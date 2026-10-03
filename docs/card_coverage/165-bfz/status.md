@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 7.5% |
-| Works (untested) | 142 | 62.8% |
+| Tested | 20 | 8.8% |
+| Works (untested) | 145 | 64.2% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 61 | 27.0% |
+| Not working | 55 | 24.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Angelic Captain | silent | Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Ally. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bane of Bala Ged | silent | Whenever this creature attacks, defending player exiles two permanents they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Benthic Infiltrator | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Boiling Earth | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -77,15 +76,10 @@
 | Unified Front | silent | Converge — Create a 1/1 white Kor Ally creature token for each color of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vile Aggregate | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Zada, Hedron Grinder | silent | Whenever you cast an instant or sorcery spell that targets only Zada, copy that spell for each other creature you control that the spell could target. Each copy | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Akoum Hellkite | notice | Landfall — Whenever a land you control enters, this creature deals 1 damage to any target. If that land is a Mountain, this creature deals 2 damage instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Barrage Tyrant | notice | {2}{R}, Sacrifice another colorless creature: This creature deals damage equal to the sacrificed creature's power to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emeria Shepherd | notice | Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Guardian of Tazeem | notice | Landfall — Whenever a land you control enters, tap target creature an opponent controls. If that land is an Island, that creature doesn't untap during its contr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Guul Draz Overseer | notice | Landfall — Whenever a land you control enters, other creatures you control get +1/+0 until end of turn. If that land is a Swamp, those creatures get +2/+0 until | unparsed remainder: If that land is a Swamp, those creatures get +2/+0 until end of turn instead. | Y/Y/- | not_working |
 | Herald of Kozilek | notice | Colorless spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lithomancer's Focus | notice | Target creature gets +2/+2 until end of turn. Prevent all damage that would be dealt to that creature this turn by colorless sources. | unparsed remainder: Prevent all damage that would be dealt to that creature this turn by colorless sources. | Y/Y/- | not_working |
-| Oran-Rief Hydra | notice | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. If that land is a Forest, put two +1/+1 counters on this creature instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Swarm Surge | notice | Devoid (This card has no color.) Creatures you control get +2/+0 until end of turn. Colorless creatures you control also gain first strike until end of turn. | unparsed remainder: Colorless creatures you control also gain first strike until end of turn. | Y/Y/- | not_working |
 | Unnatural Aggression | notice | Devoid (This card has no color.) Target creature you control fights target creature an opponent controls. If the creature an opponent controls would die this tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Breaker of Armies | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kor Castigator | unaudited | This creature can't be blocked by Eldrazi Scions. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -98,6 +92,7 @@
 | Akoum Stonewaker | handled | Landfall — Whenever a land you control enters, you may pay {2}{R}. If you do, create a 3/1 red Elemental creature token with trample and haste. Exile that token | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ally Encampment | handled | {1}, {T}, Sacrifice this land: Return target Ally you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angel of Renewal | handled | When this creature enters, you gain 1 life for each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Angelic Captain | handled | Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Ally. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Gift | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Beastcaller Savant | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
 | Belligerent Whiptail | handled | Landfall — Whenever a land you control enters, this creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -144,6 +139,7 @@
 | Greenwarden of Murasa | handled | When this creature enters, you may return target card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grove Rumbler | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grovetender Druids | handled | Rally — Whenever this creature or another Ally you control enters, you may pay {1}. If you do, create a 1/1 green Plant creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Guardian of Tazeem | handled | Landfall — Whenever a land you control enters, tap target creature an opponent controls. If that land is an Island, that creature doesn't untap during its contr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hagra Sharpshooter | handled | {4}{B}: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Halimar Tidecaller | handled | When this creature enters, you may return target card with awaken from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hedron Archive | handled | {2}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -181,6 +177,7 @@
 | Ondu Champion | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control gain trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ondu Greathorn | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oracle of Dust | handled | {2}, Put a card an opponent owns from exile into that player's graveyard: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Oran-Rief Hydra | handled | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. If that land is a Forest, put two +1/+1 counters on this creature instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oran-Rief Invoker | handled | {8}: This creature gets +5/+5 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Outnumber | handled | Outnumber deals damage to target creature equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pathway Arrows | handled | Equipped creature has "{2}, {T}: This creature deals 1 damage to target creature. If a colorless creature is dealt damage this way, tap it." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -239,14 +236,16 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>20 cards</summary>
 
+- Akoum Hellkite
 - Aligned Hedron Network
 - Blisterpod
 - Canopy Vista
 - Conduit of Ruin
 - Dust Stalker
 - Endless One
+- Guul Draz Overseer
 - Kiora, Master of the Depths
 - Murk Strider
 - Painful Truths
@@ -254,6 +253,7 @@
 - Shrine of the Forsaken Gods
 - Skyrider Elf
 - Sunken Hollow
+- Swarm Surge
 - Tide Drifter
 - Ulamog, the Ceaseless Hunger
 - Vampiric Rites
@@ -268,7 +268,7 @@
 | awaken | 13 | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice | bfz |
 | Converge | 7 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements, Radiant Flames | bfz |
 | ingest | 7 | Benthic Infiltrator, Culling Drone, Mist Intruder, Ruination Guide, Salvage Drone | bfz |
-| Landfall | 5 | Akoum Hellkite, Emeria Shepherd, Guardian of Tazeem, Guul Draz Overseer, Oran-Rief Hydra | bfz |
+| Landfall | 1 | Emeria Shepherd | bfz |
 | Rally | 1 | Munda, Ambush Leader | bfz |
 | +N: until end of turn, gideon becomes a N/N human soldier ally creature with indestructible that's still a planeswalker. prevent all damage that would be dealt  | 1 | Gideon, Ally of Zendikar | bfz |
 | all creatures able to block ~ do so. | 1 | Breaker of Armies | bfz |
@@ -277,7 +277,6 @@
 | at the beginning of your upkeep, sacrifice a creature. | 1 | Smothering Abomination | bfz |
 | colorless spells you cast cost {M} less to cast. | 1 | Herald of Kozilek | bfz |
 | devoid (~ has no color.) create two N/N colorless eldrazi scion creature tokens. they have "..." | 1 | Call the Scions | bfz |
-| devoid (~ has no color.) creatures you control get +N/+N until end of turn. colorless creatures you control also gain first strike until end of turn. | 1 | Swarm Surge | bfz |
 | devoid (~ has no color.) exile target creature and target land. | 1 | Grip of Desolation | bfz |
 | devoid (~ has no color.) exile target nonbasic land. search its controller's graveyard, hand, and library for any number of cards with the same name as that lan | 1 | Crumble to Dust | bfz |
 | devoid (~ has no color.) target creature you control fights target creature an opponent controls. if the creature an opponent controls would die ~, exile it ins | 1 | Unnatural Aggression | bfz |
@@ -298,7 +297,6 @@
 | whenever you cast an instant or sorcery spell that targets only zada, copy that spell for each other creature you control that the spell could target. each copy | 1 | Zada, Hedron Grinder | bfz |
 | whenever ~ attacks, defending player exiles two permanents they control. | 1 | Bane of Bala Ged | bfz |
 | whenever ~ attacks, defending player loses N life. | 1 | Silent Skimmer | bfz |
-| whenever ~ attacks, it gets +N/+N until end of turn for each other attacking ally. | 1 | Angelic Captain | bfz |
 | your opponents can't cast spells with even mana values. | 1 | Void Winnower | bfz |
 | {M}{M}, sacrifice another colorless creature: ~ deals damage equal to the sacrificed creature's power to any target. | 1 | Barrage Tyrant | bfz |
 | {M}{M}{M}: draw a card. each opponent exiles the top card of their library. | 1 | Fathom Feeder | bfz |

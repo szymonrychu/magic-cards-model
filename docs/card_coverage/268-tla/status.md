@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 56 | 20.2% |
+| Tested | 57 | 20.6% |
 | Works (untested) | 124 | 44.8% |
 | Partial (unaudited) | 13 | 4.7% |
-| Not working | 84 | 30.3% |
+| Not working | 83 | 30.0% |
 
 ## Cards needing work
 
@@ -102,7 +102,6 @@
 | Iroh, Tea Master | notice | At the beginning of combat on your turn, you may have target opponent gain control of target permanent you control. When you do, create a 1/1 white Ally creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Jeong Jeong, the Deserter | notice | Exhaust — {3}: Put a +1/+1 counter on Jeong Jeong. When you next cast a Lesson spell this turn, copy it and you may choose new targets for the copy. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Jet's Brainwashing | notice | Kicker {3} (You may pay an additional {3} as you cast this spell.) Target creature can't block this turn. If this spell was kicked, gain control of that creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Katara, Water Tribe's Hope | notice | Waterbend {X}: Creatures you control have base power and toughness X/X until end of turn. X can't be 0. Activate only during your turn. | unparsed remainder: 0 can't be 0. | Y/Y/Y | not_working |
 | Messenger Hawk | notice | This creature gets +2/+0 as long as you've drawn two or more cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Planetarium of Wan Shi Tong | notice | Whenever you scry or surveil, look at the top card of your library. You may cast that card without paying its mana cost. Do this only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sandbender Scavengers | notice | When this creature dies, you may exile it. When you do, return target creature card with mana value less than or equal to this creature's power from your gravey | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -251,7 +250,7 @@
 ## Fully supported
 
 <details>
-<summary>56 cards</summary>
+<summary>57 cards</summary>
 
 - Aang, Swift Savior // Aang and La, Ocean's Fury
 - Aang, at the Crossroads // Aang, Destined Savior
@@ -286,6 +285,7 @@
 - Iroh's Demonstration
 - Iroh, Grand Lotus
 - It'll Quench Ya!
+- Katara, Water Tribe's Hope
 - Kyoshi Battle Fan
 - Momo, Friendly Flier
 - Momo, Playful Pet
@@ -365,7 +365,6 @@
 | untap one or two target creatures. they each get +N/+N until end of turn. | 1 | Fancy Footwork | tla |
 | untap ~ during each other player's untap step. | 1 | Bender's Waterskin | tla |
 | waterbend {M}, {M}: you may cast a noncreature spell from your hand without paying its mana cost. | 1 | Yue, the Moon Spirit | tla |
-| waterbend {M}: creatures you control have base power and toughness N/N until end of turn. N can't be N. activate only during your turn. | 1 | Katara, Water Tribe's Hope | tla |
 | waterbend {M}: enchanted creature's owner shuffles it into their library. | 1 | Watery Grasp | tla |
 | waterbend {M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Water Tribe Rallier | tla |
 | waterbend {M}: sacrifice ~. if you do, scry N. | 1 | Aang's Iceberg | tla |

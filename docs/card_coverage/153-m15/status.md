@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 7.0% |
+| Tested | 11 | 7.7% |
 | Works (untested) | 73 | 51.0% |
-| Partial (unaudited) | 5 | 3.5% |
-| Not working | 55 | 38.5% |
+| Partial (unaudited) | 6 | 4.2% |
+| Not working | 53 | 37.1% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Festergloom | silent | Nonblack creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk, Apex Predator | silent | −3: Destroy target creature. You gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glacial Crasher | silent | This creature can't attack unless there is a Mountain on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Goblin Rabblemaster | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Goblin. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hot Soup | silent | Whenever equipped creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hunter's Ambush | silent | Prevent all combat damage that would be dealt by nongreen creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | In Garruk's Wake | silent | Destroy all creatures you don't control and all planeswalkers you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -78,11 +77,11 @@
 | Life's Legacy | notice | As an additional cost to cast this spell, sacrifice a creature. Draw cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nightfire Giant | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rotfeaster Maggot | notice | When this creature enters, exile target creature card from a graveyard. You gain life equal to that card's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sanctified Charge | notice | Creatures you control get +2/+1 until end of turn. White creatures you control also gain first strike until end of turn. (They deal combat damage before creatur | unparsed remainder: White creatures you control also gain first strike until end of turn. | Y/Y/- | not_working |
 | Sunblade Elf | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Warden of the Beyond | notice | This creature gets +2/+2 as long as an opponent owns a card in exile. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aggressive Mining | unaudited | You can't play lands. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Constricting Sliver | unaudited | Sliver creatures you control have "When this creature enters, you may exile target creature an opponent controls until this creature leaves the battlefield." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Goblin Rabblemaster | unaudited | Other Goblin creatures you control attack each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shield of the Avatar | unaudited | If a source would deal damage to equipped creature, prevent X of that damage, where X is the number of creatures you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sliver Hivelord | unaudited | Sliver creatures you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Undergrowth Scavenger | unaudited | This creature enters with a number of +1/+1 counters on it equal to the number of creature cards in all graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -163,7 +162,7 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Ensoul Artifact
 - Feast on the Fallen
@@ -174,6 +173,7 @@
 - Might Makes Right
 - Ob Nixilis, Unshackled
 - Resolute Archangel
+- Sanctified Charge
 - Soul of Shandalar
 
 </details>
@@ -188,7 +188,6 @@
 | as long as you control an artifact, ~ gets +N/+N and has trample. | 1 | Scrapyard Mongrel | m15 |
 | at the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays N life. | 1 | Indulgent Tormentor | m15 |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature"..."s graveyard, hand, and library for  | 1 | Stain the Mind | m15 |
-| creatures you control get +N/+N until end of turn. white creatures you control also gain first strike until end of turn. (they deal combat damage before creatur | 1 | Sanctified Charge | m15 |
 | destroy all creatures you don"..."t control. | 1 | In Garruk's Wake | m15 |
 | enchanted creature gets +N/+N and has protection from each color. ~ doesn't remove auras. | 1 | Spectra Ward | m15 |
 | enchanted creature has lifelink and "..." | 1 | Eternal Thirst | m15 |
@@ -197,6 +196,7 @@
 | nonblack creatures get -N/-N until end of turn. | 1 | Festergloom | m15 |
 | other black creatures you control get +N/+N. | 1 | Paragon of Open Graves | m15 |
 | other blue creatures you control get +N/+N. | 1 | Paragon of Gathering Mists | m15 |
+| other goblin creatures you control attack each combat if able. | 1 | Goblin Rabblemaster | m15 |
 | other green creatures you control get +N/+N. | 1 | Paragon of Eternal Wilds | m15 |
 | other red creatures you control get +N/+N. | 1 | Paragon of Fierce Defiance | m15 |
 | other white creatures you control get +N/+N. | 1 | Paragon of New Dawns | m15 |
@@ -222,7 +222,6 @@
 | whenever equipped creature dies, target opponent gains control of ~. | 1 | Avarice Amulet | m15 |
 | whenever equipped creature is dealt damage, destroy it. | 1 | Hot Soup | m15 |
 | whenever you activate an ability of an artifact, if it isn't a mana ability, you may pay {M}. if you do, copy that ability. you may choose new targets for the c | 1 | Kurkesh, Onakke Ancient | m15 |
-| whenever ~ attacks, it gets +N/+N until end of turn for each other attacking goblin. | 1 | Goblin Rabblemaster | m15 |
 | whenever ~ deals combat damage to a player, choose a card in your hand. that player guesses whether the card's mana value is greater than N. if the player guess | 1 | Master of Predicaments | m15 |
 | you can't play lands. | 1 | Aggressive Mining | m15 |
 | {M}, {M}: for each planeswalker you control, you may activate one of its loyalty abilities once ~ as though none of its loyalty abilities have been activated ~. | 1 | The Chain Veil | m15 |

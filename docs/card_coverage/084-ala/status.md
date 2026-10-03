@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 5.4% |
+| Tested | 13 | 5.8% |
 | Works (untested) | 140 | 62.8% |
 | Partial (unaudited) | 7 | 3.1% |
-| Not working | 64 | 28.7% |
+| Not working | 63 | 28.3% |
 
 ## Cards needing work
 
@@ -87,7 +87,6 @@
 | Bant Charm | notice | Choose one — • Destroy target artifact. • Put target creature on the bottom of its owner's library. • Counter target instant spell. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ooze Garden | notice | {1}{G}, Sacrifice a non-Ooze creature: Create an X/X green Ooze creature token, where X is the sacrificed creature's power. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sigil Blessing | notice | Until end of turn, target creature you control gets +3/+3 and other creatures you control get +1/+1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Vein Drinker | notice | {R}, {T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wild Nacatl | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Windwright Mage | notice | This creature has flying as long as an artifact card is in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Empyrial Archangel | unaudited | All damage that would be dealt to you is dealt to this creature instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -241,7 +240,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Angelsong
 - Bone Splinters
@@ -255,6 +254,7 @@
 - Relic of Progenitus
 - Salvage Titan
 - Thunder-Thrash Elder
+- Vein Drinker
 
 </details>
 
@@ -305,7 +305,6 @@
 | you gain life equal to target creature's power. | 1 | Soul's Grace | ala |
 | {M}, sacrifice ~: destroy all permanents except for artifacts and lands. activate only during your upkeep. | 1 | Scourglass | ala |
 | {M}, {M}: prevent the next N damage that would be dealt to you ~. | 1 | Esper Battlemage | ala |
-| {M}, {M}: ~ deals damage equal to its power to target creature. that creature deals damage equal to its power to ~. | 1 | Vein Drinker | ala |
 | {M}: create an N/N beast creature token that's red, green, and white. | 1 | Godsire | ala |
 | {M}: reveal any number of creature cards with power N or greater from your hand. add {M} for each card revealed ~. | 1 | Sacellum Godspeaker | ala |
 | {M}{M}, sacrifice a non-ooze creature: create an N/N green ooze creature token, where N is the sacrificed creature's power. activate only as a sorcery. | 1 | Ooze Garden | ala |

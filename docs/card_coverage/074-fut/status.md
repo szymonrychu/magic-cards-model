@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 11.2% |
-| Works (untested) | 67 | 37.6% |
+| Tested | 22 | 12.4% |
+| Works (untested) | 68 | 38.2% |
 | Partial (unaudited) | 18 | 10.1% |
-| Not working | 73 | 41.0% |
+| Not working | 70 | 39.3% |
 
 ## Cards needing work
 
@@ -90,12 +90,9 @@
 | Thunderblade Charge | silent | Thunderblade Charge deals 3 damage to any target. Whenever one or more creatures you control deal combat damage to a player, if this card is in your graveyard,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Veilstone Amulet | silent | Whenever you cast a spell, creatures you control can't be the targets of spells or abilities your opponents control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wrap in Vigor | silent | Regenerate each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cyclical Evolution | notice | Target creature gets +3/+3 until end of turn. Exile Cyclical Evolution with three time counters on it. Suspend 3—{2}{G} (Rather than cast this card from your ha | unparsed remainder: Exile Cyclical Evolution with three time counters on it. | Y/-/- | not_working |
 | Dust of Moments | notice | Choose one — • Remove two time counters from each permanent and each suspended card. • Put two time counters on each permanent with a time counter on it and eac | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Festering March | notice | Creatures your opponents control get -1/-1 until end of turn. Exile Festering March with three time counters on it. Suspend 3—{2}{B} (Rather than cast this card | unparsed remainder: Exile Festering March with three time counters on it. | Y/-/- | not_working |
 | Grave Peril | notice | When a nonblack creature enters, sacrifice this enchantment. If you do, destroy that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Intervention Pact | notice | The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way. At the begi | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Mistmeadow Skulk | notice | Protection | protection from a quality the engine does not read: mana value 3 or greater | Y/-/- | not_working |
 | Saltskitter | notice | Whenever another creature enters, exile this creature. Return this creature to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Shivan Sand-Mage | notice | When this creature enters, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permanent with a t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sword of the Meek | notice | Whenever a 1/1 creature you control enters, you may return this card from your graveyard to the battlefield, then attach it to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -128,6 +125,7 @@
 | Centaur Omenreader | handled | As long as this creature is tapped, creature spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Char-Rumbler | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cryptic Annelid | handled | When this creature enters, scry 1, then scry 2, then scry 3. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cyclical Evolution | handled | Target creature gets +3/+3 until end of turn. Exile Cyclical Evolution with three time counters on it. Suspend 3—{2}{G} (Rather than cast this card from your ha | the engine reads this text and performs it | Y/-/- | not_tested |
 | Daybreak Coronet | handled | Enchanted creature gets +3/+3 and has first strike, vigilance, and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Death Rattle | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Destroy target nongreen creature. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Edge of Autumn | handled | If you control four or fewer lands, search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Cycling—Sacrifice a land. (Sacr | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -188,7 +186,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>22 cards</summary>
 
 - Akroma's Memorial
 - Arc Blade
@@ -197,6 +195,7 @@
 - Dakmor Salvage
 - Delay
 - Dryad Arbor
+- Festering March
 - Glittering Wish
 - Grave Scrabbler
 - Grove of the Burnwillows
@@ -204,6 +203,7 @@
 - Keldon Megaliths
 - Llanowar Empath
 - Logic Knot
+- Mistmeadow Skulk
 - Pact of Negation
 - Street Wraith
 - Summoner's Pact
@@ -238,7 +238,6 @@
 | counter target spell if no mana was spent to cast it. | 1 | Nix | fut |
 | creatures with no abilities get +N/+N. | 1 | Muraganda Petroglyphs | fut |
 | creatures without flying can't attack. | 1 | Magus of the Moat | fut |
-| creatures your opponents control get -N/-N until end of turn. exile ~ with three time counters on it. suspend N—{M}{M} (rather than cast ~ from your hand, you m | 1 | Festering March | fut |
 | each player may play an additional land on each of their turns. | 1 | Rites of Flourishing | fut |
 | each sliver card in each player's hand has slivercycling {M}. | 1 | Homing Sliver | fut |
 | enchanted creature gets +N/+N and doesn"..."s untap step. | 1 | Leaden Fists | fut |
@@ -252,13 +251,11 @@
 | if ~ was kicked, it enters with three additional time counters on it. | 1 | Ravaging Riftwurm | fut |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, it has split second. (as long as ~ is on the stack, players can"..."t mana abilities. | 1 | Molten Disaster | fut |
 | play with the top card of your library revealed. | 1 | Magus of the Future | fut |
-| protection | 1 | Mistmeadow Skulk | fut |
 | put target creature on top of its owner"..."s library, then put any number of them on the bottom of that player's library and the rest on top in any order.) | 1 | Spin into Myth | fut |
 | regenerate each creature you control. | 1 | Wrap in Vigor | fut |
 | search target player's library for a card and exile it. then that player shuffles. gravestorm (when you cast ~, copy it for each permanent put into a graveyard  | 1 | Bitter Ordeal | fut |
 | spells that target ~ cost {M} less to cast. | 1 | Spellwild Ouphe | fut |
 | spend only mana produced by basic lands to cast ~. | 1 | Imperiosaur | fut |
-| target creature gets +N/+N until end of turn. exile ~ with three time counters on it. suspend N—{M}{M} (rather than cast ~ from your hand, you may pay {M}{M} an | 1 | Cyclical Evolution | fut |
 | target player reveals their hand. you choose a nonland card from it. that player puts that card into their library third from the top. | 1 | Lost Hours | fut |
 | the next creature card you play ~ can be played as though it had flash. draw a card. | 1 | Scout's Warning | fut |
 | the next time a source of your choice would deal damage to you ~, prevent that damage. you gain life equal to the damage prevented ~. at the beginning of your n | 1 | Intervention Pact | fut |

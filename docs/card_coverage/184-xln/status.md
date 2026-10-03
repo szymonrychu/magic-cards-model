@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.6% |
-| Works (untested) | 157 | 64.1% |
+| Tested | 23 | 9.4% |
+| Works (untested) | 158 | 64.5% |
 | Partial (unaudited) | 14 | 5.7% |
-| Not working | 53 | 21.6% |
+| Not working | 50 | 20.4% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Deadeye Tracker | silent | Explore | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Deathgorge Scavenger | silent | Whenever this creature enters or attacks, you may exile target card from a graveyard. If a creature card is exiled this way, you gain 2 life. If a noncreature c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dinosaur Stampede | silent | Attacking creatures get +2/+0 until end of turn. Dinosaurs you control gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dire Fleet Captain | silent | Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Pirate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dire Fleet Ravager | silent | When this creature enters, each player loses a third of their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dowsing Dagger // Lost Vale | silent | Whenever equipped creature deals combat damage to a player, you may transform this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Entrancing Melody | silent | Gain control of target creature with mana value X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,13 +71,11 @@
 | Drover of the Mighty | notice | This creature gets +2/+2 as long as you control a Dinosaur. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emergent Growth | notice | Target creature gets +5/+5 until end of turn and must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kumena's Speaker | notice | This creature gets +1/+1 as long as you control another Merfolk or an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rallying Roar | notice | Creatures you control get +1/+1 until end of turn. Untap them. | unparsed remainder: Untap them. | Y/Y/- | not_working |
 | Siren's Ruse | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If a Pirate was exiled this way, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Skulduggery | notice | Until end of turn, target creature you control gets +1/+1 and target creature an opponent controls gets -1/-1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Thaumatic Compass // Spires of Orazca | notice | {T}: Untap target attacking creature an opponent controls and remove it from combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vampire's Zeal | notice | Target creature gets +2/+2 until end of turn. If it's a Vampire, it gains first strike until end of turn. | unparsed remainder: If it's a Vampire, it gains first strike until end of turn. | Y/Y/- | not_working |
 | Verdant Rebirth | notice | Until end of turn, target creature gains "When this creature dies, return it to its owner's hand." Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Waker of the Wilds | notice | {X}{G}{G}: Put X +1/+1 counters on target land you control. That land becomes a 0/0 Elemental creature with haste. It's still a land. | unparsed remainder: It's still a land. | Y/Y/- | not_working |
 | Ashes of the Abhorrent | unaudited | Players can't cast spells from graveyards or activate abilities of cards in graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Belligerent Brontodon | unaudited | Each creature you control assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Bloodcrazed Paladin | unaudited | This creature enters with a +1/+1 counter on it for each creature that died this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -125,6 +122,7 @@
 | Deeproot Waters | handled | Whenever you cast a Merfolk spell, create a 1/1 blue Merfolk creature token with hexproof. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Depths of Desire | handled | Return target creature to its owner's hand. Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Desperate Castaways | handled | This creature can't attack unless you control an artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dire Fleet Captain | handled | Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Pirate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dire Fleet Hoarder | handled | When this creature dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dire Fleet Interloper | handled | When this creature enters, it explores. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dive Down | handled | Target creature you control gets +0/+3 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -254,7 +252,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>23 cards</summary>
 
 - Admiral Beckett Brass
 - Arguel's Blood Fast // Temple of Aclazotz
@@ -268,6 +266,7 @@
 - Kinjalli's Sunwing
 - Kitesail Freebooter
 - Merfolk Branchwalker
+- Rallying Roar
 - Ranging Raptors
 - Search for Azcanta // Azcanta, the Sunken Ruin
 - Settle the Wreckage
@@ -277,6 +276,7 @@
 - Unclaimed Territory
 - Vraska's Contempt
 - Vraska, Relic Seeker
+- Waker of the Wilds
 
 </details>
 
@@ -298,7 +298,6 @@
 | attacking creatures get +N/+N until end of turn. dinosaurs you control gain trample until end of turn. | 1 | Dinosaur Stampede | xln |
 | counter target spell. create N treasure tokens, where N is that spell"..."re artifacts with "...") | 1 | Spell Swindle | xln |
 | creatures you control are the chosen type in addition to their other types. the same is true for creature spells you control and creature cards you own that are | 1 | Arcane Adaptation | xln |
-| creatures you control get +N/+N until end of turn. untap them. | 1 | Rallying Roar | xln |
 | creatures you control with +N/+N counters on them can't be blocked. | 1 | Herald of Secret Streams | xln |
 | each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Belligerent Brontodon | xln |
 | each opponent must attack you or a planeswalker you control with at least one creature each combat if able. | 1 | Trove of Temptation | xln |
@@ -335,12 +334,10 @@
 | whenever equipped creature deals combat damage to a player, you may transform ~. | 1 | Dowsing Dagger // Lost Vale | xln |
 | whenever gishath deals combat damage to a player, reveal that many cards from the top of your library. put any number of dinosaur creature cards from among them | 1 | Gishath, Sun's Avatar | xln |
 | whenever you cast a spell from your hand, reveal the top N cards of your library, where N is that spell's mana value. you may cast a spell with mana value N or  | 1 | Sunbird's Invocation | xln |
-| whenever ~ attacks, it gets +N/+N until end of turn for each other attacking pirate. | 1 | Dire Fleet Captain | xln |
 | whenever ~ enters or attacks, you may exile target card from a graveyard. if a creature card is exiled ~, you gain N life. if a noncreature card is exiled ~, ~  | 1 | Deathgorge Scavenger | xln |
 | you gain twice N life. put ~ on the bottom of its owner's library. | 1 | Sanguine Sacrament | xln |
 | your opponents can't cast spells with the same name as the exiled card. | 1 | Ixalan's Binding | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |
-| {M}{M}{M}: put N +N/+N counters on target land you control. that land becomes a N/N elemental creature with haste. it's still a land. | 1 | Waker of the Wilds | xln |
 | ~ can block an additional creature each combat. | 1 | Spike-Tailed Ceratops | xln |
 | ~ can block only creatures with flying. | 1 | Dreamcaller Siren | xln |
 | ~ can't attack or block alone. | 1 | Bonded Horncrest | xln |

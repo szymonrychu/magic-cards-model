@@ -58,7 +58,7 @@
 | Intrepid Adversary | silent | When this creature enters, you may pay {1}{W} any number of times. When you pay this cost one or more times, put that many valor counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kessig Naturalist // Lord of the Ulvenwald | silent | Whenever this creature attacks, add {R} or {G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Loyal Gryff | silent | When this creature enters, you may return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ludevic, Necrogenius // Olag, Ludevic's Hubris | silent | {X}{U}{U}{B}{B}, Exile X creature cards from your graveyard: Transform Ludevic. X can't be 0. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Ludevic, Necrogenius // Olag, Ludevic's Hubris | silent | As this creature transforms into Olag, Ludevic's Hubris, it becomes a copy of a creature card exiled with it, except its name is Olag, Ludevic's Hubris, it's 4/ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lunarch Veteran // Luminous Phantom | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Malevolent Hermit // Benevolent Geist | silent | {U}, Sacrifice this creature: Counter target noncreature spell unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mask of Griselbrand | silent | Whenever equipped creature dies, you may pay X life, where X is its power. If you do, draw X cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -296,6 +296,7 @@
 | as an additional cost to cast ~, sacrifice any number of creatures. create an N/N blue and black zombie creature token with menace, where N is the total power o | 1 | Corpse Cobble | mid |
 | as long as an opponent lost life ~, each other vampire you control enters with an additional +N/+N counter on it. | 1 | Vampire Socialite | mid |
 | as long as you control a token, ~ gets +N/+N. | 1 | Briarbridge Tracker | mid |
+| as ~ transforms into olag, ludevic"..."s hubris, it"..."s a legendary blue and black zombie in addition to its other colors and types. put a number of +N/+N cou | 1 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | mid |
 | as ~ transforms into ~, attach it to a player. | 1 | Curse of Leeches // Leeching Lurker | mid |
 | at the beginning of each combat, double the power and toughness of each creature you control until end of turn. | 1 | Unnatural Growth | mid |
 | at the beginning of each of your postcombat main phases, look at the top N cards of your library, where N is the total amount of life your opponents lost ~. exi | 1 | Florian, Voldaren Scion | mid |
@@ -361,7 +362,6 @@
 | {M}, sacrifice ~: counter target noncreature spell unless its controller pays {M}. | 1 | Malevolent Hermit // Benevolent Geist | mid |
 | {M}, {M}, pay N life, discard a card: draw a card, mill a card, then put a ritual counter on ~. then if it has three or more ritual counters on it, remove them  | 1 | Heirloom Mirror // Inherited Fiend | mid |
 | {M}, {M}: if it's night, it becomes day. otherwise, it becomes night. activate only as a sorcery. | 1 | The Celestus | mid |
-| {M}{M}{M}{M}{M}, exile N creature cards from your graveyard: transform ludevic. N can't be N. activate only as a sorcery. | 1 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | mid |
 | ~ costs {M} less to cast for each creature you attacked with ~. | 1 | Search Party Captain | mid |
 | ~ costs {M} less to cast if you control a vampire. ~ deals N damage to target creature and N damage to its controller. draw a card. | 1 | Neonate's Rush | mid |
 | ~ deals N damage to any target. if a player is dealt damage ~, scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Play with Fire | mid |

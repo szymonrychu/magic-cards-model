@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 6.5% |
-| Works (untested) | 166 | 63.6% |
-| Partial (unaudited) | 11 | 4.2% |
-| Not working | 67 | 25.7% |
+| Tested | 19 | 7.3% |
+| Works (untested) | 168 | 64.4% |
+| Partial (unaudited) | 10 | 3.8% |
+| Not working | 64 | 24.5% |
 
 ## Cards needing work
 
@@ -82,15 +82,12 @@
 | Wolf of Devil's Breach | silent | Whenever this creature attacks, you may pay {1}{R} and discard a card. If you do, this creature deals damage to target creature or planeswalker equal to the dis | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Altered Ego | notice | You may have this creature enter as a copy of any creature on the battlefield, except it enters with X additional +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Avacyn's Judgment | notice | Madness {X}{R} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Avacyn's Judgment dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Behind the Scenes | notice | Creatures you control have skulk. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Burn from Within | notice | Burn from Within deals X damage to any target. If a creature is dealt damage this way, it loses indestructible until end of turn. If that creature would die thi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Declaration in Stone | notice | Exile target creature and all other creatures its controller controls with the same name as that creature. That player investigates for each nontoken creature e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Essence Flux | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If it's a Spirit, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Geralf's Masterpiece | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Malevolent Whispers | notice | Gain control of target creature until end of turn. Untap that creature. It gets +2/+0 and gains haste until end of turn. Madness {3}{R} (If you discard this car | unparsed remainder: Untap that creature. It gets +2/+0 and gains haste until end of turn. | Y/Y/- | not_working |
-| Odric, Lunarch Marshal | notice | At the beginning of each combat, creatures you control gain first strike until end of turn if a creature you control has first strike. The same is true for flyi | unparsed remainder: The same is true for flying, deathtouch, double strike, haste, hexproof, indestructible, lifelink, menace, reach, skulk, trample, and vigilance. | Y/Y/- | not_working |
 | Structural Distortion | notice | Exile target artifact or land. Structural Distortion deals 2 damage to that permanent's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Tenacity | notice | Creatures you control get +1/+1 and gain lifelink until end of turn. Untap those creatures. (Damage dealt by those creatures also causes you to gain that much l | unparsed remainder: Untap those creatures. | Y/Y/- | not_working |
 | Thing in the Ice // Awoken Horror | notice | Whenever you cast an instant or sorcery spell, remove an ice counter from this creature. Then if it has no ice counters on it, transform it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Triskaidekaphobia | notice | At the beginning of your upkeep, choose one — • Each player with exactly 13 life loses the game, then each player gains 1 life. • Each player with exactly 13 li | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bound by Moonsilver | unaudited | Enchanted creature can't attack, block, or transform. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -100,7 +97,6 @@
 | Rattlechains | unaudited | You may cast Spirit spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sigarda, Heron's Grace | unaudited | You and Humans you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Silburlind Snapper | unaudited | This creature can't attack unless you've cast a noncreature spell this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Skeleton Key | unaudited | Equipped creature has skulk. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | True-Faith Censer | unaudited | As long as equipped creature is a Human, it gets an additional +1/+0. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Watcher in the Web | unaudited | This creature can block an additional seven creatures each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Weirding Wood | unaudited | Enchanted land has "{T}: Add two mana of any one color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -114,6 +110,7 @@
 | Arlinn Kord // Arlinn, Embraced by the Moon | handled | +1: Until end of turn, up to one target creature gets +2/+2 and gains vigilance and haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Asylum Visitor | handled | At the beginning of each player's upkeep, if that player has no cards in hand, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Autumnal Gloom // Ancient of the Equinox | handled | {B}: Mill a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Behind the Scenes | handled | Creatures you control have skulk. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Biting Rain | handled | All creatures get -2/-2 until end of turn. Madness {2}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodmad Vampire | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Broken Concentration | handled | Counter target spell. Madness {3}{U} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -227,6 +224,7 @@
 | Silverfur Partisan | handled | Whenever a Wolf or Werewolf you control becomes the target of an instant or sorcery spell, create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverstrike | handled | Destroy target attacking creature. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sinister Concoction | handled | {B}, Pay 1 life, Mill a card, Discard a card, Sacrifice this enchantment: Destroy target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Skeleton Key | handled | Equipped creature has skulk. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sleep Paralysis | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Solitary Hunter // One of the Pack | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soul Swallower | handled | Delirium — At the beginning of your upkeep, if there are four or more card types among cards in your graveyard, put three +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -274,7 +272,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>19 cards</summary>
 
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
@@ -288,10 +286,12 @@
 - Duskwatch Recruiter // Krallenhorde Howler
 - Gryff's Boon
 - Nahiri, the Harbinger
+- Odric, Lunarch Marshal
 - Port Town
 - Prized Amalgam
 - Rabid Bite
 - Slayer's Plate
+- Tenacity
 - Thraben Inspector
 
 </details>
@@ -306,7 +306,6 @@
 | as long as enchanted creature is a human, it has trample. | 1 | Equestrian Skill | soi |
 | as long as equipped creature is a human, it gets an additional +N/+N. | 1 | True-Faith Censer | soi |
 | as long as equipped creature is a human, it has menace. | 1 | Harvest Hand // Scrounged Scythe | soi |
-| at the beginning of each combat, creatures you control gain first strike until end of turn if a creature you control has first strike. the same is true for flyi | 1 | Odric, Lunarch Marshal | soi |
 | at the beginning of each player's end step, that player draws a card. if the player is your opponent and has four or more cards in hand, ~ deals N damage to tha | 1 | Fevered Visions | soi |
 | at the beginning of your upkeep, choose one — • each player with exactly N life loses the game, then each player gains N life. • each player with exactly N life | 1 | Triskaidekaphobia | soi |
 | at the beginning of your upkeep, each player discards a card. each opponent who discarded a card that shares a card type with the card you discarded loses N lif | 1 | Creeping Dread | soi |
@@ -316,12 +315,9 @@
 | attacking creatures you control get +N/+N and have trample. | 1 | Breakneck Rider // Neck Breaker | soi |
 | choose target creature you don"..."s a wolf or a werewolf deals damage equal to its power to that creature. | 1 | Moonlight Hunt | soi |
 | counter target sorcery spell. delirium — if there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | 1 | Invasive Surgery | soi |
-| creatures you control get +N/+N and gain lifelink until end of turn. untap those creatures. (damage dealt by those creatures also causes you to gain that much l | 1 | Tenacity | soi |
-| creatures you control have skulk. | 1 | Behind the Scenes | soi |
 | each vampire creature card you own that isn't on the battlefield has madness. the madness cost is equal to its mana cost. | 1 | Falkenrath Gorger | soi |
 | enchanted creature can't attack, block, or transform. | 1 | Bound by Moonsilver | soi |
 | enchanted land has "..." | 1 | Weirding Wood | soi |
-| equipped creature has skulk. | 1 | Skeleton Key | soi |
 | exile target artifact or land. ~ deals N damage to that permanent's controller. | 1 | Structural Distortion | soi |
 | exile target creature and all other creatures its controller controls with the same name as that creature. that player investigates for each nontoken creature e | 1 | Declaration in Stone | soi |
 | exile target creature you control, then return that card to the battlefield under its owner"..."s a spirit, put a +N/+N counter on it. | 1 | Essence Flux | soi |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 10.4% |
+| Tested | 12 | 11.3% |
 | Works (untested) | 35 | 33.0% |
 | Partial (unaudited) | 6 | 5.7% |
-| Not working | 54 | 50.9% |
+| Not working | 53 | 50.0% |
 
 ## Cards needing work
 
@@ -77,7 +77,6 @@
 | Apple of Eden, Isu Relic | notice | {T}, Pay 4 life, Sacrifice Apple of Eden: Look at target opponent's hand and exile those cards face down. You may play those cards this turn, and mana of any ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Auditore Ambush | notice | Choose one or both — • Return target creature to its owner's hand. • Target player searches their library and/or graveyard for a card named Ezio, Blade of Venge | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Battlefield Improvisation | notice | Target creature gets +2/+2 until end of turn. If that creature is attacking, you may attach any number of Equipment you control to it. | unparsed remainder: If that creature is attacking, you may attach any number of Equipment you control to it. | Y/-/- | not_working |
-| Bleeding Effect | notice | At the beginning of combat on your turn, creatures you control gain flying until end of turn if a creature card in your graveyard has flying. The same is true f | unparsed remainder: The same is true for first strike, double strike, deathtouch, hexproof, indestructible, lifelink, menace, reach, trample, and vigilance. | Y/-/- | not_working |
 | Havi, the All-Father | notice | Havi has indestructible as long as there are four or more historic cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | What Must Be Done | notice | Choose one — • Let the World Burn — Destroy all artifacts and creatures. • Release Juno — Return target historic permanent card from your graveyard to the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Bureau Headmaster | unaudited | Equip abilities you activate cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -125,11 +124,12 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Abstergo Entertainment
 - Adrestia
 - Ballad of the Black Flag
+- Bleeding Effect
 - Eivor, Battle-Ready
 - Evie Frye
 - Haystack
@@ -154,7 +154,6 @@
 | as long as you have N or more life, equipped creature gets +N/+N and has indestructible and "..." | 1 | Caduceus, Staff of Hermes | acr |
 | as long as ~ hasn"..."t be blocked. | 1 | Ratonhnhaké꞉ton | acr |
 | assassin spells you cast have freerunning {M}{M}. | 1 | Ezio Auditore da Firenze | acr |
-| at the beginning of combat on your turn, creatures you control gain flying until end of turn if a creature card in your graveyard has flying. the same is true f | 1 | Bleeding Effect | acr |
 | at the beginning of combat on your turn, if you control a legendary assassin, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Brotherhood Spy | acr |
 | at the beginning of each player's upkeep, that player gains control of alexios, untaps it, and puts a +N/+N counter on it. it gains haste until end of turn. | 1 | Alexios, Deimos of Kosmos | acr |
 | at the beginning of your end step, create a treasure token for each tapped assassin, pirate, and/or vehicle you control. | 1 | Edward Kenway | acr |

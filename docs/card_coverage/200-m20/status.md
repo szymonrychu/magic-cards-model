@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 14.2% |
-| Works (untested) | 90 | 51.1% |
+| Tested | 30 | 17.0% |
+| Works (untested) | 91 | 51.7% |
 | Partial (unaudited) | 5 | 2.8% |
-| Not working | 56 | 31.8% |
+| Not working | 50 | 28.4% |
 
 ## Cards needing work
 
@@ -66,22 +66,16 @@
 | Yanling's Harbinger | silent | When this creature enters, you may search your library and/or graveyard for a card named Mu Yanling, Celestial Wind, reveal it, and put it into your hand. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yarok's Fenlurker | silent | When this creature enters, each opponent exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yarok's Wavecrasher | silent | When this creature enters, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Apostle of Purifying Light | notice | Protection | protection from a quality the engine does not read: black (This creature can't be blocked | Y/Y/- | not_working |
-| Boreal Elemental | notice | Spells your opponents cast that target this creature cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Celestial Messenger | notice | This creature gets +1/+1 as long as you control a Yanling planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Cerulean Drake | notice | Protection | protection from a quality the engine does not read: red (This creature can't be blocked | Y/Y/- | not_working |
-| Chandra, Flame's Fury | notice | −2: Chandra deals 4 damage to target creature and 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Elvish Reclaimer | notice | This creature gets +2/+2 as long as there are three or more land cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Growth Cycle | notice | Target creature gets +3/+3 until end of turn. It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | unparsed remainder: It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | Y/Y/- | not_working |
 | Kethis, the Hidden Hand | notice | Legendary spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Legion's End | notice | Exile target creature an opponent controls with mana value 2 or less and all other creatures that player controls with the same name as that creature. Then that | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Masterful Replication | notice | Choose one — • Create two 3/3 colorless Golem artifact creature tokens. • Choose target artifact you control. Each other artifact you control becomes a copy of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Shifting Ceratops | notice | Protection | protection from a quality the engine does not read: blue (This creature can't be blocked | Y/Y/- | not_working |
 | Thunderkin Awakener | notice | Whenever this creature attacks, choose target Elemental creature card in your graveyard with toughness less than this creature's toughness. Return that card to  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unchained Berserker | notice | This creature gets +2/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vivien's Crocodile | notice | This creature gets +1/+1 as long as you control a Vivien planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Voracious Hydra | notice | When this creature enters, choose one — • Double the number of +1/+1 counters on this creature. • This creature fights target creature you don't control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Wakeroot Elemental | notice | {G}{G}{G}{G}{G}: Untap target land you control. It becomes a 5/5 Elemental creature with haste. It's still a land. | unparsed remainder: It's still a land. | Y/Y/- | not_working |
 | Blightbeetle | unaudited | Creatures your opponents control can't have +1/+1 counters put on them. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Embodiment of Agonies | unaudited | This creature enters with a +1/+1 counter on it for each different mana cost among nonland cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mystic Forge | unaudited | You may cast artifact spells and colorless spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -96,6 +90,7 @@
 | Bloodsoaked Altar | handled | {T}, Pay 2 life, Discard a card, Sacrifice a creature: Create a 5/5 black Demon creature token with flying. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodthirsty Aerialist | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boneclad Necromancer | handled | When this creature enters, you may exile target creature card from a graveyard. If you do, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Boreal Elemental | handled | Spells your opponents cast that target this creature cost {2} more to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brightwood Tracker | handled | {5}{G}, {T}: Look at the top four cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Captivating Gyre | handled | Return up to three target creatures to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cavalier of Dawn | handled | When this creature enters, destroy up to one target nonland permanent. Its controller creates a 3/3 colorless Golem artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -181,16 +176,19 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>30 cards</summary>
 
 - Aether Gust
 - Agent of Treachery
 - Ajani, Strength of the Pride
 - Angel of Vitality
+- Apostle of Purifying Light
 - Blood Burglar
 - Brineborn Cutthroat
 - Cavalier of Flame
 - Cavalier of Gales
+- Cerulean Drake
+- Chandra, Flame's Fury
 - Cryptic Caves
 - Devout Decree
 - Flame Sweep
@@ -202,10 +200,12 @@
 - Nightpack Ambusher
 - Omnath, Locus of the Roil
 - Risen Reef
+- Shifting Ceratops
 - Spectral Sailor
 - Tomebound Lich
 - Veil of Summer
 - Vivien, Arkbow Ranger
+- Wakeroot Elemental
 - Wildfire Elemental
 - Wolfrider's Saddle
 
@@ -215,7 +215,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| protection | 3 | Apostle of Purifying Light, Cerulean Drake, Shifting Ceratops | m20 |
 | Choose one | 1 | Masterful Replication | m20 |
 | +N: each opponent gets an emblem with "..." | 1 | Chandra, Awakened Inferno | m20 |
 | +N: until your next turn, up to one target creature gets -N/-N and loses flying. | 1 | Mu Yanling, Sky Dancer | m20 |
@@ -234,7 +233,6 @@
 | other multicolored creatures you control get +N/+N. | 1 | Rienne, Angel of Rebirth | m20 |
 | put target creature with power N or greater on the bottom of its owner's library. | 1 | Eternal Isolation | m20 |
 | return all nonland permanents to their owners' hands. if you return four or more nontoken permanents you control ~, you may put a permanent card from your hand  | 1 | Flood of Tears | m20 |
-| spells your opponents cast that target ~ cost {M} more to cast. | 1 | Boreal Elemental | m20 |
 | target creature gets +N/+N until end of turn. it gets an additional +N/+N until end of turn for each card named ~ in your graveyard. | 1 | Growth Cycle | m20 |
 | when you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability ~, copy that spell or ability twice. you may choose new targets for the | 1 | Repeated Reverberation | m20 |
 | when ~ enters, choose one — • double the number of +N/+N counters on ~. • ~ fights target creature you don't control. | 1 | Voracious Hydra | m20 |
@@ -261,7 +259,6 @@
 | {M}, {M}: look at the top three cards of your library. you may reveal a creature card of the chosen type from among them and put it into your hand. put the rest | 1 | Icon of Ancestry | m20 |
 | {M}, {M}: return target creature you control and each aura attached to it to their owners' hands. activate only during your turn. | 1 | Portal of Sanctuary | m20 |
 | {M}{M}: each creature you control named ~ gets +N/+N until end of turn. | 1 | Pack Mastiff | m20 |
-| {M}{M}{M}{M}{M}: untap target land you control. it becomes a N/N elemental creature with haste. it's still a land. | 1 | Wakeroot Elemental | m20 |
 | {M}{M}{M}{M}{M}{M}: exile the top three cards of your library. you may play them ~ without paying their mana costs. | 1 | Golos, Tireless Pilgrim | m20 |
 | ~ can"..."s hand and graveyard. | 1 | Thought Distortion | m20 |
 | ~ deals N damage to target player and each creature that player controls. search your library and/or graveyard for a card named chandra, flame's fury, reveal it | 1 | Chandra's Flame Wave | m20 |
@@ -271,7 +268,6 @@
 | ~ gets +N/+N as long as there are three or more land cards in your graveyard. | 1 | Elvish Reclaimer | m20 |
 | ~ gets +N/+N as long as you control a vivien planeswalker. | 1 | Vivien's Crocodile | m20 |
 | ~ gets +N/+N as long as you control a yanling planeswalker. | 1 | Celestial Messenger | m20 |
-| −N: chandra deals N damage to target creature and N damage to that creature's controller. | 1 | Chandra, Flame's Fury | m20 |
 | −N: until end of turn, each vampire you control gains "..." | 1 | Sorin, Vampire Lord | m20 |
 | −N: you may cast target instant or sorcery card with mana value N or less from your graveyard. if that spell would be put into your graveyard, exile it instead. | 1 | Chandra, Acolyte of Flame | m20 |
 

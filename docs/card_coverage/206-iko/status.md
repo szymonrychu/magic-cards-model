@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 7.9% |
-| Works (untested) | 97 | 42.5% |
+| Works (untested) | 98 | 43.0% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 91 | 39.9% |
+| Not working | 90 | 39.5% |
 
 ## Cards needing work
 
@@ -109,7 +109,6 @@
 | Dire Tactics | notice | Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flame Spill | notice | Flame Spill deals 4 damage to target creature. Excess damage is dealt to that creature's controller instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heightened Reflexes | notice | Target creature gets +1/+0 until end of turn. Put a first strike counter on it. | unparsed remainder: Put a first strike counter on it. | Y/Y/- | not_working |
-| Jubilant Skybonder | notice | Creatures you control with flying have "Spells your opponents cast that target this creature cost {2} more to cast." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lavabrink Venturer | notice | This creature has protection from each mana value of the chosen quality. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Monstrous Step | notice | Target creature gets +7/+7 until end of turn. Up to one other target creature blocks it this turn if able. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: Up to one other target creature blocks it this turn if able. | Y/Y/- | not_working |
 | Mythos of Illuna | notice | Create a token that's a copy of target permanent. If {R}{G} was spent to cast this spell, instead create a token that's a copy of that permanent, except the tok | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -180,6 +179,7 @@
 | Imposing Vantasaur | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Indatha Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Inspired Ultimatum | handled | Target player gains 5 life, Inspired Ultimatum deals 5 damage to any target, then you draw five cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jubilant Skybonder | handled | Creatures you control with flying have "Spells your opponents cast that target this creature cost {2} more to cast." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ketria Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Ketria Triome | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kogla, the Titan Ape | handled | When Kogla enters, it fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -281,7 +281,6 @@
 | choose odd or even. exile each creature with mana value of the chosen quality. (zero is even.) | 1 | Extinction Event | iko |
 | counter target spell that targets a permanent you control. draw a card. | 1 | Keep Safe | iko |
 | create a token that"..."s a copy of that permanent, except the token has "..." | 1 | Mythos of Illuna | iko |
-| creatures you control with flying have "..." | 1 | Jubilant Skybonder | iko |
 | creatures you control with trample have "..." | 1 | Proud Wildbonder | iko |
 | creatures you control with vigilance have "..." | 1 | Frondland Felidar | iko |
 | destroy target creature. put a menace counter on a creature you control. (it can't be blocked except by two or more creatures.) | 1 | Blood Curdle | iko |

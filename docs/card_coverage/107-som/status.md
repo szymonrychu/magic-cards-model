@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 10.7% |
-| Works (untested) | 123 | 57.2% |
+| Tested | 24 | 11.2% |
+| Works (untested) | 124 | 57.7% |
 | Partial (unaudited) | 8 | 3.7% |
-| Not working | 61 | 28.4% |
+| Not working | 59 | 27.4% |
 
 ## Cards needing work
 
@@ -71,7 +71,6 @@
 | Precursor Golem | silent | Whenever a player casts an instant or sorcery spell that targets only a single Golem, that player copies that spell for each other Golem that spell could target | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Prototype Portal | silent | {X}, {T}: Create a token that's a copy of the exiled card. X is the mana value of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Psychic Miasma | silent | Target player discards a card. If a land card is discarded this way, return Psychic Miasma to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Relic Putrescence | silent | Whenever enchanted artifact becomes tapped, its controller gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shape Anew | silent | The controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. That player puts that card | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul Parry | silent | Prevent all damage one or two target creatures would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strata Scythe | silent | Equipped creature gets +1/+1 for each land on the battlefield with the same name as the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -84,7 +83,6 @@
 | Vigil for the Lost | silent | Whenever a creature you control dies, you may pay {X}. If you do, you gain X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viridian Revel | silent | Whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Flesh Allergy | notice | As an additional cost to cast this spell, sacrifice a creature. Destroy target creature. Its controller loses life equal to the number of creatures that died th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Koth of the Hammer | notice | +1: Untap target Mountain. It becomes a 4/4 red Elemental creature until end of turn. It's still a land. | unparsed remainder: It's still a land. | Y/-/- | not_working |
 | Quicksilver Gargantuan | notice | You may have this creature enter as a copy of any creature on the battlefield, except it's 7/7. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Turn to Slag | notice | Turn to Slag deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Echo Circlet | unaudited | Equipped creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -177,6 +175,7 @@
 | Razor Hippogriff | handled | When this creature enters, return target artifact card from your graveyard to your hand. You gain life equal to that card's mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razorfield Thresher | handled |  |  | Y/-/- | not_tested |
 | Razorverge Thicket | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Relic Putrescence | handled | Whenever enchanted artifact becomes tapped, its controller gets a poison counter. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Revoke Existence | handled | Exile target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Saberclaw Golem | handled | {R}: This creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Salvage Scout | handled | {W}, Sacrifice this creature: Return target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -222,7 +221,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
@@ -230,6 +229,7 @@
 - Assault Strobe
 - Darkslick Shores
 - Galvanic Blast
+- Koth of the Hammer
 - Kuldotha Phoenix
 - Liquimetal Coating
 - Memnite
@@ -256,7 +256,6 @@
 |---|---|---|---|
 | Metalcraft | 8 | Auriok Sunchaser, Carapace Forger, Chrome Steed, Etched Champion, Ezuri's Brigade | som |
 | Imprint | 1 | Clone Shell | som |
-| +N: untap target mountain. it becomes a N/N red elemental creature until end of turn. it's still a land. | 1 | Koth of the Hammer | som |
 | as an additional cost to cast ~, sacrifice a creature. destroy target creature. its controller loses life equal to the number of creatures that died ~. | 1 | Flesh Allergy | som |
 | as long as ~ is equipped, it has first strike and lifelink. | 1 | Sunspear Shikari | som |
 | at the beginning of your upkeep, create a N/N white cat creature token for each equipment attached to kemba. | 1 | Kemba, Kha Regent | som |
@@ -289,7 +288,6 @@
 | whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | 1 | Viridian Revel | som |
 | whenever an opponent casts a spell, that player loses N life unless they discard a card. | 1 | Painful Quandary | som |
 | whenever another artifact you control enters, you may have ~ become a N/N bird artifact creature with flying until end of turn. | 1 | Glint Hawk Idol | som |
-| whenever enchanted artifact becomes tapped, its controller gets a poison counter. | 1 | Relic Putrescence | som |
 | whenever equipped creature becomes blocked by a creature, you may draw two cards. | 1 | Infiltration Lens | som |
 | whenever you cast an artifact spell, you may have target creature get +N/+N and gain deathtouch until end of turn. | 1 | Painsmith | som |
 | whenever ~ attacks, gain control of target equipment an opponent controls until end of turn. attach it to ~. when you lose control of that equipment, unattach i | 1 | Ogre Geargrabber | som |

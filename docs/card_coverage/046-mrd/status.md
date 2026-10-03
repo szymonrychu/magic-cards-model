@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 8.2% |
-| Works (untested) | 153 | 56.9% |
+| Works (untested) | 155 | 57.6% |
 | Partial (unaudited) | 9 | 3.3% |
-| Not working | 85 | 31.6% |
+| Not working | 83 | 30.9% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Dead-Iron Sledge | silent | Whenever equipped creature blocks or becomes blocked by a creature, destroy both creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Disarm | silent | Unattach all Equipment from target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Disciple of the Vault | silent | Whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dross Prowler | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Duplicant | silent | As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duskworker | silent | Whenever this creature becomes blocked, regenerate it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Empyrial Plate | silent | Equipped creature gets +1/+1 for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -89,7 +88,6 @@
 | Vulshok Gauntlets | silent | Equipped creature gets +4/+2 and doesn't untap during its controller's untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wanderguard Sentry | silent | When this creature enters, look at target opponent's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wizard Replica | silent | {U}, Sacrifice this creature: Counter target spell unless its controller pays {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Woebearer | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Worldslayer | silent | Whenever equipped creature deals combat damage to a player, destroy all permanents other than this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wrench Mind | silent | Target player discards two cards unless they discard an artifact card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blinding Beam | notice | Choose one — • Tap two target creatures. • Creatures don't untap during target player's next untap step. Entwine {1} (Choose both if you pay the entwine cost.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -140,6 +138,7 @@
 | Deconstruct | handled | Destroy target artifact. Add {G}{G}{G}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dream's Grip | handled | Choose one — • Tap target permanent. • Untap target permanent. Entwine {1} (Choose both if you pay the entwine cost.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dross Harvester | handled | At the beginning of your end step, you lose 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dross Prowler | handled | Fear | machines/keywords.py | Y/-/- | not_tested |
 | Dross Scorpion | handled | Whenever this creature or another artifact creature dies, you may untap target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elf Replica | handled | {1}{G}, Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Extraplanar Lens | handled | Imprint — When this artifact enters, you may exile target land you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -272,6 +271,7 @@
 | Vulshok Berserker | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Wall of Blood | handled | Pay 1 life: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | War Elemental | handled | When this creature enters, sacrifice it unless an opponent was dealt damage this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Woebearer | handled | Whenever this creature deals combat damage to a player, you may return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wurmskin Forger | handled | When this creature enters, distribute three +1/+1 counters among one, two, or three target creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
@@ -310,7 +310,6 @@
 |---|---|---|---|
 | Choose one | 5 | Blinding Beam, Grab the Reins, Incite War, Journey of Discovery, Wail of the Nim | mrd |
 | whenever ~ attacks or blocks, remove a +N/+N counter from it at end of combat. | 4 | Clockwork Beetle, Clockwork Condor, Clockwork Dragon, Clockwork Vorrac | mrd |
-| fear | 2 | Dross Prowler, Woebearer | mrd |
 | Imprint | 1 | Thought Prison | mrd |
 | all creatures able to block target creature ~ do so. | 1 | Bloodscent | mrd |
 | artifacts you control have hexproof. | 1 | Leonin Abunas | mrd |

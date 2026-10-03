@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 12.3% |
+| Tested | 32 | 12.7% |
 | Works (untested) | 106 | 42.1% |
 | Partial (unaudited) | 9 | 3.6% |
-| Not working | 106 | 42.1% |
+| Not working | 105 | 41.7% |
 
 ## Cards needing work
 
@@ -124,7 +124,6 @@
 | Gleeful Demolition | notice | Destroy target artifact. If you controlled that artifact, create three 1/1 red Phyrexian Goblin creature tokens. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hexgold Slash | notice | Hexgold Slash deals 2 damage to target creature. If that creature has toxic, Hexgold Slash deals 4 damage to that creature instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kethek, Crucible Goliath | notice | At the beginning of your end step, you may sacrifice another creature. If you do, reveal cards from the top of your library until you reveal a nonlegendary crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Noxious Assault | notice | Creatures you control get +2/+2 until end of turn. Whenever a creature blocks this turn, its controller gets a poison counter. | unparsed remainder: Whenever a creature blocks this turn, its controller gets a poison counter. | Y/Y/- | not_working |
 | Orthodoxy Enforcer | notice | This creature gets +2/+0 as long as you control two or more artifacts. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Porcelain Zealot | notice | At the beginning of combat on your turn, target creature you control gets +1/+1 until end of turn. If that creature has toxic, instead it gets +2/+2 until end o | unparsed remainder: If that creature has toxic, instead it gets +2/+2 until end of turn. | Y/Y/- | not_working |
 | Rebel Salvo | notice | Affinity for Equipment (This spell costs {1} less to cast for each Equipment you control.) Rebel Salvo deals 5 damage to target creature or planeswalker. That p | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -251,7 +250,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>32 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
@@ -271,6 +270,7 @@
 - Myr Convert
 - Nahiri, the Unforgiving
 - Nissa, Ascended Animist
+- Noxious Assault
 - Prosthetic Injector
 - Sheoldred's Edict
 - Skyscythe Engulfer
@@ -314,7 +314,6 @@
 | counter target spell unless its controller pays {M}. corrupted — counter that spell instead if its controller has three or more poison counters. | 1 | Bring the Ending | one |
 | counter target spell. if that spell's mana value was N or less, proliferate. (choose any number of permanents and/or players, then give each another counter of  | 1 | Reject Imperfection | one |
 | create a N/N green phyrexian beast creature token with toxic N. (players dealt combat damage by it also get a poison counter.) corrupted — as long as an opponen | 1 | Viral Spawning | one |
-| creatures you control get +N/+N until end of turn. whenever a creature blocks ~, its controller gets a poison counter. | 1 | Noxious Assault | one |
 | creatures you control that are equipped get +N/+N. | 1 | Hexgold Hoverwings | one |
 | creatures you control with oil counters on them get +N/+N. | 1 | Ichorplate Golem | one |
 | destroy target artifact, enchantment, or creature with flying. if that permanent's mana value was N or less, proliferate. (choose any number of permanents and/o | 1 | Carnivorous Canopy | one |

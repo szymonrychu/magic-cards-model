@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 14.3% |
+| Tested | 39 | 15.1% |
 | Works (untested) | 120 | 46.5% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 89 | 34.5% |
+| Not working | 87 | 33.7% |
 
 ## Cards needing work
 
@@ -109,8 +109,6 @@
 | Yusri, Fortune's Flame | silent | Whenever Yusri attacks, choose a number between 1 and 5. Flip that many coins. For each flip you win, draw a card. For each flip you lose, Yusri deals 2 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zabaz, the Glimmerwasp | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Blacksmith's Skill | notice | Target permanent gains hexproof and indestructible until end of turn. If it's an artifact creature, it gets +2/+2 until end of turn. | unparsed remainder: If it's an artifact creature, it gets +2/+2 until end of turn. | Y/-/- | not_working |
-| Breathless Knight | notice | Whenever this creature or another creature you control enters, if that creature entered from a graveyard or you cast it from a graveyard, put a +1/+1 counter on | unread intervening "if": "that creature entered from a graveyard or you cast it from a graveyard" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/-/- | not_working |
-| Fae Offering | notice | At the beginning of each end step, if you've cast both a creature spell and a noncreature spell this turn, create a Clue token, a Food token, and a Treasure tok | unread intervening "if": "you've cast both a creature spell and a noncreature spell this turn" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/-/- | not_working |
 | Flay Essence | notice | Exile target creature or planeswalker. You gain life equal to the number of counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mount Velus Manticore | notice | At the beginning of combat on your turn, you may discard a card. When you do, this creature deals X damage to any target, where X is the number of card types th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unmarked Grave | notice | Search your library for a nonlegendary card, put that card into your graveyard, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -251,18 +249,20 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>39 cards</summary>
 
 - Abiding Grace
 - Archon of Cruelty
 - Blazing Rootwalla
 - Blossoming Calm
+- Breathless Knight
 - Chatterfang, Squirrel General
 - Dauthi Voidwalker
 - Dragon's Rage Channeler
 - Dress Down
 - Echoing Return
 - Endurance
+- Fae Offering
 - Gilt-Blade Prowler
 - Glorious Enforcer
 - Grief
@@ -309,7 +309,6 @@
 | aftermath | 1 | Road // Ruin | mh2 |
 | as ~ enters, choose a card type. | 1 | Serra's Emissary | mh2 |
 | at the beginning of combat on your turn, you may discard a card. when you do, ~ deals N damage to any target, where N is the number of card types the discarded  | 1 | Mount Velus Manticore | mh2 |
-| at the beginning of each end step, if you've cast both a creature spell and a noncreature spell ~, create a clue token, a food token, and a treasure token. | 1 | Fae Offering | mh2 |
 | at the beginning of your upkeep, if ~ is in your graveyard, you may pay N life. if you do, return it to your hand. | 1 | Master of Death | mh2 |
 | at the beginning of your upkeep, sacrifice piru unless you pay {M}{M}{M}. | 1 | Piru, the Volatile | mh2 |
 | bushido | 1 | Jade Avenger | mh2 |
@@ -373,7 +372,6 @@
 | whenever you win a coin flip, create two treasure tokens. | 1 | Tavern Scoundrel | mh2 |
 | whenever yusri attacks, choose a number between N and N. flip that many coins. for each flip you win, draw a card. for each flip you lose, yusri deals N damage  | 1 | Yusri, Fortune's Flame | mh2 |
 | whenever ~ attacks, flip three coins. for each flip you win, create a N/N red goblin creature token that's tapped and attacking. | 1 | Goblin Traprunner | mh2 |
-| whenever ~ or another creature you control enters, if that creature entered from a graveyard or you cast it from a graveyard, put a +N/+N counter on ~. | 1 | Breathless Knight | mh2 |
 | {M}, sacrifice N clues: target opponent reveals the top N cards of their library. you may put a nonland permanent card with mana value N or less from among them | 1 | Lonis, Cryptozoologist | mh2 |
 | {M}: choose a card name that hasn't been chosen from among disenchant, braingeyser, terror, shivan dragon, regrowth, and black lotus. create a copy of the card  | 1 | Garth One-Eye | mh2 |
 | {M}{M}{M}: put enchanted creature into its owner's library third from the top. | 1 | Shattered Ego | mh2 |

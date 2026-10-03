@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 16.0% |
-| Works (untested) | 98 | 52.4% |
+| Works (untested) | 99 | 52.9% |
 | Partial (unaudited) | 13 | 7.0% |
-| Not working | 46 | 24.6% |
+| Not working | 45 | 24.1% |
 
 ## Cards needing work
 
@@ -68,7 +68,6 @@
 | Hide on the Ceiling | notice | Exile X target artifacts and/or creatures. Return the exiled cards to the battlefield under their owners' control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kraven's Last Hunt | notice | I — Mill five cards. When you do, this Saga deals damage equal to the greatest power among creature cards in your graveyard to target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Origin of Spider-Man | notice | II — Put a +1/+1 counter on target creature you control. It becomes a legendary Spider Hero in addition to its other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Shocker, Unshakable | notice | Vibro-Shock Gauntlets — When Shocker enters, he deals 2 damage to target creature and 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Skyward Spider | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Terrific Team-Up | notice | This spell costs {2} less to cast if you control a permanent with mana value 4 or greater. One or two target creatures you control each get +1/+0 until end of t | unparsed remainder: This spell costs {2} less to cast if you control a permanent with mana value 4 or greater. They each deal damage equal to their power to target creature an opponent controls. | Y/Y/Y | not_working |
 | Thwip! | notice | Target creature gets +2/+2 and gains flying until end of turn. If it's a Spider, you gain 2 life. | unparsed remainder: If it's a Spider, you gain 2 life. | Y/Y/Y | not_working |
@@ -142,6 +141,7 @@
 | Scorpion's Sting | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scorpion, Seething Striker | handled | At the beginning of your end step, if a creature died this turn, target creature you control connives. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Secret Identity | handled | Choose one — • Conceal — Until end of turn, target creature you control becomes a Citizen with base power and toughness 1/1 and gains hexproof. • Reveal — Until | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Shocker, Unshakable | handled | During your turn, Shocker has first strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shriek, Treblemaker | handled | At the beginning of your first main phase, you may discard a card. When you do, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Silk, Web Weaver | handled | Whenever you cast a creature spell, create a 1/1 green and white Human Citizen creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Silver Sable, Mercenary Leader | handled | When Silver Sable enters, put a +1/+1 counter on another target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -256,7 +256,6 @@
 | target creature you control gets +N/+N until end of turn. it fights target creature an opponent controls. when excess damage is dealt to the creature an opponen | 1 | Rhino's Rampage | spm |
 | top of the food chain — kraven's power is equal to the greatest mana value among permanents you control. | 1 | Kraven, Proud Predator | spm |
 | until your next turn, each creature attacks each combat if able and attacks a player other than you if able. | 1 | Maximum Carnage | spm |
-| vibro-shock gauntlets — when shocker enters, he deals N damage to target creature and N damage to that creature's controller. | 1 | Shocker, Unshakable | spm |
 | when black cat enters, look at the top nine cards of target opponent's library, exile two of them face down, then put the rest on the bottom of their library in | 1 | Black Cat, Cunning Thief | spm |
 | when carnage enters, return target creature card with mana value N or less from your graveyard to the battlefield. it gains "..." and "..." | 1 | Carnage, Crimson Chaos | spm |
 | when molten man leaves the battlefield, sacrifice a land. | 1 | Molten Man, Inferno Incarnate | spm |

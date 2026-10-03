@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 8.8% |
-| Works (untested) | 87 | 54.4% |
+| Works (untested) | 88 | 55.0% |
 | Partial (unaudited) | 8 | 5.0% |
-| Not working | 51 | 31.9% |
+| Not working | 50 | 31.2% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Everflame Eidolon | notice | {R}: This creature gets +1/+0 until end of turn. If it's an Aura, enchanted creature gets +1/+0 until end of turn instead. | unparsed remainder: If it's an Aura, enchanted creature gets +1/+0 until end of turn instead. | Y/Y/- | not_working |
 | Eye Gouge | notice | Target creature gets -1/-1 until end of turn. If it's a Cyclops, destroy it. | unparsed remainder: If it's a Cyclops, destroy it. | Y/Y/- | not_working |
 | Fated Return | notice | Put target creature card from a graveyard onto the battlefield under your control. It gains indestructible. If it's your turn, scry 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Felhide Spiritbinder | notice | Inspired — Whenever this creature becomes untapped, you may pay {1}{R}. If you do, create a token that's a copy of another target creature, except it's an encha | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ragemonger | notice | Minotaur spells you cast cost {B}{R} less to cast. This effect reduces only the amount of colored mana you pay. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Retraction Helix | notice | Until end of turn, target creature gains "{T}: Return target nonland permanent to its owner's hand." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Satyr Firedancer | notice | Whenever an instant or sorcery spell you control deals damage to an opponent, this creature deals that much damage to target creature that player controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -112,6 +111,7 @@
 | Fated Conflagration | handled | Fated Conflagration deals 5 damage to target creature or planeswalker. If it's your turn, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fated Infatuation | handled | Create a token that's a copy of target creature you control. If it's your turn, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fearsome Temper | handled | Enchanted creature gets +2/+2 and has "{2}{R}: Target creature can't block this creature this turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Felhide Spiritbinder | handled | Inspired — Whenever this creature becomes untapped, you may pay {1}{R}. If you do, create a token that's a copy of another target creature, except it's an encha | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forsaken Drifters | handled | When this creature dies, mill four cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ghostblade Eidolon | handled | Enchanted creature gets +1/+1 and has double strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glimpse the Sun God | handled | Tap X target creatures. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -199,7 +199,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Inspired | 9 | Aerie Worshippers, Arbiter of the Ideal, Felhide Spiritbinder, Forlorn Pseudamma, God-Favored General | bng |
+| Inspired | 8 | Aerie Worshippers, Arbiter of the Ideal, Forlorn Pseudamma, God-Favored General, Pheres-Band Raiders | bng |
 | Heroic | 1 | Hero of Leina Tower | bng |
 | +N: until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | 1 | Kiora, the Crashing Wave | bng |
 | all creatures able to block ~ or enchanted creature do so. | 1 | Noble Quarry | bng |

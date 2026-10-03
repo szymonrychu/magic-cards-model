@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 9.9% |
-| Works (untested) | 94 | 51.6% |
+| Tested | 19 | 10.4% |
+| Works (untested) | 97 | 53.3% |
 | Partial (unaudited) | 10 | 5.5% |
-| Not working | 60 | 33.0% |
+| Not working | 56 | 30.8% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Heartfire Immolator | silent | {R}, Sacrifice this creature: It deals damage equal to its power to target creature or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hooded Blightfang | silent | Whenever a creature you control with deathtouch deals damage to a planeswalker, destroy that planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Idol of Endurance | silent | When this artifact enters, exile all creature cards with mana value 3 or less from your graveyard until this artifact leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jolrael, Mwonvuli Recluse | silent | {4}{G}{G}: Until end of turn, creatures you control have base power and toughness X/X, where X is the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kaervek, the Spiteful | silent | Other creatures get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Scrounger | silent | At the beginning of each end step, if a creature died this turn, you may put a loyalty counter on a Liliana planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Standard Bearer | silent | When this creature enters, draw X cards, where X is the number of creatures that died under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,15 +71,12 @@
 | Unleash Fury | silent | Double the power of target creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warded Battlements | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alchemist's Gift | notice | Target creature gets +1/+1 and gains your choice of deathtouch or lifelink until end of turn. (Any amount of damage a creature with deathtouch deals to a creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Basri's Aegis | notice | Put a +1/+1 counter on each of up to two target creatures. You may search your library and/or graveyard for a card named Basri, Devoted Paladin, reveal it, and  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Carrion Grub | notice | This creature gets +X/+0, where X is the greatest power among creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crypt Lurker | notice | When this creature enters, you may sacrifice a creature or discard a creature card. If you do, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire Fleet Warmonger | notice | At the beginning of combat on your turn, you may sacrifice another creature. If you do, this creature gets +2/+2 and gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Liliana's Scorn | notice | Destroy target creature. You may search your library and/or graveyard for a card named Liliana, Death Mage, reveal it, and put it into your hand. If you search  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Niambi, Esteemed Speaker | notice | When Niambi enters, you may return another target creature you control to its owner's hand. If you do, you gain life equal to that creature's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pestilent Haze | notice | Choose one — • All creatures get -2/-2 until end of turn. • Remove two loyalty counters from each planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Predatory Wurm | notice | This creature gets +2/+2 as long as you control a Garruk planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Pursued Whale | notice | Spells your opponents cast that target this creature cost {3} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rookie Mistake | notice | Until end of turn, target creature gets +0/+2 and another target creature gets -2/-0. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sigiled Contender | notice | This creature has lifelink as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Soul Sear | notice | Soul Sear deals 5 damage to target creature or planeswalker. That permanent loses indestructible until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -103,6 +99,7 @@
 | Anointed Chorister | handled | {4}{W}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bad Deal | handled | You draw two cards and each opponent discards two cards. Each player loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Basri's Acolyte | handled | When this creature enters, put a +1/+1 counter on each of up to two other target creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Basri's Aegis | handled | Put a +1/+1 counter on each of up to two target creatures. You may search your library and/or graveyard for a card named Basri, Devoted Paladin, reveal it, and  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Basri, Devoted Paladin | handled | +1: Put a +1/+1 counter on up to one target creature. It gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood Glutton | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Bolt Hound | handled | Whenever this creature attacks, other creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -132,12 +129,14 @@
 | Igneous Cur | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Indulging Patrician | handled | At the beginning of your end step, if you gained 3 or more life this turn, each opponent loses 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Invigorating Surge | handled | Put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jolrael, Mwonvuli Recluse | handled | Whenever you draw your second card each turn, create a 2/2 green Cat creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keen Glidemaster | handled | {2}{U}: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keral Keep Disciples | handled | Whenever you activate a loyalty ability of a Chandra planeswalker, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leafkin Avenger | handled | {7}{R}: This creature deals damage equal to its power to target player or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Library Larcenist | handled | Whenever this creature attacks, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Light of Promise | handled | Enchanted creature has "Whenever you gain life, put that many +1/+1 counters on this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liliana's Devotee | handled | Zombies you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Liliana's Scorn | handled | Destroy target creature. You may search your library and/or graveyard for a card named Liliana, Death Mage, reveal it, and put it into your hand. If you search  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liliana's Steward | handled | {T}, Sacrifice this creature: Target opponent discards a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Llanowar Visionary | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lofty Denial | handled | Counter target spell unless its controller pays {1}. If you control a creature with flying, counter that spell unless its controller pays {4} instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -194,7 +193,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -207,6 +206,7 @@
 - Liliana, Waker of the Dead
 - Mazemind Tome
 - Peer into the Abyss
+- Pursued Whale
 - Sanctum of Fruitful Harvest
 - Sanctum of Tranquil Light
 - Speaker of the Heavens
@@ -233,7 +233,6 @@
 | choose a card name other than a basic land card name. search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | 1 | Necromentia | m21 |
 | create an N/N blue and red weird creature token, where N is the number of instant and sorcery cards in your graveyard. then you may return an instant or sorcery | 1 | Experimental Overload | m21 |
 | creature spells with flying you cast cost {M} less to cast. | 1 | Watcher of the Spheres | m21 |
-| destroy target creature. you may search your library and/or graveyard for a card named liliana, death mage, reveal it, and put it into your hand. if you search  | 1 | Liliana's Scorn | m21 |
 | discard a card: tap ~. it gains indestructible until end of turn. | 1 | Seasoned Hallowblade | m21 |
 | double the power of target creature until end of turn. | 1 | Unleash Fury | m21 |
 | draw a card, then draw cards equal to the number of cards named ~ in your graveyard. | 1 | Frantic Inventory | m21 |
@@ -246,8 +245,6 @@
 | other cats you control get +N/+N and have protection from dogs. | 1 | Feline Sovereign | m21 |
 | other creatures get -N/-N. | 1 | Kaervek, the Spiteful | m21 |
 | play with the top card of your library revealed. | 1 | Conspicuous Snoop | m21 |
-| put a +N/+N counter on each of up to two target creatures. you may search your library and/or graveyard for a card named basri, devoted paladin, reveal it, and  | 1 | Basri's Aegis | m21 |
-| spells your opponents cast that target ~ cost {M} more to cast. | 1 | Pursued Whale | m21 |
 | target creature gets +N/+N and gains your choice of deathtouch or lifelink until end of turn. (any amount of damage a creature with deathtouch deals to a creatu | 1 | Alchemist's Gift | m21 |
 | triple | 1 | Fiery Emancipation | m21 |
 | until end of turn, target creature gets +N/+N and another target creature gets -N/-N. | 1 | Rookie Mistake | m21 |
@@ -278,7 +275,6 @@
 | you may look at the top card of your library any time, and you may play lands from the top of your library. | 1 | Radha, Heart of Keld | m21 |
 | you may spend mana as though it were mana of any color. | 1 | Chromatic Orrery | m21 |
 | {M}, sacrifice ~: it deals damage equal to its power to target creature or planeswalker. | 1 | Heartfire Immolator | m21 |
-| {M}{M}{M}: until end of turn, creatures you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Jolrael, Mwonvuli Recluse | m21 |
 | ~ can block only creatures with flying. | 1 | Shacklegeist | m21 |
 | ~ costs {M}{M} less to cast if you've cast an instant or sorcery spell ~. | 1 | Stormwing Entity | m21 |
 | ~ deals N damage to target creature or planeswalker. that permanent loses indestructible until end of turn. | 1 | Soul Sear | m21 |

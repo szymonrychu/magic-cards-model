@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 13 | 8.8% |
-| Works (untested) | 56 | 37.8% |
+| Works (untested) | 57 | 38.5% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 72 | 48.6% |
+| Not working | 71 | 48.0% |
 
 ## Cards needing work
 
@@ -62,7 +62,6 @@
 | Notorious Throng | silent | Prowl {5}{U} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Create X 1/1 black Faerie Rogue creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orchard Warden | silent | Whenever another Treefolk creature you control enters, you may gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Preeminent Captain | silent | Whenever this creature attacks, you may put a Soldier creature card from your hand onto the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Prickly Boggart | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Pulling Teeth | silent | Clash with an opponent. If you win, target player discards two cards. Otherwise, that player discards a card. (Each clashing player reveals the top card of thei | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pyroclast Consul | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rage Forger | silent | When this creature enters, put a +1/+1 counter on each other Shaman creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -138,6 +137,7 @@
 | Nevermaker | handled | When this creature leaves the battlefield, put target nonland permanent on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Offalsnout | handled | When this creature leaves the battlefield, exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Order of the Golden Cricket | handled | Whenever this creature attacks, you may pay {W}. If you do, it gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Prickly Boggart | handled | Fear | machines/keywords.py | Y/-/- | not_tested |
 | Primal Beyond | handled | As this land enters, you may reveal an Elemental card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reach of Branches | handled | Create a 2/5 green Treefolk Shaman creature token. Whenever a Forest you control enters, you may return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reveillark | handled | When this creature leaves the battlefield, return up to two target creature cards with power 2 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -207,7 +207,6 @@
 | each other wizard creature you control enters with an additional +N/+N counter on it. | 1 | Sage of Fables | mor |
 | enchanted creature can't attack. | 1 | Weight of Conscience | mor |
 | enchanted land has "..." | 1 | Hostile Realm | mor |
-| fear | 1 | Prickly Boggart | mor |
 | goblin spells and rogue spells you cast cost {M} less to cast. | 1 | Frogtosser Banneret | mor |
 | if a source would deal damage to a player, you may prevent N of that damage, where N is the number of clerics you control. | 1 | Battletide Alchemist | mor |
 | kithkin spells and soldier spells you cast cost {M} less to cast. | 1 | Ballyrush Banneret | mor |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 6.4% |
-| Works (untested) | 126 | 54.1% |
+| Works (untested) | 127 | 54.5% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 81 | 34.8% |
+| Not working | 80 | 34.3% |
 
 ## Cards needing work
 
@@ -97,7 +97,6 @@
 | Draconic Roar | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. Draconic Roar deals 3 damage to target creature. If you revealed a Dragon | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dromoka's Command | notice | Choose two — • Prevent all damage target instant or sorcery spell would deal this turn. • Target player sacrifices an enchantment of their choice. • Put a +1/+1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Foul Renewal | notice | Return target creature card from your graveyard to your hand. Target creature gets -X/-X until end of turn, where X is the toughness of the card returned this w | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Icefall Regent | notice | Spells your opponents cast that target this creature cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lightwalker | notice | This creature has flying as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror Mockery | notice | Whenever enchanted creature attacks, you may create a token that's a copy of that creature. Exile that token at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ojutai Exemplars | notice | Whenever you cast a noncreature spell, choose one — • Tap target creature. • This creature gains first strike and lifelink until end of turn. • Exile this creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -170,6 +169,7 @@
 | Hand of Silumgar | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Haven of the Spirit Dragon | handled | {2}, {T}, Sacrifice this land: Return target Dragon creature card or Ugin planeswalker card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hidden Dragonslayer | handled | When this creature is turned face up, destroy target creature with power 4 or greater an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Icefall Regent | handled | When this creature enters, tap target creature an opponent controls. That creature doesn't untap during its controller's untap step for as long as you control t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspiring Call | handled | Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn. (Damage and effects that say "destr | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ire Shaman | handled | When this creature is turned face up, exile the top card of your library. Until end of turn, you may play that card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kolaghan Forerunners | handled | Kolaghan Forerunners's power is equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -302,7 +302,6 @@
 | prevent all combat damage that would be dealt ~. you may look at each face-down creature that's attacking or blocking. | 1 | Revealing Wind | dtk |
 | return target creature card from your graveyard to your hand. target creature gets -N/-N until end of turn, where N is the toughness of the card returned ~. | 1 | Foul Renewal | dtk |
 | return target instant or sorcery card from your graveyard to your hand. ~ deals damage equal to that card's mana value to each creature your opponents control.  | 1 | Volcanic Vision | dtk |
-| spells your opponents cast that target ~ cost {M} more to cast. | 1 | Icefall Regent | dtk |
 | target creature gets +N/+N and gains lifelink until end of turn. regenerate it. (damage dealt by a creature with lifelink also causes its controller to gain tha | 1 | Butcher's Glee | dtk |
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Taigam's Strike | dtk |
 | target creature you control gains protection from the color of your choice until end of turn. rebound (if you cast ~ from your hand, exile it as it resolves. at | 1 | Center Soul | dtk |

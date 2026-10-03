@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 59 | 21.5% |
-| Works (untested) | 134 | 48.7% |
+| Tested | 62 | 22.5% |
+| Works (untested) | 135 | 49.1% |
 | Partial (unaudited) | 13 | 4.7% |
-| Not working | 69 | 25.1% |
+| Not working | 65 | 23.6% |
 
 ## Cards needing work
 
@@ -84,16 +84,12 @@
 | Zoyowa's Justice | silent | The owner of target artifact or creature with mana value 1 or greater shuffles it into their library. Then that player discovers X, where X is its mana value. ( | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bonehoard Dracosaur | notice | At the beginning of your upkeep, exile the top two cards of your library. You may play them this turn. If you exiled a land card this way, create a 3/1 red Dino | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Brackish Blunder | notice | Return target creature to its owner's hand. If it was tapped, create a Map token. (It's an artifact with "{1}, {T}, Sacrifice this token: Target creature you co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Cosmium Confluence | notice | Choose three. You may choose the same mode more than once. • Search your library for a Cave card, put it onto the battlefield tapped, then shuffle. • Put three  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Disturbed Slumber | notice | Until end of turn, target land you control becomes a 4/4 Dinosaur creature with reach and haste. It's still a land. It must be blocked this turn if able. | unparsed remainder: It must be blocked this turn if able. | Y/Y/Y | not_working |
 | Grasping Shadows // Shadows' Lair | notice | Whenever a creature you control attacks alone, it gains deathtouch and lifelink until end of turn. Put a dread counter on this enchantment. Then if there are th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Itzquinth, Firstborn of Gishath | notice | When Itzquinth enters, you may pay {2}. When you do, target Dinosaur you control deals damage equal to its power to another target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kutzil's Flanker | notice | When this creature enters, choose one — • Put a +1/+1 counter on this creature for each creature that left the battlefield under your control this turn. • You g | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Malicious Eclipse | notice | All creatures get -2/-2 until end of turn. If a creature an opponent controls would die this turn, exile it instead. | unparsed remainder: If a creature an opponent controls would die this turn, exile it instead. | Y/Y/Y | not_working |
 | Quintorius Kand | notice | −6: Exile any number of target cards from your graveyard. Add {R} for each card exiled this way. You may play those cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Saheeli, the Sun's Brilliance | notice | {U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains h | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Scampering Surveyor | notice | When this creature enters, search your library for a basic land card or Cave card, put it onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Tendril of the Mycotyrant | notice | {5}{G}{G}: Put seven +1/+1 counters on target noncreature land you control. It becomes a 0/0 Fungus creature with haste. It's still a land. | unparsed remainder: It's still a land. | Y/Y/Y | not_working |
 | The Enigma Jewel // Locus of Enlightenment | notice | Locus of Enlightenment has each activated ability of the exiled cards used to craft it. You may activate each of those abilities only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Bedrock Tortoise | unaudited | During your turn, creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Bloodletter of Aclazotz | unaudited | If an opponent would lose life during your turn, they lose twice that much life instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -214,6 +210,7 @@
 | River Herald Scout | handled | When this creature enters, it explores. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Runaway Boulder | handled | When this artifact enters, it deals 6 damage to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sage of Days | handled | When this creature enters, look at the top three cards of your library. You may put one of those cards back on top of your library. Put the rest into your grave | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Saheeli, the Sun's Brilliance | handled | {U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains h | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sanguine Evangelist | handled | When this creature enters or dies, create a 1/1 black Bat creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Screaming Phantom | handled | Whenever this creature attacks, mill a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Seeker of Sunlight | handled | {2}{G}: This creature explores. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -246,7 +243,7 @@
 ## Fully supported
 
 <details>
-<summary>59 cards</summary>
+<summary>62 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
@@ -263,6 +260,7 @@
 - Chimil, the Inner Sun
 - Clay-Fired Bricks // Cosmium Kiln
 - Coati Scavenger
+- Cosmium Confluence
 - Deep-Cavern Bat
 - Deeproot Pilgrimage
 - Didact Echo
@@ -276,6 +274,7 @@
 - Ghalta, Stampede Tyrant
 - Glimpse the Core
 - Greedy Freebooter
+- Malicious Eclipse
 - Market Gnome
 - Master's Guide-Mural // Master's Manufactory
 - Miner's Guidewing
@@ -297,6 +296,7 @@
 - Spyglass Siren
 - Starving Revenant
 - Sunken Citadel
+- Tendril of the Mycotyrant
 - The Millennium Calendar
 - The Mycotyrant
 - Threefold Thunderhulk
@@ -316,7 +316,6 @@
 |---|---|---|---|
 | Fathomless descent | 5 | Chupacabra Echo, Matzalantli, the Great Door // The Core, Song of Stupefaction, Squirming Emergence, Terror Tide | lci |
 | explore | 3 | Deepfathom Echo, Defossilize, Glowcap Lantern | lci |
-| all creatures get -N/-N until end of turn. if a creature an opponent controls would die ~, exile it instead. | 1 | Malicious Eclipse | lci |
 | as an additional cost to cast ~, discard a card or sacrifice a permanent. | 1 | Souls of the Lost | lci |
 | as an additional cost to cast ~, tap four untapped artifacts, creatures, and/or lands you control. | 1 | Guardian of the Great Door | lci |
 | as long as an artifact entered the battlefield under your control ~, ~ can attack as though it didn't have defender. | 1 | Shipwreck Sentry | lci |
@@ -326,7 +325,6 @@
 | at the beginning of your end step, if you descended ~, each opponent may discard a card or sacrifice a permanent of their choice. zoyowa deals N damage to each  | 1 | Zoyowa Lava-Tongue | lci |
 | at the beginning of your upkeep, exile the top two cards of your library. you may play them ~. if you exiled a land card ~, create a N/N red dinosaur creature t | 1 | Bonehoard Dracosaur | lci |
 | choose target creature you control and target creature you don't control. if the creature you control entered ~, put a +N/+N counter on it. then those creatures | 1 | Malamet Battle Glyph | lci |
-| choose three. you may choose the same mode more than once. • search your library for a cave card, put it onto the battlefield tapped, then shuffle. • put three  | 1 | Cosmium Confluence | lci |
 | counter target artifact or creature spell. discover N, where N is that spell's mana value. (exile cards from the top of your library until you exile a nonland c | 1 | Hurl into History | lci |
 | create N map tokens, where N is one plus the number of opponents who control an artifact. (then exile ~. you may cast the creature later from exile.) | 1 | Kellan, Daring Traveler // Journey On | lci |
 | descend N — choose one. if there are eight or more permanent cards in your graveyard as you cast ~, choose one or more instead. • return target nonland permanen | 1 | Wail of the Forgotten | lci |
@@ -381,11 +379,9 @@
 | you may mill two cards. then return up to two creature cards from your graveyard to your hand. (to mill two cards, put the top two cards of your library into yo | 1 | Another Chance | lci |
 | {M}: add one mana of any of the exiled cards' colors. | 1 | Pit of Offerings | lci |
 | {M}: you may cast a creature spell from your graveyard ~. if you do, it enters with a finality counter on it and is a vampire in addition to its other types. | 1 | Tarrian's Journal // The Tomb of Aclazotz | lci |
-| {M}{M}, {M}: create a token that"..."s an artifact in addition to its other types. it gains haste. sacrifice it at the beginning of the next end step. | 1 | Saheeli, the Sun's Brilliance | lci |
 | {M}{M}, {M}: look at the top four cards of your library. you may reveal a creature card from among them and put that card into your hand. put the rest on the bo | 1 | Twists and Turns // Mycoid Maze | lci |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Cavern Stomper | lci |
 | {M}{M}{M}: draw a card, then discard a card. when you discard a card ~, target player mills cards equal to its mana value. | 1 | The Ancient One | lci |
-| {M}{M}{M}: put seven +N/+N counters on target noncreature land you control. it becomes a N/N fungus creature with haste. it's still a land. | 1 | Tendril of the Mycotyrant | lci |
 | ~ can't be blocked except by three or more creatures. | 1 | Rampaging Ceratops | lci |
 | ~ deals damage to target creature equal to N or the greatest power among dinosaurs you control, whichever is greater. | 1 | Triumphant Chomp | lci |
 | ~ is the chosen type in addition to its other types. | 1 | Roaming Throne | lci |

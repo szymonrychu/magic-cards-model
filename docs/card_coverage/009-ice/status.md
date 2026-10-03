@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 14.3% |
+| Tested | 6 | 17.1% |
 | Works (untested) | 19 | 54.3% |
 | Partial (unaudited) | 2 | 5.7% |
-| Not working | 9 | 25.7% |
+| Not working | 8 | 22.9% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Merieke Ri Berit | silent | {T}: Gain control of target creature for as long as you control Merieke Ri Berit. When Merieke Ri Berit leaves the battlefield or becomes untapped, destroy that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orcish Librarian | silent | {R}, {T}: Look at the top eight cards of your library. Exile four of them at random, then put the rest on top of your library in any order. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wrath of Marit Lage | silent | When this enchantment enters, tap all red creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Karplusan Yeti | notice | {T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Lhurgoyf | unaudited | Lhurgoyf's power is equal to the number of creature cards in all graveyards and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Zur's Weirding | unaudited | Players play with their hands revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abyssal Specter | handled | Whenever this creature deals damage to a player, that player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -60,9 +59,10 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
 - Karplusan Forest
+- Karplusan Yeti
 - Pyroclasm
 - Snow-Covered Forest
 - Snow-Covered Island
@@ -82,7 +82,6 @@
 | {M}, {M}: look at the top eight cards of your library. exile four of them at random, then put the rest on top of your library in any order. | 1 | Orcish Librarian | ice |
 | {M}: all combat damage that would be dealt to you by unblocked creatures ~ is dealt to ~ instead. | 1 | Kjeldoran Royal Guard | ice |
 | {M}: gain control of target creature for as long as you control ~. when ~ leaves the battlefield or becomes untapped, destroy that creature. it can't be regener | 1 | Merieke Ri Berit | ice |
-| {M}: ~ deals damage equal to its power to target creature. that creature deals damage equal to its power to ~. | 1 | Karplusan Yeti | ice |
 | ~ deals N damage to any target. a creature dealt damage ~ can't be regenerated ~. | 1 | Incinerate | ice |
 | ~'s power is equal to the number of creature cards in all graveyards and its toughness is equal to that number plus N. | 1 | Lhurgoyf | ice |
 

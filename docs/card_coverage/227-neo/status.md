@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 10.5% |
+| Tested | 30 | 11.2% |
 | Works (untested) | 119 | 44.6% |
 | Partial (unaudited) | 11 | 4.1% |
-| Not working | 109 | 40.8% |
+| Not working | 107 | 40.1% |
 
 ## Cards needing work
 
@@ -125,10 +125,8 @@
 | Kappa Tech-Wrecker | notice | Whenever this creature deals combat damage to a player, you may remove a deathtouch counter from it. When you do, exile target artifact or enchantment that play | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitsune Ace | notice | Whenever a Vehicle you control attacks, choose one — • That Vehicle gains first strike until end of turn. • Untap this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lethal Exploit | notice | Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until end of turn for each modified creature you controlled as you cast this spell. (E | unparsed remainder: It gets an additional -1/-1 until end of turn for each modified creature you controlled as you cast this spell. | Y/Y/- | not_working |
-| Malicious Malfunction | notice | All creatures get -2/-2 until end of turn. If a creature would die this turn, exile it instead. | unparsed remainder: If a creature would die this turn, exile it instead. | Y/Y/- | not_working |
 | Okiba Salvage | notice | Return target creature or Vehicle card from your graveyard to the battlefield. Then put two +1/+1 counters on that permanent if you control an artifact and an e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Regent's Authority | notice | Target creature gets +2/+2 until end of turn. If it's an enchantment creature or legendary creature, instead put a +1/+1 counter on it and it gets +1/+1 until e | unparsed remainder: If it's an enchantment creature or legendary creature, instead put a +1/+1 counter on it and it gets +1/+1 until end of turn. | Y/Y/- | not_working |
-| Roaring Earth | notice | Channel — {X}{G}{G}, Discard this card: Put X +1/+1 counters on target land you control. It becomes a 0/0 green Spirit creature with haste. It's still a land. | unparsed remainder: It's still a land. | Y/Y/- | not_working |
 | Runaway Trash-Bot | notice | This creature gets +1/+0 for each artifact and/or enchantment card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Storyweave | notice | Choose one — • Put two +1/+1 counters on target creature you control. • Put two lore counters on target Saga you control. The next time one or more enchantment  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tamiyo's Compleation | notice | When this Aura enters, tap enchanted permanent. If it's an Equipment, unattach it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -269,7 +267,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>30 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
@@ -284,6 +282,7 @@
 - Iron Apprentice
 - Jin-Gitaxias, Progress Tyrant
 - Kami of Transience
+- Malicious Malfunction
 - March of Otherworldly Light
 - March of Swirling Mist
 - March of Wretched Sorrow
@@ -293,6 +292,7 @@
 - Nashi, Moon Sage's Scion
 - Otawara, Soaring City
 - Reality Heist
+- Roaring Earth
 - Takenuma, Abandoned Mire
 - Tameshi, Reality Architect
 - Tamiyo, Compleated Sage
@@ -308,9 +308,8 @@
 |---|---|---|---|
 | reconfigure | 10 | Acquisition Octopus, Armguard Familiar, Bronzeplate Boar, Chainflail Centipede, Leech Gauntlet | neo |
 | as long as enchanted permanent is a creature, it gets +N/+N. | 3 | Akki War Paint, Historian's Wisdom, Twisted Embrace | neo |
-| Channel | 2 | Mirrorshell Crab, Roaring Earth | neo |
 | Choose one | 2 | Debt to the Kami, Storyweave | neo |
-| all creatures get -N/-N until end of turn. if a creature would die ~, exile it instead. | 1 | Malicious Malfunction | neo |
+| Channel | 1 | Mirrorshell Crab | neo |
 | as an additional cost to cast ~, sacrifice an artifact or creature. search your library for an equipment or vehicle card, put that card onto the battlefield, th | 1 | Anchor to Reality | neo |
 | as an additional cost to cast ~, you may exile any number of green cards from your hand. ~ costs {M} less to cast for each card exiled ~. choose target creature | 1 | March of Burgeoning Life | neo |
 | as an additional cost to cast ~, you may exile any number of red cards from your hand. ~ costs {M} less to cast for each card exiled ~. exile the top N cards of | 1 | March of Reckless Joy | neo |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 10.0% |
+| Tested | 29 | 10.3% |
 | Works (untested) | 133 | 47.3% |
 | Partial (unaudited) | 20 | 7.1% |
-| Not working | 100 | 35.6% |
+| Not working | 99 | 35.2% |
 
 ## Cards needing work
 
@@ -107,7 +107,6 @@
 | Éowyn, Lady of Rohan | silent | At the beginning of combat on your turn, target creature gains your choice of first strike or vigilance until end of turn. If that creature is equipped, it gain | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bill Ferny, Bree Swindler | notice | Whenever Bill Ferny becomes blocked, choose one — • Create a Treasure token. • Target opponent gains control of target Horse you control. If they do, remove Bil | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eastfarthing Farmer | notice | When this creature enters, create a Food token. When you do, target creature you control gets +1/+1 until end of turn for each Food you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Esquire of the King | notice | {4}{W}, {T}: Creatures you control get +1/+1 until end of turn. This ability costs {2} less to activate if you control a legendary creature. | unparsed remainder: This ability costs {2} less to activate if you control a legendary creature. | Y/-/- | not_working |
 | Fires of Mount Doom | notice | When Fires of Mount Doom enters, it deals 2 damage to target creature an opponent controls. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flowering of the White Tree | notice | Legendary creatures you control get +2/+1 and have ward {1}. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gandalf's Sanction | notice | Gandalf's Sanction deals X damage to target creature, where X is the number of instant and sorcery cards in your graveyard. Excess damage is dealt to that creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -283,7 +282,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Arwen, Mortal Queen
 - Bill the Pony
@@ -293,6 +292,7 @@
 - Dúnedain Rangers
 - Elanor Gardner
 - Elven Chorus
+- Esquire of the King
 - Flame of Anor
 - Galadhrim Bow
 - Generous Ent
@@ -427,7 +427,6 @@
 | your opponents can't gain life. | 1 | Gríma Wormtongue | ltr |
 | {M}: another target creature you control gains protection from the card type of your choice until end of turn. | 1 | Pippin, Guard of the Citadel | ltr |
 | {M}: move a counter of each kind not on goldberry from another target permanent you control onto goldberry. | 1 | Goldberry, River-Daughter | ltr |
-| {M}{M}, {M}: creatures you control get +N/+N until end of turn. ~ costs {M} less to activate if you control a legendary creature. | 1 | Esquire of the King | ltr |
 | {M}{M}{M}, {M}, sacrifice ~ and a legendary artifact: choose up to two creatures, then destroy the rest. activate only as a sorcery. | 1 | Mount Doom | ltr |
 | {M}{M}{M}: if frodo is a scout, it becomes a halfling rogue with "..." | 1 | Frodo, Sauron's Bane | ltr |
 | ~ can't be blocked except by three or more creatures. | 1 | Troll of Khazad-dûm | ltr |

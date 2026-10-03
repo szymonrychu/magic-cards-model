@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 88 | 47.1% |
-| Works (untested) | 98 | 52.4% |
+| Tested | 90 | 48.1% |
+| Works (untested) | 97 | 51.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 1 | 0.5% |
+| Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Novel Nunchaku | notice | When this Equipment enters, attach it to target creature you control. When you do, equipped creature fights up to one target creature an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Action News Crew | handled | Channel — {6}, Discard this card: Put a +1/+1 counter on each creature you control. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Agent Bishop, Man in Black | handled | At the beginning of combat on your turn, put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Anchovy & Banana Pizza | handled | When this artifact enters, destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -38,7 +37,6 @@
 | Bot Bashing Time | handled | Bot Bashing Time deals 6 damage to target creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Buzz Bots | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Casey Jones, Jury-Rig Justiciar | handled | When Casey Jones enters, look at the top four cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on  | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Chrome Dome | handled | Other artifact creatures you control get +1/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cool but Rude | handled | Whenever you attack, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cowabunga! | handled | Look at the top four cards of your library. You may reveal a Mutant, Ninja, Turtle, or land card from among them and put it into your hand. Put the rest on the  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Death in the Family | handled | Exile target creature with mana value 3 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -129,7 +127,7 @@
 ## Fully supported
 
 <details>
-<summary>88 cards</summary>
+<summary>90 cards</summary>
 
 - April O'Neil, Hacktivist
 - April O'Neil, Kunoichi Trainee
@@ -137,6 +135,7 @@
 - Brilliance Unleashed
 - Broadcast Takeover
 - Casey Jones, Vigilante
+- Chrome Dome
 - Courier of Comestibles
 - Crustacean Commando
 - Dark Leo & Shredder
@@ -174,6 +173,7 @@
 - Ninja Teen
 - North Wind Avatar
 - Northampton Farm
+- Novel Nunchaku
 - Ooze Spill
 - Pain 101
 - Paramecia Coloniex
@@ -224,9 +224,7 @@
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| when ~ enters, attach it to target creature you control. when you do, equipped creature fights up to one target creature an opponent controls. | 1 | Novel Nunchaku | tmt |
+None.
 
 ## Notes
 

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 7.0% |
-| Works (untested) | 71 | 49.7% |
-| Partial (unaudited) | 10 | 7.0% |
-| Not working | 52 | 36.4% |
+| Works (untested) | 74 | 51.7% |
+| Partial (unaudited) | 9 | 6.3% |
+| Not working | 50 | 35.0% |
 
 ## Cards needing work
 
@@ -45,12 +45,10 @@
 | Glory of Warfare | silent | During your turn, creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grixis Grimblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Intimidation Bolt | silent | Intimidation Bolt deals 3 damage to target creature. Other creatures can't attack this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jhessian Zombies | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Jund Hackblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karrthus, Tyrant of Jund | silent | When Karrthus enters, gain control of all Dragons, then untap all Dragons. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of New Alara | silent | Each other multicolored creature you control gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich Lord of Unx | silent | {U}{U}{B}{B}: Target player loses X life and mills X cards, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lightning Reaver | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Lord of Extinction | silent | Lord of Extinction's power and toughness are each equal to the number of cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mage Slayer | silent | Whenever equipped creature attacks, it deals damage equal to its power to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Marrow Chomper | silent | When this creature enters, you gain 2 life for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -81,7 +79,6 @@
 | Arsenal Thresher | unaudited | As this creature enters, you may reveal any number of other artifact cards from your hand. This creature enters with a +1/+1 counter on it for each card reveale | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fieldmist Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Firewild Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Mask of Riddles | unaudited | Equipped creature has fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mistvein Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sages of the Anima | unaudited | If you would draw a card, instead reveal the top three cards of your library. Put all creature cards revealed this way into your hand and the rest on the bottom | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Spellbreaker Behemoth | unaudited | Creature spells you control with power 5 or greater can't be countered. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -118,16 +115,19 @@
 | Igneous Pouncer | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/-/- | not_tested |
 | Illusory Demon | handled | When you cast a spell, sacrifice this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jenara, Asura of War | handled | {1}{W}: Put a +1/+1 counter on Jenara. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Jhessian Zombies | handled | Islandcycling | machines/keywords.py (off_zone_abilities: cycling) | Y/-/- | not_tested |
 | Jund Sojourners | handled | When you cycle this card and when this creature dies, you may have it deal 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kathari Bomber | handled | When this creature deals combat damage to a player, create two 1/1 red Goblin creature tokens and sacrifice this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kathari Remnant | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Knotvine Paladin | handled | Whenever this creature attacks, it gets +1/+1 until end of turn for each untapped creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lavalanche | handled | Lavalanche deals X damage to target player or planeswalker and each creature that player or that planeswalker's controller controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leonin Armorguard | handled | When this creature enters, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lightning Reaver | handled | Whenever this creature deals combat damage to a player, put a charge counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lorescale Coatl | handled | Whenever you draw a card, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Madrush Cyclops | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magefire Wings | handled | Enchanted creature gets +2/+0 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Marisi's Twinclaws | handled | Double strike | machines/combat.py | Y/-/- | not_tested |
+| Mask of Riddles | handled | Equipped creature has fear. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mayael's Aria | handled | At the beginning of your upkeep, put a +1/+1 counter on each creature you control if you control a creature with power 5 or greater. Then you gain 10 life if yo | the engine reads this text and performs it | Y/-/- | not_tested |
 | Messenger Falcons | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Monstrous Carabid | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -184,7 +184,6 @@
 |---|---|---|---|
 | you may pay {M} and return a basic land you control to its owner's hand rather than pay ~ mana cost. | 5 | Fieldmist Borderpost, Firewild Borderpost, Mistvein Borderpost, Veinfire Borderpost, Wildfield Borderpost | arb |
 | exalted | 4 | Ardent Plea, Ethercaste Knight, Qasali Pridemage, Sigiled Behemoth | arb |
-| fear | 2 | Jhessian Zombies, Lightning Reaver | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has deathtouch. | 1 | Grixis Grimblade | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has first strike. | 1 | Bant Sureblade | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has flying. | 1 | Esper Stormblade | arb |
@@ -202,7 +201,6 @@
 | during your turn, creatures you control get +N/+N. | 1 | Glory of Warfare | arb |
 | each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |
 | enchanted land has shroud. | 1 | Trace of Abundance | arb |
-| equipped creature has fear. | 1 | Mask of Riddles | arb |
 | exile target creature card from a graveyard, then create N N/N green saproling creature tokens, where N is the exiled card's toughness. | 1 | Morbid Bloom | arb |
 | gain control of target creature. untap that creature. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Slave of Bolas | arb |
 | if you would draw a card, instead reveal the top three cards of your library. put all creature cards revealed ~ into your hand and the rest on the bottom of you | 1 | Sages of the Anima | arb |

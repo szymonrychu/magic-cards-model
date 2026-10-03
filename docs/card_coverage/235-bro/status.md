@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 10.9% |
+| Tested | 30 | 11.7% |
 | Works (untested) | 134 | 52.3% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 83 | 32.4% |
+| Not working | 81 | 31.6% |
 
 ## Cards needing work
 
@@ -105,8 +105,6 @@
 | Mishra, Lost to Phyrexia | notice | Whenever Mishra enters or attacks, choose three — • Target opponent discards two cards. • Mishra deals 3 damage to any target. • Destroy target artifact or plan | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Portal to Phyrexia | notice | At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. It's a Phyrexian in addition to its other ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Recommission | notice | Return target artifact or creature card with mana value 3 or less from your graveyard to the battlefield. If a creature enters this way, it enters with an addit | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Spectrum Sentinel | notice | Protection | protection from a quality the engine does not read: multicolored (This creature can't be blocked | Y/Y/- | not_working |
-| Titania, Gaea Incarnate | notice | {3}{G}: Put four +1/+1 counters on target land you control. It becomes a 0/0 Elemental creature with haste. It's still a land. | unparsed remainder: It's still a land. | Y/Y/- | not_working |
 | Unleash Shell | notice | Unleash Shell deals 5 damage to target creature or planeswalker and 2 damage to that permanent's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urza's Command | notice | Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Argoth, Sanctum of Nature | unaudited | This land enters tapped unless you control a legendary green creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -258,7 +256,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>30 cards</summary>
 
 - Aeronaut Cavalry
 - Alloy Animist
@@ -281,9 +279,11 @@
 - Power Plant Worker
 - Recruitment Officer
 - Soul Partition
+- Spectrum Sentinel
 - Tawnos's Tinkering
 - The Stone Brain
 - The Temporal Anchor
+- Titania, Gaea Incarnate
 - Tocasia, Dig Site Mentor
 - Tower Worker
 - Visions of Phyrexia
@@ -327,7 +327,6 @@
 | look at the top seven cards of your library. put up to N artifact and/or creature cards with mana value N or less from among them onto the battlefield. put the  | 1 | Kayla's Reconstruction | bro |
 | permanents you control have "..." | 1 | Mishra, Tamer of Mak Fawa | bro |
 | prevent all damage that would be dealt to other attacking soldiers you control. | 1 | Rescue Retriever | bro |
-| protection | 1 | Spectrum Sentinel | bro |
 | return target artifact or creature card with mana value N or less from your graveyard to the battlefield. if a creature enters ~, it enters with an additional + | 1 | Recommission | bro |
 | sacrifice hajar: legendary creatures you control get +N/+N and gain indestructible until end of turn. | 1 | Hajar, Loyal Bodyguard | bro |
 | target opponent reveals their hand. you choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. exile the ch | 1 | Dreams of Steel and Oil | bro |
@@ -362,7 +361,6 @@
 | {M}, {M}: each opponent loses N life. ~ costs {M} less to activate for each creature card in your graveyard. | 1 | Battlefield Butcher | bro |
 | {M}: until end of turn, ~ gets -N/-N and gains your choice of flying, vigilance, deathtouch, or haste. | 1 | Argivian Avenger | bro |
 | {M}: ~ loses defender and gains "..." | 1 | Surge Engine | bro |
-| {M}{M}: put four +N/+N counters on target land you control. it becomes a N/N elemental creature with haste. it's still a land. | 1 | Titania, Gaea Incarnate | bro |
 | {M}{M}: return target permanent you control to its owner"..."s hand. activate only during your turn. | 1 | Meticulous Excavation | bro |
 | {M}{M}: you may put an artifact card from your hand onto the battlefield. that artifact gains haste. sacrifice it at the beginning of the next end step. | 1 | Arms Race | bro |
 | {M}{M}{M}, sacrifice ~: create an N/N colorless golem artifact creature token, where N is three times ~ power. it gains haste until end of turn. activate only a | 1 | Rootwire Amalgam | bro |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.3% |
-| Works (untested) | 77 | 47.5% |
+| Works (untested) | 78 | 48.1% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 68 | 42.0% |
+| Not working | 67 | 41.4% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Death Cloud | silent | Each player loses X life, discards X cards, sacrifices X creatures of their choice, then sacrifices X lands of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Death-Mask Duplicant | silent | As long as a card exiled with this creature has flying, this creature has flying. The same is true for fear, first strike, double strike, haste, landwalk, prote | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drooling Ogre | silent | Whenever a player casts an artifact spell, that player gains control of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dross Golem | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Eater of Days | silent | When this creature enters, you skip your next two turns. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Emissary of Hope | silent | Whenever this creature deals combat damage to a player, you gain 1 life for each artifact that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fangren Firstborn | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -121,6 +120,7 @@
 | Darksteel Pendant | handled | {1}, {T}: Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Demon's Horn | handled | Whenever a player casts a black spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dragon's Claw | handled | Whenever a player casts a red spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dross Golem | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/-/- | not_tested |
 | Echoing Decay | handled | Target creature and all other creatures with the same name as that creature get -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emissary of Despair | handled | Whenever this creature deals combat damage to a player, that player loses 1 life for each artifact they control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Essence Drain | handled | Essence Drain deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -229,7 +229,6 @@
 | equipment named sword of kaldra, ~, and helm of kaldra have indestructible. | 1 | Shield of Kaldra | dst |
 | equipped creature can't be blocked and has shroud. | 1 | Whispersilk Cloak | dst |
 | equipped creature has first strike and "..." | 1 | Surestrike Trident | dst |
-| fear | 1 | Dross Golem | dst |
 | if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Darksteel Colossus | dst |
 | myr creatures get +N/+N. | 1 | Myr Matrix | dst |
 | prevent all damage target spell would deal ~. you gain life equal to the damage prevented ~. | 1 | Hallow | dst |

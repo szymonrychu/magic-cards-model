@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 9.9% |
+| Tested | 27 | 10.7% |
 | Works (untested) | 134 | 53.0% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 84 | 33.2% |
+| Not working | 82 | 32.4% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Backstreet Bruiser | silent | As long as there are two or more counters among creatures you control, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ballroom Brawlers | silent | Whenever this creature attacks, this creature and up to one other target creature you control both gain your choice of first strike or lifelink until end of tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Black Market Tycoon | silent | At the beginning of your upkeep, this creature deals 2 damage to you for each Treasure you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Brass Knuckles | silent | Equipped creature has double strike as long as two or more Equipment are attached to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brokers Ascendancy | silent | At the beginning of your end step, put a +1/+1 counter on each creature you control and a loyalty counter on each planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cabaretti Ascendancy | silent | At the beginning of your upkeep, look at the top card of your library. If it's a creature or planeswalker card, you may reveal it and put it into your hand. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Caldaia Strongarm | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -99,7 +98,6 @@
 | Crew Captain | notice | This creature has indestructible as long as it entered this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extract the Truth | notice | Choose one — • Target opponent reveals their hand. You may choose a creature, enchantment, or planeswalker card from it. That player discards that card. • Targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extraction Specialist | notice | When this creature enters, return target creature card with mana value 2 or less from your graveyard to the battlefield. That creature can't attack or block for | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Hostile Takeover | notice | Up to one target creature has base power and toughness 1/1 until end of turn. Up to one other target creature has base power and toughness 4/4 until end of turn | unparsed remainder: Up to one other target creature has base power and toughness 4/4 until end of turn. | Y/Y/- | not_working |
 | Revelation of Power | notice | Target creature gets +2/+2 until end of turn. If it has a counter on it, it also gains flying and lifelink until end of turn. | unparsed remainder: If it has a counter on it, it also gains flying and lifelink until end of turn. | Y/Y/- | not_working |
 | Rhox Pummeler | notice | This creature has trample as long as it has a shield counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sewer Crocodile | notice | {3}{U}: This creature can't be blocked this turn. This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | unparsed remainder: This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | Y/Y/- | not_working |
@@ -258,17 +256,19 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>27 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
 - Bouncer's Beatdown
+- Brass Knuckles
 - Dusk Mangler
 - Expendable Lackey
 - Fight Rigging
 - For the Family
 - Gala Greeters
 - Getaway Car
+- Hostile Takeover
 - Hypnotic Grifter
 - Jetmir's Fixer
 - Join the Maestros
@@ -326,7 +326,6 @@
 | enchanted creature has menace and "..." | 1 | Sticky Fingers | snc |
 | enchanted creature loses all abilities and is a green and white citizen creature with base power and toughness N/N named legitimate businessperson. | 1 | Witness Protection | snc |
 | equipped creature gets +N/+N for each counter on it. | 1 | Luxior, Giada's Gift | snc |
-| equipped creature has double strike as long as two or more equipment are attached to it. | 1 | Brass Knuckles | snc |
 | exile the top ten cards of your library. you may cast spells with exactly three colors from among them ~. add {M}{M}{M}{M}{M}{M}{M}{M}{M}{M}. spend ~ only to ca | 1 | Meeting of the Five | snc |
 | for each color, return up to one target creature card of that color from your graveyard to your hand. | 1 | Rogues' Gallery | snc |
 | if you would create one or more tokens, you may instead create that many N/N green cat creature tokens with haste or that many N/N green dog creature tokens wit | 1 | Jinnie Fay, Jetmir's Second | snc |
@@ -334,7 +333,6 @@
 | put a +N/+N counter on target creature. it phases out. (treat it and anything attached to it as though they don"..."s next turn.) | 1 | Slip Out the Back | snc |
 | target creature gets +N/+N until end of turn. if it has a counter on it, it also gains flying and lifelink until end of turn. | 1 | Revelation of Power | snc |
 | until end of turn, target artifact or creature becomes a N/N angel artifact creature and gains flying. draw a card. | 1 | Majestic Metamorphosis | snc |
-| up to one target creature has base power and toughness N/N until end of turn. up to one other target creature has base power and toughness N/N until end of turn | 1 | Hostile Takeover | snc |
 | when lord xander enters, target opponent discards half the cards in their hand, rounded down. | 1 | Lord Xander, the Collector | snc |
 | when ~ enters, choose target creature you don"..."t untap during its controller's next untap step. | 1 | Celestial Regulator | snc |
 | when ~ enters, choose two — • destroy target artifact or enchantment. • target player gains N life. • create a N/N green rhino warrior creature token. • put a s | 1 | Titan of Industry | snc |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 16.4% |
+| Tested | 46 | 17.2% |
 | Works (untested) | 110 | 41.0% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 104 | 38.8% |
+| Not working | 102 | 38.1% |
 
 ## Cards needing work
 
@@ -114,11 +114,9 @@
 | Blood Spatter Analysis | notice | Whenever one or more creatures die, mill a card and put a bloodstain counter on this enchantment. Then sacrifice it if it has five or more bloodstain counters o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Case of the Burning Masks | notice | Solved — Sacrifice this Case: Exile the top three cards of your library. Choose one of them. You may play that card this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Case of the Filched Falcon | notice | Solved — {2}{U}, Sacrifice this Case: Put four +1/+1 counters on target noncreature artifact. It becomes a 0/0 Bird creature with flying in addition to its othe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Case of the Stashed Skeleton | notice | To solve — You control no suspected Skeletons. | unread intervening "if": "you control no suspected Skeletons" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/Y/Y | not_working |
 | Caught Red-Handed | notice | This spell can't be countered. (This includes by the ward ability.) Gain control of target creature until end of turn. Untap that creature. It gains haste until | unparsed remainder: This spell can't be countered. Untap that creature. It gains haste until end of turn. Suspect it. | Y/Y/Y | not_working |
 | Deadly Complication | notice | Choose one or both — • Destroy target creature. • Put a +1/+1 counter on target suspected creature you control. You may have it become no longer suspected. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Eliminate the Impossible | notice | Investigate. Creatures your opponents control get -2/-0 until end of turn. If any of them are suspected, they're no longer suspected. (To investigate, create a  | unparsed remainder: Investigate. If any of them are suspected, they're no longer suspected. | Y/Y/Y | not_working |
-| Essence of Antiquity | notice | When this creature is turned face up, creatures you control gain hexproof until end of turn. Untap them. | unparsed remainder: Untap them. | Y/Y/Y | not_working |
 | Gearbane Orangutan | notice | When this creature enters, choose one — • Destroy up to one target artifact. • Sacrifice an artifact. If you do, put two +1/+1 counters on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Get a Leg Up | notice | Until end of turn, target creature gets +1/+1 for each creature you control and gains reach. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Hotshot Investigators | notice | When this creature enters, return up to one other target creature to its owner's hand. If you controlled it, investigate. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -254,7 +252,7 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>46 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
@@ -263,6 +261,7 @@
 - Bolrac-Clan Basher
 - Break Out
 - Case of the Crimson Pulse
+- Case of the Stashed Skeleton
 - Case of the Uneaten Feast
 - Clandestine Meddler
 - Commercial District
@@ -271,6 +270,7 @@
 - Detective's Satchel
 - Elegant Parlor
 - Escape Tunnel
+- Essence of Antiquity
 - Forensic Gadgeteer
 - Forensic Researcher
 - Hedge Maze
@@ -312,7 +312,6 @@
 | cloak | 2 | Expose the Culprit, Vannifar, Evolved Enigma | mkm |
 | Choose one | 1 | Archdruid's Charm | mkm |
 | Choose one or both | 1 | Deadly Complication | mkm |
-| To solve | 1 | Case of the Stashed Skeleton | mkm |
 | as an additional cost to cast ~, collect evidence N, where N is the total mana value of the permanents ~ targets. destroy up to one target artifact, up to one t | 1 | Urgent Necropsy | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) each opponent sacrifices a cr | 1 | Extract a Confession | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) search your library for a bas | 1 | Analyze the Pollen | mkm |
@@ -368,7 +367,6 @@
 | when ~ enters, untap enchanted creature. it gains hexproof until end of turn. if it"..."s no longer suspected. | 1 | Airtight Alibi | mkm |
 | when ~ enters, you may collect evidence N. | 1 | Surveillance Monitor | mkm |
 | when ~ enters, you may search your graveyard, hand and/or library for a card named magnifying glass and/or a card named thinking cap and put them onto the battl | 1 | Agency Outfitter | mkm |
-| when ~ is turned face up, creatures you control gain hexproof until end of turn. untap them. | 1 | Essence of Antiquity | mkm |
 | when ~ is turned face up, exile another target nonland permanent. if you controlled it, return it to the battlefield tapped. otherwise, its controller creates a | 1 | Unyielding Gatekeeper | mkm |
 | when ~ is turned face up, search your library for up to two forest cards and reveal them. put one of them onto the battlefield tapped and the other into your ha | 1 | Flourishing Bloom-Kin | mkm |
 | when ~ is turned face up, target opponent gains control of any number of target permanents you control. draw a card for each one they gained control of ~. | 1 | Coveted Falcon | mkm |

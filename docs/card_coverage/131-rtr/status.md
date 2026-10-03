@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 8.5% |
+| Tested | 20 | 8.9% |
 | Works (untested) | 100 | 44.6% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 95 | 42.4% |
+| Not working | 94 | 42.0% |
 
 ## Cards needing work
 
@@ -119,7 +119,6 @@
 | Destroy the Evidence | notice | Destroy target land. Its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Golgari Charm | notice | Choose one — • All creatures get -1/-1 until end of turn. • Destroy target enchantment. • Regenerate each creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grave Betrayal | notice | Whenever a creature you don't control dies, return it to the battlefield under your control with an additional +1/+1 counter on it at the beginning of the next  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Izzet Staticaster | notice | {T}: This creature deals 1 damage to target creature and each other creature with the same name as that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rakdos Charm | notice | Choose one — • Exile target player's graveyard. • Destroy target artifact. • Each creature deals 1 damage to its controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dryad Militant | unaudited | If an instant or sorcery card would be put into a graveyard from anywhere, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hypersonic Dragon | unaudited | You may cast sorcery spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -235,7 +234,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Abrupt Decay
 - Azorius Guildgate
@@ -248,6 +247,7 @@
 - Grisly Salvage
 - Guttersnipe
 - Izzet Guildgate
+- Izzet Staticaster
 - Nivix Guildmage
 - Precinct Captain
 - Rakdos Guildgate
@@ -326,7 +326,6 @@
 | {M}, {M}, discard a card: ~ deals damage to target creature equal to the discarded card's mana value. | 1 | Mercurial Chemister | rtr |
 | {M}: add N mana in any combination of colors, where N is the number of creatures you control with defender. | 1 | Axebane Guardian | rtr |
 | {M}: exile target land card from a graveyard. add one mana of any color. | 1 | Deathrite Shaman | rtr |
-| {M}: ~ deals N damage to target creature and each other creature with the same name as that creature. | 1 | Izzet Staticaster | rtr |
 | {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Doorkeeper | rtr |
 | {M}{M}: target player who lost life ~ loses N life. | 1 | Rix Maadi Guildmage | rtr |
 | {M}{M}{M}, sacrifice ~: it deals damage equal to its power to target player or planeswalker. | 1 | Hellhole Flailer | rtr |

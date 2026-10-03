@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 14.6% |
-| Works (untested) | 109 | 58.9% |
+| Tested | 32 | 17.3% |
+| Works (untested) | 110 | 59.5% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 45 | 24.3% |
+| Not working | 39 | 21.1% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Aetherwind Basker | silent | Whenever this creature enters or attacks, you get {E} for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani Unyielding | silent | +2: Reveal the top three cards of your library. Put all nonland permanent cards revealed this way into your hand and the rest on the bottom of your library in a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani's Aid | silent | When this enchantment enters, you may search your library and/or graveyard for a card named Ajani, Valiant Protector, reveal it, and put it into your hand. If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Baral's Expertise | silent | Return up to three target artifacts and/or creatures to their owners' hands. You may cast a spell with mana value 4 or less from your hand without paying its ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baral, Chief of Compliance | silent | Whenever a spell or ability you control counters a spell, you may draw a card. If you do, discard a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Dark Intimations | silent | Each opponent sacrifices a creature or planeswalker of their choice, then discards a card. You return a creature or planeswalker card from your graveyard to you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Decommission | silent | Destroy target artifact or enchantment. Revolt — If a permanent left the battlefield under your control this turn, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -41,7 +40,6 @@
 | Greenbelt Rampager | silent | When this creature enters, pay {E}{E} . If you can't, return this creature to its owner's hand and you get {E}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gremlin Infestation | silent | At the beginning of your end step, this Aura deals 2 damage to enchanted artifact's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Indomitable Creativity | silent | Destroy X target artifacts and/or creatures. For each permanent destroyed this way, its controller reveals cards from the top of their library until an artifact | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kari Zev's Expertise | silent | Gain control of target creature or Vehicle until end of turn. Untap it. It gains haste until end of turn. You may cast a spell with mana value 2 or less from yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lightning Runner | silent | Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an addi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mechanized Production | silent | At the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one anoth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Metallic Mimic | silent | This creature is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -54,11 +52,9 @@
 | Quicksmith Rebel | silent | When this creature enters, target artifact you control gains "{T}: This artifact deals 2 damage to any target" for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quicksmith Spy | silent | When this creature enters, target artifact you control gains "{T}: Draw a card" for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Restoration Specialist | silent | {W}, Sacrifice this creature: Return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rishkar's Expertise | silent | Draw cards equal to the greatest power among creatures you control. You may cast a spell with mana value 5 or less from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Salvage Scuttler | silent | Whenever this creature attacks, return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrap Trawler | silent | Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Modification | silent | As long as enchanted permanent is a Vehicle, it's a creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sram's Expertise | silent | Create three 1/1 colorless Servo artifact creature tokens. You may cast a spell with mana value 3 or less from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tezzeret's Touch | silent | When enchanted artifact is put into a graveyard, return that card to its owner's hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Tezzeret, Master of Metal | silent | −3: Target opponent loses life equal to the number of artifacts you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trophy Mage | silent | When this creature enters, you may search your library for an artifact card with mana value 3, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -68,9 +64,7 @@
 | Kari Zev, Skyship Raider | notice | Whenever Kari Zev attacks, create Ragavan, a legendary 2/1 red Monkey creature token. Ragavan enters tapped and attacking. Exile that token at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lifecraft Awakening | notice | Put X +1/+1 counters on target artifact you control. If it isn't a creature or Vehicle, it becomes a 0/0 Construct artifact creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Secret Salvage | notice | Exile target nonland card from your graveyard. Search your library for any number of cards with the same name as that card, reveal them, put them into your hand | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Tezzeret's Betrayal | notice | Destroy target creature. You may search your library and/or graveyard for a card named Tezzeret, Master of Metal, reveal it, and put it into your hand. If you s | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Treasure Keeper | notice | When this creature dies, reveal cards from the top of your library until you reveal a nonland card with mana value 3 or less. You may cast that card without pay | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Yahenni's Expertise | notice | All creatures get -3/-3 until end of turn. You may cast a spell with mana value 3 or less from your hand without paying its mana cost. | unparsed remainder: You may cast a spell with mana value 3 or less from your hand without paying its mana cost. | Y/Y/- | not_working |
 | Heart of Kiran | unaudited | You may remove a loyalty counter from a planeswalker you control rather than pay Heart of Kiran's crew cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Night Market Guard | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rishkar, Peema Renegade | unaudited | Each creature you control with a counter on it has "{T}: Add {G}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -172,6 +166,7 @@
 | Sweatworks Brawler | handled | Improvise | machines/objects_as_costs.py (improvise) | Y/Y/- | not_tested |
 | Take into Custody | handled | Tap target creature. It doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tezzeret the Schemer | handled | +1: Create a colorless artifact token named Etherium Cell with "{T}, Sacrifice this token: Add one mana of any color." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tezzeret's Betrayal | handled | Destroy target creature. You may search your library and/or graveyard for a card named Tezzeret, Master of Metal, reveal it, and put it into your hand. If you s | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tezzeret's Simulacrum | handled | {T}: Target opponent loses 1 life. If you control a Tezzeret planeswalker, that player loses 3 life instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thopter Arrest | handled | When this enchantment enters, exile target artifact or creature an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Universal Solvent | handled | {7}, {T}, Sacrifice this artifact: Destroy target permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -188,13 +183,14 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>32 cards</summary>
 
 - Aether Chaser
 - Aether Swooper
 - Aetherstream Leopard
 - Aid from the Cowl
 - Audacious Infiltrator
+- Baral's Expertise
 - Bastion Enforcer
 - Cogwork Assembler
 - Consulate Crackdown
@@ -208,15 +204,19 @@
 - Hope of Ghirapur
 - Hungry Flames
 - Inspiring Statuary
+- Kari Zev's Expertise
 - Maulfist Revolutionary
 - Merchant's Dockhand
 - Metallic Rebuke
 - Renegade Rallier
+- Rishkar's Expertise
 - Scrounging Bandar
 - Skyship Plunderer
+- Sram's Expertise
 - Walking Ballista
 - Whir of Invention
 - Winding Constrictor
+- Yahenni's Expertise
 
 </details>
 
@@ -228,26 +228,20 @@
 | when ~ enters, target artifact you control gains "..." for as long as you control ~. | 2 | Quicksmith Rebel, Quicksmith Spy | aer |
 | Choose one | 1 | Destructive Tampering | aer |
 | +N: reveal the top three cards of your library. put all nonland permanent cards revealed ~ into your hand and the rest on the bottom of your library in any orde | 1 | Ajani Unyielding | aer |
-| all creatures get -N/-N until end of turn. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Yahenni's Expertise | aer |
 | at the beginning of your end step, ~ deals N damage to enchanted artifact's controller. | 1 | Gremlin Infestation | aer |
 | at the beginning of your upkeep, create a token that's a copy of enchanted artifact. then if you control eight or more artifacts with the same name as one anoth | 1 | Mechanized Production | aer |
-| create three N/N colorless servo artifact creature tokens. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Sram's Expertise | aer |
 | creatures you control get +N/+N for each unity counter on ~. | 1 | Call for Unity | aer |
 | destroy N target artifacts and/or creatures. for each permanent destroyed ~, its controller reveals cards from the top of their library until an artifact or cre | 1 | Indomitable Creativity | aer |
 | destroy target artifact or enchantment. revolt — if a permanent left the battlefield under your control ~, you gain N life. | 1 | Decommission | aer |
-| destroy target creature. you may search your library and/or graveyard for a card named tezzeret, master of metal, reveal it, and put it into your hand. if you s | 1 | Tezzeret's Betrayal | aer |
-| draw cards equal to the greatest power among creatures you control. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Rishkar's Expertise | aer |
 | each creature you control with a counter on it has "..." | 1 | Rishkar, Peema Renegade | aer |
 | each opponent sacrifices a creature or planeswalker of their choice, then discards a card. you return a creature or planeswalker card from your graveyard to you | 1 | Dark Intimations | aer |
 | each opponent sacrifices an artifact creature and a nonartifact creature of their choice. | 1 | Perilous Predicament | aer |
 | enchanted land has "..." | 1 | Unbridled Growth | aer |
 | exile target nonland card from your graveyard. search your library for any number of cards with the same name as that card, reveal them, put them into your hand | 1 | Secret Salvage | aer |
-| gain control of target creature or vehicle until end of turn. untap it. it gains haste until end of turn. you may cast a spell with mana value N or less from yo | 1 | Kari Zev's Expertise | aer |
 | pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |
 | pay {M}{M}, sacrifice ~: each opponent loses N life. you gain life equal to the life lost ~. | 1 | Gonti's Machinations | aer |
 | put N +N/+N counters on target artifact you control. if it isn't a creature or vehicle, it becomes a N/N construct artifact creature. | 1 | Lifecraft Awakening | aer |
 | put target artifact on the bottom of its owner's library. | 1 | Natural Obsolescence | aer |
-| return up to three target artifacts and/or creatures to their owners' hands. you may cast a spell with mana value N or less from your hand without paying its ma | 1 | Baral's Expertise | aer |
 | when enchanted artifact is put into a graveyard, return that card to its owner's hand. | 1 | Tezzeret's Touch | aer |
 | when ~ dies, reveal cards from the top of your library until you reveal a nonland card with mana value N or less. you may cast that card without paying its mana | 1 | Treasure Keeper | aer |
 | when ~ enters, pay {M}{M} . if you can"..."s hand and you get {M}. | 1 | Greenbelt Rampager | aer |

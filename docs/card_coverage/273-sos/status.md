@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 119 | 46.7% |
+| Tested | 120 | 47.1% |
 | Works (untested) | 135 | 52.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 1 | 0.4% |
+| Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Dissection Practice | notice | Target opponent loses 1 life and you gain 1 life. Up to one target creature gets +1/+1 until end of turn. Up to one target creature gets -1/-1 until end of turn | unparsed remainder: Up to one target creature gets +1/+1 until end of turn. | Y/Y/Y | not_working |
 | Abigale, Poet Laureate // Heroic Stanza | handled | Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Abstract Paintmage | handled | At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Additive Evolution | handled | When this enchantment enters, create a 0/0 green and blue Fractal creature token. Put three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -166,7 +165,7 @@
 ## Fully supported
 
 <details>
-<summary>119 cards</summary>
+<summary>120 cards</summary>
 
 - Aberrant Manawurm
 - Ajani's Response
@@ -190,6 +189,7 @@
 - Deluge Virtuoso
 - Diary of Dreams
 - Dina's Guidance
+- Dissection Practice
 - Duel Tactics
 - Echocasting Symposium
 - Elemental Mascot
@@ -292,9 +292,7 @@
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| target opponent loses N life and you gain N life. up to one target creature gets +N/+N until end of turn. up to one target creature gets -N/-N until end of turn | 1 | Dissection Practice | sos |
+None.
 
 ## Notes
 

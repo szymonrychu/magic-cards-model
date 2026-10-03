@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 7.1% |
-| Works (untested) | 73 | 51.8% |
+| Tested | 12 | 8.5% |
+| Works (untested) | 75 | 53.2% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 53 | 37.6% |
+| Not working | 49 | 34.8% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Paragon of the Amesha | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes an Angel, gets +3/+3, and gains flying and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rhox Bodyguard | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rupture Spire | silent | When this land enters, sacrifice it unless you pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Scornful Aether-Lich | silent | {W}{B}: This creature gains fear and vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shard Convergence | silent | Search your library for a Plains card, an Island card, a Swamp card, and a Mountain card. Reveal those cards, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Majesty | silent | Draw cards equal to the power of target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Telemin Performance | silent | Target opponent reveals cards from the top of their library until they reveal a creature card. That player puts all noncreature cards revealed this way into the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -71,12 +70,9 @@
 | Cliffrunner Behemoth | notice | This creature has haste as long as you control a red permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Court Homunculus | notice | This creature gets +1/+1 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Filigree Fracture | notice | Destroy target artifact or enchantment. If that permanent was blue or black, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Fleshformer | notice | {W}{U}{B}{R}{G}: This creature gets +2/+2 and gains fear until end of turn. Target creature gets -2/-2 until end of turn. Activate only during your turn. | unparsed remainder: This creature gets +2/+2 and gains fear until end of turn. | Y/-/- | not_working |
-| Gleam of Resistance | notice | Creatures you control get +1/+2 until end of turn. Untap those creatures. Basic landcycling {1}{W} ({1}{W}, Discard this card: Search your library for a basic l | unparsed remainder: Untap those creatures. | Y/-/- | not_working |
 | Hellkite Hatchling | notice | This creature has flying and trample if it devoured a creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Quenchable Fire | notice | Quenchable Fire deals 3 damage to target player or planeswalker. It deals an additional 3 damage to that player or planeswalker at the beginning of your next up | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sphinx Summoner | notice | When this creature enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Suicidal Charge | notice | Sacrifice this enchantment: Creatures your opponents control get -1/-1 until end of turn. Those creatures attack this turn if able. | unparsed remainder: Those creatures attack this turn if able. | Y/-/- | not_working |
 | Toxic Iguanar | notice | This creature has deathtouch as long as you control a green permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | View from Above | notice | Target creature gains flying until end of turn. If you control a white permanent, return View from Above to its owner's hand. | unparsed remainder: If you control a white permanent, return View from Above to its owner's hand. | Y/-/- | not_working |
 | Apocalypse Hydra | unaudited | This creature enters with X +1/+1 counters on it. If X is 5 or more, it enters with an additional X +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -105,6 +101,7 @@
 | Exploding Borders | handled | Domain — Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Exploding Borders deals X damage to target player o | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faerie Mechanist | handled | When this creature enters, look at the top three cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fiery Fall | handled | Fiery Fall deals 5 damage to target creature. Basic landcycling {1}{R} ({1}{R}, Discard this card: Search your library for a basic land card, reveal it, put it  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fleshformer | handled | {W}{U}{B}{R}{G}: This creature gets +2/+2 and gains fear until end of turn. Target creature gets -2/-2 until end of turn. Activate only during your turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Font of Mythos | handled | At the beginning of each player's draw step, that player draws two additional cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fusion Elemental | handled |  |  | Y/-/- | not_tested |
 | Gluttonous Slime | handled | Flash | machines/casting.py (timing) | Y/-/- | not_tested |
@@ -142,6 +139,7 @@
 | Scepter of Dominance | handled | {W}, {T}: Tap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scepter of Fugue | handled | {1}{B}, {T}: Target player discards a card. Activate only during your turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scepter of Insight | handled | {3}{U}, {T}: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Scornful Aether-Lich | handled | {W}{B}: This creature gains fear and vigilance until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sedraxis Alchemist | handled | When this creature enters, if you control a blue permanent, return target nonland permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shambling Remains | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sigil of the Empty Throne | handled | Whenever you cast an enchantment spell, create a 4/4 white Angel creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -161,17 +159,19 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>12 cards</summary>
 
 - Aerie Mystics
 - Canyon Minotaur
 - Celestial Purge
 - Exotic Orchard
+- Gleam of Resistance
 - Magister Sphinx
 - Mark of Asylum
 - Path to Exile
 - Reliquary Tower
 - Skyward Eye Prophets
+- Suicidal Charge
 - Thornling
 
 </details>
@@ -190,12 +190,10 @@
 | at the beginning of your upkeep, return an artifact you control to its owner's hand. | 1 | Esperzoa | con |
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M}. | 1 | Wild Leotau | con |
 | create N N/N white soldier creature tokens. if N is N or more, destroy all other creatures. | 1 | Martial Coup | con |
-| creatures you control get +N/+N until end of turn. untap those creatures. basic landcycling {M}{M} ({M}{M}, discard ~: search your library for a basic land card | 1 | Gleam of Resistance | con |
 | destroy target artifact or enchantment. if that permanent was blue or black, draw a card. | 1 | Filigree Fracture | con |
 | destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | 1 | Wretched Banquet | con |
 | draw cards equal to the power of target creature you control. | 1 | Soul's Majesty | con |
 | if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Progenitus | con |
-| sacrifice ~: creatures your opponents control get -N/-N until end of turn. those creatures attack ~ if able. | 1 | Suicidal Charge | con |
 | search your library for a plains card, an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Shard Convergence | con |
 | search your library for a white card, a blue card, a black card, a red card, and a green card. reveal those cards, put them into your hand, then shuffle. | 1 | Conflux | con |
 | target creature gains flying until end of turn. if you control a white permanent, return ~ to its owner's hand. | 1 | View from Above | con |
@@ -212,12 +210,10 @@
 | whenever ~ deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | 1 | Maelstrom Archangel | con |
 | you may cast ~ from your graveyard by paying {M}{M}{M}{M}{M} rather than paying its mana cost. if you do, it enters with two +N/+N counters on it. | 1 | Worldheart Phoenix | con |
 | {M}{M}, {M}: put a bribery counter on target creature you don't control. its controller draws a card. | 1 | Gwafa Hazid, Profiteer | con |
-| {M}{M}: ~ gains fear and vigilance until end of turn. | 1 | Scornful Aether-Lich | con |
 | {M}{M}: ~ gets -N/-N until end of turn and can't be blocked ~. | 1 | Vectis Agents | con |
 | {M}{M}{M}: ~ and each other creature with the same name as it get +N/+N until end of turn. | 1 | Cylian Sunsinger | con |
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes a dragon, gets +N/+N, and gains flying and trample. | 1 | Dragonsoul Knight | con |
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes an angel, gets +N/+N, and gains flying and lifelink. | 1 | Paragon of the Amesha | con |
-| {M}{M}{M}{M}{M}: ~ gets +N/+N and gains fear until end of turn. target creature gets -N/-N until end of turn. activate only during your turn. | 1 | Fleshformer | con |
 | ~ can't be countered. ~ deals N damage to each creature and each player. | 1 | Volcanic Fallout | con |
 | ~ deals N damage divided as you choose among one, two, or three target white and/or blue creatures. | 1 | Ignite Disorder | con |
 | ~ deals N damage to any target. if N is N or more, ~ can"..."t be prevented. | 1 | Banefire | con |

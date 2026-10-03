@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 6.8% |
-| Works (untested) | 73 | 45.3% |
+| Tested | 14 | 8.7% |
+| Works (untested) | 77 | 47.8% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 66 | 41.0% |
+| Not working | 59 | 36.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Abzan Advantage | silent | Target player sacrifices an enchantment of their choice. Bolster 1. (Choose a creature with the least toughness among creatures you control and put a +1/+1 coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Abzan Runemark | silent | Enchanted creature has vigilance as long as you control a black or green permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Abzan Skycaptain | silent | When this creature dies, bolster 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alesha, Who Smiles at Death | silent | Whenever Alesha attacks, you may pay {W/B}{W/B}. If you do, return target creature card with power 2 or less from your graveyard to the battlefield tapped and a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ambush Krotiq | silent | When this creature enters, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -54,10 +53,8 @@
 | Honor's Reward | silent | You gain 4 life. Bolster 2. (Choose a creature with the least toughness among creatures you control and put two +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Humble Defector | silent | {T}: Draw two cards. Target opponent gains control of this creature. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jeskai Infiltrator | silent | When this creature deals combat damage to a player, exile it and the top card of your library in a face-down pile, shuffle that pile, then manifest those cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jeskai Runemark | silent | Enchanted creature has flying as long as you control a red or white permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lightform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Map the Wastes | silent | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Bolster 1. (Choose a creature with the least toughness among creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mardu Runemark | silent | Enchanted creature has first strike as long as you control a white or black permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rageform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakshasa's Disdain | silent | Counter target spell unless its controller pays {1} for each card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Renowned Weaponsmith | silent | {U}, {T}: Search your library for a card named Heart-Piercer Bow or Vial of Dragonfire, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -70,9 +67,7 @@
 | Soulfire Grand Master | silent | Instant and sorcery spells you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulflayer | silent | If a creature card with flying was exiled with this creature's delve ability, this creature has flying. The same is true for first strike, double strike, deatht | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sudden Reclamation | silent | Mill four cards, then return a creature card and a land card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sultai Runemark | silent | Enchanted creature has deathtouch as long as you control a green or blue permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tasigur, the Golden Fang | silent | {2}{G/U}{G/U}: Mill two cards, then return a nonland card of an opponent's choice from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Temur Runemark | silent | Enchanted creature has trample as long as you control a blue or red permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temur Sabertooth | silent | {1}{G}: You may return another creature you control to its owner's hand. If you do, this creature gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temur War Shaman | silent | Whenever a permanent you control is turned face up, if it's a creature, you may have it fight target creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torrent Elemental | silent | Whenever this creature attacks, tap all creatures defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,11 +82,9 @@
 | Bloodfire Enforcers | notice | This creature has first strike and trample as long as an instant card and a sorcery card are in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crux of Fate | notice | Choose one — • Destroy all Dragon creatures. • Destroy all non-Dragon creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fearsome Awakening | notice | Return target creature card from your graveyard to the battlefield. If it's a Dragon, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Flamerush Rider | notice | Whenever this creature attacks, create a token that's a copy of another target attacking creature and that's tapped and attacking. Exile the token at end of com | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rally the Ancestors | notice | Return each creature card with mana value X or less from your graveyard to the battlefield. Exile those creatures at the beginning of your next upkeep. Exile Ra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reality Shift | notice | Exile target creature. Its controller manifests the top card of their library. (That player puts the top card of their library onto the battlefield face down as | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Supplant Form | notice | Return target creature to its owner's hand. You create a token that's a copy of that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| War Flare | notice | Creatures you control get +2/+1 until end of turn. Untap those creatures. | unparsed remainder: Untap those creatures. | Y/Y/- | not_working |
 | Battlefront Krushok | unaudited | Each creature you control with a +1/+1 counter on it can't be blocked by more than one creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Citadel Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Frontier Mastodon | unaudited | Ferocious — This creature enters with a +1/+1 counter on it if you control a creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -104,6 +97,7 @@
 | Palace Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Wardscale Dragon | unaudited | As long as this creature is attacking, defending player can't cast spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abzan Beastmaster | handled | At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Abzan Runemark | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alesha's Vanguard | handled | Dash | machines/casting.py | Y/Y/- | not_tested |
 | Ancestral Vengeance | handled | When this Aura enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arashin Cleric | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -133,11 +127,13 @@
 | Hero's Blade | handled | Equipped creature gets +3/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hooded Assassin | handled | When this creature enters, choose one — • Put a +1/+1 counter on this creature. • Destroy target creature that was dealt damage this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jeskai Barricade | handled | When this creature enters, you may return another target creature you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jeskai Runemark | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jeskai Sage | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kolaghan, the Storm's Fury | handled | Whenever a Dragon you control attacks, creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lightning Shrieker | handled | At the beginning of the end step, this creature's owner shuffles it into their library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lotus Path Djinn | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Lotus-Eye Mystics | handled | When this creature enters, return target enchantment card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mardu Runemark | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Scout | handled | Dash | machines/casting.py | Y/Y/- | not_tested |
 | Mardu Shadowspear | handled | Whenever this creature attacks, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Strike Leader | handled | Whenever this creature attacks, create a 2/1 black Warrior creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -167,6 +163,7 @@
 | Smoldering Efreet | handled | When this creature dies, it deals 2 damage to you. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soul Summons | handled | Manifest the top card of your library. (Put it onto the battlefield face down as a 2/2 creature. Turn it face up any time for its mana cost if it's a creature c | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sultai Emissary | handled | When this creature dies, manifest the top card of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sultai Runemark | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sultai Skullkeeper | handled | When this creature enters, mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tasigur's Cruelty | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Each opponent discards two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Temporal Trespass | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Take an extra turn after this one. Exile Temporal Trespass. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -180,18 +177,21 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>14 cards</summary>
 
 - Ainok Guide
 - Break Through the Line
 - Dark Deal
 - Ethereal Ambush
+- Flamerush Rider
 - Mardu Woe-Reaper
 - Mastery of the Unseen
 - Mob Rule
 - Shifting Loyalties
 - Temur Battle Rage
+- Temur Runemark
 - Wandering Champion
+- War Flare
 - Warden of the First Tree
 
 </details>
@@ -218,14 +218,8 @@
 | choose target creature. mill three cards, then put a +N/+N counter on that creature for each creature card in your graveyard. (to mill three cards, put the top  | 1 | Grave Strength | frf |
 | choose target creature. whenever that creature is dealt damage ~, it deals that much damage to each other creature and each player. | 1 | Arcbond | frf |
 | counter target spell unless its controller pays {M} for each card in your graveyard. | 1 | Rakshasa's Disdain | frf |
-| creatures you control get +N/+N until end of turn. untap those creatures. | 1 | War Flare | frf |
 | delve (each card you exile from your graveyard while casting ~ pays for {M}.) return target nonland permanent you control and target nonland permanent you don". | 1 | Rite of Undoing | frf |
 | each creature you control with a +N/+N counter on it can't be blocked by more than one creature. | 1 | Battlefront Krushok | frf |
-| enchanted creature has deathtouch as long as you control a green or blue permanent. | 1 | Sultai Runemark | frf |
-| enchanted creature has first strike as long as you control a white or black permanent. | 1 | Mardu Runemark | frf |
-| enchanted creature has flying as long as you control a red or white permanent. | 1 | Jeskai Runemark | frf |
-| enchanted creature has trample as long as you control a blue or red permanent. | 1 | Temur Runemark | frf |
-| enchanted creature has vigilance as long as you control a black or green permanent. | 1 | Abzan Runemark | frf |
 | exile all creature cards from target player"..."s a creature card.) | 1 | Ghastly Conscription | frf |
 | exile target creature. its controller manifests the top card of their library. (that player puts the top card of their library onto the battlefield face down as | 1 | Reality Shift | frf |
 | if a creature card with flying was exiled with ~ delve ability, ~ has flying. the same is true for first strike, double strike, deathtouch, haste, hexproof, ind | 1 | Soulflayer | frf |
@@ -256,7 +250,6 @@
 | whenever a dragon you control attacks, creatures defending player controls get -N/-N until end of turn. | 1 | Silumgar, the Drifting Death | frf |
 | whenever a permanent you control is turned face up, if it"..."t control. | 1 | Temur War Shaman | frf |
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
-| whenever ~ attacks, create a token that"..."s tapped and attacking. exile the token at end of combat. | 1 | Flamerush Rider | frf |
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |
 | whenever ~ deals combat damage to a player, it deals N damage to each creature that player controls. | 1 | Shockmaw Dragon | frf |
 | you gain N life. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Honor's Reward | frf |

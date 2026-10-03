@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.7% |
-| Works (untested) | 159 | 70.7% |
+| Tested | 18 | 8.0% |
+| Works (untested) | 160 | 71.1% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 42 | 18.7% |
+| Not working | 38 | 16.9% |
 
 ## Cards needing work
 
@@ -55,16 +55,12 @@
 | See the Unwritten | silent | Reveal the top eight cards of your library. You may put a creature card from among them onto the battlefield. Put the rest into your graveyard. Ferocious — If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smoke Teller | silent | {1}{U}: Look at target face-down creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Solemn Visitor | silent | +1: Until your next turn, creatures you control get +1/+0 and gain lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Wingmate Roc | silent | Whenever this creature attacks, you gain 1 life for each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bring Low | notice | Bring Low deals 3 damage to target creature. If that creature has a +1/+1 counter on it, Bring Low deals 5 damage to it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Death Frenzy | notice | All creatures get -2/-2 until end of turn. Whenever a creature dies this turn, you gain 1 life. | unparsed remainder: Whenever a creature dies this turn, you gain 1 life. | Y/Y/- | not_working |
 | Feat of Resistance | notice | Put a +1/+1 counter on target creature you control. It gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | High Sentinels of Arashin | notice | This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Jeskai Ascendancy | notice | Whenever you cast a noncreature spell, creatures you control get +1/+1 until end of turn. Untap those creatures. | unparsed remainder: Untap those creatures. | Y/Y/- | not_working |
 | Mardu Charm | notice | Choose one — • Mardu Charm deals 4 damage to target creature. • Create two 1/1 white Warrior creature tokens. They gain first strike until end of turn. • Target | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ride Down | notice | Destroy target blocking creature. Creatures that were blocked by that creature this combat gain trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rite of the Serpent | notice | Destroy target creature. If that creature had a +1/+1 counter on it, create a 1/1 green Snake creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rush of Battle | notice | Creatures you control get +2/+1 until end of turn. Warrior creatures you control gain lifelink until end of turn. (Damage dealt by those Warriors also causes th | unparsed remainder: Warrior creatures you control gain lifelink until end of turn. | Y/Y/- | not_working |
 | Savage Punch | notice | Target creature you control fights target creature you don't control. Ferocious — The creature you control gets +2/+2 until end of turn before it fights if you  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Temur Charm | notice | Choose one — • Target creature you control gets +1/+1 until end of turn. It fights target creature you don't control. • Counter target spell unless its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Villainous Wealth | notice | Target opponent exiles the top X cards of their library. You may cast any number of spells with mana value X or less from among them without paying their mana c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -233,6 +229,7 @@
 | Wetland Sambar | handled |  |  | Y/Y/- | not_tested |
 | Whirlwind Adept | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
 | Wind-Scarred Crag | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Wingmate Roc | handled | Raid — When this creature enters, if you attacked this turn, create a 3/4 white Bird creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Winterflame | handled | Choose one or both — • Tap target creature. • Winterflame deals 2 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Witness of the Ages | handled | Morph | machines/casting.py | Y/Y/- | not_tested |
 | Woolly Loxodon | handled | Morph | machines/casting.py | Y/Y/- | not_tested |
@@ -240,20 +237,23 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>18 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
 - Ainok Bond-Kin
 - Burn Away
 - Clever Impersonator
+- Death Frenzy
 - Hardened Scales
 - Hooting Mandrills
 - Jeering Instigator
+- Jeskai Ascendancy
 - Kheru Dreadmaw
 - Kheru Spellsnatcher
 - Monastery Swiftspear
 - Necropolis Fiend
+- Rush of Battle
 - Stubborn Denial
 - Treasure Cruise
 - Utter End
@@ -270,12 +270,10 @@
 | +N: until end of turn, sarkhan becomes a legendary N/N red dragon creature with flying, indestructible, and haste. | 1 | Sarkhan, the Dragonspeaker | ktk |
 | +N: until your next turn, creatures you control get +N/+N and gain lifelink. | 1 | Sorin, Solemn Visitor | ktk |
 | all creatures able to block target creature ~ do so. ferocious — that creature gains indestructible until end of turn if you control a creature with power N or  | 1 | Roar of Challenge | ktk |
-| all creatures get -N/-N until end of turn. whenever a creature dies ~, you gain N life. | 1 | Death Frenzy | ktk |
 | as ~ is turned face up, put five +N/+N counters on it. | 1 | Hooded Hydra | ktk |
 | at the beginning of your upkeep, you may pay {M}{M}. if you do, return a creature card at random from your graveyard to the battlefield. it gains flying, trampl | 1 | Kheru Lich Lord | ktk |
 | choose up to one creature. destroy the rest. | 1 | Duneblast | ktk |
 | counter target spell unless its controller pays {M}. ~ deals N damage to that spell's controller. | 1 | Mindswipe | ktk |
-| creatures you control get +N/+N until end of turn. warrior creatures you control gain lifelink until end of turn. (damage dealt by those warriors also causes th | 1 | Rush of Battle | ktk |
 | destroy all creatures and all permanents attached to creatures. | 1 | End Hostilities | ktk |
 | destroy target blocking creature. creatures that were blocked by that creature ~ gain trample until end of turn. | 1 | Ride Down | ktk |
 | destroy target creature. if that creature had a +N/+N counter on it, create a N/N green snake creature token. | 1 | Rite of the Serpent | ktk |
@@ -299,10 +297,8 @@
 | whenever narset attacks, exile the top four cards of your library. until end of turn, you may cast noncreature spells from among those cards without paying thei | 1 | Narset, Enlightened Master | ktk |
 | whenever one or more cards are put into exile from your graveyard, put that many +N/+N counters on ~. | 1 | Rakshasa Vizier | ktk |
 | whenever you activate ~ outlast ability, create a N/N white warrior creature token. | 1 | Herald of Anafenza | ktk |
-| whenever you cast a noncreature spell, creatures you control get +N/+N until end of turn. untap those creatures. | 1 | Jeskai Ascendancy | ktk |
 | whenever ~ attacks, exile it. return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on your next t | 1 | Meandering Towershell | ktk |
 | whenever ~ attacks, target creature defending player controls blocks it ~ if able. | 1 | Avalanche Tusker | ktk |
-| whenever ~ attacks, you gain N life for each attacking creature. | 1 | Wingmate Roc | ktk |
 | whenever ~ or another creature you control is turned face up, untap that creature. | 1 | Pine Walker | ktk |
 | you may look at the top card of your library and at face-down creatures you don't control any time. | 1 | Lens of Clarity | ktk |
 | {M}, exile ~: target player shuffles their graveyard into their library. draw a card. | 1 | Cranial Archive | ktk |

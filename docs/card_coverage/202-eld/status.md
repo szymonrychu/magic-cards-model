@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 13.0% |
+| Tested | 37 | 13.8% |
 | Works (untested) | 135 | 50.2% |
 | Partial (unaudited) | 24 | 8.9% |
-| Not working | 75 | 27.9% |
+| Not working | 73 | 27.1% |
 
 ## Cards needing work
 
@@ -91,8 +91,6 @@
 | Flaxen Intruder // Welcome Home | notice | Whenever this creature deals combat damage to a player, you may sacrifice it. When you do, destroy target artifact or enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Giant Opportunity | notice | You may sacrifice two Foods. If you do, create a 7/7 green Giant creature token. Otherwise, create three Food tokens. (They're artifacts with "{2}, {T}, Sacrifi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Insatiable Appetite | notice | You may sacrifice a Food. If you do, target creature gets +5/+5 until end of turn. Otherwise, that creature gets +3/+3 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Oko's Hospitality | notice | Creatures you control have base power and toughness 3/3 until end of turn. You may search your library and/or graveyard for a card named Oko, the Trickster, rev | unparsed remainder: You may search your library and/or graveyard for a card named Oko, the Trickster, reveal it, and put it into your hand. If you search your library this way, shuffle. | Y/Y/- | not_working |
-| Oko, the Trickster | notice | 0: Until end of turn, Oko becomes a copy of target creature you control. Prevent all damage that would be dealt to him this turn. | unparsed remainder: Prevent all damage that would be dealt to him this turn. | Y/Y/- | not_working |
 | Outmuscle | notice | Put a +1/+1 counter on target creature you control, then it fights target creature you don't control. (Each deals damage equal to its power to the other.) Adama | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Return of the Wildspeaker | notice | Choose one — • Draw cards equal to the greatest power among non-Human creatures you control. • Non-Human creatures you control get +3/+3 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Roving Keep | notice | {7}: This creature gets +2/+0 and gains trample until end of turn. It can attack this turn as though it didn't have defender. | unparsed remainder: It can attack this turn as though it didn't have defender. | Y/Y/- | not_working |
@@ -264,7 +262,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>37 cards</summary>
 
 - Banish into Fable
 - Bartered Cow
@@ -293,6 +291,8 @@
 - Moonlit Scavengers
 - Murderous Rider // Swift End
 - Mystical Dispute
+- Oko's Hospitality
+- Oko, the Trickster
 - Reaper of Night // Harvest Fear
 - Rimrock Knight // Boulder Rush
 - Run Away Together
@@ -310,7 +310,6 @@
 |---|---|---|---|
 | Adamant | 7 | Ardenvale Paladin, Cauldron's Gift, Embereth Paladin, Garenbrig Paladin, Henge Walker | eld |
 | Choose one | 1 | Return of the Wildspeaker | eld |
-| N: until end of turn, oko becomes a copy of target creature you control. prevent all damage that would be dealt to him ~. | 1 | Oko, the Trickster | eld |
 | a deck can have up to seven cards named ~. | 1 | Seven Dwarves | eld |
 | add one mana of any color. (then exile ~. you may cast the creature later from exile.) | 1 | Rosethorn Acolyte // Seasonal Ritual | eld |
 | add seven {M}. you can cast only one more spell ~. | 1 | Irencrag Feat | eld |
@@ -328,7 +327,6 @@
 | creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Archon of Absolution | eld |
 | creatures entering or dying don't cause abilities to trigger. | 1 | Hushbringer | eld |
 | creatures of the creature type of your choice get -N/-N until end of turn. | 1 | Witch's Vengeance | eld |
-| creatures you control have base power and toughness N/N until end of turn. you may search your library and/or graveyard for a card named oko, the trickster, rev | 1 | Oko's Hospitality | eld |
 | destroy all non-giant creatures. (then exile ~. you may cast the creature later from exile.) | 1 | Realm-Cloaked Giant // Cast Off | eld |
 | draw three cards. adamant — if at least three blue mana was spent to cast ~, scry N. | 1 | Unexplained Vision | eld |
 | each creature you control that has an adventure enters with an additional +N/+N counter on it. | 1 | Mysterious Pathlighter | eld |

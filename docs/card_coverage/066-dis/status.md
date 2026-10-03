@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 11.2% |
-| Works (untested) | 56 | 33.1% |
+| Works (untested) | 58 | 34.3% |
 | Partial (unaudited) | 4 | 2.4% |
-| Not working | 90 | 53.3% |
+| Not working | 88 | 52.1% |
 
 ## Cards needing work
 
@@ -85,7 +85,6 @@
 | Rakdos Pit Dragon | silent | Hellbent — This creature has double strike as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Riteknife | silent | Equipped creature gets +1/+0 for each blood counter on this Equipment and has "{T}, Sacrifice a creature: Put a blood counter on Rakdos Riteknife." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos the Defiler | silent | Whenever Rakdos attacks, sacrifice half the non-Demon permanents you control, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ratcatcher | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Research // Development | silent | Shuffle up to four cards you own from outside the game into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rise // Fall | silent | Return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Simic Basilisk | silent | {1}{G}: Until end of turn, target creature with a +1/+1 counter on it gains "Whenever this creature deals combat damage to a creature, destroy that creature at  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -94,7 +93,6 @@
 | Slithering Shade | silent | Hellbent — This creature can attack as though it didn't have defender as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sporeback Troll | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Squealing Devil | silent | When this creature enters, you may pay {X}. If you do, target creature gets +X/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stormscale Anarch | silent | {2}{R}, Discard a card at random: This creature deals 2 damage to any target. If the discarded card was multicolored, this creature deals 4 damage instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Street Savvy | silent | Enchanted creature gets +0/+2 and can block creatures with landwalk abilities as though they didn't have those abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Swift Silence | silent | Counter all other spells. Draw a card for each spell countered this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trial // Error | silent | Return all creatures blocking or blocked by target creature to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -150,6 +148,7 @@
 | Rakdos Carnarium | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Guildmage | handled | {3}{B}, Discard a card: Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Signet | handled |  |  | Y/-/- | not_tested |
+| Ratcatcher | handled | At the beginning of your upkeep, you may search your library for a Rat card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Riot Spikes | handled | Enchanted creature gets +2/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rix Maadi, Dungeon Palace | handled | {1}{B}{R}, {T}: Each player discards a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sandstorm Eidolon | handled | {R}, Sacrifice this creature: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -165,6 +164,7 @@
 | Steeling Stance | handled | Creatures you control get +1/+1 until end of turn. Forecast — {W}, Reveal this card from your hand: Target creature gets +1/+1 until end of turn. (Activate only | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stoic Ephemera | handled | When this creature blocks, sacrifice it at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stomp and Howl | handled | Destroy target artifact and target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stormscale Anarch | handled | {2}{R}, Discard a card at random: This creature deals 2 damage to any target. If the discarded card was multicolored, this creature deals 4 damage instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tidespout Tyrant | handled | Whenever you cast a spell, return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Transguild Courier | handled | Transguild Courier is all colors. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trygon Predator | handled | Whenever this creature deals combat damage to a player, you may destroy target artifact or enchantment that player controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -230,7 +230,6 @@
 | enchanted land has "..." | 1 | Leafdrake Roost | dis |
 | equipped creature gets +N/+N for each blood counter on ~ and has "..." | 1 | Rakdos Riteknife | dis |
 | exile all cards from your hand face down. at the beginning of the next end step, return those cards to your hand, then draw a card. | 1 | Ignorant Bliss | dis |
-| fear | 1 | Ratcatcher | dis |
 | flip a coin. if it comes up heads, counter target instant or sorcery spell. if it comes up tails, copy that spell and you may choose new targets for the copy. | 1 | Odds // Ends | dis |
 | gain control of target monocolored creature. forecast — {M}{M}, reveal ~ from your hand: target creature becomes the color or colors of your choice until end of | 1 | Govern the Guildless | dis |
 | if a spell or ability would cause its controller to gain life, that player loses that much life instead. | 1 | Rain of Gore | dis |
@@ -275,7 +274,6 @@
 | {M}: reveal your hand and discard a card of target opponent's choice. then that player reveals their hand and discards a card of your choice. activate only as a | 1 | Rakdos Augermage | dis |
 | {M}: switch ~ power and toughness until end of turn. | 1 | Windreaver | dis |
 | {M}: ~ deals N damage to target creature and that creature's controller loses N life. | 1 | Rakdos Ickspitter | dis |
-| {M}{M}, discard a card at random: ~ deals N damage to any target. if the discarded card was multicolored, ~ deals N damage instead. | 1 | Stormscale Anarch | dis |
 | {M}{M}, {M}: put a +N/+N counter on each creature that entered ~. | 1 | Novijen, Heart of Progress | dis |
 | {M}{M}: creatures you control with defender can attack ~ as though they didn't have defender. | 1 | Wakestone Gargoyle | dis |
 | {M}{M}: move a +N/+N counter from target creature onto another target creature with the same controller. | 1 | Simic Guildmage | dis |

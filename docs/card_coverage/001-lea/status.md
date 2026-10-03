@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 22.4% |
+| Tested | 29 | 25.0% |
 | Works (untested) | 58 | 50.0% |
-| Partial (unaudited) | 4 | 3.4% |
-| Not working | 28 | 24.1% |
+| Partial (unaudited) | 3 | 2.6% |
+| Not working | 26 | 22.4% |
 
 ## Cards needing work
 
@@ -48,14 +48,11 @@
 | Pirate Ship | silent | When you control no Islands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Regeneration | silent | {G}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reverse Damage | silent | The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Black Knight | notice | Protection | protection from a quality the engine does not read: white (This creature can't be blocked | Y/-/- | not_working |
 | Cockatrice | notice | Whenever this creature blocks or becomes blocked by a non-Wall creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Disintegrate | notice | Disintegrate deals X damage to any target. If it's a creature, it can't be regenerated this turn, and if it would die this turn, exile it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dragon Whelp | notice | {R}: This creature gets +1/+0 until end of turn. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of th | unparsed remainder: If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step. | Y/Y/- | not_working |
 | Stone Giant | notice | {T}: Target creature you control with toughness less than this creature's power gains flying until end of turn. Destroy that creature at the beginning of the ne | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| White Knight | notice | Protection | protection from a quality the engine does not read: black (This creature can't be blocked | Y/-/- | not_working |
 | Consecrate Land | unaudited | Enchanted land has indestructible and can't be enchanted by other Auras. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Fear | unaudited | Enchanted creature has fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Invisibility | unaudited | Enchanted creature can't be blocked except by Walls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lure | unaudited | All creatures able to block enchanted creature do so. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Air Elemental | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -65,6 +62,7 @@
 | Drudge Skeletons | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dwarven Demolition Team | handled | {T}: Destroy target Wall. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Earth Elemental | handled |  |  | Y/-/- | not_tested |
+| Fear | handled | Enchanted creature has fear. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fire Elemental | handled |  |  | Y/Y/Y | not_tested |
 | Flight | handled | Enchanted creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fungusaur | handled | Whenever this creature is dealt damage, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -94,7 +92,6 @@
 | Scathe Zombies | handled |  |  | Y/-/- | not_tested |
 | Sengir Vampire | handled | Whenever a creature dealt damage by this creature this turn dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shatter | handled | Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Shivan Dragon | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spell Blast | handled | Counter target spell with mana value X. (For example, if that spell's mana cost is {3}{U}{U}, X is 5.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Steal Artifact | handled | You control enchanted artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stone Rain | handled | Destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -120,9 +117,10 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>29 cards</summary>
 
 - Birds of Paradise
+- Black Knight
 - Clone
 - Counterspell
 - Craw Wurm
@@ -145,8 +143,10 @@
 - Raise Dead
 - Savannah Lions
 - Serra Angel
+- Shivan Dragon
 - Swamp
 - Unsummon
+- White Knight
 - Wrath of God
 
 </details>
@@ -155,7 +155,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| protection | 2 | Black Knight, White Knight | lea |
 | {M}: enchanted creature gets +N/+N until end of turn. | 2 | Blessing, Firebreathing | lea |
 | all creatures able to block enchanted creature do so. | 1 | Lure | lea |
 | as long as ~ isn't attacking, its power and toughness are each equal to the number of forests you control. as long as ~ is attacking, its power and toughness ar | 1 | Gaea's Liege | lea |
@@ -164,7 +163,6 @@
 | black creatures get +N/+N. | 1 | Bad Moon | lea |
 | destroy all plains. | 1 | Flashfires | lea |
 | enchanted creature can't be blocked except by walls. | 1 | Invisibility | lea |
-| enchanted creature has ~. | 1 | Fear | lea |
 | enchanted land has indestructible and can't be enchanted by other auras. | 1 | Consecrate Land | lea |
 | enchanted land is a swamp. | 1 | Evil Presence | lea |
 | other goblins get +N/+N and have mountainwalk. | 1 | Goblin King | lea |

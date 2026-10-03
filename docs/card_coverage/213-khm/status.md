@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 8.7% |
+| Tested | 27 | 9.4% |
 | Works (untested) | 134 | 46.7% |
 | Partial (unaudited) | 15 | 5.2% |
-| Not working | 113 | 39.4% |
+| Not working | 111 | 38.7% |
 
 ## Cards needing work
 
@@ -118,7 +118,6 @@
 | Varragoth, Bloodsky Sire | silent | Boast — {1}{B}: Target player searches their library for a card, then shuffles and puts that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Waking the Trolls | silent | III — Choose target opponent. If they control fewer lands than you, create a number of 4/4 green Troll Warrior creature tokens with trample equal to the differe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Absorb Identity | notice | Return target creature to its owner's hand. You may have Shapeshifters you control become copies of that creature until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Armed and Armored | notice | Vehicles you control become artifact creatures until end of turn. Choose a Dwarf you control. Attach any number of Equipment you control to it. | unparsed remainder: Choose a Dwarf you control. Attach any number of Equipment you control to it. | Y/Y/- | not_working |
 | Axgard Armory | notice | {1}{R}{R}{W}, {T}, Sacrifice this land: Search your library for an Aura card and/or an Equipment card, reveal them, put them into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Berg Strider | notice | When this creature enters, tap target artifact or creature an opponent controls. If {S} was spent to cast this spell, that permanent doesn't untap during its co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bind the Monster | notice | When this Aura enters, tap enchanted creature. It deals damage to you equal to its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -134,7 +133,6 @@
 | Return Upon the Tide | notice | Return target creature card from your graveyard to the battlefield. If it's an Elf, create two 1/1 green Elf Warrior creature tokens. Foretell {3}{B} (During yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Search for Glory | notice | Search your library for a snow permanent card, a legendary card, or a Saga card, reveal it, put it into your hand, then shuffle. You gain 1 life for each {S} sp | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Shackles of Treachery | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals damage, destroy targ | unparsed remainder: Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals damage, destroy target Equipment attached to it." | Y/Y/- | not_working |
-| Sigrid, God-Favored | notice | Protection | protection from a quality the engine does not read: God creatures | Y/Y/- | not_working |
 | Skemfar Shadowsage | notice | When this creature enters, choose one — • Each opponent loses X life, where X is the greatest number of creatures you control that have a creature type in commo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spirit of the Aldergard | notice | This creature gets +1/+0 for each other snow permanent you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Surtland Flinger | notice | Whenever this creature attacks, you may sacrifice another creature. When you do, this creature deals damage equal to the sacrificed creature's power to any targ | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -292,8 +290,9 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>27 cards</summary>
 
+- Armed and Armored
 - Axgard Braggart
 - Battle Mammoth
 - Cleaving Reaper
@@ -313,6 +312,7 @@
 - Raven Wings
 - Righteous Valkyrie
 - Saw It Coming
+- Sigrid, God-Favored
 - Snakeskin Veil
 - The Trickster-God's Heist
 - Vega, the Watcher
@@ -381,7 +381,6 @@
 | mill three cards, then return a land card or elf card from your graveyard to your hand. if you can't, draw a card. (to mill a card, put the top card of your lib | 1 | Roots of Wisdom | khm |
 | mill three cards. you may put an elf or tyvar card from your graveyard onto the battlefield. | 1 | Harald Unites the Elves | khm |
 | other snow and zombie creatures you control get +N/+N. | 1 | Narfi, Betrayer King | khm |
-| protection | 1 | Sigrid, God-Favored | khm |
 | return target creature card from your graveyard to the battlefield. if it's an elf, create two N/N green elf warrior creature tokens. foretell {M}{M} (during yo | 1 | Return Upon the Tide | khm |
 | return target creature to its owner's hand. you may have shapeshifters you control become copies of that creature until end of turn. | 1 | Absorb Identity | khm |
 | search your library for a card named halvar, god of battle or an equipment card, reveal it, put it into your hand, then shuffle. | 1 | Forging the Tyrite Sword | khm |
@@ -393,7 +392,6 @@
 | treasures you control have "..." | 1 | Goldspan Dragon | khm |
 | until end of turn, angels you control gain "..." | 1 | Firja's Retribution | khm |
 | until end of turn, target creature gets +N/+N for each creature you control and gains trample. it must be blocked ~ if able. | 1 | King Harald's Revenge | khm |
-| vehicles you control become artifact creatures until end of turn. choose a dwarf you control. attach any number of equipment you control to it. | 1 | Armed and Armored | khm |
 | when kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able. | 1 | Kardur, Doomscourge | khm |
 | when valki enters, each opponent reveals their hand. for each opponent, exile a creature card they revealed ~ until valki leaves the battlefield. | 1 | Valki, God of Lies // Tibalt, Cosmic Impostor | khm |
 | when ~ dies, draw three cards if three or more creatures died ~. | 1 | Inga Rune-Eyes | khm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 8.2% |
+| Tested | 11 | 11.2% |
 | Works (untested) | 57 | 58.2% |
 | Partial (unaudited) | 4 | 4.1% |
-| Not working | 29 | 29.6% |
+| Not working | 26 | 26.5% |
 
 ## Cards needing work
 
@@ -48,13 +48,10 @@
 | Sphinx of Uthuun | silent | When this creature enters, reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the othe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stonehorn Dignitary | silent | When this creature enters, target opponent skips their next combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tectonic Rift | silent | Destroy target land. Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Throne of Empires | silent | {1}, {T}: Create a 1/1 white Soldier creature token. Create five of those tokens instead if you control artifacts named Crown of Empires and Scepter of Empires. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Timely Reinforcements | silent | If you have less life than an opponent, you gain 6 life. If you control fewer creatures than an opponent, create three 1/1 white Soldier creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vengeful Pharaoh | silent | Whenever combat damage is dealt to you or a planeswalker you control, if this card is in your graveyard, destroy target attacking creature, then put this card o | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Visions of Beyond | silent | Draw a card. If a graveyard has twenty or more cards in it, draw three cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Crown of Empires | notice | {3}, {T}: Tap target creature. Gain control of that creature instead if you control artifacts named Scepter of Empires and Throne of Empires. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Primordial Hydra | notice | This creature has trample as long as it has ten or more +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Scepter of Empires | notice | {T}: This artifact deals 1 damage to target player or planeswalker. It deals 3 damage instead if you control artifacts named Crown of Empires and Throne of Empi | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Garruk's Horde | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grand Abolisher | unaudited | During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Personal Sanctuary | unaudited | During your turn, prevent all damage that would be dealt to you. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -120,15 +117,18 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>11 cards</summary>
 
 - Aegis Angel
+- Crown of Empires
 - Dungrove Elder
 - Frost Breath
 - Gladecover Scout
 - Gorehorn Minotaurs
 - Phantasmal Image
+- Scepter of Empires
 - Sundial of the Infinite
+- Throne of Empires
 - Turn to Frog
 
 </details>
@@ -158,13 +158,10 @@
 | whenever combat damage is dealt to you or a planeswalker you control, if ~ is in your graveyard, destroy target attacking creature, then put ~ on top of your li | 1 | Vengeful Pharaoh | m12 |
 | whenever you cast a vampire creature spell, it gains bloodthirst N. | 1 | Bloodlord of Vaasgoth | m12 |
 | white creatures you control get +N/+N until end of turn. | 1 | Guardians' Pledge | m12 |
-| {M}, {M}: create a N/N white soldier creature token. create five of those tokens instead if you control artifacts named crown of empires and scepter of empires. | 1 | Throne of Empires | m12 |
 | {M}, {M}: each player discards their hand, then draws cards equal to the greatest number of cards a player discarded ~. | 1 | Jace's Archivist | m12 |
 | {M}, {M}: reveal the top card of your library. if it"..."s a land card, put that card onto the battlefield under your control. if it's a noncreature, nonland ca | 1 | Druidic Satchel | m12 |
-| {M}, {M}: tap target creature. gain control of that creature instead if you control artifacts named scepter of empires and throne of empires. | 1 | Crown of Empires | m12 |
 | {M}: choose one. activate only once each turn. | 1 | Skinshifter | m12 |
 | {M}: flip a coin. if you win the flip, ~ deals N damage to any target. if you lose the flip, ~ deals N damage to itself. | 1 | Goblin Bangchuckers | m12 |
-| {M}: ~ deals N damage to target player or planeswalker. it deals N damage instead if you control artifacts named crown of empires and throne of empires. | 1 | Scepter of Empires | m12 |
 | {M}{M}, {M}: ~ deals N damage to target attacking or blocking creature. ~ doesn't untap during your next untap step. | 1 | Arbalest Elite | m12 |
 | ~ can block only creatures with flying. | 1 | Skywinder Drake | m12 |
 | ~ has trample as long as it has ten or more +N/+N counters on it. | 1 | Primordial Hydra | m12 |

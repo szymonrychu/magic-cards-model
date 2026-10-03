@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 9.9% |
+| Tested | 13 | 11.7% |
 | Works (untested) | 67 | 60.4% |
 | Partial (unaudited) | 8 | 7.2% |
-| Not working | 25 | 22.5% |
+| Not working | 23 | 20.7% |
 
 ## Cards needing work
 
@@ -46,9 +46,7 @@
 | Sleep | silent | Tap all creatures target player controls. Those creatures don't untap during that player's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphinx Ambassador | silent | Whenever this creature deals combat damage to a player, search that player's library for a card, then that player chooses a card name. If you searched for a cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vampire Nocturnus | silent | As long as the top card of your library is black, this creature and other Vampire creatures you control get +2/+1 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Baneslayer Angel | notice | Protection | protection from a quality the engine does not read: Demons, Dragons | Y/Y/- | not_working |
 | Djinn of Wishes | notice | {2}{U}{U}, Remove a wish counter from this creature: Reveal the top card of your library. You may play that card without paying its mana cost. If you don't, exi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Great Sable Stag | notice | Protection | protection from a quality the engine does not read: black (This creature can't be blocked | Y/-/- | not_working |
 | Rise from the Grave | notice | Put target creature card from a graveyard onto the battlefield under your control. That creature is a black Zombie in addition to its other colors and types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Demon | notice | At the beginning of your upkeep, sacrifice a creature other than this creature, then each opponent loses life equal to the sacrificed creature's power. If you c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Convincing Mirage | unaudited | Enchanted land is the chosen type. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -130,14 +128,16 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>13 cards</summary>
 
 - Acidic Slime
 - Act of Treason
+- Baneslayer Angel
 - Burning Inquiry
 - Divination
 - Elite Vanguard
 - Essence Scatter
+- Great Sable Stag
 - Lifelink
 - Runeclaw Bear
 - Sign in Blood
@@ -150,7 +150,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| protection | 2 | Baneslayer Angel, Great Sable Stag | m10 |
 | all creatures able to block ~ do so. | 1 | Prized Unicorn | m10 |
 | as long as the top card of your library is black, ~ and other vampire creatures you control get +N/+N and have flying. | 1 | Vampire Nocturnus | m10 |
 | at the beginning of your upkeep, choose target nonland permanent you control and up to two target nonland permanents you don't control. destroy one of them at r | 1 | Capricious Efreet | m10 |

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 13.2% |
-| Works (untested) | 118 | 53.6% |
+| Tested | 30 | 13.6% |
+| Works (untested) | 117 | 53.2% |
 | Partial (unaudited) | 7 | 3.2% |
 | Not working | 66 | 30.0% |
 
@@ -210,7 +210,6 @@
 | Turntimber Ranger | handled | Whenever this creature or another Ally you control enters, you may create a 2/2 green Wolf creature token. If you do, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Umara Raptor | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unstable Footing | handled | Kicker {3}{R} (You may pay an additional {3}{R} as you cast this spell.) Damage can't be prevented this turn. If this spell was kicked, it deals 5 damage to tar | the engine reads this text and performs it | Y/-/- | not_tested |
-| Vampire Nighthawk | handled | Deathtouch | machines/combat.py | Y/Y/Y | not_tested |
 | Vampire's Bite | handled | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Target creature gets +3/+0 until end of turn. If this spell was kicked, that creature g | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vastwood Gorger | handled |  |  | Y/Y/- | not_tested |
 | Windborne Charge | handled | Two target creatures you control each get +2/+2 and gain flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -221,7 +220,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Archive Trap
 - Arid Mesa
@@ -250,6 +249,7 @@
 - Steppe Lynx
 - Valakut, the Molten Pinnacle
 - Vampire Hexmage
+- Vampire Nighthawk
 - Verdant Catacombs
 - Warren Instigator
 

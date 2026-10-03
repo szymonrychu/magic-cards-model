@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 5.5% |
+| Tested | 14 | 6.5% |
 | Works (untested) | 105 | 48.4% |
 | Partial (unaudited) | 16 | 7.4% |
-| Not working | 84 | 38.7% |
+| Not working | 82 | 37.8% |
 
 ## Cards needing work
 
@@ -76,7 +76,6 @@
 | Nightshade Peddler | silent | As long as this creature is paired with another creature, both creatures have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Outwit | silent | Counter target spell that targets a player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pathbreaker Wurm | silent | As long as this creature is paired with another creature, both creatures have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Predator's Gambit | silent | Enchanted creature has intimidate as long as its controller controls no other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primal Surge | silent | Exile the top card of your library. If it's a permanent card, you may put it onto the battlefield. If you do, repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Riot Ringleader | silent | Whenever this creature attacks, Human creatures you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rite of Ruin | silent | Choose an order for artifacts, creatures, and lands. Each player sacrifices one permanent of their choice of the first type, sacrifices two of their choice of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -105,7 +104,6 @@
 | Herald of War | notice | Angel spells and Human spells you cast cost {1} less to cast for each +1/+1 counter on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Joint Assault | notice | Target creature gets +2/+2 until end of turn. If it's paired with a creature, that creature also gets +2/+2 until end of turn. | unparsed remainder: If it's paired with a creature, that creature also gets +2/+2 until end of turn. | Y/-/- | not_working |
 | Leap of Faith | notice | Target creature gains flying until end of turn. Prevent all damage that would be dealt to that creature this turn. | unparsed remainder: Prevent all damage that would be dealt to that creature this turn. | Y/-/- | not_working |
-| Midnight Duelist | notice | Protection | protection from a quality the engine does not read: Vampires | Y/-/- | not_working |
 | Necrobite | notice | Target creature gains deathtouch until end of turn. Regenerate it. (The next time that creature would be destroyed this turn, instead tap it, remove it from com | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
 | Revenge of the Hunted | notice | Until end of turn, target creature gets +6/+6 and gains trample, and all creatures able to block it this turn do so. Miracle {G} (You may cast this card for its | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rush of Blood | notice | Target creature gets +X/+0 until end of turn, where X is its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -235,7 +233,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>14 cards</summary>
 
 - Blood Artist
 - Cavern of Souls
@@ -244,6 +242,8 @@
 - Entreat the Angels
 - Griselbrand
 - Lone Revenant
+- Midnight Duelist
+- Predator's Gambit
 - Reforge the Soul
 - Stolen Goods
 - Terminus
@@ -290,7 +290,6 @@
 | enchanted creature gets +N/-N and attacks each combat if able. | 1 | Guise of Fire | avr |
 | enchanted creature gets -N/-N and is a black zombie in addition to its other colors and types. | 1 | Ghoulflesh | avr |
 | enchanted creature has haste and "..." | 1 | Lightning Prowess | avr |
-| enchanted creature has intimidate as long as its controller controls no other creatures. | 1 | Predator's Gambit | avr |
 | enchanted creature loses flying. | 1 | Grounded | avr |
 | enchanted land has "..." | 1 | Abundant Growth | avr |
 | equipped creature gets +N/+N and attacks each combat if able. | 1 | Tormentor's Trident | avr |
@@ -307,7 +306,6 @@
 | prevent all combat damage that would be dealt by creatures other than target creature ~. | 1 | Terrifying Presence | avr |
 | prevent all damage that would be dealt by enchanted creature. | 1 | Defang | avr |
 | prevent the next N damage that would be dealt to you and/or permanents you control ~. if damage is prevented ~, ~ deals that much damage to any target. | 1 | Divine Deflection | avr |
-| protection | 1 | Midnight Duelist | avr |
 | put target artifact, creature, or enchantment on the bottom of its owner"..."s the first card you drew ~.) | 1 | Banishing Stroke | avr |
 | return target creature card from your graveyard to the battlefield. if it's an angel, put two +N/+N counters on it. | 1 | Defy Death | avr |
 | reveal the top two cards of your library. put all creature and land cards revealed ~ into your hand and the rest on the bottom of your library in any order. | 1 | Lair Delve | avr |

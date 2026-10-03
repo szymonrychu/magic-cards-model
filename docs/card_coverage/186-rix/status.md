@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 12.9% |
-| Works (untested) | 92 | 51.7% |
+| Tested | 24 | 13.5% |
+| Works (untested) | 94 | 52.8% |
 | Partial (unaudited) | 10 | 5.6% |
-| Not working | 53 | 29.8% |
+| Not working | 50 | 28.1% |
 
 ## Cards needing work
 
@@ -65,10 +65,8 @@
 | Vraska, Scheming Gorgon | silent | −10: Until end of turn, creatures you control gain deathtouch and "Whenever this creature deals damage to an opponent, that player loses the game." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warkite Marauder | silent | Whenever this creature attacks, target creature defending player controls loses all abilities and has base power and toughness 0/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angrath's Ambusher | notice | This creature gets +2/+0 as long as you control an Angrath planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Angrath's Fury | notice | Destroy target creature. Angrath's Fury deals 3 damage to target player or planeswalker. You may search your library and/or graveyard for a card named Angrath,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dusk Charger | notice | This creature gets +2/+2 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Expel from Orazca | notice | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Return target nonland permanent to its owner's hand. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Golden Demise | notice | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) All creatures get -2/-2 until end of turn. If you have the | unparsed remainder: If you have the city's blessing, instead only creatures your opponents control get -2/-2 until end of turn. | Y/Y/- | not_working |
 | Grasping Scoundrel | notice | This creature gets +1/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hadana's Climb // Winged Temple of Orazca | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has three or more +1/+1 counters on it, trans | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitesail Corsair | notice | This creature has flying as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -78,7 +76,6 @@
 | Spire Winder | notice | This creature gets +1/+1 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Storm Fleet Swashbuckler | notice | This creature has double strike as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tilonalli's Summoner | notice | Whenever this creature attacks, you may pay {X}{R}. If you do, create X 1/1 red Elemental creature tokens that are tapped and attacking. At the beginning of the | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Vraska's Scorn | notice | Target opponent loses 4 life. You may search your library and/or graveyard for a card named Vraska, Scheming Gorgon, reveal it, and put it into your hand. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Sun | unaudited | All lands lose all abilities except mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Charging Tuskodon | unaudited | If this creature would deal combat damage to a player, it deals double that damage to that player instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oathsworn Vampire | unaudited | You may cast this card from your graveyard if you gained life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -89,6 +86,7 @@
 | Temple Altisaur | unaudited | If a source would deal damage to another Dinosaur you control, prevent all but 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | The Immortal Sun | unaudited | Players can't activate planeswalkers' loyalty abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Wayward Swordtooth | unaudited | This creature can't attack or block unless you have the city's blessing. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Angrath's Fury | handled | Destroy target creature. Angrath's Fury deals 3 damage to target player or planeswalker. You may search your library and/or graveyard for a card named Angrath,  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aquatic Incursion | handled | When this enchantment enters, create two 1/1 blue Merfolk creature tokens with hexproof. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arterial Flow | handled | Each opponent discards two cards. If you control a Vampire, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Atzocan Seer | handled | Sacrifice this creature: Return target Dinosaur card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -177,6 +175,7 @@
 | Vampire Revenant | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Voracious Vampire | handled | When this creature enters, target Vampire you control gets +1/+1 and gains menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vraska's Conquistador | handled | Whenever this creature attacks or blocks, if you control a Vraska planeswalker, target opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Vraska's Scorn | handled | Target opponent loses 4 life. You may search your library and/or graveyard for a card named Vraska, Scheming Gorgon, reveal it, and put it into your hand. If yo | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Waterknot | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | World Shaper | handled | Whenever this creature attacks, you may mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zacama, Primal Calamity | handled | When Zacama enters, if you cast it, untap all lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -185,7 +184,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Arch of Orazca
 - Crafty Cutpurse
@@ -195,6 +194,7 @@
 - Flood of Recollection
 - Form of the Dinosaur
 - Ghalta, Primal Hunger
+- Golden Demise
 - Jadelight Ranger
 - Mastermind's Acquisition
 - Mausoleum Harpy
@@ -223,13 +223,11 @@
 | all lands lose all abilities except mana abilities. | 1 | Blood Sun | rix |
 | as long as you have the city"..."t be blocked. | 1 | Slippery Scoundrel | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s blessing, instead each opponent sacrifices half the creatures they control of their choice | 1 | Vona's Hunger | rix |
-| ascend (if you control ten or more permanents, you get the city"..."s blessing, instead only creatures your opponents control get -N/-N until end of turn. | 1 | Golden Demise | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s hand. if you have the city"..."s library instead. | 1 | Expel from Orazca | rix |
 | at the beginning of combat on your turn, put a +N/+N counter on target creature you control. then if that creature has three or more +N/+N counters on it, trans | 1 | Hadana's Climb // Winged Temple of Orazca | rix |
 | at the beginning of your upkeep, each player draws a card. if you have the city's blessing, instead only you draw a card. | 1 | Kumena's Awakening | rix |
 | at the beginning of your upkeep, if you have the city"..."s mana value. | 1 | Twilight Prophet | rix |
 | attacking pirates you control get +N/+N. | 1 | Dire Fleet Neckbreaker | rix |
-| destroy target creature. ~ deals N damage to target player or planeswalker. you may search your library and/or graveyard for a card named angrath, minotaur pira | 1 | Angrath's Fury | rix |
 | during your turn, ~ gets +N/+N. | 1 | Hardy Veteran | rix |
 | each opponent can"..."s next turn. | 1 | Sphinx's Decree | rix |
 | each opponent loses N life for each creature you control. | 1 | Gruesome Fate | rix |
@@ -243,7 +241,6 @@
 | players can"..." loyalty abilities. | 1 | The Immortal Sun | rix |
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
 | target creature an opponent controls deals damage equal to its power to another target creature that player controls. | 1 | Mutiny | rix |
-| target opponent loses N life. you may search your library and/or graveyard for a card named vraska, scheming gorgon, reveal it, and put it into your hand. if yo | 1 | Vraska's Scorn | rix |
 | when azor enters, each opponent can"..."s next turn. | 1 | Azor, the Lawbringer | rix |
 | when enchanted creature dies, exile cards equal to its power from the top of its owner's library. you may cast spells from among those cards for as long as they | 1 | Dead Man's Chest | rix |
 | when enchanted creature dies, return it to the battlefield under your control, then return ~ to the battlefield transformed under your control. | 1 | Journey to Eternity // Atzal, Cave of Eternity | rix |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 7.8% |
-| Works (untested) | 142 | 58.2% |
+| Works (untested) | 143 | 58.6% |
 | Partial (unaudited) | 16 | 6.6% |
-| Not working | 67 | 27.5% |
+| Not working | 66 | 27.0% |
 
 ## Cards needing work
 
@@ -87,7 +87,6 @@
 | Vizier of the Scorpion | silent | Zombie tokens you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Widespread Brutality | silent | Amass Zombies 2, then the Army you amassed deals damage equal to its power to each non-Army creature. (To amass Zombies 2, put two +1/+1 counters on an Army you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakening of Vitu-Ghazi | notice | Put nine +1/+1 counters on target land you control. It becomes a legendary 0/0 Elemental creature with haste named Vitu-Ghazi. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Gideon's Battle Cry | notice | Put a +1/+1 counter on each creature you control. You may search your library and/or graveyard for a card named Gideon, the Oathsworn, reveal it, and put it int | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kasmina, Enigmatic Mentor | notice | Spells your opponents cast that target a creature or planeswalker you control cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Planewide Celebration | notice | Choose four. You may choose the same mode more than once. • Create a 2/2 Citizen creature token that's all colors. • Return target permanent card from your grav | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spark Double | notice | You may have this creature enter as a copy of a creature or planeswalker you control, except it enters with an additional +1/+1 counter on it if it's a creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -159,6 +158,7 @@
 | Eternal Taskmaster | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Evolution Sage | handled | Landfall — Whenever a land you control enters, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flux Channeler | handled | Whenever you cast a noncreature spell, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gideon's Battle Cry | handled | Put a +1/+1 counter on each creature you control. You may search your library and/or graveyard for a card named Gideon, the Oathsworn, reveal it, and put it int | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gideon's Company | handled | Whenever you gain life, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Assailant | handled |  |  | Y/Y/- | not_tested |
 | Goblin Assault Team | handled | When this creature dies, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -315,7 +315,6 @@
 | if one or more +N/+N counters would be put on mowu, that many plus one +N/+N counters are put on it instead. | 1 | Mowu, Loyal Companion | war |
 | if you would draw a card while your library has no cards in it, you win the game instead. | 1 | Jace, Wielder of Mysteries | war |
 | lands on the battlefield and land cards in graveyards can't be the targets of spells or abilities your opponents control. | 1 | Tomik, Distinguished Advokist | war |
-| put a +N/+N counter on each creature you control. you may search your library and/or graveyard for a card named gideon, the oathsworn, reveal it, and put it int | 1 | Gideon's Battle Cry | war |
 | put nine +N/+N counters on target land you control. it becomes a legendary N/N elemental creature with haste named vitu-ghazi. it's still a land. | 1 | Awakening of Vitu-Ghazi | war |
 | put target creature with flying on the bottom of its owner's library. | 1 | Forced Landing | war |
 | remove up to five counters from target artifact, creature, planeswalker, or opponent. | 1 | Price of Betrayal | war |

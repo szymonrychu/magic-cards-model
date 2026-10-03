@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 11.7% |
+| Tested | 20 | 12.3% |
 | Works (untested) | 76 | 46.9% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 56 | 34.6% |
+| Not working | 55 | 34.0% |
 
 ## Cards needing work
 
@@ -76,7 +76,6 @@
 | Chancellor of the Dross | notice | You may reveal this card from your opening hand. If you do, at the beginning of the first upkeep, each opponent loses 3 life, then you gain life equal to the li | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chancellor of the Tangle | notice | You may reveal this card from your opening hand. If you do, at the beginning of your first main phase of the game, add {G}. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dispatch | notice | Tap target creature. Metalcraft — If you control three or more artifacts, exile that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Furnace Scamp | notice | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, this creature deals 3 damage to that player. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ichor Explosion | notice | As an additional cost to cast this spell, sacrifice a creature. All creatures get -X/-X until end of turn, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mycosynth Fiend | notice | This creature gets +1/+1 for each poison counter your opponents have. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Phyrexian Ingester | notice | This creature gets +X/+Y, where X is the exiled creature card's power and Y is its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -173,7 +172,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Argent Mutation
 - Caged Sun
@@ -181,6 +180,7 @@
 - Darksteel Relic
 - Dismember
 - Elesh Norn, Grand Cenobite
+- Furnace Scamp
 - Gitaxian Probe
 - Glistener Elf
 - Greenhilt Trainee
@@ -245,7 +245,6 @@
 | whenever an opponent shuffles their library, you may look at the top two cards of that library. you may exile one of those cards. then put the rest on top of th | 1 | Psychic Surgery | nph |
 | whenever equipped creature deals combat damage to a player, ~ deals damage to that player equal to the number of cards in their hand and you gain N life for eac | 1 | Sword of War and Peace | nph |
 | whenever ~ deals combat damage to a player, you may sacrifice it. if you do, that player discards a card for each poison counter they have. | 1 | Whispering Specter | nph |
-| whenever ~ deals combat damage to a player, you may sacrifice it. if you do, ~ deals N damage to that player. | 1 | Furnace Scamp | nph |
 | you can't get poison counters. | 1 | Melira, Sylvok Outcast | nph |
 | you don't lose the game for having N or less life. | 1 | Phyrexian Unlife | nph |
 | you gain life equal to the number of creatures on the battlefield plus the number of artifacts on the battlefield. | 1 | War Report | nph |

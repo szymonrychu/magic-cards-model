@@ -18,16 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 6.7% |
-| Works (untested) | 80 | 53.7% |
+| Works (untested) | 81 | 54.4% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 52 | 34.9% |
+| Not working | 51 | 34.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Absolver Thrull | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Abyssal Nocturnus | silent | Whenever an opponent discards a card, this creature gets +2/+2 and gains fear until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Agent of Masks | silent | At the beginning of your upkeep, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beastmaster's Magemark | silent | Creatures you control that are enchanted get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Belfry Spirit | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -85,6 +84,7 @@
 | Skarrgan Pit-Skulk | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Stratozeppelid | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ulasht, the Hate Seed | unaudited | Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Abyssal Nocturnus | handled | Whenever an opponent discards a card, this creature gets +2/+2 and gains fear until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angel of Despair | handled | When this creature enters, destroy target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodscale Prowler | handled | Bloodthirst | machines/keywords.py | Y/-/- | not_tested |
 | Borborygmos | handled | Whenever Borborygmos deals combat damage to a player, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -220,7 +220,6 @@
 | whenever a creature attacks you, its controller loses N life. | 1 | Hissing Miasma | gpt |
 | whenever a player casts an instant or sorcery spell, if that spell targets only ~, copy the spell for each other creature that spell could target. each copy tar | 1 | Ink-Treader Nephilim | gpt |
 | whenever an opponent casts a spell, that player sacrifices a permanent of their choice unless they pay {M}. | 1 | Spelltithe Enforcer | gpt |
-| whenever an opponent discards a card, ~ gets +N/+N and gains fear until end of turn. | 1 | Abyssal Nocturnus | gpt |
 | whenever another creature enters, its controller loses N life. | 1 | Poisonbelly Ogre | gpt |
 | whenever ~ attacks, each other attacking creature gains fear until end of turn. | 1 | Smogsteed Rider | gpt |
 | whenever ~ attacks, exile the top card of your library. if it"..."s power and y is its toughness. | 1 | Bioplasm | gpt |

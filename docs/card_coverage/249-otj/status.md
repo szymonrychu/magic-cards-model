@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 10.8% |
+| Tested | 29 | 11.2% |
 | Works (untested) | 128 | 49.4% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 96 | 37.1% |
+| Not working | 95 | 36.7% |
 
 ## Cards needing work
 
@@ -111,7 +111,6 @@
 | Riku of Many Paths | notice | Whenever you cast a modal spell, choose up to X, where X is the number of times you chose a mode for that spell — • Exile the top card of your library. Until th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Rush of Dread | notice | Spree (Choose one or more additional costs.) + {1} — Target opponent sacrifices half the creatures they control of their choice, rounded up. + {2} — Target oppo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Rustler Rampage | notice | Spree (Choose one or more additional costs.) + {1} — Untap all creatures target player controls. + {1} — Target creature gains double strike until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Satoru, the Infiltrator | notice | Whenever Satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card. | unread intervening "if": "none of them were cast or no mana was spent to cast them" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/Y/Y | not_working |
 | Shepherd of the Clouds | notice | When this creature enters, return target permanent card with mana value 3 or less from your graveyard to your hand. Return that card to the battlefield instead  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shifting Grift | notice | Spree (Choose one or more additional costs.) + {2} — Exchange control of two target creatures. + {1} — Exchange control of two target artifacts. + {1} — Exchang | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Steer Clear | notice | Steer Clear deals 2 damage to target attacking or blocking creature. Steer Clear deals 4 damage to that creature instead if you controlled a Mount as you cast t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -261,7 +260,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Armored Armadillo
 - Drover Grizzly
@@ -284,6 +283,7 @@
 - Omenport Vigilante
 - Outcaster Greenblade
 - Prairie Dog
+- Satoru, the Infiltrator
 - Servant of the Stinger
 - Shoot the Sheriff
 - Slickshot Show-Off
@@ -358,7 +358,6 @@
 | whenever equipped creature deals combat damage to a player, look at that many cards from the top of your library. you may exile a nonland card from among them.  | 1 | The Key to the Vault | otj |
 | whenever fortune attacks while saddled, at end of combat, exile it and up to one creature that saddled it ~, then return those cards to the battlefield under th | 1 | Fortune, Loyal Steed | otj |
 | whenever obeka deals combat damage to a player, you get that many additional upkeep steps after ~. | 1 | Obeka, Splitter of Seconds | otj |
-| whenever satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card. | 1 | Satoru, the Infiltrator | otj |
 | whenever the gitrog deals combat damage to a player, you may sacrifice a creature that saddled it ~. if you do, draw N cards, then put up to N land cards from y | 1 | The Gitrog, Ravenous Ride | otj |
 | whenever tinybones deals combat damage to a player, you may cast target nonland permanent card from that player's graveyard, and mana of any type can be spent t | 1 | Tinybones, the Pickpocket | otj |
 | whenever you activate an ability that targets a creature or player, copy that ability. you may choose new targets for the copy. | 1 | Ertha Jo, Frontier Mentor | otj |

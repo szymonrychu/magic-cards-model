@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 12.9% |
+| Tested | 28 | 13.3% |
 | Works (untested) | 97 | 46.2% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 71 | 33.8% |
+| Not working | 70 | 33.3% |
 
 ## Cards needing work
 
@@ -96,7 +96,6 @@
 | Twisted Reflection | notice | Choose one — • Target creature gets -6/-0 until end of turn. • Switch target creature's power and toughness until end of turn. Entwine {B} (Choose both if you p | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Urza, Lord High Artificer | notice | {5}: Shuffle your library, then exile the top card. Until end of turn, you may play that card without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Volatile Claws | notice | Until end of turn, creatures you control get +2/+0 and gain all creature types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Yawgmoth, Thran Physician | notice | Protection | protection from a quality the engine does not read: Humans | Y/-/- | not_working |
 | Bladeback Sliver | unaudited | Hellbent — As long as you have no cards in hand, Sliver creatures you control have "{T}: This creature deals 1 damage to target player or planeswalker." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dregscape Sliver | unaudited | Each Sliver creature card in your graveyard has unearth {2}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Enduring Sliver | unaudited | Other Sliver creatures you control have outlast {2}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -213,7 +212,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Changeling Outcast
 - Collector Ouphe
@@ -241,6 +240,7 @@
 - Watcher for Tomorrow
 - Windcaller Aven
 - Wrenn and Six
+- Yawgmoth, Thran Physician
 - Zhalfirin Decoy
 
 </details>
@@ -284,7 +284,6 @@
 | modular | 1 | Scrapyard Recombiner | mh1 |
 | other creatures you control of the chosen type get +N/+N. | 1 | Morophon, the Boundless | mh1 |
 | other sliver creatures you control have outlast {M}. | 1 | Enduring Sliver | mh1 |
-| protection | 1 | Yawgmoth, Thran Physician | mh1 |
 | retrace | 1 | Throes of Chaos | mh1 |
 | return N cards at random from your graveyard to your hand. exile ~. | 1 | Reap the Past | mh1 |
 | return target creature to its owner"..."s controller may pay {M}{M}. if the player does, they may copy ~ and may choose a new target for that copy. | 1 | String of Disappearances | mh1 |

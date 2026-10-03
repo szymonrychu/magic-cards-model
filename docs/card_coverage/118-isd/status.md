@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.9% |
-| Works (untested) | 145 | 60.7% |
+| Tested | 28 | 11.7% |
+| Works (untested) | 144 | 60.3% |
 | Partial (unaudited) | 14 | 5.9% |
-| Not working | 54 | 22.6% |
+| Not working | 53 | 22.2% |
 
 ## Cards needing work
 
@@ -74,7 +74,6 @@
 | Witchbane Orb | silent | When this artifact enters, destroy all Curses attached to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wooden Stake | silent | Whenever equipped creature blocks or becomes blocked by a Vampire, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woodland Sleuth | silent | Morbid — When this creature enters, if a creature died this turn, return a creature card at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Grave Bramble | notice | Protection | protection from a quality the engine does not read: Zombies | Y/-/- | not_working |
 | Mirror-Mad Phantasm | notice | {1}{U}: This creature's owner shuffles it into their library. If that player does, they reveal cards from the top of that library until a card named Mirror-Mad  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Night Revelers | notice | This creature has haste as long as an opponent controls a Human. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Scourge of Geier Reach | notice | This creature gets +1/+1 for each creature your opponents control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -237,13 +236,12 @@
 | Village Ironsmith // Ironfang | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Villagers of Estwald // Howlpack of Estwald | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Voiceless Spirit | handled | Flying | machines/combat.py | Y/-/- | not_tested |
-| Walking Corpse | handled |  |  | Y/Y/- | not_tested |
 | Woodland Cemetery | handled | This land enters tapped unless you control a Swamp or a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>28 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -260,6 +258,7 @@
 - Elder Cathar
 - Festerhide Boar
 - Forbidden Alchemy
+- Grave Bramble
 - Intangible Virtue
 - Liliana of the Veil
 - Ludevic's Test Subject // Ludevic's Abomination
@@ -271,6 +270,7 @@
 - Slayer of the Wicked
 - Snapcaster Mage
 - Stony Silence
+- Walking Corpse
 
 </details>
 
@@ -308,7 +308,6 @@
 | if equipped creature would deal combat damage, it deals double that damage instead. | 1 | Inquisitor's Flail | isd |
 | if you would draw a card while your library has no cards in it, you win the game instead. | 1 | Laboratory Maniac | isd |
 | prevent all combat damage that would be dealt to and dealt by enchanted creature. | 1 | Ghostly Possession | isd |
-| protection | 1 | Grave Bramble | isd |
 | return target exiled card with flashback you own to your hand. | 1 | Runic Repetition | isd |
 | return two cards at random from your graveyard to your hand. | 1 | Make a Wish | isd |
 | search your library for a basic land card, reveal it, put it into your hand, then shuffle. morbid — you may put that card onto the battlefield instead of puttin | 1 | Caravan Vigil | isd |

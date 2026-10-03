@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 21 | 8.2% |
-| Works (untested) | 117 | 45.5% |
+| Works (untested) | 118 | 45.9% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 102 | 39.7% |
+| Not working | 101 | 39.3% |
 
 ## Cards needing work
 
@@ -114,7 +114,6 @@
 | Dragon's Fire | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand or choose a Dragon you control. Dragon's Fire deals 3 damage to target cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feign Death | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Iymrith, Desert Doom | notice | Iymrith has ward {4} as long as it's untapped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Lair of the Hydra | notice | {X}{G}: Until end of turn, this land becomes an X/X green Hydra creature. It's still a land. X can't be 0. | unparsed remainder: 0 can't be 0. | Y/Y/- | not_working |
 | Nadaar, Selfless Paladin | notice | Other creatures you control get +1/+1 as long as you've completed a dungeon. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Orcus, Prince of Undeath | notice | When Orcus enters, choose one — • Each other creature gets -X/-X until end of turn. You lose X life. • Return up to X target creature cards with total mana valu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Paladin Class | notice | Spells your opponents cast during your turn cost {1} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -195,6 +194,7 @@
 | Intrepid Outlander | handled | Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, venture into the dungeon. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jaded Sell-Sword | handled | When this creature enters, if mana from a Treasure was spent to cast it, it gains first strike and haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Krydle of Baldur's Gate | handled | Whenever Krydle deals combat damage to a player, that player loses 1 life and mills a card, then you gain 1 life and scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lair of the Hydra | handled | If you control two or more other lands, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lolth, Spider Queen | handled | Whenever a creature you control dies, put a loyalty counter on Lolth. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loyal Warhound | handled | When this creature enters, if an opponent controls more lands than you, search your library for a basic Plains card, put it onto the battlefield tapped, then sh | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lurking Roper | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -396,7 +396,6 @@
 | {M}: ~ becomes a shapeshifter artifact creature with base power and toughness N/N until end of turn. | 1 | Mimic | afr |
 | {M}{M}, {M}: search your library for a creature card with mana value equal to the number of harmony counters on ~, reveal it, and put it into your hand. if that | 1 | Instrument of the Bards | afr |
 | {M}{M}: roll a dN. activate only if ~ is in your graveyard. | 1 | Loathsome Troll | afr |
-| {M}{M}: until end of turn, ~ becomes an N/N green hydra creature. it"..."t be N. | 1 | Lair of the Hydra | afr |
 | {M}{M}: until end of turn, ~ has base power and toughness N/N, gains trample, and isn't a human. | 1 | Werewolf Pack Leader | afr |
 | {M}{M}{M}, {M}, exile ~: put an enlightened counter on target angel. it gains "..." activate only as a sorcery. | 1 | The Book of Exalted Deeds | afr |
 | {M}{M}{M}{M}: until end of turn, ~ gains "..." | 1 | Vorpal Sword | afr |

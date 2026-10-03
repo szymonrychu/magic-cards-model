@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 7.7% |
-| Works (untested) | 90 | 63.4% |
+| Works (untested) | 91 | 64.1% |
 | Partial (unaudited) | 7 | 4.9% |
-| Not working | 34 | 23.9% |
+| Not working | 33 | 23.2% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Gore Vassal | notice | Sacrifice this creature: Put a -1/-1 counter on target creature. Then if that creature's toughness is 1 or greater, regenerate it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pistus Strike | notice | Destroy target creature with flying. Its controller gets a poison counter. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vedalken Anatomist | notice | {2}{U}, {T}: Put a -1/-1 counter on target creature. You may tap or untap that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Virulent Wound | notice | Put a -1/-1 counter on target creature. When that creature dies this turn, its controller gets a poison counter. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Blightsteel Colossus | unaudited | If Blightsteel Colossus would be put into a graveyard from anywhere, reveal Blightsteel Colossus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Kemba's Legion | unaudited | This creature can block an additional creature each combat for each Equipment attached to this creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Phyrexian Hydra | unaudited | If damage would be dealt to this creature, prevent that damage. Put a -1/-1 counter on this creature for each 1 damage prevented this way. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -155,6 +154,7 @@
 | Viridian Claw | handled | Equipped creature gets +1/+0 and has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viridian Corrupter | handled | When this creature enters, destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viridian Emissary | handled | When this creature dies, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Virulent Wound | handled | Put a -1/-1 counter on target creature. When that creature dies this turn, its controller gets a poison counter. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vivisection | handled | As an additional cost to cast this spell, sacrifice a creature. Draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | White Sun's Zenith | handled | Create X 2/2 white Cat creature tokens. Shuffle White Sun's Zenith into its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 
@@ -194,7 +194,6 @@
 | if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Blightsteel Colossus | mbs |
 | look at the top seven cards of your library. you may put one of those cards onto the battlefield if it has the same name as a permanent. put the rest on the bot | 1 | Mitotic Manipulation | mbs |
 | put a -N/-N counter on each attacking creature. | 1 | Choking Fumes | mbs |
-| put a -N/-N counter on target creature. when that creature dies ~, its controller gets a poison counter. | 1 | Virulent Wound | mbs |
 | return all cards from your graveyard to your hand. exile ~. you have no maximum hand size for the rest of the game. | 1 | Praetor's Counsel | mbs |
 | sacrifice ~: put a -N/-N counter on target creature. then if that creature's toughness is N or greater, regenerate it. | 1 | Gore Vassal | mbs |
 | search your library for a card, exile it, then shuffle. any opponent may have you put that card into your hand. if no player does, you draw three cards. | 1 | Distant Memories | mbs |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 1 | 4.0% |
-| Works (untested) | 15 | 60.0% |
+| Works (untested) | 16 | 64.0% |
 | Partial (unaudited) | 1 | 4.0% |
-| Not working | 8 | 32.0% |
+| Not working | 7 | 28.0% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Hidden Horror | silent | When this creature enters, sacrifice it unless you discard a creature card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Llanowar Sentinel | silent | When this creature enters, you may pay {1}{G}. If you do, search your library for a card named Llanowar Sentinel, put that card onto the battlefield, then shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phantom Wings | silent | Sacrifice this Aura: Return enchanted creature to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Razortooth Rats | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Agonizing Memories | notice | Look at target player's hand and choose two cards from it. Put them on top of that player's library in any order. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cinder Wall | notice | When this creature blocks, destroy it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Steel Golem | unaudited | You can't cast creature spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -47,6 +46,7 @@
 | Gemstone Mine | handled | This land enters with three mining counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lava Hounds | handled | When this creature enters, it deals 4 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Llanowar Behemoth | handled | Tap an untapped creature you control: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Razortooth Rats | handled | Fear | machines/keywords.py | Y/-/- | not_tested |
 | Sage Owl | handled | When this creature enters, look at the top four cards of your library, then put them back in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Serra's Blessing | handled | Creatures you control have vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thunderbolt | handled | Choose one — • Thunderbolt deals 3 damage to target player or planeswalker. • Thunderbolt deals 4 damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -64,7 +64,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| fear | 1 | Razortooth Rats | wth |
 | look at target player"..."s library in any order. | 1 | Agonizing Memories | wth |
 | sacrifice ~: return enchanted creature to its owner's hand. | 1 | Phantom Wings | wth |
 | target player shuffles up to three target cards from their graveyard into their library. draw a card. when ~ is put into your graveyard from your library, shuff | 1 | Gaea's Blessing | wth |

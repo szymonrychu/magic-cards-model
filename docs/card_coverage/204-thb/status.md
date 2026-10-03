@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 7.3% |
+| Tested | 19 | 7.7% |
 | Works (untested) | 135 | 54.9% |
 | Partial (unaudited) | 27 | 11.0% |
-| Not working | 66 | 26.8% |
+| Not working | 65 | 26.4% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Impending Doom | silent | Enchanted creature gets +3/+3 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inspire Awe | silent | Prevent all combat damage that would be dealt this turn except combat damage that would be dealt by enchanted creatures and enchantment creatures. Scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kiora Bests the Sea God | silent | II — Tap all nonland permanents target opponent controls. They don't untap during their controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Labyrinth of Skophos | silent | {4}, {T}: Remove target attacking or blocking creature from combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lagonna-Band Storyteller | silent | When this creature enters, you may put target enchantment card from your graveyard on top of your library. If you do, you gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Medomai's Prophecy | silent | III — When you cast a spell with the chosen name for the first time this turn, draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mystic Repeal | silent | Put target enchantment on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -258,7 +257,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Cling to Dust
 - Dawn Evangel
@@ -269,6 +268,7 @@
 - Klothys, God of Destiny
 - Kroxa, Titan of Death's Hunger
 - Kunoros, Hound of Athreos
+- Labyrinth of Skophos
 - Nessian Hornbeetle
 - Nylea, Keen-Eyed
 - Nyxbloom Ancient
@@ -358,7 +358,6 @@
 | you may choose not to untap ~ during your untap step. | 1 | Entrancing Lyre | thb |
 | your devotion to each color and each combination of colors is increased by one. | 1 | Altar of the Pantheon | thb |
 | your opponents can't cast spells with the same name as the exiled card. | 1 | Ashiok's Erasure | thb |
-| {M}, {M}: remove target attacking or blocking creature from combat. | 1 | Labyrinth of Skophos | thb |
 | {M}{M}: target land you control becomes an N/N elemental creature with trample and haste until end of turn, where N is the number of enchantments you control. i | 1 | Destiny Spinner | thb |
 | {M}{M}: you may put a red creature card or an artifact creature card from your hand onto the battlefield. sacrifice it at the beginning of the next end step. | 1 | Purphoros, Bronze-Blooded | thb |
 | ~ can't attack unless you control another creature with power N or greater. | 1 | Warden of the Chained | thb |

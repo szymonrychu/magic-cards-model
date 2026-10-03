@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 49 | 19.4% |
+| Tested | 50 | 19.8% |
 | Works (untested) | 129 | 51.2% |
 | Partial (unaudited) | 12 | 4.8% |
-| Not working | 62 | 24.6% |
+| Not working | 61 | 24.2% |
 
 ## Cards needing work
 
@@ -80,7 +80,6 @@
 | Windcrag Siege | silent | • Jeskai — At the beginning of your upkeep, create a 1/1 red Goblin creature token. It gains lifelink and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wingspan Stride | silent | {2}{U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Desperate Measures | notice | Target creature gets +1/-1 until end of turn. When it dies under your control this turn, draw two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Eshki Dragonclaw | notice | At the beginning of combat on your turn, if you've cast both a creature spell and a noncreature spell this turn, draw a card and put two +1/+1 counters on Eshki | unread intervening "if": "you've cast both a creature spell and a noncreature spell this turn" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/Y/Y | not_working |
 | Karakyk Guardian | notice | This creature has hexproof as long as it hasn't dealt damage yet. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kishla Trawlers | notice | When this creature enters, you may exile a creature card from your graveyard. When you do, return target instant or sorcery card from your graveyard to your han | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Lie in Wait | notice | Return target creature card from your graveyard to your hand. Lie in Wait deals damage equal to that card's power to target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -233,7 +232,7 @@
 ## Fully supported
 
 <details>
-<summary>49 cards</summary>
+<summary>50 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
@@ -249,6 +248,7 @@
 - Dispelling Exhale
 - Dragonback Lancer
 - Dragonfire Blade
+- Eshki Dragonclaw
 - Essence Anchor
 - Flamehold Grappler
 - Fortress Kin-Guard
@@ -297,7 +297,6 @@
 | as long as you control a creature with a counter on it, ~ gets +N/+N. | 1 | Formation Breaker | tdm |
 | as ~ enters, choose abzan or mardu. | 1 | Barrensteppe Siege | tdm |
 | as ~ enters, choose temur or sultai. | 1 | Glacierwood Siege | tdm |
-| at the beginning of combat on your turn, if you've cast both a creature spell and a noncreature spell ~, draw a card and put two +N/+N counters on ~. | 1 | Eshki Dragonclaw | tdm |
 | at the beginning of each combat, if you've cast two or more spells ~, ~ becomes a N/N monk creature with haste in addition to its other types until end of turn. | 1 | Reverberating Summons | tdm |
 | at the beginning of your end step, if creatures you control have total toughness N or greater, draw a card. then if creatures you control have total toughness N | 1 | Betor, Kin to All | tdm |
 | at the beginning of your end step, you may discard your hand. if you do, draw cards equal to the number of spells you've cast ~. | 1 | Narset, Jeskai Waymaster | tdm |

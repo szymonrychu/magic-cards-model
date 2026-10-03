@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 6.1% |
-| Works (untested) | 90 | 50.3% |
+| Works (untested) | 91 | 50.8% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 74 | 41.3% |
+| Not working | 73 | 40.8% |
 
 ## Cards needing work
 
@@ -62,7 +62,6 @@
 | Kithkin Zealot | silent | When this creature enters, you gain 1 life for each black and/or red permanent target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leering Emblem | silent | Whenever you cast a spell, equipped creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Light from Within | silent | Chroma — Each creature you control gets +1/+1 for each white mana symbol in its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lingering Tormentor | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Loyal Gyrfalcon | silent | Whenever you cast a white spell, this creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindwrack Liege | silent | Other blue creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirror Sheen | silent | {1}{U/R}{U/R}: Copy target instant or sorcery spell that targets you. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -143,6 +142,7 @@
 | Invert the Skies | handled | Creatures your opponents control lose flying until end of turn if {G} was spent to cast this spell, and creatures you control gain flying until end of turn if { | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jawbone Skulkin | handled | {2}: Target red creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kithkin Spellduster | handled | {1}{W}, Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lingering Tormentor | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
 | Marshdrinker Giant | handled | When this creature enters, destroy target Island or Swamp an opponent controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merrow Levitator | handled | {T}: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Necroskitter | handled | Whenever a creature an opponent controls with a -1/-1 counter on it dies, you may return that card to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -237,7 +237,6 @@
 | destroy target nongreen creature. its controller loses N life if you've cast another black spell ~. | 1 | Soul Reap | eve |
 | each opponent who controls more creatures than you can't cast creature spells. the same is true for artifacts and enchantments. | 1 | Ward of Bones | eve |
 | each player returns each creature card from their graveyard to the battlefield with an additional -N/-N counter on it. | 1 | Pyrrhic Revival | eve |
-| fear | 1 | Lingering Tormentor | eve |
 | gain control of target creature until end of turn. untap that creature. it gets +N/+N and gains haste until end of turn. | 1 | Unwilling Recruit | eve |
 | if {M} was spent to cast ~, you may have target creature get -N/-N until end of turn. if {M} was spent to cast ~, you may have target creature get +N/+N until e | 1 | Cankerous Thirst | eve |
 | other black creatures you control get +N/+N. | 1 | Creakwood Liege | eve |

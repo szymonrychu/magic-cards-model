@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.6% |
+| Tested | 23 | 9.4% |
 | Works (untested) | 118 | 48.4% |
 | Partial (unaudited) | 18 | 7.4% |
-| Not working | 87 | 35.7% |
+| Not working | 85 | 34.8% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Djinn of the Fountain | notice | Whenever you cast an instant or sorcery spell, choose one — • This creature gets +1/+1 until end of turn. • Exile this creature. Return it to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ertai Resurrected | notice | When Ertai Resurrected enters, choose up to one — • Counter target spell, activated ability, or triggered ability. Its controller draws a card. • Destroy anothe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Golden Argosy | notice | Whenever Golden Argosy attacks, exile each creature that crewed it this turn. Return them to the battlefield tapped under their owner's control at the beginning | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Heroic Charge | notice | Kicker {1}{R} (You may pay an additional {1}{R} as you cast this spell.) Creatures you control get +2/+1 until end of turn. If this spell was kicked, those crea | unparsed remainder: If this spell was kicked, those creatures also gain trample until end of turn. | Y/Y/- | not_working |
 | In Thrall to the Pit | notice | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Gain control of target creature until end of turn. Untap that creature. It gains haste  | unparsed remainder: Untap that creature. It gains haste until end of turn. If this spell was kicked, sacrifice that creature at the beginning of the next end step. | Y/Y/- | not_working |
 | Jodah, the Unifier | notice | Legendary creatures you control get +X/+X, where X is the number of legendary creatures you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Keldon Strike Team | notice | As long as this creature entered this turn, creatures you control have haste. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -111,7 +110,6 @@
 | Timely Interference | notice | Kicker {1}{R} (You may pay an additional {1}{R} as you cast this spell.) Target creature gets -1/-0 until end of turn. If this spell was kicked, that creature b | unparsed remainder: If this spell was kicked, that creature blocks this turn if able. Draw a card. | Y/Y/- | not_working |
 | Tribute to Urborg | notice | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Target creature gets -2/-2 until end of turn. If this spell was kicked, that creature g | unparsed remainder: If this spell was kicked, that creature gets an additional -1/-1 until end of turn for each instant and sorcery card in your graveyard. | Y/Y/- | not_working |
 | Twinferno | notice | Choose one — • When you cast your next instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. • Target creature you contr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Warhost's Frenzy | notice | Kicker {B} (You may pay an additional {B} as you cast this spell.) Creatures you control get +2/+0 until end of turn. If this spell was kicked, whenever a creat | unparsed remainder: If this spell was kicked, whenever a creature you control dies this turn, draw a card. | Y/Y/- | not_working |
 | Weatherlight Compleated | notice | Whenever a creature you control dies, put a phyresis counter on Weatherlight Compleated. Then draw a card if it has seven or more phyresis counters on it. If it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Anointed Peacekeeper | unaudited | As this creature enters, look at an opponent's hand, then choose any card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Astor, Bearer of Blades | unaudited | Equipment you control have equip {1}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -253,7 +251,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>23 cards</summary>
 
 - Ajani, Sleeper Agent
 - Archangel of Wrath
@@ -264,6 +262,7 @@
 - Cult Conscript
 - Extinguish the Light
 - Guardian of New Benalia
+- Heroic Charge
 - Ivy, Gleeful Spellthief
 - Lagomos, Hand of Hatred
 - Leyline Binding
@@ -276,6 +275,7 @@
 - Sheoldred, the Apocalypse
 - The Raven Man
 - Vohar, Vodalian Desecrator
+- Warhost's Frenzy
 
 </details>
 
@@ -308,11 +308,9 @@
 | enchantment creatures you control have deathtouch, lifelink, and hexproof. | 1 | Zur, Eternal Schemer | dmu |
 | equipment you control have equip {M}. | 1 | Astor, Bearer of Blades | dmu |
 | exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and/or up to one target land. for each  | 1 | Chaotic Transformation | dmu |
-| kicker {M} (you may pay an additional {M} as you cast ~.) creatures you control get +N/+N until end of turn. if ~ was kicked, whenever a creature you control di | 1 | Warhost's Frenzy | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, create a N/N white soldier creature token. counter target spell unless its controller | 1 | Protect the Negotiators | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, put a +N/+N counter on a creature you control. all creatures get -N/-N until end of t | 1 | Choking Miasma | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) target player discards two cards. if ~ was kicked, it deals N damage to that player. | 1 | Aggressive Sabotage | dmu |
-| kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) creatures you control get +N/+N until end of turn. if ~ was kicked, those creatures also gain tr | 1 | Heroic Charge | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) gain control of target creature until end of turn. untap that creature. it gains haste until end | 1 | In Thrall to the Pit | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) return target creature card from your graveyard to the battlefield. if ~ was kicked, you gain li | 1 | Sheoldred's Restoration | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) return target creature or planeswalker you don"..."s hand. if ~ was kicked, put that permanent o | 1 | Rona's Vortex | dmu |

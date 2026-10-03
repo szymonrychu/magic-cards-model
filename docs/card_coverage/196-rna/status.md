@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.9% |
-| Works (untested) | 135 | 56.5% |
+| Tested | 29 | 12.1% |
+| Works (untested) | 137 | 57.3% |
 | Partial (unaudited) | 9 | 3.8% |
-| Not working | 69 | 28.9% |
+| Not working | 64 | 26.8% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Dovin's Automaton | silent | As long as you control a Dovin planeswalker, this creature gets +2/+2 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin's Dismissal | silent | Put up to one target tapped creature on top of its owner's library. You may search your library and/or graveyard for a card named Dovin, Architect of Law, revea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin, Architect of Law | silent | −9: Tap all permanents target opponent controls. That player skips their next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Electrodominance | silent | Electrodominance deals X damage to any target. You may cast a spell with mana value X or less from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emergency Powers | silent | Each player shuffles their hand and graveyard into their library, then draws seven cards. Exile Emergency Powers. Addendum — If you cast this spell during your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eyes Everywhere | silent | {5}{U}: Exchange control of this enchantment and target nonland permanent. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flames of the Raze-Boar | silent | Flames of the Raze-Boar deals 4 damage to target creature an opponent controls. Then Flames of the Raze-Boar deals 2 damage to each other creature that player c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -86,15 +85,11 @@
 | Windstorm Drake | silent | Other creatures you control with flying get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodmist Infiltrator | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Code of Constraint | notice | Target creature gets -4/-0 until end of turn. Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap duri | unparsed remainder: Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap during its controller's next untap step. | Y/Y/- | not_working |
-| Cry of the Carnarium | notice | All creatures get -2/-2 until end of turn. Exile all creature cards in all graveyards that were put there from the battlefield this turn. If a creature would di | unparsed remainder: Exile all creature cards in all graveyards that were put there from the battlefield this turn. If a creature would die this turn, exile it instead. | Y/Y/- | not_working |
 | Deputy of Detention | notice | When this creature enters, exile target nonland permanent an opponent controls and all other nonland permanents that player controls with the same name as that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror March | notice | Whenever a nontoken creature you control enters, flip a coin until you lose a flip. For each flip you won, create a token that's a copy of that creature. Those  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Open the Gates | notice | Search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rally to Battle | notice | Creatures you control get +1/+3 until end of turn. Untap them. | unparsed remainder: Untap them. | Y/Y/- | not_working |
 | Rhythm of the Wild | notice | Nontoken creatures you control have riot. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sphinx of Foresight | notice | You may reveal this card from your opening hand. If you do, scry 3 at the beginning of your first upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sphinx of New Prahv | notice | Spells your opponents cast that target this creature cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Unbreakable Formation | notice | Creatures you control gain indestructible until end of turn. Addendum — If you cast this spell during your main phase, put a +1/+1 counter on each of those crea | unparsed remainder: If you cast this spell during your main phase, put a +1/+1 counter on each of those creatures and they gain vigilance until end of turn. | Y/Y/- | not_working |
 | Gruul Spellbreaker | unaudited | During your turn, you and this creature have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | High Alert | unaudited | Each creature you control assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lavinia, Azorius Renegade | unaudited | Each opponent can't cast noncreature spells with mana value greater than the number of lands that player controls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -142,6 +137,7 @@
 | Domri, City Smasher | handled | +2: Creatures you control get +1/+1 and gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dovin's Acuity | handled | When this enchantment enters, you gain 2 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drill Bit | handled | Spectacle {B} (You may cast this spell for its spectacle cost rather than its mana cost if an opponent lost life this turn.) Target player reveals their hand. Y | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Electrodominance | handled | Electrodominance deals X damage to any target. You may cast a spell with mana value X or less from your hand without paying its mana cost. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elite Arrester | handled | {1}{U}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | End-Raze Forerunners | handled | When this creature enters, other creatures you control get +2/+2 and gain vigilance and trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Enraged Ceratok | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -213,6 +209,7 @@
 | Smelt-Ward Ignus | handled | {2}{R}, Sacrifice this creature: Gain control of target creature with power 3 or less until end of turn. Untap that creature. It gains haste until end of turn.  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spawn of Mayhem | handled | At the beginning of your upkeep, this creature deals 1 damage to each player. Then if you have 10 or less life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spear Spewer | handled | {T}: This creature deals 1 damage to each player. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sphinx of New Prahv | handled | Spells your opponents cast that target this creature cost {2} more to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sphinx's Insight | handled | Draw two cards. Addendum — If you cast this spell during your main phase, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spikewheel Acrobat | handled | Spectacle | machines/casting.py | Y/Y/- | not_tested |
 | Steeple Creeper | handled | {3}{U}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -243,12 +240,13 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>29 cards</summary>
 
 - Angel of Grace
 - Awaken the Erstwhile
 - Captive Audience
 - Consign to the Pit
+- Cry of the Carnarium
 - Dovin, Grand Arbiter
 - Footlight Fiend
 - Gates Ablaze
@@ -260,6 +258,7 @@
 - Light Up the Stage
 - Prime Speaker Vannifar
 - Rafter Demon
+- Rally to Battle
 - Repudiate // Replicate
 - Rix Maadi Reveler
 - Sagittars' Volley
@@ -268,6 +267,7 @@
 - Skarrgan Hellkite
 - Skewer the Critics
 - Sphinx of the Guildpact
+- Unbreakable Formation
 - Verity Circle
 - Zegana, Utopian Speaker
 - Zhur-Taa Goblin
@@ -281,7 +281,6 @@
 | afterlife | 10 | Debtors' Transport, Imperious Oligarch, Knight of Sorrows, Knight of the Last Breath, Ministrant of Obligation | rna |
 | other creatures you control with flying get +N/+N. | 2 | Spirit of the Spires, Windstorm Drake | rna |
 | a deck can have any number of cards named ~. | 1 | Persistent Petitioners | rna |
-| all creatures get -N/-N until end of turn. exile all creature cards in all graveyards that were put there from the battlefield ~. if a creature would die ~, exi | 1 | Cry of the Carnarium | rna |
 | as long as you control a domri planeswalker, ~ gets +N/+N and has trample. | 1 | Charging War Boar | rna |
 | as long as you control a dovin planeswalker, ~ gets +N/+N and has vigilance. | 1 | Dovin's Automaton | rna |
 | as long as you control two or more gates, ~ has vigilance and trample. | 1 | Gatebreaker Ram | rna |
@@ -291,8 +290,6 @@
 | counter target spell. its controller mills three cards. | 1 | Thought Collapse | rna |
 | create a N/N white and blue sphinx creature token with flying and vigilance. | 1 | Warrant // Warden | rna |
 | create a number of N/N red goblin creature tokens equal to two plus the number of cards named ~ in your graveyard. | 1 | Goblin Gathering | rna |
-| creatures you control gain indestructible until end of turn. addendum — if you cast ~ during your main phase, put a +N/+N counter on each of those creatures and | 1 | Unbreakable Formation | rna |
-| creatures you control get +N/+N until end of turn. untap them. | 1 | Rally to Battle | rna |
 | destroy all artifacts and enchantments. for each permanent destroyed ~, its controller creates a N/N green centaur creature token. | 1 | Rampage of the Clans | rna |
 | destroy all creatures. you gain life equal to the number of creatures you controlled that were destroyed ~. | 1 | Kaya's Wrath | rna |
 | distribute three +N/+N counters among one, two, or three target creatures, then double the number of +N/+N counters on each of those creatures. | 1 | Biogenic Upgrade | rna |
@@ -310,7 +307,6 @@
 | nontoken creatures you control have riot. | 1 | Rhythm of the Wild | rna |
 | put up to one target tapped creature on top of its owner's library. you may search your library and/or graveyard for a card named dovin, architect of law, revea | 1 | Dovin's Dismissal | rna |
 | search your library for a basic land card or gate card, reveal it, put it into your hand, then shuffle. | 1 | Open the Gates | rna |
-| spells your opponents cast that target ~ cost {M} more to cast. | 1 | Sphinx of New Prahv | rna |
 | target creature gets -N/-N until end of turn. draw a card. addendum — if you cast ~ during your main phase, tap that creature and it doesn"..."s next untap step | 1 | Code of Constraint | rna |
 | target player sacrifices a creature with the greatest power among creatures they control. you gain life equal to its power. | 1 | Consecrate // Consume | rna |
 | target player shuffles their graveyard into their library. draw a card. | 1 | Clear the Mind | rna |
@@ -343,7 +339,6 @@
 | {M}{M}: adapt N. ~ costs {M} less to activate for each instant and sorcery card in your graveyard. | 1 | Pteramander | rna |
 | {M}{M}: exchange control of ~ and target nonland permanent. activate only as a sorcery. | 1 | Eyes Everywhere | rna |
 | ~ can't be blocked by creature tokens. | 1 | Rubblebelt Runner | rna |
-| ~ deals N damage to any target. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Electrodominance | rna |
 | ~ deals N damage to target creature an opponent controls. then ~ deals N damage to each other creature that player controls if you control a creature with power | 1 | Flames of the Raze-Boar | rna |
 | −N: tap all permanents target opponent controls. that player skips their next untap step. | 1 | Dovin, Architect of Law | rna |
 

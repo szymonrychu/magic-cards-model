@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 8.1% |
-| Works (untested) | 117 | 47.4% |
+| Tested | 22 | 8.9% |
+| Works (untested) | 119 | 48.2% |
 | Partial (unaudited) | 17 | 6.9% |
-| Not working | 93 | 37.7% |
+| Not working | 89 | 36.0% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Compulsive Research | silent | Target player draws three cards. Then that player discards two cards unless they discard a land card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Congregation at Dawn | silent | Search your library for up to three creature cards, reveal them, then shuffle and put those cards on top in any order. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crown of Convergence | silent | As long as the top card of your library is a creature card, creatures you control that share a color with that card get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dimir House Guard | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Dimir Machinations | silent | Look at the top three cards of target player's library. Exile any number of those cards, then put the rest back in any order. Transmute {1}{B}{B} ({1}{B}{B}, Di | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drake Familiar | silent | When this creature enters, sacrifice it unless you return an enchantment to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dryad's Caress | silent | You gain 1 life for each creature on the battlefield. If {W} was spent to cast this spell, untap all creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -95,7 +94,6 @@
 | Tidewater Minion | silent | {4}: This creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Torpid Moloch | silent | Sacrifice three lands: This creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tunnel Vision | silent | Choose a card name. Target player reveals cards from the top of their library until a card with that name is revealed. If it is, that player puts the rest of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Undercity Shade | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Vindictive Mob | silent | When this creature enters, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vulturous Zombie | silent | Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Warp World | silent | Each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. Each player puts all artifact, crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -104,7 +102,6 @@
 | Woodwraith Corrupter | silent | {1}{B}{G}, {T}: Target Forest becomes a 4/4 black and green Elemental Horror creature. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brightflame | notice | Radiance — Brightflame deals X damage to target creature and each other creature that shares a color with it. You gain life equal to the damage dealt this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cleansing Beam | notice | Radiance — Cleansing Beam deals 2 damage to target creature and each other creature that shares a color with it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Concerted Effort | notice | At the beginning of each upkeep, creatures you control gain flying until end of turn if a creature you control has flying. The same is true for fear, first stri | unparsed remainder: The same is true for fear, first strike, double strike, landwalk, protection, trample, and vigilance. | Y/-/- | not_working |
 | Dimir Doppelganger | notice | {1}{U}{B}: Exile target creature card from a graveyard. This creature becomes a copy of that card, except it has this ability. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flash Conscription | notice | Untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. If {W} was spent to cast this spell, the creature g | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flickerform | notice | {2}{W}{W}: Exile enchanted creature and all Auras attached to it. At the beginning of the next end step, return that card to the battlefield under its owner's c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -118,7 +115,6 @@
 | Twisted Justice | notice | Target player sacrifices a creature of their choice. You draw cards equal to that creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vigor Mortis | notice | Return target creature card from your graveyard to the battlefield. If {G} was spent to cast this spell, that creature enters with an additional +1/+1 counter o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Voyager Staff | notice | {2}, Sacrifice this artifact: Exile target creature. Return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Wojek Embermage | notice | Radiance — {T}: This creature deals 1 damage to target creature and each other creature that shares a color with it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chorus of the Conclave | unaudited | As an additional cost to cast creature spells, you may pay any amount of mana. If you do, that creature enters with that many additional +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Circu, Dimir Lobotomist | unaudited | Your opponents can't cast spells with the same name as a card exiled with Circu. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dream Leash | unaudited | You can't choose an untapped permanent as this spell's target as you cast it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -164,6 +160,7 @@
 | Devouring Light | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Exile targe | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dimir Aqueduct | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dimir Cutpurse | handled | Whenever this creature deals combat damage to a player, that player discards a card and you draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dimir House Guard | handled | Sacrifice a creature: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dimir Signet | handled |  |  | Y/-/- | not_tested |
 | Disembowel | handled | Destroy target creature with mana value X. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Divebomber Griffin | handled | {T}, Sacrifice this creature: It deals 3 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -244,6 +241,7 @@
 | Tattered Drake | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thundersong Trumpeter | handled | {T}: Target creature can't attack or block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trophy Hunter | handled | {1}{G}: This creature deals 1 damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Undercity Shade | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Veteran Armorer | handled | Other creatures you control get +0/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viashino Fangtail | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viashino Slasher | handled | {R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -257,12 +255,13 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>22 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
 - Cerulean Sphinx
 - Char
+- Concerted Effort
 - Dark Confidant
 - Doubling Season
 - Firemane Angel
@@ -279,6 +278,7 @@
 - Temple Garden
 - Watchwolf
 - Watery Grave
+- Wojek Embermage
 
 </details>
 
@@ -286,8 +286,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Radiance | 9 | Bathe in Light, Brightflame, Cleansing Beam, Incite Hysteria, Leave No Trace | rav |
-| fear | 2 | Dimir House Guard, Undercity Shade | rav |
+| Radiance | 8 | Bathe in Light, Brightflame, Cleansing Beam, Incite Hysteria, Leave No Trace | rav |
 | ({M} can be paid with either {M} or {M}.) players can't search libraries ~. draw a card. | 1 | Shadow of Doubt | rav |
 | ({M} can be paid with either {M} or {M}.) regenerate target creature. at ~ next end of combat, destroy all creatures that blocked or were blocked by it ~. | 1 | Gaze of the Gorgon | rav |
 | activated abilities cost {M} more to activate unless they're mana abilities. | 1 | Suppression Field | rav |
@@ -298,7 +297,6 @@
 | as ~ enters, flip a coin. if the coin comes up heads, ~ enters as a N/N creature with haste. if it comes up tails, ~ enters as a N/N creature with defender. | 1 | Molten Sentry | rav |
 | at the beginning of each opponent's upkeep, exile all cards from your hand face down. | 1 | Bottled Cloister | rav |
 | at the beginning of each player"..."t, sacrifice ~. | 1 | Woebringer Demon | rav |
-| at the beginning of each upkeep, creatures you control gain flying until end of turn if a creature you control has flying. the same is true for fear, first stri | 1 | Concerted Effort | rav |
 | at the beginning of your end step, destroy each creature with mana value equal to the number of +N/+N counters on ~. | 1 | Necroplasm | rav |
 | at the beginning of your end step, return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | Gleancrawler | rav |
 | at the beginning of your upkeep, create a token that's a copy of enchanted creature. | 1 | Followed Footsteps | rav |

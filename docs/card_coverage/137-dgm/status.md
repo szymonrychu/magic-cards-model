@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 9.1% |
+| Tested | 14 | 9.8% |
 | Works (untested) | 71 | 49.7% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 54 | 37.8% |
+| Not working | 53 | 37.1% |
 
 ## Cards needing work
 
@@ -78,7 +78,6 @@
 | Wake the Reflections | silent | Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Weapon Surge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pontiff of Blight | notice | Other creatures you control have extort. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ready // Willing | notice | Creatures you control gain indestructible until end of turn. Untap each creature you control. Fuse (You may cast one or both halves of this card from your hand. | unparsed remainder: Untap each creature you control. | Y/Y/- | not_working |
 | Warped Physique | notice | Target creature gets +X/-X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Scrivener | unaudited | If you would draw a card while you have no cards in hand, instead you draw two cards and you lose 1 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Council of the Absolute | unaudited | As this creature enters, choose a noncreature, nonland card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -160,7 +159,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Aetherling
 - Beck // Call
@@ -172,6 +171,7 @@
 - Notion Thief
 - Possibility Storm
 - Protect // Serve
+- Ready // Willing
 - Trostani's Summoner
 - Voice of Resurgence
 - Wear // Tear
@@ -195,7 +195,6 @@
 | cipher | 1 | Hidden Strings | dgm |
 | counter target spell. at the beginning of your next first main phase, add N mana in any combination of colors, where N is that spell's mana value. | 1 | Plasm Capture | dgm |
 | counter target spell. its controller can't cast spells ~. | 1 | Render Silent | dgm |
-| creatures you control gain indestructible until end of turn. untap each creature you control. fuse (you may cast one or both halves of ~ from your hand.) | 1 | Ready // Willing | dgm |
 | detain up to two target creatures your opponents control. (until your next turn, those creatures can"..."t be activated.) | 1 | Lyev Decree | dgm |
 | each creature card in your graveyard has scavenge. the scavenge cost is equal to its mana cost. | 1 | Varolz, the Scar-Striped | dgm |
 | each opponent loses two times N life. you gain life equal to the life lost ~. | 1 | Debt to the Deathless | dgm |

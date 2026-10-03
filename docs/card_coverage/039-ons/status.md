@@ -17,24 +17,21 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 25.9% |
-| Works (untested) | 31 | 53.4% |
+| Tested | 17 | 29.3% |
+| Works (untested) | 32 | 55.2% |
 | Partial (unaudited) | 3 | 5.2% |
-| Not working | 9 | 15.5% |
+| Not working | 6 | 10.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Blackmail | silent | Target player reveals three cards from their hand and you choose one of them. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gluttonous Zombie | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Goblin Piledriver | silent | Whenever this creature attacks, it gets +2/+0 until end of turn for each other attacking Goblin. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Head Games | silent | Target opponent puts the cards from their hand on top of their library. Search that player's library for that many cards. The player puts those cards into their | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mobilization | silent | Soldier creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Patriarch's Bidding | silent | Each player chooses a creature type. Each player returns all creature cards of a type chosen this way from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reminisce | silent | Target player shuffles their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sea's Claim | silent | Enchanted land is an Island. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Severed Legion | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cover of Darkness | unaudited | Creatures of the chosen type have fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Future Sight | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gratuitous Violence | unaudited | If a creature you control would deal damage to a permanent or player, it deals double that damage instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -52,6 +49,7 @@
 | Festering Goblin | handled | When this creature dies, target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Forgotten Cave | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glory Seeker | handled |  |  | Y/Y/- | not_tested |
+| Gluttonous Zombie | handled | Fear | machines/keywords.py | Y/-/- | not_tested |
 | Goblin Sky Raider | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Infest | handled | All creatures get -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inspirit | handled | Untap target creature. It gets +2/+4 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -73,7 +71,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>17 cards</summary>
 
 - Annex
 - Biorhythm
@@ -82,8 +80,10 @@
 - Demystify
 - Elvish Warrior
 - Flooded Strand
+- Goblin Piledriver
 - Krosan Tusker
 - Polluted Delta
+- Severed Legion
 - Skirk Prospector
 - Threaten
 - True Believer
@@ -97,7 +97,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| fear | 2 | Gluttonous Zombie, Severed Legion | ons |
 | creatures of the chosen type have fear. | 1 | Cover of Darkness | ons |
 | each player chooses a creature type. each player returns all creature cards of a type chosen ~ from their graveyard to the battlefield. | 1 | Patriarch's Bidding | ons |
 | enchanted land is an island. | 1 | Sea's Claim | ons |
@@ -107,7 +106,6 @@
 | target opponent puts the cards from their hand on top of their library. search that player's library for that many cards. the player puts those cards into their | 1 | Head Games | ons |
 | target player reveals three cards from their hand and you choose one of them. that player discards that card. | 1 | Blackmail | ons |
 | target player shuffles their graveyard into their library. | 1 | Reminisce | ons |
-| whenever ~ attacks, it gets +N/+N until end of turn for each other attacking goblin. | 1 | Goblin Piledriver | ons |
 
 ## Notes
 

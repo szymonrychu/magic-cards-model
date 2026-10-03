@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.6% |
+| Tested | 17 | 7.1% |
 | Works (untested) | 131 | 54.4% |
 | Partial (unaudited) | 19 | 7.9% |
-| Not working | 75 | 31.1% |
+| Not working | 74 | 30.7% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Exemplar of Strength | silent | Whenever this creature attacks, remove a -1/-1 counter from it. If you do, you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Failure // Comply | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Choose a card name. Until your next turn, your opponents can't cast spells with the chosen  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gate to the Afterlife | silent | {2}, {T}, Sacrifice this artifact: Search your graveyard, hand, and/or library for a card named God-Pharaoh's Gift and put it onto the battlefield. If you searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gideon of the Trials | silent | +1: Until your next turn, prevent all damage target permanent would deal. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon's Resolve | silent | When this enchantment enters, you may search your library and/or graveyard for a card named Gideon, Martial Paragon, reveal it, and put it into your hand. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon, Martial Paragon | silent | +2: Untap all creatures you control. Those creatures get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glorious End | silent | End the turn. (Exile all spells and abilities from the stack, including this card. The player whose turn it is discards down to their maximum hand size. Damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -255,13 +254,14 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Angler Drake
 - Archfiend of Ifnir
 - Cascading Cataracts
 - Censor
 - Curator of Mysteries
+- Gideon of the Trials
 - Harsh Mentor
 - Harvest Season
 - Luxa River Shrine
@@ -284,7 +284,6 @@
 | aftermath | 8 | Cut // Ribbons, Heaven // Earth, Mouth // Feed, Never // Return, Onward // Victory | akh |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 2 | Hooded Brawler, Nef-Crop Entangler | akh |
 | +N: untap all creatures you control. those creatures get +N/+N until end of turn. | 1 | Gideon, Martial Paragon | akh |
-| +N: until your next turn, prevent all damage target permanent would deal. | 1 | Gideon of the Trials | akh |
 | N target creatures can't be blocked ~. until end of turn, those creatures gain "..." | 1 | Open into Wonder | akh |
 | N: look at the top card of your library. if it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on nissa, y | 1 | Nissa, Steward of Elements | akh |
 | activated abilities of creature cards in your graveyard cost {M} less to activate. | 1 | Embalmer's Tools | akh |

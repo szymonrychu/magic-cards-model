@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 11.4% |
+| Tested | 21 | 11.9% |
 | Works (untested) | 108 | 61.4% |
 | Partial (unaudited) | 4 | 2.3% |
-| Not working | 44 | 25.0% |
+| Not working | 43 | 24.4% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Visions of Brutality | silent | Whenever enchanted creature deals damage, its controller loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baloth Pup | notice | This creature has trample as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Eldrazi Aggressor | notice | This creature has haste as long as you control another colorless creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Flaying Tendrils | notice | Devoid (This card has no color.) All creatures get -2/-2 until end of turn. If a creature would die this turn, exile it instead. | unparsed remainder: If a creature would die this turn, exile it instead. | Y/Y/- | not_working |
 | Kor Scythemaster | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reflector Mage | notice | When this creature enters, return target creature an opponent controls to its owner's hand. That creature's owner can't cast spells with the same name as that c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sweep Away | notice | Return target creature to its owner's hand. If that creature is attacking, you may put it on top of its owner's library instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -186,12 +185,13 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Ayli, Eternal Pilgrim
 - Crumbling Vestige
 - Eldrazi Mimic
 - Eldrazi Obligator
+- Flaying Tendrils
 - Kozilek, the Great Distortion
 - Matter Reshaper
 - Mirrorpool
@@ -222,7 +222,6 @@
 | at the beginning of combat on your turn, reveal the top card of your library. if a creature card is revealed ~, you may have creatures you control other than ~  | 1 | Deceiver of Form | ogw |
 | at the beginning of your upkeep, you lose N life unless you control another colorless creature. | 1 | Reaver Drone | ogw |
 | at the beginning of your upkeep, you may reveal your hand. if you do, you win the game if you own a card named ~ in exile, in your hand, in your graveyard, and  | 1 | Hedron Alignment | ogw |
-| devoid (~ has no color.) all creatures get -N/-N until end of turn. if a creature would die ~, exile it instead. | 1 | Flaying Tendrils | ogw |
 | devoid (~ has no color.) search your library for a basic land card and reveal it. you may put that card onto the battlefield tapped if you control a land named  | 1 | Ruin in Their Wake | ogw |
 | devoid (~ has no color.) target creature gets +N/+N until end of turn. regenerate it. | 1 | Unnatural Endurance | ogw |
 | devoid (~ has no color.) ~ deals N damage to each creature. whenever you cast an eldrazi creature spell with mana value N or greater, you may exile ~ from your  | 1 | Kozilek's Return | ogw |

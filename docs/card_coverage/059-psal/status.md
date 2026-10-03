@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 3 | 3.8% |
-| Works (untested) | 48 | 60.8% |
+| Works (untested) | 49 | 62.0% |
 | Partial (unaudited) | 4 | 5.1% |
-| Not working | 24 | 30.4% |
+| Not working | 23 | 29.1% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Undying Rage | silent | Enchanted creature gets +2/+2 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whitemane Lion | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wojek Apothecary | silent | Radiance — {T}: Prevent the next 1 damage that would be dealt to target creature and each other creature that shares a color with it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Helldozer | notice | {B}{B}{B}, {T}: Destroy target land. If that land was nonbasic, untap this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Skyrider Trainee | notice | This creature has flying as long as it's enchanted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Strength in Numbers | notice | Until end of turn, target creature gains trample and gets +X/+X, where X is the number of attacking creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Detainment Spell | unaudited | Enchanted creature's activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -64,6 +63,7 @@
 | Golgari Guildmage | handled | {4}{B}, Sacrifice a creature: Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gruul Nodorog | handled | {R}: This creature gains menace until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gruul Scrapper | handled | When this creature enters, if {R} was spent to cast it, it gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Helldozer | handled | {B}{B}{B}, {T}: Destroy target land. If that land was nonbasic, untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Herd Gnarr | handled | Whenever another creature you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Indrik Stomphowler | handled | When this creature enters, destroy target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jedit's Dragoons | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -143,7 +143,6 @@
 | {M}, reveal N blue cards from your hand, sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Martyr of Frost | psal |
 | {M}, sacrifice a creature: destroy each creature with the same mana value as the sacrificed creature. | 1 | Sanguine Praetor | psal |
 | {M}{M}: target creature can't block ~ ~. | 1 | Burning-Tree Bloodscale | psal |
-| {M}{M}{M}, {M}: destroy target land. if that land was nonbasic, untap ~. | 1 | Helldozer | psal |
 | ~ has flying as long as it's enchanted. | 1 | Skyrider Trainee | psal |
 | ~ must be blocked by exactly one creature if able. | 1 | Nacatl War-Pride | psal |
 

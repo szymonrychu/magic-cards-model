@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 8.6% |
-| Works (untested) | 106 | 39.6% |
+| Works (untested) | 107 | 39.9% |
 | Partial (unaudited) | 27 | 10.1% |
-| Not working | 112 | 41.8% |
+| Not working | 111 | 41.4% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Chameleon Blur | silent | Prevent all damage that creatures would deal to players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chronosavant | silent | {1}{W}: Return this card from your graveyard to the battlefield tapped. You skip your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clockspinning | silent | Buyback {3} (You may pay an additional {3} as you cast this spell. If you do, put this card into your hand as it resolves.) Choose a counter on target permanent | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Corpulent Corpse | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Crookclaw Transmuter | silent | When this creature enters, switch target creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of the Cabal | silent | Target player sacrifices half the permanents they control of their choice, rounded down. Suspend 2—{2}{B}{B} (Rather than cast this card from your hand, you may | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cyclopean Giant | silent | When this creature dies, target land becomes a Swamp. Exile this card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -185,6 +184,7 @@
 | Cloudchaser Kestrel | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conflagrate | handled | Conflagrate deals X damage divided as you choose among any number of targets. Flashback—{R}{R}, Discard X cards. (You may cast this card from your graveyard for | the engine reads this text and performs it | Y/-/- | not_tested |
 | Coral Trickster | handled | When this creature is turned face up, you may tap or untap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Corpulent Corpse | handled | Suspend | machines/casting.py (MarkedExile.suspend, finish_suspend) | Y/-/- | not_tested |
 | D'Avenant Healer | handled | {T}: This creature deals 1 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dark Withering | handled | Destroy target nonblack creature. Madness {B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your gr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deathspore Thallid | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -340,7 +340,6 @@
 | enchanted creature gets +N/+N, has reach, and can block creatures with shadow as though they didn't have shadow. | 1 | Aether Web | tsp |
 | enchanted creature has flying and "..." | 1 | Fallen Ideal | tsp |
 | enchanted creature has protection from the chosen color. ~ doesn't remove ~. | 1 | Pentarch Ward | tsp |
-| fear | 1 | Corpulent Corpse | tsp |
 | if a spell would deal damage to a permanent or player, prevent N damage that spell would deal to that permanent or player. | 1 | Plated Pegasus | tsp |
 | if damage would be dealt to dralnu, sacrifice that many permanents instead. | 1 | Dralnu, Lich Lord | tsp |
 | if damage would be dealt to ~, prevent that damage. remove a +N/+N counter from ~. | 1 | Phantom Wurm | tsp |

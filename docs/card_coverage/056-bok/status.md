@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.4% |
-| Works (untested) | 72 | 45.3% |
+| Works (untested) | 73 | 45.9% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 70 | 44.0% |
+| Not working | 69 | 43.4% |
 
 ## Cards needing work
 
@@ -33,7 +33,7 @@
 | Budoka Pupil // Ichiga, Who Topples Oaks | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Callow Jushi // Jaraku the Interloper | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chisei, Heart of Oceans | silent | At the beginning of your upkeep, sacrifice Chisei unless you remove a counter from a permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Crawling Filth | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Crawling Filth | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cunning Bandit // Azamuki, Treachery Incarnate | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faithful Squire // Kaiso, Memory of Loyalty | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flames of the Blood Hand | silent | Flames of the Blood Hand deals 4 damage to target player or planeswalker. The damage can't be prevented. If that player or that planeswalker's controller would  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -93,7 +93,6 @@
 | Yukora, the Prisoner | silent | When Yukora leaves the battlefield, sacrifice all non-Ogre creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Call for Blood | notice | As an additional cost to cast this spell, sacrifice a creature. Target creature gets -X/-X until end of turn, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Empty-Shrine Kannushi | notice | This creature has protection from each color among permanents you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| First Volley | notice | First Volley deals 1 damage to target creature and 1 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kodama of the Center Tree | notice | Kodama of the Center Tree has soulshift X, where X is the number of Spirits you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unchecked Growth | notice | Target creature gets +4/+4 until end of turn. If it's a Spirit, it gains trample until end of turn. | unparsed remainder: If it's a Spirit, it gains trample until end of turn. | Y/-/- | not_working |
 | Clash of Realities | unaudited | All Spirits have "When this permanent enters, you may have it deal 3 damage to target non-Spirit creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -117,6 +116,7 @@
 | Day of Destiny | handled | Legendary creatures you control get +2/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enshrined Memories | handled | Reveal the top X cards of your library. Put all creature cards revealed this way into your hand and the rest on the bottom of your library in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Final Judgment | handled | Exile all creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
+| First Volley | handled | First Volley deals 1 damage to target creature and 1 damage to that creature's controller. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Floodbringer | handled | {2}, Return a land you control to its owner's hand: Tap target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frost Ogre | handled |  |  | Y/-/- | not_tested |
 | Frostling | handled | Sacrifice this creature: It deals 1 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -199,8 +199,8 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | bushido | 6 | Indebted Samurai, Isao, Enlightened Bushi, Kentaro, the Smiling Cat, Silverstorm Samurai, Takeno's Cavalry | bok |
+| soulshift | 6 | Body of Jukai, Crawling Filth, Forked-Branch Garami, Harbinger of Spring, Moonlit Strider | bok |
 | at the beginning of the end step, if there are two or more ki counters on ~, you may flip it. | 5 | Budoka Pupil // Ichiga, Who Topples Oaks, Callow Jushi // Jaraku the Interloper, Cunning Bandit // Azamuki, Treachery Incarnate, Faithful Squire // Kaiso, Memory of Loyalty, Hired Muscle // Scarmaker | bok |
-| soulshift | 5 | Body of Jukai, Forked-Branch Garami, Harbinger of Spring, Moonlit Strider, Pus Kami | bok |
 | offering | 3 | Patron of the Akki, Patron of the Kitsune, Patron of the Moon | bok |
 | whenever ~ becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | 2 | Jetting Glasskite, Shimmering Glasskite | bok |
 | all spirits have "..." | 1 | Clash of Realities | bok |
@@ -214,7 +214,6 @@
 | each enchantment deals N damage to its controller, then each aura attached to a creature deals N damage to the creature it's attached to. | 1 | Aura Barbs | bok |
 | each permanent with a divinity counter on it has indestructible. | 1 | That Which Was Taken | bok |
 | each time target permanent would deal damage to a permanent or player ~, it deals double that damage to that permanent or player instead. splice onto arcane {M} | 1 | Overblaze | bok |
-| fear | 1 | Crawling Filth | bok |
 | if a creature dealt damage by enchanted creature ~ would die, exile it instead. | 1 | Kumano's Blessing | bok |
 | if you would draw a card, look at the top three cards of your library instead. put one of those cards into your hand and the rest on the bottom of your library  | 1 | Tomorrow, Azami's Familiar | bok |
 | mill a card, then draw cards equal to the milled card's mana value. | 1 | Heed the Mists | bok |
@@ -257,7 +256,6 @@
 | {M}{M}: switch each creature's power and toughness until end of turn. | 1 | Mannichi, the Fevered Dream | bok |
 | {M}{M}: the next N damage that would be dealt to enchanted creature ~ is dealt to any target instead. | 1 | Ward of Piety | bok |
 | ~ can"..."ve cast a creature spell ~. | 1 | Goblin Cohort | bok |
-| ~ deals N damage to target creature and N damage to that creature's controller. | 1 | First Volley | bok |
 | ~ deals N damage to target player or planeswalker. the damage can"..."s controller would gain life ~, that player gains no life instead. | 1 | Flames of the Blood Hand | bok |
 | ~ has protection from each color among permanents you control. | 1 | Empty-Shrine Kannushi | bok |
 | ~ has soulshift N, where N is the number of spirits you control. | 1 | Kodama of the Center Tree | bok |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 8.4% |
+| Tested | 10 | 9.3% |
 | Works (untested) | 57 | 53.3% |
 | Partial (unaudited) | 2 | 1.9% |
-| Not working | 39 | 36.4% |
+| Not working | 38 | 35.5% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Crimson Muckwader | notice | This creature gets +1/+1 as long as you control a Swamp. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flinthoof Boar | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Harbor Bandit | notice | This creature gets +1/+1 as long as you control an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Predatory Rampage | notice | Creatures you control get +3/+3 until end of turn. Each creature your opponents control blocks this turn if able. | unparsed remainder: Each creature your opponents control blocks this turn if able. | Y/-/- | not_working |
 | Prized Elephant | notice | This creature gets +1/+1 as long as you control a Forest. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Timberpack Wolf | notice | This creature gets +1/+1 for each other creature you control named Timberpack Wolf. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Gorgon | notice | {2}{B}, {T}: Put a petrification counter on target creature. It gains defender and becomes a colorless artifact in addition to its other types. Its activated ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -128,7 +127,7 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Augur of Bolas
 - Elderscale Wurm
@@ -136,6 +135,7 @@
 - Jace's Phantasm
 - Mind Sculpt
 - Omniscience
+- Predatory Rampage
 - Switcheroo
 - Touch of the Eternal
 - Worldfire
@@ -152,7 +152,6 @@
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's red. | 1 | Ring of Valkas | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's white. | 1 | Ring of Thune | m13 |
 | at the beginning of your upkeep, return a creature you control to its owner's hand. | 1 | Roaring Primadox | m13 |
-| creatures you control get +N/+N until end of turn. each creature your opponents control blocks ~ if able. | 1 | Predatory Rampage | m13 |
 | destroy target creature an opponent controls. each other creature that player controls gets -N/-N until end of turn. | 1 | Public Execution | m13 |
 | enchanted creature gets +N/+N and can't be blocked. | 1 | Tricks of the Trade | m13 |
 | enchanted creature gets -N/-N and can't block. | 1 | Crippling Blight | m13 |

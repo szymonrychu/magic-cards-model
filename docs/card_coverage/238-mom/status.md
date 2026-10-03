@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 57 | 21.0% |
-| Works (untested) | 99 | 36.4% |
+| Tested | 58 | 21.3% |
+| Works (untested) | 98 | 36.0% |
 | Partial (unaudited) | 6 | 2.2% |
 | Not working | 110 | 40.4% |
 
@@ -198,7 +198,6 @@
 | Omen Hawker | handled |  |  | Y/Y/- | not_tested |
 | Onakke Javelineer | handled | {T}: This creature deals 2 damage to target player or battle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Order of the Mirror // Order of the Alabaster Host | handled | {3}{W/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Orthion, Hero of Lavabrink | handled | {1}{R}, {T}: Create a token that's a copy of another target creature you control. It gains haste. Sacrifice it at the beginning of the next end step. Activate o | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ozolith, the Shattered Spire | handled | If one or more +1/+1 counters would be put on an artifact or creature you control, that many plus one +1/+1 counters are put on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phyrexian Archivist | handled | {2}, {T}: Put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phyrexian Pegasus | handled | Whenever this creature attacks, another target attacking creature without flying gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -245,7 +244,7 @@
 ## Fully supported
 
 <details>
-<summary>57 cards</summary>
+<summary>58 cards</summary>
 
 - Archangel Elspeth
 - Borborygmos and Fblthp
@@ -294,6 +293,7 @@
 - Invasion of Xerex // Vertex Paladin
 - Invasion of Zendikar // Awakened Skyclave
 - Kami of Whispered Hopes
+- Orthion, Hero of Lavabrink
 - Rampaging Geoderm
 - Sandstalker Moloch
 - See Double

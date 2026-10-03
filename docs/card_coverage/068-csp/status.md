@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 6.3% |
-| Works (untested) | 59 | 41.3% |
+| Tested | 11 | 7.7% |
+| Works (untested) | 62 | 43.4% |
 | Partial (unaudited) | 12 | 8.4% |
-| Not working | 63 | 44.1% |
+| Not working | 58 | 40.6% |
 
 ## Cards needing work
 
@@ -29,12 +29,9 @@
 | Adarkar Valkyrie | silent | {T}: When target creature other than this creature dies this turn, return that card to the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Adarkar Windform | silent | {1}{S}: Target creature loses flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcum Dagsson | silent | {T}: Target artifact creature's controller sacrifices it. That player may search their library for a noncreature artifact card, put it onto the battlefield, the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Aurochs Herd | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Aurochs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Balduvian Fallen | silent | Whenever this creature's cumulative upkeep is paid, it gets +1/+0 until end of turn for each {B} or {R} spent this way. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Balduvian Frostwaker | silent | {U}, {T}: Target snow land becomes a 2/2 blue Elemental creature with flying. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Balduvian Warlord | silent | {T}: Remove target blocking creature from combat. Creatures it was blocking that hadn't become blocked by another creature this combat become unblocked, then it | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brooding Saurian | silent | At the beginning of each end step, each player gains control of all nontoken permanents they own. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bull Aurochs | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Aurochs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Commandeer | silent | You may exile two blue cards from your hand rather than pay this spell's mana cost. Gain control of target noncreature spell. You may choose new targets for it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Controvert | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Counterbalance | silent | Whenever an opponent casts a spell, you may reveal the top card of your library. If you do, counter that spell if it has the same mana value as the revealed car | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -60,10 +57,9 @@
 | Luminesce | silent | Prevent all damage that black sources and red sources would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magmatic Core | silent | At the beginning of your end step, this enchantment deals X damage divided as you choose among any number of target creatures, where X is the number of age coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Perilous Research | silent | Draw two cards, then sacrifice a permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Phobian Phantasm | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Resize | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rimefeather Owl | silent | Rimefeather Owl's power and toughness are each equal to the number of snow permanents on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rimehorn Aurochs | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Aurochs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Rimehorn Aurochs | silent | {2}{S}: Target creature blocks target creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rite of Flame | silent | Add {R}{R}, then add {R} for each card named Rite of Flame in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ronom Serpent | silent | When you control no snow lands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Rune Snag | silent | Counter target spell unless its controller pays {2} plus an additional {2} for each card named Rune Snag in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -85,7 +81,6 @@
 | Kjeldoran War Cry | notice | Creatures you control get +X/+X until end of turn, where X is 1 plus the number of cards named Kjeldoran War Cry in all graveyards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mystic Melting | notice | Destroy target artifact or enchantment. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ohran Viper | notice | Whenever this creature deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Ronom Hulk | notice | Protection | protection from a quality the engine does not read: snow | Y/-/- | not_working |
 | Swift Maneuver | notice | Prevent the next 2 damage that would be dealt to any target this turn. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thermal Flux | notice | Choose one — • Target nonsnow permanent becomes snow until end of turn. • Target snow permanent isn't snow until end of turn. Draw a card at the beginning of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vanish into Memory | notice | Exile target creature. You draw cards equal to that creature's power. At the beginning of your next upkeep, return that card to the battlefield under its owner' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -102,10 +97,12 @@
 | Void Maw | unaudited | If another creature would die, exile it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Wilderness Elemental | unaudited | Wilderness Elemental's power is equal to the number of nonbasic lands your opponents control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arctic Flats | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Aurochs Herd | handled | When this creature enters, you may search your library for an Aurochs card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boreal Centaur | handled | {S}: This creature gets +1/+1 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boreal Druid | handled |  |  | Y/-/- | not_tested |
 | Boreal Griffin | handled | {S}: This creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boreal Shelf | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bull Aurochs | handled | Whenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Aurochs. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chill to the Bone | handled | Destroy target nonsnow creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chilling Shade | handled | {S}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Coldsteel Heart | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -137,6 +134,7 @@
 | Mouth of Ronom | handled | {4}{S}, {T}, Sacrifice this land: It deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ohran Yeti | handled | {2}{S}: Target snow creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Orcish Bloodpainter | handled | {T}, Sacrifice a creature: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Phobian Phantasm | handled | Cumulative upkeep | machines/keywords.py | Y/-/- | not_tested |
 | Phyrexian Etchings | handled | At the beginning of your end step, draw a card for each age counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phyrexian Ironfoot | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phyrexian Snowcrusher | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -164,15 +162,17 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>11 cards</summary>
 
 - Allosaurus Rider
+- Balduvian Warlord
 - Braid of Fire
 - Kjeldoran Javelineer
 - Martyr of Ashes
 - Martyr of Sands
 - Mishra's Bauble
 - Rimewind Cryomancer
+- Ronom Hulk
 - Soul Spike
 - Vexing Sphinx
 
@@ -184,7 +184,6 @@
 |---|---|---|---|
 | recover | 7 | Controvert, Garza's Assassin, Grim Harvest, Icefall, Krovikan Rot | csp |
 | ripple | 5 | Surging Aether, Surging Dementia, Surging Flame, Surging Might, Surging Sentinels | csp |
-| whenever ~ attacks, it gets +N/+N until end of turn for each other attacking aurochs. | 3 | Aurochs Herd, Bull Aurochs, Rimehorn Aurochs | csp |
 | Choose one | 1 | Thermal Flux | csp |
 | add {M}{M}, then add {M} for each card named ~ in each graveyard. | 1 | Rite of Flame | csp |
 | as long as ~ has an ice counter on it, prevent all combat damage it would deal and it has defender. | 1 | Woolly Razorback | csp |
@@ -198,7 +197,6 @@
 | enchanted creature can"..."t be activated. | 1 | Gelid Shackles | csp |
 | enchanted creature gets +N/+N for each age counter on ~. | 1 | Glacial Plating | csp |
 | exile target creature. you draw cards equal to that creature"..."s control. if you do, discard cards equal to that creature's toughness. | 1 | Vanish into Memory | csp |
-| fear | 1 | Phobian Phantasm | csp |
 | if a creature would deal combat damage to you and/or one or more creatures you control, prevent N of that damage, where N is the number of age counters on ~. | 1 | Cover of Winter | csp |
 | if another creature would die, exile it instead. | 1 | Void Maw | csp |
 | other soldier creatures get +N/+N and have first strike. | 1 | Field Marshal | csp |
@@ -206,7 +204,6 @@
 | prevent all damage that would be dealt to ~ by creatures with first strike. | 1 | Tresserhorn Skyknight | csp |
 | prevent all damage that ~ would deal to snow creatures. | 1 | Goblin Furrier | csp |
 | prevent the next N damage that would be dealt to any target ~. draw a card at the beginning of the next turn's upkeep. | 1 | Swift Maneuver | csp |
-| protection | 1 | Ronom Hulk | csp |
 | remove a healing counter from ~: prevent the next N damage that would be dealt to ~ ~. | 1 | Ursine Fylgja | csp |
 | snow permanents don"..." untap steps. | 1 | Freyalise's Radiance | csp |
 | spells you cast have ripple N. | 1 | Thrumming Stone | csp |
@@ -232,11 +229,11 @@
 | you may exile two blue cards from your hand rather than pay ~ mana cost. gain control of target noncreature spell. you may choose new targets for it. (if that s | 1 | Commandeer | csp |
 | you may exile two red cards from your hand rather than pay ~ mana cost. untap all creatures that attacked ~. after ~ phase, there is an additional combat phase  | 1 | Fury of the Horde | csp |
 | {M}, {M}: target snow land becomes a N/N blue elemental creature with flying. it's still a land. | 1 | Balduvian Frostwaker | csp |
-| {M}: remove target blocking creature from combat. creatures it was blocking that hadn't become blocked by another creature ~ become unblocked, then it blocks an | 1 | Balduvian Warlord | csp |
 | {M}: target artifact creature's controller sacrifices it. that player may search their library for a noncreature artifact card, put it onto the battlefield, the | 1 | Arcum Dagsson | csp |
 | {M}: when target creature other than ~ dies ~, return that card to the battlefield under your control. | 1 | Adarkar Valkyrie | csp |
 | {M}{M}, {M}: look at the top card of your library. if that card is snow, you may reveal it and put it into your hand. | 1 | Scrying Sheets | csp |
 | {M}{M}: snow creatures you control get +N/+N until end of turn. | 1 | Diamond Faerie | csp |
+| {M}{M}: target creature blocks target creature ~ if able. | 1 | Rimehorn Aurochs | csp |
 | {M}{M}: target creature loses flying until end of turn. | 1 | Adarkar Windform | csp |
 | ~ can't be the target of blue or black spells. | 1 | Karplusan Strider | csp |
 | ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |

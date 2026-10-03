@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 6.4% |
-| Works (untested) | 130 | 55.8% |
+| Works (untested) | 131 | 56.2% |
 | Partial (unaudited) | 5 | 2.1% |
-| Not working | 83 | 35.6% |
+| Not working | 82 | 35.2% |
 
 ## Cards needing work
 
@@ -108,7 +108,6 @@
 | Find // Finality | notice | You may put two +1/+1 counters on a creature you control. Then all creatures get -4/-4 until end of turn. | unparsed remainder: You may put two +1/+1 counters on a creature you control. | Y/Y/- | not_working |
 | Leapfrog | notice | This creature has flying as long as you've cast an instant or sorcery spell this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mnemonic Betrayal | notice | Exile all opponents' graveyards. You may cast spells from among those cards this turn, and mana of any type can be spent to cast them. At the beginning of the n | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ral's Dispersal | notice | Return target creature to its owner's hand. You may search your library and/or graveyard for a card named Ral, Caller of Storms, reveal it, and put it into your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crackling Drake | unaudited | Crackling Drake's power is equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Demotion | unaudited | Enchanted creature can't block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ochran Assassin | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -203,6 +202,7 @@
 | Portcullis Vine | handled | {2}, {T}, Sacrifice a creature with defender: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Precision Bolt | handled | Precision Bolt deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Price of Fame | handled | This spell costs {2} less to cast if it targets a legendary creature. Destroy target creature. Surveil 2. (Look at the top two cards of your library, then put a | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ral's Dispersal | handled | Return target creature to its owner's hand. You may search your library and/or graveyard for a card named Ral, Caller of Storms, reveal it, and put it into your | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ral, Caller of Storms | handled | +1: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rampaging Monument | handled | This creature enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Response // Resurgence | handled | Response deals 5 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -300,7 +300,6 @@
 | gain control of target creature with power N or less. | 1 | Connive // Concoct | grn |
 | if you would draw a card, instead look at the top three cards of your library, then put one into your hand and the rest into your graveyard. | 1 | Underrealm Lich | grn |
 | return N target creatures of the creature type of your choice to their owner's hand. | 1 | Selective Snare | grn |
-| return target creature to its owner's hand. you may search your library and/or graveyard for a card named ral, caller of storms, reveal it, and put it into your | 1 | Ral's Dispersal | grn |
 | search your library for up to two basic land cards and/or gate cards, put them onto the battlefield tapped, then shuffle. | 1 | Circuitous Route | grn |
 | surveil N, then choose an instant or sorcery card in your graveyard. you may cast it ~. if that spell would be put into your graveyard, exile it instead. (to su | 1 | Mission Briefing | grn |
 | surveil N, then draw two cards. ~ deals N damage to you. (to surveil N, look at the top two cards of your library, then put any number of them into your graveya | 1 | Notion Rain | grn |

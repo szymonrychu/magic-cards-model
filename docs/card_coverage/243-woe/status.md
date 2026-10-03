@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 9.8% |
+| Tested | 27 | 10.2% |
 | Works (untested) | 139 | 52.3% |
 | Partial (unaudited) | 8 | 3.0% |
-| Not working | 93 | 35.0% |
+| Not working | 92 | 34.6% |
 
 ## Cards needing work
 
@@ -107,7 +107,6 @@
 | Become Brutes | notice | One or two target creatures each gain haste until end of turn. For each of those creatures, create a Monster Role token attached to it. (If you control another  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Cheeky House-Mouse // Squeak By | notice | Target creature you control gets +1/+1 until end of turn. It can't be blocked by creatures with power 3 or greater this turn. | unparsed remainder: It can't be blocked by creatures with power 3 or greater this turn. | Y/Y/Y | not_working |
 | Curse of the Werefox | notice | Create a Monster Role token attached to target creature you control. When you do, that creature fights up to one target creature you don't control. (If you cont | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Gnawing Crescendo | notice | Creatures you control get +2/+0 until end of turn. Whenever a nontoken creature you control dies this turn, create a 1/1 black Rat creature token with "This tok | unparsed remainder: Whenever a nontoken creature you control dies this turn, create a 1/1 black Rat creature token with "This token can't block." | Y/Y/Y | not_working |
 | Howling Galefang | notice | This creature has haste as long as you own a card in exile that has an Adventure. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kellan, the Fae-Blooded // Birthright Boon | notice | Other creatures you control get +1/+0 for each Aura and Equipment attached to Kellan. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Lord Skitter's Butcher | notice | When this creature enters, choose one — • Create a 1/1 black Rat creature token with "This token can't block." • You may sacrifice another creature. If you do,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -270,7 +269,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Agatha's Champion
 - Agatha's Soul Cauldron
@@ -281,6 +280,7 @@
 - Extraordinary Journey
 - Fell Horseman // Deathly Ride
 - Frantic Firebolt
+- Gnawing Crescendo
 - Gruff Triplets
 - Hearth Elemental // Stoke Genius
 - Horned Loch-Whale // Lagoon Breach
@@ -326,7 +326,6 @@
 | create a cursed role token attached to up to one target creature. | 1 | Gadwick's First Duel | woe |
 | create a monster role token attached to target creature you control. when you do, that creature fights up to one target creature you don't control. (if you cont | 1 | Curse of the Werefox | woe |
 | creatures with power less than ~ power can't block it. | 1 | Elusive Otter // Grove's Bounty | woe |
-| creatures you control get +N/+N until end of turn. whenever a nontoken creature you control dies ~, create a N/N black rat creature token with "..." | 1 | Gnawing Crescendo | woe |
 | destroy target creature or enchantment. create a wicked role token attached to up to one target creature you control. (if you control another role on it, put th | 1 | Shatter the Oath | woe |
 | destroy target enchantment. if a permanent you controlled or a token was destroyed ~, draw a card. | 1 | Break the Spell | woe |
 | draw three cards. create a N/N blue faerie creature token with flying and "..." | 1 | Into the Fae Court | woe |

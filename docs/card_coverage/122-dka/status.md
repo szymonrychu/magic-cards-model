@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 10.4% |
+| Tested | 18 | 11.7% |
 | Works (untested) | 73 | 47.4% |
 | Partial (unaudited) | 5 | 3.2% |
-| Not working | 60 | 39.0% |
+| Not working | 58 | 37.7% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Havengul Lich | silent | {1}: You may cast target creature card in a graveyard this turn. When you cast it this turn, this creature gains all activated abilities of that card until end  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Runebinder | silent | {2}{U}, {T}, Exile a creature card from your graveyard: Create a 2/2 black Zombie creature token, then put a +1/+1 counter on each Zombie creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Helvault | silent | When Helvault is put into a graveyard from the battlefield, return all cards exiled with it to the battlefield under their owners' control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hollowhenge Spirit | silent | When this creature enters, remove target attacking or blocking creature from combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Increasing Ambition | silent | Search your library for a card and put that card into your hand. If this spell was cast from a graveyard, instead search your library for two cards and put thos | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Increasing Confusion | silent | Target player mills X cards. If this spell was cast from a graveyard, that player mills twice that many cards instead. Flashback {X}{U} (You may cast this card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Increasing Devotion | silent | Create five 1/1 white Human creature tokens. If this spell was cast from a graveyard, create ten of those tokens instead. Flashback {7}{W}{W} (You may cast this | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -77,7 +76,6 @@
 | Young Wolf | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Zombie Apocalypse | silent | Return all Zombie creature cards from your graveyard to the battlefield tapped, then destroy all Humans. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Afflicted Deserter // Werewolf Ransacker | notice | Whenever this creature transforms into Werewolf Ransacker, you may destroy target artifact. If that artifact is put into a graveyard this way, this creature dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Break of Day | notice | Creatures you control get +1/+1 until end of turn. Fateful hour — If you have 5 or less life, those creatures gain indestructible until end of turn. (Damage and | unparsed remainder: If you have 5 or less life, those creatures gain indestructible until end of turn. | Y/-/- | not_working |
 | Counterlash | notice | Counter target spell. You may cast a spell that shares a card type with it from your hand without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Deadly Allure | notice | Target creature gains deathtouch until end of turn and must be blocked this turn if able. Flashback {G} (You may cast this card from your graveyard for its flas | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Death's Caress | notice | Destroy target creature. If that creature was a Human, you gain life equal to its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -168,9 +166,10 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>18 cards</summary>
 
 - Avacyn's Collar
+- Break of Day
 - Chalice of Life // Chalice of Death
 - Curse of Exhaustion
 - Dungeon Geists
@@ -179,6 +178,7 @@
 - Gruesome Discovery
 - Heckling Fiends
 - Hellrider
+- Hollowhenge Spirit
 - Huntmaster of the Fells // Ravager of the Fells
 - Increasing Vengeance
 - Predator Ooze
@@ -205,7 +205,6 @@
 | counter target spell. you may cast a spell that shares a card type with it from your hand without paying its mana cost. | 1 | Counterlash | dka |
 | create five N/N white human creature tokens. if ~ was cast from a graveyard, create ten of those tokens instead. flashback {M}{M}{M} (you may cast ~ from your g | 1 | Increasing Devotion | dka |
 | create two N/N white human creature tokens. fateful hour — if you have N or less life, create five of those tokens instead. | 1 | Gather the Townsfolk | dka |
-| creatures you control get +N/+N until end of turn. fateful hour — if you have N or less life, those creatures gain indestructible until end of turn. (damage and | 1 | Break of Day | dka |
 | destroy target creature. if that creature was a human, you gain life equal to its toughness. | 1 | Death's Caress | dka |
 | destroy target land. ~ deals N damage to each human creature. | 1 | Scorch the Fields | dka |
 | discard all the cards in your hand, then draw that many cards. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Shattered Perception | dka |
@@ -228,7 +227,6 @@
 | when ~ dies, return it to the battlefield transformed under your control at the beginning of the next end step. | 1 | Loyal Cathar // Unhallowed Cathar | dka |
 | when ~ dies, target opponent discards a card at random. | 1 | Black Cat | dka |
 | when ~ enters, it deals N damage to target creature and N damage to you. | 1 | Forge Devil | dka |
-| when ~ enters, remove target attacking or blocking creature from combat. | 1 | Hollowhenge Spirit | dka |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Markov Warlord | dka |
 | when ~ is put into a graveyard from the battlefield, return all cards exiled with it to the battlefield under their owners' control. | 1 | Helvault | dka |
 | whenever a creature attacks you or a planeswalker you control, reveal the top card of your library. if it's a forest card, remove that creature from combat. the | 1 | Lost in the Woods | dka |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 10.2% |
-| Works (untested) | 148 | 60.2% |
+| Works (untested) | 149 | 60.6% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 66 | 26.8% |
+| Not working | 65 | 26.4% |
 
 ## Cards needing work
 
@@ -90,7 +90,6 @@
 | Built to Last | notice | Target creature gets +2/+2 until end of turn. If it's an artifact creature, it gains indestructible until end of turn. (Damage and effects that say "destroy" do | unparsed remainder: If it's an artifact creature, it gains indestructible until end of turn. | Y/Y/- | not_working |
 | Built to Smash | notice | Target attacking creature gets +3/+3 until end of turn. If it's an artifact creature, it gains trample until end of turn. | unparsed remainder: If it's an artifact creature, it gains trample until end of turn. | Y/Y/- | not_working |
 | Insidious Will | notice | Choose one — • Counter target spell. • You may choose new targets for target spell. • Copy target instant or sorcery spell. You may choose new targets for the c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Liberating Combustion | notice | Liberating Combustion deals 6 damage to target creature. You may search your library and/or graveyard for a card named Chandra, Pyrogenius, reveal it, and put i | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nissa, Vital Force | notice | +1: Untap target land you control. Until your next turn, it becomes a 5/5 Elemental creature with haste. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Demolition Stomper | unaudited | This Vehicle can't be blocked by creatures with power 2 or less. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ghirapur Orrery | unaudited | Each player may play an additional land on each of their turns. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -170,6 +169,7 @@
 | Larger Than Life | handled | Target creature gets +4/+4 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lathnu Hellion | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lawless Broker | handled | When this creature dies, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Liberating Combustion | handled | Liberating Combustion deals 6 damage to target creature. You may search your library and/or graveyard for a card named Chandra, Pyrogenius, reveal it, and put i | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Live Fast | handled | You draw two cards, lose 2 life, and get {E}{E} (two energy counters). | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Longtusk Cub | handled | Whenever this creature deals combat damage to a player, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Make Obsolete | handled | Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -343,7 +343,6 @@
 | ~ can't attack alone. | 1 | Trusty Companion | kld |
 | ~ can't be blocked by creatures with power N or less. | 1 | Demolition Stomper | kld |
 | ~ costs {M} less to cast, where N is the total mana value of noncreature artifacts you control. | 1 | Metalwork Colossus | kld |
-| ~ deals N damage to target creature. you may search your library and/or graveyard for a card named chandra, pyrogenius, reveal it, and put it into your hand. if | 1 | Liberating Combustion | kld |
 | ~ deals damage to any target equal to the number of cards in your hand. discard all the cards in your hand, then draw that many cards. | 1 | Fateful Showdown | kld |
 | −N: reveal the top two cards of your library. put all land cards from among them onto the battlefield and the rest into your hand. | 1 | Nissa, Nature's Artisan | kld |
 

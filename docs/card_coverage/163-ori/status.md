@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 8.3% |
+| Tested | 16 | 8.8% |
 | Works (untested) | 104 | 57.5% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 55 | 30.4% |
+| Not working | 54 | 29.8% |
 
 ## Cards needing work
 
@@ -77,7 +77,6 @@
 | Enshrouding Mist | notice | Target creature gets +1/+1 until end of turn. Prevent all damage that would be dealt to it this turn. If it's renowned, untap it. | unparsed remainder: Prevent all damage that would be dealt to it this turn. If it's renowned, untap it. | Y/Y/- | not_working |
 | Flameshadow Conjuring | notice | Whenever a nontoken creature you control enters, you may pay {R}. If you do, create a token that's a copy of that creature. That token gains haste. Exile it at  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Harbinger of the Tides | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Kytheon's Tactics | notice | Creatures you control get +2/+1 until end of turn. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, those creatures also | unparsed remainder: If there are two or more instant and/or sorcery cards in your graveyard, those creatures also gain vigilance until end of turn. | Y/Y/- | not_working |
 | Necromantic Summons | notice | Put target creature card from a graveyard onto the battlefield under your control. Spell mastery — If there are two or more instant and/or sorcery cards in your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ramroller | notice | This creature gets +2/+0 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Woodland Bellower | notice | When this creature enters, you may search your library for a nonlegendary green creature card with mana value 3 or less, put it onto the battlefield, then shuff | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -196,7 +195,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Alhammarret's Archive
 - Boggart Brute
@@ -209,6 +208,7 @@
 - Hallowed Moonlight
 - Hangarback Walker
 - Jace, Vryn's Prodigy // Jace, Telepath Unbound
+- Kytheon's Tactics
 - Scab-Clan Berserker
 - Sigil of Valor
 - Unholy Hunger
@@ -233,7 +233,6 @@
 | attacking creatures you control get +N/+N. | 1 | War Horn | ori |
 | choose a creature card name. search target opponent's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuff | 1 | Infinite Obliteration | ori |
 | counter target instant or sorcery spell that targets you. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, you may copy  | 1 | Psychic Rebuttal | ori |
-| creatures you control get +N/+N until end of turn. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, those creatures also | 1 | Kytheon's Tactics | ori |
 | during your turn, ~ gets +N/+N and has first strike. | 1 | Prickleboar | ori |
 | each player shuffles all cards from their hand and all permanents they own into their library, then draws that many cards. each player may put any number of lan | 1 | The Great Aurora | ori |
 | enchanted creature gets +N/+N, has haste, and attacks each combat if able. | 1 | Infectious Bloodlust | ori |

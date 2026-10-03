@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 9.1% |
-| Works (untested) | 107 | 48.6% |
+| Tested | 22 | 10.0% |
+| Works (untested) | 106 | 48.2% |
 | Partial (unaudited) | 8 | 3.6% |
-| Not working | 85 | 38.6% |
+| Not working | 84 | 38.2% |
 
 ## Cards needing work
 
@@ -107,7 +107,6 @@
 | Distortion Strike | notice | Target creature gets +1/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Emerge Unscathed | notice | Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Essence Feed | notice | Target player loses 3 life. You gain 3 life and create three 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." | unparsed remainder: They have "Sacrifice this token: Add {C}." | Y/-/- | not_working |
 | Induce Despair | notice | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Might of the Masses | notice | Target creature gets +1/+1 until end of turn for each creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Traitorous Instinct | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | unparsed remainder: Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | Y/Y/- | not_working |
@@ -193,7 +192,6 @@
 | Pawn of Ulamog | handled | Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has "Sacrifice this token: | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pelakka Wurm | handled | When this creature enters, you gain 7 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pennon Blade | handled | Equipped creature gets +1/+1 for each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Pestilence Demon | handled | {B}: This creature deals 1 damage to each creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phantasmal Abomination | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Prey's Vengeance | handled | Target creature gets +2/+2 until end of turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you | the engine reads this text and performs it | Y/-/- | not_tested |
 | Puncturing Light | handled | Destroy target attacking or blocking creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -230,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>22 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -238,6 +236,7 @@
 - Dawnglare Invoker
 - Eldrazi Temple
 - Emrakul, the Aeons Torn
+- Essence Feed
 - Hyena Umbra
 - Inquisition of Kozilek
 - Living Destiny
@@ -245,6 +244,7 @@
 - Momentous Fall
 - Near-Death Experience
 - Nirkana Revenant
+- Pestilence Demon
 - Prophetic Prism
 - Recurring Insight
 - Repay in Kind
@@ -311,7 +311,6 @@
 | target creature must be blocked ~ if able. draw a card. | 1 | Irresistible Prey | roe |
 | target creature you control gains protection from the color of your choice until end of turn. rebound (if you cast ~ from your hand, exile it as it resolves. at | 1 | Emerge Unscathed | roe |
 | target opponent reveals their hand. you choose a card from it. that player shuffles that card into their library. | 1 | Perish the Thought | roe |
-| target player loses N life. you gain N life and create three N/N colorless eldrazi spawn creature tokens. they have "..." | 1 | Essence Feed | roe |
 | target player sacrifices a creature of their choice. you gain life equal to that creature's toughness. rebound (if you cast ~ from your hand, exile it as it res | 1 | Consuming Vapors | roe |
 | when ~ enters, prevent all combat damage that other creatures would deal ~. | 1 | Haze Frog | roe |
 | when ~ enters, put a +N/+N counter on it for each card in your hand. if you do, discard your hand. | 1 | Thought Gorger | roe |

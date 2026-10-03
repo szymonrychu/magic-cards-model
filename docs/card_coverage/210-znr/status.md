@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 12.2% |
+| Tested | 32 | 12.5% |
 | Works (untested) | 117 | 45.9% |
 | Partial (unaudited) | 22 | 8.6% |
-| Not working | 85 | 33.3% |
+| Not working | 84 | 32.9% |
 
 ## Cards needing work
 
@@ -104,7 +104,6 @@
 | Expedition Champion | notice | This creature gets +2/+0 as long as you control another Warrior. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Felidar Retreat | notice | Landfall — Whenever a land you control enters, choose one — • Create a 2/2 white Cat Beast creature token. • Put a +1/+1 counter on each creature you control. T | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Inscription of Insight | notice | Kicker {2}{U}{U} Choose one. If this spell was kicked, choose any number instead. • Return up to two target creatures to their owners' hands. • Scry 2, then dra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Legion Angel | notice | When this creature enters, you may reveal a card you own named Legion Angel from outside the game and put it into your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oblivion's Hunger | notice | Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it. (Damage and effects that say "destro | unparsed remainder: Draw a card if that creature has a +1/+1 counter on it. | Y/Y/- | not_working |
 | Pyroclastic Hellion | notice | When this creature enters, you may return a land you control to its owner's hand. When you do, this creature deals 2 damage to each opponent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sejiri Shelter // Sejiri Glacier | notice | Target creature you control gains protection from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -254,7 +253,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>32 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
@@ -272,6 +271,7 @@
 - Inscription of Ruin
 - Iridescent Hornbeetle
 - Jwari Disruption // Jwari Ruins
+- Legion Angel
 - Might of Murasa
 - Nighthawk Scavenger
 - Nimana Skitter-Sneak
@@ -364,7 +364,6 @@
 | when ~ enters, you gain N life for each creature in your party. | 1 | Shepherd of Heroes | znr |
 | when ~ enters, you may return a land you control to its owner's hand. | 1 | Tazeem Raptor | znr |
 | when ~ enters, you may return a land you control to its owner's hand. when you do, ~ deals N damage to each opponent. | 1 | Pyroclastic Hellion | znr |
-| when ~ enters, you may reveal a card you own named ~ from outside the game and put it into your hand. | 1 | Legion Angel | znr |
 | whenever a creature you control deals combat damage to a planeswalker, destroy that planeswalker. | 1 | Zagras, Thief of Heartbeats | znr |
 | whenever a land an opponent controls enters, if that player had another land enter the battlefield under their control ~, they return a land they control to its | 1 | Confounding Conundrum | znr |
 | whenever drana attacks, defending player chooses a nonlegendary creature card in your graveyard. you return that card to the battlefield with an additional +N/+ | 1 | Drana, the Last Bloodchief | znr |
