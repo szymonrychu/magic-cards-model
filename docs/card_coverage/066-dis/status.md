@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 10.1% |
+| Tested | 19 | 11.2% |
 | Works (untested) | 56 | 33.1% |
 | Partial (unaudited) | 4 | 2.4% |
-| Not working | 92 | 54.4% |
+| Not working | 90 | 53.3% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Carom | silent | The next 1 damage that would be dealt to target creature this turn is dealt to another target creature instead. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Condemn | silent | Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Court Hussar | silent | When this creature enters, sacrifice it unless {W} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Crime // Punishment | silent | Destroy each artifact, creature, and enchantment with mana value X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crypt Champion | silent | When this creature enters, each player puts a creature card with mana value 3 or less from their graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytoplast Manipulator | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cytoplast Root-Kin | silent | When this creature enters, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -79,7 +78,6 @@
 | Plaxcaster Frogling | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Plaxmanta | silent | When this creature enters, sacrifice it unless {G} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Prahv, Spires of Order | silent | {4}{W}{U}, {T}: Prevent all damage a source of your choice would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Proper Burial | silent | Whenever a creature you control dies, you gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Protean Hulk | silent | When this creature dies, search your library for any number of creature cards with total mana value 6 or less, put them onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pure // Simple | silent | Destroy all Auras and Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Augermage | silent | {T}: Reveal your hand and discard a card of target opponent's choice. Then that player reveals their hand and discards a card of your choice. Activate only as a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -130,12 +128,11 @@
 | Beacon Hawk | handled | Whenever this creature deals combat damage to a player, you may untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cackling Flames | handled | Cackling Flames deals 3 damage to any target. Hellbent — Cackling Flames deals 5 damage instead if you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Celestial Ancient | handled | Whenever you cast an enchantment spell, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Crime // Punishment | handled | Put target creature or enchantment card from an opponent's graveyard onto the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Delirium Skeins | handled | Each player discards three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Enemy of the Guildpact | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Enigma Eidolon | handled | {U}, Sacrifice this creature: Target player mills three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Entropic Eidolon | handled | {B}, Sacrifice this creature: Target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnat Alley Creeper | handled | This creature can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Guardian of the Guildpact | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Haazda Exonerator | handled | {T}, Sacrifice this creature: Destroy target Aura. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lyzolda, the Blood Witch | handled | {2}, Sacrifice a creature: Lyzolda deals 2 damage to any target if the sacrificed creature was red. Draw a card if the sacrificed creature was black. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Macabre Waltz | handled | Return up to two target creature cards from your graveyard to your hand, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -149,6 +146,7 @@
 | Overrule | handled | Counter target spell unless its controller pays {X}. You gain X life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pillar of the Paruns | handled |  |  | Y/-/- | not_tested |
 | Proclamation of Rebirth | handled | Return up to three target creature cards with mana value 1 or less from your graveyard to the battlefield. Forecast — {5}{W}, Reveal this card from your hand: R | the engine reads this text and performs it | Y/-/- | not_tested |
+| Proper Burial | handled | Whenever a creature you control dies, you gain life equal to that creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Carnarium | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Guildmage | handled | {3}{B}, Discard a card: Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Signet | handled |  |  | Y/-/- | not_tested |
@@ -182,7 +180,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>19 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
@@ -190,8 +188,10 @@
 - Bound // Determined
 - Breeding Pool
 - Coiling Oracle
+- Enemy of the Guildpact
 - Ghost Quarter
 - Grand Arbiter Augustin IV
+- Guardian of the Guildpact
 - Hallowed Fountain
 - Pride of the Clouds
 - Psychic Possession
@@ -222,7 +222,6 @@
 | choose a nonlegendary creature on the battlefield. target creature becomes a copy of that creature until end of turn. | 1 | Cytoshape | dis |
 | counter all other spells. draw a card for each spell countered ~. | 1 | Swift Silence | dis |
 | destroy all auras and equipment. | 1 | Pure // Simple | dis |
-| destroy each artifact, creature, and enchantment with mana value N. | 1 | Crime // Punishment | dis |
 | discard a card at random. if you do, ~ deals damage equal to that card's mana value to each creature. you may repeat ~ any number of times. | 1 | Kindle the Carnage | dis |
 | draw a card for each creature target player controls, then draw a card for each creature another target player controls. | 1 | Biomantic Mastery | dis |
 | enchanted creature can't be the target of spells or abilities your opponents control. | 1 | Shielding Plax | dis |
@@ -260,7 +259,6 @@
 | when ~ enters, target player shuffles any number of target cards from their graveyard into their library. | 1 | Loaming Shaman | dis |
 | when ~ enters, you may pay {M}. if you do, target creature gets +N/+N until end of turn. | 1 | Squealing Devil | dis |
 | whenever a creature you control attacks, it gets +N/+N until end of turn and ~ deals N damage to you. | 1 | Anthem of Rakdos | dis |
-| whenever a creature you control dies, you gain life equal to that creature's toughness. | 1 | Proper Burial | dis |
 | whenever a player casts a noncreature spell, counter that spell. that player creates N N/N white and blue bird creature tokens with flying, where N is the spell | 1 | Dovescape | dis |
 | whenever an opponent is dealt N or more damage by a single source, that player discards a card. | 1 | Pain Magnification | dis |
 | whenever an opponent taps a land for mana, tap all lands that player controls. | 1 | War's Toll | dis |

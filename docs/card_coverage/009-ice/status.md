@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 11.4% |
-| Works (untested) | 20 | 57.1% |
+| Tested | 5 | 14.3% |
+| Works (untested) | 19 | 54.3% |
 | Partial (unaudited) | 2 | 5.7% |
 | Not working | 9 | 25.7% |
 
@@ -30,11 +30,11 @@
 | Goblin Snowman | silent | Whenever this creature blocks, prevent all combat damage that would be dealt to and dealt by it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incinerate | silent | Incinerate deals 3 damage to any target. A creature dealt damage this way can't be regenerated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jester's Cap | silent | {2}, {T}, Sacrifice this artifact: Search target player's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Karplusan Yeti | silent | {T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kjeldoran Royal Guard | silent | {T}: All combat damage that would be dealt to you by unblocked creatures this turn is dealt to this creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merieke Ri Berit | silent | {T}: Gain control of target creature for as long as you control Merieke Ri Berit. When Merieke Ri Berit leaves the battlefield or becomes untapped, destroy that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orcish Librarian | silent | {R}, {T}: Look at the top eight cards of your library. Exile four of them at random, then put the rest on top of your library in any order. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wrath of Marit Lage | silent | When this enchantment enters, tap all red creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Karplusan Yeti | notice | {T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Lhurgoyf | unaudited | Lhurgoyf's power is equal to the number of creature cards in all graveyards and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Zur's Weirding | unaudited | Players play with their hands revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abyssal Specter | handled | Whenever this creature deals damage to a player, that player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -55,18 +55,18 @@
 | Stormbind | handled | {2}, Discard a card at random: This enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sulfurous Springs | handled |  |  | Y/Y/- | not_tested |
 | Underground River | handled |  |  | Y/Y/- | not_tested |
-| Vexing Arcanix | handled | {3}, {T}: Target player chooses a card name, then reveals the top card of their library. If that card has the chosen name, that player puts it into their hand.  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Zuran Orb | handled | Sacrifice a land: You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
 - Karplusan Forest
 - Pyroclasm
 - Snow-Covered Forest
 - Snow-Covered Island
+- Vexing Arcanix
 
 </details>
 

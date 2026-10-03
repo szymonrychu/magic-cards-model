@@ -1853,16 +1853,44 @@ def test_a_snapshot_written_before_cast_trigger_subject_stamp_is_refused() -> No
         Game.model_validate(dumped)
 
 
+#: The version stamped before the life-total and combat-damage-history shapes
+#: (fix-archangel-beckett): `Game.attacked_players_this_turn`,
+#: `Game.attacks_unblocked_triggered`,
+#: `CardState.assigns_no_combat_damage_this_combat`,
+#: `TriggerEvent.ATTACKS_UNBLOCKED`, `DamageLifeFloorReplacement`, and the
+#: `EventKind.LOSE_THE_GAME`/`LOSE_LIFE` replacement event kinds.
+_SCHEMA_VERSION_BEFORE_LIFE_TOTAL_SHAPES = 106
+
+
+def test_a_snapshot_written_before_life_total_shapes_is_refused() -> None:
+    """A version-106 dump has no record of which players were attacked this
+    turn or which attacks-and-unblocked triggers already fired: decoded as
+    current both would default to empty, and a "deals combat damage to a
+    player who was attacked this turn" reader or a CR 508.3f trigger could
+    fire again, or not at all, with no signal. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_LIFE_TOTAL_SHAPES
+    dumped = _a_played_game().model_dump(mode="json")
+    assert "attacked_players_this_turn" in dumped
+    assert "attacks_unblocked_triggered" in dumped
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_LIFE_TOTAL_SHAPES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_LIFE_TOTAL_SHAPES}",
+    ):
+        Game.model_validate(dumped)
+
+
 #: The version stamped before stream s7c's one shared bump: `CardState`
 #: gained `last_known_copiable` (Ochre Jelly's Split, CR 707.2),
 #: `AbilityOnStack` gained `cost_sacrificed_powers`/`cost_sacrificed_toughnesses`
 #: (CR 608.2h), `machines/delayed` gained `create_token_copy_of_last_known` and
 #: `CreatedReplacementSpec` gained `LeaveBattlefieldExile` (CR 614.1a).
-_SCHEMA_VERSION_BEFORE_S7C_LAST_KNOWN_SHAPES = 106
+_SCHEMA_VERSION_BEFORE_S7C_LAST_KNOWN_SHAPES = 107
 
 
 def test_a_snapshot_written_before_the_s7c_last_known_shapes_is_refused() -> None:
-    """A version-106 dump's card states carry no `last_known_copiable`:
+    """A version-107 dump's card states carry no `last_known_copiable`:
     decoded as current each would default to none, and an Ochre Jelly copy
     that died before the snapshot would make its delayed token copy from
     nothing instead of the copiable values it last had. Refused instead."""

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 7.9% |
-| Works (untested) | 134 | 53.0% |
-| Partial (unaudited) | 12 | 4.7% |
+| Tested | 23 | 9.1% |
+| Works (untested) | 132 | 52.2% |
+| Partial (unaudited) | 11 | 4.3% |
 | Not working | 87 | 34.4% |
 
 ## Cards needing work
@@ -56,7 +56,6 @@
 | Glamorous Outlaw | silent | When this creature enters, it deals 2 damage to each opponent and you scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Graveyard Shift | silent | This spell has flash as long as there are five or more mana values among cards in your graveyard. Return target creature card from your graveyard to the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grisly Sigil | silent | Casualty 1 (As you cast this spell, you may sacrifice a creature with power 1 or greater. When you do, copy this spell and you may choose a new target for the c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hoard Hauler | silent | Whenever this Vehicle deals combat damage to a player, create a Treasure token for each artifact they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Incandescent Aria | silent | Incandescent Aria deals 3 damage to each nontoken creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Incriminate | silent | Choose two target creatures controlled by the same player. That player sacrifices one of them of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jaxis, the Troublemaker | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -102,16 +101,17 @@
 | Crew Captain | notice | This creature has indestructible as long as it entered this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extract the Truth | notice | Choose one — • Target opponent reveals their hand. You may choose a creature, enchantment, or planeswalker card from it. That player discards that card. • Targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extraction Specialist | notice | When this creature enters, return target creature card with mana value 2 or less from your graveyard to the battlefield. That creature can't attack or block for | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Involuntary Employment | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Treasure token. (It's an artifact with "{T},  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Revelation of Power | notice | Target creature gets +2/+2 until end of turn. If it has a counter on it, it also gains flying and lifelink until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Hostile Takeover | notice | Up to one target creature has base power and toughness 1/1 until end of turn. Up to one other target creature has base power and toughness 4/4 until end of turn | unparsed remainder: Up to one other target creature has base power and toughness 4/4 until end of turn. | Y/Y/- | not_working |
+| Involuntary Employment | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Treasure token. (It's an artifact with "{T},  | unparsed remainder: Untap that creature. It gains haste until end of turn. Create a Treasure token. | Y/Y/Y | not_working |
+| Revelation of Power | notice | Target creature gets +2/+2 until end of turn. If it has a counter on it, it also gains flying and lifelink until end of turn. | unparsed remainder: If it has a counter on it, it also gains flying and lifelink until end of turn. | Y/Y/- | not_working |
 | Rhox Pummeler | notice | This creature has trample as long as it has a shield counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sewer Crocodile | notice | {3}{U}: This creature can't be blocked this turn. This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Sewer Crocodile | notice | {3}{U}: This creature can't be blocked this turn. This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | unparsed remainder: This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | Y/Y/- | not_working |
 | Sizzling Soloist | notice | Alliance — Whenever another creature you control enters, target creature an opponent controls can't block this turn. If this is the second time this ability has | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Slip Out the Back | notice | Put a +1/+1 counter on target creature. It phases out. (Treat it and anything attached to it as though they don't exist until its controller's next turn.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Titan of Industry | notice | When this creature enters, choose two — • Destroy target artifact or enchantment. • Target player gains 5 life. • Create a 4/4 green Rhino Warrior creature toke | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Undercover Operative | notice | You may have this creature enter as a copy of any creature on the battlefield, except it enters with a shield counter on it if you control that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unleash the Inferno | notice | Unleash the Inferno deals 7 damage to target creature or planeswalker. When it deals excess damage this way, destroy target artifact or enchantment an opponent  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Venom Connoisseur | notice | Alliance — Whenever another creature you control enters, this creature gains deathtouch until end of turn. If this is the second time this ability has resolved  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Venom Connoisseur | notice | Alliance — Whenever another creature you control enters, this creature gains deathtouch until end of turn. If this is the second time this ability has resolved  | unparsed remainder: If this is the second time this ability has resolved this turn, all creatures you control gain deathtouch until end of turn. | Y/Y/Y | not_working |
 | Ziatora, the Incinerator | notice | At the beginning of your end step, you may sacrifice another creature. When you do, Ziatora deals damage equal to that creature's power to any target and you cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dusk Mangler | unaudited | As an additional cost to cast this spell, sacrifice a creature, discard a card, or pay 4 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Falco Spara, Pactweaver | unaudited | You may cast spells from the top of your library by removing a counter from a creature you control in addition to paying their other costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -123,7 +123,6 @@
 | Raffine's Guidance | unaudited | You may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Scheming Fence | unaudited | As this creature enters, you may choose a nonland permanent. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Security Rhox | unaudited | You may pay {R}{G} rather than pay this spell's mana cost. Spend only mana produced by Treasures to cast it this way. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shadow of Mortality | unaudited | If your life total is less than your starting life total, this spell costs {X} less to cast, where X is the difference. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Witness Protection | unaudited | Enchanted creature loses all abilities and is a green and white Citizen creature with base power and toughness 1/1 named Legitimate Businessperson. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | A Little Chat | handled | Casualty 1 (As you cast this spell, you may sacrifice a creature with power 1 or greater. When you do, copy this spell.) Look at the top two cards of your libra | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Observer | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -183,12 +182,11 @@
 | Halo Fountain | handled | {W}, {T}, Untap a tapped creature you control: Create a 1/1 green and white Citizen creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Halo Scarab | handled | {2}, Exile this card from your graveyard: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | High-Rise Sawjack | handled | Whenever this creature blocks a creature with flying, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Hostile Takeover | handled | Up to one target creature has base power and toughness 1/1 until end of turn. Up to one other target creature has base power and toughness 4/4 until end of turn | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hoard Hauler | handled | Whenever this Vehicle deals combat damage to a player, create a Treasure token for each artifact they control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Illicit Shipment | handled | Casualty 3 (As you cast this spell, you may sacrifice a creature with power 3 or greater. When you do, copy this spell.) Search your library for a card, put it  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Illuminator Virtuoso | handled | Whenever this creature becomes the target of a spell you control, it connives. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspiring Overseer | handled | When this creature enters, you gain 1 life and draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Jackhammer | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Jetmir's Fixer | handled | {R}{G}: This creature gets +1/+1 until end of turn. If mana from a Treasure was spent to activate this ability, put a +1/+1 counter on this creature instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jetmir's Garden | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jewel Thief | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Knockout Blow | handled | This spell costs {2} less to cast if it targets a red creature. Knockout Blow deals 4 damage to target attacking or blocking creature and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -210,7 +208,6 @@
 | Ognis, the Dragon's Lash | handled | Whenever a creature you control with haste attacks, create a tapped Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ominous Parcel | handled | {2}, {T}, Sacrifice this artifact: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Out of the Way | handled | This spell costs {2} less to cast if it targets a green permanent. Return target nonland permanent an opponent controls to its owner's hand. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Paragon of Modernity | handled | {3}: This creature gets +1/+1 until end of turn. If exactly three colors of mana were spent to activate this ability, put a +1/+1 counter on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Park Heights Pegasus | handled | Whenever this creature deals combat damage to a player, draw a card if you had two or more creatures enter the battlefield under your control this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Patch Up | handled | Return up to three target creature cards with total mana value 3 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prizefight | handled | Target creature you control fights target creature you don't control. (Each deals damage equal to its power to the other.) Create a Treasure token. (It's an art | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -263,7 +260,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>23 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
@@ -273,15 +270,18 @@
 - Gala Greeters
 - Getaway Car
 - Hypnotic Grifter
+- Jetmir's Fixer
 - Join the Maestros
 - Lagrella, the Magpie
 - Obscura Ascendancy
+- Paragon of Modernity
 - Psionic Snoop
 - Quick-Draw Dagger
 - Riveteers Charm
 - Sanctuary Warden
 - Sanguine Spy
 - Scuttling Butler
+- Shadow of Mortality
 - Take to the Streets
 - Urabrask, Heretic Praetor
 - Vivien on the Hunt
@@ -332,11 +332,11 @@
 | for each color, return up to one target creature card of that color from your graveyard to your hand. | 1 | Rogues' Gallery | snc |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. create a treasure token. (it's an artifact with "...") | 1 | Involuntary Employment | snc |
 | if you would create one or more tokens, you may instead create that many N/N green cat creature tokens with haste or that many N/N green dog creature tokens wit | 1 | Jinnie Fay, Jetmir's Second | snc |
-| if your life total is less than your starting life total, ~ costs {M} less to cast, where N is the difference. | 1 | Shadow of Mortality | snc |
 | once during each of your turns, you may cast an instant or sorcery spell from your graveyard by sacrificing a creature in addition to paying its other costs. if | 1 | Maestros Ascendancy | snc |
 | put a +N/+N counter on target creature. it phases out. (treat it and anything attached to it as though they don"..."s next turn.) | 1 | Slip Out the Back | snc |
 | target creature gets +N/+N until end of turn. if it has a counter on it, it also gains flying and lifelink until end of turn. | 1 | Revelation of Power | snc |
 | until end of turn, target artifact or creature becomes a N/N angel artifact creature and gains flying. draw a card. | 1 | Majestic Metamorphosis | snc |
+| up to one target creature has base power and toughness N/N until end of turn. up to one other target creature has base power and toughness N/N until end of turn | 1 | Hostile Takeover | snc |
 | when lord xander enters, target opponent discards half the cards in their hand, rounded down. | 1 | Lord Xander, the Collector | snc |
 | when ~ enters, choose target creature you don"..."t untap during its controller's next untap step. | 1 | Celestial Regulator | snc |
 | when ~ enters, choose two — • destroy target artifact or enchantment. • target player gains N life. • create a N/N green rhino warrior creature token. • put a s | 1 | Titan of Industry | snc |
@@ -362,7 +362,6 @@
 | whenever ~ attacks, defending player may have you draw a card. if they do, untap ~ and remove it from combat. | 1 | Shakedown Heavy | snc |
 | whenever ~ attacks, if you don't control a devil token, create a tapped and attacking N/N red devil creature token with "..." | 1 | Maestros Diabolist | snc |
 | whenever ~ attacks, ~ and up to one other target creature you control both gain your choice of first strike or lifelink until end of turn. | 1 | Ballroom Brawlers | snc |
-| whenever ~ deals combat damage to a player, create a treasure token for each artifact they control. | 1 | Hoard Hauler | snc |
 | whenever ~ deals combat damage to a player, look at the top card of your library. you may play a land from the top of your library or cast a spell with mana val | 1 | Ziatora's Envoy | snc |
 | whenever ~ enters or attacks, exile up to one other target creature until ~ leaves the battlefield. if a creature is put into exile ~, return each other card ex | 1 | Mysterious Limousine | snc |
 | you may cast spells from the top of your library by removing a counter from a creature you control in addition to paying their other costs. | 1 | Falco Spara, Pactweaver | snc |

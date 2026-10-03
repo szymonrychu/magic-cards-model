@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 7.5% |
-| Works (untested) | 37 | 34.9% |
+| Tested | 9 | 8.5% |
+| Works (untested) | 34 | 32.1% |
 | Partial (unaudited) | 6 | 5.7% |
-| Not working | 55 | 51.9% |
+| Not working | 57 | 53.8% |
 
 ## Cards needing work
 
@@ -51,6 +51,7 @@
 | Haytham Kenway | silent | Other Knights you control get +2/+2 and have protection from Assassins. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hemlock Vial | silent | {B}, {T}, Sacrifice this artifact: Each equipped creature and Equipment you control gains deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hookblade | silent | During your turn, equipped creature has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Hunter's Bow | silent | When this Equipment enters, attach it to target creature you control. That creature deals damage equal to its power to up to one target creature you don't contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kassandra, Eagle Bearer | silent | When Kassandra enters, search your graveyard, hand, and library for a card named The Spear of Leonidas, put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leonardo da Vinci | silent | {3}{U}{U}: Until end of turn, Thopters you control have base power and toughness X/X, where X is the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loyal Inventor | silent | When this creature enters, you may search your library for an artifact card, reveal it, then shuffle. Put that card into your hand if you control an Assassin. O | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -72,12 +73,13 @@
 | The Aesir Escape Valhalla | silent | I — Exile a permanent card from your graveyard. You gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viewpoint Synchronization | silent | Freerunning {2}{G} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Search you | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Yggdrasil, Rebirth Engine | silent | When Yggdrasil enters, exile all creature cards from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Adrestia | notice | Whenever Adrestia attacks, if an Assassin crewed it this turn, draw a card. Adrestia becomes an Assassin in addition to its other types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Adrestia | notice | Whenever Adrestia attacks, if an Assassin crewed it this turn, draw a card. Adrestia becomes an Assassin in addition to its other types until end of turn. | unparsed remainder: draw a card. this permanent becomes an Assassin in addition to its other types until end of turn. | Y/-/- | not_working |
 | Altaïr Ibn-La'Ahad | notice | Whenever Altaïr attacks, exile up to one target Assassin creature card from your graveyard with a memory counter on it. Then for each creature card you own in e | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Apple of Eden, Isu Relic | notice | {T}, Pay 4 life, Sacrifice Apple of Eden: Look at target opponent's hand and exile those cards face down. You may play those cards this turn, and mana of any ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Auditore Ambush | notice | Choose one or both — • Return target creature to its owner's hand. • Target player searches their library and/or graveyard for a card named Ezio, Blade of Venge | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Basim Ibn Ishaq | notice | Whenever you cast a historic spell, draw a card. Basim Ibn Ishaq can't be blocked this turn. This ability triggers only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Battlefield Improvisation | notice | Target creature gets +2/+2 until end of turn. If that creature is attacking, you may attach any number of Equipment you control to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Basim Ibn Ishaq | notice | Whenever you cast a historic spell, draw a card. Basim Ibn Ishaq can't be blocked this turn. This ability triggers only once each turn. | unparsed remainder: draw a card. this permanent can't be blocked this turn. | Y/-/- | not_working |
+| Battlefield Improvisation | notice | Target creature gets +2/+2 until end of turn. If that creature is attacking, you may attach any number of Equipment you control to it. | unparsed remainder: If that creature is attacking, you may attach any number of Equipment you control to it. | Y/-/- | not_working |
+| Bleeding Effect | notice | At the beginning of combat on your turn, creatures you control gain flying until end of turn if a creature card in your graveyard has flying. The same is true f | unparsed remainder: The same is true for first strike, double strike, deathtouch, hexproof, indestructible, lifelink, menace, reach, trample, and vigilance. | Y/-/- | not_working |
 | Havi, the All-Father | notice | Havi has indestructible as long as there are four or more historic cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Misthios's Fury | notice | Misthios's Fury deals 3 damage to target creature. If you control an Equipment, Misthios's Fury also deals 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | What Must Be Done | notice | Choose one — • Let the World Burn — Destroy all artifacts and creatures. • Release Juno — Return target historic permanent card from your graveyard to the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -93,17 +95,14 @@
 | Assassin Initiate | handled | {1}: This creature gains your choice of flying, deathtouch, or lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aya of Alexandria | handled | Whenever a historic creature you control deals combat damage to a player, create a 1/1 black Assassin creature token with menace. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Black Market Connections | handled | At the beginning of your first main phase, choose one or more — • Sell Contraband — Create a Treasure token. You lose 1 life. • Buy Information — Draw a card. Y | the engine reads this text and performs it | Y/-/- | not_tested |
-| Bleeding Effect | handled | At the beginning of combat on your turn, creatures you control gain flying until end of turn if a creature card in your graveyard has flying. The same is true f | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brotherhood Headquarters | handled |  |  | Y/-/- | not_tested |
 | Brotherhood Patriarch | handled | When this creature dies, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Detained by Legionnaires | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Escarpment Fortress | handled | Other creatures you control get +1/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ezio, Blade of Vengeance | handled | Whenever an Assassin you control deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Headsplitter | handled | When this Equipment enters, create a 1/1 black Assassin creature token with menace, then attach this Equipment to it. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Hidden Blade | handled | When this Equipment enters, attach it to target creature you control. If that creature is an Assassin, it gains deathtouch until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hidden Footblade | handled | When this Equipment enters, attach it to target creature you control. That creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hookblade Veteran | handled | During your turn, this creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Hunter's Bow | handled | When this Equipment enters, attach it to target creature you control. That creature deals damage equal to its power to up to one target creature you don't contr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jackdaw | handled | Whenever Jackdaw deals combat damage to a player, you may discard your hand. If you do, draw a card for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Keen-Eyed Raven | handled | When this creature enters, put a +1/+1 counter on another target creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Layla Hassan | handled | When Layla Hassan enters and whenever one or more Assassins you control deal combat damage to a player, return target historic card from your graveyard to your  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -128,13 +127,14 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Abstergo Entertainment
 - Ballad of the Black Flag
 - Eivor, Battle-Ready
 - Evie Frye
 - Haystack
+- Hidden Blade
 - Jacob Frye
 - Labyrinth Adversary
 - Smoke Bomb
@@ -154,6 +154,7 @@
 | as long as you have N or more life, equipped creature gets +N/+N and has indestructible and "..." | 1 | Caduceus, Staff of Hermes | acr |
 | as long as ~ hasn"..."t be blocked. | 1 | Ratonhnhaké꞉ton | acr |
 | assassin spells you cast have freerunning {M}{M}. | 1 | Ezio Auditore da Firenze | acr |
+| at the beginning of combat on your turn, creatures you control gain flying until end of turn if a creature card in your graveyard has flying. the same is true f | 1 | Bleeding Effect | acr |
 | at the beginning of combat on your turn, if you control a legendary assassin, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Brotherhood Spy | acr |
 | at the beginning of each player's upkeep, that player gains control of alexios, untaps it, and puts a +N/+N counter on it. it gains haste until end of turn. | 1 | Alexios, Deimos of Kosmos | acr |
 | at the beginning of your end step, create a treasure token for each tapped assassin, pirate, and/or vehicle you control. | 1 | Edward Kenway | acr |
@@ -180,6 +181,7 @@
 | when kassandra enters, search your graveyard, hand, and library for a card named the spear of leonidas, put it onto the battlefield, then shuffle. | 1 | Kassandra, Eagle Bearer | acr |
 | when shaun & rebecca enters, search your graveyard, hand, and library for a card named the animus and put it onto the battlefield, then shuffle. | 1 | Shaun & Rebecca, Agents | acr |
 | when yggdrasil enters, exile all creature cards from your graveyard. | 1 | Yggdrasil, Rebirth Engine | acr |
+| when ~ enters, attach it to target creature you control. that creature deals damage equal to its power to up to one target creature you don't control. | 1 | Hunter's Bow | acr |
 | when ~ enters, attach it to up to one target creature you control. destroy up to one other target creature. | 1 | Phantom Blade | acr |
 | when ~ enters, attach it to up to one target creature you control. tap all creatures target opponent controls. | 1 | Assassin Gauntlet | acr |
 | when ~ enters, you may search your library and/or graveyard for a card named eivor, battle-ready, reveal it, and put it into your hand. if you search your libra | 1 | Raven Clan War-Axe | acr |

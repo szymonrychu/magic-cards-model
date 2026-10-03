@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 7.1% |
-| Works (untested) | 141 | 62.4% |
+| Tested | 17 | 7.5% |
+| Works (untested) | 140 | 61.9% |
 | Partial (unaudited) | 6 | 2.7% |
 | Not working | 63 | 27.9% |
 
@@ -26,7 +26,6 @@
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Akoum Hellkite | silent | Landfall — Whenever a land you control enters, this creature deals 1 damage to any target. If that land is a Mountain, this creature deals 2 damage instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angelic Captain | silent | Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Ally. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bane of Bala Ged | silent | Whenever this creature attacks, defending player exiles two permanents they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Benthic Infiltrator | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -59,9 +58,9 @@
 | Quarantine Field | silent | When this enchantment enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until this enchantment leaves the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Radiant Flames | silent | Converge — Radiant Flames deals X damage to each creature, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rising Miasma | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Roil Spout | silent | Put target creature on top of its owner's library. Awaken 4—{4}{W}{U} (If you cast this spell for {4}{W}{U}, also put four +1/+1 counters on target land you con | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Roil Spout | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Roilmage's Trick | silent | Converge — Creatures your opponents control get -X/-0 until end of turn, where X is the number of colors of mana spent to cast this spell. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ruination Guide | silent | Other colorless creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Ruination Guide | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ruinous Path | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rush of Ice | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Salvage Drone | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -73,21 +72,22 @@
 | Slab Hammer | silent | Whenever equipped creature attacks, you may return a land you control to its owner's hand. If you do, the creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sludge Crawler | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Smothering Abomination | silent | At the beginning of your upkeep, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tide Drifter | silent | Other colorless creatures you control get +0/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tightening Coils | silent | Enchanted creature gets -6/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Titan's Presence | silent | As an additional cost to cast this spell, reveal a colorless creature card from your hand. Exile target creature if its power is less than or equal to the revea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Transgress the Mind | silent | Devoid (This card has no color.) Target player reveals their hand. You choose a card from it with mana value 3 or greater and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unified Front | silent | Converge — Create a 1/1 white Kor Ally creature token for each color of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vile Aggregate | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Zada, Hedron Grinder | silent | Whenever you cast an instant or sorcery spell that targets only Zada, copy that spell for each other creature you control that the spell could target. Each copy | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Akoum Stonewaker | notice | Landfall — Whenever a land you control enters, you may pay {2}{R}. If you do, create a 3/1 red Elemental creature token with trample and haste. Exile that token | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Akoum Hellkite | notice | Landfall — Whenever a land you control enters, this creature deals 1 damage to any target. If that land is a Mountain, this creature deals 2 damage instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Barrage Tyrant | notice | {2}{R}, Sacrifice another colorless creature: This creature deals damage equal to the sacrificed creature's power to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Brutal Expulsion | notice | Devoid (This card has no color.) Choose one or both — • Return target spell or creature to its owner's hand. • Brutal Expulsion deals 2 damage to target creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emeria Shepherd | notice | Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Guardian of Tazeem | notice | Landfall — Whenever a land you control enters, tap target creature an opponent controls. If that land is an Island, that creature doesn't untap during its contr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Guul Draz Overseer | notice | Landfall — Whenever a land you control enters, other creatures you control get +1/+0 until end of turn. If that land is a Swamp, those creatures get +2/+0 until | unparsed remainder: If that land is a Swamp, those creatures get +2/+0 until end of turn instead. | Y/Y/- | not_working |
 | Herald of Kozilek | notice | Colorless spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Lithomancer's Focus | notice | Target creature gets +2/+2 until end of turn. Prevent all damage that would be dealt to that creature this turn by colorless sources. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Lithomancer's Focus | notice | Target creature gets +2/+2 until end of turn. Prevent all damage that would be dealt to that creature this turn by colorless sources. | unparsed remainder: Prevent all damage that would be dealt to that creature this turn by colorless sources. | Y/Y/- | not_working |
 | Oran-Rief Hydra | notice | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. If that land is a Forest, put two +1/+1 counters on this creature instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Swarm Surge | notice | Devoid (This card has no color.) Creatures you control get +2/+0 until end of turn. Colorless creatures you control also gain first strike until end of turn. | unparsed remainder: Colorless creatures you control also gain first strike until end of turn. | Y/Y/- | not_working |
 | Unnatural Aggression | notice | Devoid (This card has no color.) Target creature you control fights target creature an opponent controls. If the creature an opponent controls would die this tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Breaker of Armies | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kor Castigator | unaudited | This creature can't be blocked by Eldrazi Scions. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -97,6 +97,7 @@
 | Void Winnower | unaudited | Your opponents can't cast spells with even mana values. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adverse Conditions | handled | Devoid (This card has no color.) Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Create a 1/1 colorless E | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akoum Firebird | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Akoum Stonewaker | handled | Landfall — Whenever a land you control enters, you may pay {2}{R}. If you do, create a 3/1 red Elemental creature token with trample and haste. Exile that token | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ally Encampment | handled | {1}, {T}, Sacrifice this land: Return target Ally you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angel of Renewal | handled | When this creature enters, you gain 1 life for each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Gift | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -143,7 +144,6 @@
 | Greenwarden of Murasa | handled | When this creature enters, you may return target card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grove Rumbler | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grovetender Druids | handled | Rally — Whenever this creature or another Ally you control enters, you may pay {1}. If you do, create a 1/1 green Plant creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Guul Draz Overseer | handled | Landfall — Whenever a land you control enters, other creatures you control get +1/+0 until end of turn. If that land is a Swamp, those creatures get +2/+0 until | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hagra Sharpshooter | handled | {4}{B}: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Halimar Tidecaller | handled | When this creature enters, you may return target card with awaken from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hedron Archive | handled | {2}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -214,7 +214,6 @@
 | Stone Haven Medic | handled | {W}, {T}: You gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stonefury | handled | Stonefury deals damage to target creature equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sure Strike | handled | Target creature gets +3/+0 and gains first strike until end of turn. (It deals combat damage before creatures without first strike.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Swarm Surge | handled | Devoid (This card has no color.) Creatures you control get +2/+0 until end of turn. Colorless creatures you control also gain first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swell of Growth | handled | Target creature gets +2/+2 until end of turn. You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tajuru Beastmaster | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tajuru Stalwart | handled | Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -240,7 +239,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Aligned Hedron Network
 - Blisterpod
@@ -255,6 +254,7 @@
 - Shrine of the Forsaken Gods
 - Skyrider Elf
 - Sunken Hollow
+- Tide Drifter
 - Ulamog, the Ceaseless Hunger
 - Vampiric Rites
 - Wasteland Strangler
@@ -265,11 +265,10 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| awaken | 12 | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice | bfz |
+| awaken | 13 | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice | bfz |
 | Converge | 7 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements, Radiant Flames | bfz |
-| ingest | 6 | Benthic Infiltrator, Culling Drone, Mist Intruder, Salvage Drone, Sludge Crawler | bfz |
-| Landfall | 5 | Akoum Hellkite, Akoum Stonewaker, Emeria Shepherd, Guardian of Tazeem, Oran-Rief Hydra | bfz |
-| other colorless creatures you control get +N/+N. | 2 | Ruination Guide, Tide Drifter | bfz |
+| ingest | 7 | Benthic Infiltrator, Culling Drone, Mist Intruder, Ruination Guide, Salvage Drone | bfz |
+| Landfall | 5 | Akoum Hellkite, Emeria Shepherd, Guardian of Tazeem, Guul Draz Overseer, Oran-Rief Hydra | bfz |
 | Rally | 1 | Munda, Ambush Leader | bfz |
 | +N: until end of turn, gideon becomes a N/N human soldier ally creature with indestructible that's still a planeswalker. prevent all damage that would be dealt  | 1 | Gideon, Ally of Zendikar | bfz |
 | all creatures able to block ~ do so. | 1 | Breaker of Armies | bfz |
@@ -279,6 +278,7 @@
 | colorless spells you cast cost {M} less to cast. | 1 | Herald of Kozilek | bfz |
 | devoid (~ has no color.) choose one or both — • return target spell or creature to its owner's hand. • ~ deals N damage to target creature or planeswalker. if t | 1 | Brutal Expulsion | bfz |
 | devoid (~ has no color.) create two N/N colorless eldrazi scion creature tokens. they have "..." | 1 | Call the Scions | bfz |
+| devoid (~ has no color.) creatures you control get +N/+N until end of turn. colorless creatures you control also gain first strike until end of turn. | 1 | Swarm Surge | bfz |
 | devoid (~ has no color.) exile target creature and target land. | 1 | Grip of Desolation | bfz |
 | devoid (~ has no color.) exile target nonbasic land. search its controller's graveyard, hand, and library for any number of cards with the same name as that lan | 1 | Crumble to Dust | bfz |
 | devoid (~ has no color.) target creature you control fights target creature an opponent controls. if the creature an opponent controls would die ~, exile it ins | 1 | Unnatural Aggression | bfz |
@@ -287,7 +287,6 @@
 | enchanted creature gets -N/-N and loses flying. | 1 | Tightening Coils | bfz |
 | if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove a +N/+N counter from ~. | 1 | Undergrowth Champion | bfz |
 | prevent all combat damage that would be dealt ~ by creatures target opponent controls. awaken N—{M}{M} (if you cast ~ for {M}{M}, also put two +N/+N counters on | 1 | Encircling Fissure | bfz |
-| put target creature on top of its owner"..."s still a land.) | 1 | Roil Spout | bfz |
 | target creature gets +N/+N until end of turn. prevent all damage that would be dealt to that creature ~ by colorless sources. | 1 | Lithomancer's Focus | bfz |
 | until end of turn, colorless creatures you control gain "..." | 1 | Gruesome Slaughter | bfz |
 | when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |

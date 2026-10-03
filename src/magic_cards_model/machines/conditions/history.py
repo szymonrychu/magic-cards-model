@@ -1089,27 +1089,103 @@ def _kind_matches(record, kind: str | None) -> bool:
     return True
 
 
-def _player_dealt_damage(context: "ConditionContext", match: re.Match[str]) -> bool:
-    """ "<who> was dealt [N or more] [combat|noncombat] damage [by <source>]
-    this turn" (CR 120.2a/120.2b), summed per player."""
+#: The shared tail of every "dealt combat damage" turn-history clause, once
+#: the subject and verb ("<who> was dealt" / "controlled by a player who was
+#: dealt" / "whose controller was dealt") have been stripped off by whichever
+#: family reads this shape: an amount (CR 120.2a/120.2b), the combat/noncombat
+#: kind, and an optional source - a quality plus a count of *distinct*
+#: sources of that quality (Admiral Beckett Brass's "by three or more
+#: Pirates" - CR 510.2's combat damage is dealt simultaneously, so a combat
+#: with three Pirates attacking unblocked deals it in one instant, but the
+#: count is of sources, not of that instant's total damage), or a specific
+#: object (CR 201.5/CR 700.7's self-reference, already rewritten to "this
+#: `<noun>`" by `self_normalized_effect_text` ahead of every parser that
+#: reaches this - Hope of Ghirapur's and Steel Hellkite's own "this
+#: creature"/"this permanent"). Exported as `dealt_damage_clause_test` for
+#: `machines/targeting.py`'s "target player who ..." and "controlled by a
+#: player who ..." and `machines/effects.py`'s "whose controller ..." -
+#: Oracle prints the identical tail after all three subjects.
+_DEALT_DAMAGE_TAIL_RE = re.compile(
+    rf"(?:was|were|has been|have been) dealt (?:(?P<count>{COUNT}) or more )?"
+    r"(?P<kind>combat |noncombat )?damage"
+    rf"(?: by (?:(?P<by_count>{COUNT}) or more )?(?P<by>[a-z ,'-]+?))? this turn"
+)
+
+#: A self-reference already rewritten to CR 700.7's "this `<noun>`" form -
+#: see `_DEALT_DAMAGE_TAIL_RE`'s own docstring for why no literal card name
+#: ever reaches here.
+_THIS_SELF_RE = re.compile(r"this [a-z]+")
+
+
+def dealt_damage_clause_test(
+    tail: str,
+) -> "Callable[[Game, str, CardState | None], bool] | None":
+    """`_DEALT_DAMAGE_TAIL_RE`'s shape read into a `(game, player, source) ->
+    bool` test, or `None` when `tail` is not this shape or names a source
+    phrase this cannot read.
+
+    `source` is only consulted for a self-reference "by" phrase (CR 700.7) -
+    the object the printed ability is on, resolved by whichever caller has
+    one to give (a turn-history condition's own `context.source`, or a
+    target/filter reader's own ability source) - so parsing never needs one
+    to validate a quality-only "by" phrase (Admiral Beckett Brass's "by three
+    or more Pirates" reads the same with `source=None`, which is what a
+    parser validating the shape ahead of any game existing has to pass)."""
+    match = _DEALT_DAMAGE_TAIL_RE.fullmatch(tail.strip().lower())
+    if match is None:
+        return None
     needed = _count(match.group("count"))
     if needed is None:
-        return False
-    source_test = _source_quality(match.group("by")) if match.group("by") else None
-    if match.group("by") and source_test is None:
-        return False
+        return None
     kind = (match.group("kind") or "").strip() or None
-    for player in _players(context, match.group("who")):
-        total = sum(
-            record.amount
-            for record in context.game.damage_dealt_this_turn
-            if record.recipient_player == player
-            and _kind_matches(record, kind)
-            and (source_test is None or source_test(record))
-        )
-        if total >= needed:
-            return True
-    return False
+    by_phrase = match.group("by")
+    self_reference = False
+    quality_test = None
+    by_count = None
+    if by_phrase:
+        if _THIS_SELF_RE.fullmatch(by_phrase.strip()):
+            self_reference = True
+        else:
+            quality_test = _source_quality(by_phrase)
+            if quality_test is None:
+                return None
+        if match.group("by_count"):
+            by_count = parse_count(match.group("by_count"))
+            if by_count is None:
+                return None
+
+    def test(game: "Game", player: str, source: "CardState | None" = None) -> bool:
+        def matches(record: object) -> bool:
+            if not _kind_matches(record, kind):
+                return False
+            if self_reference:
+                return source is not None and record.source_id == source.id
+            return quality_test is None or quality_test(record)
+
+        records = [
+            record
+            for record in game.damage_dealt_this_turn
+            if record.recipient_player == player and matches(record)
+        ]
+        if by_count is not None:
+            return len({record.source_id for record in records}) >= by_count
+        return sum(record.amount for record in records) >= needed
+
+    return test
+
+
+def _player_dealt_damage(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "<who> was dealt [N or more] [combat|noncombat] damage [by [M or
+    more] <quality-or-self>] this turn" (CR 120.2a/120.2b) - the tail shared
+    with `machines/targeting.py`'s and `machines/effects.py`'s own readers,
+    through `dealt_damage_clause_test`."""
+    test = dealt_damage_clause_test(match.group("tail"))
+    if test is None:
+        return False
+    return any(
+        test(context.game, player, context.source)
+        for player in _players(context, match.group("who"))
+    )
 
 
 def _sources_dealt_damage(context: "ConditionContext", match: re.Match[str]) -> bool:
@@ -1627,10 +1703,7 @@ READERS: tuple[ConditionReader, ...] = (
         _did_not_lose_life,
     ),
     ConditionReader(
-        re.compile(
-            rf"{_WHO} (?:was|were|has been|have been) dealt {_N_OR_MORE}"
-            r"(?P<kind>combat |noncombat )?damage(?: by (?P<by>[a-z ,'-]+?))? this turn"
-        ),
+        re.compile(rf"{_WHO} (?P<tail>{_DEALT_DAMAGE_TAIL_RE.pattern})"),
         _player_dealt_damage,
     ),
     ConditionReader(

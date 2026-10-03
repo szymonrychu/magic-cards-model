@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 13.6% |
+| Tested | 37 | 14.0% |
 | Works (untested) | 110 | 41.5% |
 | Partial (unaudited) | 14 | 5.3% |
-| Not working | 105 | 39.6% |
+| Not working | 104 | 39.2% |
 
 ## Cards needing work
 
@@ -117,7 +117,6 @@
 | Fear of Immobility | notice | When this creature enters, tap up to one target creature. If an opponent controls that creature, put a stun counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Haunted Screen | notice | {7}: Put seven +1/+1 counters on this artifact. It becomes a 0/0 Spirit creature in addition to its other types. Activate only once. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Jump Scare | notice | Until end of turn, target creature gets +2/+2, gains flying, and becomes a Horror enchantment creature in addition to its other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Leyline of Hope | notice | As long as you have at least 7 life more than your starting life total, creatures you control get +2/+2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Marvin, Murderous Mimic | notice | Marvin has all activated abilities of creatures you control that don't have the same name as this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Possessed Goat | notice | {3}, Discard a card: Put three +1/+1 counters on this creature and it becomes a black Demon in addition to its other colors and types. Activate only once. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Rampaging Soulrager | notice | This creature gets +3/+0 as long as there are two or more unlocked doors among Rooms you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -130,7 +129,7 @@
 | Toby, Beastie Befriender | notice | As long as you control four or more creature tokens, creature tokens you control have flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Turn Inside Out | notice | Target creature gets +3/+0 until end of turn. When it dies this turn, manifest dread. (Look at the top two cards of your library. Put one onto the battlefield f | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Untimely Malfunction | notice | Choose one — • Destroy target artifact. • Change the target of target spell or ability with a single target. • One or two target creatures can't block this turn | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Vengeful Possession | notice | Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Vengeful Possession | notice | Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card. | unparsed remainder: Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card. | Y/Y/Y | not_working |
 | Charred Foyer // Warped Space | unaudited | Once each turn, you may pay {0} rather than pay the mana cost for a spell you cast from exile. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dazzling Theater // Prop Room | unaudited | Untap each creature you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Fear of Exposure | unaudited | As an additional cost to cast this spell, tap two untapped creatures and/or lands you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -259,7 +258,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Abhorrent Oculus
 - Balustrade Wurm
@@ -282,6 +281,7 @@
 - Kaito, Bane of Nightmares
 - Kona, Rescue Beastie
 - Lakeside Shack
+- Leyline of Hope
 - Miasma Demon
 - Mirror Room // Fractured Realm
 - Nashi, Searcher in the Dark
@@ -314,7 +314,6 @@
 | as an additional cost to cast ~, tap two untapped creatures and/or lands you control. | 1 | Fear of Exposure | dsk |
 | as long as there are three or more cards exiled with ~, it gets +N/+N and has hexproof. | 1 | Veteran Survivor | dsk |
 | as long as you control four or more creature tokens, creature tokens you control have flying. | 1 | Toby, Beastie Befriender | dsk |
-| as long as you have at least N life more than your starting life total, creatures you control get +N/+N. | 1 | Leyline of Hope | dsk |
 | as long as ~ entered ~, enchanted creature has hexproof. | 1 | Shardmage's Rescue | dsk |
 | at the beginning of your end step, if a land entered the battlefield under your control ~ and you control a prime number of lands, create primo, the indivisible | 1 | Zimone, All-Questioning | dsk |
 | at the beginning of your end step, you may draw a card. if you do, discard a card unless a permanent entered the battlefield face down under your control ~ or y | 1 | Oblivious Bookworm | dsk |

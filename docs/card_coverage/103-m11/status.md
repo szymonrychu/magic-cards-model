@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 13.3% |
+| Tested | 15 | 14.3% |
 | Works (untested) | 62 | 59.0% |
 | Partial (unaudited) | 6 | 5.7% |
-| Not working | 23 | 21.9% |
+| Not working | 22 | 21.0% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Autumn's Veil | silent | Spells you control can't be countered by blue or black spells this turn, and creatures you control can't be the targets of blue or black spells this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blood Tithe | silent | Each opponent loses 3 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Combust | silent | This spell can't be countered. Combust deals 5 damage to target white or blue creature. The damage can't be prevented. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Conundrum Sphinx | silent | Whenever this creature attacks, each player chooses a card name. Then each player reveals the top card of their library. If the card a player revealed has the n | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cyclops Gladiator | silent | Whenever this creature attacks, you may have it deal damage equal to its power to target creature defending player controls. If you do, that creature deals dama | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elixir of Immortality | silent | {2}, {T}: You gain 5 life. Shuffle this artifact and your graveyard into their owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gargoyle Sentinel | silent | {3}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -121,12 +120,13 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Aether Adept
 - Ajani's Mantra
 - Brittle Effigy
 - Captivating Vampire
+- Conundrum Sphinx
 - Cultivate
 - Frost Titan
 - Inferno Titan
@@ -161,7 +161,6 @@
 | when you control no permanents with phylactery counters on them, sacrifice ~. | 1 | Phylactery Lich | m11 |
 | when ~ enters, you may search your library for up to three cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Squadron Hawk | m11 |
 | whenever you draw a card, you may have target player mill a card. | 1 | Jace's Erasure | m11 |
-| whenever ~ attacks, each player chooses a card name. then each player reveals the top card of their library. if the card a player revealed has the name they cho | 1 | Conundrum Sphinx | m11 |
 | whenever ~ attacks, you may have it deal damage equal to its power to target creature defending player controls. if you do, that creature deals damage equal to  | 1 | Cyclops Gladiator | m11 |
 | whenever ~ deals combat damage to a player, that player reveals a card at random from their hand. | 1 | Merfolk Spy | m11 |
 | you may choose new targets for target spell. | 1 | Redirect | m11 |

@@ -64,7 +64,6 @@
 | Honden of Night's Reach | silent | At the beginning of your upkeep, target opponent discards a card for each Shrine you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horobi, Death's Wail | silent | Whenever a creature becomes the target of a spell or ability, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hundred-Talon Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Initiate of Blood // Goka the Unjust | silent | {T}: This creature deals 1 damage to target creature that was dealt damage this turn. When that creature dies this turn, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jushi Apprentice // Tomoya the Revealer | silent | {2}{U}, {T}: Draw a card. If you have nine or more cards in hand, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kami of Lunacy | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kami of the Painted Road | silent | Whenever you cast a Spirit or Arcane spell, this creature gains protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -97,7 +96,6 @@
 | Nezumi Shortfang // Stabwhisker the Odious | silent | {1}{B}, {T}: Target opponent discards a card. Then if that player has no cards in hand, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Night Dealings | silent | {2}{B}{B}, Remove X theft counters from this enchantment: Search your library for a nonland card with mana value X, reveal it, put it into your hand, then shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Night of Souls' Betrayal | silent | All creatures get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nine-Ringed Bo | silent | {T}: This artifact deals 1 damage to target Spirit creature. If that creature would die this turn, exile it instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Numai Outcast | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Oathkeeper, Takeno's Daisho | silent | Whenever equipped creature dies, return that card to the battlefield under your control if it's a Samurai card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oni Possession | silent | At the beginning of your upkeep, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -112,7 +110,7 @@
 | Reverse the Sands | silent | Redistribute any number of players' life totals. (Each of those players gets one life total back.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reweave | silent | Target permanent's controller sacrifices it. If the player does, they reveal cards from the top of their library until they reveal a permanent card that shares  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ronin Houndmaster | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Rootrunner | silent | {G}{G}, Sacrifice this creature: Put target land on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Rootrunner | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Samurai Enforcers | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Samurai of the Pale Curtain | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Scuttling Death | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -142,11 +140,13 @@
 | Zo-Zu the Punisher | silent | Whenever a land enters, Zo-Zu deals 2 damage to that land's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blessed Breath | notice | Target creature you control gains protection from the color of your choice until end of turn. Splice onto Arcane {W} (As you cast an Arcane spell, you may revea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Blind with Anger | notice | Untap target nonlegendary creature and gain control of it until end of turn. That creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Devouring Rage | notice | As an additional cost to cast this spell, you may sacrifice any number of Spirits. Target creature gets +3/+0 until end of turn. For each Spirit sacrificed this | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Devouring Rage | notice | As an additional cost to cast this spell, you may sacrifice any number of Spirits. Target creature gets +3/+0 until end of turn. For each Spirit sacrificed this | unparsed remainder: As an additional cost to cast this spell, you may sacrifice any number of Spirits. For each Spirit sacrificed this way, that creature gets an additional +3/+0 until end of turn. | Y/-/- | not_working |
 | Feast of Worms | notice | Destroy target land. If that land was legendary, its controller sacrifices another land of their choice. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hikari, Twilight Guardian | notice | Whenever you cast a Spirit or Arcane spell, you may exile Hikari. If you do, return it to the battlefield under its owner's control at the beginning of the next | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hinder | notice | Counter target spell. If that spell is countered this way, put that card on your choice of the top or bottom of its owner's library instead of into that player' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Initiate of Blood // Goka the Unjust | notice | {T}: This creature deals 1 damage to target creature that was dealt damage this turn. When that creature dies this turn, flip this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Junkyo Bell | notice | At the beginning of your upkeep, you may have target creature you control get +X/+X until end of turn, where X is the number of creatures you control. If you do | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Kitsune Riftwalker | notice | Protection | protection from a quality the engine does not read: Spirits, Arcane | Y/-/- | not_working |
 | Otherworldly Journey | notice | Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sosuke, Son of Seshiro | notice | Whenever a Warrior you control deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Strength of Cedars | notice | Target creature gets +X/+X until end of turn, where X is the number of lands you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -221,7 +221,6 @@
 | Kami of Twisted Reflection | handled | Sacrifice this creature: Return target creature you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kami of the Hunt | handled | Whenever you cast a Spirit or Arcane spell, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kitsune Diviner | handled | {T}: Tap target Spirit. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Kitsune Riftwalker | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Kodama of the North Tree | handled | Shroud | models/game.py (Game.shroud_refusal), machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a) | Y/-/- | not_tested |
 | Kodama of the South Tree | handled | Whenever you cast a Spirit or Arcane spell, each other creature you control gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kodama's Might | handled | Target creature gets +2/+2 until end of turn. Splice onto Arcane {G} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice co | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -235,6 +234,7 @@
 | Moss Kami | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Mystic Restraints | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nezumi Bone-Reader | handled | {B}, Sacrifice a creature: Target player discards a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nine-Ringed Bo | handled | {T}: This artifact deals 1 damage to target Spirit creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | No-Dachi | handled | Equipped creature gets +2/+0 and has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Okina, Temple to the Grandfathers | handled | {G}, {T}: Target legendary creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Orbweaver Kumo | handled | Whenever you cast a Spirit or Arcane spell, this creature gains forestwalk until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -323,7 +323,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | bushido | 12 | Battle-Mad Ronin, Cursed Ronin, Devoted Retainer, Kitsune Blademaster, Konda, Lord of Eiganjo | chk |
-| soulshift | 11 | Burr Grafter, Gibbering Kami, He Who Hungers, Hundred-Talon Kami, Kami of Lunacy | chk |
+| soulshift | 12 | Burr Grafter, Gibbering Kami, He Who Hungers, Hundred-Talon Kami, Kami of Lunacy | chk |
 | whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 4 | Kashi-Tribe Reaver, Kashi-Tribe Warriors, Matsu-Tribe Decoy, Orochi Ranger | chk |
 | ~ enters with a divinity counter on it if you cast it from your hand. | 3 | Myojin of Infinite Rage, Myojin of Life's Web, Myojin of Seeing Winds | chk |
 | if a creature dealt damage by ~ ~ would die, exile it instead. | 2 | Frostwielder, Kumano's Pupils | chk |
@@ -364,6 +364,7 @@
 | players can't untap more than one artifact during their untap steps. | 1 | Imi Statue | chk |
 | prevent all damage that would be dealt by creatures ~. | 1 | Ethereal Haze | chk |
 | prevent the next N damage that would be dealt to any target ~. you gain life equal to the damage prevented ~. splice onto arcane {M}{M} (as you cast an arcane s | 1 | Candles' Glow | chk |
+| protection | 1 | Kitsune Riftwalker | chk |
 | redistribute any number of players' life totals. (each of those players gets one life total back.) | 1 | Reverse the Sands | chk |
 | remove a divinity counter from ~: destroy all other creatures. | 1 | Myojin of Cleansing Fire | chk |
 | remove a divinity counter from ~: each opponent discards their hand. | 1 | Myojin of Night's Reach | chk |
@@ -422,9 +423,7 @@
 | {M}: the next N damage that would be dealt to target legendary creature you control ~ is dealt to you instead. | 1 | Vassal's Duty | chk |
 | {M}: you may put a land card from your hand onto the battlefield. if you control ten or more lands, flip ~. | 1 | Budoka Gardener // Dokai, Weaver of Life | chk |
 | {M}: ~ deals N damage to target creature that was dealt damage ~. when that creature dies ~, flip ~. | 1 | Initiate of Blood // Goka the Unjust | chk |
-| {M}: ~ deals N damage to target spirit creature. if that creature would die ~, exile it instead. | 1 | Nine-Ringed Bo | chk |
 | {M}{M}, discard a card: counter target spell if it has the same mana value as the discarded card. | 1 | Hisoka, Minamo Sensei | chk |
-| {M}{M}, sacrifice ~: put target land on top of its owner's library. | 1 | Rootrunner | chk |
 | {M}{M}, {M}: create a N/N green snake creature token. if you control ten or more creatures, flip ~. | 1 | Orochi Eggwatcher // Shidako, Broodmistress | chk |
 | {M}{M}, {M}: draw a card. if you have nine or more cards in hand, flip ~. | 1 | Jushi Apprentice // Tomoya the Revealer | chk |
 | {M}{M}, {M}: target creature you control other than ~ has shroud for as long as ~ remains tapped. | 1 | Hisoka's Guard | chk |

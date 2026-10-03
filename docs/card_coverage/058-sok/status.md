@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 4.8% |
-| Works (untested) | 57 | 34.5% |
+| Works (untested) | 58 | 35.2% |
 | Partial (unaudited) | 11 | 6.7% |
-| Not working | 89 | 53.9% |
+| Not working | 88 | 53.3% |
 
 ## Cards needing work
 
@@ -113,7 +113,6 @@
 | Ideas Unbound | notice | Draw three cards. Discard three cards at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Iname as One | notice | When Iname as One enters, if you cast it from your hand, you may search your library for a Spirit permanent card, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Inner Calm, Outer Strength | notice | Target creature gets +X/+X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Miren, the Moaning Well | notice | {3}, {T}, Sacrifice a creature: You gain life equal to the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Plow Through Reito | notice | Sweep — Return any number of Plains you control to their owner's hand. Target creature gets +1/+1 until end of turn for each Plains returned this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cowed by Wisdom | unaudited | Enchanted creature can't attack or block unless its controller pays {1} for each card in your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dense Canopy | unaudited | Creatures with flying can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -157,6 +156,7 @@
 | Manriki-Gusari | handled | Equipped creature gets +1/+2 and has "{T}: Destroy target Equipment." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Michiko Konda, Truth Seeker | handled | Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mikokoro, Center of the Sea | handled | {2}, {T}: Each player draws a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Miren, the Moaning Well | handled | {3}, {T}, Sacrifice a creature: You gain life equal to the sacrificed creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molting Skin | handled | Return this enchantment to its owner's hand: Regenerate target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moonwing Moth | handled | {W}: This creature gets +0/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nikko-Onna | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -279,7 +279,6 @@
 | you gain N life for each card in your hand. | 1 | Presence of the Wise | sok |
 | your maximum hand size is increased by one. | 1 | Minamo Scrollkeeper | sok |
 | {M}, return a land you control to its owner's hand: target land becomes the basic land type of your choice until end of turn. | 1 | Moonbow Illusionist | sok |
-| {M}, {M}, sacrifice a creature: you gain life equal to the sacrificed creature's toughness. | 1 | Miren, the Moaning Well | sok |
 | {M}: prevent all combat damage that would be dealt to and dealt by target creature you control ~. | 1 | Soratami Cloud Chariot | sok |
 | {M}: target creature gets +N/+N until end of turn, where N is its power. sacrifice ~ at the beginning of the next end step. | 1 | Wine of Blood and Iron | sok |
 | {M}: untap enchanted creature. | 1 | Freed from the Real | sok |

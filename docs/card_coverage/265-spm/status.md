@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 16.0% |
-| Works (untested) | 97 | 51.9% |
-| Partial (unaudited) | 14 | 7.5% |
+| Works (untested) | 98 | 52.4% |
+| Partial (unaudited) | 13 | 7.0% |
 | Not working | 46 | 24.6% |
 
 ## Cards needing work
@@ -70,8 +70,8 @@
 | Origin of Spider-Man | notice | II — Put a +1/+1 counter on target creature you control. It becomes a legendary Spider Hero in addition to its other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shocker, Unshakable | notice | Vibro-Shock Gauntlets — When Shocker enters, he deals 2 damage to target creature and 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Skyward Spider | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Terrific Team-Up | notice | This spell costs {2} less to cast if you control a permanent with mana value 4 or greater. One or two target creatures you control each get +1/+0 until end of t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Thwip! | notice | Target creature gets +2/+2 and gains flying until end of turn. If it's a Spider, you gain 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Terrific Team-Up | notice | This spell costs {2} less to cast if you control a permanent with mana value 4 or greater. One or two target creatures you control each get +1/+0 until end of t | unparsed remainder: This spell costs {2} less to cast if you control a permanent with mana value 4 or greater. They each deal damage equal to their power to target creature an opponent controls. | Y/Y/Y | not_working |
+| Thwip! | notice | Target creature gets +2/+2 and gains flying until end of turn. If it's a Spider, you gain 2 life. | unparsed remainder: If it's a Spider, you gain 2 life. | Y/Y/Y | not_working |
 | Alien Symbiosis | unaudited | You may cast this card from your graveyard by discarding a card in addition to paying its other costs. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Anti-Venom, Horrifying Healer | unaudited | If damage would be dealt to Anti-Venom, prevent that damage and put that many +1/+1 counters on him. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Arachne, Psionic Weaver | unaudited | As Arachne enters, look at an opponent's hand, then choose a card type other than creature. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -85,7 +85,6 @@
 | Scarlet Spider, Ben Reilly | unaudited | Sensational Save — If Scarlet Spider was cast using web-slinging, he enters with X +1/+1 counters on him, where X is the mana value of the returned creature. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Spider-Man 2099 | unaudited | From the Future — You can't cast Spider-Man 2099 during your first, second, or third turns of the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Spider-Punk | unaudited | Other Spiders you control have riot. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Spider-Woman, Stunning Savior | unaudited | Venom Blast — Artifacts and creatures your opponents control enter tapped. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Agent Venom | handled | Whenever another nontoken creature you control dies, you draw a card and lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Amazing Acrobatics | handled | Choose one or both — • Counter target spell. • Tap one or two target creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Angry Rabble | handled | Whenever you cast a spell with mana value 4 or greater, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -160,6 +159,7 @@
 | Spider-Rex, Daring Dino | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
 | Spider-Sense | handled | Web-slinging {U} (You may cast this spell for {U} if you also return a tapped creature you control to its owner's hand.) Counter target instant spell, sorcery s | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spider-Suit | handled | Equipped creature gets +2/+2 and is a Spider Hero in addition to its other types. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spider-Woman, Stunning Savior | handled | Venom Blast — Artifacts and creatures your opponents control enter tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Starling, Aerial Ally | handled | When Starling enters, another target creature you control gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Steel Wrecking Ball | handled | When this artifact enters, it deals 5 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Strength of Will | handled | Until end of turn, target creature you control gains indestructible and "Whenever this creature is dealt damage, put that many +1/+1 counters on it." | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -230,7 +230,6 @@
 | Dinosaur Formula | 1 | Stegron the Dinosaur Man | spm |
 | From the Future | 1 | Spider-Man 2099 | spm |
 | Sensational Save | 1 | Scarlet Spider, Ben Reilly | spm |
-| Venom Blast | 1 | Spider-Woman, Stunning Savior | spm |
 | animal may-ham — other spiders, boars, bats, bears, birds, cats, dogs, frogs, jackals, lizards, mice, otters, rabbits, raccoons, rats, squirrels, turtles, and w | 1 | Spider-Ham, Peter Porker | spm |
 | as arachne enters, look at an opponent's hand, then choose a card type other than creature. | 1 | Arachne, Psionic Weaver | spm |
 | as long as there are eight or more cards in your graveyard, doc ock has base power and toughness N/N. | 1 | Doc Ock, Sinister Scientist | spm |

@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11",
+  "oracle_id": "ae0b8c13-0a71-4a60-bf9f-6e2da9503e9c",
+  "multiverse_ids": [
+    278195
+  ],
+  "mtgo_id": 45592,
+  "mtgo_foil_id": 45593,
+  "tcgplayer_id": 59804,
+  "cardmarket_id": 256670,
+  "name": "Worldfire",
+  "lang": "en",
+  "released_at": "2012-07-13",
+  "uri": "https://api.scryfall.com/cards/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11",
+  "scryfall_uri": "https://scryfall.com/card/m13/158/worldfire?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:01:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.jpg?1783940477",
+    "normal": "https://cards.scryfall.io/normal/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.jpg?1783940477",
+    "large": "https://cards.scryfall.io/large/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.jpg?1783940477",
+    "png": "https://cards.scryfall.io/png/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.png?1783940477",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.jpg?1783940477",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.jpg?1783940477",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.webp?1783940477",
+    "grid": "https://cards.scryfall.io/grid/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.webp?1783940477",
+    "display": "https://cards.scryfall.io/display/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.webp?1783940477",
+    "art": "https://cards.scryfall.io/art/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.webp?1783940477",
+    "crop": "https://cards.scryfall.io/crop/front/2/e/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11.webp?1783940477"
+  },
+  "mana_cost": "{6}{R}{R}{R}",
+  "cmc": 9.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Exile all permanents. Exile all cards from all hands and graveyards. Each player's life total becomes 1.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set": "m13",
+  "set_name": "Magic 2013",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am13&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m13?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2ef3d4b5-0453-4bf0-b018-23b0c3b9ae11/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aae0b8c13-0a71-4a60-bf9f-6e2da9503e9c&unique=prints",
+  "collector_number": "158",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "Even the smallest spark may set a world ablaze.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Izzy",
+  "artist_ids": [
+    "2c3d2473-ff5d-4309-8194-e0b2def2ab65"
+  ],
+  "illustration_id": "5f46ad97-b32e-4687-9fdd-f6327bf7ddda",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8195,
+  "penny_rank": 6698,
+  "prices": {
+    "usd": "36.32",
+    "usd_foil": "96.46",
+    "usd_etched": null,
+    "eur": "16.91",
+    "eur_foil": "25.35",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=278195&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWorldfire",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWorldfire",
+    "edhrec": "https://edhrec.com/route/?cc=Worldfire"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F59804%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=256670&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/45592?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

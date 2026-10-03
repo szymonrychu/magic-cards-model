@@ -18,14 +18,16 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 86 | 46.0% |
-| Works (untested) | 101 | 54.0% |
+| Works (untested) | 99 | 52.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 0 | 0.0% |
+| Not working | 2 | 1.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
+| Chrome Dome | notice | {5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step. | unparsed remainder: That token gains haste. | Y/Y/Y | not_working |
+| Novel Nunchaku | notice | When this Equipment enters, attach it to target creature you control. When you do, equipped creature fights up to one target creature an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Action News Crew | handled | Channel — {6}, Discard this card: Put a +1/+1 counter on each creature you control. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Agent Bishop, Man in Black | handled | At the beginning of combat on your turn, put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Anchovy & Banana Pizza | handled | When this artifact enters, destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -37,7 +39,6 @@
 | Bot Bashing Time | handled | Bot Bashing Time deals 6 damage to target creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Buzz Bots | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Casey Jones, Jury-Rig Justiciar | handled | When Casey Jones enters, look at the top four cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on  | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Chrome Dome | handled | Other artifact creatures you control get +1/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cool but Rude | handled | Whenever you attack, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cowabunga! | handled | Look at the top four cards of your library. You may reveal a Mutant, Ninja, Turtle, or land card from among them and put it into your hand. Put the rest on the  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Death in the Family | handled | Exile target creature with mana value 3 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -91,7 +92,6 @@
 | Mutant Town Musicians | handled | Alliance — Whenever another creature you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | New Generation's Technique | handled | Sneak {2}{G} (You may cast this spell for {2}{G} if you also return an unblocked attacker you control to hand during the declare blockers step.) Search your lib | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nobody | handled | When this creature enters, return up to one other target artifact you control to its owner's hand. Scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Novel Nunchaku | handled | When this Equipment enters, attach it to target creature you control. When you do, equipped creature fights up to one target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Null Group Biological Assets | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Old Hob, Alleycat Blues | handled | At the beginning of combat on your turn, create a 2/2 red Mutant creature token. It gains haste until end of turn. Destroy it at the beginning of the next end s | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Omni-Cheese Pizza | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -224,7 +224,10 @@
 
 ## Missing mechanics
 
-None.
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| when ~ enters, attach it to target creature you control. when you do, equipped creature fights up to one target creature an opponent controls. | 1 | Novel Nunchaku | tmt |
+| {M}: create a token that's a copy of another target artifact you control. that token gains haste. sacrifice it at the beginning of the next end step. | 1 | Chrome Dome | tmt |
 
 ## Notes
 

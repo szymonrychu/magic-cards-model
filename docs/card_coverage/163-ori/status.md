@@ -27,11 +27,10 @@
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Acolyte of the Inferno | silent | Whenever this creature becomes blocked by a creature, it deals 2 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Anchor to the Aether | silent | Put target creature on top of its owner's library. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Animist's Awakening | silent | Reveal the top X cards of your library. Put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood-Cursed Knight | silent | As long as you control an enchantment, this creature gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra's Ignition | silent | Target creature you control deals damage equal to its power to each other creature and each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chandra, Fire of Kaladesh // Chandra, Roaring Flame | silent | {T}: Chandra deals 1 damage to target player or planeswalker. If Chandra has dealt 3 or more damage this turn, exile her, then return her to the battlefield tra | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Chandra, Fire of Kaladesh // Chandra, Roaring Flame | silent | −7: Chandra deals 6 damage to each opponent. Each player dealt damage this way gets an emblem with "At the beginning of your upkeep, this emblem deals 3 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cleric of the Forward Order | silent | When this creature enters, you gain 2 life for each creature you control named Cleric of the Forward Order. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consul's Lieutenant | silent | Whenever this creature attacks, if it's renowned, other attacking creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Dabbling | silent | Regenerate target creature. Draw a card. (The next time the creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -75,9 +74,10 @@
 | War Horn | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Willbreaker | silent | Whenever a creature an opponent controls becomes the target of a spell or ability you control, gain control of that creature for as long as you control this cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Demonic Pact | notice | At the beginning of your upkeep, choose one that hasn't been chosen — • This enchantment deals 4 damage to any target and you gain 4 life. • Target opponent dis | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Enshrouding Mist | notice | Target creature gets +1/+1 until end of turn. Prevent all damage that would be dealt to it this turn. If it's renowned, untap it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Enshrouding Mist | notice | Target creature gets +1/+1 until end of turn. Prevent all damage that would be dealt to it this turn. If it's renowned, untap it. | unparsed remainder: Prevent all damage that would be dealt to it this turn. If it's renowned, untap it. | Y/Y/- | not_working |
 | Flameshadow Conjuring | notice | Whenever a nontoken creature you control enters, you may pay {R}. If you do, create a token that's a copy of that creature. That token gains haste. Exile it at  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Harbinger of the Tides | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Kytheon's Tactics | notice | Creatures you control get +2/+1 until end of turn. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, those creatures also | unparsed remainder: If there are two or more instant and/or sorcery cards in your graveyard, those creatures also gain vigilance until end of turn. | Y/Y/- | not_working |
 | Necromantic Summons | notice | Put target creature card from a graveyard onto the battlefield under your control. Spell mastery — If there are two or more instant and/or sorcery cards in your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ramroller | notice | This creature gets +2/+0 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ravaging Blaze | notice | Ravaging Blaze deals X damage to target creature. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, Ravaging Blaze also d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -95,6 +95,7 @@
 | Akroan Sergeant | handled | Renown | machines/keywords.py | Y/Y/- | not_tested |
 | Alchemist's Vial | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ampryn Tactician | handled | When this creature enters, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Anchor to the Aether | handled | Put target creature on top of its owner's library. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Anointer of Champions | handled | {T}: Target attacking creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Artificer's Epiphany | handled | Draw two cards. If you control no artifacts, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aspiring Aeronaut | handled | When this creature enters, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -143,7 +144,6 @@
 | Knight of the Pilgrim's Road | handled | Renown | machines/keywords.py | Y/Y/- | not_tested |
 | Kothophed, Soul Hoarder | handled | Whenever a permanent owned by another player is put into a graveyard from the battlefield, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kytheon's Irregulars | handled | {W}{W}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Kytheon's Tactics | handled | Creatures you control get +2/+1 until end of turn. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, those creatures also | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Languish | handled | All creatures get -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lightning Javelin | handled | Lightning Javelin deals 3 damage to any target. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mage-Ring Bully | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -233,6 +233,7 @@
 | attacking creatures you control get +N/+N. | 1 | War Horn | ori |
 | choose a creature card name. search target opponent's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuff | 1 | Infinite Obliteration | ori |
 | counter target instant or sorcery spell that targets you. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, you may copy  | 1 | Psychic Rebuttal | ori |
+| creatures you control get +N/+N until end of turn. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, those creatures also | 1 | Kytheon's Tactics | ori |
 | during your turn, ~ gets +N/+N and has first strike. | 1 | Prickleboar | ori |
 | each player shuffles all cards from their hand and all permanents they own into their library, then draws that many cards. each player may put any number of lan | 1 | The Great Aurora | ori |
 | enchanted creature gets +N/+N, has haste, and attacks each combat if able. | 1 | Infectious Bloodlust | ori |
@@ -245,7 +246,6 @@
 | other creatures you control with flying get +N/+N. | 1 | Thunderclap Wyvern | ori |
 | prevent all combat damage that would be dealt ~ by creatures with power N or less. | 1 | Vine Snare | ori |
 | put target creature card from a graveyard onto the battlefield under your control. spell mastery — if there are two or more instant and/or sorcery cards in your | 1 | Necromantic Summons | ori |
-| put target creature on top of its owner's library. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Anchor to the Aether | ori |
 | regenerate target creature. draw a card. (the next time the creature would be destroyed ~, instead tap it, remove it from combat, and heal all damage on it.) sp | 1 | Dark Dabbling | ori |
 | return all nonland permanents with mana value N or less to their owners' hands. | 1 | Displacement Wave | ori |
 | reveal the top N cards of your library. put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | 1 | Animist's Awakening | ori |
@@ -278,10 +278,10 @@
 | whenever ~ becomes blocked by a creature, it deals N damage to that creature. | 1 | Acolyte of the Inferno | ori |
 | whenever ~ deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | 1 | Graveblade Marauder | ori |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Harbinger of the Tides | ori |
-| {M}: chandra deals N damage to target player or planeswalker. if chandra has dealt N or more damage ~, exile her, then return her to the battlefield transformed | 1 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | ori |
 | ~ can't attack alone. | 1 | Bonded Construct | ori |
 | ~ deals N damage to target creature. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, ~ also deals N damage to that crea | 1 | Ravaging Blaze | ori |
 | ~ gets +N/+N as long as you control another artifact. | 1 | Ramroller | ori |
+| −N: chandra deals N damage to each opponent. each player dealt damage ~ gets an emblem with "..." | 1 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | ori |
 | −N: create ashaya, the awoken world, a legendary N/N green elemental creature token. | 1 | Nissa, Vastwood Seer // Nissa, Sage Animist | ori |
 
 ## Notes

@@ -1,0 +1,157 @@
+{
+  "object": "card",
+  "id": "79883468-a37c-4894-8d05-6a4d150b7d59",
+  "oracle_id": "c3974ec7-7af0-4b65-baf6-4c1c4fe8a5c4",
+  "multiverse_ids": [
+    466756
+  ],
+  "mtgo_id": 72903,
+  "arena_id": 69787,
+  "tcgplayer_id": 192523,
+  "cardmarket_id": 378336,
+  "name": "Ajani, Strength of the Pride",
+  "lang": "en",
+  "released_at": "2019-07-12",
+  "uri": "https://api.scryfall.com/cards/79883468-a37c-4894-8d05-6a4d150b7d59",
+  "scryfall_uri": "https://scryfall.com/card/m20/2/ajani-strength-of-the-pride?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:57:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.jpg?1783933034",
+    "normal": "https://cards.scryfall.io/normal/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.jpg?1783933034",
+    "large": "https://cards.scryfall.io/large/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.jpg?1783933034",
+    "png": "https://cards.scryfall.io/png/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.png?1783933034",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.jpg?1783933034",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.jpg?1783933034",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.webp?1783933034",
+    "grid": "https://cards.scryfall.io/grid/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.webp?1783933034",
+    "display": "https://cards.scryfall.io/display/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.webp?1783933034",
+    "art": "https://cards.scryfall.io/art/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.webp?1783933034",
+    "crop": "https://cards.scryfall.io/crop/front/7/9/79883468-a37c-4894-8d05-6a4d150b7d59.webp?1783933034"
+  },
+  "mana_cost": "{2}{W}{W}",
+  "cmc": 4.0,
+  "type_line": "Legendary Planeswalker \u2014 Ajani",
+  "oracle_text": "+1: You gain life equal to the number of creatures you control plus the number of planeswalkers you control.\n\u22122: Create a 2/2 white Cat Soldier creature token named Ajani's Pridemate with \"Whenever you gain life, put a +1/+1 counter on this token.\"\n0: If you have at least 15 life more than your starting life total, exile Ajani and each artifact and creature your opponents control.",
+  "loyalty": "5",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "b0819e8e-fb7e-43c7-a7cf-d768f43193ac",
+      "component": "token",
+      "name": "Ajani's Pridemate",
+      "type_line": "Token Creature \u2014 Cat Soldier",
+      "uri": "https://api.scryfall.com/cards/b0819e8e-fb7e-43c7-a7cf-d768f43193ac"
+    },
+    {
+      "object": "related_card",
+      "id": "79883468-a37c-4894-8d05-6a4d150b7d59",
+      "component": "combo_piece",
+      "name": "Ajani, Strength of the Pride",
+      "type_line": "Legendary Planeswalker \u2014 Ajani",
+      "uri": "https://api.scryfall.com/cards/79883468-a37c-4894-8d05-6a4d150b7d59"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set": "m20",
+  "set_name": "Core Set 2020",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/79883468-a37c-4894-8d05-6a4d150b7d59/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac3974ec7-7af0-4b65-baf6-4c1c4fe8a5c4&unique=prints",
+  "collector_number": "2",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rallis",
+  "artist_ids": [
+    "a8e7b854-b15a-421a-b66d-6e68187ae285"
+  ],
+  "illustration_id": "f10e3c2b-cb58-40fb-87b9-5e7ced8a42b1",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3153,
+  "penny_rank": 5825,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2019-06-17"
+  },
+  "prices": {
+    "usd": "8.45",
+    "usd_foil": "19.84",
+    "usd_etched": null,
+    "eur": "5.52",
+    "eur_foil": "10.08",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=466756&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAjani%252C%2BStrength%2Bof%2Bthe%2BPride",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAjani%252C%2BStrength%2Bof%2Bthe%2BPride",
+    "edhrec": "https://edhrec.com/route/?cc=Ajani%2C+Strength+of+the+Pride"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192523%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=378336&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/72903?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

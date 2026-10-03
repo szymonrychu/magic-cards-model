@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 6.0% |
-| Works (untested) | 89 | 48.6% |
+| Tested | 12 | 6.6% |
+| Works (untested) | 91 | 49.7% |
 | Partial (unaudited) | 5 | 2.7% |
-| Not working | 78 | 42.6% |
+| Not working | 75 | 41.0% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Ammit Eternal | silent | Whenever this creature deals combat damage to a player, remove all -1/-1 counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Apocalypse Demon | silent | Apocalypse Demon's power and toughness are each equal to the number of cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Appeal // Authority | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Bontu's Last Reckoning | silent | Destroy all creatures. Lands you control don't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Champion of Wits | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chaos Maw | silent | When this creature enters, it deals 3 damage to each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Claim // Fame | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -65,13 +64,11 @@
 | Nimble Obstructionist | silent | When you cycle this card, counter target activated or triggered ability you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Encouragement | silent | Search your library and graveyard for a card named Forest, a card named Brambleweft Behemoth, and a card named Nissa, Genesis Mage. Reveal those cards, put them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Genesis Mage | silent | +2: Untap up to two target creatures and up to two target lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Oketra's Last Mercy | silent | Your life total becomes equal to your starting life total. Lands you control don't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Proven Combatant | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Reason // Believe | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Look at the top card of your library. You may put it onto the battlefield if it's a creatur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Refuse // Cooperate | silent | Refuse deals damage to target spell's controller equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Resilient Khenra | silent | When this creature enters, you may have target creature get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Resolute Survivors | silent | Whenever you exert a creature, this creature deals 1 damage to each opponent and you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Rhonas's Last Stand | silent | Create a 5/4 green Snake creature token. Lands you control don't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rhonas's Stalwart | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 until end of turn and can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Riddleform | silent | Whenever you cast a noncreature spell, you may have this enchantment become a 3/3 Sphinx creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Saving Grace | silent | When this Aura enters, all damage that would be dealt this turn to you and permanents you control is dealt to enchanted creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -121,6 +118,7 @@
 | Beneath the Sands | handled | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bitterbow Sharpshooters | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Bloodwater Entity | handled | When this creature enters, you may put target instant or sorcery card from your graveyard on top of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bontu's Last Reckoning | handled | Destroy all creatures. Lands you control don't untap during your next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brambleweft Behemoth | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Burning-Fist Minotaur | handled | {1}{R}, Discard a card: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Carrion Screecher | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -179,6 +177,7 @@
 | Ramunap Ruins | handled | {2}{R}{R}, {T}, Sacrifice a Desert: This land deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Razaketh's Rite | handled | Search your library for a card, put that card into your hand, then shuffle. Cycling {B} ({B}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Razaketh, the Foulblooded | handled | Pay 2 life, Sacrifice another creature: Search your library for a card, put that card into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rhonas's Last Stand | handled | Create a 5/4 green Snake creature token. Lands you control don't untap during your next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | River Hoopoe | handled | {3}{G}{U}: You gain 2 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruin Rat | handled | When this creature dies, exile target card from an opponent's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scavenger Grounds | handled | {2}, {T}, Sacrifice a Desert: Exile all graveyards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -202,7 +201,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Abrade
 - Desert of the True
@@ -210,6 +209,7 @@
 - Hollow One
 - Liliana's Defeat
 - Nissa's Defeat
+- Oketra's Last Mercy
 - Pride Sovereign
 - Sand Strangler
 - Solemnity
@@ -239,10 +239,8 @@
 | at the beginning of enchanted player's upkeep, that player loses N life unless they sacrifice a nonland permanent of their choice or discard a card. | 1 | Torment of Scarabs | hou |
 | counter target blue spell. if it was a jace planeswalker spell, scry N. | 1 | Jace's Defeat | hou |
 | counter target spell unless its controller pays {M} for each card in your graveyard. cycling {M} ({M}, discard ~: draw a card.) | 1 | Countervailing Winds | hou |
-| create a N/N green snake creature token. lands you control don't untap during your next untap step. | 1 | Rhonas's Last Stand | hou |
 | creatures enchanted player controls lose all abilities and have base power and toughness N/N. | 1 | Overwhelming Splendor | hou |
 | creatures target opponent controls attack ~ if able. during that player"..."t untap. cycling {M} ({M}, discard ~: draw a card.) | 1 | Imaginary Threats | hou |
-| destroy all creatures. lands you control don't untap during your next untap step. | 1 | Bontu's Last Reckoning | hou |
 | draw two cards. then discard a card unless you return a land you control to its owner's hand. | 1 | Tragic Lesson | hou |
 | enchanted creature can"..."t be activated. | 1 | Desert's Hold | hou |
 | equipped creature gets +N/+N and has afflict N. | 1 | Dagger of the Worthy | hou |
@@ -282,7 +280,6 @@
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn and can't be blocked by creatures with power N or less ~. | 1 | Rhonas's Stalwart | hou |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 1 | Khenra Scrapper | hou |
 | you may exert ~ as it attacks. when you do, prevent all combat damage that would be dealt to it ~. | 1 | Oketra's Avenger | hou |
-| your life total becomes equal to your starting life total. lands you control don't untap during your next untap step. | 1 | Oketra's Last Mercy | hou |
 | ~ deals N damage to target red creature or red planeswalker. if that permanent is a chandra planeswalker, you may discard a card. if you do, draw a card. | 1 | Chandra's Defeat | hou |
 | ~ deals damage to target spell"..."s mana value. | 1 | Refuse // Cooperate | hou |
 | ~ gets +N/+N as long as you control a desert. | 1 | Ramunap Hydra | hou |

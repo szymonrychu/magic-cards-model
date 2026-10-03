@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 10.7% |
-| Works (untested) | 95 | 53.4% |
+| Tested | 21 | 11.8% |
+| Works (untested) | 93 | 52.2% |
 | Partial (unaudited) | 10 | 5.6% |
 | Not working | 54 | 30.3% |
 
@@ -44,7 +44,6 @@
 | Dire Fleet Neckbreaker | silent | Attacking Pirates you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Etali, Primal Storm | silent | Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana cos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fathom Fleet Boarder | silent | When this creature enters, you lose 2 life unless you control another Pirate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Form of the Dinosaur | silent | When this enchantment enters, your life total becomes 15. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Golden Guardian // Gold-Forge Garrison | silent | {2}: This creature fights another target creature you control. When this creature dies this turn, return it to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gruesome Fate | silent | Each opponent loses 1 life for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hardy Veteran | silent | During your turn, this creature gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -69,6 +68,7 @@
 | Angrath's Fury | notice | Destroy target creature. Angrath's Fury deals 3 damage to target player or planeswalker. You may search your library and/or graveyard for a card named Angrath,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dusk Charger | notice | This creature gets +2/+2 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Expel from Orazca | notice | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Return target nonland permanent to its owner's hand. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Golden Demise | notice | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) All creatures get -2/-2 until end of turn. If you have the | unparsed remainder: If you have the city's blessing, instead only creatures your opponents control get -2/-2 until end of turn. | Y/Y/- | not_working |
 | Grasping Scoundrel | notice | This creature gets +1/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hadana's Climb // Winged Temple of Orazca | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has three or more +1/+1 counters on it, trans | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitesail Corsair | notice | This creature has flying as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -121,7 +121,6 @@
 | Giltgrove Stalker | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gleaming Barrier | handled | When this creature dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goblin Trailblazer | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
-| Golden Demise | handled | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) All creatures get -2/-2 until end of turn. If you have the | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hornswoggle | handled | Counter target creature spell. You create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Impale | handled | Destroy target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Imperial Ceratops | handled | Enrage — Whenever this creature is dealt damage, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -147,7 +146,6 @@
 | Pirate's Pillage | handled | As an additional cost to cast this spell, discard a card. Draw two cards and create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pitiless Plunderer | handled | Whenever another creature you control dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Polyraptor | handled | Enrage — Whenever this creature is dealt damage, create a token that's a copy of this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Pride of Conquerors | handled | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Creatures you control get +1/+1 until end of turn. If you  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Radiant Destiny | handled | As this enchantment enters, choose a creature type. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raging Regisaur | handled | Whenever this creature attacks, it deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reaver Ambush | handled | Exile target creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -189,7 +187,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>21 cards</summary>
 
 - Arch of Orazca
 - Crafty Cutpurse
@@ -197,6 +195,7 @@
 - Dire Fleet Daredevil
 - Enter the Unknown
 - Flood of Recollection
+- Form of the Dinosaur
 - Ghalta, Primal Hunger
 - Jadelight Ranger
 - Mastermind's Acquisition
@@ -204,6 +203,7 @@
 - Needletooth Raptor
 - Orazca Relic
 - Paladin of Atonement
+- Pride of Conquerors
 - Ravenous Chupacabra
 - Resplendent Griffin
 - Secrets of the Golden City
@@ -223,6 +223,7 @@
 | all lands lose all abilities except mana abilities. | 1 | Blood Sun | rix |
 | as long as you have the city"..."t be blocked. | 1 | Slippery Scoundrel | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s blessing, instead each opponent sacrifices half the creatures they control of their choice | 1 | Vona's Hunger | rix |
+| ascend (if you control ten or more permanents, you get the city"..."s blessing, instead only creatures your opponents control get -N/-N until end of turn. | 1 | Golden Demise | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s hand. if you have the city"..."s library instead. | 1 | Expel from Orazca | rix |
 | at the beginning of combat on your turn, put a +N/+N counter on target creature you control. then if that creature has three or more +N/+N counters on it, trans | 1 | Hadana's Climb // Winged Temple of Orazca | rix |
 | at the beginning of your upkeep, each player draws a card. if you have the city's blessing, instead only you draw a card. | 1 | Kumena's Awakening | rix |
@@ -254,7 +255,6 @@
 | when ~ enters, target player exiles all cards from their hand face down, then draws that many cards. | 1 | Induced Amnesia | rix |
 | when ~ enters, you draw N cards and you lose N life, where N is the number of vampires you control. | 1 | Champion of Dusk | rix |
 | when ~ enters, you lose N life unless you control another pirate. | 1 | Fathom Fleet Boarder | rix |
-| when ~ enters, your life total becomes N. | 1 | Form of the Dinosaur | rix |
 | whenever etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana cos | 1 | Etali, Primal Storm | rix |
 | whenever ~ attacks, target creature defending player controls loses all abilities and has base power and toughness N/N until end of turn. | 1 | Warkite Marauder | rix |
 | whenever ~ attacks, target vampire gets +N/+N until end of turn, where N is the power of the exiled card. | 1 | Bishop of Binding | rix |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 11.5% |
-| Works (untested) | 137 | 50.9% |
+| Tested | 33 | 12.3% |
+| Works (untested) | 136 | 50.6% |
 | Partial (unaudited) | 24 | 8.9% |
-| Not working | 77 | 28.6% |
+| Not working | 76 | 28.3% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Alela, Artful Provocateur | silent | Other creatures you control with flying get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | All That Glitters | silent | Enchanted creature gets +1/+1 for each artifact and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Animating Faerie // Bring to Life | silent | Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Banish into Fable | silent | When you cast this spell from your hand, copy it if you control an artifact, then copy it if you control an enchantment. You may choose new targets for the copi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Belle of the Brawl | silent | Whenever this creature attacks, other Knights you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blacklance Paragon | silent | When this creature enters, target Knight gains deathtouch and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blow Your House Down | silent | Up to three target creatures can't block this turn. Destroy any of them that are Walls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -48,7 +47,6 @@
 | Foreboding Fruit | silent | Target player draws two cards and loses 2 life. Adamant — If at least three black mana was spent to cast this spell, create a Food token. (It's an artifact with | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gingerbrute | silent | {1}: This creature can't be blocked this turn except by creatures with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gluttonous Troll | silent | When this creature enters, create a number of Food tokens equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Happily Ever After | silent | At the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Irencrag Feat | silent | Add seven {R}. You can cast only one more spell this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Joust | silent | Choose target creature you control and target creature you don't control. The creature you control gets +2/+1 until end of turn if it's a Knight. Then those cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Knights' Charge | silent | {6}{W}{B}, Sacrifice this enchantment: Return all Knight creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,16 +85,17 @@
 | Wishful Merfolk | silent | {1}{U}: This creature loses defender and becomes a Human until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Witch's Vengeance | silent | Creatures of the creature type of your choice get -3/-3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Workshop Elders | silent | At the beginning of combat on your turn, you may have target noncreature artifact you control become a 0/0 artifact creature. If you do, put four +1/+1 counters | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Barge In | notice | Target attacking creature gets +2/+2 until end of turn. Each attacking non-Human creature gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Barge In | notice | Target attacking creature gets +2/+2 until end of turn. Each attacking non-Human creature gains trample until end of turn. | unparsed remainder: Each attacking non-Human creature gains trample until end of turn. | Y/Y/- | not_working |
 | Charming Prince | notice | When this creature enters, choose one — • Scry 2. • You gain 3 life. • Exile another target creature you own. Return it to the battlefield under your control at | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Festive Funeral | notice | Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flaxen Intruder // Welcome Home | notice | Whenever this creature deals combat damage to a player, you may sacrifice it. When you do, destroy target artifact or enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Giant Opportunity | notice | You may sacrifice two Foods. If you do, create a 7/7 green Giant creature token. Otherwise, create three Food tokens. (They're artifacts with "{2}, {T}, Sacrifi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Insatiable Appetite | notice | You may sacrifice a Food. If you do, target creature gets +5/+5 until end of turn. Otherwise, that creature gets +3/+3 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Oko, the Trickster | notice | 0: Until end of turn, Oko becomes a copy of target creature you control. Prevent all damage that would be dealt to him this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Oko's Hospitality | notice | Creatures you control have base power and toughness 3/3 until end of turn. You may search your library and/or graveyard for a card named Oko, the Trickster, rev | unparsed remainder: You may search your library and/or graveyard for a card named Oko, the Trickster, reveal it, and put it into your hand. If you search your library this way, shuffle. | Y/Y/- | not_working |
+| Oko, the Trickster | notice | 0: Until end of turn, Oko becomes a copy of target creature you control. Prevent all damage that would be dealt to him this turn. | unparsed remainder: Prevent all damage that would be dealt to him this turn. | Y/Y/- | not_working |
 | Outmuscle | notice | Put a +1/+1 counter on target creature you control, then it fights target creature you don't control. (Each deals damage equal to its power to the other.) Adama | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Return of the Wildspeaker | notice | Choose one — • Draw cards equal to the greatest power among non-Human creatures you control. • Non-Human creatures you control get +3/+3 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Roving Keep | notice | {7}: This creature gets +2/+0 and gains trample until end of turn. It can attack this turn as though it didn't have defender. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Roving Keep | notice | {7}: This creature gets +2/+0 and gains trample until end of turn. It can attack this turn as though it didn't have defender. | unparsed remainder: It can attack this turn as though it didn't have defender. | Y/Y/- | not_working |
 | Scorching Dragonfire | notice | Scorching Dragonfire deals 3 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Searing Barrage | notice | Searing Barrage deals 5 damage to target creature. Adamant — If at least three red mana was spent to cast this spell, Searing Barrage deals 3 damage to that cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Slaying Fire | notice | Slaying Fire deals 3 damage to any target. Adamant — If at least three red mana was spent to cast this spell, it deals 4 damage instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -207,7 +206,6 @@
 | Oakhame Ranger // Bring Back | handled | Create two 1/1 white Human creature tokens. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ogre Errant | handled | Whenever this creature attacks, another target attacking Knight gains menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oko's Accomplices | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
-| Oko's Hospitality | handled | Creatures you control have base power and toughness 3/3 until end of turn. You may search your library and/or graveyard for a card named Oko, the Trickster, rev | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Order of Midnight // Alter Fate | handled | Return target creature card from your graveyard to your hand. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Outflank | handled | Outflank deals damage to target attacking or blocking creature equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Piper of the Swarm | handled | Rats you control have menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -268,8 +266,9 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>33 cards</summary>
 
+- Banish into Fable
 - Bartered Cow
 - Bonecrusher Giant // Stomp
 - Castle Ardenvale
@@ -288,6 +287,7 @@
 - Flutterfox
 - Foulmire Knight // Profane Insight
 - Gilded Goose
+- Happily Ever After
 - Heraldic Banner
 - Idyllic Grange
 - Kenrith's Transformation
@@ -320,7 +320,6 @@
 | at the beginning of combat on your turn, you may have target noncreature artifact you control become a N/N artifact creature. if you do, put four +N/+N counters | 1 | Workshop Elders | eld |
 | at the beginning of each player"..."t, they discard a card, they lose N life, you draw a card, you gain N life, you create a N/N white knight creature token wit | 1 | Doom Foretold | eld |
 | at the beginning of your upkeep, choose one at random. create a red and white creature token with those characteristics. | 1 | Outlaws' Merriment | eld |
-| at the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or car | 1 | Happily Ever After | eld |
 | attacking non-human creatures you control get +N/+N and have trample. | 1 | Ferocity of the Wilds | eld |
 | choose target creature you control and target creature you don"..."s a knight. then those creatures fight each other. (each deals damage equal to its power to t | 1 | Joust | eld |
 | combat damage that would be dealt by creatures you control can't be prevented. | 1 | Questing Beast | eld |
@@ -329,6 +328,7 @@
 | creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Archon of Absolution | eld |
 | creatures entering or dying don't cause abilities to trigger. | 1 | Hushbringer | eld |
 | creatures of the creature type of your choice get -N/-N until end of turn. | 1 | Witch's Vengeance | eld |
+| creatures you control have base power and toughness N/N until end of turn. you may search your library and/or graveyard for a card named oko, the trickster, rev | 1 | Oko's Hospitality | eld |
 | destroy all non-giant creatures. (then exile ~. you may cast the creature later from exile.) | 1 | Realm-Cloaked Giant // Cast Off | eld |
 | draw three cards. adamant — if at least three blue mana was spent to cast ~, scry N. | 1 | Unexplained Vision | eld |
 | each creature you control that has an adventure enters with an additional +N/+N counter on it. | 1 | Mysterious Pathlighter | eld |
@@ -357,7 +357,6 @@
 | target player draws two cards and loses N life. adamant — if at least three black mana was spent to cast ~, create a food token. (it's an artifact with "...") | 1 | Foreboding Fruit | eld |
 | up to three target creatures can't block ~. destroy any of them that are walls. | 1 | Blow Your House Down | eld |
 | when the twelfth hour counter is put on ~, shuffle your hand and graveyard into your library, then draw seven cards. exile ~. | 1 | Midnight Clock | eld |
-| when you cast ~ from your hand, copy it if you control an artifact, then copy it if you control an enchantment. you may choose new targets for the copies. retur | 1 | Banish into Fable | eld |
 | when ~ enters, choose one — • scry N. • you gain N life. • exile another target creature you own. return it to the battlefield under your control at the beginni | 1 | Charming Prince | eld |
 | when ~ enters, choose target human or artifact an opponent controls. for as long as ~ remains on the battlefield, gain control of that permanent, it loses all a | 1 | Opportunistic Dragon | eld |
 | when ~ enters, create a number of N/N black rat creature tokens equal to the number of opponents you have. | 1 | Chittering Witch | eld |

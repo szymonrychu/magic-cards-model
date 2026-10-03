@@ -61,13 +61,12 @@
 | Necromentia | silent | Choose a card name other than a basic land card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nine Lives | silent | When this enchantment leaves the battlefield, you lose the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pack Leader | silent | Whenever this creature attacks, prevent all combat damage that would be dealt this turn to Dogs you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pursued Whale | silent | When this creature enters, each opponent creates a 1/1 red Pirate creature token with "This token can't block" and "Creatures you control attack each combat if  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanctum of Calm Waters | silent | At the beginning of your first main phase, you may draw X cards, where X is the number of Shrines you control. If you do, discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasoned Hallowblade | silent | Discard a card: Tap this creature. It gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | See the Truth | silent | Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. If this spell was ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Striker | silent | Whenever this creature attacks, you may tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi's Wavecaster | silent | When this creature enters, you may search your library and/or graveyard for a card named Teferi, Timeless Voyager, reveal it, and put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Teferi, Timeless Voyager | silent | −3: Put target creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Teferi, Timeless Voyager | silent | −8: Each creature target opponent controls phases out. Until the end of your next turn, they can't phase in. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Terror of the Peaks | silent | Whenever another creature you control enters, this creature deals damage equal to that creature's power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thieves' Guild Enforcer | silent | Whenever this creature or another Rogue you control enters, each opponent mills two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unleash Fury | silent | Double the power of target creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -82,10 +81,11 @@
 | Niambi, Esteemed Speaker | notice | When Niambi enters, you may return another target creature you control to its owner's hand. If you do, you gain life equal to that creature's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pestilent Haze | notice | Choose one — • All creatures get -2/-2 until end of turn. • Remove two loyalty counters from each planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Predatory Wurm | notice | This creature gets +2/+2 as long as you control a Garruk planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Pursued Whale | notice | Spells your opponents cast that target this creature cost {3} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rookie Mistake | notice | Until end of turn, target creature gets +0/+2 and another target creature gets -2/-0. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sigiled Contender | notice | This creature has lifelink as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Soul Sear | notice | Soul Sear deals 5 damage to target creature or planeswalker. That permanent loses indestructible until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Traitorous Greed | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Add two mana of any one color. (The creature can attac | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Traitorous Greed | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Add two mana of any one color. (The creature can attac | unparsed remainder: Untap that creature. It gains haste until end of turn. Add two mana of any one color. | Y/Y/- | not_working |
 | Transmogrify | notice | Exile target creature. That creature's controller reveals cards from the top of their library until they reveal a creature card. That player puts that card onto | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chromatic Orrery | unaudited | You may spend mana as though it were mana of any color. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Conspicuous Snoop | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -247,6 +247,7 @@
 | other creatures get -N/-N. | 1 | Kaervek, the Spiteful | m21 |
 | play with the top card of your library revealed. | 1 | Conspicuous Snoop | m21 |
 | put a +N/+N counter on each of up to two target creatures. you may search your library and/or graveyard for a card named basri, devoted paladin, reveal it, and  | 1 | Basri's Aegis | m21 |
+| spells your opponents cast that target ~ cost {M} more to cast. | 1 | Pursued Whale | m21 |
 | target creature gets +N/+N and gains your choice of deathtouch or lifelink until end of turn. (any amount of damage a creature with deathtouch deals to a creatu | 1 | Alchemist's Gift | m21 |
 | triple | 1 | Fiery Emancipation | m21 |
 | until end of turn, target creature gets +N/+N and another target creature gets -N/-N. | 1 | Rookie Mistake | m21 |
@@ -254,7 +255,6 @@
 | when ~ dies, you gain N life for each creature that died ~. | 1 | Canopy Stalker | m21 |
 | when ~ dies, you gain life equal to its power. | 1 | Conclave Mentor | m21 |
 | when ~ enters, draw N cards, where N is the number of creatures that died under your control ~. | 1 | Liliana's Standard Bearer | m21 |
-| when ~ enters, each opponent creates a N/N red pirate creature token with "..." and "..." | 1 | Pursued Whale | m21 |
 | when ~ enters, each opponent sacrifices a creature. | 1 | Goremand | m21 |
 | when ~ enters, exile all creature cards with mana value N or less from your graveyard until ~ leaves the battlefield. | 1 | Idol of Endurance | m21 |
 | when ~ enters, you gain N life for each creature you control with flying. | 1 | Aven Gagglemaster | m21 |
@@ -288,7 +288,7 @@
 | ~ has lifelink as long as it has a +N/+N counter on it. | 1 | Sigiled Contender | m21 |
 | ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Kinetic Augur | m21 |
 | −N: discard your hand, then draw seven cards. until end of turn, you may cast spells from your hand without paying their mana costs. | 1 | Chandra, Flame's Catalyst | m21 |
-| −N: put target creature on top of its owner's library. | 1 | Teferi, Timeless Voyager | m21 |
+| −N: each creature target opponent controls phases out. until the end of your next turn, they can't phase in. | 1 | Teferi, Timeless Voyager | m21 |
 | −N: target creature you control deals damage equal to its power to another target creature. | 1 | Garruk, Savage Herald | m21 |
 | −N: target opponent loses N life for each creature card in their graveyard. | 1 | Liliana, Death Mage | m21 |
 | −N: whenever one or more nontoken creatures attack ~, create that many N/N white soldier creature tokens that are tapped and attacking. | 1 | Basri Ket | m21 |

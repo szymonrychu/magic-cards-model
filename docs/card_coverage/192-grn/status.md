@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 6.0% |
+| Tested | 15 | 6.4% |
 | Works (untested) | 129 | 55.4% |
 | Partial (unaudited) | 5 | 2.1% |
-| Not working | 85 | 36.5% |
+| Not working | 84 | 36.1% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Gruesome Menagerie | silent | Choose a creature card with mana value 1 in your graveyard, then do the same for creature cards with mana value 2 and 3. Return those cards to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guild Summit | silent | When this enchantment enters, you may tap any number of untapped Gates you control. Draw a card for each Gate tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hammer Dropper | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Hatchery Spider | silent | Undergrowth — When you cast this spell, reveal the top X cards of your library, where X is the number of creature cards in your graveyard. You may put a green p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | House Guildmage | silent | {1}{U}, {T}: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invert // Invent | silent | Switch the power and toughness of each of up to two target creatures until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ionize | silent | Counter target spell. Ionize deals 2 damage to that spell's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -102,12 +101,12 @@
 | Vraska's Stoneglare | silent | Destroy target creature. You gain life equal to its toughness. You may search your library and/or graveyard for a card named Vraska, Regal Gorgon, reveal it, an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vraska, Regal Gorgon | silent | −10: For each creature card in your graveyard, put a +1/+1 counter on each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wojek Bodyguard | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Camaraderie | notice | You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Camaraderie | notice | You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn. | unparsed remainder: You gain X life and draw X cards, where X is the number of creatures you control. | Y/Y/- | not_working |
 | Circuitous Route | notice | Search your library for up to two basic land cards and/or Gate cards, put them onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | District Guide | notice | When this creature enters, you may search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dream Eater | notice | When this creature enters, surveil 4. When you do, you may return target nonland permanent an opponent controls to its owner's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Etrata, the Silencer | notice | Whenever Etrata deals combat damage to a player, exile target creature that player controls and put a hit counter on that card. That player loses the game if th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Find // Finality | notice | You may put two +1/+1 counters on a creature you control. Then all creatures get -4/-4 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Find // Finality | notice | You may put two +1/+1 counters on a creature you control. Then all creatures get -4/-4 until end of turn. | unparsed remainder: You may put two +1/+1 counters on a creature you control. | Y/Y/- | not_working |
 | Leapfrog | notice | This creature has flying as long as you've cast an instant or sorcery spell this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mnemonic Betrayal | notice | Exile all opponents' graveyards. You may cast spells from among those cards this turn, and mana of any type can be spent to cast them. At the beginning of the n | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ral's Dispersal | notice | Return target creature to its owner's hand. You may search your library and/or graveyard for a card named Ral, Caller of Storms, reveal it, and put it into your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -249,7 +248,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Arclight Phoenix
 - Assassin's Trophy
@@ -257,6 +256,7 @@
 - Conclave Tribunal
 - Deafening Clarion
 - Divine Visitation
+- Hatchery Spider
 - Hellkite Whelp
 - Hired Poisoner
 - Kraul Harpooner
@@ -274,7 +274,7 @@
 |---|---|---|---|
 | mentor | 11 | Barging Sergeant, Blade Instructor, Boros Challenger, Goblin Banneret, Hammer Dropper | grn |
 | jump | 7 | Chemister's Insight, Direct Current, Maximize Altitude, Maximize Velocity, Quasiduplicate | grn |
-| Undergrowth | 3 | Hatchery Spider, Mausoleum Secrets, Necrotic Wound | grn |
+| Undergrowth | 2 | Mausoleum Secrets, Necrotic Wound | grn |
 | all creatures able to block ~ do so. | 1 | Ochran Assassin | grn |
 | as long as you"..."t have defender. | 1 | Piston-Fist Cyclops | grn |
 | as long as you've surveilled ~, ~ has deathtouch and "..." | 1 | Darkblade Agent | grn |

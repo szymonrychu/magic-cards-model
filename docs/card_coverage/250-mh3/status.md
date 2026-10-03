@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 64 | 24.4% |
+| Tested | 69 | 26.3% |
 | Works (untested) | 90 | 34.4% |
-| Partial (unaudited) | 18 | 6.9% |
-| Not working | 90 | 34.4% |
+| Partial (unaudited) | 19 | 7.3% |
+| Not working | 84 | 32.1% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Drossclaw | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Eladamri, Korvecdal | silent | {G}, {T}, Tap two untapped creatures you control: Reveal a card from your hand or the top card of your library. If you reveal a creature card this way, put it o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Electrozoa | silent | At the beginning of your first main phase, tap this creature unless you pay {E}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Emrakul, the World Anew | silent | When you cast this spell, gain control of all creatures target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Envoy of the Ancestors | silent | Modified creatures you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Essence Reliquary | silent | {T}: Return another target permanent you control and all Auras you control attached to it to their owner's hand. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Expanding Ooze | silent | Whenever this creature attacks, put a +1/+1 counter on target modified creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -58,18 +57,14 @@
 | Golden-Tail Trainer | silent | Whenever this creature attacks, other modified creatures you control get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grim Servant | silent | When this creature enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grist, Voracious Larva // Grist, the Plague Swarm | silent | Whenever Grist or another creature you control enters, if it entered from your graveyard or you cast it from your graveyard, you may pay {G}. If you do, exile G | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Herigast, Erupting Nullkite | silent | When you cast this spell, you may exile your hand. If you do, draw three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hope-Ender Coatl | silent | When you cast this spell, counter target spell an opponent controls unless they pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horrid Shadowspinner | silent | Whenever this creature attacks, you may draw cards equal to its power. If you do, discard that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Imskir Iron-Eater | silent | When Imskir enters, you draw X cards and you lose X life, where X is half the number of artifacts you control, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Indebted Spirit | silent | Enchanted creature gets +1/+1 and has afterlife 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infernal Captor | silent | When this creature exploits a creature, gain control of target artifact or creature until end of turn. Untap that permanent. It gains haste until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Invert Polarity | silent | Choose target spell, then flip a coin. If you win the flip, gain control of that spell and you may choose new targets for it. If you lose the flip, counter that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| It That Heralds the End | silent | Other colorless creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jolted Awake | silent | Choose up to one target artifact or creature card in your graveyard. You get {E}{E} (two energy counters). Then you may pay an amount of {E} equal to that card' | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kami of Jealous Thirst | silent | {4}{B}: Each opponent loses 2 life and you gain 2 life. This ability costs {4}{B} less to activate if you've drawn three or more cards this turn. Activate only  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kozilek's Unsealing | silent | Whenever you cast a creature spell with mana value 4, 5, or 6, create two 0/1 colorless Eldrazi Spawn creature tokens with "Sacrifice this token: Add {C}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kozilek, the Broken Reality | silent | When you cast this spell, up to two target players each manifest two cards from their hands. For each card manifested this way, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kudo, King Among Bears | silent | Other creatures have base power and toughness 2/2 and are Bears in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Laelia, the Blade Reforged | silent | Whenever one or more cards are put into exile from your library and/or your graveyard, put a +1/+1 counter on Laelia. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Legion Leadership // Legion Stronghold | silent | Until end of turn, double target creature's power and it gains first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -106,7 +101,6 @@
 | Unstable Amulet | silent | {T}, Pay {E}{E}: Exile the top card of your library. You may play it until you exile another card with this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Volatile Stormdrake | silent | When this creature enters, exchange control of this creature and target creature an opponent controls. If you do, you get {E}{E}{E}{E}, then sacrifice that crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wheel of Potential | silent | You get {E}{E}{E} (three energy counters), then you may pay any amount of {E}. Each player may exile their hand and draw a number of cards equal to the amount o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wumpus Aberration | silent | When you cast this spell, if {C} wasn't spent to cast it, target opponent may put a creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Abstruse Appropriation | notice | Devoid (This card has no color.) Exile target nonland permanent. You may cast that card for as long as it remains exiled, and you may spend colorless mana as th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Charitable Levy | notice | Whenever a player casts a noncreature spell, put a collection counter on this enchantment. Then if there are three or more collection counters on it, sacrifice  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Estrid's Invocation | notice | You may have this enchantment enter as a copy of an enchantment you control, except it has "At the beginning of your upkeep, you may exile this enchantment. If  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -124,6 +118,7 @@
 | Echoes of Eternity | unaudited | If a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Etherium Pteramander | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hydra Trainer | unaudited | You may exert this creature as it attacks. When you do, target creature gets +X/+X until end of turn, where X is the number of counters on permanents you contro | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| It That Heralds the End | unaudited | Colorless spells you cast with mana value 7 or greater cost {1} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nethergoyf | unaudited | Nethergoyf's power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Party Thrasher | unaudited | Noncreature spells you cast from exile have convoke. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Path of Annihilation | unaudited | Eldrazi you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -228,7 +223,7 @@
 ## Fully supported
 
 <details>
-<summary>64 cards</summary>
+<summary>69 cards</summary>
 
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
 - Archway of Innovation
@@ -249,17 +244,21 @@
 - Drowner of Truth // Drowned Jungle
 - Eldrazi Repurposer
 - Emperor of Bones
+- Emrakul, the World Anew
 - Fanatic of Rhonas
 - Galvanic Discharge
 - Glaring Fleshraker
 - Guide of Souls
 - Harbinger of the Seas
+- Herigast, Erupting Nullkite
 - Hexgold Slith
+- Hope-Ender Coatl
 - Hydroelectric Specimen // Hydroelectric Laboratory
 - Idol of False Gods
 - Izzet Generatorium
 - Kappa Cannoneer
 - Kozilek's Command
+- Kozilek, the Broken Reality
 - Malevolent Rumble
 - Monumental Henge
 - Necrodominance
@@ -294,6 +293,7 @@
 - White Orchid Phantom
 - Witch Enchanter // Witch-Blessed Meadow
 - Wrath of the Skies
+- Wumpus Aberration
 
 </details>
 
@@ -315,6 +315,7 @@
 | choose target spell, then flip a coin. if you win the flip, gain control of that spell and you may choose new targets for it. if you lose the flip, counter that | 1 | Invert Polarity | mh3 |
 | choose target spell. you get {M}{M} (two energy counters), then you may pay any amount of {M}. counter that spell unless its controller pays {M} for each {M} pa | 1 | Aether Spike | mh3 |
 | choose up to one target artifact or creature card in your graveyard. you get {M}{M} (two energy counters). then you may pay an amount of {M} equal to that card' | 1 | Jolted Awake | mh3 |
+| colorless spells you cast with mana value N or greater cost {M} less to cast. | 1 | It That Heralds the End | mh3 |
 | connive | 1 | Copycrook | mh3 |
 | create a N/N white cat warrior creature token, then put a vigilance counter on a creature you control. | 1 | Ajani Fells the Godsire | mh3 |
 | create a spellgorger weird token. | 1 | Ral and the Implicit Maze | mh3 |
@@ -345,7 +346,6 @@
 | modified creatures you control have trample. | 1 | Temperamental Oozewagg | mh3 |
 | modular | 1 | Arcbound Condor | mh3 |
 | noncreature spells you cast from exile have convoke. | 1 | Party Thrasher | mh3 |
-| other colorless creatures you control get +N/+N. | 1 | It That Heralds the End | mh3 |
 | other creatures have base power and toughness N/N and are bears in addition to their other types. | 1 | Kudo, King Among Bears | mh3 |
 | overload | 1 | Fangs of Kalonia | mh3 |
 | permanents you control have "..." | 1 | Cursed Wombat | mh3 |
@@ -361,11 +361,6 @@
 | until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |
 | when imskir enters, you draw N cards and you lose N life, where N is half the number of artifacts you control, rounded down. | 1 | Imskir Iron-Eater | mh3 |
 | when rosheen enters, mill six cards. you may put a card with {M} in its mana cost from among them into your hand. | 1 | Rosheen, Roaring Prophet | mh3 |
-| when you cast ~, counter target spell an opponent controls unless they pay {M}. | 1 | Hope-Ender Coatl | mh3 |
-| when you cast ~, gain control of all creatures target player controls. | 1 | Emrakul, the World Anew | mh3 |
-| when you cast ~, if {M} wasn't spent to cast it, target opponent may put a creature card from their hand onto the battlefield. | 1 | Wumpus Aberration | mh3 |
-| when you cast ~, up to two target players each manifest two cards from their hands. for each card manifested ~, you draw a card. | 1 | Kozilek, the Broken Reality | mh3 |
-| when you cast ~, you may exile your hand. if you do, draw three cards. | 1 | Herigast, Erupting Nullkite | mh3 |
 | when ~ enters, create two N/N red gremlin creature tokens. then you get an amount of {M} equal to the number of creatures you control. | 1 | Scurry of Gremlins | mh3 |
 | when ~ enters, exchange control of ~ and target creature an opponent controls. if you do, you get {M}{M}{M}{M}, then sacrifice that creature unless you pay an a | 1 | Volatile Stormdrake | mh3 |
 | when ~ enters, look at the top six cards of your library. you may reveal an artifact or enchantment card from among them and put it into your hand. put the rest | 1 | Rosecot Knight | mh3 |

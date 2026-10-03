@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 6.4% |
-| Works (untested) | 75 | 53.2% |
+| Tested | 10 | 7.1% |
+| Works (untested) | 73 | 51.8% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 52 | 36.9% |
+| Not working | 53 | 37.6% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Gwafa Hazid, Profiteer | silent | {W}{U}, {T}: Put a bribery counter on target creature you don't control. Its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ignite Disorder | silent | Ignite Disorder deals 3 damage divided as you choose among one, two, or three target white and/or blue creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maelstrom Archangel | silent | Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Magister Sphinx | silent | When this creature enters, target player's life total becomes 10. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Malfegor | silent | When Malfegor enters, discard your hand. Each opponent sacrifices a creature of their choice for each card discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manaforce Mace | silent | Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Martial Coup | silent | Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -72,12 +71,14 @@
 | Cliffrunner Behemoth | notice | This creature has haste as long as you control a red permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Court Homunculus | notice | This creature gets +1/+1 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Filigree Fracture | notice | Destroy target artifact or enchantment. If that permanent was blue or black, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Fleshformer | notice | {W}{U}{B}{R}{G}: This creature gets +2/+2 and gains fear until end of turn. Target creature gets -2/-2 until end of turn. Activate only during your turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Fleshformer | notice | {W}{U}{B}{R}{G}: This creature gets +2/+2 and gains fear until end of turn. Target creature gets -2/-2 until end of turn. Activate only during your turn. | unparsed remainder: This creature gets +2/+2 and gains fear until end of turn. | Y/-/- | not_working |
+| Gleam of Resistance | notice | Creatures you control get +1/+2 until end of turn. Untap those creatures. Basic landcycling {1}{W} ({1}{W}, Discard this card: Search your library for a basic l | unparsed remainder: Untap those creatures. | Y/-/- | not_working |
 | Hellkite Hatchling | notice | This creature has flying and trample if it devoured a creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Quenchable Fire | notice | Quenchable Fire deals 3 damage to target player or planeswalker. It deals an additional 3 damage to that player or planeswalker at the beginning of your next up | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sphinx Summoner | notice | When this creature enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Suicidal Charge | notice | Sacrifice this enchantment: Creatures your opponents control get -1/-1 until end of turn. Those creatures attack this turn if able. | unparsed remainder: Those creatures attack this turn if able. | Y/-/- | not_working |
 | Toxic Iguanar | notice | This creature has deathtouch as long as you control a green permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| View from Above | notice | Target creature gains flying until end of turn. If you control a white permanent, return View from Above to its owner's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| View from Above | notice | Target creature gains flying until end of turn. If you control a white permanent, return View from Above to its owner's hand. | unparsed remainder: If you control a white permanent, return View from Above to its owner's hand. | Y/-/- | not_working |
 | Apocalypse Hydra | unaudited | This creature enters with X +1/+1 counters on it. If X is 5 or more, it enters with an additional X +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aven Trailblazer | unaudited | Domain — Aven Trailblazer's toughness is equal to the number of basic land types among lands you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nyxathid | unaudited | As this creature enters, choose an opponent. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -106,7 +107,6 @@
 | Fiery Fall | handled | Fiery Fall deals 5 damage to target creature. Basic landcycling {1}{R} ({1}{R}, Discard this card: Search your library for a basic land card, reveal it, put it  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Font of Mythos | handled | At the beginning of each player's draw step, that player draws two additional cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fusion Elemental | handled |  |  | Y/-/- | not_tested |
-| Gleam of Resistance | handled | Creatures you control get +1/+2 until end of turn. Untap those creatures. Basic landcycling {1}{W} ({1}{W}, Discard this card: Search your library for a basic l | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gluttonous Slime | handled | Flash | machines/casting.py (timing) | Y/-/- | not_tested |
 | Goblin Outlander | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Goblin Razerunners | handled | {1}{R}, Sacrifice a land: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -147,7 +147,6 @@
 | Sigil of the Empty Throne | handled | Whenever you cast an enchantment spell, create a 4/4 white Angel creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sludge Strider | handled | Whenever another artifact you control enters or leaves the battlefield, you may pay {1}. If you do, target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spore Burst | handled | Domain — Create a 1/1 green Saproling creature token for each basic land type among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Suicidal Charge | handled | Sacrifice this enchantment: Creatures your opponents control get -1/-1 until end of turn. Those creatures attack this turn if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sylvan Bounty | handled | Target player gains 8 life. Basic landcycling {1}{G} ({1}{G}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, th | the engine reads this text and performs it | Y/-/- | not_tested |
 | Traumatic Visions | handled | Counter target spell. Basic landcycling {1}{U} ({1}{U}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shu | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tukatongue Thallid | handled | When this creature dies, create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -162,12 +161,13 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Aerie Mystics
 - Canyon Minotaur
 - Celestial Purge
 - Exotic Orchard
+- Magister Sphinx
 - Mark of Asylum
 - Path to Exile
 - Reliquary Tower
@@ -190,10 +190,12 @@
 | at the beginning of your upkeep, return an artifact you control to its owner's hand. | 1 | Esperzoa | con |
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M}. | 1 | Wild Leotau | con |
 | create N N/N white soldier creature tokens. if N is N or more, destroy all other creatures. | 1 | Martial Coup | con |
+| creatures you control get +N/+N until end of turn. untap those creatures. basic landcycling {M}{M} ({M}{M}, discard ~: search your library for a basic land card | 1 | Gleam of Resistance | con |
 | destroy target artifact or enchantment. if that permanent was blue or black, draw a card. | 1 | Filigree Fracture | con |
 | destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | 1 | Wretched Banquet | con |
 | draw cards equal to the power of target creature you control. | 1 | Soul's Majesty | con |
 | if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Progenitus | con |
+| sacrifice ~: creatures your opponents control get -N/-N until end of turn. those creatures attack ~ if able. | 1 | Suicidal Charge | con |
 | search your library for a plains card, an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Shard Convergence | con |
 | search your library for a white card, a blue card, a black card, a red card, and a green card. reveal those cards, put them into your hand, then shuffle. | 1 | Conflux | con |
 | target creature gains flying until end of turn. if you control a white permanent, return ~ to its owner's hand. | 1 | View from Above | con |
@@ -203,7 +205,6 @@
 | when ~ enters, discard your hand. each opponent sacrifices a creature of their choice for each card discarded ~. | 1 | Malfegor | con |
 | when ~ enters, it deals damage to any target equal to twice the number of goblins it devoured. | 1 | Voracious Dragon | con |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Rupture Spire | con |
-| when ~ enters, target player's life total becomes N. | 1 | Magister Sphinx | con |
 | when ~ enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | 1 | Sphinx Summoner | con |
 | whenever another creature leaves the battlefield, you may have target player mill two cards. | 1 | Extractor Demon | con |
 | whenever enchanted land becomes tapped, its controller loses N life. | 1 | Corrupted Roots | con |

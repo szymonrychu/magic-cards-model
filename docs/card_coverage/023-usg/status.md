@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 16.7% |
-| Works (untested) | 33 | 50.0% |
+| Works (untested) | 34 | 51.5% |
 | Partial (unaudited) | 7 | 10.6% |
-| Not working | 15 | 22.7% |
+| Not working | 14 | 21.2% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Redeem | silent | Prevent all damage that would be dealt this turn to up to two target creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rewind | silent | Counter target spell. Untap up to four lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanctum Guardian | silent | Sacrifice this creature: The next time a source of your choice would deal damage to any target this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Serra Avatar | silent | Serra Avatar's power and toughness are each equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shiv's Embrace | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sleeper Agent | silent | When this creature enters, target opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spreading Algae | silent | When enchanted land becomes tapped, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -73,6 +72,7 @@
 | Phyrexian Tower | handled |  |  | Y/-/- | not_tested |
 | Priest of Titania | handled |  |  | Y/-/- | not_tested |
 | Scoria Wurm | handled | At the beginning of your upkeep, flip a coin. If you lose the flip, return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Serra Avatar | handled | Serra Avatar's power and toughness are each equal to your life total. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Serra's Embrace | handled | Enchanted creature gets +2/+2 and has flying and vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shivan Hellkite | handled | {1}{R}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skirge Familiar | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -126,7 +126,6 @@
 | ~ can't attack unless a creature with greater power also attacks. | 1 | Okk | usg |
 | ~ can't be blocked except by three or more creatures. | 1 | Phyrexian Colossus | usg |
 | ~ deals damage to any target equal to the number of swamps you control. you gain life equal to the damage dealt ~. | 1 | Corrupt | usg |
-| ~'s power and toughness are each equal to your life total. | 1 | Serra Avatar | usg |
 
 ## Notes
 

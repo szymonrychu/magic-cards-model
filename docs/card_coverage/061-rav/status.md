@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 8.1% |
-| Works (untested) | 118 | 47.8% |
+| Works (untested) | 117 | 47.4% |
 | Partial (unaudited) | 17 | 6.9% |
-| Not working | 92 | 37.2% |
+| Not working | 93 | 37.7% |
 
 ## Cards needing work
 
@@ -100,11 +100,11 @@
 | Vulturous Zombie | silent | Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Warp World | silent | Each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. Each player puts all artifact, crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woebringer Demon | silent | At the beginning of each player's upkeep, that player sacrifices a creature of their choice. If the player can't, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wojek Embermage | silent | Radiance — {T}: This creature deals 1 damage to target creature and each other creature that shares a color with it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wojek Siren | silent | Radiance — Target creature and each other creature that shares a color with it get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woodwraith Corrupter | silent | {1}{B}{G}, {T}: Target Forest becomes a 4/4 black and green Elemental Horror creature. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brightflame | notice | Radiance — Brightflame deals X damage to target creature and each other creature that shares a color with it. You gain life equal to the damage dealt this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cleansing Beam | notice | Radiance — Cleansing Beam deals 2 damage to target creature and each other creature that shares a color with it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Concerted Effort | notice | At the beginning of each upkeep, creatures you control gain flying until end of turn if a creature you control has flying. The same is true for fear, first stri | unparsed remainder: The same is true for fear, first strike, double strike, landwalk, protection, trample, and vigilance. | Y/-/- | not_working |
 | Dimir Doppelganger | notice | {1}{U}{B}: Exile target creature card from a graveyard. This creature becomes a copy of that card, except it has this ability. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flash Conscription | notice | Untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. If {W} was spent to cast this spell, the creature g | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flickerform | notice | {2}{W}{W}: Exile enchanted creature and all Auras attached to it. At the beginning of the next end step, return that card to the battlefield under its owner's c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -118,6 +118,7 @@
 | Twisted Justice | notice | Target player sacrifices a creature of their choice. You draw cards equal to that creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vigor Mortis | notice | Return target creature card from your graveyard to the battlefield. If {G} was spent to cast this spell, that creature enters with an additional +1/+1 counter o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Voyager Staff | notice | {2}, Sacrifice this artifact: Exile target creature. Return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Wojek Embermage | notice | Radiance — {T}: This creature deals 1 damage to target creature and each other creature that shares a color with it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chorus of the Conclave | unaudited | As an additional cost to cast creature spells, you may pay any amount of mana. If you do, that creature enters with that many additional +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Circu, Dimir Lobotomist | unaudited | Your opponents can't cast spells with the same name as a card exiled with Circu. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dream Leash | unaudited | You can't choose an untapped permanent as this spell's target as you cast it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -151,7 +152,6 @@
 | Chord of Calling | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Search your | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Civic Wayfinder | handled | When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Clinging Darkness | handled | Enchanted creature gets -4/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Concerted Effort | handled | At the beginning of each upkeep, creatures you control gain flying until end of turn if a creature you control has flying. The same is true for fear, first stri | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conclave Equenaut | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Conclave Phalanx | handled | When this creature enters, you gain 1 life for each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conclave's Blessing | handled | Enchanted creature gets +0/+2 for each other creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -298,6 +298,7 @@
 | as ~ enters, flip a coin. if the coin comes up heads, ~ enters as a N/N creature with haste. if it comes up tails, ~ enters as a N/N creature with defender. | 1 | Molten Sentry | rav |
 | at the beginning of each opponent's upkeep, exile all cards from your hand face down. | 1 | Bottled Cloister | rav |
 | at the beginning of each player"..."t, sacrifice ~. | 1 | Woebringer Demon | rav |
+| at the beginning of each upkeep, creatures you control gain flying until end of turn if a creature you control has flying. the same is true for fear, first stri | 1 | Concerted Effort | rav |
 | at the beginning of your end step, destroy each creature with mana value equal to the number of +N/+N counters on ~. | 1 | Necroplasm | rav |
 | at the beginning of your end step, return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | Gleancrawler | rav |
 | at the beginning of your upkeep, create a token that's a copy of enchanted creature. | 1 | Followed Footsteps | rav |

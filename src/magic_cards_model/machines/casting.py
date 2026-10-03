@@ -3715,7 +3715,8 @@ def why_cannot_cast_restriction(
             f"such spell(s) each turn, and that many were already cast (CR 601.3, CR 101.2)"
         )
     if targeted is not None:
-        return f"{targeted.source_name} says {caster} can't cast spells this turn (CR 611.1)"
+        which = "noncreature spells" if targeted.noncreature_only else "spells"
+        return f"{targeted.source_name} says {caster} can't cast {which} this turn (CR 611.1)"
     prohibited_from = zone_cast_prohibition_source(game, spell.card, spell.zone, types=types)
     if prohibited_from is not None:
         # Grafdigger's Cage's "Players can't cast spells from graveyards or

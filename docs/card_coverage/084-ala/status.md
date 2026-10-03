@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 4.5% |
-| Works (untested) | 138 | 61.9% |
-| Partial (unaudited) | 8 | 3.6% |
-| Not working | 67 | 30.0% |
+| Tested | 12 | 5.4% |
+| Works (untested) | 140 | 62.8% |
+| Partial (unaudited) | 7 | 3.1% |
+| Not working | 64 | 28.7% |
 
 ## Cards needing work
 
@@ -48,13 +48,11 @@
 | Demon's Herald | silent | {2}{B}, {T}, Sacrifice a blue creature, a black creature, and a red creature: Search your library for a card named Prince of Thralls, put it onto the battlefiel | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragon's Herald | silent | {2}{R}, {T}, Sacrifice a black creature, a red creature, and a green creature: Search your library for a card named Hellkite Overlord, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Esper Battlemage | silent | {W}, {T}: Prevent the next 2 damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Excommunicate | silent | Put target creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Godsire | silent | {T}: Create an 8/8 Beast creature token that's red, green, and white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Godtoucher | silent | {1}{W}, {T}: Prevent all damage that would be dealt to target creature with power 5 or greater this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guardians of Akrasa | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hindering Light | silent | Counter target spell that targets you or a permanent you control. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Immortal Coil | silent | When there are no cards in your graveyard, you lose the game. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Invincible Hymn | silent | Count the number of cards in your library. Your life total becomes that number. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kederekt Leviathan | silent | When this creature enters, return all other nonland permanents to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Keeper of Progenitus | silent | Whenever a player taps a Mountain, Forest, or Plains for mana, that player adds one mana of any type that land produced. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Lush Growth | silent | Enchanted land is a Mountain, Forest, and Plains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -81,22 +79,20 @@
 | Soul's Fire | silent | Target creature you control deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Grace | silent | You gain life equal to target creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Might | silent | Put X +1/+1 counters on target creature, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sphinx Sovereign | silent | At the beginning of your end step, you gain 3 life if this creature is untapped. Otherwise, each opponent loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx's Herald | silent | {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tar Fiend | silent | When this creature enters, target player discards a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughtcutter Agent | silent | {U}{B}, {T}: Target player loses 1 life and reveals their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vein Drinker | silent | {R}, {T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vicious Shadows | silent | Whenever a creature dies, you may have this enchantment deal damage to target player equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Waveskimmer Aven | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bant Charm | notice | Choose one — • Destroy target artifact. • Put target creature on the bottom of its owner's library. • Counter target instant spell. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ooze Garden | notice | {1}{G}, Sacrifice a non-Ooze creature: Create an X/X green Ooze creature token, where X is the sacrificed creature's power. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sigil Blessing | notice | Until end of turn, target creature you control gets +3/+3 and other creatures you control get +1/+1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Vein Drinker | notice | {R}, {T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wild Nacatl | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Windwright Mage | notice | This creature has flying as long as an artifact card is in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Empyrial Archangel | unaudited | All damage that would be dealt to you is dealt to this creature instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ethersworn Canonist | unaudited | Each player who has cast a nonartifact spell this turn can't cast additional nonartifact spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Goblin Assault | unaudited | Goblin creatures attack each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Lich's Mirror | unaudited | If you would lose the game, instead shuffle your hand, your graveyard, and all permanents you own into your library, then draw seven cards and your life total b | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mindlock Orb | unaudited | Players can't search libraries. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Qasali Ambusher | unaudited | If a creature is attacking you and you control a Forest and a Plains, you may cast this creature without paying its mana cost and as though it had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sedris, the Traitor King | unaudited | Each creature card in your graveyard has unearth {2}{B}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -138,6 +134,7 @@
 | Esper Panorama | handled | {1}, {T}, Sacrifice this land: Search your library for a basic Plains, Island, or Swamp card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Etherium Astrolabe | handled | {B}, {T}, Sacrifice an artifact: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Etherium Sculptor | handled | Artifact spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Excommunicate | handled | Put target creature on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Executioner's Capsule | handled | {1}{B}, {T}, Sacrifice this artifact: Destroy target nonblack creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Exuberant Firestoker | handled | At the beginning of your end step, if you control a creature with power 5 or greater, you may have this creature deal 2 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feral Hydra | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -215,6 +212,7 @@
 | Skeletal Kathari | handled | {B}, Sacrifice a creature: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spearbreaker Behemoth | handled | {1}: Target creature with power 5 or greater gains indestructible until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spell Snip | handled | Counter target spell unless its controller pays {1}. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sphinx Sovereign | handled | At the beginning of your end step, you gain 3 life if this creature is untapped. Otherwise, each opponent loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sprouting Thrinax | handled | When this creature dies, create three 1/1 green Saproling creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Steelclad Serpent | handled | This creature can't attack unless you control another artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Steward of Valeron | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
@@ -243,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>12 cards</summary>
 
 - Angelsong
 - Bone Splinters
@@ -251,6 +249,8 @@
 - Fatestitcher
 - Gather Specimens
 - Gustrider Exuberant
+- Invincible Hymn
+- Lich's Mirror
 - Punish Ignorance
 - Relic of Progenitus
 - Salvage Titan
@@ -267,12 +267,10 @@
 | +N: target permanent doesn"..."s next untap step. | 1 | Ajani Vengeant | ala |
 | all damage that would be dealt to you is dealt to ~ instead. | 1 | Empyrial Archangel | ala |
 | as long as the top card of your library is an artifact or creature card, ~ has all activated abilities of that card. | 1 | Skill Borrower | ala |
-| at the beginning of your end step, you gain N life if ~ is untapped. otherwise, each opponent loses N life. | 1 | Sphinx Sovereign | ala |
 | at the beginning of your upkeep, create a N/N green saproling creature token for each +N/+N counter on ~. | 1 | Mycoloth | ala |
 | at the beginning of your upkeep, sacrifice a homunculus. | 1 | Puppet Conjurer | ala |
 | at the beginning of your upkeep, sacrifice a non-zombie creature, then create a N/N black zombie creature token. | 1 | Archdemon of Unx | ala |
 | choose five permanents you control. for each of those permanents, you may search your library for a card with the same name as that permanent. put those cards o | 1 | Clarion Ultimatum | ala |
-| count the number of cards in your library. your life total becomes that number. | 1 | Invincible Hymn | ala |
 | counter target spell that targets you or a permanent you control. draw a card. | 1 | Hindering Light | ala |
 | each creature card in your graveyard has unearth {M}{M}. | 1 | Sedris, the Traitor King | ala |
 | each player who has cast a nonartifact spell ~ can't cast additional nonartifact spells. | 1 | Ethersworn Canonist | ala |
@@ -281,11 +279,9 @@
 | exile the top five cards of your library. an opponent separates those cards into two piles. you may play lands and cast spells from one of those piles. if you c | 1 | Brilliant Ultimatum | ala |
 | goblin creatures attack each combat if able. | 1 | Goblin Assault | ala |
 | if a creature is attacking you and you control a forest and a plains, you may cast ~ without paying its mana cost and as though it had flash. | 1 | Qasali Ambusher | ala |
-| if you would lose the game, instead shuffle your hand, your graveyard, and all permanents you own into your library, then draw seven cards and your life total b | 1 | Lich's Mirror | ala |
 | players can't search libraries. | 1 | Mindlock Orb | ala |
 | players can't untap more than one creature during their untap steps. | 1 | Stoic Angel | ala |
 | put N +N/+N counters on target creature, where N is that creature's power. | 1 | Soul's Might | ala |
-| put target creature on top of its owner's library. | 1 | Excommunicate | ala |
 | return target creature to its owner's hand. its controller draws a card. | 1 | Call to Heel | ala |
 | reveal the top card of your library and put that card into your hand. you lose life equal to its mana value. you may repeat ~ any number of times. | 1 | Ad Nauseam | ala |
 | reveal the top three cards of your library. target opponent may choose to put those cards into your hand. if they don't, put those cards into your graveyard and | 1 | Covenant of Minds | ala |

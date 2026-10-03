@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 7.7% |
-| Works (untested) | 72 | 50.3% |
+| Tested | 12 | 8.4% |
+| Works (untested) | 71 | 49.7% |
 | Partial (unaudited) | 5 | 3.5% |
 | Not working | 55 | 38.5% |
 
@@ -50,7 +50,6 @@
 | Lavinia of the Tenth | silent | When Lavinia enters, detain each nonland permanent your opponents control with mana value 4 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Legion's Initiative | silent | Red creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lyev Decree | silent | Detain up to two target creatures your opponents control. (Until your next turn, those creatures can't attack or block and their activated abilities can't be ac | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Master of Cruelties | silent | Whenever this creature attacks a player and isn't blocked, that player's life total becomes 1. This creature assigns no combat damage this combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Maze Abomination | silent | Multicolored creatures you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Maze Behemoth | silent | Multicolored creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Maze Glider | silent | Multicolored creatures you control have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -80,6 +79,7 @@
 | Wake the Reflections | silent | Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Weapon Surge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pontiff of Blight | notice | Other creatures you control have extort. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Ready // Willing | notice | Creatures you control gain indestructible until end of turn. Untap each creature you control. Fuse (You may cast one or both halves of this card from your hand. | unparsed remainder: Untap each creature you control. | Y/Y/- | not_working |
 | Warped Physique | notice | Target creature gets +X/-X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Scrivener | unaudited | If you would draw a card while you have no cards in hand, instead you draw two cards and you lose 1 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Council of the Absolute | unaudited | As this creature enters, choose a noncreature, nonland card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -128,7 +128,6 @@
 | Progenitor Mimic | handled | You may have this creature enter as a copy of any creature on the battlefield, except it has "At the beginning of your upkeep, if this creature isn't a token, c | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Punish the Enemy | handled | Punish the Enemy deals 3 damage to target player or planeswalker and 3 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rakdos Cluestone | handled | {B}{R}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Ready // Willing | handled | Creatures you control gain indestructible until end of turn. Untap each creature you control. Fuse (You may cast one or both halves of this card from your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Renounce the Guilds | handled | Each player sacrifices a multicolored permanent of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riot Piker | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rot Farm Skeleton | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -162,12 +161,13 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Aetherling
 - Beck // Call
 - Gleam of Battle
 - Korozda Gorgon
+- Master of Cruelties
 - Maze's End
 - Notion Thief
 - Possibility Storm
@@ -196,6 +196,7 @@
 | cipher | 1 | Hidden Strings | dgm |
 | counter target spell. at the beginning of your next first main phase, add N mana in any combination of colors, where N is that spell's mana value. | 1 | Plasm Capture | dgm |
 | counter target spell. its controller can't cast spells ~. | 1 | Render Silent | dgm |
+| creatures you control gain indestructible until end of turn. untap each creature you control. fuse (you may cast one or both halves of ~ from your hand.) | 1 | Ready // Willing | dgm |
 | detain up to two target creatures your opponents control. (until your next turn, those creatures can"..."t be activated.) | 1 | Lyev Decree | dgm |
 | each creature card in your graveyard has scavenge. the scavenge cost is equal to its mana cost. | 1 | Varolz, the Scar-Striped | dgm |
 | each opponent loses two times N life. you gain life equal to the life lost ~. | 1 | Debt to the Deathless | dgm |
@@ -233,7 +234,6 @@
 | whenever one or more creatures you control deal combat damage to a player, if ~ is in your graveyard, you may pay {M}. if you do, return ~ to your hand. | 1 | Pyrewild Shaman | dgm |
 | whenever you cast an instant or sorcery spell, you may switch ~ power and toughness until end of turn. | 1 | Fluxcharger | dgm |
 | whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn and can attack ~ as though it didn't have defender. | 1 | Nivix Cyclops | dgm |
-| whenever ~ attacks a player and isn"..."s life total becomes N. ~ assigns no combat damage ~. | 1 | Master of Cruelties | dgm |
 | whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Jelenn Sphinx | dgm |
 | whenever ~ evolves, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Renegade Krasis | dgm |
 | you gain N life for each creature your opponents control. prevent all damage that would be dealt to you ~. | 1 | Riot Control | dgm |

@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "712c64bc-ba0c-4bab-9329-54805f4efa8a",
+  "oracle_id": "cc7d99e8-f9dc-47d3-b6c0-e9308d33c3c0",
+  "multiverse_ids": [
+    175039
+  ],
+  "mtgo_id": 31107,
+  "mtgo_foil_id": 31108,
+  "tcgplayer_id": 27700,
+  "cardmarket_id": 19788,
+  "name": "Invincible Hymn",
+  "lang": "en",
+  "released_at": "2008-10-03",
+  "uri": "https://api.scryfall.com/cards/712c64bc-ba0c-4bab-9329-54805f4efa8a",
+  "scryfall_uri": "https://scryfall.com/card/ala/14/invincible-hymn?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:36:21Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.jpg?1783942581",
+    "normal": "https://cards.scryfall.io/normal/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.jpg?1783942581",
+    "large": "https://cards.scryfall.io/large/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.jpg?1783942581",
+    "png": "https://cards.scryfall.io/png/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.png?1783942581",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.jpg?1783942581",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.jpg?1783942581",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.webp?1783942581",
+    "grid": "https://cards.scryfall.io/grid/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.webp?1783942581",
+    "display": "https://cards.scryfall.io/display/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.webp?1783942581",
+    "art": "https://cards.scryfall.io/art/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.webp?1783942581",
+    "crop": "https://cards.scryfall.io/crop/front/7/1/712c64bc-ba0c-4bab-9329-54805f4efa8a.webp?1783942581"
+  },
+  "mana_cost": "{6}{W}{W}",
+  "cmc": 8.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Count the number of cards in your library. Your life total becomes that number.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d667aaec-09b7-4406-b6fa-60795132dc11",
+  "set": "ala",
+  "set_name": "Shards of Alara",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d667aaec-09b7-4406-b6fa-60795132dc11",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aala&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ala?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/712c64bc-ba0c-4bab-9329-54805f4efa8a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Acc7d99e8-f9dc-47d3-b6c0-e9308d33c3c0&unique=prints",
+  "collector_number": "14",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Bantians believe those who are born into the highest caste and live a life of discipline and virtue can ascend to become angels.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Matt Stewart",
+  "artist_ids": [
+    "20871267-2d8a-41d5-b03a-be3d557c5734"
+  ],
+  "illustration_id": "83a1a43f-514b-43f9-b671-b56c87a7268b",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13363,
+  "penny_rank": 13091,
+  "prices": {
+    "usd": "3.60",
+    "usd_foil": "15.68",
+    "usd_etched": null,
+    "eur": "0.66",
+    "eur_foil": "1.40",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=175039&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvincible%2BHymn",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvincible%2BHymn",
+    "edhrec": "https://edhrec.com/route/?cc=Invincible+Hymn"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F27700%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=19788&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/31107?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

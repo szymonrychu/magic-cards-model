@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 9.0% |
-| Works (untested) | 123 | 48.2% |
+| Tested | 25 | 9.8% |
+| Works (untested) | 121 | 47.5% |
 | Partial (unaudited) | 22 | 8.6% |
 | Not working | 87 | 34.1% |
 
@@ -29,7 +29,6 @@
 | Acquisitions Expert | silent | When this creature enters, target opponent reveals a number of cards from their hand equal to the number of creatures in your party. You choose one of those car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Adventure Awaits | silent | Look at the top five cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Akiri, Fearless Voyager | silent | {W}: You may unattach an Equipment from a creature you control. If you do, tap that creature and it gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Angel of Destiny | silent | Whenever a creature you control deals combat damage to a player, you and that player each gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anticognition | silent | Counter target creature or planeswalker spell unless its controller pays {2}. If an opponent has eight or more cards in their graveyard, instead counter that sp | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ardent Electromancer | silent | When this creature enters, add {R} for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashaya, Soul of the Wild | silent | Nontoken creatures you control are Forest lands in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -43,7 +42,7 @@
 | Emeria Captain | silent | When this creature enters, put a +1/+1 counter on it for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emeria's Call // Emeria, Shattered Skyclave | silent | Create two 4/4 white Angel Warrior creature tokens with flying. Non-Angel creatures you control gain indestructible until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fireblade Charger | silent | As long as this creature is equipped, it has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Forsaken Monument | silent | Colorless creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Forsaken Monument | silent | Whenever you tap a permanent for {C}, add an additional {C}. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Glacial Grasp | silent | Tap target creature. Its controller mills two cards. That creature doesn't untap during its controller's next untap step. (They put the top two cards of their l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goma Fada Vanguard | silent | Whenever this creature attacks, target creature an opponent controls with power less than or equal to the number of Warriors you control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grotag Bug-Catcher | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -107,12 +106,13 @@
 | Expedition Champion | notice | This creature gets +2/+0 as long as you control another Warrior. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Felidar Retreat | notice | Landfall — Whenever a land you control enters, choose one — • Create a 2/2 white Cat Beast creature token. • Put a +1/+1 counter on each creature you control. T | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Inscription of Insight | notice | Kicker {2}{U}{U} Choose one. If this spell was kicked, choose any number instead. • Return up to two target creatures to their owners' hands. • Scry 2, then dra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Oblivion's Hunger | notice | Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it. (Damage and effects that say "destro | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Legion Angel | notice | When this creature enters, you may reveal a card you own named Legion Angel from outside the game and put it into your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Oblivion's Hunger | notice | Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it. (Damage and effects that say "destro | unparsed remainder: Draw a card if that creature has a +1/+1 counter on it. | Y/Y/- | not_working |
 | Pyroclastic Hellion | notice | When this creature enters, you may return a land you control to its owner's hand. When you do, this creature deals 2 damage to each opponent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sejiri Shelter // Sejiri Glacier | notice | Target creature you control gains protection from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Synchronized Spellcraft | notice | Synchronized Spellcraft deals 4 damage to target creature and X damage to that creature's controller, where X is the number of creatures in your party. (Your pa | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Taborax, Hope's Demise | notice | Taborax has lifelink as long as it has five or more +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Zulaport Duelist | notice | When this creature enters, up to one target creature gets -2/-0 until end of turn. Its controller mills two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Zulaport Duelist | notice | When this creature enters, up to one target creature gets -2/-0 until end of turn. Its controller mills two cards. | unparsed remainder: Its controller mills two cards. | Y/Y/- | not_working |
 | Archpriest of Iona | unaudited | Archpriest of Iona's power is equal to the number of creatures in your party. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Cragplate Baloth | unaudited | If this creature was kicked, it enters with four +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Expedition Diviner | unaudited | As long as you control another Wizard, this creature has "When this creature dies, draw a card." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -161,7 +161,6 @@
 | Cragcrown Pathway // Timbercrown Pathway | handled |  |  | Y/Y/- | not_tested |
 | Cunning Geysermage | handled | When this creature enters, if it was kicked, return up to one other target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dauntless Survivor | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Dauntless Unity | handled | Kicker {1}{W} (You may pay an additional {1}{W} as you cast this spell.) Creatures you control get +1/+1 until end of turn. If this spell was kicked, those crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadly Alliance | handled | This spell costs {1} less to cast for each creature in your party. (Your party consists of up to one each of Cleric, Rogue, Warrior, and Wizard.) Destroy target | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deliberate | handled | Scry 2, then draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Demon's Disciple | handled | When this creature enters, each player sacrifices a creature or planeswalker of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -190,7 +189,6 @@
 | Khalni Ambush // Khalni Territory | handled | Target creature you control fights target creature you don't control. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kitesail Cleric | handled | When this creature enters, if it was kicked, tap up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kor Celebrant | handled | Whenever this creature or another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Legion Angel | handled | When this creature enters, you may reveal a card you own named Legion Angel from outside the game and put it into your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Living Tempest | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Lullmage's Familiar | handled | Whenever you cast a kicked spell, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Luminarch Aspirant | handled | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -262,13 +260,15 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>25 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
 - Ancient Greenwarden
+- Angel of Destiny
 - Beyeen Veil // Beyeen Coast
 - Cleansing Wildfire
+- Dauntless Unity
 - Farsight Adept
 - Inscription of Abundance
 - Inscription of Ruin
@@ -311,7 +311,6 @@
 | choose target attacking or blocking creature. ~ deals damage to that creature equal to twice the number of creatures in your party. (your party consists of up t | 1 | Practiced Tactics | znr |
 | choose target creature you control. put a +N/+N counter on it for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, | 1 | Strength of Solidarity | znr |
 | choose target creature. you lose N life. until end of turn, that creature gains "..." | 1 | Malakir Rebirth // Malakir Mire | znr |
-| colorless creatures you control get +N/+N. | 1 | Forsaken Monument | znr |
 | counter target creature or planeswalker spell unless its controller pays {M}. if an opponent has eight or more cards in their graveyard, instead counter that sp | 1 | Anticognition | znr |
 | counter target noncreature spell unless its controller pays {M} plus an additional {M} for each creature in your party. (your party consists of up to one each o | 1 | Concerted Defense | znr |
 | cowards can't block warriors. | 1 | Kargan Intimidator | znr |
@@ -366,12 +365,13 @@
 | when ~ enters, you gain N life for each creature in your party. | 1 | Shepherd of Heroes | znr |
 | when ~ enters, you may return a land you control to its owner's hand. | 1 | Tazeem Raptor | znr |
 | when ~ enters, you may return a land you control to its owner's hand. when you do, ~ deals N damage to each opponent. | 1 | Pyroclastic Hellion | znr |
+| when ~ enters, you may reveal a card you own named ~ from outside the game and put it into your hand. | 1 | Legion Angel | znr |
 | whenever a creature you control deals combat damage to a planeswalker, destroy that planeswalker. | 1 | Zagras, Thief of Heartbeats | znr |
-| whenever a creature you control deals combat damage to a player, you and that player each gain that much life. | 1 | Angel of Destiny | znr |
 | whenever a land an opponent controls enters, if that player had another land enter the battlefield under their control ~, they return a land they control to its | 1 | Confounding Conundrum | znr |
 | whenever drana attacks, defending player chooses a nonlegendary creature card in your graveyard. you return that card to the battlefield with an additional +N/+ | 1 | Drana, the Last Bloodchief | znr |
 | whenever you cast a kicked spell, you may remove two +N/+N counters from verazol. if you do, copy that spell. you may choose new targets for the copy. | 1 | Verazol, the Split Current | znr |
 | whenever you cast an instant, sorcery, or wizard spell, you may have ~ base power and toughness become N/N or N/N until end of turn. | 1 | Master of Winds | znr |
+| whenever you tap a permanent for {M}, add an additional {M}. | 1 | Forsaken Monument | znr |
 | whenever ~ attacks, it gets +N/+N until end of turn for each creature in your party. | 1 | Grotag Bug-Catcher | znr |
 | whenever ~ attacks, put a +N/+N counter on each attacking creature with a +N/+N counter on it. | 1 | Oran-Rief Ooze | znr |
 | whenever ~ attacks, target creature an opponent controls with power less than or equal to the number of warriors you control can't block ~. | 1 | Goma Fada Vanguard | znr |

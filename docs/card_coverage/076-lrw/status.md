@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 11.1% |
-| Works (untested) | 133 | 47.5% |
+| Tested | 32 | 11.4% |
+| Works (untested) | 131 | 46.8% |
 | Partial (unaudited) | 16 | 5.7% |
-| Not working | 100 | 35.7% |
+| Not working | 101 | 36.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Adder-Staff Boggart | silent | When this creature enters, clash with an opponent. If you win, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arbiter of Knollridge | silent | When this creature enters, each player's life total becomes the highest life total among all players. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ashling the Pilgrim | silent | {1}{R}: Put a +1/+1 counter on Ashling. If this is the third time this ability has resolved this turn, remove all +1/+1 counters from Ashling, and it deals that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ashling's Prerogative | silent | Each creature with mana value of the chosen quality has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bog Hoodlums | silent | When this creature enters, clash with an opponent. If you win, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -118,14 +117,16 @@
 | Blades of Velis Vel | notice | Changeling (This card is every creature type.) Up to two target creatures each get +2/+0 and gain all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Brion Stoutarm | notice | {R}, {T}, Sacrifice another creature: Brion Stoutarm deals damage equal to the sacrificed creature's power to target player or planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Faerie Trickery | notice | Counter target non-Faerie spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Fodder Launch | notice | As an additional cost to cast this spell, sacrifice a Goblin. Target creature gets -5/-5 until end of turn. Fodder Launch deals 5 damage to that creature's cont | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Fodder Launch | notice | As an additional cost to cast this spell, sacrifice a Goblin. Target creature gets -5/-5 until end of turn. Fodder Launch deals 5 damage to that creature's cont | unparsed remainder: As an additional cost to cast this spell, sacrifice a Goblin. Fodder Launch deals 5 damage to that creature's controller. | Y/-/- | not_working |
 | Goatnapper | notice | When this creature enters, untap target Goat and gain control of it until end of turn. It gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Heal the Scars | notice | Regenerate target creature. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Lowland Oaf | notice | {T}: Target Goblin creature you control gets +1/+0 and gains flying until end of turn. Sacrifice that creature at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Lowland Oaf | notice | {T}: Target Goblin creature you control gets +1/+0 and gains flying until end of turn. Sacrifice that creature at the beginning of the next end step. | unparsed remainder: Sacrifice that creature at the beginning of the next end step. | Y/-/- | not_working |
 | Makeshift Mannequin | notice | Return target creature card from your graveyard to the battlefield with a mannequin counter on it. For as long as that creature has a mannequin counter on it, i | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Nameless Inversion | notice | Changeling (This card is every creature type.) Target creature gets +3/-3 and loses all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Nath's Buffoon | notice | Protection | protection from a quality the engine does not read: Elves | Y/-/- | not_working |
 | Primal Command | notice | Choose two — • Target player gains 7 life. • Put target noncreature permanent on top of its owner's library. • Target player shuffles their graveyard into their | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Warren Pilferers | notice | When this creature enters, return target creature card from your graveyard to your hand. If that card is a Goblin card, this creature gains haste until end of t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Warren-Scourge Elf | notice | Protection | protection from a quality the engine does not read: Goblins | Y/-/- | not_working |
 | Dolmen Gate | unaudited | Prevent all combat damage that would be dealt to attacking creatures you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Doran, the Siege Tower | unaudited | Each creature assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ethereal Whiskergill | unaudited | This creature can't attack unless defending player controls an Island. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -234,7 +235,6 @@
 | Moonglove Winnower | handled | Deathtouch | machines/combat.py | Y/-/- | not_tested |
 | Mournwhelk | handled | When this creature enters, target player discards two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mudbutton Torchrunner | handled | When this creature dies, it deals 3 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Nath's Buffoon | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Neck Snap | handled | Destroy target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nectar Faerie | handled | {B}, {T}: Target Faerie or Elf gains lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Needle Drop | handled | Needle Drop deals 1 damage to any target that was dealt damage this turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -268,7 +268,6 @@
 | Veteran of the Depths | handled | Whenever this creature becomes tapped, you may put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wanderer's Twig | handled | {1}, Sacrifice this artifact: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wanderwine Hub | handled | As this land enters, you may reveal a Merfolk card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Warren-Scourge Elf | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Wispmare | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wizened Cenn | handled | Other Kithkin creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Woodland Changeling | handled | Changeling | machines/keywords.py | Y/-/- | not_tested |
@@ -279,10 +278,11 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>32 cards</summary>
 
 - Amoeboid Changeling
 - Aquitect's Will
+- Arbiter of Knollridge
 - Battle Mastery
 - Ceaseless Searblades
 - Crib Swap
@@ -324,6 +324,7 @@
 | ~ enters tapped with two charge counters on it. | 5 | Vivid Crag, Vivid Creek, Vivid Grove, Vivid Marsh, Vivid Meadow | lrw |
 | fear | 3 | Shriekmaw, Squeaking Pie Sneak, Wort, Boggart Auntie | lrw |
 | clash | 2 | Fistful of Force, Whirlpool Whelm | lrw |
+| protection | 2 | Nath's Buffoon, Warren-Scourge Elf | lrw |
 | Choose two | 1 | Primal Command | lrw |
 | as an additional cost to cast ~, sacrifice a goblin. target creature gets -N/-N until end of turn. ~ deals N damage to that creature's controller. | 1 | Fodder Launch | lrw |
 | as long as a creature card with flying is in a graveyard, ~ has flying. the same is true for fear, first strike, double strike, deathtouch, haste, landwalk, lif | 1 | Cairn Wanderer | lrw |
@@ -366,7 +367,6 @@
 | target creature blocks target creature ~ if able. | 1 | Hunt Down | lrw |
 | when a faerie is championed with ~, tap all lands target player controls. | 1 | Mistbind Clique | lrw |
 | when ~ dies, clash with an opponent. if you win, return ~ to its owner's hand. | 1 | Ringskipper | lrw |
-| when ~ enters, each player's life total becomes the highest life total among all players. | 1 | Arbiter of Knollridge | lrw |
 | when ~ enters, exile the top seven cards of your library face down. | 1 | Colfenor's Plans | lrw |
 | when ~ enters, it deals N damage to each creature with flying and each player. | 1 | Cloudthresher | lrw |
 | when ~ enters, it deals damage equal to the number of giants you control to each non-giant creature. | 1 | Thundercloud Shaman | lrw |
