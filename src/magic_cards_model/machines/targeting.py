@@ -453,6 +453,11 @@ class TargetRequirement(EngineModel):
     resolved until a `game` exists to look one up in) rather than compiled
     once and carried as a callable on this otherwise-persisted-free but
     still-`EngineModel` requirement."""
+    object_dealt_damage_clause: str | None = None
+    """"target creature that was dealt damage this turn" (Goka the Unjust,
+    Initiate of Blood) - the same per-turn damage history as
+    `dealt_damage_clause`, judged against the target permanent itself
+    (`machines/conditions/history.object_dealt_damage_clause_test`)."""
     controller_dealt_damage_clause: str | None = None
     """"target nonland permanent controlled by a player who was dealt
     combat damage by three or more Pirates this turn" (Admiral Beckett
@@ -1128,7 +1133,26 @@ class TargetRequirement(EngineModel):
         controller_dealt_damage = self._rejects_controller_dealt_damage(target, game, source_id)
         if controller_dealt_damage is not None:
             return controller_dealt_damage
+        object_dealt_damage = self._rejects_object_dealt_damage(target, game, source_id)
+        if object_dealt_damage is not None:
+            return object_dealt_damage
         return self._rejects_controller(target, caster)
+
+    def _rejects_object_dealt_damage(
+        self, target: CardState, game: Any, source_id: UUID | None
+    ) -> str | None:
+        """`object_dealt_damage_clause`, judged against `target` itself."""
+        if self.object_dealt_damage_clause is None or game is None:
+            return None
+        from .conditions.history import object_dealt_damage_clause_test
+
+        test = object_dealt_damage_clause_test(self.object_dealt_damage_clause)
+        if test is None:
+            return None
+        source = game.find_by_id(source_id) if source_id is not None else None
+        if test(game, target, source):
+            return None
+        return f"{self.phrase} needs a permanent that {self.object_dealt_damage_clause}"
 
     def _rejects_controller_dealt_damage(
         self, target: CardState, game: Any, source_id: UUID | None
@@ -2845,6 +2869,10 @@ _CONTROLLED_BY_PLAYER_WHO_RE = re.compile(
 #: "player"/"opponent" (`allows_players`), so an unrelated "target ... who
 #: ..." shape this parser does not otherwise know is never mistaken for it.
 _PLAYER_WHO_RE = re.compile(r"^who (?P<tail>was dealt .+? this turn)\b", re.IGNORECASE)
+#: "that was dealt damage this turn" on a permanent noun (Goka the Unjust's
+#: "target creature that was dealt damage this turn") - the same tail as
+#: `_PLAYER_WHO_RE`, CR 115.1's restriction on the target object itself.
+_OBJECT_THAT_WAS_DEALT_RE = re.compile(r"^that (?P<tail>was dealt .+? this turn)\b", re.IGNORECASE)
 _ZONE_CLAUSE = re.compile(
     r"\b(?:from|in)\s+"
     r"(?:(?P<whose>your|their|an? opponent'?s?|that player'?s|a single|any single|a|an|any)\s+)?"
@@ -4626,6 +4654,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     owned_by_caster = False
     dealt_damage_clause: str | None = None
     controller_dealt_damage_clause: str | None = None
+    object_dealt_damage_clause: str | None = None
 
     # Read out of the way before the comparison scan sees it: this clause looks
     # exactly like a mana-value bound and is not one (see
@@ -4775,6 +4804,12 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
                     return None
                 dealt_damage_clause = tail
                 rest = rest[player_who_match.end() :].strip()
+            elif (object_that_match := _OBJECT_THAT_WAS_DEALT_RE.match(rest)) is not None:
+                tail = object_that_match.group("tail")
+                if dealt_damage_clause_test(tail) is None:
+                    return None
+                object_dealt_damage_clause = tail
+                rest = rest[object_that_match.end() :].strip()
 
     if strict and not _nothing_left_unread(
         rest, bare_card=bare_card, comparison_read=comparison_attribute is not None
@@ -4905,6 +4940,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         must_have_crewed_source_this_turn=crewed_source_this_turn,
         dealt_damage_clause=dealt_damage_clause,
         controller_dealt_damage_clause=controller_dealt_damage_clause,
+        object_dealt_damage_clause=object_dealt_damage_clause,
         alternatives=compound_alternatives,
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,

@@ -2718,6 +2718,13 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     """
     if ability.event not in _SYNTHESIZABLE_EVENTS:
         return None
+    from .machines.triggers import DEALT_DAMAGE_BY_THIS_RE
+
+    if DEALT_DAMAGE_BY_THIS_RE.search(ability.condition.lower()):
+        # "a creature dealt damage by this creature this turn dies" (Vein
+        # Drinker) needs a damage event this turn, which this closure's
+        # synthetic board never has - no occurrence to try.
+        return None
     if ability.event is TriggerEvent.ATTACKS and is_batched_attack_condition(ability.condition):
         # "one or more <description> attack" counts a declared attack, which
         # this closure's synthetic board has none of - no occurrence to try.

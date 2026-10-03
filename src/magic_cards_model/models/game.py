@@ -1177,9 +1177,13 @@ _CONDITION_CONTROLS_ANOTHER = re.compile(r"you control another (?P<quality>.+)",
 #: Power Plant Worker / Mine Worker / Tower Worker's own shared "you control
 #: creatures named `<name>` and `<name>`" - two specific printed names
 #: (CR 201.4), not `_CONDITION_CONTROLS_A`'s quality phrase, so it is its own
-#: pattern rather than a widening of that one.
+#: pattern rather than a widening of that one. The plural noun is read too:
+#: Scepter, Crown and Throne of Empires print "artifacts named ...", and each
+#: named permanent has to be one of those.
 _CONDITION_CONTROLS_NAMED_PAIR = re.compile(
-    r"you control creatures named (?P<first>.+?) and (?P<second>.+)", re.IGNORECASE
+    r"you control (?P<kind>creatures|artifacts|enchantments|lands|planeswalkers|permanents) "
+    r"named (?P<first>.+?) and (?P<second>.+)",
+    re.IGNORECASE,
 )
 #: Beza, the Bounding Spring's four trailing conditions, Sunset Revelry's three
 #: leading ones and Ticket Tortoise's intervening if (CR 603.4): "an opponent
@@ -24130,7 +24134,14 @@ class Game(EngineModel):
         if match := _CONDITION_CONTROLS_NAMED_PAIR.fullmatch(text):
             first = match.group("first").strip().lower()
             second = match.group("second").strip().lower()
-            names = {state.name.lower() for state in controlled}
+            kind = _permanent_quality(match.group("kind"))
+            if kind is None:
+                return None
+            names = {
+                chars.name.lower()
+                for chars in (board.of(state) for state in controlled)
+                if kind(chars)
+            }
             return first in names and second in names
 
         if match := _CONDITION_OPPONENT_COMPARISON.fullmatch(text):

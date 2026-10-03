@@ -1147,7 +1147,7 @@ _THIS_SELF_RE = re.compile(r"this [a-z]+")
 
 def dealt_damage_clause_test(
     tail: str,
-) -> "Callable[[Game, str, CardState | None], bool] | None":
+) -> "Callable[[Game, str | UUID, CardState | None], bool] | None":
     """`_DEALT_DAMAGE_TAIL_RE`'s shape read into a `(game, player, source) ->
     bool` test, or `None` when `tail` is not this shape or names a source
     phrase this cannot read.
@@ -1182,7 +1182,10 @@ def dealt_damage_clause_test(
             if by_count is None:
                 return None
 
-    def test(game: "Game", player: str, source: "CardState | None" = None) -> bool:
+    def test(game: "Game", player: "str | UUID", source: "CardState | None" = None) -> bool:
+        """`player` is a username, or a permanent's id for
+        `object_dealt_damage_clause_test`."""
+
         def matches(record: object) -> bool:
             if not _kind_matches(record, kind):
                 return False
@@ -1193,13 +1196,31 @@ def dealt_damage_clause_test(
         records = [
             record
             for record in game.damage_dealt_this_turn
-            if record.recipient_player == player and matches(record)
+            if (record.recipient_player == player or record.recipient_id == player)
+            and matches(record)
         ]
         if by_count is not None:
             return len({record.source_id for record in records}) >= by_count
         return sum(record.amount for record in records) >= needed
 
     return test
+
+
+def object_dealt_damage_clause_test(
+    tail: str,
+) -> "Callable[[Game, CardState, CardState | None], bool] | None":
+    """`dealt_damage_clause_test`'s shape about a permanent rather than a
+    player - Goka the Unjust's and Initiate of Blood's "target creature that
+    was dealt damage this turn" (CR 120.1's damage events, read off
+    `Game.damage_dealt_this_turn`'s `recipient_id`)."""
+    test = dealt_damage_clause_test(tail)
+    if test is None:
+        return None
+
+    def object_test(game: "Game", target: "CardState", source: "CardState | None" = None) -> bool:
+        return test(game, target.id, source)
+
+    return object_test
 
 
 def _player_dealt_damage(context: "ConditionContext", match: re.Match[str]) -> bool:

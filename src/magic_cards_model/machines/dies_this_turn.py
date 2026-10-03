@@ -18,8 +18,10 @@ are the creature as it last existed on the battlefield (CR 608.2h).
 
 import re
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from ..models.card_state import CardState
+from ..models.zone import Zone
 from ..numbers import parse_count
 from .decisions import Decision, DecisionKind, source_id_of
 
@@ -40,6 +42,9 @@ _EXILE_TOP_THEN_CHOOSE_ONE_TO_PLAY_RE = re.compile(
 _EXILE_ITS_CONTROLLERS_GRAVEYARD_RE = re.compile(
     r"^exile its controller'?s graveyard\.?$", re.IGNORECASE
 )
+#: Initiate of Blood's "flip this creature" (CR 710): the source that created
+#: the delayed trigger, not the creature that died.
+_FLIP_THIS_RE = re.compile(r"^flip this (?:creature|permanent)\.?$", re.IGNORECASE)
 
 
 def _dead_creature(game: "Game", ability: Any) -> CardState | None:
@@ -61,11 +66,28 @@ def _last_known_power(card: CardState) -> int:
     return max(power or 0, 0)
 
 
-def dies_consequence_effect(text: str) -> Any:
-    """The consequence as an ability effect, or None."""
+def dies_consequence_effect(text: str, *, source_stamp: UUID | None = None) -> Any:
+    """The consequence as an ability effect, or None.
+
+    `source_stamp` is the creating ability's source as it was then
+    (`CardState.zone_change_stamp`): "this creature" is that object, and one
+    that has left the battlefield since is a new object (CR 400.7, CR 603.7c)
+    the consequence no longer reaches."""
     from .casting import PlayAction
 
     cleaned = " ".join(text.split())
+    if _FLIP_THIS_RE.fullmatch(cleaned):
+
+        def flip_source(game: "Game", ability: Any) -> None:
+            source_id = getattr(ability, "source_id", None)
+            source = game.find_by_id(source_id) if source_id is not None else None
+            if not isinstance(source, CardState) or source.zone is not Zone.BATTLEFIELD:
+                return
+            if source_stamp is not None and source.zone_change_stamp != source_stamp:
+                return
+            source.flip()
+
+        return flip_source
     if match := _EXILE_TOP_THEN_CHOOSE_ONE_TO_PLAY_RE.fullmatch(cleaned):
         fixed = None if match.group("its_power") else parse_count(match.group("n") or "")
         if fixed is None and not match.group("its_power"):
@@ -167,7 +189,9 @@ def parse_then_when_that_creature_dies_this_turn(text: str, *, for_spell: bool) 
                     subject_id=creature.id,
                     remaining=1,
                     expires_end_of_turn=True,
-                    effect=ThatCreatureDiesConsequence(),
+                    effect=ThatCreatureDiesConsequence(
+                        source_stamp=getattr(stack_object, "source_stamp", None)
+                    ),
                 )
             )
 
