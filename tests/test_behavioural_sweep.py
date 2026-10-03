@@ -114,6 +114,7 @@ from magic_cards_model.machines.keywords import (
     crew_activation,
     crew_number,
     cycling_activation,
+    ninjutsu_activation,
     off_zone_abilities,
     off_zone_activation,
 )
@@ -4097,6 +4098,44 @@ def _animated_attack(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]
     yield animated
 
 
+def _ninjutsu_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "When this enters from your hand, if it's attacking": the source is
+    put onto the battlefield tapped and attacking by its own ninjutsu,
+    returning an unblocked attacker (CR 702.49a). A vanilla partner attacks
+    too, for an "another target attacking creature"."""
+    card = case.printing
+    if "ninjutsu" not in {k.canonical.lower() for k in keyword_abilities(card)}:
+        return
+
+    def ninjutsu() -> tuple[PlayedScenario, Any]:
+        scenario = _board(
+            hand=(card.name,),
+            battlefield=("Grizzly Bears", *_extra_lands_for(card)),
+            step=Step.DECLARE_ATTACKERS,
+            busy=False,
+        )
+        game = scenario.game
+        bears = _last(scenario, "Grizzly Bears", Zone.BATTLEFIELD, ALICE)
+        returning = _last(scenario, "Memnite", Zone.BATTLEFIELD, ALICE)
+        source = _last(scenario, card.name, Zone.HAND, ALICE)
+        try:
+            scenario.attack_with(bears, returning, defending=BOB)
+            scenario.turn.advance_to(Step.DECLARE_BLOCKERS)
+            game.sync_priority_with_step()
+            scenario.no_blocks()
+            activation = ninjutsu_activation(game, source, returning, ALICE)
+            activation.begin_paying()
+            activation.payment.auto_tap(game.permanents_controlled_by(ALICE))
+            activation.payment.pay()
+            activation.activate()
+            activation.resolve()
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(str(error)) from error
+        return scenario, source.id
+
+    yield ninjutsu
+
+
 def _attempts(case: Case) -> Iterator[Attempt]:
     ability = _trigger_ability(case.printing, case.text)
     if ability.event_qualifier:
@@ -4196,6 +4235,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _enlisting(case, ability)
         elif kind == "attacks":
             yield from _animated_attack(case, ability)
+        elif kind == TriggerEvent.ENTERS_THE_BATTLEFIELD.value:
+            yield from _ninjutsu_entering(case, ability)
 
 
 #: Attempts whose event happens later in the turn (or in the next ones), so
@@ -4343,11 +4384,6 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         kind="attacks",
         event="a second attacking creature of the subtype the trigger targets",
         precondition=r"another target attacking [A-Z][a-z]+ you control",
-    ),
-    DriverGap(
-        kind="enters_the_battlefield",
-        event="the source put onto the battlefield attacking from hand (ninjutsu)",
-        precondition=r"enters from your hand, if it's attacking",
     ),
     DriverGap(
         kind="enters_the_battlefield",
