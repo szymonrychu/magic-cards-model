@@ -32,7 +32,12 @@ def _ability(condition: str, intervening_if: str | None = None) -> AbilityOnStac
 
 @pytest.mark.parametrize(
     "condition",
-    ["this creature attacks", "this Vehicle attacked or blocked", "this Time Lord dies", "this permanent enters"],
+    [
+        "this creature attacks",
+        "this Vehicle attacked or blocked",
+        "this Time Lord dies",
+        "this permanent enters",
+    ],
 )
 def test_a_type_or_subtype_self_reference_names_the_source(condition):
     assert _names_its_source(_ability(condition))

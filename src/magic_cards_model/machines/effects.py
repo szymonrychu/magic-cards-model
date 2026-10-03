@@ -16788,7 +16788,8 @@ def _parse_counter_on_it_trigger_subject_clause(clause: str) -> TargetedClause |
 def _names_its_source(ability: AbilityOnStack) -> bool:
     """Whether a triggered ability's own trigger condition or intervening
     "if" names its source by CR 700.7's "this [type or subtype]" ("this
-    Vehicle", "this creature"; never "this turn" or "this way") - the antecedent a later bare "it" then refers to."""
+    Vehicle", "this creature"; never "this turn" or "this way") - the antecedent
+    a later bare "it" then refers to."""
     printed = ability.ability
     if not isinstance(printed, TriggeredAbility):
         return False
