@@ -247,6 +247,19 @@ def _could_be_targeted_by_the_event_spell(
     return ctx.game.legal_target(spell, TargetRef.to_card(state)) is not None
 
 
+def _fought_this_turn(
+    ctx: "ConditionContext", state: "CardState", chars: "Characteristics"
+) -> bool:
+    """ "that fought this turn" (CR 701.14a) - Boxing Ring's own "Activate
+    only if you control a creature that fought this turn", read through
+    `conditions.history.fought_this_turn`'s ledger the same "quality" suffix
+    grammar every other one already shares, so any quality word ("a Zombie
+    that fought this turn") composes with it for free."""
+    from .history import fought_this_turn
+
+    return fought_this_turn(ctx.game, state.id)
+
+
 def _counter_kind(word: str) -> str:
     return word.strip().lower()
 
@@ -285,6 +298,7 @@ _SUFFIXES: tuple[tuple[re.Pattern[str], str], ...] = (
         re.compile(rf"(?P<rest>.+?) with (?P<stat>{_STAT}) (?P<n>\d+) or (?P<dir>greater|less)"),
         "stat",
     ),
+    (re.compile(r"(?P<rest>.+?) that fought this turn"), "fought"),
     (re.compile(r"(?P<rest>.+?) that spell could target"), "could_target"),
     (re.compile(r"(?P<rest>.+?) (?:that )?you (?P<neg>don't |do not )?own"), "owned"),
     (re.compile(r"(?P<rest>.+?) (?:that )?you (?P<neg>don't |do not )?control"), "controlled"),
@@ -338,6 +352,8 @@ def _suffix_test(kind: str, match: re.Match[str]) -> ObjectTest | None:
         if match.group("dir") == "greater":
             return lambda ctx, state, chars: _stat(chars, stat) >= threshold
         return lambda ctx, state, chars: _stat(chars, stat) <= threshold
+    if kind == "fought":
+        return _fought_this_turn
     if kind == "could_target":
         return _could_be_targeted_by_the_event_spell
     if kind == "owned":

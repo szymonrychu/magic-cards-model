@@ -71,6 +71,7 @@ def test_every_family_module_exports_a_tuple_of_readers():
         conditions.timing,
         conditions.board,
         conditions.cast_record,
+        conditions.activation,
         conditions.history,
         conditions.player,
         conditions.objects,

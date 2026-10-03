@@ -1,0 +1,150 @@
+{
+  "object": "card",
+  "id": "6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7",
+  "oracle_id": "d29d3b44-06dd-45dd-bbb2-506a6fce6a8d",
+  "multiverse_ids": [
+    622656
+  ],
+  "mtgo_id": 115195,
+  "tcgplayer_id": 507180,
+  "cardmarket_id": 723518,
+  "name": "Palace Sentinels",
+  "lang": "en",
+  "released_at": "2023-08-04",
+  "uri": "https://api.scryfall.com/cards/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7",
+  "scryfall_uri": "https://scryfall.com/card/cmm/48/palace-sentinels?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:08:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.jpg?1783915715",
+    "normal": "https://cards.scryfall.io/normal/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.jpg?1783915715",
+    "large": "https://cards.scryfall.io/large/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.jpg?1783915715",
+    "png": "https://cards.scryfall.io/png/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.png?1783915715",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.jpg?1783915715",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.jpg?1783915715",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.webp?1783915715",
+    "grid": "https://cards.scryfall.io/grid/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.webp?1783915715",
+    "display": "https://cards.scryfall.io/display/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.webp?1783915715",
+    "art": "https://cards.scryfall.io/art/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.webp?1783915715",
+    "crop": "https://cards.scryfall.io/crop/front/6/c/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7.webp?1783915715"
+  },
+  "mana_cost": "{3}{W}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Human Soldier",
+  "oracle_text": "When this creature enters, you become the monarch.",
+  "power": "2",
+  "toughness": "4",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "0cd9c491-6ba0-4484-822c-73bcbe9b0c49",
+      "component": "combo_piece",
+      "name": "The Monarch",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/0cd9c491-6ba0-4484-822c-73bcbe9b0c49"
+    },
+    {
+      "object": "related_card",
+      "id": "6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7",
+      "component": "combo_piece",
+      "name": "Palace Sentinels",
+      "type_line": "Creature \u2014 Human Soldier",
+      "uri": "https://api.scryfall.com/cards/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set": "cmm",
+  "set_name": "Commander Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acmm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cmm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6c0bbbe0-e6cf-43df-9c44-b6bbfa9c9af7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad29d3b44-06dd-45dd-bbb2-506a6fce6a8d&unique=prints",
+  "collector_number": "48",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"One who ruled willing subjects would need no such protection.\"\n\u2014Adriana, Captain of the Guard",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Aaron Miller",
+  "artist_ids": [
+    "fc021f3d-773a-4706-bbe7-f602324f511f"
+  ],
+  "illustration_id": "b69b6b6b-e882-4c20-8386-5f12c21d3301",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 15335,
+  "prices": {
+    "usd": "0.15",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.18",
+    "tix": "0.36"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=622656&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPalace%2BSentinels",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPalace%2BSentinels",
+    "edhrec": "https://edhrec.com/route/?cc=Palace+Sentinels"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F507180%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=723518&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/115195?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

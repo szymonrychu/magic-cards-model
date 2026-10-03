@@ -104,6 +104,7 @@ from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
 from .abilities import (
     ActivatedAbility,
+    _split_top_level_sentences,
     keywords_in_lines,
     layer_readable_sentences,
     parse_abilities,
@@ -1089,6 +1090,11 @@ class QualifiedCreatures(SelectorBase):
     other: bool = False
     opponents: bool = False
     without_color: Color | None = None
+    colorless: bool = False
+    """ "colorless creatures" (CR 105.2c: "A colorless object has no color.") -
+    not `without_color`'s negation of one named colour, but a predicate on
+    there being no colour at all, so a creature with two colours is excluded
+    by it exactly as one with one colour is."""
     land: bool = False
     also_artifact: bool = False
     tokens: bool = False
@@ -1125,6 +1131,8 @@ class QualifiedCreatures(SelectorBase):
         if self.other and chars.card_id == self.source_id:
             return False
         if self.without_color is not None and self.without_color in chars.colors:
+            return False
+        if self.colorless and chars.colors:
             return False
         if self.land and not chars.is_land:
             return False
@@ -3063,26 +3071,65 @@ def _sublayers_of(layer: Layer) -> tuple[Sublayer | CopySublayer | None, ...]:
     return _SUBLAYERS_BY_LAYER.get(layer, (None,))
 
 
+#: A counter kind spelled as its own printed bonus - "+1/+1", "-1/-1", or
+#: Clockwork Steed's own asymmetric "+1/+0" (CR 122.1a: "A +X/+Y counter on a
+#: creature or on a creature card in a zone other than the battlefield, where
+#: X and Y are numbers, adds X to that object's power and Y to that object's
+#: toughness. Similarly, -X/-Y counters subtract from power and toughness.").
+#: Read off the kind's own name rather than a fixed pair of enum members -
+#: CR 122.1's kinds are an open set, and CR 122.1a's own rule is not limited
+#: to the ±1/±1 pair; a named kind with no numbers at all ("charge", "hone" -
+#: the latter has its own separate CR 122.1j effect, `_hone_counter_effects`,
+#: since its bonus lands on what the counter's *permanent* is attached to,
+#: never on itself) simply carries no bonus here.
+_PT_COUNTER_KIND_RE = re.compile(r"^([+-])(\d+)/([+-])(\d+)$")
+
+
+def _pt_counter_delta(kind: str) -> tuple[int, int] | None:
+    """`kind`'s own (power, toughness) bonus (CR 122.1a), or `None` when it is
+    not a "+X/+Y"/"-X/-Y"-shaped kind at all."""
+    match = _PT_COUNTER_KIND_RE.fullmatch(kind)
+    if match is None:
+        return None
+    power_sign, power_digits, toughness_sign, toughness_digits = match.groups()
+    power = int(power_digits) * (1 if power_sign == "+" else -1)
+    toughness = int(toughness_digits) * (1 if toughness_sign == "+" else -1)
+    return power, toughness
+
+
 def _counter_effects(board: Board) -> list[ContinuousEffect]:
-    """+1/+1 and -1/-1 counters, as the 7c effects CR 613.4c says they are.
+    """Every "+X/+Y"/"-X/-Y"-named counter kind, summed per permanent, as the
+    7c effects CR 613.4c/CR 122.1a say they are - +1/+1 and -1/-1 read the
+    same general way as any other such kind (`_pt_counter_delta`), rather
+    than as the two special-cased enum members CR 122.1 merely happens to
+    name as examples.
 
     They carry timestamp 0 because counters have no timestamp of their own; 7c
     is addition, so their order among the other 7c effects cannot matter.
     """
     effects: list[ContinuousEffect] = []
     for card_id, chars in board.items():
-        amount = chars.counters.get(Counter.PLUS_ONE, 0) - chars.counters.get(Counter.MINUS_ONE, 0)
-        if amount == 0:
+        power = 0
+        toughness = 0
+        for kind, count in chars.counters.items():
+            if not count:
+                continue
+            delta = _pt_counter_delta(kind)
+            if delta is None:
+                continue
+            power += delta[0] * count
+            toughness += delta[1] * count
+        if power == 0 and toughness == 0:
             continue
         effects.append(
             ContinuousEffect(
-                description=f"{chars.name}: {amount:+}/{amount:+} from counters",
+                description=f"{chars.name}: {power:+d}/{toughness:+d} from counters",
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.MODIFY,
                 timestamp=0,
                 from_counters=True,
                 selector=_only(card_id),
-                modification=modify_power_toughness(amount, amount),
+                modification=modify_power_toughness(power, toughness),
             )
         )
     return effects
@@ -3467,6 +3514,7 @@ def qualified_creatures(
     other: bool = False,
     opponents: bool = False,
     without_color: Color | None = None,
+    colorless: bool = False,
     land: bool = False,
     also_artifact: bool = False,
     tokens: bool = False,
@@ -3477,10 +3525,10 @@ def qualified_creatures(
     of_chosen_color: bool = False,
     chosen_color: Color | None = None,
 ) -> Selector:
-    """ "[Other] [non<colour>] [[non]legendary] [nontoken] [land|artifact]
-    creature[ token]s [you control|your opponents control] [of the chosen
-    color]" - the anthem subject with the qualifiers the pool actually prints,
-    composed one predicate at a time.
+    """ "[Other] [non<colour>|colorless] [[non]legendary] [nontoken]
+    [land|artifact] creature[ token]s [you control|your opponents control]
+    [of the chosen color]" - the anthem subject with the qualifiers the pool
+    actually prints, composed one predicate at a time.
 
     Each qualifier is a plain question about the *computed* characteristics,
     which is what makes it correct rather than merely convenient:
@@ -3493,6 +3541,11 @@ def qualified_creatures(
       colourless creature is nonblack too, and a creature that *became* black
       in layer 5 (CR 613.1e) is excluded when layer 6 or layer 7 asks - the
       board this selector reads has already had layer 5 applied.
+    - `colorless` is the printed "colorless" (CR 105.2c: "A colorless object
+      has no color."), Kozilek, the Broken Reality's own "Other colorless
+      creatures you control" - a predicate on having *no* colour at all,
+      never the negation of one named colour the way `without_color` is, so
+      it is its own field rather than a `Color` value.
     - `land` is the "land creatures" of Aang, Destined Savior: both card types
       at once (CR 205.2b: "Some objects have more than one card type ... Such
       objects satisfy the criteria for any effect that applies to any of their
@@ -3527,6 +3580,7 @@ def qualified_creatures(
         other=other,
         opponents=opponents,
         without_color=without_color,
+        colorless=colorless,
         land=land,
         also_artifact=also_artifact,
         tokens=tokens,
@@ -5192,8 +5246,11 @@ _KEYWORD_GRANT_RE = re.compile(
 
 #: The qualifier words an anthem's subject may carry, ahead of the noun:
 #: "other" (the source itself excluded), a colour negation ("nonblack",
-#: CR 105.2), and "land" (both card types at once, CR 205.2b). The noun itself
-#: is either "creatures" or CR 111.1's "creature tokens". Every one of them is
+#: CR 105.2) or "colorless" (CR 105.2c: no colour at all, Kozilek, the Broken
+#: Reality's own "Other colorless creatures you control") - mutually
+#: exclusive, so only one of the two ever reads on a single subject - and
+#: "land" (both card types at once, CR 205.2b). The noun itself is either
+#: "creatures" or CR 111.1's "creature tokens". Every one of them is
 #: optional, so the plain "creatures you control" of Glorious Anthem reads
 #: through this fragment exactly as it did before it existed.
 #:
@@ -5204,7 +5261,7 @@ _KEYWORD_GRANT_RE = re.compile(
 #: otherwise need the qualifiers spelled out twice and kept in step by hand.
 _SUBJECT_QUALIFIERS = (
     r"(?P<other>other )?"
-    r"(?:non(?P<noncolor>white|blue|black|red|green) )?"
+    r"(?:(?:non(?P<noncolor>white|blue|black|red|green)|(?P<colorless>colorless)) )?"
     r"(?P<legendary>(?:non)?legendary )?"
     r"(?P<nontoken>nontoken )?"
     r"(?:(?P<land>land )|(?P<artifact>artifact ))?"
@@ -7007,7 +7064,8 @@ _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE = re.compile(
 #: "Creatures you control of the chosen color get +1/+1." are excluded from
 #: resolution routing as the static abilities they are.
 _LOOKS_LIKE_ANTHEM_RE = re.compile(
-    r"^(?:as long as [^,]+, )?(?:each )?(?:other )?(?:non(?:white|blue|black|red|green) )?"
+    r"^(?:as long as [^,]+, )?(?:each )?(?:other )?"
+    r"(?:(?:non(?:white|blue|black|red|green)|colorless) )?"
     r"(?:(?:non)?legendary )?(?:nontoken )?(?:land |artifact )?"
     r"(?:creature tokens?|creatures?) (?:you control|your opponents control)"
     r"(?: of the chosen colou?r)? (?:get|gets|have|has)\b",
@@ -7882,6 +7940,7 @@ def _creature_group(
             other=other,
             opponents=opponents,
             without_color=qualifiers.without_color,
+            colorless=qualifiers.colorless,
             land=qualifiers.land,
             also_artifact=qualifiers.also_artifact,
             tokens=qualifiers.tokens,
@@ -8055,6 +8114,8 @@ class CreatureQualifiers(EngineModel):
 
     without_color: Color | None = None
     color_word: str | None = None
+    colorless: bool = False
+    """"colorless creatures" (CR 105.2c) - see `QualifiedCreatures.colorless`."""
     land: bool = False
     also_artifact: bool = False
     tokens: bool = False
@@ -8069,6 +8130,7 @@ class CreatureQualifiers(EngineModel):
     def is_empty(self) -> bool:
         return (
             self.without_color is None
+            and not self.colorless
             and not self.land
             and not self.also_artifact
             and not self.tokens
@@ -8083,6 +8145,8 @@ class CreatureQualifiers(EngineModel):
         prefix = ""
         if self.color_word is not None:
             prefix += f"non{self.color_word} "
+        if self.colorless:
+            prefix += "colorless "
         if self.legendary is not None:
             prefix += "legendary " if self.legendary else "nonlegendary "
         if self.nontoken:
@@ -8109,6 +8173,7 @@ def qualifiers_from_subject(
         update={
             "without_color": _COLOR_WORDS[color_word.lower()] if color_word else None,
             "color_word": color_word.lower() if color_word else None,
+            "colorless": match.group("colorless") is not None,
             "land": match.group("land") is not None,
             "also_artifact": match.group("artifact") is not None,
             "tokens": match.group("noun").lower() in ("creature tokens", "creature token"),
@@ -8908,15 +8973,32 @@ _SUBTYPE_ANTHEM_RE = re.compile(
 
 #: "Thopters you control have haste." (Saheeli, Jewel of Avishkar) - the same
 #: bare creature-type subject as `_SUBTYPE_ANTHEM_RE`, granting a keyword
-#: instead of (or, "Vigorbloom Vanguard" style, this shape stays keyword-only;
-#: the pump-and-keyword combination has no printed example yet) modifying
-#: power/toughness. Case-sensitive on the subtype for the same reason
-#: `_SUBTYPE_ANTHEM_RE` is: Oracle text only ever capitalizes a creature type.
-#: Rith, Liberated Primeval's "Other Dragons you control have ward {2}." is
-#: the same subject with a costed keyword (`_KEYWORD_LIST_WITH_COSTS`).
+#: instead of modifying power/toughness. Case-sensitive on the subtype for the
+#: same reason `_SUBTYPE_ANTHEM_RE` is: Oracle text only ever capitalizes a
+#: creature type. Rith, Liberated Primeval's "Other Dragons you control have
+#: ward {2}." is the same subject with a costed keyword
+#: (`_KEYWORD_LIST_WITH_COSTS`).
 _SUBTYPE_KEYWORD_GRANT_RE = re.compile(
     rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST} you control "
     rf"(?:have|has) (?P<keywords>{_KEYWORD_LIST_WITH_COSTS})\.?$"
+)
+
+#: "Other Demons, Devils, Imps, and Tieflings you control get +1/+1 and have
+#: lifelink." (Raphael, Fiendish Savior) - `_SUBTYPE_ANTHEM_RE` and
+#: `_SUBTYPE_KEYWORD_GRANT_RE`'s two predicates on the same subtype-list
+#: subject in one sentence, the identical "and have" join
+#: `_ANTHEM_AND_KEYWORD_GRANT_RE` already reads for the bare "creatures you
+#: control" subject. `subtypes` is any length list (CR 205.3m), Oxford comma
+#: or not, "other" or not - Gisa, the Hellraiser's "Skeletons and Zombies you
+#: control get +1/+1 and have menace." is the same shape as a two-item list
+#: with no "other" and a different keyword, proving the reader is not fitted
+#: to Raphael's own four-item list. Sublayer 7c for the pump (CR 613.4c) and
+#: layer 6 for the keyword (CR 613.1f), one ability applying in two layers
+#: (CR 613.6), the same split `_filtered_anthem_builder` already builds.
+_SUBTYPE_ANTHEM_AND_KEYWORD_GRANT_RE = re.compile(
+    rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST} you control get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and "
+    r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$"
 )
 
 #: "Each other creature you control that's a Cat, Elemental, Nightmare,
@@ -9704,17 +9786,75 @@ _GAINED_LIFE_GATED_GROUP_STATIC_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: The same group pump gated, condition-leading, on the controller's life
-#: total against their own starting life total (CR 103.4) - Path of
-#: Bravery's "As long as your life total is greater than or equal to your
-#: starting life total, creatures you control get +1/+1." CR 604.2/611.3a:
-#: re-read on every computation, off `LayerContext.life_of`/`starting_life_of`.
+#: The starting-life comparison itself (CR 103.4), as a fragment shared by
+#: every sentence shape below rather than a second copy of the grammar per
+#: shape - three printed templates, one comparison:
+#:
+#: - "your life total is greater/less than [or equal to] your starting life
+#:   total" (Path of Bravery's own group static);
+#: - the same comparison with a printed numeric gap, "your life total is at
+#:   least N greater/less than your starting life total" (Elenda, Saint of
+#:   Dusk's own second self-pump, "gets an additional +5/+5 as long as your
+#:   life total is at least 10 greater than your starting life total.");
+#: - the CR-standard "you have at least N life more/less than your starting
+#:   life total" (Leyline of Hope's and Righteous Valkyrie's own group
+#:   statics, Ajani/Angel of Destiny/Ayli/Speaker of the Heavens/Chalice of
+#:   Life's activation and trigger conditions - the identical wording
+#:   `machines/conditions/player.py`'s `_life_against_starting` already
+#:   reads for those, never a second grammar for the same words).
+#:
+#: Embedded verbatim into every sentence-shape regex below, so `_life_
+#: against_starting_gate` can read the same group names off any of their
+#: matches without a separate reader per shape.
+_STARTING_LIFE_CONDITION = (
+    r"your life total is (?:(?P<direction>less|greater) than(?P<or_equal> or equal to)?"
+    r"|(?P<equal>equal to)|at least (?P<threshold>\d+) (?P<threshold_direction>greater|less) than)"
+    r" your starting life total"
+    r"|you have at least (?P<amount>\d+) life (?P<amount_direction>more|less|fewer) than"
+    r" your starting life total"
+)
+
+#: The group pump gated, condition-leading, on `_STARTING_LIFE_CONDITION` -
+#: Path of Bravery's own "As long as your life total is greater than or
+#: equal to your starting life total, creatures you control get +1/+1." and
+#: Leyline of Hope's/Righteous Valkyrie's own "As long as you have at least 7
+#: life more than your starting life total, creatures you control get
+#: +2/+2." CR 604.2/611.3a: re-read on every computation, off `LayerContext.
+#: life_of`/`starting_life_of`.
 _STARTING_LIFE_GATED_GROUP_STATIC_RE = re.compile(
-    r"^as long as your life total is (?:(?P<direction>less|greater) than(?P<or_equal> or equal to)?"
-    r"|(?P<equal>equal to)) your starting life total, "
+    rf"^as long as (?:{_STARTING_LIFE_CONDITION}), "
     r"creatures you control get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
     r"(?: and (?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))?"
     r"\.?$",
+    re.IGNORECASE,
+)
+
+#: The self-static twin, condition-leading - Elenda, Saint of Dusk's own "As
+#: long as your life total is greater than your starting life total, Elenda
+#: gets +1/+1 and has menace." Read after `self_normalized_effect_text` has
+#: already rewritten "Elenda" to "this permanent" (`_layer_readable_
+#: sentences_uncached`'s own call, the same normalisation `_LIFE_GATED_SELF_
+#: STATIC_LEADING_RE`'s own "this creature"/"it" pair already relies on), so
+#: no literal-name branch is needed here either.
+_STARTING_LIFE_GATED_SELF_STATIC_LEADING_RE = re.compile(
+    rf"^as long as (?:{_STARTING_LIFE_CONDITION}), "
+    r"(?:this (?:creature|permanent|token)|it) "
+    r"(?:gets (?:an additional )?(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
+    r"|(?P<grant_only>has .+?))\.?$",
+    re.IGNORECASE,
+)
+
+#: The self-static twin, condition-trailing - Elenda, Saint of Dusk's own
+#: second sentence, "Elenda gets an additional +5/+5 as long as your life
+#: total is at least 10 greater than your starting life total." (CR 613.4c's
+#: sublayer 7c stacks this pump on top of the first static's own +1/+1
+#: independently, the same "an additional" adjective `_DESCEND_GATED_SELF_
+#: STATIC_LEADING_RE`'s own docstring already reads as rules-inert English).
+_STARTING_LIFE_GATED_SELF_STATIC_TRAILING_RE = re.compile(
+    rf"^this (?:creature|permanent|token) "
+    r"gets (?:an additional )?(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?P<rest>(?: and has [^.]+?)?)"
+    rf" as long as (?:{_STARTING_LIFE_CONDITION})\.?$",
     re.IGNORECASE,
 )
 
@@ -9722,7 +9862,39 @@ _STARTING_LIFE_GATED_GROUP_STATIC_RE = re.compile(
 def _life_against_starting_gate(
     match: re.Match[str],
 ) -> Callable[[CardState, LayerContext], bool]:
-    """`_STARTING_LIFE_GATED_GROUP_STATIC_RE`'s comparison, as a gate."""
+    """`_STARTING_LIFE_CONDITION`'s comparison, as a gate - shared by every
+    sentence shape that embeds it, since a `re.Match` answers `.group(name)`
+    the same way regardless of which of those compiled it."""
+    threshold_text = match.group("threshold")
+    if threshold_text is not None:
+        threshold = int(threshold_text)
+        more = (match.group("threshold_direction") or "").lower() == "greater"
+
+        def gate(source: CardState, context: LayerContext) -> bool:
+            life = context.life_of(source.controller)
+            start = context.starting_life_of(source.controller)
+            if life is None or start is None:
+                return False
+            difference = life - start
+            return difference >= threshold if more else -difference >= threshold
+
+        return gate
+
+    amount_text = match.group("amount")
+    if amount_text is not None:
+        amount = int(amount_text)
+        more = (match.group("amount_direction") or "").lower() == "more"
+
+        def gate(source: CardState, context: LayerContext) -> bool:
+            life = context.life_of(source.controller)
+            start = context.starting_life_of(source.controller)
+            if life is None or start is None:
+                return False
+            difference = life - start
+            return difference >= amount if more else -difference >= amount
+
+        return gate
+
     direction = (match.group("direction") or "").lower()
     or_equal = match.group("or_equal") is not None or match.group("equal") is not None
 
@@ -10263,6 +10435,17 @@ def _source_line_for(source: CardState, sentence: str) -> str:
             )
         )
         if normalized == sentence or normalized.startswith(sentence):
+            return line
+        # A line holding more than one top-level sentence (CR 608.2c's one
+        # instruction, printed as several) - Elenda, Saint of Dusk's own two-
+        # sentence static line, "As long as ... menace. Elenda gets an
+        # additional +5/+5 ...". A sentence that is not the *first* one on
+        # the line is never a prefix of the line's own normalized text, so
+        # `startswith` above never matches it - split the line the identical
+        # top-level way `layer_readable_sentences` itself already split it
+        # into sentences, and match against each one instead of only the
+        # whole line.
+        if sentence in _split_top_level_sentences(normalized):
             return line
     return sentence
 
@@ -14281,6 +14464,19 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             keywords=chosen_type_keywords,
             line=sentence,
         )
+    if match := _SUBTYPE_ANTHEM_AND_KEYWORD_GRANT_RE.fullmatch(sentence):
+        subtypes = _subtype_list_words(match.group("subtypes"))
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if subtypes is None or keywords is None:
+            return None
+        return _filtered_anthem_builder(
+            subtypes,
+            int(match.group("power")),
+            int(match.group("toughness")),
+            keywords,
+            other=match.group("other") is not None,
+            line=sentence,
+        )
     if match := _SUBTYPE_ANTHEM_RE.fullmatch(sentence):
         subtypes = _subtype_list_words(match.group("subtypes"))
         if subtypes is None:
@@ -14936,6 +15132,29 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             description="while your life total stands against your starting life total",
         )
+    for starting_life_self_re in (
+        _STARTING_LIFE_GATED_SELF_STATIC_LEADING_RE,
+        _STARTING_LIFE_GATED_SELF_STATIC_TRAILING_RE,
+    ):
+        if match := starting_life_self_re.fullmatch(sentence):
+            grant_only = match.groupdict().get("grant_only")
+            if grant_only is not None:
+                granted = _split_gated_grants(grant_only)
+                power = toughness = 0
+            else:
+                granted = _split_gated_grants(match.group("rest") or "")
+                power = int(match.group("power"))
+                toughness = int(match.group("toughness"))
+            if granted is None:
+                return None
+            return _context_gated_self_pump_builder(
+                _life_against_starting_gate(match),
+                power,
+                toughness,
+                granted,
+                line=sentence,
+                description="while its controller's life stands against their starting life",
+            )
     if _THIS_LAND_IS_CHOSEN_TYPE_RE.fullmatch(sentence):
         return _self_chosen_basic_land_type_builder(line=sentence)
     return None

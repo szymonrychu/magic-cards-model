@@ -10,6 +10,8 @@ wins), a multi-face card, and cards whose only rules are keywords.
 """
 
 import json
+import re
+import sys
 import time
 import uuid
 
@@ -254,20 +256,76 @@ def test_classification_never_consumes_a_games_id_allocator():
     assert minted == []
 
 
+def _reference_workload_seconds() -> float:
+    """CPU seconds this process spends on a fixed pure-Python workload (regex
+    matching and dict churn, the same kind of work classification does) -
+    the yardstick the budget below is measured in, taken as the best of
+    three so one descheduled slice does not inflate it."""
+    pattern = re.compile(r"(\w+) (\d+)")
+    best = float("inf")
+    for _ in range(3):
+        start = time.process_time()
+        table: dict[str, int] = {}
+        for index in range(2_000_000):
+            text = f"card {index}"
+            match = pattern.match(text)
+            assert match is not None
+            table[match.group(1) + str(index % 97)] = len(text)
+        best = min(best, time.process_time() - start)
+    return best
+
+
+#: The cold-classification budget, in units of `_reference_workload_seconds`.
+#: CPU time of this process, not wall time, so a busy machine does not fail
+#: it; and a ratio, because CPU time itself still stretches on a loaded
+#: machine (shared cores, lower clocks) by about as much as the reference
+#: does. The reference takes about 0.45s CPU on the engine's workstation, so
+#: 11 units is the old wall-clock 5.0s budget restated, not loosened.
+#: Measured there (load 6-10): base 3dfb7e9a 9.4-9.7 units (4.5-4.7s CPU),
+#: EC7 strict classifier 7.9-9.0 units (3.7-3.8s CPU).
+_COLD_BUDGET_UNITS = 11.0
+
+
+def _clear_engine_caches() -> int:
+    """Clear every `functools` cache in the engine's own modules - the
+    per-text memos the classification path fills (`_strip_non_effect_
+    preamble`, `_effect_sentences_memo`, `spell_keyword_grant`,
+    `static_zone_cast_permission`, ...) and the pool indexes the support
+    oracle builds (`_cards_by_subtype`, ...) - so a "cold" pass is genuinely
+    cold, not warmed by whichever tests ran first in this process. How many
+    were cleared, so the test can tell the walk found them."""
+    cleared = 0
+    for name, module in list(sys.modules.items()):
+        if not name.startswith("magic_cards_model") or module is None:
+            continue
+        for value in list(vars(module).values()):
+            if callable(getattr(value, "cache_clear", None)) and hasattr(value, "cache_info"):
+                value.cache_clear()
+                cleared += 1
+    return cleared
+
+
 def test_the_full_pool_classifies_within_budget():
     """The whole printings pool (one Card per printing) classifies from a
-    cold cache in well under five seconds, and a warm cache is near free."""
+    cold cache within `_COLD_BUDGET_UNITS` reference workloads of CPU time,
+    and a warm cache is near free."""
     printings = list({id(c): c for c in pool().values()}.values())
+    reference = _reference_workload_seconds()
     clear_card_support_cache()
-    start = time.perf_counter()
+    assert _clear_engine_caches() >= 20
+    start = time.process_time()
     for printing in printings:
         card_support(printing)
-    cold = time.perf_counter() - start
-    start = time.perf_counter()
+    cold = time.process_time() - start
+    start = time.process_time()
     for printing in printings:
         card_support(printing)
-    warm = time.perf_counter() - start
-    assert cold < 5.0, f"cold pool classification took {cold:.2f}s"
+    warm = time.process_time() - start
+    units = cold / reference
+    assert units < _COLD_BUDGET_UNITS, (
+        f"cold pool classification took {cold:.2f}s CPU = {units:.1f} reference workloads "
+        f"({reference:.3f}s each), budget {_COLD_BUDGET_UNITS}"
+    )
     assert warm < cold
 
 

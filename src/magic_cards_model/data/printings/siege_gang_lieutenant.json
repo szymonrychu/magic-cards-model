@@ -1,0 +1,147 @@
+{
+  "object": "card",
+  "id": "76049160-69f7-4114-81f3-dfab8242ac15",
+  "oracle_id": "9e9d538b-a9e5-4d59-b7c1-208fe18110e3",
+  "multiverse_ids": [],
+  "tcgplayer_id": 693895,
+  "cardmarket_id": 891770,
+  "name": "Siege-Gang Lieutenant",
+  "lang": "en",
+  "released_at": "2026-05-18",
+  "uri": "https://api.scryfall.com/cards/76049160-69f7-4114-81f3-dfab8242ac15",
+  "scryfall_uri": "https://scryfall.com/card/plst/M3C-113/siege-gang-lieutenant?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:44:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.jpg?1783903441",
+    "normal": "https://cards.scryfall.io/normal/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.jpg?1783903441",
+    "large": "https://cards.scryfall.io/large/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.jpg?1783903441",
+    "png": "https://cards.scryfall.io/png/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.png?1783903441",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.jpg?1783903441",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.jpg?1783903441",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.webp?1783903441",
+    "grid": "https://cards.scryfall.io/grid/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.webp?1783903441",
+    "display": "https://cards.scryfall.io/display/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.webp?1783903441",
+    "art": "https://cards.scryfall.io/art/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.webp?1783903441",
+    "crop": "https://cards.scryfall.io/crop/front/7/6/76049160-69f7-4114-81f3-dfab8242ac15.webp?1783903441"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Goblin",
+  "oracle_text": "Lieutenant \u2014 At the beginning of combat on your turn, if you control your commander, create two 1/1 red Goblin creature tokens. Those tokens gain haste until end of turn.\n{2}, Sacrifice a Goblin: This creature deals 1 damage to any target.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Lieutenant"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "0c7f299e-4774-4e8b-bb0e-db27d57d2621",
+      "component": "token",
+      "name": "Goblin",
+      "type_line": "Token Creature \u2014 Goblin",
+      "uri": "https://api.scryfall.com/cards/0c7f299e-4774-4e8b-bb0e-db27d57d2621"
+    },
+    {
+      "object": "related_card",
+      "id": "76049160-69f7-4114-81f3-dfab8242ac15",
+      "component": "combo_piece",
+      "name": "Siege-Gang Lieutenant",
+      "type_line": "Creature \u2014 Goblin",
+      "uri": "https://api.scryfall.com/cards/76049160-69f7-4114-81f3-dfab8242ac15"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "67e47ba2-b019-4181-9005-fe9fc021de44",
+  "set": "plst",
+  "set_name": "The List",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/67e47ba2-b019-4181-9005-fe9fc021de44",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aplst&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/plst?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/76049160-69f7-4114-81f3-dfab8242ac15/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9e9d538b-a9e5-4d59-b7c1-208fe18110e3&unique=prints",
+  "collector_number": "M3C-113",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "His crew proudly maintains an accident rate of 100% per day.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Warren Mahy",
+  "artist_ids": [
+    "002c739e-aa1f-4c1d-921b-37cb2d1b1c5b"
+  ],
+  "illustration_id": "675610b7-8207-4cf2-8420-ea6fa815fe77",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 2580,
+  "prices": {
+    "usd": "4.14",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.35",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSiege-Gang%2BLieutenant",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSiege-Gang%2BLieutenant",
+    "edhrec": "https://edhrec.com/route/?cc=Siege-Gang+Lieutenant"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F693895%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891770&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Siege-Gang+Lieutenant&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -116,6 +116,8 @@ def record(game: "Game", event: "GameEvent") -> None:
         _record_departure(game, event, "sacrificed")
     elif kind is TriggerEvent.ATTACKS and event.subject_id is not None:
         _record_attackers(game)
+    elif kind is TriggerEvent.BLOCKS and event.subject_id is not None:
+        _record_blockers(game)
     elif kind is TriggerEvent.BECOMES_TAPPED and event.during_cost_keyword == "crew":
         _record_crew(game, event)
     elif kind is ExtraTriggerEvent.ABILITY_ACTIVATED:
@@ -223,6 +225,39 @@ def _record_attackers(game: "Game") -> None:
         game.turn_history.append(
             TurnHistoryEntry(
                 kind="attacked",
+                player=characteristics.controller or creature.controller,
+                owner=creature.owner,
+                object_id=creature.id,
+                characteristics=characteristics,
+                combat=combat,
+            )
+        )
+
+
+def _record_blockers(game: "Game") -> None:
+    """Every creature declared as a blocker this combat (CR 509.1g), noted
+    the first time any of their `BLOCKS` events is raised - the blocking
+    twin of `_record_attackers`, read by Clockwork Steed's and Daredevil
+    Dragster's own "attacked or blocked this combat" (`_attacked_or_
+    blocked`)."""
+    from ...models.game import TurnHistoryEntry
+
+    combat = _current_combat(game)
+    noted = {
+        entry.object_id
+        for entry in game.turn_history
+        if entry.kind == "blocked" and entry.combat == combat
+    }
+    for blocker_id in game.combat.blocker_ids:
+        if blocker_id in noted:
+            continue
+        creature = game.find_by_id(blocker_id)
+        if not _is_card_state(creature):
+            continue
+        characteristics = game.characteristics_of(creature)
+        game.turn_history.append(
+            TurnHistoryEntry(
+                kind="blocked",
                 player=characteristics.controller or creature.controller,
                 owner=creature.owner,
                 object_id=creature.id,
@@ -588,6 +623,25 @@ def _attacked(context: "ConditionContext", match: re.Match[str]) -> bool:
     return not attacked if match.group("neg") else attacked
 
 
+def _attacked_or_blocked(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "<subject> attacked or blocked this combat" (CR 508.1, CR 509.1g) -
+    Clockwork Steed's and Daredevil Dragster's own end-of-combat intervening
+    if. Kept apart from `_attacked`'s plain "or"-free "attacked this turn/
+    combat": the generic compound splitter (`machines/conditions/__init__.
+    _read_compound`) reads "X or Y" as two independent halves, which loses
+    the shared subject here - "X attacked or blocked" is CR omitted-subject
+    templating for "X attacked or X blocked", not "X attacked" read against
+    "blocked" with no subject of its own at all."""
+    target = _subject_object(context, match.group("subject"))
+    if target is None:
+        return False
+    combat = _current_combat(context.game)
+    return any(
+        entry.object_id == target.id and entry.combat == combat
+        for entry in (*_entries(context, "attacked"), *_entries(context, "blocked"))
+    )
+
+
 def _attackers_this_combat(context: "ConditionContext", controller: str | None = None) -> list:
     combat = _current_combat(context.game)
     return [
@@ -730,6 +784,119 @@ def _cards_left_your_graveyard(context: "ConditionContext", match: re.Match[str]
     if needed is None:
         return False
     return context.game.turn_count(CARDS_LEFT_GRAVEYARD, context.controller) >= needed
+
+
+# -- EC7: tokens created, graveyard arrivals from anywhere, fights ---------------
+
+
+def _created_a_token(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "you created a token this turn" (CR 111.2, CR 701.7a) - Bennie Bracks,
+    Zoologist's own end-step intervening if; Idol of Oblivion prints the
+    identical condition as a CR 602.5b activation restriction instead, so the
+    same clause is proven read on both rules paths this package's readers
+    are shared by (`machines/conditions/__init__.py`'s own docstring).
+    `models.token._note_token_creation` already notes every token-creation
+    event (CR 701.7b) per player per turn; no card in Magic's history prints
+    this template on a Modern/Pioneer/Standard-legal card, so Idol of
+    Oblivion - Legacy/Vintage/Commander-legal only - stands in for the
+    Scryfall-searched, format-legal second printing this package's other
+    readers are proven on."""
+    from ...models.token import TOKEN_CREATION_FACT
+
+    return context.game.turn_count(TOKEN_CREATION_FACT, context.controller) > 0
+
+
+def _card_type_quality(word: str) -> "Callable[[tuple[Type, ...]], bool] | None":
+    """A `GraveyardArrival.card_types` quality word - a card type (CR 110.4),
+    "permanent" (CR 110.4a's six-type union), or a "non" negation of either -
+    the same one-word grammar `models.game._card_quality` reads off a live
+    `CardState`, narrowed to types alone: a `GraveyardArrival` never keeps
+    subtypes, because an arrival that skipped the battlefield (a discard, a
+    mill, a countered spell) has none computed to keep (`GraveyardArrival.
+    card_types`'s own docstring). None when the word is not a type or
+    "permanent"."""
+    from ...models.game import _PERMANENT_TYPES, _card_type_named
+
+    lowered = word.strip().lower()
+    if lowered == "permanent":
+        return lambda types: bool(_PERMANENT_TYPES.intersection(types))
+    if lowered.startswith("non") and len(lowered) > 4:
+        inner = _card_type_quality(lowered.removeprefix("non").lstrip("-"))
+        if inner is None:
+            return None
+        return lambda types: not inner(types)
+    card_type = _card_type_named(lowered)
+    if card_type is None:
+        return None
+    return lambda types: card_type in types
+
+
+def _card_put_into_graveyard_from_anywhere(
+    context: "ConditionContext", match: re.Match[str]
+) -> bool:
+    """ "a <type> card was put into your graveyard from anywhere this turn"
+    (CR 700.11's own "from anywhere", the same look-back `Game.descended`
+    already reads for the unqualified "permanent card" template) - Raphael,
+    Fiendish Savior's own end-step intervening if, generalized from
+    "creature" to any card type rather than hardcoded to it. Macabre
+    Reconstruction prints the identical condition as a CR 601.2f cost
+    reduction, read through the same `Game.condition_holds` this package's
+    readers all share - proof the clause reads on a second rules path, not
+    only a second card, since no other quality word (only "creature" and the
+    unqualified "permanent"/"card" `descended` already owns) is printed on
+    any Magic card at all."""
+    quality = _card_type_quality(match.group("quality"))
+    needed = _count(match.group("count"))
+    if quality is None or needed is None:
+        return False
+    whose = match.group("whose")
+    owners = _players(context, "you" if whose == "your" else "an opponent")
+    matches = sum(
+        1
+        for arrival in context.game.graveyard_arrivals_this_turn
+        if arrival.player in owners and quality(arrival.card_types)
+    )
+    return matches >= needed
+
+
+#: `Game.turn_history` `kind` for CR 701.14's fight - both participants,
+#: recorded by `record_fight` directly from `machines/effects._fight` rather
+#: than through `record`'s event dispatch, the same way `record_crime`/
+#: `excess_damage` are: CR 701.14a's damage is dealt through the ordinary
+#: `DEALS_DAMAGE` event, which carries no "this was a fight" marker of its
+#: own for `record` to key off.
+FOUGHT = "fought"
+
+
+def record_fight(game: "Game", a: "CardState", b: "CardState") -> None:
+    """Note that `a` and `b` fought each other this turn (CR 701.14a) - Boxing
+    Ring's own "Activate only if you control a creature that fought this
+    turn", read generically for any quality by `machines/conditions/board.
+    py`'s "that fought this turn" quality suffix, which shares the ordinary
+    `quality()`/`_controls` grammar every other suffix already does."""
+    from ...models.game import TurnHistoryEntry
+
+    for creature in (a, b):
+        if creature.zone is not Zone.BATTLEFIELD:
+            continue
+        characteristics = game.characteristics_of(creature)
+        game.turn_history.append(
+            TurnHistoryEntry(
+                kind=FOUGHT,
+                player=characteristics.controller or creature.controller,
+                owner=creature.owner,
+                object_id=creature.id,
+                characteristics=characteristics,
+            )
+        )
+
+
+def fought_this_turn(game: "Game", object_id: UUID) -> bool:
+    """Whether the permanent `object_id` fought this turn (CR 701.14a) -
+    `record_fight`'s own ledger, read by `machines/conditions/board.py`'s
+    "that fought this turn" quality suffix without that module needing to
+    know `Game.turn_history`'s own shape."""
+    return any(entry.kind == FOUGHT and entry.object_id == object_id for entry in game.turn_history)
 
 
 # -- H3: permanents entering ------------------------------------------------------
@@ -1354,6 +1521,10 @@ READERS: tuple[ConditionReader, ...] = (
         _attacked,
     ),
     ConditionReader(
+        re.compile(rf"{_SUBJECT} attacked or blocked this combat"),
+        _attacked_or_blocked,
+    ),
+    ConditionReader(
         re.compile(
             rf"you attacked with (?P<exactly>exactly )?(?P<count>{COUNT}) (?:or more )?"
             r"(?P<other>other )?creatures? this combat"
@@ -1597,5 +1768,14 @@ READERS: tuple[ConditionReader, ...] = (
             r"this turn"
         ),
         _spells_of_types_cast,
+    ),
+    # EC7
+    ConditionReader(re.compile(r"you created a token this turn"), _created_a_token),
+    ConditionReader(
+        re.compile(
+            rf"(?:(?P<count>{COUNT}) or more |an? ){_QUALITY} cards? (?:was|were) put into "
+            r"(?P<whose>your|an opponent's) graveyard from anywhere this turn"
+        ),
+        _card_put_into_graveyard_from_anywhere,
     ),
 )

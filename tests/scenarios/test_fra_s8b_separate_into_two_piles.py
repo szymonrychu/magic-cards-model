@@ -162,3 +162,32 @@ def test_do_or_die_destroys_the_pile_bob_chooses_of_creatures_only():
     assert bears.zone is Zone.GRAVEYARD
     assert giant.zone is Zone.BATTLEFIELD, "pile two: bob's own choice left the giant out"
     assert mountain.zone is Zone.BATTLEFIELD, "Do or Die's own quality is creatures only"
+
+
+def test_do_or_die_s_pile_cannot_be_regenerated():
+    """Do or Die's own "They can't be regenerated." (CR 701.19c: effects
+    that say a permanent can't be regenerated cause regeneration shields not
+    to be applied): a shield Ancient Silverback raised in response is still
+    standing, unused, and the creature dies anyway."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Do or Die"], battlefield=["Swamp", "Swamp"])
+        .player("bob", battlefield=["Ancient Silverback", "Hill Giant", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    silverback = scenario.creature("Ancient Silverback", "bob")
+    giant = scenario.creature("Hill Giant", "bob")
+    sources = scenario.untapped_sources("Swamp", "Swamp", username="alice")
+    (forest,) = scenario.untapped_sources("Forest", username="bob")
+
+    scenario.will_choose_cards(silverback, username="alice", source="Do or Die")
+    scenario.will_choose_pile(True, username="bob", source="Do or Die")
+    scenario.cast_onto_stack("Do or Die", *sources, username="alice", targets=["bob"])
+    scenario.pass_priority()
+    scenario.activate(silverback, forest, index=0, username="bob")
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+
+    assert silverback.zone is Zone.GRAVEYARD, "the regeneration shield is not applied"
+    assert giant.zone is Zone.BATTLEFIELD

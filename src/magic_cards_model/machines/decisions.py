@@ -211,6 +211,14 @@ class DecisionKind(StrEnum):
     #: only *below* 0 is not); declining is paying 0, always legal
     #: (CR 119.4b: "Players can always pay 0 life").
     PAY_LIFE_AMOUNT = "pay_life_amount"
+    #: "Put up to N counters on `<this>`" (Clockwork Steed) and any other
+    #: resolution-time "choose an amount from 0 up to N" with no cost or
+    #: payment attached (CR 608.2d) - `PAY_ENERGY_AMOUNT`/`PAY_LIFE_AMOUNT`'s
+    #: own shape (an `int` answer from 0 up to `Decision.amount`) generalised
+    #: past paying something, since "up to N" always permits choosing fewer,
+    #: including none (CR 608.2d), the same way those two always permit
+    #: paying nothing.
+    CHOOSE_AN_AMOUNT = "choose_an_amount"
     #: Scry N: which of the looked-at cards go to the bottom (CR 701.22a).
     SCRY = "scry"
     #: Surveil N: which of them go to the graveyard (CR 701.25a).
@@ -692,12 +700,17 @@ def default_answer(decision: Decision) -> object:
         DecisionKind.PAY_MANA,
     ):
         return decision.affirmative_is_legal
-    if decision.kind in (DecisionKind.PAY_ENERGY_AMOUNT, DecisionKind.PAY_LIFE_AMOUNT):
+    if decision.kind in (
+        DecisionKind.PAY_ENERGY_AMOUNT,
+        DecisionKind.PAY_LIFE_AMOUNT,
+        DecisionKind.CHOOSE_AN_AMOUNT,
+    ):
         # Paying nothing is always legal (CR 118.3's energy floor, CR 119.4b's
-        # life floor never forbid it), and is the least-committal answer - the
-        # same "leave it as it was" convention `SCRY`/`SURVEIL`'s "keep
+        # life floor never forbid it), and "up to N" always permits choosing
+        # none (CR 608.2d) - 0 is the least-committal answer in every case,
+        # the same "leave it as it was" convention `SCRY`/`SURVEIL`'s "keep
         # everything on top" default follows, not a claim that 0 is somehow
-        # the right amount for an unscripted player to pay.
+        # the right amount for an unscripted player to choose.
         return 0
     if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
         return True
@@ -889,6 +902,7 @@ _ANSWER_FIELD_FOR_KIND: dict[DecisionKind, str] = {
     DecisionKind.CHOOSE_PILE: "accept",
     DecisionKind.PAY_ENERGY_AMOUNT: "amount",
     DecisionKind.PAY_LIFE_AMOUNT: "amount",
+    DecisionKind.CHOOSE_AN_AMOUNT: "amount",
     DecisionKind.CHOOSE_CARDS: "card_ids",
     DecisionKind.CHOOSE_PLAYERS: "usernames",
     DecisionKind.ORDER_TRIGGERS: "card_ids",

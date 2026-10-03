@@ -127,9 +127,69 @@ def parse_that_spell_gains_clause(text: str) -> Any:
     return effect
 
 
+#: "Copy it if you control a[n] `<qualityA>`, then copy it if you control a[n]
+#: `<qualityB>`. You may choose new targets for the copies." - Banish into
+#: Fable's own cast trigger: two *independent* conditional copies, each
+#: checked against the board as the trigger resolves (CR 611.2c's "now",
+#: read through the same `game.permanents_controlled_by`/`machines.
+#: targeting.permanent_description` pairing `machines/effects.py`'s own
+#: mass-control-change readers already use for "all `<description>` target
+#: player controls") rather than one shared condition repeated twice. Either,
+#: both, or neither copy may be made; CR 707.10's copy is put on the stack
+#: for each condition that held, and CR 707.10c's new-targets offer covers
+#: every copy actually made, not one apiece.
+_COPY_IT_IF_CONTROL_TWICE_RE = re.compile(
+    r"^copy it if you control an? (?P<qualityA>[a-z]+), "
+    r"then copy it if you control an? (?P<qualityB>[a-z]+)\.\s*"
+    r"you may choose new targets for the cop(?:y|ies)\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_copy_it_if_control_twice_clause(text: str) -> Any:
+    """`_COPY_IT_IF_CONTROL_TWICE_RE`'s shape - see the banner above."""
+    from .targeting import permanent_description
+
+    match = _COPY_IT_IF_CONTROL_TWICE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    requirement_a = permanent_description(match.group("qualityA"))
+    if requirement_a is None:
+        return None
+    requirement_b = permanent_description(match.group("qualityB"))
+    if requirement_b is None:
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        spell = _event_spell(game, ability)
+        if spell is None:
+            return
+        controller = ability.controller
+        source_id = source_id_of(ability)
+        for requirement in (requirement_a, requirement_b):
+            controls_one = any(
+                requirement.rejects(permanent, controller, game) is None
+                for permanent in game.permanents_controlled_by(controller)
+            )
+            if not controls_one:
+                continue
+            copy = game.copy_spell_as_last_known(spell, controller=controller)
+            if copy is None:
+                continue
+            game.offer_new_targets_for_copy(
+                copy, controller, source_name=ability.source_name, source_id=source_id
+            )
+
+    return effect
+
+
 def cast_copy_ability_effect(effect_text: str) -> Any:
     """This module's ability readers, or None."""
-    for reader in (parse_copy_it_those_spells_gain_clause, parse_that_spell_gains_clause):
+    for reader in (
+        parse_copy_it_those_spells_gain_clause,
+        parse_that_spell_gains_clause,
+        parse_copy_it_if_control_twice_clause,
+    ):
         effect = reader(effect_text)
         if effect is not None:
             return effect

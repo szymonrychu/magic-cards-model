@@ -25,15 +25,17 @@ are pinned by `tests/test_sweep_pool.py` and `tests/test_card_support.py`.
 import json
 import operator
 import re
+import sys
 import threading
 from collections import defaultdict
 from collections.abc import Callable
-from functools import cache
+from functools import cache, partial
 from pathlib import Path
+from types import BuiltinMethodType, FunctionType, MethodType
 from typing import Literal, NamedTuple
 from uuid import uuid4
 
-from pydantic import ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 from magic_cards_model import __version__
 from magic_cards_model.data.creature_types import creature_types
@@ -62,6 +64,7 @@ from magic_cards_model.machines.casting import (
     keyword_cast_options,
     player_keyword_grant_of_line,
     reads_as_graveyard_cast_permission_line,
+    reads_granted_cast_spell_keyword_line,
     reads_granted_zone_keyword_line,
     reads_linked_exile_static_cast_line,
     reads_mandatory_additional_cost_line,
@@ -110,6 +113,7 @@ from magic_cards_model.machines.counter_effects import (
     parse_resolution_text as counter_resolution_text,
 )
 from magic_cards_model.machines.effects import (
+    _INLINE_REMINDER_RE,
     _YOU_AND_GROUP_SUBJECT_RE,
     _compose_layer_effect_with_remainder_for_ability_mode,
     _parse_counter_then_recruit_by_mana_value_pair,
@@ -122,7 +126,11 @@ from magic_cards_model.machines.effects import (
     _parse_recruit_clause,
     _parse_referent_object_clause,
     _parse_where_x_is_continuous_effect,
+    _strip_ability_word_labels,
+    _strip_leading_standalone_cast_trigger,
+    _strip_non_effect_preamble,
     activated_effect_for,
+    activation_resolution_text,
     create_continuous_effect,
     create_continuous_effect_of_ability,
     effect_for,
@@ -134,6 +142,7 @@ from magic_cards_model.machines.effects import (
     parse_mode_effect,
     reads_as_transforms_line,
     resolve_modal_spell,
+    spell_resolution_text,
     split_effect_clauses,
     trigger_effect_for,
 )
@@ -150,7 +159,7 @@ from magic_cards_model.machines.layers import (
     plays_lands_from_graveyard_line,
 )
 from magic_cards_model.machines.map_tokens import credits_explore_via_created_token
-from magic_cards_model.machines.modes import modal_profile, substitute_x
+from magic_cards_model.machines.modes import Mode, modal_profile, substitute_x
 from magic_cards_model.machines.objects_as_costs import (
     granted_convoke_line_is_readable,
     has_improvise,
@@ -170,6 +179,7 @@ from magic_cards_model.machines.replacement import (
     strip_reminder_text,
 )
 from magic_cards_model.machines.spell_grants import reads_spell_keyword_grant_line
+from magic_cards_model.machines.targeting import profile_for_text
 from magic_cards_model.machines.triggers import (
     _ENTERS_TAPPED_RE as _CONDITION_ENTERS_TAPPED_RE,
 )
@@ -186,6 +196,7 @@ from magic_cards_model.machines.triggers import (
     TriggerEvent,
     _unread_trigger_events,
     condition_matches,
+    intervening_if_readable,
     is_additional_trigger_line,
     is_batched_attack_condition,
     total_power_attack_threshold,
@@ -222,6 +233,8 @@ from magic_cards_model.models.game import (
     condition_is_readable,
     conditional_additional_land_plays_of_line,
     is_player_rules_static_line,
+    protection_qualities,
+    protection_quality_readable,
     reads_activation_rule_line,
     reads_self_cost_reduction_line,
 )
@@ -1444,29 +1457,15 @@ def has_rules_text(printing: Card) -> bool:
 
 
 #: `effect_for`/`trigger_effect_for`/`activated_effect_for` fall back, on an
-#: otherwise-unreadable clause, to one of these three inline stand-ins - see
-#: `_ability_effect_or_notice`/`_spell_effect_or_notice` in `machines/effects.py`.
+#: otherwise-unreadable clause, to an inline stand-in named `..._notice_only`
+#: - see `_ability_effect_or_notice`/`_spell_effect_or_notice` in
+#: `machines/effects.py` (whose own `_is_notice_only` reads the same suffix).
 #: Each records a notice (`AnaphoricClauseNotice`, `DelayedClauseNotice`,
-#: `ImprintNotice`, `UnmodeledTriggerEffectNotice`) and does nothing else,
+#: `ImprintNotice`, `CastFromHandExileNotice`, ...) and does nothing else,
 #: which is correct, fail-closed behaviour rather than a card silently doing
-#: nothing - so a dispatcher returning one of these by name is "notice", not
+#: nothing - so a dispatcher returning one of these is "notice", not
 #: "handled".
-_NOTICE_STAND_IN_NAMES = frozenset(
-    {
-        "anaphoric_notice_only",
-        "delayed_notice_only",
-        "imprint_notice_only",
-        "conditional_notice_only",
-        "cast_permission_notice_only",
-        "unbounded_hand_choice_notice_only",
-        "event_player_target_notice_only",
-        "reflexive_notice_only",
-        "damage_then_group_grant_notice_only",
-        "control_replacement_notice_only",
-        "search_description_notice_only",
-        "layer_effect_with_remainder_notice",
-    }
-)
+_NOTICE_STAND_IN_SUFFIX = "_notice_only"
 
 
 def _leaves_you_and_group_player_half_unread(text: str) -> bool:
@@ -1481,8 +1480,8 @@ def _leaves_you_and_group_player_half_unread(text: str) -> bool:
     the same reader `_PLAYER_GAINS_HEXPROOF_RE` already proved reads "You
     gain hexproof from blue and from black until end of turn". When that
     reader understands the predicate too, both halves apply and this
-    function must not downgrade the card - unlike `_NOTICE_STAND_IN_NAMES`
-    above, this is not a permanent stand-in, only a fallback for whatever
+    function must not downgrade the card - unlike a `_NOTICE_STAND_IN_SUFFIX`
+    stand-in above, this is not a permanent stand-in, only a fallback for whatever
     predicate shape the player-clause reader does not (yet) cover, still
     recorded as a `PlayerSubjectSplitNotice` rather than silently applied or
     dropped (see that model's own docstring). The dispatcher this clause
@@ -2041,6 +2040,11 @@ def _static_ability_category(
         # the keyword where the card lies and `_rezoned_by_using` opens that
         # zone to it (Ninja Teen's level 3; Iroh, Grand Lotus's flashback).
         return HANDLED
+    if reads_granted_cast_spell_keyword_line(text):
+        # CR 611.3d: `casting._grant_spell_you_cast_has_keyword` grants the
+        # keyword to every matching spell as it is cast, not to a card
+        # sitting in a zone (Herigast, Erupting Nullkite's emerge grant).
+        return HANDLED
     if reads_linked_exile_static_cast_line(printing, text) or reads_printed_self_zone_cast_line(
         text
     ):
@@ -2209,13 +2213,41 @@ def _modal_category(printing: Card) -> str:
     modal = modal_profile(printing)
     if modal is None or not modal.understood or not modal.modes:
         return SILENT
+    instruction = modal.instruction
+
+    def read(mode: Mode) -> object | None:
+        # `resolve_modal_spell`'s own order: the shared-verb fallback only
+        # when `parse_mode_effect` reads nothing.
+        effect = parse_mode_effect(mode, 0)
+        return (
+            effect
+            if effect is not None
+            else (_parse_mode_with_shared_verb_fallback(mode, instruction))
+        )
+
     if all(
-        parse_mode_effect(mode, 0) is not None
-        or _parse_mode_with_shared_verb_fallback(mode, modal.instruction) is not None
+        _reads_whole(
+            read(mode),
+            lambda text, mode=mode: read(mode.model_copy(update={"text": text})),
+            mode.text,
+        )
         for mode in modal.modes
     ):
         return HANDLED
     return NOTICE
+
+
+def _reads_whole(effect: object, dispatch: Callable[[str], object], text: str) -> bool:
+    """Whether a mode reader's answer is a real effect for the whole mode:
+    not `None`, not a closure that drops part of the mode's text
+    (`unparsed_remainder`), and not one that ignores a sentence of it (the
+    ablation probe, `ignored_rider`, asked through the same mode reader) -
+    a mode is judged by the same closure tests as any other clause."""
+    return (
+        effect is not None
+        and unparsed_remainder(effect) is None
+        and _ablation_finding(dispatch, text, effect) is None
+    )
 
 
 def _modal_trigger_category(effect_text: str, *, card_name: str | None = None) -> str | None:
@@ -2250,8 +2282,12 @@ def _modal_trigger_category(effect_text: str, *, card_name: str | None = None) -
     profile = modal_trigger_profile(effect_text)
     if profile is None:
         return None
+
+    def read(text: str) -> object | None:
+        return _first_reading(text, card_name=card_name)
+
     if all(
-        _first_reading(mode_effect_body(mode), card_name=card_name) is not None
+        _reads_whole(read(mode_effect_body(mode)), read, mode_effect_body(mode))
         for mode in profile.modes
     ):
         return HANDLED
@@ -2334,7 +2370,9 @@ def _dispatch_category(effect: object, printing: Card, ability_text: str | None 
         return _layer_category(printing, ability_text) or SILENT
     if effect is resolve_modal_spell:
         return _modal_category(printing)
-    if getattr(effect, "__name__", "") in _NOTICE_STAND_IN_NAMES:
+    if getattr(effect, "__name__", "").endswith(_NOTICE_STAND_IN_SUFFIX):
+        return NOTICE
+    if unparsed_remainder(effect) is not None:
         return NOTICE
     return HANDLED
 
@@ -2870,6 +2908,13 @@ _LAYER_COMPOSED_NAMES = frozenset(
 )
 
 
+_BARE_SENTINELS = (
+    create_continuous_effect,
+    create_continuous_effect_of_ability,
+    resolve_modal_spell,
+)
+
+
 def _is_sentinel_effect(effect: object) -> bool:
     """Whether `effect` is one of `_dispatch_category`'s three named stand-
     ins (`create_continuous_effect`, `create_continuous_effect_of_ability`,
@@ -2893,11 +2938,7 @@ def _is_sentinel_effect(effect: object) -> bool:
     pool) does not depend on the layer sentence's quote either. Matched by
     name rather than identity, since a fresh closure is built on every call.
     """
-    if effect in (
-        create_continuous_effect,
-        create_continuous_effect_of_ability,
-        resolve_modal_spell,
-    ):
+    if effect in _BARE_SENTINELS:
         return True
     return getattr(effect, "__name__", "") in _LAYER_COMPOSED_NAMES
 
@@ -2938,6 +2979,424 @@ def _effect_matched_inside_quotes(dispatch: Callable[[str], object], text: str) 
     if dispatch(text) is None:
         return False
     return dispatch(_blank_quoted_spans(text)) is None
+
+
+# ---------------------------------------------------------------------------
+# The remainder closure. A dispatcher closure that drops part of its clause's
+# text, or only notices it, is not `handled`: CR 608.2c has the controller
+# follow every instruction of the text in the order written, and one the
+# engine skips leaves the clause half-played. Pride of Conquerors' mass pump
+# read "Creatures you control get +1/+1" and recorded a LayerRemainderNotice
+# for its city's-blessing "instead" sentence; Summon: Knights of Round's
+# chapter V pumped and never put the indestructible counters down - both
+# scored `handled`.
+#
+# Two probes. The marker: every `machines/effects.py` closure built around a
+# remainder it could not read carries `effect.unparsed_remainder = <text>`,
+# found anywhere in the closure graph (`unparsed_remainder`). The ablation
+# probe: each trailing sentence of a handled clause's resolution text is
+# removed and the clause re-dispatched; the same closure back means nothing
+# read that sentence (`ignored_rider`, `probe_sentences`).
+# ---------------------------------------------------------------------------
+
+#: How far `unparsed_remainder` walks a closure graph before giving up - a
+#: composed effect is a few levels deep; this only bounds a pathological one.
+_CLOSURE_WALK_LIMIT = 2000
+
+_REMAINDER_REASON = "unparsed remainder: "
+
+#: What `unparsed_remainder` answers for a closure graph larger than
+#: `_CLOSURE_WALK_LIMIT` - it could not finish looking.
+_WALK_LIMIT_REASON = "closure graph exceeds the walk limit; not every part was checked"
+
+
+def _closure_children(value: object) -> list[object]:
+    """What `value` runs or holds that `unparsed_remainder` must look into: a
+    function's closure cells, default arguments and attributes, a partial's
+    function and arguments, a bound method's function and receiver, and the
+    members of a plain container."""
+    if isinstance(value, FunctionType):
+        children: list[object] = []
+        for cell in value.__closure__ or ():
+            try:
+                children.append(cell.cell_contents)
+            except ValueError:  # an empty cell - nothing bound yet
+                continue
+        children.extend(value.__defaults__ or ())
+        children.extend((value.__kwdefaults__ or {}).values())
+        return children
+    if isinstance(value, partial):
+        return [value.func, *value.args, *value.keywords.values()]
+    if isinstance(value, MethodType):
+        return [value.__func__]
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return list(value)
+    if isinstance(value, dict):
+        return list(value.values())
+    return []
+
+
+def unparsed_remainder(effect: object) -> str | None:
+    """The text a dispatcher closure could not read and will only notice at
+    runtime - the `unparsed_remainder` marker `machines/effects.py` sets on
+    every closure it builds around such a remainder - or `None` when no
+    closure reachable from `effect` carries one.
+
+    Walked through the whole closure graph, not just `effect` itself: a
+    remainder-dropping mass pump composed inside a larger mixed effect is
+    still a remainder the resolving clause never performs. A graph larger
+    than `_CLOSURE_WALK_LIMIT` fails closed with `_WALK_LIMIT_REASON`.
+    """
+    pending = [effect]
+    seen: set[int] = set()
+    while pending:
+        value = pending.pop()
+        if id(value) in seen or value is None:
+            continue
+        if len(seen) >= _CLOSURE_WALK_LIMIT:
+            # Not finished walking: a remainder may sit past the limit, so
+            # the answer is not a clean bill - fail closed.
+            return _WALK_LIMIT_REASON
+        seen.add(id(value))
+        marker = getattr(value, "unparsed_remainder", None) if callable(value) else None
+        if isinstance(marker, str) and marker.strip():
+            return marker.strip()
+        pending.extend(_closure_children(value))
+    return None
+
+
+def same_closure(first: object, second: object, _seen: set[tuple[int, int]] | None = None) -> bool:
+    """Whether two dispatcher answers are the same effect, compared by value
+    the way two builds from the same text differ only in identity: the same
+    object; functions with the same code whose closure cells, defaults and
+    attributes are the same; a partial or bound method whose parts are; a
+    `re.Match` of the same pattern over the same string with the same
+    groups; and an instance of one class whose attributes are (a callable
+    pydantic modification, a plain parsed description). Compared
+    recursively - a composed closure holds other closures. Anything else
+    compares with `==`; a comparison that raises is not equal."""
+    if first is second:
+        return True
+    seen = set() if _seen is None else _seen
+    key = (id(first), id(second))
+    if key in seen:
+        return True
+    seen.add(key)
+    if isinstance(first, FunctionType) and isinstance(second, FunctionType):
+        if first.__code__ is not second.__code__:
+            return False
+        return same_closure(_closure_children(first), _closure_children(second), seen) and (
+            same_closure(first.__dict__, second.__dict__, seen)
+        )
+    if type(first) is not type(second):
+        return False
+    if isinstance(first, partial):
+        assert isinstance(second, partial)
+        return same_closure(
+            (first.func, first.args, first.keywords),
+            (second.func, second.args, second.keywords),
+            seen,
+        )
+    if isinstance(first, MethodType):
+        assert isinstance(second, MethodType)
+        return same_closure(first.__func__, second.__func__, seen) and same_closure(
+            first.__self__, second.__self__, seen
+        )
+    if isinstance(first, BuiltinMethodType):
+        assert isinstance(second, BuiltinMethodType)
+        return first.__name__ == second.__name__ and same_closure(
+            first.__self__, second.__self__, seen
+        )
+    if isinstance(first, re.Match):
+        assert isinstance(second, re.Match)
+        return first.re is second.re and first.string == second.string and first.regs == second.regs
+    if isinstance(first, (list, tuple)):
+        assert isinstance(second, (list, tuple))
+        return len(first) == len(second) and all(
+            same_closure(a, b, seen) for a, b in zip(first, second, strict=True)
+        )
+    if isinstance(first, dict):
+        assert isinstance(second, dict)
+        return first.keys() == second.keys() and all(
+            same_closure(first[k], second[k], seen) for k in first
+        )
+    if isinstance(first, BaseModel):
+        assert isinstance(second, BaseModel)
+        return same_closure(dict(first), dict(second), seen)
+    if type(first).__eq__ is object.__eq__ and hasattr(first, "__dict__"):
+        return same_closure(vars(first), vars(second), seen)
+    if callable(first):
+        return False
+    try:
+        return bool(first == second)
+    except Exception:  # noqa: BLE001 - an uncomparable value is not the same value
+        return False
+
+
+def _sentence_spans(text: str) -> list[tuple[int, int]]:
+    """The `(start, end)` offsets of each sentence of `text`, surrounding
+    whitespace excluded, never split inside a quoted ability (CR 113.10's
+    granted abilities carry their own periods) or reminder text."""
+    spans: list[tuple[int, int]] = []
+    depth = 0
+    quoted = False
+    start = 0
+
+    def close(begin: int, stop: int) -> None:
+        piece = text[begin:stop]
+        if piece.strip():
+            lead = len(piece) - len(piece.lstrip())
+            spans.append((begin + lead, begin + len(piece.rstrip())))
+
+    for index, char in enumerate(text):
+        if char == '"':
+            quoted = not quoted
+        elif char == "(" and not quoted:
+            depth += 1
+        elif char == ")" and not quoted and depth:
+            depth -= 1
+        elif not quoted and not depth and (char == "\n" or char == "."):
+            following = text[index + 1 : index + 2]
+            if char == "\n" or not following or following.isspace():
+                close(start, index + 1)
+                start = index + 1
+    close(start, len(text))
+    return spans
+
+
+def _sentences(text: str) -> list[str]:
+    """`text` split into its sentences (`_sentence_spans`)."""
+    return [text[begin:stop] for begin, stop in _sentence_spans(text)]
+
+
+def _cast_trigger_prefix_end(text: str) -> int:
+    """Where the leading `TriggerEvent.CAST_SPELL` paragraph(s)
+    `_strip_leading_standalone_cast_trigger` strips off `text` end - `0`
+    when it strips nothing. The stripped text is always a suffix of `text`
+    (whole leading lines are dropped), so this is an offset, never a
+    substring guess."""
+    stripped = _strip_leading_standalone_cast_trigger(text)
+    return len(text) - len(stripped) if stripped != text else 0
+
+
+def _normalized(text: str) -> str:
+    """`text` without reminder text, whitespace collapsed - what a sentence
+    and the resolution text it is looked up in are compared as."""
+    return " ".join(_INLINE_REMINDER_RE.sub("", text).split())
+
+
+def probe_sentences(text: str, reads: str | None = None) -> list[tuple[int, int]]:
+    """The spans of every sentence of `text` the ablation probe removes in
+    turn: every sentence after the first that the dispatcher's resolution
+    readers are actually handed (CR 608.2c: the controller follows every
+    instruction in the order written, so a later sentence the closure never
+    read is an instruction skipped). The first sentence is never one -
+    nothing is left to dispatch without it.
+
+    `reads` is the text the dispatcher resolves - `spell_resolution_text`
+    for a spell, the ability's own text otherwise - run through the same
+    `_strip_non_effect_preamble` every reader applies: a sentence missing
+    from it (a keyword line, reminder text, a cost or "can't be countered"
+    line, a separate triggered or activated ability printed on the spell,
+    the self-shuffle a replacement effect performs) is read by casting, a
+    keyword machine or its own ability, never by this closure, so removing
+    it can never show a difference here.
+
+    A sentence inside a leading `TriggerEvent.CAST_SPELL` paragraph
+    `_strip_leading_standalone_cast_trigger` strips (Dash Hopes' and
+    Temporal Extortion's "When you cast this spell, any player may pay ... .
+    If a player does, counter `<this spell>`." ahead of their resolution
+    line) is never one either: CR 601.2i makes that paragraph a separate
+    ability, judged by its own `[triggered]` clause. It is excluded by
+    offset, so an identical sentence printed again in the resolution text
+    is still probed."""
+    prefix_end = _cast_trigger_prefix_end(text)
+    resolution = _normalized(_strip_non_effect_preamble(text if reads is None else reads))
+    found = []
+    for begin, stop in _sentence_spans(text)[1:]:
+        if begin < prefix_end:
+            continue
+        # CR 207.2c: an ability word is a label the readers strip too.
+        own = _normalized(_strip_ability_word_labels(text[begin:stop]))
+        if own and own in resolution:
+            found.append((begin, stop))
+    return found
+
+
+def _without_span(text: str, begin: int, stop: int) -> str:
+    """`text` with `text[begin:stop]` removed, the whitespace around it
+    collapsed to what separated the neighbouring sentences."""
+    before, after = text[:begin].rstrip(" "), text[stop:].lstrip(" ")
+    joiner = (
+        " " if before and after and not before.endswith("\n") and not after.startswith("\n") else ""
+    )
+    return (before + joiner + after).strip()
+
+
+#: A sentence that only chooses targets - "If this spell was cast using
+#: teamwork, instead choose target creature card in your graveyard.", a
+#: kicker's or gift's "instead choose ..." - with no instruction of its own.
+_TARGET_CHOICE_ONLY_RE = re.compile(
+    r"^(?:if [^,]+,\s*)?(?:instead\s+)?choose\b[^.;]*\btargets?\b[^.;]*?(?:\s+instead)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _only_chooses_targets(sentence: str, text: str, ablated: str) -> bool:
+    """Whether `sentence` is a rider that only changes what the clause
+    targets: shaped as a bare target choice (`_TARGET_CHOICE_ONLY_RE`) and
+    changing the text's targeting profile. CR 601.2c reads it when targets
+    are announced, not the resolution closure - so the closure coming back
+    unchanged without it proves nothing. A sentence that names a target *and*
+    does something with it (Wasteland Strangler's "If you do, target creature
+    gets -3/-3") is an instruction the closure must perform, judged by the
+    closure like any other."""
+    own = _UNQUOTED_RE.sub("", sentence).strip()
+    if _TARGET_CHOICE_ONLY_RE.match(own) is None:
+        return False
+    return profile_for_text(ablated) != profile_for_text(text)
+
+
+_UNQUOTED_RE = re.compile(r'"[^"]*"|\([^)]*\)')
+
+
+class UnprobeableClosure(Exception):
+    """`dispatch(text)` built a closure `same_closure` cannot match to a
+    second build of the very same text - the ablation probe would read every
+    sentence as consumed there, so the clause fails closed instead."""
+
+
+_UNPROBEABLE_REASON = "unprobeable closure: a second dispatch of the same text compares unequal"
+
+
+def _answers_any_text(dispatch: Callable[[str], object], effect: object) -> bool:
+    """Whether `dispatch` gives back `effect` even for no text at all - a
+    card's own row, written whole by hand, whose answer never depended on
+    the words it was handed."""
+    try:
+        blind = dispatch("")
+    except Exception:  # noqa: BLE001 - a dispatcher refusing empty text reads its text
+        return False
+    return blind is not None and same_closure(blind, effect)
+
+
+def _builder_of(effect: object) -> Callable[[str], object] | None:
+    """The one-argument text reader whose own nested closure `effect` is -
+    `parse_mixed_effect` for `parse_mixed_effect.<locals>.effect` - or `None`
+    when it is not a nested closure of a module-level reader taking just the
+    text."""
+    qualname = getattr(effect, "__qualname__", "")
+    head, marker, _ = qualname.partition(".<locals>.")
+    module = sys.modules.get(getattr(effect, "__module__", "") or "")
+    reader = getattr(module, head, None) if marker and "." not in head else None
+    if not isinstance(reader, FunctionType):
+        return None
+    code = reader.__code__
+    required = code.co_argcount - len(reader.__defaults__ or ())
+    return reader if code.co_argcount >= 1 and required == 1 else None
+
+
+def _builds_same(builder: Callable[[str], object], text: str, effect: object) -> bool:
+    """Whether `builder` - the reader that built `effect` - builds the same
+    closure again from `text`. The cheap first question the ablation probe
+    asks: the reader that read a sentence builds something else without it,
+    so only a same answer here needs the whole dispatch chain asked as
+    well."""
+    try:
+        return same_closure(builder(text), effect)
+    except Exception:  # noqa: BLE001 - a reader refusing the text is not the same answer
+        return False
+
+
+def ignored_rider(
+    dispatch: Callable[[str], object], text: str, effect: object, reads: str | None = None
+) -> str | None:
+    """The first trailing sentence of `text` (`probe_sentences`) that
+    `effect` - `dispatch(text)`'s own answer - never read: removing it and
+    asking `dispatch` again gives back the same closure (`same_closure`).
+
+    `None` when every sentence changes the answer, or `text` has none to
+    remove. Also `None` for an answer that cannot show the difference at
+    all: a bare sentinel (`resolve_modal_spell`, `create_continuous_effect`,
+    ...), which reads the card's whole text itself at resolution -
+    `_layer_category`/`_modal_category` judge that text instead - and a
+    closure the dispatcher gives back for any text (`_answers_any_text`). A
+    sentence that only chooses targets (`_only_chooses_targets`) is read
+    when they are announced (CR 601.2c), not by the resolution closure.
+
+    Raises `UnprobeableClosure` when a second `dispatch(text)` does not
+    compare equal to `effect` - the probe cannot judge that closure at all,
+    and saying nothing would be scoring it `handled` blind."""
+    if effect is None or effect in _BARE_SENTINELS:
+        return None
+    if getattr(effect, "__name__", "").endswith(_NOTICE_STAND_IN_SUFFIX):
+        return None  # a fail-closed stand-in reads nothing and claims nothing
+    spans = probe_sentences(text, reads)
+    if not spans:
+        return None
+    builder = _builder_of(effect)
+    if builder is None or not _builds_same(builder, text, effect):
+        # No reader to stand in for the dispatcher, or the dispatcher handed
+        # its reader something other than `text` (a stripped preamble, a
+        # substituted X): every sentence goes through the whole chain, and
+        # the chain must first be shown to build a closure `same_closure`
+        # matches at all. (A reader building the same closure again already
+        # showed that.)
+        builder = None
+        if not same_closure(effect, dispatch(text)):
+            raise UnprobeableClosure(text)
+    for begin, stop in spans:
+        ablated = _without_span(text, begin, stop)
+        if not ablated:
+            continue
+        if builder is not None and not _builds_same(builder, ablated, effect):
+            continue
+        try:
+            other = dispatch(ablated)
+        except Exception:  # noqa: BLE001 - a dispatch that refuses the ablated text read the rider
+            continue
+        if other is None or not same_closure(effect, other):
+            continue
+        sentence = text[begin:stop]
+        if _only_chooses_targets(sentence, text, ablated):
+            continue
+        # Asked last, and only of a suspect: re-dispatching empty text walks
+        # every fallback reader, and nearly every answer never gets here.
+        return None if _answers_any_text(dispatch, effect) else sentence
+    return None
+
+
+def _ablation_finding(
+    dispatch: Callable[[str], object], text: str, effect: object, reads: str | None = None
+) -> str | None:
+    """`ignored_rider` as a clause reason: the sentence it names, or the
+    unprobeable-closure reason."""
+    try:
+        rider = ignored_rider(dispatch, text, effect, reads)
+    except UnprobeableClosure:
+        return _UNPROBEABLE_REASON
+    return None if rider is None else _REMAINDER_REASON + rider
+
+
+def _remainder_finding(
+    effects: list[object],
+    category: str,
+    dispatch: Callable[[str], object],
+    text: str,
+    reads: str | None = None,
+) -> str | None:
+    """Why a clause does not perform its whole text: a remainder its closure
+    carries (`unparsed_remainder`), or - for a clause still `HANDLED` whose
+    answer is an ordinary closure - a sentence the ablation probe finds
+    ignored (`ignored_rider`). The bare sentinels are left to `_layer_category`/
+    `_modal_category`, which judge the card's whole text themselves."""
+    for effect in effects:
+        remainder = unparsed_remainder(effect)
+        if remainder is not None:
+            return _REMAINDER_REASON + remainder
+    if category != HANDLED or not effects:
+        return None
+    return _ablation_finding(dispatch, text, effects[0], reads)
 
 
 #: CR 107.3a's X, substituted into a card's own text before classification so
@@ -3213,11 +3672,80 @@ def _spell_faces(printing: Card) -> list[SpellFace]:
 
 class ClauseOutcome(NamedTuple):
     """What one clause of a card really does: its category, the printed text
-    it came from, and which dispatch path answered for it."""
+    it came from, which dispatch path answered for it, and - when a strict
+    check below moved it to `NOTICE` - why, in words naming the part of the
+    clause the engine does not read."""
 
     category: str
     text: str
     source: str
+    reason: str | None = None
+
+
+def _throwaway_board(printing: Card) -> tuple[Game, CardState]:
+    """A two-player `Game` with `printing` on the battlefield under the first
+    player - the board the strict probes ask their questions on."""
+    game = Game(
+        players=[Player(username="sweep_you"), Player(username="sweep_opp")],
+        schema_version=Game.CURRENT_SCHEMA_VERSION,
+    )
+    source = CardState(
+        card=printing, zone=Zone.BATTLEFIELD, controller="sweep_you", owner="sweep_you"
+    )
+    source.bind_to_game(game)
+    game.battlefield.append(source)
+    return game, source
+
+
+def _unread_intervening_if(printing: Card, ability: TriggeredAbility) -> str | None:
+    """Why `ability` fails closed on its own intervening "if", or `None` when
+    it prints none or a reader claims it (`triggers.intervening_if_readable`).
+
+    CR 603.4: the ability checks the condition when the trigger event occurs
+    and triggers only if it is true. A condition no reader claims is recorded
+    as an `InterveningIfNotice` and the ability never triggers, so however
+    well its effect reads the clause is a notice, never `HANDLED`.
+    """
+    clause = (ability.intervening_if or "").strip()
+    if not clause or intervening_if_readable(printing, ability):
+        return None
+    return (
+        f'unread intervening "if": "{clause}" - the engine records an '
+        "InterveningIfNotice and the ability never triggers (CR 603.4)"
+    )
+
+
+def _unread_activation_instructions(printing: Card, ability: ActivatedAbility) -> str | None:
+    """Why `ability` fails closed on its own activation instructions, or
+    `None` when it prints none or the engine checks every one
+    (`Game.unread_activation_restrictions`, asked on a throwaway board).
+
+    CR 602.1b: activation instructions are followed while activating and
+    function at all times. One the engine does not check makes the runtime
+    refuse the activation with its reason, so the clause is a notice.
+    """
+    if not (ability.instructions or "").strip():
+        return None
+    game, source = _throwaway_board(printing)
+    unread = game.unread_activation_restrictions(ability, source)
+    if not unread:
+        return None
+    named = "; ".join(f'"{restriction}"' for restriction in unread)
+    return (
+        f"unread activation restriction: {named} - the engine refuses the "
+        "activation rather than let it through unchecked (CR 602.1b)"
+    )
+
+
+def _strict(category: str, *findings: str | None) -> tuple[str, str | None]:
+    """`category` taken down to `NOTICE` when any strict finding is present
+    (never raised: a clause already worse keeps its worse verdict), with the
+    findings as the reason when `NOTICE` is where it lands."""
+    present = [finding for finding in findings if finding]
+    if not present:
+        return category, None
+    category = _worse(category, NOTICE)
+    return category, ("; ".join(present) if category == NOTICE else None)
 
 
 def _best(categories: list[str]) -> str:
@@ -3407,7 +3935,19 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             # worsen an already-worse verdict.
             if _leaves_you_and_group_player_half_unread(face.text):
                 category = _worse(category, NOTICE)
-            clauses.append(ClauseOutcome(category, face.text, "spell"))
+            category, reason = _strict(
+                category,
+                _remainder_finding(
+                    effects,
+                    category,
+                    lambda text, name=face.name, x=x_candidates[0]: effect_for(
+                        name, text, x_value=x
+                    ),
+                    face.text,
+                    spell_resolution_text(face.name, face.text),
+                ),
+            )
+            clauses.append(ClauseOutcome(category, face.text, "spell", reason))
 
     activated_index = 0
     for ability in parse_abilities(printing):
@@ -3472,7 +4012,20 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 category = QUOTED_EFFECT
             if _leaves_you_and_group_player_half_unread(ability.effect):
                 category = _worse(category, NOTICE)
-            clauses.append(ClauseOutcome(category, ability.text, "activated"))
+            category, reason = _strict(
+                category,
+                _unread_activation_instructions(printing, ability),
+                _remainder_finding(
+                    activated_effects,
+                    category,
+                    lambda text, i=index, legend=legendary, name=dispatch_name, x=x_candidates[0]: (
+                        activated_effect_for(name, i, text, x_value=x, legendary=legend)
+                    ),
+                    ability.effect,
+                    activation_resolution_text(ability.effect),
+                ),
+            )
+            clauses.append(ClauseOutcome(category, ability.text, "activated", reason))
         elif isinstance(ability, TriggeredAbility) and (
             is_permanent or triggers_only_off_the_stack(ability) or _is_own_cast_trigger(ability)
         ):
@@ -3570,7 +4123,21 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 category = UNMATCHABLE_CONDITION
             if _leaves_you_and_group_player_half_unread(ability.effect):
                 category = _worse(category, NOTICE)
-            clauses.append(ClauseOutcome(category, ability.text, "triggered"))
+            category, reason = _strict(
+                category,
+                _unread_intervening_if(printing, ability),
+                None
+                if modal_category is not None
+                else _remainder_finding(
+                    trigger_effects,
+                    category,
+                    lambda text, event=ability.event, name=dispatch_name, x=x_candidates[0]: (
+                        trigger_effect_for(name, event, text, x_value=x)
+                    ),
+                    ability.effect,
+                ),
+            )
+            clauses.append(ClauseOutcome(category, ability.text, "triggered", reason))
         elif ability.kind is AbilityKind.STATIC and is_permanent:
             if prepare_spell_face_name is not None and ability.face == prepare_spell_face_name:
                 continue  # CR 722.4 - see this function's own docstring above.
@@ -3739,8 +4306,13 @@ class CardSupport(EngineModel):
     effect_detail: str
 
 
-def _clause(kind: ClauseKind, text: str, outcome: str, source: str) -> SupportClause:
-    reason = _UNREAD_CONDITION_REASON if source == _UNREAD_CONDITION_SOURCE else _REASONS[outcome]
+def _clause(
+    kind: ClauseKind, text: str, outcome: str, source: str, reason: str | None = None
+) -> SupportClause:
+    if reason is None:
+        reason = (
+            _UNREAD_CONDITION_REASON if source == _UNREAD_CONDITION_SOURCE else _REASONS[outcome]
+        )
     return SupportClause(
         kind=kind,
         text=text,
@@ -3777,6 +4349,8 @@ def _keyword_clauses(printing: Card) -> list[SupportClause]:
                     source="keyword",
                 )
             )
+        elif lowered == "protection" and (unread := _unread_protection(printing)) is not None:
+            found.append(_clause("keyword", keyword, NOTICE, where, unread))
         else:
             found.append(
                 SupportClause(
@@ -3791,6 +4365,21 @@ def _keyword_clauses(printing: Card) -> list[SupportClause]:
     return found
 
 
+def _unread_protection(printing: Card) -> str | None:
+    """Why this printing's Protection keyword is not enforced in full, or
+    `None` when it is: CR 702.16a's quality is "any characteristic value or
+    information", and one no protection reader understands
+    (`protection_quality_readable`) protects from nothing - so the keyword is
+    credited only when every quality it names reads."""
+    qualities = protection_qualities(printing)
+    if not qualities:
+        return "protection from a quality the engine does not read"
+    unread = [quality for quality in qualities if not protection_quality_readable(quality)]
+    if not unread:
+        return None
+    return "protection from a quality the engine does not read: " + ", ".join(unread)
+
+
 def _classify(printing: Card) -> CardSupport:
     clauses: list[SupportClause] = []
     rules_text = has_rules_text(printing)
@@ -3801,7 +4390,11 @@ def _classify(printing: Card) -> CardSupport:
         for outcome in outcomes:
             clauses.append(
                 _clause(
-                    _KIND_OF_SOURCE[outcome.source], outcome.text, outcome.category, outcome.source
+                    _KIND_OF_SOURCE[outcome.source],
+                    outcome.text,
+                    outcome.category,
+                    outcome.source,
+                    outcome.reason,
                 )
             )
         if outcomes:

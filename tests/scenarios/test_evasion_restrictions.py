@@ -173,6 +173,56 @@ def test_a_higher_power_blocker_is_permitted():
     assert scenario.game.is_blocked(beast)
 
 
+# -- qualified by card type: Clockwork Steed --------------------------------
+
+
+def test_a_matching_type_blocker_is_refused():
+    """Clockwork Steed: "This creature can't be blocked by artifact
+    creatures." - Adaptive Automaton is an Artifact Creature and is refused
+    the same generic `_parse_creature_description` grammar the "can't block
+    or be blocked by <description>" compound already reads (CR 509.1a)."""
+    scenario = duel("Clockwork Steed", "Adaptive Automaton").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    steed = scenario.creature("Clockwork Steed")
+    automaton = scenario.creature("Adaptive Automaton", "bob")
+    scenario.attack_with(steed)
+
+    assert not scenario.game.can_block(automaton, steed)
+    with pytest.raises(ValueError, match="artifact creatures"):
+        scenario.block(steed, automaton)
+
+
+def test_a_non_matching_type_blocker_is_permitted():
+    scenario = duel("Clockwork Steed", "Grizzly Bears").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    steed = scenario.creature("Clockwork Steed")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(steed)
+
+    assert scenario.game.can_block(bears, steed)
+    scenario.block(steed, bears)
+
+    assert scenario.game.is_blocked(steed)
+
+
+def test_fen_haulers_own_printing_of_the_same_restriction_is_enforced():
+    """Fen Hauler - a second, unrelated real printing of the identical "can't
+    be blocked by artifact creatures." sentence - proves the reader is not
+    fitted to Clockwork Steed's own card."""
+    scenario = duel("Fen Hauler", "Adaptive Automaton").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    hauler = scenario.creature("Fen Hauler")
+    automaton = scenario.creature("Adaptive Automaton", "bob")
+    scenario.attack_with(hauler)
+
+    with pytest.raises(ValueError, match="artifact creatures"):
+        scenario.block(hauler, automaton)
+    assert scenario.game.evasion_notices == []
+
+
 # -- fail-closed: a comparison this parser does not read ---------------------
 
 
