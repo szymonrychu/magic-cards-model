@@ -80,7 +80,7 @@
         "source": "Grub, Storied Matriarch"
       }
     ],
-    "fields_changed": ["combat", "continuous_effects", "counters_put_this_turn", "creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_facts", "turn_history"],
+    "fields_changed": ["combat", "continuous_effects", "counters_put_this_turn", "creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Grub, Notorious Auntie@alice#1": {

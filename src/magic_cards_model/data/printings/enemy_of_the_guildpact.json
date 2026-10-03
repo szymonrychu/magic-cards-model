@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "3dcc7d53-2510-4322-969c-1e138287562c",
+  "oracle_id": "e5cf7b75-b59b-4cac-bfd2-13e452457d74",
+  "multiverse_ids": [
+    107342
+  ],
+  "mtgo_id": 24169,
+  "mtgo_foil_id": 24170,
+  "tcgplayer_id": 13857,
+  "cardmarket_id": 12993,
+  "name": "Enemy of the Guildpact",
+  "lang": "en",
+  "released_at": "2006-05-05",
+  "uri": "https://api.scryfall.com/cards/3dcc7d53-2510-4322-969c-1e138287562c",
+  "scryfall_uri": "https://scryfall.com/card/dis/44/enemy-of-the-guildpact?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:50:30Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.jpg?1783943430",
+    "normal": "https://cards.scryfall.io/normal/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.jpg?1783943430",
+    "large": "https://cards.scryfall.io/large/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.jpg?1783943430",
+    "png": "https://cards.scryfall.io/png/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.png?1783943430",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.jpg?1783943430",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.jpg?1783943430",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.webp?1783943430",
+    "grid": "https://cards.scryfall.io/grid/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.webp?1783943430",
+    "display": "https://cards.scryfall.io/display/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.webp?1783943430",
+    "art": "https://cards.scryfall.io/art/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.webp?1783943430",
+    "crop": "https://cards.scryfall.io/crop/front/3/d/3dcc7d53-2510-4322-969c-1e138287562c.webp?1783943430"
+  },
+  "mana_cost": "{4}{B}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Spirit",
+  "oracle_text": "Protection from multicolored",
+  "power": "4",
+  "toughness": "2",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Protection"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "fdebeda1-b95f-4343-8a94-d125821e6b5c",
+  "set": "dis",
+  "set_name": "Dissension",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/fdebeda1-b95f-4343-8a94-d125821e6b5c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adis&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dis?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3dcc7d53-2510-4322-969c-1e138287562c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae5cf7b75-b59b-4cac-bfd2-13e452457d74&unique=prints",
+  "collector_number": "44",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Guilds often exterminate those who saw or knew too much. Some vindictive souls retain their knowledge, using it in the afterlife to crush the guilded and the vile bargain that gives them power.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Fred Hooper",
+  "artist_ids": [
+    "5768868e-878c-48aa-9982-eaa498db1b5e"
+  ],
+  "illustration_id": "ea791862-c539-437f-8de3-f8c70bc33627",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 30102,
+  "prices": {
+    "usd": "0.07",
+    "usd_foil": "0.52",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.28",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=107342&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEnemy%2Bof%2Bthe%2BGuildpact",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEnemy%2Bof%2Bthe%2BGuildpact",
+    "edhrec": "https://edhrec.com/route/?cc=Enemy+of+the+Guildpact"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F13857%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12993&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/24169?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

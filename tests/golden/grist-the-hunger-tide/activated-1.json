@@ -64,7 +64,7 @@
         "source": "Grist, the Hunger Tide"
       }
     ],
-    "fields_changed": ["creatures_died_this_turn", "delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts", "turn_history"],
+    "fields_changed": ["creatures_died_this_turn", "delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Icehide Golem@alice#1": {

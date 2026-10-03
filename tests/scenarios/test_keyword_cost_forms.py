@@ -102,6 +102,13 @@ def test_a_sentence_starting_with_a_keyword_is_not_a_keyword_line():
         ("Pay 2 life", "Pay 2 life"),
         ("Discard a card", "Discard a card"),
         ("{2}{R}", "{2}{R}"),
+        # Emrakul, the World Anew's own "Madness—Pay six {C}." - a spelled-out
+        # count naming how many of one mana symbol to pay (CR 107.4c's {C}).
+        ("Pay six {C}", "{C}{C}{C}{C}{C}{C}"),
+        # The digit form of the same grammar, and a different mana symbol -
+        # never printed in the pool, proving the reader is not fitted to
+        # Emrakul's exact word or its exact symbol.
+        ("Pay 3 {R}", "{R}{R}{R}"),
     ],
 )
 def test_a_printed_cost_phrase_becomes_a_total_cost(phrase, rendered):
@@ -114,6 +121,18 @@ def test_a_printed_cost_phrase_becomes_a_total_cost(phrase, rendered):
 def test_a_phrase_the_parser_cannot_read_is_refused_rather_than_guessed():
     """A cost that cannot be read has to say so, not charge nothing."""
     assert total_cost_for_phrase("Sacrifice a permanent with the highest mana value") is None
+
+
+def test_a_repeated_energy_symbol_is_refused_rather_than_treated_as_mana():
+    """CR 107.14: `{E}` is the energy symbol, not a mana symbol (CR 107.4's
+    own list never names it) - "removes one energy counter", a resource this
+    engine does not model as a payable cost anywhere yet. The Kaladesh-block
+    template prints this exact "Pay `<count>` {E}" shape (Aetherworks
+    Marvel's "Pay six {E}", none in this pool), and it must keep failing
+    closed rather than the repeated-mana-symbol reader silently treating it
+    as three colorless mana.
+    """
+    assert total_cost_for_phrase("Pay three {E}") is None
 
 
 # -- the ones that parse and still have nowhere to go -----------------------

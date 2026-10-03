@@ -237,12 +237,22 @@ def test_a_dead_clause_cannot_hide_behind_a_working_one():
     text-keyed layer work landed in the same wave and reads it now - Kavu is
     `handled` on both clauses, pinned below - so the case moved to a card that
     still has the split rather than being deleted along with the gap it found.
+
+    The predicate also requires the card-level verdict itself to be
+    `STATIC_UNAUDITED` - not just that one clause is, since a *third* clause
+    on the same card (an unrelated silent activated ability, say) can be
+    worse still and would otherwise make `gap_example` hand back a witness
+    that no longer demonstrates this test's own point (EC7 moved the example
+    from a card with only the two clauses to Clockwork Steed, whose separate,
+    unrelated activated ability is silent).
     """
 
     def split(printing) -> bool:
         by_source = {c.source: c.category for c in classify_clauses(printing)}
-        return by_source.get("triggered") == HANDLED and by_source.get("static") == (
-            STATIC_UNAUDITED
+        return (
+            by_source.get("triggered") == HANDLED
+            and by_source.get("static") == STATIC_UNAUDITED
+            and classify_card(printing)[0] == STATIC_UNAUDITED
         )
 
     printing = gap_example("a read trigger beside an unaudited static", split)
