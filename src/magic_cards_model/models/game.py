@@ -4396,7 +4396,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 108
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 107
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4579,11 +4579,6 @@ class Game(EngineModel):
     #: `DamageLifeFloorReplacement` and the `EventKind.LOSE_THE_GAME`/
     #: `LOSE_LIFE` event kinds, and CR 119.5 "your life total becomes" got one
     #: reader (fix-archangel-beckett).
-    #: 108: `CardState` gained `flipped` (CR 710 flip cards), the targeting
-    #: `TargetRequirement` gained `object_dealt_damage_clause`, the delayed
-    #: `ThatCreatureDiesConsequence` gained `source_stamp`, and source-damage
-    #: abilities with back-references (`machines/damage_backrefs.py`) now
-    #: resolve instead of recording a notice (e5-damage-anaphora).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
