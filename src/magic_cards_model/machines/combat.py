@@ -436,6 +436,12 @@ class Attack(EngineModel):
     defender: TargetRef
     blockers: list[UUID] = Field(default_factory=list)
     blocked: bool = False
+    blocked_by: list[UUID] = Field(default_factory=list)
+    """Every creature that has blocked this attacker this combat, in the
+    order each began to, including any since removed from combat - the
+    history Balduvian Warlord's "creatures it was blocking that hadn't become
+    blocked by another creature this combat" asks about (CR 509.1h), which
+    `blockers` (who is blocking *now*) cannot answer."""
 
 
 class CombatMachine(EngineModel):
@@ -522,6 +528,31 @@ class CombatMachine(EngineModel):
         for attack in self.attacks:
             if card_id in attack.blockers:
                 attack.blockers.remove(card_id)
+
+    def unblock_attacks_blocked_only_by(self, blocker_id: UUID) -> list[UUID]:
+        """Each attacker `blocker_id` had blocked and no other creature had
+        this combat becomes unblocked (CR 509.1h's "an effect says that it
+        becomes ... unblocked"). Returns the attackers it unblocked."""
+        unblocked = []
+        for attack in self.attacks:
+            if attack.blocked and attack.blocked_by and set(attack.blocked_by) == {blocker_id}:
+                attack.blocked = False
+                unblocked.append(attack.attacker_id)
+        return unblocked
+
+    def add_blocker(self, blocker_id: UUID, attacker_id: UUID) -> None:
+        """An effect makes `blocker_id` block `attacker_id` (CR 509.3b): it is
+        blocking that attacker, which becomes (or stays) blocked (CR 509.1h).
+        Not a declaration, so CR 509.1b/509.1c's restrictions and
+        requirements are not consulted."""
+        attack = self.attack_by(attacker_id)
+        if attack is None:
+            return
+        if blocker_id not in attack.blockers:
+            attack.blockers.append(blocker_id)
+        if blocker_id not in attack.blocked_by:
+            attack.blocked_by.append(blocker_id)
+        attack.blocked = True
 
     def clear(self) -> None:
         """Everything is removed from combat as the combat phase ends (CR 511.3)."""
@@ -2707,6 +2738,7 @@ def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) ->
     for attack in combat.attacks:
         chosen = declared[attack.attacker_id]
         attack.blockers = [blocker.id for blocker in chosen]
+        attack.blocked_by += [b.id for b in chosen if b.id not in attack.blocked_by]
         # CR 509.1h: once blocked, a creature stays blocked for the rest of combat.
         attack.blocked = attack.blocked or bool(chosen)
     combat.blockers_declared = True
@@ -2738,6 +2770,23 @@ def defending_player(game: "Game", defender: TargetRef) -> str | None:
             return permanent.protector
         return game.controller_of(permanent).username
     return None
+
+
+def effect_block_candidates(game: "Game", blocker: CardState) -> list[CardState]:
+    """The attacking creatures an effect can make `blocker` block (CR 509.3b):
+    each attacking its controller, a planeswalker they control or a battle
+    they protect (CR 509.1a's bound on what a blocker can be blocking). The
+    declaration's restrictions and requirements (CR 509.1b, 509.1c) do not
+    apply - an effect causing a block is not a declaration of blockers."""
+    controller = game.controller_of(blocker).username
+    found = []
+    for attack in game.combat.attacks:
+        attacker = game.find_by_id(attack.attacker_id)
+        if attacker is None or attacker.id == blocker.id:
+            continue
+        if defending_player(game, attack.defender) == controller:
+            found.append(attacker)
+    return found
 
 
 def protector_candidates(

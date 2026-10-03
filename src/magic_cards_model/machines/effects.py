@@ -107,8 +107,14 @@ from ..numbers import (
     where_x_pattern,
 )
 from ..snapshot import EngineModel
+from . import (
+    block_reassignment,
+    map_tokens,
+    mass_pump_conditions,
+    mass_pump_followups,
+    token_riders,
+)
 from . import combat as combat_rules
-from . import map_tokens, mass_pump_conditions, mass_pump_followups, token_riders
 from .abilities import (
     _ABILITY_WORD,
     KEYWORD_ABILITY_NAMES,
@@ -63105,6 +63111,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     for whole_text_reader in (
         _parse_remove_all_counters_then_cant_have_clause,
         _parse_player_loses_all_counters_clause,
+        block_reassignment.parse_remove_blocker_then_it_blocks_another_clause,
     ):
         whole = whole_text_reader(text)
         if whole is not None:
