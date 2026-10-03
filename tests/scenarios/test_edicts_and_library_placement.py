@@ -186,6 +186,32 @@ def test_clash_of_elements_on_a_token_still_deals_damage_when_it_goes_to_the_lib
     assert scenario.game.player("bob").life == bob_life_before - 2
 
 
+def test_clash_of_elements_does_nothing_when_its_target_is_illegal_on_resolution() -> None:
+    """CR 608.2b: the only target left the battlefield, so no damage and nothing moves."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Clash of Elements"], battlefield=["Island", "Mountain", "Mountain"])
+        .player("bob", battlefield=["Grizzly Bears"], library=["Opt"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bob_life_before = scenario.game.player("bob").life
+    library_before = list(scenario.game.player("bob").library)
+    scenario.will_take_the_may(True, source="Clash of Elements")
+    scenario.cast_onto_stack(
+        "Clash of Elements",
+        *scenario.untapped_sources("Island", "Mountain", "Mountain"),
+        targets=[bears],
+    )
+    scenario.game.return_to_hand(bears)
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.HAND
+    assert scenario.game.player("bob").library == library_before
+    assert scenario.game.player("bob").life == bob_life_before
+
+
 def test_clash_of_elements_reader_accepts_both_top_wordings() -> None:
     from magic_cards_model.machines.effects import _CHOOSE_TARGET_OWNER_MAY_TOP_ELSE_BOTTOM_RE as RE
 
