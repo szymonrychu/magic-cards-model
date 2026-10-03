@@ -3,6 +3,8 @@
   "id": "b61bcef7-5832-45e6-a2bc-26d4f23707fc",
   "oracle_id": "78304a06-4c9a-4cdf-b67f-067d88762381",
   "multiverse_ids": [],
+  "resource_id": "4DDDCD222480F69092E77D2CCAEFEBA0EDB3102D7BA822882A1DDA44EA2A996F",
+  "mtgo_id": 155958,
   "tcgplayer_id": 715859,
   "cardmarket_id": 907312,
   "name": "Clash of Elements",
@@ -30,7 +32,7 @@
   "mana_cost": "{1}{U}{R}",
   "cmc": 3.0,
   "type_line": "Instant",
-  "oracle_text": "Choose target nonland permanent. Its owner may put it on the top of their library. If they do, Clash of Elements deals 2 damage to them. If they didn't put the card on top of their library, they put it on the bottom.",
+  "oracle_text": "Choose target nonland permanent. Its owner may put it on top of their library. If they do, Clash of Elements deals 2 damage to them. If they didn't put the card on top of their library, they put it on the bottom.",
   "colors": [
     "R",
     "U"
@@ -41,29 +43,29 @@
   ],
   "keywords": [],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -107,14 +109,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 32098,
+  "edhrec_rank": 30023,
   "prices": {
-    "usd": "1.99",
-    "usd_foil": "3.00",
+    "usd": "0.26",
+    "usd_foil": "0.70",
     "usd_etched": null,
-    "eur": null,
-    "eur_foil": null,
-    "tix": null
+    "eur": "0.15",
+    "eur_foil": "0.22",
+    "tix": "0.01"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DClash%2Bof%2BElements",
@@ -124,6 +126,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715859%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907312&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Clash+of+Elements&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155958?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

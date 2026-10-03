@@ -25,6 +25,7 @@ cross-checked with `mise run rules:find` (on-disk CR effective 2026-09-25):
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.token import PREDEFINED, create_tokens
 from tests.scenarios.harness import Scenario
 
 
@@ -133,6 +134,69 @@ def test_clash_of_elements_bottoms_the_card_when_the_owner_declines() -> None:
     assert bears.zone is Zone.LIBRARY
     assert scenario.game.player("bob").library[-1] is bears
     assert scenario.game.player("bob").life == bob_life_before
+
+
+def test_clash_of_elements_on_the_casters_own_permanent_damages_the_caster() -> None:
+    """CR 608.2d: the owner (here the caster) makes the may choice and takes the damage."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Clash of Elements"],
+            battlefield=["Island", "Mountain", "Mountain", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    alice_life_before = scenario.game.player("alice").life
+    scenario.will_take_the_may(True, source="Clash of Elements")
+
+    scenario.cast_and_resolve(
+        "Clash of Elements",
+        *scenario.untapped_sources("Island", "Mountain", "Mountain"),
+        targets=[bears],
+    )
+
+    assert bears.zone is Zone.LIBRARY
+    assert scenario.game.player("alice").life == alice_life_before - 2
+
+
+def test_clash_of_elements_on_a_token_still_deals_damage_when_it_goes_to_the_library() -> None:
+    """CR 111.7: the token ceases to exist in the library, but it was still put there."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Clash of Elements"], battlefield=["Island", "Mountain", "Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (treasure,) = create_tokens(scenario.game, PREDEFINED["Treasure"], "bob")
+    bob_life_before = scenario.game.player("bob").life
+    scenario.will_take_the_may(True, source="Clash of Elements")
+
+    scenario.cast_and_resolve(
+        "Clash of Elements",
+        *scenario.untapped_sources("Island", "Mountain", "Mountain"),
+        targets=[treasure],
+    )
+
+    assert treasure not in scenario.game.battlefield
+    assert scenario.game.player("bob").life == bob_life_before - 2
+
+
+def test_clash_of_elements_reader_accepts_both_top_wordings() -> None:
+    from magic_cards_model.machines.effects import _CHOOSE_TARGET_OWNER_MAY_TOP_ELSE_BOTTOM_RE as RE
+
+    tail = (
+        " If they do, Clash of Elements deals 2 damage to them. If they didn't put the card"
+        " on top of their library, they put it on the bottom."
+    )
+    for wording in ("on top of", "on the top of"):
+        head = "Choose target nonland permanent. Its owner may put it"
+        text = f"{head} {wording} their library.{tail}"
+        assert RE.fullmatch(text) is not None
 
 
 def test_living_library_shuffles_the_targeted_permanent_into_its_owners_library() -> None:

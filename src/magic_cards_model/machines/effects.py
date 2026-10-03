@@ -43083,9 +43083,9 @@ def _parse_may_exile_hand_if_you_do_clause(text: str) -> AbilityEffect | None:
 #: shape ("may X. If they do, Y. If they didn't, Z.") rather than a literal
 #: match on Clash of Elements' own sentence.
 _CHOOSE_TARGET_OWNER_MAY_TOP_ELSE_BOTTOM_RE = re.compile(
-    r"^choose target (?P<desc>.+?)\.\s*its owner may put it on the top of their library\.\s*"
+    r"^choose target (?P<desc>.+?)\.\s*its owner may put it on (?:the )?top of their library\.\s*"
     r"if they do,\s*.*?\bdeals (?P<n>\d+) damage to them\.\s*"
-    r"if they didn'?t put the card on top of their library, they put it on the bottom\.?$",
+    r"if they didn'?t put the card on (?:the )?top of their library, they put it on the bottom\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
