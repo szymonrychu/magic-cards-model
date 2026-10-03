@@ -1272,6 +1272,15 @@ def token_copy_of(
                     counters=dict(enters_with_counters) or None,
                 )
                 created.append(copy)
+            defender = options.get("attacking")
+            if defender is not None:
+                # CR 508.4: put onto the battlefield attacking - set before
+                # the enters event is raised, so it enters attacking. Only the
+                # copies asked for, and only those a replacement effect left
+                # on the battlefield.
+                for copy in created:
+                    if copy.zone is Zone.BATTLEFIELD:
+                        _put_onto_the_battlefield_attacking(game, copy, defender)
             for extra in extra_definitions:
                 addition = TokenState(
                     card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner

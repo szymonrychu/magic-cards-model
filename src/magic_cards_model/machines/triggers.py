@@ -2596,7 +2596,42 @@ def _entry_qualifier_matches(game: "Game", condition: str, event: "GameEvent") -
         if kind not in subject.counters:
             return False
 
+    origin_match = _ENTERS_FROM_ZONE_RE.search(lowered)
+    if origin_match is not None:
+        # CR 603.6a: "enters from a graveyard"/"from your hand" - the enters
+        # event carries the zone the permanent moved from (`origin_zone`);
+        # "your" names a zone of the permanent's owner (CR 400.3).
+        required = _ENTERS_FROM_ZONE_WORDS[origin_match.group("zone")]
+        if event.origin_zone is not required:
+            return False
+        if origin_match.group("whose") == "your" and (
+            subject is None or subject.owner != event.subject_controller
+        ):
+            return False
+
     return True
+
+
+#: "enters from a graveyard" (Treacherous Pit-Dweller), "enters from your
+#: graveyard" (Phyrexian Dragon Engine), "enters from your hand"
+#: (Thousand-Faced Shadow), "enters from exile" - the origin half of an
+#: enters condition (CR 603.6a).
+_ENTERS_FROM_ZONE_RE = re.compile(
+    r"\benters? from (?:(?P<whose>your|a|their) )?(?P<zone>hand|graveyard|library|exile)\b"
+)
+_ENTERS_FROM_ZONE_WORDS: dict[str, Zone] = {
+    "hand": Zone.HAND,
+    "graveyard": Zone.GRAVEYARD,
+    "library": Zone.LIBRARY,
+    "exile": Zone.EXILE,
+}
+
+
+def entering_origin_zone(condition: str) -> Zone | None:
+    """The zone an enters condition requires its permanent to have come from
+    (`_ENTERS_FROM_ZONE_RE`), or `None` when it names none."""
+    match = _ENTERS_FROM_ZONE_RE.search(condition.lower())
+    return None if match is None else _ENTERS_FROM_ZONE_WORDS[match.group("zone")]
 
 
 #: CR 111.1's token, read off a condition's own printed word rather than
@@ -5211,7 +5246,16 @@ def zones_ability_functions_in(
         ability.event is TriggerEvent.CAST_SPELL
         and _required_cast_origin_zone(lowered) is Zone.GRAVEYARD
     )
-    if "in your graveyard" in lowered or ("from your graveyard" in lowered and not cast_origin):
+    # Likewise "When this creature enters from your graveyard" (Phyrexian
+    # Dragon Engine) says where the *entering permanent* came from; an enters
+    # ability triggers from the battlefield (CR 603.6a).
+    enters_origin = (
+        ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+        and entering_origin_zone(lowered) is not None
+    )
+    if "in your graveyard" in lowered or (
+        "from your graveyard" in lowered and not cast_origin and not enters_origin
+    ):
         return frozenset({Zone.GRAVEYARD})
     if "opening hand" in lowered:
         return frozenset({Zone.HAND})

@@ -53576,7 +53576,9 @@ _CREATE_TOKEN_COPIES_EXCEPT_RE = re.compile(
     r"that(?: are copies|'s a copy|’s a copy| is a copy) of "
     r"(?P<phrase>(?:another )?target [^.]+?)"
     r"(?:, except (?P<except>.+?))?"
-    rf"(?:\.\s*put {count_pattern('counters')} \+1/\+1 counters? on (?:it|them))?\.?$",
+    rf"(?:\.\s*put {count_pattern('counters')} \+1/\+1 counters? on (?:it|them))?"
+    # CR 508.4: Thousand-Faced Shadow's "The token enters tapped and attacking."
+    r"(?P<enters_attacking>\.\s*(?:the tokens? enters?|they enter) tapped and attacking)?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -53840,16 +53842,28 @@ def _parse_create_token_copies_except_clause(
         if exception is None:
             return None
         added, power, toughness, added_type = exception
+    enters_attacking = match.group("enters_attacking") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState):
+                # CR 508.4: put onto the battlefield attacking what its
+                # controller is already attacking.
+                attacking = (
+                    {
+                        "tapped": True,
+                        "attacking": _defender_of_controllers_attack(game, controller.username),
+                    }
+                    if enters_attacking
+                    else {}
+                )
                 created = token_copy_of(
                     game,
                     target,
                     controller.username,
                     count=count,
+                    **attacking,
                     added_abilities=added,
                     power=power,
                     toughness=toughness,

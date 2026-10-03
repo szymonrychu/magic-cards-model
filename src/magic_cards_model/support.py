@@ -198,6 +198,7 @@ from magic_cards_model.machines.triggers import (
     TriggerEvent,
     _unread_trigger_events,
     condition_matches,
+    entering_origin_zone,
     intervening_if_readable,
     is_additional_trigger_line,
     is_batched_attack_condition,
@@ -2846,6 +2847,9 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
             # occurrence is tried as though it always were one, the one way
             # the condition could ever be satisfied at all.
             tapped_for_teamwork=ability.event is TriggerEvent.BECOMES_TAPPED,
+            # "enters from a graveyard"/"from your hand" (CR 603.6a): the one
+            # origin such a condition can be satisfied by, tried as that.
+            origin_zone=entering_origin_zone(ability.condition) if entering else None,
         )
 
     for host in source_variants:
