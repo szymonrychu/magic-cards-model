@@ -11863,6 +11863,70 @@ def card_types_among_spells_cast_reader(
     return read
 
 
+#: "(other) attacking `<qualifier>`" - Goblin Piledriver's own "for each other
+#: attacking Goblin", Cenn's Heir's "for each other attacking Kithkin", Charging
+#: Hooligan's "for each attacking creature". CR 508.1k makes an attacking
+#: creature one chosen as an attacker and not yet removed from combat, whoever
+#: controls it (the printing says no "you control"), so this walks
+#: `Game.combat.attacker_ids`; "other" leaves out the ability's own source
+#: (`source_id`), and CR 608.2h has the count taken once, as the effect applies.
+_ATTACKING_QUALIFIER_RE = re.compile(
+    r"^(?P<other>other )?attacking (?:(?P<color>colorless|white|blue|black|red|green) )?"
+    r"(?P<qualifier>[a-z]+)$",
+    re.IGNORECASE,
+)
+
+
+def _for_each_attacking_count(phrase: str) -> Callable[["Game", str, str | None], int] | None:
+    """`_ATTACKING_QUALIFIER_RE`'s shape as a `(game, controller, source_id)
+    -> int` reader, or `None` when `phrase` is not that shape."""
+    match = _ATTACKING_QUALIFIER_RE.fullmatch(phrase.strip())
+    if match is None:
+        return None
+    qualifier_word = match.group("qualifier")
+    universal = qualifier_word.lower() in ("permanent", "permanents")
+    card_type = None if universal else _singular_card_type(qualifier_word)
+    subtype = (
+        None
+        if universal or card_type is not None
+        else _singular_subtype_for_count_expression(qualifier_word)
+    )
+    if not universal and card_type is None and subtype is None:
+        return None
+    other = match.group("other") is not None
+    color_word = (match.group("color") or "").lower()
+
+    def count(game: "Game", _controller: str, source_id: str | None) -> int:
+        board = game.computed_board()
+        total = 0
+        for permanent in game.battlefield:
+            if permanent.id not in game.combat.attacker_ids:
+                continue
+            if other and source_id is not None and str(permanent.id) == source_id:
+                continue
+            chars = board.of(permanent)
+            if color_word == "colorless" and chars.colors:
+                continue
+            if (
+                color_word
+                and color_word != "colorless"
+                and _COLOR_WORDS_FOR_COUNT[color_word] not in chars.colors
+            ):
+                continue
+            if card_type is not None and card_type not in chars.types:
+                continue
+            if (
+                card_type is None
+                and subtype is not None
+                and not any(word.lower() == subtype for word in chars.subtypes)
+            ):
+                continue
+            total += 1
+        return total
+
+    return count
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -11967,7 +12031,7 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
                 return sum(1 for player in game.players if len(player.graveyard) >= threshold)
 
             return count_graveyards_at_least
-    qualifier_reader = _for_each_qualifier_count(stripped)
+    qualifier_reader = _for_each_qualifier_count(stripped) or _for_each_attacking_count(stripped)
     if qualifier_reader is not None:
         return qualifier_reader
     if this_way := _COUNT_THIS_WAY_RE.fullmatch(f"number of {stripped}"):
