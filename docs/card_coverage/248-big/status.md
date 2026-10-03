@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 7.4% |
-| Works (untested) | 8 | 29.6% |
+| Tested | 4 | 14.8% |
+| Works (untested) | 7 | 25.9% |
 | Partial (unaudited) | 2 | 7.4% |
-| Not working | 15 | 55.6% |
+| Not working | 14 | 51.9% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Vaultborn Tyrant | silent | When this creature dies, if it's not a token, create a token that's a copy of it, except it's an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bristlebud Farmer | notice | Whenever this creature attacks, you may sacrifice a Food. If you do, mill three cards. You may put a permanent card from among them into your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Loot, the Key to Everything | notice | At the beginning of your upkeep, exile the top X cards of your library, where X is the number of card types among other nonland permanents you control. You may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Molten Duplication | notice | Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. It gains haste until end of tur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Nexus of Becoming | notice | At the beginning of combat on your turn, draw a card. Then you may exile an artifact or creature card from your hand. If you do, create a token that's a copy of | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Territory Forge | unaudited | This artifact has all activated abilities of the exiled card. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Worldwalker Helm | unaudited | If you would create one or more artifact tokens, instead create those tokens plus an additional Map token. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -50,15 +49,16 @@
 | Lost Jitte | handled | Whenever equipped creature deals combat damage, put a charge counter on Lost Jitte. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lotus Ring | handled | Equipped creature gets +3/+3 and has vigilance and "{T}, Sacrifice this creature: Add three mana of any one color." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Oltec Matterweaver | handled | Whenever you cast a creature spell, choose one — • Create a 1/1 colorless Gnome artifact creature token. • Create a token that's a copy of target artifact token | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Simulacrum Synthesizer | handled | When this artifact enters, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>4 cards</summary>
 
 - Harvester of Misery
+- Molten Duplication
 - Pest Control
+- Simulacrum Synthesizer
 
 </details>
 
@@ -68,7 +68,6 @@
 |---|---|---|---|
 | at the beginning of combat on your turn, draw a card. then you may exile an artifact or creature card from your hand. if you do, create a token that"..."s a N/N | 1 | Nexus of Becoming | big |
 | at the beginning of your upkeep, exile the top N cards of your library, where N is the number of card types among other nonland permanents you control. you may  | 1 | Loot, the Key to Everything | big |
-| create a token that"..."s an artifact in addition to its other types. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Molten Duplication | big |
 | if you would create one or more artifact tokens, instead create those tokens plus an additional map token. | 1 | Worldwalker Helm | big |
 | when ~ dies, if it"..."s a copy of it, except it's an artifact in addition to its other types. | 1 | Vaultborn Tyrant | big |
 | when ~ enters, search your library for up to five land cards that have different names, exile them, then shuffle. | 1 | Omenpath Journey | big |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 14.0% |
-| Works (untested) | 111 | 41.9% |
+| Tested | 41 | 15.5% |
+| Works (untested) | 108 | 40.8% |
 | Partial (unaudited) | 14 | 5.3% |
-| Not working | 103 | 38.9% |
+| Not working | 102 | 38.5% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Demonic Counsel | silent | Search your library for a Demon card, reveal it, put it into your hand, then shuffle. Delirium — If there are four or more card types among cards in your gravey | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dissection Tools | silent | When this Equipment enters, manifest dread, then attach this Equipment to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Duskmourn's Domination | silent | Enchanted creature gets -3/-0 and loses all abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Enduring Tenacity | silent | Whenever you gain life, target opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Entity Tracker | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Erratic Apparition | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, this creature gets +1/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Fanatic of the Harrowing | silent | When this creature enters, each player discards a card. If you discarded a card this way, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -150,7 +149,6 @@
 | Bear Trap | handled | {3}, {T}, Sacrifice this artifact: It deals 3 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bedhead Beastie | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/Y | not_tested |
 | Betrayer's Bargain | handled | As an additional cost to cast this spell, sacrifice a creature or enchantment or pay {2}. Betrayer's Bargain deals 5 damage to target creature. If that creature | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Blazemire Verge | handled |  |  | Y/Y/Y | not_tested |
 | Bleeding Woods | handled | This land enters tapped unless a player has 13 or less life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boilerbilges Ripper | handled | When this creature enters, you may sacrifice another creature or enchantment. When you do, this creature deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bottomless Pool // Locker Room | handled | When you unlock this door, return up to one target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -169,6 +167,7 @@
 | Diversion Specialist | handled | {1}, Sacrifice another creature or enchantment: Exile the top card of your library. You may play it this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Emerge from the Cocoon | handled | Return target creature card from your graveyard to the battlefield. You gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Enduring Courage | handled | Whenever another creature you control enters, it gets +2/+0 and gains haste until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Enduring Tenacity | handled | Whenever you gain life, target opponent loses that much life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Enduring Vitality | handled | Creatures you control have "{T}: Add one mana of any color." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Enter the Enigma | handled | Target creature can't be blocked this turn. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Etched Cornfield | handled | This land enters tapped unless a player has 13 or less life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -177,11 +176,9 @@
 | Fear of Failed Tests | handled | Whenever this creature deals combat damage to a player, draw that many cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fear of Isolation | handled | As an additional cost to cast this spell, return a permanent you control to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fear of Lost Teeth | handled | When this creature dies, it deals 1 damage to any target and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Fear of Missing Out | handled | When this creature enters, discard a card, then draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fear of Surveillance | handled | Whenever this creature attacks, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Final Vengeance | handled | As an additional cost to cast this spell, sacrifice a creature or enchantment. Exile target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flesh Burrower | handled | Whenever this creature attacks, another target creature you control gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Floodfarm Verge | handled |  |  | Y/Y/Y | not_tested |
 | Frantic Strength | handled | Enchanted creature gets +2/+2 and has trample. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Friendly Ghost | handled | When this creature enters, target creature gets +2/+4 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Friendly Teddy | handled | When this creature dies, each player draws a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -228,7 +225,6 @@
 | Savior of the Small | handled | Survival — At the beginning of your second main phase, if this creature is tapped, return target creature card with mana value 3 or less from your graveyard to  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sawblade Skinripper | handled | {2}, Sacrifice another creature or enchantment: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Seized from Slumber | handled | This spell costs {3} less to cast if it targets a tapped creature. Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Sheltered by Ghosts | handled | When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shepherding Spirits | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Shrewd Storyteller | handled | Survival — At the beginning of your second main phase, if this creature is tapped, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shroudstomper | handled | Whenever this creature enters or attacks, each opponent loses 2 life. You gain 2 life and draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -258,11 +254,12 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>41 cards</summary>
 
 - Abhorrent Oculus
 - Balustrade Wurm
 - Bashful Beastie
+- Blazemire Verge
 - Cautious Survivor
 - Central Elevator // Promising Stairs
 - Chainsaw
@@ -272,7 +269,9 @@
 - Enduring Curiosity
 - Enduring Innocence
 - Fear of Impostors
+- Fear of Missing Out
 - Fear of the Dark
+- Floodfarm Verge
 - Floodpits Drowner
 - Get Out
 - Give In to Violence
@@ -289,6 +288,7 @@
 - Overlord of the Balemurk
 - Overlord of the Mistmoors
 - Screaming Nemesis
+- Sheltered by Ghosts
 - The Mindskinner
 - Thornspire Verge
 - Tyvar, the Pummeler
@@ -365,7 +365,6 @@
 | whenever one or more cards leave your graveyard, create a N/N black horror enchantment creature token. ~ triggers only once each turn. | 1 | Defiled Crypt // Cadaver Lab | dsk |
 | whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped. | 1 | Hedge Shredder | dsk |
 | whenever you attack, attacking creatures you control get +N/+N until end of turn. | 1 | Painter's Studio // Defaced Gallery | dsk |
-| whenever you gain life, target opponent loses that much life. | 1 | Enduring Tenacity | dsk |
 | whenever you lose life, discard that many cards. then if you have no cards in hand, you lose the game. | 1 | Marina Vendrell's Grimoire | dsk |
 | whenever you manifest dread, put a card you put into your graveyard ~ into your hand. | 1 | Paranormal Analyst | dsk |
 | whenever you turn a permanent face up, put a +N/+N counter on it. | 1 | Growing Dread | dsk |

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 5.5% |
-| Works (untested) | 58 | 35.2% |
+| Tested | 10 | 6.1% |
+| Works (untested) | 57 | 34.5% |
 | Partial (unaudited) | 11 | 6.7% |
 | Not working | 87 | 52.7% |
 
@@ -167,7 +167,6 @@
 | Raving Oni-Slave | handled | When this creature enters or leaves the battlefield, you lose 3 life if you don't control a Demon. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reki, the History of Kamigawa | handled | Whenever you cast a legendary spell, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sakashima the Impostor | handled | You may have Sakashima the Impostor enter as a copy of any creature on the battlefield, except its name is Sakashima the Impostor, it's legendary in addition to | the engine reads this text and performs it | Y/-/- | not_tested |
-| Sakura-Tribe Scout | handled | {T}: You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scroll of Origins | handled | {2}, {T}: Draw a card if you have seven or more cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seek the Horizon | handled | Search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shape Stealer | handled | Whenever this creature blocks or becomes blocked by a creature, this creature's base power and toughness become equal to that creature's power and toughness unt | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -186,7 +185,7 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Burning-Eye Zubera
 - Evermind
@@ -197,6 +196,7 @@
 - Pithing Needle
 - Reverence
 - Rushing-Tide Zubera
+- Sakura-Tribe Scout
 
 </details>
 

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 10.6% |
-| Works (untested) | 125 | 45.6% |
+| Tested | 30 | 10.9% |
+| Works (untested) | 124 | 45.3% |
 | Partial (unaudited) | 12 | 4.4% |
 | Not working | 108 | 39.4% |
 
@@ -204,7 +204,6 @@
 | Merrow Wavebreakers | handled | {1}{U}, {Q}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mine Excavation | handled | Return target artifact or enchantment card from a graveyard to its owner's hand. Conspire (As you cast this spell, you may tap two untapped creatures you contro | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mistmeadow Witch | handled | {2}{W}{U}: Exile target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Mistveil Plains | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moonring Island | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Morselhoarder | handled | This creature enters with two -1/-1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mudbrawler Raiders | handled | This creature can't be blocked by blue creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -275,7 +274,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Beseech the Queen
 - Blowfly Infestation
@@ -292,6 +291,7 @@
 - Kitchen Finks
 - Manamorphose
 - Mirrorweave
+- Mistveil Plains
 - Mystic Gate
 - Rosheen Meanderer
 - Savor the Moment

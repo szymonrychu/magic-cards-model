@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 7.5% |
-| Works (untested) | 141 | 62.4% |
+| Works (untested) | 142 | 62.8% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 62 | 27.4% |
+| Not working | 61 | 27.0% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Coastal Discovery | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Crumble to Dust | silent | Devoid (This card has no color.) Exile target nonbasic land. Search its controller's graveyard, hand, and library for any number of cards with the same name as  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Culling Drone | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Defiant Bloodlord | silent | Whenever you gain life, target opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drana, Liberator of Malakir | silent | Whenever Drana deals combat damage to a player, put a +1/+1 counter on each attacking creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Earthen Arms | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Encircling Fissure | silent | Prevent all combat damage that would be dealt this turn by creatures target opponent controls. Awaken 2—{4}{W} (If you cast this spell for {4}{W}, also put two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -125,6 +124,7 @@
 | Cryptic Cruiser | handled | {2}{U}, Put a card an opponent owns from exile into that player's graveyard: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dampening Pulse | handled | Creatures your opponents control get -1/-0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathless Behemoth | handled | Sacrifice two Eldrazi Scions: Return this card from your graveyard to your hand. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Defiant Bloodlord | handled | Whenever you gain life, target opponent loses that much life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Demon's Grasp | handled | Target creature gets -5/-5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Desolation Twin | handled | When you cast this spell, create a 10/10 colorless Eldrazi creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drana's Emissary | handled | At the beginning of your upkeep, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -296,7 +296,6 @@
 | whenever equipped creature attacks, you may return a land you control to its owner's hand. if you do, the creature gets +N/+N until end of turn. | 1 | Slab Hammer | bfz |
 | whenever equipped creature becomes blocked by one or more colorless creatures, it gains deathtouch until end of turn. | 1 | Hedron Blade | bfz |
 | whenever you cast an instant or sorcery spell that targets only zada, copy that spell for each other creature you control that the spell could target. each copy | 1 | Zada, Hedron Grinder | bfz |
-| whenever you gain life, target opponent loses that much life. | 1 | Defiant Bloodlord | bfz |
 | whenever ~ attacks, defending player exiles two permanents they control. | 1 | Bane of Bala Ged | bfz |
 | whenever ~ attacks, defending player loses N life. | 1 | Silent Skimmer | bfz |
 | whenever ~ attacks, it gets +N/+N until end of turn for each other attacking ally. | 1 | Angelic Captain | bfz |

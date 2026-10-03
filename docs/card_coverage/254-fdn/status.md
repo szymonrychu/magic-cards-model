@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 9.0% |
-| Works (untested) | 91 | 63.2% |
+| Tested | 16 | 11.1% |
+| Works (untested) | 88 | 61.1% |
 | Partial (unaudited) | 3 | 2.1% |
 | Not working | 37 | 25.7% |
 
@@ -112,7 +112,6 @@
 | Gutless Plunderer | handled | Raid — When this creature enters, if you attacked this turn, look at the top three cards of your library. You may put one of those cards back on top of your lib | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Helpful Hunter | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | High-Society Hunter | handled | Whenever this creature attacks, you may sacrifice another creature. If you do, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Hinterland Sanctifier | handled | Whenever another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Homunculus Horde | handled | Whenever you draw your second card each turn, create a token that's a copy of this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hungry Ghoul | handled | {1}, Sacrifice another creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Icewind Elemental | handled | When this creature enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -124,10 +123,8 @@
 | Koma, World-Eater | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kykar, Zephyr Awakener | handled | Whenever you cast a noncreature spell, choose one — • Exile another target creature you control. Return that card to the battlefield under its owner's control a | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lathril, Blade of the Elves | handled | Whenever Lathril deals combat damage to a player, create that many 1/1 green Elf Warrior creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Leyline Axe | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Luminous Rebuke | handled | This spell costs {3} less to cast if it targets a tapped creature. Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mischievous Mystic | handled | Whenever you draw your second card each turn, create a 1/1 blue Faerie creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Mossborn Hydra | handled | This creature enters with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Needletooth Pack | handled | Morbid — At the beginning of your end step, if a creature died this turn, put two +1/+1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Preposterous Proportions | handled | Creatures you control get +10/+10 and gain vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Prideful Parent | handled | When this creature enters, create a 1/1 white Cat creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -161,7 +158,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>16 cards</summary>
 
 - Arbiter of Woe
 - Crossway Troublemakers
@@ -169,7 +166,10 @@
 - Curator of Destinies
 - Elenda, Saint of Dusk
 - High Fae Trickster
+- Hinterland Sanctifier
 - Inspiration from Beyond
+- Leyline Axe
+- Mossborn Hydra
 - Perforating Artist
 - Quilled Greatwurm
 - Raise the Past

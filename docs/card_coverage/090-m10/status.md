@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 9.9% |
-| Works (untested) | 66 | 59.5% |
+| Works (untested) | 67 | 60.4% |
 | Partial (unaudited) | 8 | 7.2% |
-| Not working | 26 | 23.4% |
+| Not working | 25 | 22.5% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Protean Hydra | silent | Whenever a +1/+1 counter is removed from this creature, put two +1/+1 counters on it at the beginning of the next end step. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Rhox Pikemaster | silent | Other Soldier creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Safe Passage | silent | Prevent all damage that would be dealt to you and creatures you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sanguine Bond | silent | Whenever you gain life, target opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sleep | silent | Tap all creatures target player controls. Those creatures don't untap during that player's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphinx Ambassador | silent | Whenever this creature deals combat damage to a player, search that player's library for a card, then that player chooses a card name. If you searched for a cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vampire Nocturnus | silent | As long as the top card of your library is black, this creature and other Vampire creatures you control get +2/+1 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -106,6 +105,7 @@
 | Planar Cleansing | handled | Destroy all nonland permanents. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Regenerate | handled | Regenerate target creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rootbound Crag | handled | This land enters tapped unless you control a Mountain or a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sanguine Bond | handled | Whenever you gain life, target opponent loses that much life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seismic Strike | handled | Seismic Strike deals damage to target creature equal to the number of Mountains you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siege Mastodon | handled |  |  | Y/Y/- | not_tested |
 | Silvercoat Lion | handled |  |  | Y/-/- | not_tested |
@@ -171,7 +171,6 @@
 | when ~ enters, target forest becomes a N/N green treefolk creature for as long as ~ remains on the battlefield. it's still a land. | 1 | Awakener Druid | m10 |
 | whenever a +N/+N counter is removed from ~, put two +N/+N counters on it at the beginning of the next end step. | 1 | Protean Hydra | m10 |
 | whenever a player casts an instant or sorcery spell, each other player copies that spell. each of those players may choose new targets for their copy. | 1 | Hive Mind | m10 |
-| whenever you gain life, target opponent loses that much life. | 1 | Sanguine Bond | m10 |
 | whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Inferno Elemental | m10 |
 | whenever ~ deals combat damage to a player, search that player"..."t have that name, you may put it onto the battlefield under your control. then that player sh | 1 | Sphinx Ambassador | m10 |
 | white creatures you control get +N/+N. | 1 | Honor of the Pure | m10 |

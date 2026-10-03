@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 8.6% |
-| Works (untested) | 142 | 53.4% |
+| Tested | 26 | 9.8% |
+| Works (untested) | 139 | 52.3% |
 | Partial (unaudited) | 8 | 3.0% |
 | Not working | 93 | 35.0% |
 
@@ -141,7 +141,6 @@
 | Blossoming Tortoise | handled | Whenever this creature enters or attacks, mill three cards, then return a land card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boundary Lands Ranger | handled | At the beginning of combat on your turn, if you control a creature with power 4 or greater, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Candy Grapple | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Target creature gets -3/-3 until end of turn. If this spell was bargained | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Candy Trail | handled | When this artifact enters, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Chancellor of Tales | handled | Whenever you cast an Adventure spell, you may copy it. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Charming Scoundrel | handled | When this creature enters, choose one — • Discard a card, then draw a card. • Create a Treasure token. • Create a Wicked Role token attached to target creature  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Collector's Vault | handled | {2}, {T}: Draw a card, then discard a card. Create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -211,7 +210,6 @@
 | Redcap Thief | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Redtooth Vanguard | handled | Whenever an enchantment you control enters, you may pay {2}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Bivouac | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Restless Cottage | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Spire | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Vinestalk | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Return Triumphant | handled | Return target creature card with mana value 3 or less from your graveyard to the battlefield. Create a Young Hero Role token attached to it. (Enchanted creature | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -250,7 +248,6 @@
 | Three Blind Mice | handled | I — Create a 1/1 white Mouse creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Three Bowls of Porridge | handled | {2}, {T}: Choose one that hasn't been chosen — • This artifact deals 2 damage to target creature. • Tap target creature. • Sacrifice this artifact. You gain 3 l | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Toadstool Admirer | handled | {3}{G}: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Torch the Tower | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Torch the Tower deals 2 damage to target creature or planeswalker. If thi | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Totentanz, Swarm Piper | handled | Whenever Totentanz or another nontoken creature you control dies, create a 1/1 black Rat creature token with "This token can't block." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tough Cookie | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Twining Twins // Swift Spiral | handled | Exile target nontoken creature. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -273,12 +270,13 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>26 cards</summary>
 
 - Agatha's Champion
 - Agatha's Soul Cauldron
 - Archive Dragon
 - Bramble Familiar // Fetch Quest
+- Candy Trail
 - Decadent Dragon // Expensive Taste
 - Extraordinary Journey
 - Fell Horseman // Deathly Ride
@@ -293,9 +291,11 @@
 - Monstrous Rage
 - Ogre Chitterlord
 - Pests of Honor
+- Restless Cottage
 - Ruby, Daring Tracker
 - Song of Totentanz
 - Spiteful Hexmage
+- Torch the Tower
 - Troublemaker Ouphe
 - Troyan, Gutsy Explorer
 

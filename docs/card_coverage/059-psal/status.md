@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 2.5% |
-| Works (untested) | 49 | 62.0% |
+| Tested | 3 | 3.8% |
+| Works (untested) | 48 | 60.8% |
 | Partial (unaudited) | 4 | 5.1% |
 | Not working | 24 | 30.4% |
 
@@ -84,7 +84,6 @@
 | Scatter the Seeds | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Create thre | the engine reads this text and performs it | Y/-/- | not_tested |
 | Selesnya Evangel | handled | {1}, {T}, Tap an untapped creature you control: Create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Selesnya Guildmage | handled | {3}{G}: Create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Selesnya Sanctuary | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Selesnya Signet | handled |  |  | Y/-/- | not_tested |
 | Sinstriker's Will | handled | Enchanted creature has "{T}: This creature deals damage equal to its power to target attacking or blocking creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skarrg, the Rage Pits | handled | {R}{G}, {T}: Target creature gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -107,10 +106,11 @@
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>3 cards</summary>
 
 - Arctic Nishoba
 - Frenzied Goblin
+- Selesnya Sanctuary
 
 </details>
 

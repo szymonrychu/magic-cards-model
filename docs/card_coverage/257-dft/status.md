@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 7.4% |
-| Works (untested) | 133 | 52.0% |
+| Tested | 26 | 10.2% |
+| Works (untested) | 126 | 49.2% |
 | Partial (unaudited) | 19 | 7.4% |
 | Not working | 85 | 33.2% |
 
@@ -142,7 +142,6 @@
 | Basri, Tomorrow's Champion | handled | {W}, {T}, Exert Basri: Create a 1/1 white Cat creature token with lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Beastrider Vanguard | handled | {4}{G}: Look at the top three cards of your library. You may reveal a permanent card from among them and put it into your hand. Put the rest on the bottom of yo | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bestow Greatness | handled | Target creature gets +4/+4 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Bleachbone Verge | handled |  |  | Y/Y/Y | not_tested |
 | Boosted Sloop | handled | Whenever you attack, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bounce Off | handled | Return target creature or Vehicle to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Brightfield Glider | handled | Whenever this creature attacks while saddled, it gets +1/+2 and gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -202,7 +201,6 @@
 | Memory Guardian | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Migrating Ketradon | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Molt Tender | handled | {T}: Mill a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Monument to Endurance | handled | Whenever you discard a card, choose one that hasn't been chosen this turn — • Draw a card. • Create a Treasure token. • Each opponent loses 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Muraganda Raceway | handled | Max speed | models/game.py (why_cannot_activate, CR 702.178a) | Y/Y/Y | not_tested |
 | Mutant Surveyor | handled | {2}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Night Market | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -217,12 +215,10 @@
 | Pyrewood Gearhulk | handled | When this creature enters, other creatures you control get +2/+2 and gain vigilance and menace until end of turn. Damage can't be prevented this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Redshift, Rocketeer Chief | handled | Exhaust — {10}{R}{G}: Put any number of permanent cards from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Regal Imperiosaur | handled | Other Dinosaurs you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Repurposing Bay | handled | {2}, {T}, Sacrifice another artifact: Search your library for an artifact card with mana value equal to 1 plus the sacrificed artifact's mana value, put that ca | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ride's End | handled | This spell costs {3} less to cast if it targets a tapped permanent. Exile target creature or Vehicle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ripclaw Wrangler | handled | When this Vehicle enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Risen Necroregent | handled | Max speed — At the beginning of your end step, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Risky Shortcut | handled | Draw two cards. Each player loses 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Riverpyre Verge | handled |  |  | Y/Y/Y | not_tested |
 | Roadside Blowout | handled | This spell costs {2} less to cast if it targets a permanent with mana value 1. Return target creature or Vehicle an opponent controls to its owner's hand. Draw  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rocketeer Boostbuggy | handled | Whenever this Vehicle attacks, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rover Blades | handled | Equipped creature has double strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -241,13 +237,11 @@
 | Stall Out | handled | Tap target creature or Vehicle, then put three stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.) Cycl | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stampeding Scurryfoot | handled | Exhaust — {3}{G}: Put a +1/+1 counter on this creature. Create a 3/3 green Elephant creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Starting Column | handled | Max speed — {T}, Sacrifice this artifact: Draw two cards, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Sunbillow Verge | handled |  |  | Y/Y/Y | not_tested |
 | Sundial, Dawn Tyrant | handled |  |  | Y/Y/Y | not_tested |
 | Syphon Fuel | handled | Target creature gets -6/-6 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Terrian, World Tyrant | handled |  |  | Y/Y/Y | not_tested |
 | Thopter Fabricator | handled | Whenever you draw your second card each turn, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thunderhead Gunner | handled | Discard a card: Draw a card. Activate only as a sorcery and only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Thundering Broodwagon | handled | When this Vehicle enters, destroy target nonland permanent an opponent controls with mana value 4 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Trip Up | handled | Target nonland permanent's owner puts it on their choice of the top or bottom of their library. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tyrox, Saurid Tyrant | handled |  |  | Y/Y/Y | not_tested |
 | Unstoppable Plan | handled | At the beginning of your end step, untap all nonland permanents you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -256,7 +250,6 @@
 | Vnwxt, Verbose Host | handled | You have no maximum hand size. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Voyage Home | handled | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) You draw three cards and gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Voyager Quickwelder | handled | Artifact spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Wastewood Verge | handled |  |  | Y/Y/Y | not_tested |
 | Webstrike Elite | handled | When you cycle this card, destroy up to one target artifact or enchantment with mana value X. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Willowrush Verge | handled |  |  | Y/Y/Y | not_tested |
 | Wreck Remover | handled | Whenever this creature enters or attacks, exile up to one target card from a graveyard. You gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -267,8 +260,9 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>26 cards</summary>
 
+- Bleachbone Verge
 - Boommobile
 - Captain Howler, Sea Scourge
 - Endrider Catalyzer
@@ -281,13 +275,19 @@
 - Lumbering Worldwagon
 - Marauding Mako
 - March of the World Ooze
+- Monument to Endurance
 - Perilous Snare
 - Radiant Lotus
+- Repurposing Bay
+- Riverpyre Verge
 - Shefet Archfiend
 - Skyserpent Seeker
 - Stock Up
+- Sunbillow Verge
+- Thundering Broodwagon
 - Ticket Tortoise
 - Venomsac Lagac
+- Wastewood Verge
 
 </details>
 

@@ -448,6 +448,14 @@ _SACRIFICE_OR_DISCARD = re.compile(
     r"^sacrifice (?P<sacrifice>[\w ,]+?) or discard (?P<discard>[\w ,]+)$", re.IGNORECASE
 )
 
+#: "Sacrifice a Swamp and a Forest" (Jarad, Golgari Lich Lord): one cost
+#: piece naming two objects of different qualities - two sacrifices, each
+#: paid by an object with its own quality (CR 118.3).
+_SACRIFICE_A_AND_A = re.compile(
+    r"^sacrifice (?P<first>(?:an?|one) [\w-]+) and (?P<second>(?:an?|one) [\w-]+)$",
+    re.IGNORECASE,
+)
+
 
 def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
     """Whether a printed cost sentence names *this* permanent (CR 602.1a).
@@ -25065,6 +25073,41 @@ class Game(EngineModel):
                     components.append(
                         self._choice_cost(
                             "Sacrifice " + either.group("sacrifice"),
+                            permanent,
+                            sacrifices,
+                            controller,
+                            sacrifice_cost,
+                            x_value,
+                            targets,
+                        )
+                    )
+            elif piece.kind is CostKind.SACRIFICE and (
+                pair := _SACRIFICE_A_AND_A.match(piece.text)
+            ):
+                for half in (pair.group("first"), pair.group("second")):
+                    text = "Sacrifice " + half
+                    template = cost_component_for_phrase(text, payer=controller)
+                    if template is None:
+                        raise ValueError(f"cannot build a cost for {piece.text!r}")
+                    # Each half takes the first nominated object with its own
+                    # quality, whatever order they were nominated in.
+                    fits = next(
+                        (
+                            card
+                            for card in sacrifices
+                            if template.model_copy(update={"cards": [card], "required": 1}).why_not(
+                                self
+                            )
+                            is None
+                        ),
+                        None,
+                    )
+                    if fits is not None:
+                        sacrifices.remove(fits)
+                        sacrifices.insert(0, fits)
+                    components.append(
+                        self._choice_cost(
+                            text,
                             permanent,
                             sacrifices,
                             controller,

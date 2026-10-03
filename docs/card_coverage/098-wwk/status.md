@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 8.5% |
-| Works (untested) | 61 | 43.0% |
+| Tested | 13 | 9.2% |
+| Works (untested) | 60 | 42.3% |
 | Partial (unaudited) | 15 | 10.6% |
 | Not working | 54 | 38.0% |
 
@@ -97,7 +97,6 @@
 | Wind Zendikon | unaudited | Enchanted land is a 2/2 blue Elemental creature with flying. It's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Anowon, the Ruin Sage | handled | At the beginning of your upkeep, each player sacrifices a non-Vampire creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arbor Elf | handled | {T}: Untap target Forest. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Basilisk Collar | handled | Equipped creature has deathtouch and lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Battle Hurda | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Bojuka Brigand | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bull Rush | handled | Target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -160,9 +159,10 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Amulet of Vigor
+- Basilisk Collar
 - Bestial Menace
 - Bojuka Bog
 - Celestial Colonnade

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 57 | 21.0% |
-| Works (untested) | 98 | 36.0% |
+| Works (untested) | 99 | 36.4% |
 | Partial (unaudited) | 6 | 2.2% |
-| Not working | 111 | 40.8% |
+| Not working | 110 | 40.4% |
 
 ## Cards needing work
 
@@ -128,7 +128,6 @@
 | Lithomantic Barrage | notice | This spell can't be countered. Lithomantic Barrage deals 1 damage to target creature or planeswalker. It deals 5 damage instead if that target is white and/or b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mutagen Connoisseur | notice | This creature gets +1/+0 for each transformed permanent you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oracle of Tragedy | notice | When this creature enters or dies, choose one — • Draw a card, then discard a card. • Shuffle up to four target cards with mana value 3 or greater from your gra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Orthion, Hero of Lavabrink | notice | {1}{R}, {T}: Create a token that's a copy of another target creature you control. It gains haste. Sacrifice it at the beginning of the next end step. Activate o | unparsed remainder: It gains haste. | Y/Y/- | not_working |
 | Rampaging Raptor | notice | Whenever this creature deals combat damage to an opponent, it deals that much damage to target planeswalker that player controls or battle that player protects. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Seedpod Caretaker | notice | When this creature enters, choose one — • Put a +1/+1 counter on target artifact or creature you control. • Transform target Incubator token you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | notice | Whenever this creature attacks, create a tapped and attacking token that's a copy of it. Put a +1/+1 counter on that token for each +1/+1 counter on this creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -199,6 +198,7 @@
 | Omen Hawker | handled |  |  | Y/Y/- | not_tested |
 | Onakke Javelineer | handled | {T}: This creature deals 2 damage to target player or battle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Order of the Mirror // Order of the Alabaster Host | handled | {3}{W/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Orthion, Hero of Lavabrink | handled | {1}{R}, {T}: Create a token that's a copy of another target creature you control. It gains haste. Sacrifice it at the beginning of the next end step. Activate o | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ozolith, the Shattered Spire | handled | If one or more +1/+1 counters would be put on an artifact or creature you control, that many plus one +1/+1 counters are put on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phyrexian Archivist | handled | {2}, {T}: Put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phyrexian Pegasus | handled | Whenever this creature attacks, another target attacking creature without flying gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -389,7 +389,6 @@
 | {M}, {M}, sacrifice another creature or artifact: incubate N. | 1 | Compleated Huntmaster | mom |
 | {M}, {M}: target opponent mills three cards. put a land card from their graveyard onto the battlefield tapped under your control. it gains "..." | 1 | Realmbreaker, the Invasion Tree | mom |
 | {M}: choose target battle. if an opponent protects it, remove a defense counter from it. otherwise, put a defense counter on it. activate only as a sorcery. | 1 | Portent Tracker | mom |
-| {M}{M}, {M}: create a token that's a copy of another target creature you control. it gains haste. sacrifice it at the beginning of the next end step. activate o | 1 | Orthion, Hero of Lavabrink | mom |
 | {M}{M}{M}, discard ~: destroy up to one target artifact or enchantment. shuffle ~ into your library from your graveyard, then draw a card. | 1 | Kogla and Yidaro | mom |
 | {M}{M}{M}, {M}, sacrifice a spirit: choose target card exiled with quintorius. you may cast that card ~ without paying its mana cost. if that spell would be put | 1 | Quintorius, Loremaster | mom |
 | ~ can't be countered. ~ deals N damage to target creature or planeswalker. it deals N damage instead if that target is white and/or blue. | 1 | Lithomantic Barrage | mom |

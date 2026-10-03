@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.2% |
-| Works (untested) | 136 | 53.1% |
+| Tested | 28 | 10.9% |
+| Works (untested) | 134 | 52.3% |
 | Partial (unaudited) | 11 | 4.3% |
 | Not working | 83 | 32.4% |
 
@@ -122,7 +122,6 @@
 | Warlord's Elite | unaudited | As an additional cost to cast this spell, tap two untapped artifacts, creatures, and/or lands you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aeronaut's Wings | handled | Equipped creature gets +1/+0 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Air Marshal | handled | {3}: Target Soldier gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Alloy Animist | handled | {2}{G}: Until end of turn, target noncreature artifact you control becomes a 4/4 artifact creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ambush Paratrooper | handled | {5}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arbalest Engineers | handled | When this creature enters, choose one — • This creature deals 1 damage to any target. • Put a +1/+1 counter on target creature. It gains trample and haste until | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Argothian Opportunist | handled | When this creature enters, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,7 +195,6 @@
 | Perennial Behemoth | handled | You may play lands from your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Perimeter Patrol | handled | Whenever an artifact you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phalanx Vanguard | handled | Whenever an artifact you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Phyrexian Dragon Engine | handled | When this creature enters from your graveyard, you may discard your hand. If you do, draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Platoon Dispenser | handled | At the beginning of your end step, if you control two or more other creatures, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Powerstone Engineer | handled | When this creature dies, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Powerstone Fracture | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -260,9 +258,10 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>28 cards</summary>
 
 - Aeronaut Cavalry
+- Alloy Animist
 - Awaken the Woods
 - Bitter Reunion
 - Brotherhood's End
@@ -278,6 +277,7 @@
 - Mine Worker
 - One with the Multiverse
 - Penregon Strongbull
+- Phyrexian Dragon Engine
 - Power Plant Worker
 - Recruitment Officer
 - Soul Partition

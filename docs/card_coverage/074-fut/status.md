@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 10.1% |
-| Works (untested) | 69 | 38.8% |
+| Tested | 20 | 11.2% |
+| Works (untested) | 67 | 37.6% |
 | Partial (unaudited) | 18 | 10.1% |
 | Not working | 73 | 41.0% |
 
@@ -140,8 +140,6 @@
 | Gift of Granite | handled | Enchanted creature gets +0/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Graven Cairns | handled |  |  | Y/-/- | not_tested |
 | Grinning Ignus | handled |  |  | Y/Y/- | not_tested |
-| Grove of the Burnwillows | handled |  |  | Y/-/- | not_tested |
-| Horizon Canopy | handled | {1}, {T}, Sacrifice this land: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ichor Slick | handled | Target creature gets -3/-3 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) Madness {3}{B} (If you discard this card, discard it into exile | the engine reads this text and performs it | Y/-/- | not_tested |
 | Infiltrator il-Kor | handled | Shadow | machines/combat.py | Y/-/- | not_tested |
 | Knight of Sursi | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -190,7 +188,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>20 cards</summary>
 
 - Akroma's Memorial
 - Arc Blade
@@ -201,6 +199,8 @@
 - Dryad Arbor
 - Glittering Wish
 - Grave Scrabbler
+- Grove of the Burnwillows
+- Horizon Canopy
 - Keldon Megaliths
 - Llanowar Empath
 - Logic Knot

@@ -3641,6 +3641,7 @@ Capybara, Didact Echo, or any printing added by this task as `silent`
 non-bug category above; every other card is `handled`).
 
 ## Flow 1, T5/G2b: Veil of Summer's opponent-cast condition, per-turn
+
 ## can't-be-countered, and the "you and `<group>`" subject split
 
 Three independent gaps Veil of Summer's three sentences exposed, each closed
@@ -4087,6 +4088,7 @@ a notice. Every clause of all five (and the `A // B` names) now sweeps
 The sweep's activated-ability classifier now passes `legendary=` as `Game`
 does: it read Treasure Map's "create three Treasure tokens" as a legend's
 short self-name and scored a working ability a notice.
+
 ## S19: returned-to-hand and class-level trigger events
 
 Tameshi, Reality Architect, Azorius Aethermage, Caretaker's Talent and
@@ -4105,6 +4107,7 @@ Not read (stays an unread condition): a returned-to-hand subject naming a
 subtype, a colour, "token"/"nontoken", "an opponent controls", or "this
 creature or another creature" (Stormfront Riders, whose own ETB return is
 also unread).
+
 ## S21: modal spells - named modes, any number of target players' graveyards, mass lose-all, choose-then-anaphor
 
 Thraben Charm, Scout the City and Final Showdown failed closed with a
@@ -4129,6 +4132,7 @@ later layer 6 timestamp wins (CR 613.7).
 Still not modelled: The Death of Gwen Stacy's chapter II ("Each player may
 discard a card. Each player who doesn't loses 3 life.") is silent - the card
 was added only as the proof printing for chapter III.
+
 ## S22: put or copy onto the battlefield with haste, then take it away at the next end step
 
 Emperor of Bones, Fable of the Mirror-Breaker (and its full `A // B` name),
@@ -4161,6 +4165,7 @@ anaphoric primitive. `sweep_pool.py --effects` before/after: legal cards
 failing closed 27 -> 16, silent 50 -> 47 cards; nothing changed bucket for the
 worse. No schema bump: no new persisted field (two new `DelayedEffectSpec`
 kinds, an existing `GameEvent` field now filled for enters events).
+
 ## S23: static anthems - chosen colour, legendary, same-name count, two-subtype lords, protection from the chosen colour
 
 | Mechanic | Rules | How | Tests |
@@ -4174,6 +4179,7 @@ kinds, an existing `GameEvent` field now filled for enters events).
 
 Proof printings added: Heraldic Banner, Hall of Triumph, Order of the Stars,
 Warg Rider, Arvad the Cursed, Always Watching, Heroes' Podium.
+
 ## S24: count-driven amounts over permanents
 
 Honden of Infinite Rage, Ben-Ben, Akki Hermit, Nissa, Ascended Animist and
@@ -5764,6 +5770,7 @@ is empty again. Luminarch Ascension's "Activate only if this enchantment has
 four or more quest counters on it" is cluster O1 (EC6), not a turn-history
 clause; EC6's object-state reader reads it, so the entry went at the EC
 round 2 merge.
+
 ## Player-state conditions (EC5: hand, graveyard/exile, life, poison, library)
 
 `machines/conditions/player.py` reads every S1-S3 clause as one grammar - a
@@ -5802,6 +5809,7 @@ CR 113.6b: `triggers.zones_ability_functions_in` asks
 Spirit, Bridge from Below and Firemane Angel trigger from the graveyard, and a
 clause that only counts a pile (Sanguine Spy's "among cards in your graveyard")
 leaves its source on the battlefield.
+
 ## EC6: object state, event subjects and designations - saddle, suspect, renown, venture built
 
 `machines/conditions/objects.py` reads every O1/O2/O3/S4 clause (163, `scripts/condition_inventory.py --clusters O1,O2,O3,S4`: 0 unread). One subject resolver serves every reader: "this `<type>`" and the source's own name or short name (CR 201.5, 201.5c) are the source; "it"/"he"/"they"/"that creature"/"that spell" are the trigger event's subject (the damaged object for "... is dealt damage", CR 120.3), else the source; "enchanted/equipped `<type>`" is what the source is attached to (last known once it has left). A past-tense clause, or a present-tense one about the subject of a leaves-the-battlefield event, is asked of the object as it last existed (CR 603.10a): `last_known_counters` (now snapshot only by a move off the battlefield, so a dies trigger's look-back survives the card being exiled from the graveyard), `last_known_types`/`subtypes`/`colors`, power/toughness rebuilt from the printing plus the counters it left with, and `CardState.last_known_attachments` (new: the Auras and Equipment attached as it left). Qualities are CR 205's vocabulary (colours, supertypes, card types, every subtype, historic CR 700.6), never a free word, so nothing outside those claims a clause.
@@ -6122,6 +6130,7 @@ control no creatures with decayed" condition was already read generally by
 ABILITY_NAMES` already had decayed). `tests/scenarios/test_decayed.py`.
 
 ## 271-tmt T1: the Mutagen predefined token, LKI token riders, token-count
+
 ## ETBs, artifact-token activation cost reduction
 
 CR 111.10v's Mutagen token ("a colorless Mutagen artifact token with '{1},
@@ -6211,6 +6220,7 @@ What genuinely needed new code:
 `tests/scenarios/test_token_riders_lki.py`,
 `tests/scenarios/test_artifact_token_ability_cost_reduction.py`,
 `tests/scenarios/test_token_count_etbs_tmt.py`.
+
 ## 271-tmt T2: sneak-paid riders, Alliance/Disappear positions, new trigger conditions, attacking-group keyword statics
 
 Six shapes closed, none of them needing a new event kind - every trigger
@@ -6233,6 +6243,7 @@ count the engine already kept for a different ability word.
 | "Whenever a `<description>` you control enters, you may attach this Equipment to it." - "it" is CR 603.2's own trigger subject (the entering permanent), not something the same sentence created the way Cori-Steel Cutter's pre-existing "create a token. You may attach this Equipment to it." reads "it" | `effects._parse_may_attach_to_entering_creature_clause` | Quintessential Katana ("a Ninja") | Doc Ock's Tentacles (Modern/Pioneer/Standard, a mana-value filter rather than a subtype one) | `test_enters_attach_equipment.py` |
 
 `conditions/cast_record.py::_keyword_cost_paid`'s own pattern gained two additive widenings shared by every rider above that reads a keyword-cost condition: an optional trailing `this turn` (checked against `CardState.turn_entered`, since a sneak permanent always enters the same turn it is cast) and `this <type>'s` alongside the existing bare pronouns, for "this creature's sneak cost was paid"/"this spell's sneak cost was paid" - both purely additive (every clause the narrower pattern already matched still does), and the second one is what let Rix Maadi Reveler's own pre-existing spectacle-paid rider stop reading `notice` as a side effect, not a targeted fix.
+
 ## 271-tmt T3: counter payoffs - dealt-damage counters, counters-on-self X, reflexive remove-a-counter, crewed-this-turn targeting, pay-life-for-counters
 
 Five Teenage Mutant Ninja Turtles counter-payoff templates, all built into
@@ -6269,6 +6280,7 @@ was already a field on `AbilityOnStack`, just never populated this way before.
 | "Whenever this Vehicle attacks, put a `<kind>` counter on target creature that crewed it this turn. Then if that creature is `<a/an> <quality>`, double the number of `<kind>` counters on it." - a new targeting restriction over this turn's own crew history, plus CR 701.10e's doubling gated on a subtype check | 702.122b, 701.10e | `targeting.TargetRequirement.must_have_crewed_source_this_turn` (extraction/rejection), `counter_payoffs._crewed_this_turn_target_then_maybe_double` (doubling) | Turtle Van | Getaway Car (the targeting restriction alone, on a different Vehicle with a "return to hand" consequence and an "up to one" optional count) | `test_crewed_this_turn.py` |
 | "Whenever another creature you control enters, you may pay life equal to its power. If you do, put that many `<kind>` counters on it." - the "that many" is the life actually paid (computed and paid by this resolution), not `machines/effects.that_many`'s own triggering-event anaphora | 118.12, 119.4, 107.1a | `counter_payoffs._may_pay_life_equal_to_its_power_then_counters` | Madame Null, Power Broker | - (no second Modern/Pioneer/Standard-legal printing combines "pay life equal to a characteristic" with "put that many counters" - exhaustive `card_search` in the session that wrote this wave; see the dated MEMORY.md line) | `test_pay_life_for_counters.py` |
 | "Whenever a creature you control with a counter on it deals combat damage to a player, `<consequence>`." - Venus's own *second* ability, not her dealt-damage one above: `machines/triggers.condition_matches`'s `DEALS_DAMAGE` branch read the "a creature you control" subject clause but had no reader at all for a trailing "with a[n] `<kind>` counter on it" qualifier (CR 122.1's counter-presence question) on that subject, so the ability fired for *any* attacker regardless of whether it actually carried a counter - a genuine engine defect the T3 wave that first landed this card documented rather than fixed (see the dated MEMORY.md line this row supersedes). `triggers._SUBJECT_HAS_COUNTER_RE`/`_subject_has_required_counter` read it, generally: a bare "a counter" (no kind word, what both cards below print) asks the presence question only, a named kind ("a +1/+1 counter on it") would narrow to that one kind, though nothing in the pool proves the named-kind half yet. | 122.1 | `triggers._subject_has_required_counter`, called from `condition_matches`'s `DEALS_DAMAGE` branch | Venus, Torn Between Worlds | Yathan Tombguard (a different, unconditional "draw a card and lose 1 life" consequence, and a board where the creature carrying the ability is never the one dealing the damage - proving this reads a general subject clause, not a self-reference on the event's source) | `test_dealt_damage_counters.py` |
+
 ## 271-tmt T4: Aura type/base P/T setting, mass and exchange control, chosen colour with hexproof from it, Saga linked-exile copies, return-as-creature, per-artifact Equipment bonus
 
 | Mechanic | Reader | Reported card | Off-pool proof | Test |
@@ -6321,6 +6333,7 @@ one test). Every printing's legality and oracle text were verified with
 Scryfall this session (`resolve_cards`/`card_search` were unavailable in this
 worktree's session; `scripts/add_card.py`'s own Scryfall fetch and a direct
 Scryfall API check substituted - see MEMORY.md).
+
 ## 271-tmt T6: cast/play permissions from the graveyard, the library top and linked exile; granted sneak; next-spell affinity; card types among spells cast
 
 Standing permissions (CR 601.3, CR 611.3d) are read off the caster's permanents by `casting.granted_cast_options` and claimed at announcement as the `"Cast permission"` keyword option; a permission that only opens a zone keeps the spell's own timing (`CastTiming.OWN`, CR 117.1a). A permission's rider "If you cast a spell this way, that `<noun>` enters with a[n additional] `<kind>` counter on it" is copied onto `CastRecord.enters_with_counters` (schema 90) and applied as the permanent enters (CR 614.1c, `replacement._cast_permission_rider_modifiers`). A cast from the library that is rewound goes back to the position it left (CR 733.1, CR 401.2).
@@ -6335,9 +6348,13 @@ Standing permissions (CR 601.3, CR 611.3d) are read off the caster's permanents 
 | "each opponent / each player exiles cards from the top of their library until they exile a `<quality>` card" (APNAP, linked to the source, CR 607.2a) and "the `<quality>` cards exiled this way" as the free-cast antecedent (CR 608.2g); plural "`<pair>` enter or attack" triggers | `effects._each_player_exile_until`, `_parse_each_player_exiles_until_clause`, `_merge_exile_then_cast_any_number_free_clauses`; `triggers._ENTERS_OR_ATTACKS_RE` | Krang & Shredder | Etali, Primal Conqueror (each player; its back face's "they get that many poison counters", CR 122.1f, read too) | `test_linked_exile_cast_play.py` |
 | "you may cast a card exiled with `<this>` without paying its mana cost" - Disappear's intervening if (CR 603.4), cast during resolution (CR 608.2g, CR 118.9) | `effects._CAST_FROM_LINKED_EXILE_RE` (`card` branch) | Krang & Shredder | - (only printing, Scryfall `o:"cast a card exiled with"`; the reader is Kaho, Minamo Historian's) | `test_linked_exile_cast_play.py` |
 | "until end of turn, you may play a card exiled with `<this>`" - a `PlayPermission` per card in that incarnation's pile (CR 400.7), "a card" as one choice group, timing untouched; and the static "[During your turn, ]you may play cards exiled with `<this>`" (lands through `Game.play_land`/`legal_actions`, spells through `granted_cast_options`) | `effects._parse_play_a_card_exiled_with_clause`; `casting.linked_exile_play_source` | Raphael, Most Attitude | The Temporal Anchor (static, plural, during your turn; no other printing says "play a card exiled with") | `test_linked_exile_cast_play.py` |
+
 ## 271-tmt T7: end-step/attack flicker of new objects, an optional-payment
+
 ## delayed return, exile-until-an-Aura-leaves, a linked-exile land, a
+
 ## reflexive dies-exile, a next-upkeep delayed random discard, an
+
 ## entered-this-turn mass bounce, and same-name mass reanimation
 
 Teenage Mutant Ninja Turtles' own T7 round: nine cards, none of them reusing
@@ -6373,6 +6390,7 @@ a printed count ahead of a subtype noun (its own comment already cites
 (`test_paying_the_cost_requires_exactly_three_rats`, `test_paying_the_cost_
 sacrifices_exactly_three_rats_not_more`) are the proof that premise holds for
 this printing rather than an assumption carried over from the sweep.
+
 ## 271-tmt T8: optional wheels, outside-the-game search, multi-part sacrifice,
 tuck-then-draw, combat-damage reanimation onto the battlefield attacking, LKI
 toughness lifegain, and-or hand permanents, split ETB damage
@@ -6412,6 +6430,7 @@ same way before anything is chosen.
 `tests/scenarios/test_remove_counter_from_a_creature_you_control_cost.py`.
 
 ## 270-ecl T1: Vivid, count/difference amounts, characteristic cost
+
 ## reductions, and reveal-until-N-cards
 
 Vivid (CR 207.2c ability word, no rules meaning of its own) prints CR 105.1's
@@ -6461,6 +6480,7 @@ mechanic of its own is exercised), Skyserpent Seeker (the reveal-until-N
 family's off-pool proof, substituted for Old Stickfingers). Old Stickfingers
 and Bouncer's Beatdown were fetched as candidate proofs and are not used by
 any scenario in this task - see MEMORY.md for why.
+
 ## 270-ecl T3: -1/-1 counter self-removal, mass placement, dies-with-counter return, persist grants, can't-have-counters-put-on-it
 
 Lorwyn Eclipsed's own -1/-1 counter and persist family, closed with one new
@@ -6499,6 +6519,7 @@ Two shared-helper fixes the granted-persist shapes exposed, both regression-chec
 - `triggers.added_ability_lines` now reads `CardState.abilities_as_it_left` (the pre-existing CR 603.10a look-back snapshot `remember_last_known_power_toughness` already took) instead of unconditionally answering `()` once a permanent has left the battlefield - without it, a keyword granted to a permanent by *another* object's static ability could never produce a leaves-the-battlefield trigger at all, since `triggered_abilities_on` builds its granted-candidate list from this function and the departing object's live `computed_characteristics` is already `None` by the time that list is asked for. Filtered against `granted_as_it_left` too, so a *stored* one-shot grant (Rhys's temporary persist, already reconciled onto `granted_ability_texts` before the permanent left) is not counted twice.
 
 `Game.schema_version` is unchanged: `CANT_HAVE_COUNTERS_TEXT` is a plain string value stored the identical way `CANT_BECOME_UNTAPPED_TEXT` already is (inside `Characteristics.abilities`/`ContinuousEffect.modification`, neither a new persisted field), and every other change in this wave is behavioural, not a new field on `Game` or `CardState`.
+
 ## 270-ecl T4: behold-and-exile, flashback behold-N, chosen creature type (restricted and open), and convoke spell bodies
 
 CR 701.4a's behold and CR 614.12a's "as [this] enters, choose a creature
@@ -6535,6 +6556,7 @@ file below is touched additively.
 no row above is keyed to a card name in `EFFECTS`/`TRIGGER_EFFECTS`/
 `ACTIVATED_EFFECTS`, and every reader reads the printed shape, not the
 reported card's identity.
+
 ## 270-ecl T2: Blight as an effect (every position), opponent blights, the blighted-creature reference, and the enters-or-transforms-into/transforms-and-first-main-phase DFC triggers
 
 CR 701.68's Blight keyword action, read for the first time as ordinary
@@ -6613,6 +6635,7 @@ shares the shape). `test_opponent_blights.py`'s
 `test_casting_champion_of_the_weird_pays_behold_and_exile` and
 `test_casting_champion_of_the_weird_beholds_a_battlefield_goblin` prove it
 end-to-end, both hand and battlefield beholding.
+
 ## 270-ecl T5: layer effects - losing all abilities with type/colour/base P/T setting, every creature type, level chains, mass copy, enter-as-copy with changeling, token-copy replacement, copy of "one of them", chosen and all colours, hexproof from its colours
 
 Layers per CR 613.1a-g; base power and toughness in sublayer 7b (CR 613.4b);
@@ -6639,6 +6662,7 @@ one enters event (CR 603.6a, `GameEvent.entered_together`).
 | "create a token that's a copy of it at the beginning of the next end step. The token enters with `<half >`that many `<kind>` counters on it[, rounded down/up]" (CR 603.7, 603.10a, 707.2, 614.1c) and "exile any number of [other] `<permanents>` you [own and ]control. Return those cards to the battlefield at the beginning of the next end step" (CR 107.1c, 603.7c, 610.3c, 303.4f/g, 704.5d) | `effects._parse_delayed_token_copy_of_it_clauses` -> `delayed.CreateTokenCopyOfLastKnown` (copiable values fixed at resolution, from `CardState.last_known_copiable` for a copy that died); `effects._parse_exile_any_number_of_your_permanents_then_delayed_return_clauses` -> `delayed.ReturnEachExiledToBattlefieldUnderOwner` (Aura host chosen among what is already there); past-tense "if it had N or more counters" in `triggers._COUNTER_COUNT_CLAUSE`; `Game.put_onto_battlefield(counters=)` | Ochre Jelly, Yorion, Sky Nomad | Ochre Jelly copied by a Clone | `test_dies_then_delayed_token_copy_with_half_counters.py`, `test_exile_your_permanents_return_at_end_step.py` |
 | "draw a card, then choose a color. This artifact becomes the chosen color." / "Enchanted land is the chosen color." / "Target creature you control becomes all colors until end of turn." - layer 5 (CR 613.1e) | `becomes._then_choose_a_color` onto `effects._BECOMES_CHOSEN_COLOR_RE` (widened); `layers._ATTACHED_IS_THE_CHOSEN_COLOR_RE`; `layers._BECOMES_COLOR_RE` ("all colors") | Puca's Eye, Shimmerwilds Growth, Tam, Mindful First-Year | Distorting Lens; Scrapbasket | `test_chosen_color_and_hexproof_from_its_colors.py` |
 | "Each other creature you control has hexproof from each of its colors." - CR 702.11g per colour, read off layer 5's colours in layer 6 | `layers._HEXPROOF_FROM_EACH_OF_ITS_COLORS_RE` / `GrantHexproofFromItsColors`; `casting.hexproof_qualities_in` ("each color") | Tam, Mindful First-Year | Breaker of Creation ("Hexproof from each color") | `test_chosen_color_and_hexproof_from_its_colors.py` |
+
 ## 270-ecl T6: bare-subtype target pumps, tapped/attacking-status group
 statics, entered/attacked-with-N-this-turn counting, put-onto-battlefield
 with a dynamic mana-value cap, reflexive tap-then-reanimate, dynamic-X
@@ -6676,6 +6700,7 @@ cannot answer on its own).
 CR numbers verified this session with `mise run rules:find`: **508.3a**, **508.3d**,
 **506.5**, **701.26a/b**, **603.12/603.12a**, **510.1a**, **301.5a**, **701.14a/b**,
 **115.6**, **303.4b**, **611.3a**, **702.11b**, **702.12b**, **110.5**, **613.1f**.
+
 ## 270-ecl T7: counter abilities and mass counters, uncounterable statics and granted life ward, conspire, cast-trigger copies and spell keywords, resolving exile with counters, exile-until casts, linked-exile cast permissions, dies-this-turn consequences
 
 Schema 92: `CastRecord.conspire_paid`, `CostComponent.from_among`, `PlayPermission.while_controlling` and the `that_creature_dies_consequence` delayed effect kind.
@@ -6700,6 +6725,7 @@ Schema 92: `CastRecord.conspire_paid`, `CostComponent.from_among`, `PlayPermissi
 | Standalone "exile the top N cards of target opponent's library" (linked by `link_cards_exiled_during`); enters triggers naming a subtype list "another Elf or Faerie you control enters" | `effects._parse_exile_top_of_other_libraries_clause`; `triggers._ENTERING_SUBTYPE_LIST` | Maralen, Fae Ascendant | Ashiok, Nightmare Weaver's +2 (its -X and -10 stay unread) | `test_linked_exile_cast_permissions_ecl.py` |
 | "remove N[ `<kind>`] counters from among `<permanents>` you control" as a cost (CR 118.3, `CostComponent.from_among`; the chosen permanents, or battlefield order as the documented default); a card's own "You may cast this card from your graveyard by `<cost>` in addition to paying its other costs" | `cost._PHRASE_REMOVE_COUNTERS_FROM_AMONG`, `fill_from_among`; `casting._printed_self_zone_cast_with_additional_cost` | Dawnhand Dissident | Quilled Greatwurm | `test_linked_exile_cast_permissions_ecl.py` |
 | "target `<player>` reveals X cards from their hand, where X is `<count>`. You choose one of those cards. That player discards that card / exiles it. [If an instant or sorcery card is exiled this way, you may cast it for as long as you control this creature, and mana of any type can be spent to cast that spell.]" (CR 701.20a, 611.2b, 609.4b) | `hand_reveal_exile.parse_reveal_some_then_choose_one`, `PlayPermission.while_controlling` | Taster of Wares | Thieving Sprite | `test_linked_exile_cast_permissions_ecl.py` |
+
 ## 270-ecl T8: library digs and mill-select, draw/life prohibition, mass
 flicker with prevention, put-from-hand with haste and sacrifice, divided
 "any other target" damage, dies-this-turn token rider, named card token,
@@ -6744,6 +6770,7 @@ did not see on their own.
 | "As long as you've lost life this turn, this creature has `<keywords>`." - layer 6 grant on this turn's life loss (CR 611.3a, CR 119.3) | `layers._TURN_FACT_CONDITION_PHRASES` lost-life phrases, `LOST_LIFE_TURN_FACT` filled by `Game`'s `LayerContext` | Essence Channeler | - (no second printing; dated MEMORY.md line) | `test_lost_life_conditional_keywords.py` |
 | "[All] other creatures get -N/-N until end of turn." - set fixed at resolution (CR 611.2c) | `effects._MASS_OTHER_CREATURES_RE` in `_MASS_SUBJECT_RE`/`_mass_creature_group_targets`/`_mass_pump_parseable` | Harvester of Misery | Shefet Archfiend | `test_mass_minus_and_lose_abilities_destroy.py` |
 | "Each `<group>` loses all abilities until end of turn. Destroy those `<noun>`." - layer 6 then CR 701.8a on exactly that set (CR 611.2c, CR 608.2c) | new `machines/lose_abilities_destroy`, registered in `_spell_effect_or_notice`/`_ability_effect_or_notice`; group via `effects._parse_mass_destroy_predicate` | Day of Black Sun | - (no second printing; dated MEMORY.md line) | `test_mass_minus_and_lose_abilities_destroy.py` |
+
 ## R0a-T2: the Map predefined token, explore credited via a created token, and two basic-land-search riders
 
 No schema bump: nothing here adds a persisted field.
@@ -6755,6 +6782,7 @@ No schema bump: nothing here adds a persisted field.
 | "As an additional cost to cast this spell, sacrifice an artifact or creature." (CR 601.2f, CR 118.8a) ahead of a compound "Draw two cards and create a Map token." resolution - both already-generic (`cost._PHRASE_SACRIFICE`'s "or"-joined quality, `_parse_token_clause`'s own PREDEFINED lookup once Map has a row); no new reader needed | `machines/cost._PHRASE_SACRIFICE`, `effects._parse_token_clause` | Fanatical Offering | - (proven by the same Map-token generality above, not a reader of its own) | `test_map_tokens.py` |
 | "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control `<n>` or more lands, untap that land." (CR 701.23a search, CR 611.2c magnitude read only after the found land has entered) | `machines/map_tokens.parse_search_put_battlefield_tapped_then_count_lands_untap_clause`, additive in `effects._ability_effect_or_notice` | Fabled Passage | - (no second printing of this exact rider exists on Scryfall as of 2026-09-27, verified with `card_search`/Scryfall full-text search this session; the search-and-shuffle half it is built from is already proven generic by every fetchland and by Elven Passage's own behold-untap sibling, and the "lands you control" count and `CardState.untap` halves are each proven generic elsewhere - dated MEMORY.md line) | `test_fetching_a_land.py` |
 | "Destroy target `<X>` an opponent controls. Its controller searches their library for a basic land card, puts it onto the battlefield tapped[ with a stun counter on it], then shuffles." - CR 400.7's referent (the destroyed permanent's controller, never the caster) performing a *mandatory* (no "may") third-person search, read whole ahead of `effects.split_effect_clauses`'s own comma cut (which would otherwise sever "... tapped with a stun counter on it" from "then shuffles") | `machines/map_tokens.parse_destroy_then_referent_mandatory_search_tapped_clause`, additive in `effects._parse_mixed_clauses`'s own whole-text-pair shapes | Magmatic Hellkite | - (no second Standard/Pioneer/Modern-legal printing of this exact singular "destroy ... its controller searches ... puts it ... tapped ..., then shuffles" rider exists; Winds of Abandon (Modern-legal, not Pioneer/Standard) prints the same idea as a plural "For each creature exiled this way, its controller searches ... . Those players put those cards ..." - a different, per-instance grammar this reader does not match - and "Target player searches ..." printings (Fertilid's Favor, Restorative Technique) target directly rather than reading a referent at all; dated MEMORY.md line) | `test_fetching_a_land.py` |
+
 ## R0a-T3: unaudited self statics - conditional enters-tapped, chosen basic land type, and self cost reductions `support.py` did not audit
 
 Seven cards support.py reported `STATIC_UNAUDITED`/`static_unaudited` for a
@@ -6794,6 +6822,7 @@ substituted in as this task's proof card.
 
 CR number verified this session with `mise run rules:find` for this
 follow-up: **202.3** (mana value is the number compared either direction).
+
 ## R0a T4: additional/alternative costs - collect evidence and behold as spell effects, sacrifice-any-number cost reduction, plain object-sacrifice alternative costs, a punisher shape, mass-destroy "entered this turn", and Spree's second mode grammar
 
 Schema unchanged: every new field (`CastRecord.beheld_for_cost`, `Casting.beheld_for_cost`/`sacrificed_for_cost_reduction`, `CardRequirement.excluded_types`) defaults to `False`/`0`/`()` and backs a mechanic no printing in the pool used before this round, so no decoded snapshot's behaviour can change (`Game.CURRENT_SCHEMA_VERSION`'s own documented exemption).
@@ -6819,6 +6848,7 @@ CR numbers verified this session with `mise run rules:find`: **118.7a**, **118.8
 **118.9/118.9a/118.9c**, **118.12/118.12a**, **107.1c**, **601.2b/601.2h**, **122.1**,
 **603.2**, **508.1/508.1a**, **701.4a/701.4b**, **701.59a/701.59c**, **205.1b**,
 **613.1d/613.1f**, **302.6**, **400.7**, **608.2f**.
+
 ## R0a-T7: outlaw-restricted removal, same-name destroy/return, two modal spells, a general block requirement, X token creation beside a quoted ability, compound card-group exclusions, mill-then-select rider, distinct-mana-value reanimation, opponent exiles a creature and their graveyard
 
 No schema change - every new field here (`TargetRequirement.requires_outlaw`/
@@ -6844,6 +6874,7 @@ CR numbers verified this session with `mise run rules:find`: **700.12a**, **201.
 **700.2**, **701.6a**, **509.1c**, **701.48a**, **111.1**, **702.10a**, **205.2a**,
 **701.20e**, **401.4**, **701.17a**, **608.2b**, **107.3a**, **107.3c**, **601.2c**,
 **202.3**, **603.6a**, **701.10a**, **701.21a**, **404.1**.
+
 ## R0a-T5: skip draw, damage as counters, hexproof/ward ignore, shadow, graveyard exile with counters, Case solve, untimed control, random graveyard impulse, graveyard-cast transform, exile until leaves, self-flicker, leave-trigger manifest dread
 
 Schema 96: `CardState.solved` (CR 719.3b). All ability readers are registered in `effects._r0a_t5_ability_effect` (spell side: `_r0a_t5_spell_effect`); static credit goes through `support.r0a_t5_static_line`.
@@ -6863,6 +6894,7 @@ Schema 96: `CardState.solved` (CR 719.3b). All ability readers are registered in
 | "look at target opponent's hand. You may exile a nonland card from it until this creature leaves the battlefield." (CR 610.3) | `hand_reveal_exile.parse_hand_exile_until_leaves_clause` | Deep-Cavern Bat | Kitesail Freebooter | `test_exile_until_leaves_the_battlefield.py` |
 | "Exile this creature. Return it to the battlefield under its owner's control at the beginning of the next end step." (CR 603.7a) | `delayed.parse_self_flicker_at_next_end_step_clause` | Fleeting Spirit | Aetherling, Argent Sphinx | `test_blink_and_delayed_return.py` |
 | "When this `<type>` leaves the battlefield, the exiled card's owner manifests dread." - linked to the enters exile (CR 603.6c, 607.1, 701.62a), once per owner in APNAP order (CR 101.4) | `linked_exile.parse_exiled_card_owner_manifests_dread_clause` | Unidentified Hovership | none exists - proven on the plural template; Unwanted Remake for manifest dread by a non-source player | `test_manifest.py` |
+
 ## R0a-T6: trigger conditions and intervening-ifs - commit a crime, opponent searches, unlock a door, put into a graveyard from anywhere, this-turn history widenings, a combined mana-and-life reflexive, and the effects those triggers needed to stop being silent
 
 | Mechanic | Reader | Card that exposed it | Proof printing | Test |
@@ -6878,6 +6910,7 @@ Schema 96: `CardState.solved` (CR 719.3b). All ability readers are registered in
 | "Whenever another creature you control enters, `<effect>`. If it's a `<subtype>`, `<rider>`." - the rider's "it" is the trigger event's own subject, not an object an earlier instruction of the *same* effect chose; `Game.condition_holds`'s own `ability`/`event`/`source_stamp` parameters (built for a different card's cast-trigger rider) threaded through this caller for the first time, `_effect_condition_is_readable` gained `allow_anaphor` | Aunt May | - (no legal second printing of this exact trigger-event-subject-anaphor-in-a-rider shape) | `test_another_creature_enters_subtype_rider.py` |
 | Ability-word triggers (CR 207.2c: no rules meaning of their own) - "Darkness — Whenever Cecil deals damage, you lose that much life. Then if your life total is <= half your starting life total, untap and transform"; "Protect — Whenever Cecil attacks, other attacking creatures gain `<keyword>` until end of turn" (the keyword-grant twin of the already-generic mass +N/+N pump) | `effects._parse_deals_damage_lose_life_then_transform_if_low_clause`, `_parse_other_attacking_creatures_grant_trigger` | Cecil, Dark Knight // Cecil, Redeemed Paladin | - (no legal second printing of either exact shape) | `test_deals_damage_self_life_loss_transform.py` |
 | "you may pay `<mana>` and `<N>` life. When you do, ..." (CR 603.12/118.3/119.4) - a combined mana-and-life reflexive cost neither the pure-mana nor pure-life reader already in place could parse; `Game.may_pay_mana_and_life` (one CR 608.2d question, mana tapped from untapped sources the same way `may_pay_mana_cost` already taps them - `may_pay_unless_cost` is the wrong tool here, since it reads mana off the floating pool alone). Also added: the pure-life "you may pay N life. When you do, ..." sibling nothing had yet | `effects._parse_reflexive_pay_mana_and_life_clause`, `_parse_reflexive_pay_life_clause`, `Game.may_pay_mana_and_life` | Zoraline, Cosmos Caller | Ambulatory Edifice (pure-life sibling) | `test_reflexive_pay_trigger.py` |
+
 ## R0a T8: graveyard exile drain, dies/enters-or-attacks tokens equal to power, shuffle self and target into owners' libraries, sacrifice-self count damage, tap-and-lock activation, Speed, Enlist
 
 | Mechanic | Reader | Card that exposed it | Proof printing | Test |
@@ -6891,6 +6924,7 @@ Schema 96: `CardState.solved` (CR 719.3b). All ability readers are registered in
 | Speed (CR 702.179a-f): `Player.speed`/`speed_increased_on_turn`, `players_starting_their_engines`/`start_engines` as a state-based action read in each CR 704.3 round, the once-per-turn "opponents lose life during your turn" inherent trigger hooked into `Game.emit`'s `LOSES_LIFE` handling | new `machines/speed.py` | Perilous Snare ("Start your engines!") | - | `test_speed.py` |
 | Max speed (CR 702.178a): "Max speed — [Ability]" gated on the activator's own speed, via `ActivatedAbility.ability_word` rather than a layer-6 grant | `Game.why_cannot_activate`'s new `ability_word == "Max speed"` check | Perilous Snare | Endrider Catalyzer (a mana ability, not a counter-placement one) | `test_speed.py` |
 | Enlist (CR 702.154a-d): the CR 508.1g optional attack cost (tap an eligible creature, +X/+0 until end of turn) and its CR 702.154b linked "enlists a creature" trigger event | new `machines/enlist.py`; `Game.declare_attacker`/`declare_attackers` gained `enlisting`/`enlist_choices`; `triggers.ExtraTriggerEvent.ENLISTS` and its condition matcher | Guardian of New Benalia (also its own "Whenever this creature enlists a creature, scry 2.") | Argivian Cavalier (plain Enlist, no linked trigger; Effie, Fast Learner - the planner's own candidate - is not legal in Modern/Pioneer/Standard) | `test_enlist.py` |
+
 ## EC7-rv-rules: cast-trigger X after countering, name-then-reveal ordering, an attach-fails rider, an "up to N" real choice, and card-name validation
 
 An independent rules-defect review of this branch. Every fix generalises the
@@ -6978,25 +7012,6 @@ documented exception" rule rather than left silently asserted.
   Guidance prints a related but genuinely different single-condition,
   multi-type-list "or" shape the regex correctly does not match).
 
-## S7c: Blooming Blast, Bouncer's Beatdown, Verdant Command
-
-| Mechanic | CR | Implementation | Proof cards | Scenario tests |
-|---|---|---|---|---|
-| "`<Name>` deals N damage to target creature. If `<condition>`, `<Name>` also deals M damage to that creature's controller." - the rider's subject is the spell however it is printed ("it", "this spell", or the same name the first sentence used, CR 201.5); any condition `Game.condition_holds` reads, gift included (CR 702.174j) | CR 201.5, 702.174j, 608.2b | `effects._DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE` (`subject` back-reference) | Blooming Blast (gift promised), Misthios's Fury (control an Equipment) | `tests/scenarios/test_conditional_damage_to_that_creatures_controller.py` (gift promised vs not, illegal target at resolution deals no damage to anyone) |
-| "This spell costs `<mana>` less to cast if it targets a(n) `<description>`." - any description the target grammar reads, tested against the targets CR 601.2c fixed before CR 601.2f totals the cost; an unread description never discounts | CR 601.2c, 601.2f, 118.7 | `game._COSTS_LESS_IF_TARGETS_DESCRIPTION_RE`, `Game._target_description_reduction`, `targeting.chosen_target_description` | Bouncer's Beatdown ("a black permanent"), Ajani's Response ("a tapped creature") | `tests/scenarios/test_costs_less_if_it_targets_a_permanent.py` (black vs non-black target) |
-| "That `<noun>` or `<noun>`" as a back-reference to a two-noun target ("If that creature or planeswalker would die this turn, exile it instead.") - one object, named by its own target phrase's noun list; and `_DAMAGE_TARGET_RE` reads a sentence's own closing period so "where X is ..." is read, not swallowed into the target phrase | CR 614.1a, 608.2c, 107.3 | `effects._ANAPHOR_NOUN`/`_OBJECT_ANAPHOR`, `effects._DAMAGE_TARGET_RE` | Bouncer's Beatdown (X = greatest power among creatures you control), Scorching Dragonfire | `tests/scenarios/test_damage_then_die_exile_creature_or_planeswalker.py` (damage then die-exile, creature and planeswalker) |
-| "Counter target loyalty ability [of a `<type>`]." - CR 606.2's loyalty abilities only, narrower than "activated"; "of a(n) `<type>`" is the ability-source restriction (CR 113.7) worded the other way round; the loyalty cost stays paid (CR 606.4, 701.6a) | CR 606.2, 606.4, 701.6a, 113.7 | `TargetRequirement.loyalty_abilities_only`, `targeting._names_only_loyalty`, `targeting._ABILITY_YOU_CONTROL_FROM_SOURCE_RE` (`of_type`) | Verdant Command (the only in-format printing - Scryfall `o:"counter target" o:"loyalty ability"` over Modern/Pioneer/Standard, 2026-10-03) | `tests/scenarios/test_counter_target_loyalty_ability.py` (each mode pair, countered loyalty ability keeps its loyalty cost paid, non-loyalty activated ability rejected) |
-
-Fingerprint drift accepted with this branch (`tests/dispatch_fingerprint_baseline.json`): new pool inputs for the three proof cards, plus two whole-text `_parse_mixed_clauses` inputs (Together as One's Converge sentence, Eiganjo's channel text with its cost line) that moved from `_parse_mixed_clause` to `<none>` - before, `_DAMAGE_TARGET_RE`'s lazy target phrase ran across the sentence boundary; neither input is what the engine dispatches (Together as One resolves through `_parse_converge_draw_damage_life_clause` before and after, Eiganjo's `activated_effect_for` result is identical), and both cards stay `handled`.
-
-### S7c: kicker tap-and-self-damage rider, exile with owner-play permission
-
-| Clause | Parser | Cards | Tests |
-|---|---|---|---|
-| "tap target untapped creature and that creature deals damage equal to its power to its controller/owner" (rider on any `kicked with its [A] kicker` trigger or spell) | `_parse_mixed_clause` rider | Ana Battlemage, Wastescape Battlemage, Traitor's Roar | `test_kicker_tap_untapped_self_damage.py` |
-| "exile up to X target creatures / target nonland permanent. For each of those cards (for as long as it remains exiled), its owner may play/cast it" | `_parse_exile_targets_then_owner_play_permission_clauses` | Extraordinary Journey, Soul Partition, Release to the Wind | `test_exile_up_to_x_owner_may_play_while_exiled.py` |
-
-Extraordinary Journey's second ability (draw when a nontoken creature enters from or is cast from exile, once each turn) is scenario-proven there; the sweep driver cannot stage it, so its sweep case is the existing strict `SWEEP_DRIVER_GAPS` xfail ("entered from exile or was cast from exile").
 
 ## R0b-T1: conditional enters-tapped lands, bounce/scry/MDFC lands, conditional dual mana
 
@@ -7033,6 +7048,7 @@ Two engine fixes the proofs exposed:
 | A Verge's conditional second mana ability ("Activate only if you control a X or a Y") - first colour unconditional, second refused without either land type, nonbasic typed lands count, turning off when the land is lost, auto-payer never plans around the unavailable colour | CR 605.1a, 205.3i, 602.5b | `Game._activation_condition_holds` (already handled; proofs only) | `scenarios/test_r0b_verge_mana.py` (all six Verges) |
 | A modal double-faced land plays as either land face (a Pathway's front is a land too, so the back was unreachable): `Game.play_land(..., face=...)`, `Card.land_faces`, one `PLAY_LAND` offer per land face in `legal_actions` | CR 712.12, 712.8f, 712.8d, 305.2 | `models/card.py` (`land_faces`), `Game.play_land`, `machines/legal_actions.py` (`_land_actions`) | `scenarios/test_r0b_pathway_faces.py` (all four Pathways) |
 | A painland's / painland-artifact's coloured ability deals 1 damage to you from the permanent as part of the mana ability (no stack); the `{C}` ability is free; the auto-payer pays a generic cost with the free ability instead of taking the damage (`_prefer_painless_mana`) | CR 605.1a, 405.6c, 120.1 | `machines/cost.py` (`_entry_life_loss`, `_prefer_painless_mana`) | `scenarios/test_r0b_painland_mana_riders.py` (Llanowar Wastes, Caves of Koilos, Talisman of Curiosity) |
+
 ## R0b utility, sacrifice and manland proofs (T3)
 
 | Area | Rules | Where | Tests |
@@ -7150,3 +7166,29 @@ Fear of Missing Out (delirium extra combat), Nova Hellkite (warp, CR 702.185a).
 | An enters trigger narrowed by origin ("enters from your hand", "enters from your graveyard", "from a graveyard", "from exile") matches only an enters event whose `origin_zone` is that zone; "your" also requires the permanent's owner to be its controller. Such an enters ability functions from the battlefield, not the graveyard it names. | CR 603.6a, 400.3 | `machines/triggers.py` (`_entry_qualifier_matches`, `entering_origin_zone`, `zones_ability_functions_in`); `support._condition_can_fire` probes the named origin | `scenarios/test_enters_from_zone_trigger.py` (Phyrexian Dragon Engine reanimated by Unearth and put in from hand, Thousand-Faced Shadow cast from hand) |
 | A ninja put in by ninjutsu enters attacking: the enters event is raised only after it is attacking, so "if it's attacking" holds | CR 702.49c, 508.4, 603.4 | `machines/keywords._ninjutsu_effect` | `scenarios/test_token_copy_enters_tapped_and_attacking.py` |
 | "create a token that's a copy of another target attacking creature. The token enters tapped and attacking." - the copy enters tapped and attacking what its controller is attacking, unblocked in the declare blockers step; no attacking target means the trigger is removed | CR 707.2, 508.4, 508.4d, 603.3d | `machines/effects._CREATE_TOKEN_COPIES_EXCEPT_RE` (`enters_attacking`), `models/token.token_copy_of(attacking=)` | `scenarios/test_token_copy_enters_tapped_and_attacking.py` (Thousand-Faced Shadow, the only format-legal printing of this rider) |
+
+## S7c: Blooming Blast, Bouncer's Beatdown, Verdant Command
+
+| Mechanic | CR | Implementation | Proof cards | Scenario tests |
+|---|---|---|---|---|
+| "`<Name>` deals N damage to target creature. If `<condition>`, `<Name>` also deals M damage to that creature's controller." - the rider's subject is the spell however it is printed ("it", "this spell", or the same name the first sentence used, CR 201.5); any condition `Game.condition_holds` reads, gift included (CR 702.174j) | CR 201.5, 702.174j, 608.2b | `effects._DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE` (`subject` back-reference) | Blooming Blast (gift promised), Misthios's Fury (control an Equipment) | `tests/scenarios/test_conditional_damage_to_that_creatures_controller.py` (gift promised vs not, illegal target at resolution deals no damage to anyone) |
+| "This spell costs `<mana>` less to cast if it targets a(n) `<description>`." - any description the target grammar reads, tested against the targets CR 601.2c fixed before CR 601.2f totals the cost; an unread description never discounts | CR 601.2c, 601.2f, 118.7 | `game._COSTS_LESS_IF_TARGETS_DESCRIPTION_RE`, `Game._target_description_reduction`, `targeting.chosen_target_description` | Bouncer's Beatdown ("a black permanent"), Ajani's Response ("a tapped creature") | `tests/scenarios/test_costs_less_if_it_targets_a_permanent.py` (black vs non-black target) |
+| "That `<noun>` or `<noun>`" as a back-reference to a two-noun target ("If that creature or planeswalker would die this turn, exile it instead.") - one object, named by its own target phrase's noun list; and `_DAMAGE_TARGET_RE` reads a sentence's own closing period so "where X is ..." is read, not swallowed into the target phrase | CR 614.1a, 608.2c, 107.3 | `effects._ANAPHOR_NOUN`/`_OBJECT_ANAPHOR`, `effects._DAMAGE_TARGET_RE` | Bouncer's Beatdown (X = greatest power among creatures you control), Scorching Dragonfire | `tests/scenarios/test_damage_then_die_exile_creature_or_planeswalker.py` (damage then die-exile, creature and planeswalker) |
+| "Counter target loyalty ability [of a `<type>`]." - CR 606.2's loyalty abilities only, narrower than "activated"; "of a(n) `<type>`" is the ability-source restriction (CR 113.7) worded the other way round; the loyalty cost stays paid (CR 606.4, 701.6a) | CR 606.2, 606.4, 701.6a, 113.7 | `TargetRequirement.loyalty_abilities_only`, `targeting._names_only_loyalty`, `targeting._ABILITY_YOU_CONTROL_FROM_SOURCE_RE` (`of_type`) | Verdant Command (the only in-format printing - Scryfall `o:"counter target" o:"loyalty ability"` over Modern/Pioneer/Standard, 2026-10-03) | `tests/scenarios/test_counter_target_loyalty_ability.py` (each mode pair, countered loyalty ability keeps its loyalty cost paid, non-loyalty activated ability rejected) |
+
+Fingerprint drift accepted with this branch (`tests/dispatch_fingerprint_baseline.json`): new pool inputs for the three proof cards, plus two whole-text `_parse_mixed_clauses` inputs (Together as One's Converge sentence, Eiganjo's channel text with its cost line) that moved from `_parse_mixed_clause` to `<none>` - before, `_DAMAGE_TARGET_RE`'s lazy target phrase ran across the sentence boundary; neither input is what the engine dispatches (Together as One resolves through `_parse_converge_draw_damage_life_clause` before and after, Eiganjo's `activated_effect_for` result is identical), and both cards stay `handled`.
+
+### S7c: kicker tap-and-self-damage rider, exile with owner-play permission
+
+| Clause | Parser | Cards | Tests |
+|---|---|---|---|
+| "tap target untapped creature and that creature deals damage equal to its power to its controller/owner" (rider on any `kicked with its [A] kicker` trigger or spell) | `_parse_mixed_clause` rider | Ana Battlemage, Wastescape Battlemage, Traitor's Roar | `test_kicker_tap_untapped_self_damage.py` |
+| "exile up to X target creatures / target nonland permanent. For each of those cards (for as long as it remains exiled), its owner may play/cast it" | `_parse_exile_targets_then_owner_play_permission_clauses` | Extraordinary Journey, Soul Partition, Release to the Wind | `test_exile_up_to_x_owner_may_play_while_exiled.py` |
+
+Extraordinary Journey's second ability (draw when a nontoken creature enters from or is cast from exile, once each turn) is scenario-proven there; the sweep driver cannot stage it, so its sweep case is the existing strict `SWEEP_DRIVER_GAPS` xfail ("entered from exile or was cast from exile").
+
+## R0b integration: a sacrifice cost naming two qualities
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| A sacrifice cost naming two objects of different qualities ("Sacrifice a Swamp and a Forest") - two sacrifices, each paid by a nominated object with its own quality; two Swamps refuse | CR 118.3, 602.2 | `Game.activation_cost` (`_SACRIFICE_A_AND_A`) | `scenarios/test_sacrifice_two_named_permanents_cost.py` (Jarad, Golgari Lich Lord, the only in-format printing) |

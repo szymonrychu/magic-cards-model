@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 53 | 19.3% |
-| Works (untested) | 140 | 50.9% |
+| Tested | 59 | 21.5% |
+| Works (untested) | 134 | 48.7% |
 | Partial (unaudited) | 13 | 4.7% |
 | Not working | 69 | 25.1% |
 
@@ -119,7 +119,6 @@
 | Ancestral Reminiscence | handled | Draw three cards, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Attentive Sunscribe | handled | Whenever this creature becomes tapped, scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bartolomé del Presidio | handled | Sacrifice another creature or artifact: Put a +1/+1 counter on Bartolomé del Presidio. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Bitter Triumph | handled | As an additional cost to cast this spell, discard a card or pay 3 life. Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bloodthorn Flail | handled | Equipped creature gets +2/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Brazen Blademaster | handled | Whenever this creature attacks while you control two or more artifacts, it gets +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Breeches, Eager Pillager | handled | Whenever a Pirate you control attacks, choose one that hasn't been chosen this turn — • Create a Treasure token. • Target creature can't block this turn. • Exil | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -147,7 +146,6 @@
 | Dire Flail // Dire Blunderbuss | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Disruptor Wanderglyph | handled | Whenever this creature attacks, exile target card from an opponent's graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dowsing Device // Geode Grotto | handled | Whenever this artifact or another artifact you control enters, up to one target creature you control gets +1/+0 and gains haste until end of turn. Then transfor | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Dusk Rose Reliquary | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Earthshaker Dreadmaw | handled | When this creature enters, draw a card for each other Dinosaur you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Echo of Dusk | handled | Descend 4 — As long as there are four or more permanent cards in your graveyard, this creature gets +1/+1 and has lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Enterprising Scallywag | handled | At the beginning of your end step, if you descended this turn, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -159,10 +157,8 @@
 | Frilled Cave-Wurm | handled | Descend 4 — This creature gets +2/+0 as long as there are four or more permanent cards in your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fungal Fortitude | handled | Enchanted creature gets +2/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gargantuan Leech | handled | This spell costs {1} less to cast for each Cave you control and each Cave card in your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Glimpse the Core | handled | Choose one — • Search your library for a basic Forest card, put that card onto the battlefield tapped, then shuffle. • Return target Cave card from your graveya | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Glorifier of Suffering | handled | When this creature enters, you may sacrifice another creature or artifact. When you do, put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goldfury Strider | handled | Tap two untapped artifacts and/or creatures you control: Target creature gets +2/+0 until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Greedy Freebooter | handled | When this creature dies, scry 1 and create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Helping Hand | handled | Return target creature card with mana value 3 or less from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hermitic Nautilus | handled | {1}{U}: This creature gets +3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hidden Cataract | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -207,13 +203,11 @@
 | Poetic Ingenuity | handled | Whenever one or more Dinosaurs you control attack, create that many Treasure tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Poison Dart Frog | handled | {2}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Primordial Gnawer | handled | When this creature dies, discover 3. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Promising Vein | handled | {1}, {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Queen's Bay Paladin | handled | Whenever this creature enters or attacks, return up to one target Vampire card from your graveyard to the battlefield with a finality counter on it. You lose li | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Quicksand Whirlpool | handled | This spell costs {3} less to cast if it targets a tapped creature. Exile target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rampaging Spiketail | handled | When this creature enters, target creature you control gets +2/+0 and gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ray of Ruin | handled | Exile target creature, Vehicle, or nonbasic land. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Prairie | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Restless Reef | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Ridgeline | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Vents | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | River Herald Guide | handled | When this creature enters, it explores. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -252,12 +246,13 @@
 ## Fully supported
 
 <details>
-<summary>53 cards</summary>
+<summary>59 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
 - Amalia Benavides Aguirre
 - Basking Capybara
+- Bitter Triumph
 - Braided Net // Braided Quipu
 - Bringer of the Last Gift
 - Broodrage Mycoid
@@ -272,12 +267,15 @@
 - Deeproot Pilgrimage
 - Didact Echo
 - Dreadmaw's Ire
+- Dusk Rose Reliquary
 - Eaten by Piranhas
 - Echoing Deeps
 - Fanatical Offering
 - Geological Appraiser
 - Get Lost
 - Ghalta, Stampede Tyrant
+- Glimpse the Core
+- Greedy Freebooter
 - Market Gnome
 - Master's Guide-Mural // Master's Manufactory
 - Miner's Guidewing
@@ -287,8 +285,10 @@
 - Out of Air
 - Over the Edge
 - Preacher of the Schism
+- Promising Vein
 - Pugnacious Hammerskull
 - Restless Anchorage
+- Restless Reef
 - Ruin-Lurker Bat
 - Scytheclaw Raptor
 - Sentinel of the Nameless City

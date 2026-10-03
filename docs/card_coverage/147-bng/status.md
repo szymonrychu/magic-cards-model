@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 8.1% |
-| Works (untested) | 88 | 55.0% |
+| Tested | 14 | 8.8% |
+| Works (untested) | 87 | 54.4% |
 | Partial (unaudited) | 8 | 5.0% |
 | Not working | 51 | 31.9% |
 
@@ -165,7 +165,6 @@
 | Stormcaller of Keranos | handled | {1}{U}: Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunbond | handled | Enchanted creature has "Whenever you gain life, put that many +1/+1 counters on this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swordwise Centaur | handled |  |  | Y/Y/- | not_tested |
-| Temple of Enlightenment | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Temple of Malice | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Temple of Plenty | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thunder Brute | handled | When this creature enters, if tribute wasn't paid, it gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -177,7 +176,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Deepwater Hypnotist
 - Ephara, God of the Polis
@@ -191,6 +190,7 @@
 - Satyr Wayfinder
 - Snake of the Golden Grove
 - Spirit of the Labyrinth
+- Temple of Enlightenment
 - Xenagos, God of Revels
 
 </details>

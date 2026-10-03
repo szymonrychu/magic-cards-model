@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 5.6% |
-| Works (untested) | 60 | 42.0% |
+| Tested | 9 | 6.3% |
+| Works (untested) | 59 | 41.3% |
 | Partial (unaudited) | 12 | 8.4% |
 | Not working | 63 | 44.1% |
 
@@ -148,7 +148,6 @@
 | Sek'Kuar, Deathkeeper | handled | Whenever another nontoken creature you control dies, create a 3/1 black and red Graveborn creature token with haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sheltering Ancient | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Simian Brawler | handled | Discard a land card: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Soul Spike | handled | You may exile two black cards from your hand rather than pay this spell's mana cost. Soul Spike deals 4 damage to any target and you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sound the Call | handled | Create a 1/1 green Wolf creature token. It has "This token gets +1/+1 for each card named Sound the Call in each graveyard." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Squall Drifter | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Steam Spitter | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -165,7 +164,7 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Allosaurus Rider
 - Braid of Fire
@@ -174,6 +173,7 @@
 - Martyr of Sands
 - Mishra's Bauble
 - Rimewind Cryomancer
+- Soul Spike
 - Vexing Sphinx
 
 </details>

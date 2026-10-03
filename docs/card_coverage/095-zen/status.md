@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 12.3% |
-| Works (untested) | 120 | 54.5% |
+| Tested | 29 | 13.2% |
+| Works (untested) | 118 | 53.6% |
 | Partial (unaudited) | 7 | 3.2% |
 | Not working | 66 | 30.0% |
 
@@ -111,11 +111,9 @@
 | Cobra Trap | handled | If a noncreature permanent under your control was destroyed this turn by a spell or ability an opponent controlled, you may pay {G} rather than pay this spell's | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crypt Ripper | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crypt of Agadeem | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Day of Judgment | handled | Destroy all creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Devout Lightcaster | handled | When this creature enters, exile target black permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disfigure | handled | Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Emeria Angel | handled | Landfall — Whenever a land you control enters, you may create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Emeria, the Sky Ruin | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Explorer's Scope | handled | Whenever equipped creature attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feast of Blood | handled | Cast this spell only if you control two or more Vampires. Destroy target creature. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Felidar Sovereign | handled | At the beginning of your upkeep, if you have 40 or more life, you win the game. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -223,7 +221,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>29 cards</summary>
 
 - Archive Trap
 - Arid Mesa
@@ -233,6 +231,8 @@
 - Bloodghast
 - Burst Lightning
 - Caller of Gales
+- Day of Judgment
+- Emeria, the Sky Ruin
 - Expedition Map
 - Goblin Guide
 - Guul Draz Vampire

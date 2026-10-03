@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 115 | 45.1% |
-| Works (untested) | 139 | 54.5% |
+| Tested | 119 | 46.7% |
+| Works (untested) | 135 | 52.9% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 1 | 0.4% |
 
@@ -82,7 +82,6 @@
 | Inkling Mascot | handled | Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gains flying until end of turn. Surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Inkshape Demonstrator | handled | Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature gets +1/+0 and gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Interjection | handled | Target creature gets +2/+2 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Jadzi, Steward of Fate // Oracle's Gift | handled | Create X 0/0 green and blue Fractal creature tokens, then put X +1/+1 counters on each Fractal you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Killian's Confidence | handled | Target creature gets +1/+1 until end of turn. Draw a card. Whenever one or more creatures you control deal combat damage to a player, you may pay {W/B}. If you  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kirol, History Buff // Pack a Punch | handled | Mill a card. Put two +1/+1 counters on target creature. It gains trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Landscape Painter // Vibrant Idea | handled | Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -96,7 +95,6 @@
 | Mind into Matter | handled | Draw X cards. Then you may put a permanent card with mana value X or less from your hand onto the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mindful Biomancer | handled | When this creature enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Moment of Reckoning | handled | Choose up to four. You may choose the same mode more than once. • Destroy target nonland permanent. • Return target nonland permanent card from your graveyard t | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Moseo, Vein's New Dean | handled | When Moseo enters, create a 1/1 black and green Pest creature token with "Whenever this token attacks, you gain 1 life." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Muse Seeker | handled | Opus — Whenever you cast an instant or sorcery spell, draw a card. Then discard a card unless five or more mana was spent to cast that spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Muse's Encouragement | handled | Create a 3/3 blue and red Elemental creature token with flying. Surveil 2. (Look at the top two cards of your library, then put any number of them into your gra | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nita, Forum Conciliator | handled | Whenever you cast a spell you don't own, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -115,9 +113,7 @@
 | Postmortem Professor | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Practiced Scrollsmith | handled | When this creature enters, exile target noncreature, nonland card from your graveyard. Until the end of your next turn, you may cast that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Primary Research | handled | When this enchantment enters, return target nonland permanent card with mana value 3 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Prismari Charm | handled | Choose one — • Surveil 2, then draw a card. • Prismari Charm deals 1 damage to each of one or two targets. • Return target nonland permanent to its owner's hand | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Proctor's Gaze | handled | Return up to one target nonland permanent to its owner's hand. Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Professor Dellian Fel | handled | +2: You gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pterafractyl | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pull from the Grave | handled | Return up to two target creature cards from your graveyard to your hand. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pursue the Past | handled | You gain 2 life. You may discard a card. If you do, draw two cards. Flashback {2}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -170,7 +166,7 @@
 ## Fully supported
 
 <details>
-<summary>115 cards</summary>
+<summary>119 cards</summary>
 
 - Aberrant Manawurm
 - Ajani's Response
@@ -224,6 +220,7 @@
 - Hungry Graffalon
 - Impractical Joke
 - Improvisation Capstone
+- Jadzi, Steward of Fate // Oracle's Gift
 - Joined Researchers // Secret Rendezvous
 - Lecturing Scornmage
 - Living History
@@ -237,14 +234,17 @@
 - Mind Roots
 - Molten Note
 - Molten-Core Maestro
+- Moseo, Vein's New Dean
 - Paradox Surveyor
 - Petrified Hamlet
 - Poisoner's Apprentice
 - Potioner's Trove
 - Pox Plague
 - Practiced Offense
+- Prismari Charm
 - Prismari, the Inspiration
 - Procrastinate
+- Professor Dellian Fel
 - Quandrix, the Proof
 - Rabid Attack
 - Ral Zarek, Guest Lecturer

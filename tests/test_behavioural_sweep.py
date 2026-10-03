@@ -114,7 +114,6 @@ from magic_cards_model.machines.keywords import (
     crew_activation,
     crew_number,
     cycling_activation,
-    ninjutsu_activation,
     off_zone_abilities,
     off_zone_activation,
 )
@@ -1558,15 +1557,6 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         source.land_face_played = face
     if (
         source.zone is Zone.BATTLEFIELD
-        and source.card.layout is Layout.FLIP
-        and len(faces) > 1
-        and face == faces[1].name
-    ):
-        # A flip card's bottom-half ability exists only while it is flipped
-        # (CR 710.1b) - staged flipped (Goka the Unjust).
-        source.flip()
-    if (
-        source.zone is Zone.BATTLEFIELD
         and face
         and face not in source.unlocked_doors
         and any(door.name == face for door in locked_doors(source))
@@ -1603,32 +1593,6 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     _equip_for_condition(scenario, source, ability)
     _enter_for_condition(scenario, ability)
     return source
-
-
-def _object_damage_history(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
-    """A target restriction on the object itself - "target creature that was
-    dealt damage this turn" (Initiate of Blood, Goka the Unjust; CR 120.1) -
-    is satisfied on the stock board by playing that damage: every other
-    creature there was dealt 1 damage this turn."""
-    from magic_cards_model.models.game import DamageDealt
-
-    if not re.search(r"\btarget [a-z ]+? that was dealt damage this turn\b", (text or "").lower()):
-        return
-    game = scenario.game
-    for creature in list(game.battlefield):
-        if creature is source or Type.CREATURE not in creature.types:
-            continue
-        game.damage_dealt_this_turn.append(
-            DamageDealt(
-                source_id=uuid5(NAMESPACE_OID, "object-dealt"),
-                source_controller=BOB,
-                source_types=(Type.CREATURE,),
-                recipient_id=creature.id,
-                recipient_controller=creature.controller,
-                recipient_types=(Type.CREATURE,),
-                amount=1,
-            )
-        )
 
 
 def _target_damage_history(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
@@ -2369,11 +2333,11 @@ def _probes(case: Case, ability: TriggeredAbility, *, entering: bool) -> list[st
 _BASIC_OF = {"W": "Plains", "U": "Island", "B": "Swamp", "R": "Mountain", "G": "Forest"}
 
 
-def _extra_lands_for(card: Card, cost: str | None = None) -> tuple[str, ...]:
+def _extra_lands_for(card: Card) -> tuple[str, ...]:
     """Basics beyond the stock board's three of each, so a spell with more
     coloured pips than that (Doomsday Excruciator's six {B}) can be cast
     for its mana cost (CR 601.2g-h)."""
-    pips = re.findall(r"\{([WUBRG])\}", card.mana_cost or "" if cost is None else cost)
+    pips = re.findall(r"\{([WUBRG])\}", card.mana_cost or "")
     stock = _LANDS.count("Plains")
     return tuple(
         basic
@@ -2407,10 +2371,9 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
         yield put
 
-    if "from your graveyard" in lowered or "from a graveyard" in lowered:
-        # "if it entered from your graveyard" (CR 603.4, CR 603.6a), and
-        # Breathless Knight's "that creature entered from a graveyard": the
-        # card is put onto the battlefield from its owner's graveyard.
+    if "from your graveyard" in lowered:
+        # "if it entered from your graveyard" (CR 603.4, CR 603.6a): the card
+        # is put onto the battlefield from its owner's graveyard.
 
         def from_graveyard() -> tuple[PlayedScenario, Any]:
             scenario = _board(graveyard=(card.name,))
@@ -2802,20 +2765,6 @@ def _leaving(case: Case, ability: TriggeredAbility, kind: str) -> Iterator[Attem
                         )
                         scenario, source_id = _home(case, ability, **extra)
                         victim = _staged(scenario, probe, owner)
-                        if "dealt damage by" in lowered and victim.id == source_id:
-                            # A probe that shares the source's name (Vein
-                            # Drinker probing itself): the other copy is the
-                            # one that dies, not the source.
-                            victim = next(
-                                (
-                                    state
-                                    for state in scenario.game.battlefield
-                                    if state.name == probe
-                                    and state.controller == owner
-                                    and state.id != source_id
-                                ),
-                                victim,
-                            )
                         if as_token:
                             (victim,) = token_copy_of(scenario.game, victim, owner)
                         source = scenario.game.find_by_id(source_id)
@@ -4229,44 +4178,6 @@ def _animated_attack(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]
     yield animated
 
 
-def _ninjutsu_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
-    """ "When this enters from your hand, if it's attacking": the source is
-    put onto the battlefield tapped and attacking by its own ninjutsu,
-    returning an unblocked attacker (CR 702.49a). A vanilla partner attacks
-    too, for an "another target attacking creature"."""
-    card = case.printing
-    if "ninjutsu" not in {k.canonical.lower() for k in keyword_abilities(card)}:
-        return
-
-    def ninjutsu() -> tuple[PlayedScenario, Any]:
-        scenario = _board(
-            hand=(card.name,),
-            battlefield=("Grizzly Bears", *_extra_lands_for(card)),
-            step=Step.DECLARE_ATTACKERS,
-            busy=False,
-        )
-        game = scenario.game
-        bears = _last(scenario, "Grizzly Bears", Zone.BATTLEFIELD, ALICE)
-        returning = _last(scenario, "Memnite", Zone.BATTLEFIELD, ALICE)
-        source = _last(scenario, card.name, Zone.HAND, ALICE)
-        try:
-            scenario.attack_with(bears, returning, defending=BOB)
-            scenario.turn.advance_to(Step.DECLARE_BLOCKERS)
-            game.sync_priority_with_step()
-            scenario.no_blocks()
-            activation = ninjutsu_activation(game, source, returning, ALICE)
-            activation.begin_paying()
-            activation.payment.auto_tap(game.permanents_controlled_by(ALICE))
-            activation.payment.pay()
-            activation.activate()
-            activation.resolve()
-        except (ValueError, AssertionError) as error:
-            raise _Unavailable(str(error)) from error
-        return scenario, source.id
-
-    yield ninjutsu
-
-
 def _attempts(case: Case) -> Iterator[Attempt]:
     ability = _trigger_ability(case.printing, case.text)
     if ability.event_qualifier:
@@ -4366,8 +4277,6 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _enlisting(case, ability)
         elif kind == "attacks":
             yield from _animated_attack(case, ability)
-        elif kind == TriggerEvent.ENTERS_THE_BATTLEFIELD.value:
-            yield from _ninjutsu_entering(case, ability)
 
 
 #: Attempts whose event happens later in the turn (or in the next ones), so
@@ -4520,6 +4429,13 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         kind="enters_the_battlefield",
         event="a creature type chosen for the source as it entered (CR 614.12a)",
         precondition=r"of the chosen type enters",
+    ),
+    # R0b integration: proven by
+    # tests/scenarios/test_token_copy_enters_tapped_and_attacking.py.
+    DriverGap(
+        kind="enters_the_battlefield",
+        event="the source entering from hand already attacking (ninjutsu, CR 702.49c)",
+        precondition=r"enters from your hand, if it's attacking",
     ),
 )
 
@@ -4859,7 +4775,6 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
     target (CR 607.2a), an ability on the stack to target (CR 115.1c), and a
     this-turn "Activate only if" condition (`_history_threshold`)."""
     game = scenario.game
-    _object_damage_history(scenario, source, ability.effect)
     for condition in read_activation_instructions(ability.instructions).conditions:
         _counter_threshold(scenario, source, condition)
         _history_threshold(scenario, source, condition)
@@ -5183,10 +5098,7 @@ def _activation_board(
             scenario.game.resolve_top()
             _settle(scenario)
     else:
-        scenario = _board(
-            battlefield=(card.name, *_extra_lands_for(card, ability.cost)),
-            step=_activation_step(ability),
-        )
+        scenario = _board(battlefield=(card.name,), step=_activation_step(ability))
         source = _source(scenario, case, ability)
     indexes = [
         i for i, a in enumerate(scenario.game.activated_abilities(source)) if a.text == case.text
@@ -5444,8 +5356,8 @@ def _off_zone_pieces(ability: ActivatedAbility) -> list[tuple[str, Any]]:
     card itself, as (keyword, `CostComponent`) - read by the engine's own
     `cost_component_for_phrase`."""
     pieces = []
-    for part in ability.costs:
-        phrase = part.text.strip()
+    for part in ability.cost.split(","):
+        phrase = part.strip()
         lowered = phrase.lower()
         for verb, keyword in (
             ("sacrifice", "sacrificing"),
@@ -5453,7 +5365,15 @@ def _off_zone_pieces(ability: ActivatedAbility) -> list[tuple[str, Any]]:
             ("exile", "exiling"),
         ):
             if lowered.startswith(verb) and not re.match(rf"{verb} (this|~)", lowered):
-                pieces.append((keyword, cost_component_for_phrase(phrase)))
+                # "Sacrifice a Swamp and a Forest" (Jarad) is two pieces.
+                pair = re.fullmatch(
+                    rf"{verb} ((?:an?|one) [\w-]+) and ((?:an?|one) [\w-]+)", phrase, re.I
+                )
+                halves = (
+                    [f"{verb} {pair.group(1)}", f"{verb} {pair.group(2)}"] if pair else [phrase]
+                )
+                for half in halves:
+                    pieces.append((keyword, cost_component_for_phrase(half)))
     return pieces
 
 
@@ -5468,17 +5388,16 @@ def _off_zone_choices(
     chosen: dict[str, list[CardState]] = {}
     for keyword, component in _off_zone_pieces(ability):
         wanted = max(1, getattr(component, "required", 1) or 1)
+        taken = chosen.get(keyword, [])
         found = [
             candidate
             for candidate in sorted(_off_zone_pool(game, keyword, component), key=_land_last)
             if candidate is not state
-            and candidate not in chosen.get(keyword, [])
+            and candidate not in taken
             and _pays(component, candidate, game)
         ]
         if found:
-            # "Sacrifice a Swamp and a Forest" is two pieces of one keyword:
-            # each adds its own objects rather than replacing the other's.
-            chosen.setdefault(keyword, []).extend(found[:wanted])
+            chosen[keyword] = taken + found[:wanted]
     return chosen
 
 

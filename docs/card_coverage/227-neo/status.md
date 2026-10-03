@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 9.4% |
-| Works (untested) | 120 | 44.9% |
+| Tested | 28 | 10.5% |
+| Works (untested) | 119 | 44.6% |
 | Partial (unaudited) | 11 | 4.1% |
-| Not working | 111 | 41.6% |
+| Not working | 109 | 40.8% |
 
 ## Cards needing work
 
@@ -74,7 +74,6 @@
 | Lizard Blades | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | March of Burgeoning Life | silent | As an additional cost to cast this spell, you may exile any number of green cards from your hand. This spell costs {2} less to cast for each card exiled this wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | March of Reckless Joy | silent | As an additional cost to cast this spell, you may exile any number of red cards from your hand. This spell costs {2} less to cast for each card exiled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| March of Swirling Mist | silent | As an additional cost to cast this spell, you may exile any number of blue cards from your hand. This spell costs {2} less to cast for each card exiled this way | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mech Hangar | silent | {3}, {T}: Target Vehicle becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mechtitan Core | silent | {5}, Exile this Vehicle and four other artifact creatures and/or Vehicles you control: Create Mechtitan, a legendary 10/10 Construct artifact creature token wit | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Michiko's Reign of Truth // Portrait of Michiko | silent | I, II — Target creature gets +1/+1 until end of turn for each artifact and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -135,7 +134,6 @@
 | Tamiyo's Compleation | notice | When this Aura enters, tap enchanted permanent. If it's an Equipment, unattach it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Teachings of the Kirin // Kirin-Touched Orochi | notice | Whenever this creature attacks, choose one — • Exile target creature card from a graveyard. When you do, create a 1/1 colorless Spirit creature token. • Exile t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Kami War // O-Kagachi Made Manifest | notice | Whenever this creature attacks, defending player chooses a nonland card in your graveyard. Return that card to your hand. This creature gets +X/+0 until end of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Thousand-Faced Shadow | notice | When this creature enters from your hand, if it's attacking, create a token that's a copy of another target attacking creature. The token enters tapped and atta | unparsed remainder: The token enters tapped and attacking. | Y/Y/- | not_working |
 | Upriser Renegade | notice | This creature gets +2/+0 for each other modified creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crackling Emergence | unaudited | Enchanted land is a 3/3 red Spirit creature with haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Futurist Operative | unaudited | As long as this creature is tapped, it's a Human Citizen with base power and toughness 1/1 and can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -203,7 +201,6 @@
 | Life of Toshiro Umezawa // Memory of Toshiro | handled | I, II — Choose one — • Target creature gets +2/+2 until end of turn. • Target creature gets -1/-1 until end of turn. • You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Light the Way | handled | Choose one — • Put a +1/+1 counter on target creature or Vehicle. Untap it. • Return target permanent you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lucky Offering | handled | Destroy target artifact with mana value 3 or less. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| March of Wretched Sorrow | handled | As an additional cost to cast this spell, you may exile any number of black cards from your hand. This spell costs {2} less to cast for each card exiled this wa | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Master's Rebuke | handled | Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mnemonic Sphere | handled | {1}{U}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moonfolk Puzzlemaker | handled | Whenever this creature becomes tapped, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -272,7 +269,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>28 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
@@ -288,6 +285,8 @@
 - Jin-Gitaxias, Progress Tyrant
 - Kami of Transience
 - March of Otherworldly Light
+- March of Swirling Mist
+- March of Wretched Sorrow
 - Mirror Box
 - Moon-Circuit Hacker
 - Moonsnare Prototype
@@ -298,6 +297,7 @@
 - Tameshi, Reality Architect
 - Tamiyo, Compleated Sage
 - The Wandering Emperor
+- Thousand-Faced Shadow
 - Touch the Spirit Realm
 
 </details>
@@ -312,7 +312,6 @@
 | Choose one | 2 | Debt to the Kami, Storyweave | neo |
 | all creatures get -N/-N until end of turn. if a creature would die ~, exile it instead. | 1 | Malicious Malfunction | neo |
 | as an additional cost to cast ~, sacrifice an artifact or creature. search your library for an equipment or vehicle card, put that card onto the battlefield, th | 1 | Anchor to Reality | neo |
-| as an additional cost to cast ~, you may exile any number of blue cards from your hand. ~ costs {M} less to cast for each card exiled ~. up to N target creature | 1 | March of Swirling Mist | neo |
 | as an additional cost to cast ~, you may exile any number of green cards from your hand. ~ costs {M} less to cast for each card exiled ~. choose target creature | 1 | March of Burgeoning Life | neo |
 | as an additional cost to cast ~, you may exile any number of red cards from your hand. ~ costs {M} less to cast for each card exiled ~. exile the top N cards of | 1 | March of Reckless Joy | neo |
 | as long as a card exiled with ~ has flying, equipped creature has flying. the same is true for first strike, double strike, deathtouch, haste, hexproof, indestr | 1 | Eater of Virtue | neo |
@@ -367,7 +366,6 @@
 | when kairi dies, choose one — • return any number of target nonland permanents with total mana value N or less to their owners' hands. • mill six cards, then re | 1 | Kairi, the Swirling Sky | neo |
 | when kotose enters, exile target card other than a basic land card from an opponent"..."s graveyard, hand, and library for any number of cards with the same nam | 1 | Kotose, the Silent Spider | neo |
 | when you next cast a creature spell ~, that creature enters with an additional +N/+N counter on it. | 1 | Kumano Faces Kakkazan // Etching of Kumano | neo |
-| when ~ enters from your hand, if it"..."s a copy of another target attacking creature. the token enters tapped and attacking. | 1 | Thousand-Faced Shadow | neo |
 | when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Dramatist's Puppet | neo |
 | when ~ enters, gain control of all rat tokens. | 1 | Tribute to Horobi // Echo of Death's Wail | neo |
 | when ~ enters, look at the top five cards of your library. you may reveal a creature or enchantment card from among them and put it into your hand. put the rest | 1 | Blossom Prancer | neo |

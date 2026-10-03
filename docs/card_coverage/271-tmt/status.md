@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 86 | 46.0% |
-| Works (untested) | 99 | 52.9% |
+| Tested | 88 | 47.1% |
+| Works (untested) | 98 | 52.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 2 | 1.1% |
+| Not working | 1 | 0.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Chrome Dome | notice | {5}: Create a token that's a copy of another target artifact you control. That token gains haste. Sacrifice it at the beginning of the next end step. | unparsed remainder: That token gains haste. | Y/Y/Y | not_working |
 | Novel Nunchaku | notice | When this Equipment enters, attach it to target creature you control. When you do, equipped creature fights up to one target creature an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Action News Crew | handled | Channel — {6}, Discard this card: Put a +1/+1 counter on each creature you control. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Agent Bishop, Man in Black | handled | At the beginning of combat on your turn, put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -39,6 +38,7 @@
 | Bot Bashing Time | handled | Bot Bashing Time deals 6 damage to target creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Buzz Bots | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Casey Jones, Jury-Rig Justiciar | handled | When Casey Jones enters, look at the top four cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on  | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Chrome Dome | handled | Other artifact creatures you control get +1/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cool but Rude | handled | Whenever you attack, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cowabunga! | handled | Look at the top four cards of your library. You may reveal a Mutant, Ninja, Turtle, or land card from among them and put it into your hand. Put the rest on the  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Death in the Family | handled | Exile target creature with mana value 3 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -49,7 +49,6 @@
 | Donatello, Mutant Mechanic | handled | {T}: Put three +1/+1 counters on target artifact you control. If it isn't a creature, it becomes a 0/0 Robot creature in addition to its other types. Activate o | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Donatello, Turtle Techie | handled | When Donatello enters, if you control an artifact, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Donatello, Way with Machines | handled | Whenever an artifact you control enters, put a +1/+1 counter on Donatello. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Dream Beavers | handled | When this creature enters, each opponent loses 1 life and you gain 1 life. Scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | EPF Point Squad | handled | Alliance — Whenever another creature you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | East Wind Avatar | handled | Alliance — Whenever another creature you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Featherbrained Filcher | handled | When this creature leaves the battlefield, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -77,7 +76,6 @@
 | Krang, Utrom Warlord | handled | Other artifact creatures you control have flying, trample, indestructible, and haste. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leader's Talent | handled | Whenever you attack, put a +1/+1 counter on target attacking creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leonardo's Technique | handled | Sneak {1}{W} (You may cast this spell for {1}{W} if you also return an unblocked attacker you control to hand during the declare blockers step.) Return one or t | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Leonardo, Cutting Edge | handled | Whenever you gain life, put a +1/+1 counter on Leonardo. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lessons from Life | handled | Draw three cards. You may put a land card from your hand onto the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lord Dregg, Insect Invader | handled | Disappear — At the beginning of your end step, if a permanent left the battlefield under your control this turn, create a 1/1 black Insect Warrior creature toke | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mechanized Ninja Cavalry | handled | When this creature enters, create a 1/1 colorless Robot artifact creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -131,7 +129,7 @@
 ## Fully supported
 
 <details>
-<summary>86 cards</summary>
+<summary>88 cards</summary>
 
 - April O'Neil, Hacktivist
 - April O'Neil, Kunoichi Trainee
@@ -145,6 +143,7 @@
 - Dimensional Exile
 - Don & Leo, Problem Solvers
 - Don & Raph, Hard Science
+- Dream Beavers
 - Everything Pizza
 - Foot Ninjas
 - Fugitive Droid
@@ -156,6 +155,7 @@
 - Krang & Shredder
 - Leatherhead, Swamp Stalker
 - Leonardo, Big Brother
+- Leonardo, Cutting Edge
 - Leonardo, Leader in Blue
 - Leonardo, Sewer Samurai
 - Lita, Little Orphan Amphibian
@@ -227,7 +227,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | when ~ enters, attach it to target creature you control. when you do, equipped creature fights up to one target creature an opponent controls. | 1 | Novel Nunchaku | tmt |
-| {M}: create a token that's a copy of another target artifact you control. that token gains haste. sacrifice it at the beginning of the next end step. | 1 | Chrome Dome | tmt |
 
 ## Notes
 

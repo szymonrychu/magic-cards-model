@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 3.1% |
-| Works (untested) | 74 | 46.5% |
+| Tested | 7 | 4.4% |
+| Works (untested) | 72 | 45.3% |
 | Partial (unaudited) | 10 | 6.3% |
 | Not working | 70 | 44.0% |
 
@@ -130,7 +130,6 @@
 | Ire of Kaminari | handled | Ire of Kaminari deals damage to any target equal to the number of Arcane cards in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ishi-Ishi, Akki Crackshot | handled | Whenever an opponent casts a Spirit or Arcane spell, Ishi-Ishi deals 2 damage to that player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kaijin of the Vanishing Touch | handled | Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Kami of False Hope | handled | Sacrifice this creature: Prevent all combat damage that would be dealt this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kami of Tattered Shoji | handled | Whenever you cast a Spirit or Arcane spell, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kira, Great Glass-Spinner | handled | Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kyoki, Sanity's Eclipse | handled | Whenever you cast a Spirit or Arcane spell, target opponent exiles a card from their hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -144,7 +143,6 @@
 | Mistblade Shinobi | handled | Whenever this creature deals combat damage to a player, you may return target creature that player controls to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nezumi Shadow-Watcher | handled | Sacrifice this creature: Destroy target Ninja. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ninja of the Deep Hours | handled | Whenever this creature deals combat damage to a player, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Nourishing Shoal | handled | You may exile a green card with mana value X from your hand rather than pay this spell's mana cost. You gain X life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Okiba-Gang Shinobi | handled | Whenever this creature deals combat damage to a player, that player discards two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ornate Kanzashi | handled | {2}, {T}: Target opponent exiles the top card of their library. You may play that card this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oyobi, Who Split the Heavens | handled | Whenever you cast a Spirit or Arcane spell, create a 3/3 white Spirit creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -184,11 +182,13 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>7 cards</summary>
 
 - Bile Urchin
 - Disrupting Shoal
 - Goryo's Vengeance
+- Kami of False Hope
+- Nourishing Shoal
 - Sakiko, Mother of Summer
 - Sway of the Stars
 
