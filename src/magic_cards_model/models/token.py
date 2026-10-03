@@ -1007,6 +1007,7 @@ def token_copy_of(
     not_legendary: bool = False,
     colors: Sequence[Color] | None = None,
     creature_types: Sequence[str] | None = None,
+    enters_with_counters: Sequence[tuple[str, int]] = (),
     **options: Any,
 ) -> list[TokenState]:
     """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
@@ -1066,6 +1067,11 @@ def token_copy_of(
     legendary" (The Notary Hobbits, Impostor Syndrome, Multiversal
     Incursion): the legendary supertype is taken off the copiable type line,
     so the copy is never subject to the legend rule alongside its original.
+
+    `enters_with_counters` is the creating effect's own "The token enters
+    with N `<kind>` counters on it" (CR 614.1c) - Ochre Jelly's "half that
+    many +1/+1 counters" - `(kind, amount)` pairs put on each copy's own
+    entering event, not counters added after it arrived.
 
     `colors` and `creature_types` are CR 707.9b's *replacing* exception -
     Croaking Counterpart's "except it's a 1/1 green Frog": the copiable colour
@@ -1189,7 +1195,12 @@ def token_copy_of(
                 copy = TokenState(
                     card=copiable, zone=Zone.STACK, controller=controller, owner=owner
                 )
-                game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
+                game.put_onto_battlefield(
+                    copy,
+                    controller,
+                    tapped=bool(options.get("tapped")),
+                    counters=dict(enters_with_counters) or None,
+                )
                 created.append(copy)
             for extra in extra_definitions:
                 addition = TokenState(

@@ -83,6 +83,7 @@ from ..models.player import Player
 from ..models.token import (
     PREDEFINED,
     TokenDefinition,
+    copiable_card_of,
     create_tokens,
     is_token,
     token_copy_of,
@@ -159,6 +160,7 @@ from .delayed import (
     CreateAttackingTokens,
     CreatedTriggeredAbility,
     CreateTokenCopyOfControlledToken,
+    CreateTokenCopyOfLastKnown,
     CreateTokensForController,
     DelayedBlinkReturnWithRider,
     DelayedTrigger,
@@ -12589,6 +12591,9 @@ _LOSE_ALL_AND_BASE_PT_RE = re.compile(
 #: unmasked text still reads "cards" for whichever reader wants it next) so
 #: this never masks an unrelated "and" that happens to follow a type word for
 #: some other reason.
+#: "permanents you own and control" (Yorion, Sky Nomad) - one ownership-and-
+#: control qualifier, not two instructions.
+_YOU_OWN_AND_CONTROL_AND_RE = re.compile(r"\byou own and control\b", re.IGNORECASE)
 _CARD_TYPE_PAIR_AND_RE = re.compile(
     rf"\b(?:{'|'.join(t.value for t in Type)})\s+and\s+"
     rf"(?:{'|'.join(t.value for t in Type)})(?=\s+cards?\b)",
@@ -12673,6 +12678,9 @@ def split_effect_clauses(text: str) -> list[str]:
     # "instant and sorcery cards" / "artifact and creature card" - one card
     # type list, not two instructions.
     masked = _CARD_TYPE_PAIR_AND_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
+    masked = _YOU_OWN_AND_CONTROL_AND_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
     masked = _LOSE_ALL_AND_BASE_PT_RE.sub(
@@ -48294,6 +48302,231 @@ def _parse_delayed_blink_clauses(
     return consumed, effect
 
 
+#: "create a token that's a copy of it" - the verb half of Ochre Jelly's
+#: delayed "... at the beginning of the next end step", once
+#: `_parse_delayed_timing_clause` has taken the timing off either end.
+_DELAYED_TOKEN_COPY_OF_IT_VERB_RE = re.compile(
+    r"^create a token that'?s a copy of (?:it|this creature|this permanent)$", re.IGNORECASE
+)
+#: "The token enters with half that many +1/+1 counters on it, rounded down."
+#: - CR 614.1c's "enters with" said of the token the previous clause makes.
+#: "that many" is the number of that kind of counter "it" had (CR 603.10a's
+#: look-back for a dies trigger); a fixed number reads as itself.
+_THE_TOKEN_ENTERS_WITH_COUNTERS_RE = re.compile(
+    r"^(?:the|that) token enters with "
+    rf"(?:(?P<half>half )?(?P<that_many>that many)|(?P<n>{AMOUNT})) "
+    r"(?P<kind>\S+) counters? on it(?:, rounded (?P<rounding>down|up))?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_delayed_token_copy_of_it_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_DELAYED_TOKEN_COPY_OF_IT_VERB_RE` behind a delayed timing (CR 603.7a),
+    optionally followed by `_THE_TOKEN_ENTERS_WITH_COUNTERS_RE` - Ochre
+    Jelly's "create a token that's a copy of it at the beginning of the next
+    end step. The token enters with half that many +1/+1 counters on it,
+    rounded down."
+
+    "It" is the trigger's event subject (the creature that died), else the
+    ability's source, as it last existed (CR 603.10a, `source_or_last_known`
+    for a token that ceased to exist, CR 704.5d). Its copiable values (CR
+    707.2) and the entering counter count are fixed now, as the creating
+    ability resolves, and persisted on `CreateTokenCopyOfLastKnown` - by the
+    time the delayed ability resolves the object may be nowhere at all.
+    Ability-only: a spell has no "it" of this kind.
+    """
+    if for_spell:
+        return None
+    timing = _parse_delayed_timing_clause(clauses[index])
+    if timing is None:
+        return None
+    step, verb = timing
+    if _DELAYED_TOKEN_COPY_OF_IT_VERB_RE.fullmatch(verb.strip()) is None:
+        return None
+    consumed = 1
+    counters_match = None
+    if index + 1 < len(clauses):
+        counters_match = _THE_TOKEN_ENTERS_WITH_COUNTERS_RE.fullmatch(
+            clauses[index + 1].strip().rstrip(".")
+        )
+        if counters_match is not None:
+            consumed = 2
+    kind = _counter_kind(counters_match.group("kind")) if counters_match is not None else None
+    fixed = (
+        parse_count(counters_match.group("n"))
+        if counters_match is not None and counters_match.group("n") is not None
+        else None
+    )
+    if counters_match is not None and counters_match.group("n") is not None and fixed is None:
+        return None
+    text = ". ".join(clauses[index : index + consumed]) + "."
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        subject: CardState | None = None
+        event = ability.event
+        if event is not None and event.subject_id is not None:
+            found = game.find_by_id(event.subject_id)
+            if isinstance(found, CardState):
+                subject = found
+        if subject is None:
+            subject = ability.source_or_last_known(game)
+        if subject is None:
+            return
+        enters_with: tuple[tuple[str, int], ...] = ()
+        if counters_match is not None and kind is not None:
+            if fixed is not None:
+                amount = fixed
+            else:
+                had = (
+                    subject.counter_count(kind)
+                    if subject.zone is Zone.BATTLEFIELD
+                    else subject.last_known_counters[kind]
+                )
+                if counters_match.group("half") is not None:
+                    up = (counters_match.group("rounding") or "down").lower() == "up"
+                    amount = (had + 1) // 2 if up else had // 2
+                else:
+                    amount = had
+            if amount > 0:
+                enters_with = ((kind, amount),)
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=text,
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=step,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                effect=CreateTokenCopyOfLastKnown(
+                    copiable=copiable_card_of(game, subject),
+                    subject_id=subject.id,
+                    enters_with_counters=enters_with,
+                ),
+            )
+        )
+
+    return consumed, effect
+
+
+#: "exile any number of other nonland permanents you own and control" -
+#: Yorion, Sky Nomad's untargeted choice (CR 107.1c), made as the ability
+#: resolves. `<description>` is any permanent description
+#: `targeting.permanent_description` reads; "other" leaves the source out;
+#: the ownership/control tail narrows the candidates.
+_EXILE_ANY_NUMBER_OF_YOUR_PERMANENTS_RE = re.compile(
+    r"^exile any number of (?P<other>other )?(?P<description>.+?) "
+    r"you (?P<relation>own and control|control)$",
+    re.IGNORECASE,
+)
+#: "Return those cards to the battlefield [under their owner's control]" -
+#: the verb half once `_parse_delayed_timing_clause` has taken the timing
+#: off; CR 610.3c makes the owner's control the default when unsaid.
+_RETURN_THOSE_TO_BATTLEFIELD_RE = re.compile(
+    r"^return (?:them|those cards|those permanents) to the battlefield"
+    r"(?P<tapped> tapped)?(?: under (?:its|their) owners?'?s? control)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_any_number_of_your_permanents_then_delayed_return_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_EXILE_ANY_NUMBER_OF_YOUR_PERMANENTS_RE` followed by a delayed
+    `_RETURN_THOSE_TO_BATTLEFIELD_RE` - Yorion's "exile any number of other
+    nonland permanents you own and control. Return those cards to the
+    battlefield at the beginning of the next end step."
+
+    No target: the controller chooses among the candidates as the ability
+    resolves (CR 107.1c - zero is an answer, and then nothing is delayed).
+    What actually reached exile is remembered by id and exile stamp on
+    `ReturnEachExiledToBattlefieldUnderOwner` (CR 603.7c); a token ceases to
+    exist there (CR 704.5d) and so is never found again.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    exile_match = _EXILE_ANY_NUMBER_OF_YOUR_PERMANENTS_RE.fullmatch(
+        clauses[index].strip().rstrip(".")
+    )
+    if exile_match is None:
+        return None
+    description = exile_match.group("description").strip()
+    requirement = (
+        None
+        if description.lower() in ("permanent", "permanents")
+        else permanent_description(description)
+    )
+    if requirement is None and description.lower() not in ("permanent", "permanents"):
+        return None
+    timing = _parse_delayed_timing_clause(clauses[index + 1])
+    if timing is None:
+        return None
+    step, verb = timing
+    return_match = _RETURN_THOSE_TO_BATTLEFIELD_RE.fullmatch(verb.strip())
+    if return_match is None:
+        return None
+    tapped = return_match.group("tapped") is not None
+    excludes_source = exile_match.group("other") is not None
+    must_own = exile_match.group("relation").lower().startswith("own")
+    delayed_text = clauses[index + 1].strip().rstrip(".") + "."
+    prompt = clauses[index].strip().rstrip(".")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
+        controller = game.controller_of(stack_object).username
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(controller)
+            if not (excludes_source and permanent.id == source_id)
+            and (not must_own or permanent.owner == controller)
+            and (requirement is None or requirement.rejects(permanent, controller, game) is None)
+        ]
+        if not candidates:
+            return
+        answer = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt=prompt,
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                amount=len(candidates),
+                exact=False,
+                cards=tuple(permanent.id for permanent in candidates),
+            )
+        )
+        assert isinstance(answer, tuple)
+        chosen = [permanent for permanent in candidates if permanent.id in answer]
+        exiled: list[CardState] = []
+        for permanent in chosen:
+            game.exile_permanent(permanent)
+            if permanent.zone is Zone.EXILE:
+                exiled.append(permanent)
+        if not exiled:
+            return
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=delayed_text,
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=step,
+                controller=controller,
+                source_id=source_id,
+                source_name=source_name,
+                effect=ReturnEachExiledToBattlefieldUnderOwner(
+                    subjects=tuple(
+                        (card_state.id, card_state.zone_change_stamp) for card_state in exiled
+                    ),
+                    tapped=tapped,
+                ),
+            )
+        )
+
+    return 2, effect
+
+
 #: "Return target creature card [with mana value N or X] from your graveyard
 #: to the battlefield." - Postmortem Lunge's own reanimation clause, read
 #: generically off the shape (not off the card's name): any card printing
@@ -61745,6 +61978,20 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _parse_delayed_blink_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _parse_exile_any_number_of_your_permanents_then_delayed_return_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _parse_delayed_token_copy_of_it_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

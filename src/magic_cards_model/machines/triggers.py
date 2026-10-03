@@ -6291,8 +6291,11 @@ def _entered_or_cast_from_graveyard_holds(
 #: more quest counters on it". "It" is the source itself - the only subject
 #: this shape is printed with in this pool, and CR 603.4's clause is read about
 #: the ability's own source unless it plainly names something else.
+#: The past tense ("it had two or more +1/+1 counters on it", Ochre Jelly's
+#: dies trigger) asks the same question of the object as it last existed on
+#: the battlefield (CR 603.10a), whose counters CR 122.2 has already ended.
 _COUNTER_COUNT_CLAUSE = re.compile(
-    r"^(?:it|this [a-z]+) has "
+    r"^(?:it|this [a-z]+) (?P<tense>has|had) "
     rf"(?:(?P<comparison>fewer than|more than|at least|exactly) (?P<count>{COUNT})"
     rf"|(?P<suffix_count>{COUNT}) or (?P<direction>more|fewer)"
     r"|(?P<none>no))"
@@ -6323,7 +6326,11 @@ def _counter_count_holds(clause: str, source: CardState) -> bool | None:
     match = _COUNTER_COUNT_CLAUSE.match(clause)
     if match is None:
         return None
-    on_it = source.counter_count(match.group("kind"))
+    on_it = (
+        source.last_known_counters[match.group("kind")]
+        if match.group("tense") == "had"
+        else source.counter_count(match.group("kind"))
+    )
     if match.group("none") is not None:
         return on_it == 0
     if match.group("suffix_count") is not None:

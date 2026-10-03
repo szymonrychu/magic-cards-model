@@ -905,6 +905,45 @@ class CreateTokenCopyOfControlledToken(DelayedEffectSpecBase):
         token_copy_of(game, chosen, trigger.controller)
 
 
+class CreateTokenCopyOfLastKnown(DelayedEffectSpecBase):
+    """ "create a token that's a copy of it at the beginning of the next end
+    step. The token enters with half that many +1/+1 counters on it, rounded
+    down." - Ochre Jelly's Split, via `machines/effects.py`'s
+    `_parse_delayed_token_copy_of_it_clauses`.
+
+    The object "it" names has usually left the battlefield (a dies trigger)
+    and may have left its graveyard too, or ceased to exist as a token (CR
+    704.5d) - so CR 707.2's copiable values are taken when the creating
+    ability resolves and persisted here as `copiable`, the same way
+    `CreatedTriggeredAbility.source_card` keeps a vanished source's printing.
+    `enters_with_counters` is the count already worked out from what the
+    object had (CR 614.1c's "enters with"), `(kind, amount)` pairs.
+    """
+
+    kind: Literal["create_token_copy_of_last_known"] = "create_token_copy_of_last_known"
+
+    copiable: Card
+    subject_id: UUID | None = None
+    enters_with_counters: tuple[tuple[str, int], ...] = ()
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if not game.is_in_game(trigger.controller):
+            return
+        original = CardState(
+            id=self.subject_id or self.copiable.id,
+            card=self.copiable,
+            zone=Zone.EXILE,
+            controller=trigger.controller,
+            owner=trigger.controller,
+        )
+        token_copy_of(
+            game,
+            original,
+            trigger.controller,
+            enters_with_counters=self.enters_with_counters,
+        )
+
+
 class PayOrLoseTheGame(DelayedEffectSpecBase):
     """Summoner's Pact's own delayed half: pay `cost` - from floating mana and,
     per CR 608.2g, mana abilities activated while paying - or lose the game
@@ -1893,10 +1932,33 @@ class ReturnEachExiledToBattlefieldUnderOwner(DelayedEffectSpecBase):
             if card_state.zone_change_stamp != stamp or card_state.owner is None:
                 continue
             found.append(card_state)
+        from .effects import _aura_host_for_entry
+
+        # CR 303.4f: a returning Aura enchants what its owner chooses as it
+        # enters, among what is already on the battlefield - never a card
+        # returning alongside it, so every host is chosen before any enters.
+        # With nothing legal it stays in exile (CR 303.4g).
+        hosts: dict[UUID, object] = {}
+        for card_state in found:
+            assert card_state.owner is not None
+            host = _aura_host_for_entry(
+                game,
+                card_state,
+                card_state.owner,
+                trigger.source_name,
+                source_id_of(trigger.source_id),
+            )
+            if host is not None:
+                hosts[card_state.id] = host
         with game.entering_together():
             for card_state in found:
+                if card_state.id not in hosts:
+                    continue
                 assert card_state.owner is not None
                 game.put_onto_battlefield(card_state, card_state.owner, tapped=self.tapped)
+                host = hosts[card_state.id]
+                if host is not True and card_state.zone is Zone.BATTLEFIELD:
+                    card_state.attach_to(host)
 
 
 class ReturnSubjectFromGraveyardToBattlefield(DelayedEffectSpecBase):
@@ -1976,6 +2038,7 @@ DelayedEffectSpec = Annotated[
     | CreateAttackingTokens
     | CreateTokensForController
     | CreateTokenCopyOfControlledToken
+    | CreateTokenCopyOfLastKnown
     | PayOrLoseTheGame
     | CombatDamageToPlayerDraw
     | CopyNextSpellYouCast

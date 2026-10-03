@@ -12023,6 +12023,7 @@ class Game(EngineModel):
         transformed: bool = False,
         was_cast: bool,
         attach_to: "Targetable | None" = None,
+        counters: Mapping[str, int] | None = None,
     ) -> CardState:
         """A permanent enters the battlefield, replacement effects first (CR 614.12).
 
@@ -12080,6 +12081,7 @@ class Game(EngineModel):
                 destination=Zone.BATTLEFIELD,
                 tapped=tapped,
                 was_cast=was_cast,
+                counters=dict(counters or {}),
             )
             card_state.controller = controller
             # CR 614.12: which replacement applies is judged on the permanent
@@ -12344,6 +12346,7 @@ class Game(EngineModel):
         *,
         tapped: bool = False,
         transformed: bool = False,
+        counters: Mapping[str, int] | None = None,
     ) -> CardState:
         """Put a card onto the battlefield without casting it (CR 110.2a).
 
@@ -12361,10 +12364,19 @@ class Game(EngineModel):
         loyalty CR 306.5b puts on as it enters, which is the only way a
         creature face like Ajani, Nacatl Pariah becomes a planeswalker with any
         loyalty at all.
+
+        `counters` is the effect's own "it enters with N `<kind>` counters on
+        it" (CR 614.1c) - Ochre Jelly's token copy's "half that many" - put on
+        the entering event alongside every other entering counter.
         """
         with self._id_allocator_scope():
             return self.enter_the_battlefield(
-                card_state, controller, tapped=tapped, transformed=transformed, was_cast=False
+                card_state,
+                controller,
+                tapped=tapped,
+                transformed=transformed,
+                was_cast=False,
+                counters=counters,
             )
 
         # -- the pregame sequence (CR 103.5, CR 103.6) ----------------------------
