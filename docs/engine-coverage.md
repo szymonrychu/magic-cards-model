@@ -7186,4 +7186,9 @@ Fingerprint drift accepted with this branch (`tests/dispatch_fingerprint_baselin
 | "exile up to X target creatures / target nonland permanent. For each of those cards (for as long as it remains exiled), its owner may play/cast it" | `_parse_exile_targets_then_owner_play_permission_clauses` | Extraordinary Journey, Soul Partition, Release to the Wind | `test_exile_up_to_x_owner_may_play_while_exiled.py` |
 
 Extraordinary Journey's second ability (draw when a nontoken creature enters from or is cast from exile, once each turn) is scenario-proven there; the sweep driver cannot stage it, so its sweep case is the existing strict `SWEEP_DRIVER_GAPS` xfail ("entered from exile or was cast from exile").
+
+## R0b integration: a sacrifice cost naming two qualities
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
 | A sacrifice cost naming two objects of different qualities ("Sacrifice a Swamp and a Forest") - two sacrifices, each paid by a nominated object with its own quality; two Swamps refuse | CR 118.3, 602.2 | `Game.activation_cost` (`_SACRIFICE_A_AND_A`) | `scenarios/test_sacrifice_two_named_permanents_cost.py` (Jarad, Golgari Lich Lord, the only in-format printing) |
