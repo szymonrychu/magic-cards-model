@@ -136,8 +136,9 @@ class Keyword(StrEnum):
     FORESTWALK = "forestwalk"
 
 
-#: Keywords no combat rule reads, that a permanent may still have and a caller
-#: may still ask about.
+#: Keywords the `Keyword` enum does not carry, that a permanent may still have
+#: and a caller may still ask about - ones no combat rule reads, and the two
+#: evasion abilities `block_refusal` reads by name.
 #:
 #: Deliberately not members of `Keyword`: that enum is the combat vocabulary and
 #: is iterated elsewhere as "every keyword a grant or a counter can name" -
@@ -154,6 +155,10 @@ KEYWORDS_OUTSIDE_COMBAT: frozenset[str] = frozenset(
         "hexproof",
         # CR 702.18a: "Shroud is a static ability."
         "shroud",
+        # CR 702.118a-b / CR 702.36a-b: evasion abilities `block_refusal` reads
+        # by name, so a grant ("gain fear", "gain skulk") is recognised too.
+        "skulk",
+        "fear",
     }
 )
 
@@ -2497,6 +2502,17 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
             and blocker_power > attacker_power
         ):
             return f"{attacker.name} has skulk and {blocker.name} has greater power (CR 702.118b)"
+
+    if has_keyword(attacker, "fear", game):
+        # CR 702.36b: "A creature with fear can't be blocked except by artifact
+        # creatures and/or black creatures." Types and colours off the computed
+        # board (CR 613).
+        blocker_chars = game.characteristics_of(blocker)
+        if Type.ARTIFACT not in blocker_chars.types and Color.BLACK not in blocker_chars.colors:
+            return (
+                f"{attacker.name} has fear and {blocker.name} is neither an artifact "
+                f"creature nor a black creature (CR 702.36b)"
+            )
 
     # CR 702.16f: "Attacking creatures with protection can't be blocked by
     # creatures that have the stated quality."
