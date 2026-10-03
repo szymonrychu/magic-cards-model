@@ -7094,3 +7094,23 @@ found by the proofs and closed:
   general "a player or permanent" condition (Loki) ignores a stack object.
   Battle Mammoth ("a permanent you control") is the second-printing proof
   that a permanent-only condition does not see a countered creature spell.
+
+## R0b-T8 proofs: evoke, exile-until-leaves, charms, learn, prepare, transform, extra combat, warp
+
+Twelve already-handled cards now have their own scenario proofs (files
+`tests/scenarios/test_r0b_*.py`) and real printings in the pool. Three engine
+gaps the proofs exposed were fixed test-first:
+
+| Mechanic | Rules | Where | Tests |
+|---|---|---|---|
+| "Exile ... until this enchantment/Aura leaves the battlefield" moves nothing when the source already left after the ability triggered | CR 610.3b | `effects._parse_exile_until_leaves_battlefield_clause` now checks `source.zone is BATTLEFIELD`, like `linked_exile` and the for-each-opponent reader always did. Second printings: Prayer of Binding, Dimensional Exile | `test_r0b_exile_until_leaves_enchantments.py` |
+| Passive "Whenever a/another `<type>` you control is dealt damage" reads the recipient's controller and types, and a bare "it" in the effect is the damaged creature | CR 120.1 | `triggers.condition_matches` (DEALS_DAMAGE, passive voice) and `effects._damage_recipient_is_its_subject`. Second printing: Rite of Passage | `test_r0b_learn_prepare_transform_extra_combat_warp.py` |
+| "After this phase, there is an additional combat phase" resolving mid-phase runs the rest of the phase in progress first (declare blockers, combat damage, end of combat), then the added phase | CR 500.8 | `TurnMachine.insert_extra_phase` / `_rest_of_current_phase`. Second printing: Desert Were-Worm, Hellkite Charger (their tests in `test_total_power_extra_combat.py` asserted the old mid-combat interleaving and now assert the corrected order) | same file, plus `test_total_power_extra_combat.py` |
+
+Proof-only (no engine change): Emptiness (hybrid evoke, two mana-spent
+intervening ifs), Yathan Roadwatcher (cast-only ETB, reflexive reanimate),
+Snapcaster Mage (granted flashback via `PlayPermission.flashback`, used with
+`Casting.use_permission`), Prismari Charm and Archenemy's Charm (every mode),
+Professor of Symbology (learn, CR 701.48a), Jadzi (enters prepared, Oracle's
+Gift X), Jennifer Walters (CR 101.2 cast prohibition, sorcery-speed transform),
+Fear of Missing Out (delirium extra combat), Nova Hellkite (warp, CR 702.185a).

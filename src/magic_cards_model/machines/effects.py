@@ -16789,7 +16789,9 @@ def _parse_counter_on_it_trigger_subject_clause(clause: str) -> TargetedClause |
         if not isinstance(stack_object, AbilityOnStack):
             return
         event = stack_object.event
-        if event is not None and event.subject_id is not None:
+        if event is not None and _damage_recipient_is_its_subject(stack_object):
+            subject = game.find_by_id(event.target_id)
+        elif event is not None and event.subject_id is not None:
             subject = game.find_by_id(event.subject_id)
         elif _names_its_source(stack_object):
             # "At end of combat, if this Vehicle attacked or blocked this
@@ -16805,6 +16807,19 @@ def _parse_counter_on_it_trigger_subject_clause(clause: str) -> TargetedClause |
             game.add_counters(subject, kind, amount)
 
     return effect
+
+
+def _damage_recipient_is_its_subject(ability: AbilityOnStack) -> bool:
+    """Whether a triggered ability's condition is the passive "`<X>` is dealt
+    damage" (CR 120.1's recipient), so the bare "it" its effect then names is
+    the creature that was dealt the damage (`GameEvent.target_id`), not the
+    source of the damage (`GameEvent.subject_id`) - Rite of Passage's "Whenever
+    a creature you control is dealt damage, put a +1/+1 counter on it."."""
+    event = ability.event
+    printed = ability.ability
+    if event is None or event.target_id is None or not isinstance(printed, TriggeredAbility):
+        return False
+    return re.search(r"\b(?:is|are) dealt\b", (printed.condition or "").lower()) is not None
 
 
 def _names_its_source(ability: AbilityOnStack) -> bool:
@@ -18167,8 +18182,8 @@ def _parse_exile_until_leaves_battlefield_clause(
         if not targets:
             return  # CR 608.2b/115.6: no (legal) target chosen; nothing to exile.
         source = ability.source(game)
-        if source is None:
-            return  # CR 113.7a: the source is already gone; nothing left to watch leave.
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return  # CR 610.3b: the source already left after this triggered; nothing moves.
         for target in targets:
             exiled = game.exile_permanent(target)
             if exiled.zone is not Zone.EXILE:

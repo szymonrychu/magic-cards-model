@@ -3531,6 +3531,19 @@ def condition_matches(
             elif "opponent" in lowered:
                 if event.player is None or event.player == controller:
                     return False
+            elif event.target_id is not None and re.search(
+                r"\b(?:a|an|another)\b[^,]*\b(?:creature|planeswalker|permanent)\b", lowered
+            ):
+                # CR 120.1's recipient with a type and controller clause:
+                # The Sensational She-Hulk's "Whenever a creature you control
+                # is dealt damage" ("another" excludes the source itself).
+                if "another" in lowered and event.target_id == source.id:
+                    return False
+                if not (
+                    _controller_clause_holds(condition, controller, event.target_controller)
+                    and _types_match(event.target_types, condition)
+                ):
+                    return False
             else:
                 return False
             if "noncombat damage" in lowered:
