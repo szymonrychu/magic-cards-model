@@ -1,5 +1,5 @@
 {
-  "ability": "0: You get an emblem with \"As long as you control a Gideon planeswalker, you can't lose the game and your opponents can't win the game.\"",
+  "ability": "0: Until end of turn, Gideon becomes a 4/4 Human Soldier creature with indestructible that's still a planeswalker. Prevent all damage that would be dealt to him this turn.",
   "action": {
     "controller": "alice",
     "modes": [],
@@ -34,16 +34,20 @@
   },
   "card": "Gideon of the Trials",
   "delta": {
-    "created": {
-      "Gideon of the Trials emblem@alice+1": {
-        "counters": {},
-        "zone": "command"
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["continuous_effects", "prevention_shields"],
+    "notices": {},
+    "objects": {
+      "Gideon of the Trials@alice#1": {
+        "granted": [
+          [],
+          ["Indestructible"]
+        ],
+        "power": [null, 4],
+        "toughness": [null, 4]
       }
     },
-    "decisions": [],
-    "fields_changed": ["continuous_effects"],
-    "notices": {},
-    "objects": {},
     "players": {},
     "stack": []
   },
