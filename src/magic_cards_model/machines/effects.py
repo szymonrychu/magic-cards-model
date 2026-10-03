@@ -5050,6 +5050,65 @@ def _parse_prevent_all_damage_to_you_until_next_turn_clause(clause: str) -> Targ
     return effect
 
 
+#: "Prevent all [combat ]damage that would be dealt to him this turn." - the
+#: rider on Oko, the Trickster's copy and the Gideons' animations, and on
+#: any ability naming its own source ("him"/"her", or "this creature"/
+#: "this permanent", which `_self_normalized_effect_text` makes of the
+#: card's own name, CR 201.5). CR 615.1a's prevention effect as a shield
+#: around the ability's source, lasting CR 514.2's "this turn". A bare "it"
+#: is not read: on Djeru's Resolve it is the spell's target, not a source.
+_PREVENT_ALL_DAMAGE_TO_SELF_THIS_TURN_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that would be dealt to "
+    r"(?:him|her|this creature|this permanent) this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_prevent_all_damage_to_self_this_turn_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_PREVENT_ALL_DAMAGE_TO_SELF_THIS_TURN_RE`'s shape, on an ability.
+
+    The shield names the source *as this object* (CR 400.7): `lasts_while`
+    holds only while that incarnation stays on the battlefield, so an Oko
+    flickered out and back is a new object it never shielded."""
+    if for_spell:
+        return None
+    match = _PREVENT_ALL_DAMAGE_TO_SELF_THIS_TURN_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    combat_only = match.group("combat") is not None
+
+    def effect(game: "Game", ability: "StackObject") -> None:
+        from ..models.game import PreventionShield, ShieldKind
+
+        if not isinstance(ability, AbilityOnStack):
+            return
+        source = ability.source(game)
+        if (
+            source is None
+            or source.zone is not Zone.BATTLEFIELD
+            or source.zone_change_stamp is None
+            or ability.source_stamp not in (None, source.zone_change_stamp)
+        ):
+            return
+        game.create_prevention_shield(
+            PreventionShield(
+                kind=ShieldKind.ALL,
+                label=(
+                    f"prevent all {'combat ' if combat_only else ''}damage that would be "
+                    f"dealt to {source.name} this turn"
+                ),
+                controller=game.controller_of(ability).username,
+                card_id=source.id,
+                combat_only=combat_only,
+                lasts_while=RemainsOnBattlefield(card_id=source.id, stamp=source.zone_change_stamp),
+            )
+        )
+
+    return effect
+
+
 #: ecl-T8: a card's own trailing "Exile `<its own name>`." - CR 201.5's own
 #: self-reference, the same shape Worlds Within Worlds' and Burning Wish's
 #: printings already carry (see `_EXILE_ALL_CREATURES_THEN_HAND_REFILL_RE`'s
@@ -25675,11 +25734,15 @@ def _parse_self_base_pt_set_with_keywords_clause(effect_text: str) -> AbilityEff
 #: its id *and* its zone-change stamp, since that creature leaving and coming
 #: back is a new object (CR 400.7). The duration is CR 514.2's "this turn" or
 #: CR 611.2b's "for as long as" the resolving ability's own source remains.
+#: Gideon of the Trials' "+1: Until your next turn, prevent all damage target
+#: permanent would deal." is the same shield in the other word order, with
+#: CR 611.2a's leading "until your next turn" (`until_next_turn_of`).
 _PREVENT_DAMAGE_DEALT_BY_TARGET_RE = re.compile(
-    r"^prevent all (?P<combat>combat )?damage that would be dealt by "
-    r"(?P<phrase>(?:up to one )?target [a-z ]*?creature) "
-    r"(?:(?P<this_turn>this turn)|for as long as (?P<remains>this (?:saga|creature|enchantment|"
-    r"artifact|permanent|land)) remains on the battlefield)\."
+    r"^(?P<next_turn>until your next turn, )?prevent all (?P<combat>combat )?damage "
+    r"(?:that would be dealt by (?P<phrase>(?:up to one )?target [a-z ]*?(?:creature|permanent))"
+    r"|(?P<subject>(?:up to one )?target [a-z ]*?(?:creature|permanent)) would deal)"
+    r"(?: (?P<this_turn>this turn)| for as long as (?P<remains>this (?:saga|creature|enchantment|"
+    r"artifact|permanent|land)) remains on the battlefield)?\."
     r"(?:\s*if \{(?P<color>[wubrg])\} was spent to cast this spell, (?:this spell|[^,.]+?) "
     r"deals damage to that creature['’]s controller equal to the creature['’]s power\.)?$",
     re.IGNORECASE,
@@ -25691,10 +25754,15 @@ def _parse_prevent_damage_dealt_by_target_clause(text: str) -> TargetedClause | 
     match = _PREVENT_DAMAGE_DEALT_BY_TARGET_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
         return None
-    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+    phrase = match.group("phrase") or match.group("subject")
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+    durations = ("next_turn", "this_turn", "remains")
+    if sum(match.group(name) is not None for name in durations) != 1:
         return None
     combat_only = match.group("combat") is not None
     lasts_while_source = match.group("remains") is not None
+    until_next_turn = match.group("next_turn") is not None
     spent_color = Color(match.group("color").upper()) if match.group("color") else None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -25736,7 +25804,8 @@ def _parse_prevent_damage_dealt_by_target_clause(text: str) -> TargetedClause | 
                     source_id=target.id,
                     source_stamp=target.zone_change_stamp,
                     combat_only=combat_only,
-                    until_end_of_turn=not lasts_while_source,
+                    until_end_of_turn=not (lasts_while_source or until_next_turn),
+                    until_next_turn_of=controller if until_next_turn else None,
                     lasts_while=condition,
                 )
             )
@@ -61856,6 +61925,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     prevent_all_to_you_next_turn = _parse_prevent_all_damage_to_you_until_next_turn_clause(clause)
     if prevent_all_to_you_next_turn is not None:
         return prevent_all_to_you_next_turn
+    prevent_all_to_self = _parse_prevent_all_damage_to_self_this_turn_clause(
+        clause, for_spell=for_spell
+    )
+    if prevent_all_to_self is not None:
+        return prevent_all_to_self
     exile_self = _parse_exile_self_clause(clause, for_spell=for_spell)
     if exile_self is not None:
         return exile_self

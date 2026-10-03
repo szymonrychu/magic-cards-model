@@ -617,6 +617,47 @@ def _parse_becomes_a_copy_clause(
     return effect
 
 
+#: A sentence boundary outside a quoted ability: ". " followed by the next
+#: sentence's capital letter.
+_SENTENCE_BOUNDARY_RE = re.compile(r"\.\s+(?=[A-Z])")
+
+
+def _parse_becomes_a_copy_then_rider_ability(text: str) -> AbilityEffect | None:
+    """`_BECOMES_A_COPY_RE`'s sentence followed by further instructions of the
+    same ability - Oko, the Trickster's "Until end of turn, Oko becomes a copy
+    of target creature you control. Prevent all damage that would be dealt to
+    him this turn." The copy is made first and the rest runs after it, read
+    by the same remainder reader every layer sentence's rider goes through
+    (`_layer_remainder_or_composed`); an unreadable rest fails the whole
+    ability rather than half of it (CR 608.2c)."""
+    from .effects import _layer_remainder_or_composed
+
+    flat = " ".join(text.split())
+    for boundary in _SENTENCE_BOUNDARY_RE.finditer(flat):
+        head, rest = flat[: boundary.start() + 1], flat[boundary.end() :]
+        if head.count('"') % 2:
+            continue  # inside a quoted ability
+        copy = _parse_becomes_a_copy_clause(head)
+        if copy is None:
+            continue
+        rider = _layer_remainder_or_composed(rest, for_spell=False)
+        if rider is None:
+            return None
+        return _copy_then_rider(copy, rider)
+    return None
+
+
+def _copy_then_rider(
+    copy: Callable[[Game, StackObject], None], rider: Callable[[Game, StackObject], None]
+) -> AbilityEffect:
+    from .turn_scoped_riders import run_layer_then_rider
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        run_layer_then_rider(game, ability, copy, rider)
+
+    return effect
+
+
 #: "Each `<group>` becomes a copy of target `<quality>`[ until end of turn]."
 #: - Mirrorform's "Each nonland permanent you control becomes a copy of
 #: target non-Aura permanent." and Mirrorweave's "Each other creature becomes
@@ -1010,6 +1051,7 @@ def copy_ability_effect(effect_text: str) -> AbilityEffect | None:
         _parse_exile_then_become_its_copy_clause,
         _parse_each_becomes_a_copy_clause,
         _parse_becomes_a_copy_clause,
+        _parse_becomes_a_copy_then_rider_ability,
         _parse_copy_target_ability_clause,
         _parse_copy_next_within_mana_value_ability,
         _parse_copy_that_spell_then_clause,

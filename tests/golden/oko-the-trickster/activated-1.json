@@ -1,11 +1,11 @@
 {
-  "ability": "−7: Until end of turn, each creature you control has base power and toughness 10/10 and gains trample.",
+  "ability": "0: Until end of turn, Oko becomes a copy of target creature you control. Prevent all damage that would be dealt to him this turn.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Oko, the Trickster@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,14 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["continuous_effects", "prevention_shields"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Oko, the Trickster@alice#1": {
+        "power": [null, 1],
+        "toughness": [null, 1]
+      }
+    },
     "players": {},
     "stack": []
   },
