@@ -25618,11 +25618,15 @@ def _parse_self_base_pt_set_with_keywords_clause(effect_text: str) -> AbilityEff
 #: its id *and* its zone-change stamp, since that creature leaving and coming
 #: back is a new object (CR 400.7). The duration is CR 514.2's "this turn" or
 #: CR 611.2b's "for as long as" the resolving ability's own source remains.
+#: Gideon of the Trials' "+1: Until your next turn, prevent all damage target
+#: permanent would deal." is the same shield in the other word order, with
+#: CR 611.2a's leading "until your next turn" (`until_next_turn_of`).
 _PREVENT_DAMAGE_DEALT_BY_TARGET_RE = re.compile(
-    r"^prevent all (?P<combat>combat )?damage that would be dealt by "
-    r"(?P<phrase>(?:up to one )?target [a-z ]*?creature) "
-    r"(?:(?P<this_turn>this turn)|for as long as (?P<remains>this (?:saga|creature|enchantment|"
-    r"artifact|permanent|land)) remains on the battlefield)\."
+    r"^(?P<next_turn>until your next turn, )?prevent all (?P<combat>combat )?damage "
+    r"(?:that would be dealt by (?P<phrase>(?:up to one )?target [a-z ]*?(?:creature|permanent))"
+    r"|(?P<subject>(?:up to one )?target [a-z ]*?(?:creature|permanent)) would deal)"
+    r"(?: (?P<this_turn>this turn)| for as long as (?P<remains>this (?:saga|creature|enchantment|"
+    r"artifact|permanent|land)) remains on the battlefield)?\."
     r"(?:\s*if \{(?P<color>[wubrg])\} was spent to cast this spell, (?:this spell|[^,.]+?) "
     r"deals damage to that creature['’]s controller equal to the creature['’]s power\.)?$",
     re.IGNORECASE,
@@ -25634,10 +25638,15 @@ def _parse_prevent_damage_dealt_by_target_clause(text: str) -> TargetedClause | 
     match = _PREVENT_DAMAGE_DEALT_BY_TARGET_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
         return None
-    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+    phrase = match.group("phrase") or match.group("subject")
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+    durations = ("next_turn", "this_turn", "remains")
+    if sum(match.group(name) is not None for name in durations) != 1:
         return None
     combat_only = match.group("combat") is not None
     lasts_while_source = match.group("remains") is not None
+    until_next_turn = match.group("next_turn") is not None
     spent_color = Color(match.group("color").upper()) if match.group("color") else None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -25679,7 +25688,8 @@ def _parse_prevent_damage_dealt_by_target_clause(text: str) -> TargetedClause | 
                     source_id=target.id,
                     source_stamp=target.zone_change_stamp,
                     combat_only=combat_only,
-                    until_end_of_turn=not lasts_while_source,
+                    until_end_of_turn=not (lasts_while_source or until_next_turn),
+                    until_next_turn_of=controller if until_next_turn else None,
                     lasts_while=condition,
                 )
             )
