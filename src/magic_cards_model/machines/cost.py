@@ -1617,34 +1617,96 @@ def _plan_life_loss(
     ever asked to rule a plan *out*, and leaving a gain uncounted can only
     make that answer more cautious, never let an unpayable plan through.
     """
-    loss = 0
-    for source, colors, restriction in plan:
-        wanted_text = restriction.text if restriction is not None else None
-        matches = [
-            (index, options)
-            for scanned_source, options, scanned_restriction, _any, index in (
-                _scan_mana_candidates(context, [source])
-            )
-            if scanned_source is source
-            and (scanned_restriction.text if scanned_restriction is not None else None)
-            == wanted_text
-        ]
-        chosen = sorted(colors)
-        index = next(
-            (
-                index
-                for index, options in sorted(matches, key=lambda item: item[0])
-                if any(sorted(option) == chosen for option in options)
-            ),
-            min((index for index, _options in matches), default=None),
+    return sum(
+        _entry_life_loss(context, source, colors, restriction)
+        for source, colors, restriction in plan
+    )
+
+
+def _entry_life_loss(
+    context: "CostPayment | _SpendContext",
+    source: CardState,
+    colors: Sequence[Color],
+    restriction: ManaRestriction | None,
+) -> int:
+    """The life one plan entry's mana ability takes (`_plan_life_loss`'s
+    per-entry half): 0 unless the ability `tap_for_mana` would activate for
+    these colours carries a damage or life-loss rider."""
+    wanted_text = restriction.text if restriction is not None else None
+    matches = [
+        (index, options)
+        for scanned_source, options, scanned_restriction, _any, index in (
+            _scan_mana_candidates(context, [source])
         )
-        if index is None:
+        if scanned_source is source
+        and (scanned_restriction.text if scanned_restriction is not None else None) == wanted_text
+    ]
+    chosen = sorted(colors)
+    index = next(
+        (
+            index
+            for index, options in sorted(matches, key=lambda item: item[0])
+            if any(sorted(option) == chosen for option in options)
+        ),
+        min((index for index, _options in matches), default=None),
+    )
+    if index is None:
+        return 0
+    activation = dict(tappable_mana_activations(source, context.game)).get(index)
+    rider = activation.mana.rider if activation is not None and activation.mana else None
+    if rider is not None and rider.kind in ("damage_to_controller", "lose_life"):
+        return rider.amount
+    return 0
+
+
+def _prefer_painless_mana(
+    context: "CostPayment | _SpendContext",
+    plan: "TapPlan",
+    *,
+    owed: ManaCost,
+    base_floating: dict[Color, int],
+    base_snow: dict[Color, int],
+    base_restricted: list[Any],
+    life_available: int,
+) -> "TapPlan":
+    """Swap a plan entry that takes damage or life (a painland's coloured
+    ability, CR 405.6c) for a rider-free ability of the same source with the
+    same CR 106.6 restriction when the plan still pays - Llanowar Wastes
+    pays a generic {1} with `{T}: Add {C}.`, not by hurting its controller."""
+    plan = list(plan)
+    for position, (source, colors, restriction) in enumerate(plan):
+        if not _entry_life_loss(context, source, colors, restriction):
             continue
-        activation = dict(tappable_mana_activations(source, context.game)).get(index)
-        rider = activation.mana.rider if activation is not None and activation.mana else None
-        if rider is not None and rider.kind in ("damage_to_controller", "lose_life"):
-            loss += rider.amount
-    return loss
+        wanted_text = restriction.text if restriction is not None else None
+        for scanned_source, options, scanned_restriction, _any, _index in _scan_mana_candidates(
+            context, [source]
+        ):
+            scanned_text = scanned_restriction.text if scanned_restriction is not None else None
+            if scanned_source is not source or scanned_text != wanted_text:
+                continue
+            swapped = False
+            for option in options:
+                if _entry_life_loss(context, source, option, restriction):
+                    continue
+                trial_plan = (
+                    plan[:position] + [(source, list(option), restriction)] + plan[position + 1 :]
+                )
+                trial = ManaPool(
+                    floating=dict(base_floating),
+                    snow=dict(base_snow),
+                    restricted=[entry.model_copy(deep=True) for entry in base_restricted],
+                )
+                for each, each_colors, each_restriction in trial_plan:
+                    trial.add_all(
+                        each_colors, snow=is_snow_source(each), restriction=each_restriction
+                    )
+                if trial.can_pay(owed, life_available=life_available, spend=context.spend):
+                    plan = trial_plan
+                    swapped = True
+                    break
+            if swapped:
+                break
+    return plan
 
 
 def _solve_colours(
@@ -2264,7 +2326,15 @@ def _solve_auto_tap_flow(
                     base_restricted=base_restricted,
                     life_available=life_available,
                 )
-            return plan
+            return _prefer_painless_mana(
+                context,
+                plan,
+                owed=owed,
+                base_floating=base_floating,
+                base_snow=base_snow,
+                base_restricted=base_restricted,
+                life_available=life_available,
+            )
     return None
 
 
