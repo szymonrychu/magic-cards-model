@@ -26,7 +26,15 @@ def _board():
         .player(
             "alice",
             hand=[HOSPITALITY],
-            battlefield=["Forest", "Forest", "Forest", "Island", "Island", "Grizzly Bears", "Serra Angel"],
+            battlefield=[
+                "Forest",
+                "Forest",
+                "Forest",
+                "Island",
+                "Island",
+                "Grizzly Bears",
+                "Serra Angel",
+            ],
             library=["Shock", OKO, "Opt", "Island", "Forest"],
             graveyard=[OKO],
         )
@@ -38,7 +46,9 @@ def _board():
 
 
 def _cast(scenario):
-    return scenario.cast_and_resolve(HOSPITALITY, *scenario.untapped_sources("Forest", "Forest", "Forest", "Island", "Island"))
+    return scenario.cast_and_resolve(
+        HOSPITALITY, *scenario.untapped_sources("Forest", "Forest", "Forest", "Island", "Island")
+    )
 
 
 def test_creatures_you_control_become_three_three_and_opponents_are_untouched():
@@ -120,5 +130,7 @@ def test_searching_the_library_for_a_card_that_is_not_there_still_shuffles():
     shuffles = scenario.game.shuffles_performed
     scenario.will_take_the_may(True, source=HOSPITALITY)
     scenario.will_choose(LIBRARY_ONLY, username="alice", source=HOSPITALITY)
-    scenario.cast_and_resolve(HOSPITALITY, *scenario.untapped_sources("Forest", "Forest", "Forest", "Island", "Island"))
+    scenario.cast_and_resolve(
+        HOSPITALITY, *scenario.untapped_sources("Forest", "Forest", "Forest", "Island", "Island")
+    )
     assert scenario.game.shuffles_performed == shuffles + 1

@@ -20,7 +20,9 @@ def _cast():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.cast_and_resolve("Essence Feed", *scenario.untapped_sources(*["Swamp"] * 6), targets=["bob"])
+    scenario.cast_and_resolve(
+        "Essence Feed", *scenario.untapped_sources(*["Swamp"] * 6), targets=["bob"]
+    )
     return scenario
 
 

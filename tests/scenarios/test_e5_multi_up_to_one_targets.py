@@ -109,5 +109,5 @@ def test_hostile_takeover_second_target_must_be_a_different_creature():
     bears = scenario.creature("Grizzly Bears", "alice")
     import pytest
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         scenario.cast(TAKEOVER, targets=[bears, bears])

@@ -49,7 +49,9 @@ def test_vehicles_you_control_become_artifact_creatures():
     scenario = _board()
     copter = scenario.find("Smuggler's Copter", Zone.BATTLEFIELD, "alice")
     assert not scenario.game.characteristics_of(copter).is_creature
-    scenario.will_choose_cards(scenario.creature("Seven Dwarves", "alice"), username="alice", source=ARMED)
+    scenario.will_choose_cards(
+        scenario.creature("Seven Dwarves", "alice"), username="alice", source=ARMED
+    )
     scenario.will_choose_cards(username="alice", source=ARMED)
     _cast(scenario)
     assert scenario.game.characteristics_of(copter).is_creature
@@ -130,4 +132,4 @@ def test_an_opponents_dwarf_is_not_choosable():
     scenario.will_choose_cards(dwarf, username="alice", source=ARMED)
     scenario.will_choose_cards(bone, username="alice", source=ARMED)
     _cast(scenario)
-    assert not scenario.game.characteristics_of(theirs).power == 4
+    assert scenario.game.characteristics_of(theirs).power != 4

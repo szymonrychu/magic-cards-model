@@ -19,7 +19,12 @@ KATARA = "Katara, Water Tribe's Hope"
 
 
 def _board(*, alice, bob=()):
-    scenario = Scenario().player("alice", battlefield=[ESQUIRE, *alice]).player("bob", battlefield=list(bob)).build()
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[ESQUIRE, *alice])
+        .player("bob", battlefield=list(bob))
+        .build()
+    )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     return scenario
 

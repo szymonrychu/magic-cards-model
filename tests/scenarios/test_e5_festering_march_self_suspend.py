@@ -21,7 +21,9 @@ def _board():
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", hand=[MARCH], battlefield=["Swamp"] * 5 + ["Grizzly Bears"], library=LIBRARY)
+        .player(
+            "alice", hand=[MARCH], battlefield=["Swamp"] * 5 + ["Grizzly Bears"], library=LIBRARY
+        )
         .player("bob", battlefield=["Grizzly Bears", "Hill Giant"], library=LIBRARY)
         .build()
     )

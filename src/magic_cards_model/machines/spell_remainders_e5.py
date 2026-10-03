@@ -84,7 +84,7 @@ def _slot_step(sentence: str, slot: int) -> _Step:
 
     text = re.sub(r"^up to one (?:other )?target", "Target", sentence.strip(), flags=re.I)
 
-    def creature_slot(game: "Game", spell: CardState) -> None:
+    def creature_slot(game: Game, spell: CardState) -> None:
         refs = [t for t in spell.targets if t.kind is TargetKind.CARD]
         if slot >= len(refs):
             return  # CR 115.6: this "up to one" chose no target.
@@ -117,7 +117,7 @@ def _free_cast_reader(sentences: list[str], index: int) -> tuple[_Step, int] | N
         return None
     limit = int(match.group("limit"))
 
-    def cast_from_hand_free(game: "Game", spell: CardState) -> None:
+    def cast_from_hand_free(game: Game, spell: CardState) -> None:
         controller = game.controller_of(spell)
         caster = controller.username
         candidates = [
@@ -174,7 +174,7 @@ def _named_search_reader(sentences: list[str], index: int) -> tuple[_Step, int] 
         return None  # without its shuffle rider the sentence pair is not this shape
     name = match.group("name").strip()
 
-    def search_library_and_or_graveyard(game: "Game", spell: CardState) -> None:
+    def search_library_and_or_graveyard(game: Game, spell: CardState) -> None:
         controller = game.controller_of(spell)
         player = controller.username
         if not game.ask(
@@ -246,7 +246,7 @@ def _choose_and_attach_reader(sentences: list[str], index: int) -> tuple[_Step, 
     if subtype is None:
         return None
 
-    def attach_any_number_to_chosen(game: "Game", spell: CardState) -> None:
+    def attach_any_number_to_chosen(game: Game, spell: CardState) -> None:
         from .keywords import _protection_refusal_for_attachment
 
         controller = game.controller_of(spell)
@@ -308,14 +308,71 @@ def _choose_and_attach_reader(sentences: list[str], index: int) -> tuple[_Step, 
     return attach_any_number_to_chosen, 2
 
 
+_VEHICLES_BECOME_RE = re.compile(
+    r"^vehicles you control become artifact creatures until end of turn\.?$", re.IGNORECASE
+)
+
+
+def _vehicles_become_creatures_reader(sentences: list[str], index: int) -> tuple[_Step, int] | None:
+    """Armed and Armored: "Vehicles you control become artifact creatures until
+    end of turn." The group is the Vehicles on the battlefield as the sentence
+    begins (CR 611.2c); `machines/layers.py` reads the rewritten group sentence
+    (CR 205.1b: a Vehicle that becomes an artifact creature keeps its types)."""
+    if not _VEHICLES_BECOME_RE.match(sentences[index].strip()):
+        return None
+
+    def vehicles_become_artifact_creatures(game: Game, spell: CardState) -> None:
+        from .effects import continuous_effects, layer_context_for
+        from .layers import parsed_layer_effects
+
+        controller = game.controller_of(spell)
+        board = game.computed_board()
+        vehicles = [
+            c
+            for c in game.permanents_controlled_by(controller.username)
+            if "vehicle" in {w.lower() for w in board.of(c).subtypes}
+        ]
+        builder = parsed_layer_effects(
+            "creatures you control become artifact creatures until end of turn."
+        )
+        if not vehicles or builder is None:
+            return
+        store = continuous_effects(game)
+        context = layer_context_for(game, controller)
+        for built in builder(spell, store.tick(), vehicles, context):
+            if built.holds(game):
+                store.add(built)
+
+    return vehicles_become_artifact_creatures, 1
+
+
+def _threaten_triple_reader(sentences: list[str], index: int) -> tuple[_Step, int] | None:
+    """Kari Zev's Expertise: "Gain control of target creature or Vehicle until end
+    of turn. Untap it. It gains haste until end of turn." - Act of Treason's
+    three instructions as separate sentences ahead of a sentence this module
+    reads, so the splitter never hands them over as one clause."""
+    from .effects import _parse_untap_and_gain_control_clause
+
+    if index + 3 > len(sentences) or not sentences[index].strip().lower().startswith(
+        "gain control of "
+    ):
+        return None
+    effect = _parse_untap_and_gain_control_clause(
+        " ".join(s.strip() for s in sentences[index : index + 3])
+    )
+    return (effect, 3) if effect is not None else None
+
+
 _FAMILY_READERS: tuple[_Reader, ...] = (
+    _threaten_triple_reader,
+    _vehicles_become_creatures_reader,
     _free_cast_reader,
     _named_search_reader,
     _choose_and_attach_reader,
 )
 
 
-def spell_sentence_sequence_effect(whole: str) -> "Effect | None":
+def spell_sentence_sequence_effect(whole: str) -> Effect | None:
     """A spell's resolution text, when it carries one of this module's sentence
     families and every other sentence is readable on its own - each performed
     in printed order. `None` otherwise (the other readers get their turn)."""
@@ -362,7 +419,7 @@ def spell_sentence_sequence_effect(whole: str) -> "Effect | None":
     if not claimed:
         return None
 
-    def sentence_sequence_effect(game: "Game", spell: CardState) -> None:
+    def sentence_sequence_effect(game: Game, spell: CardState) -> None:
         for step in steps:
             step(game, spell)
             game.announce_batched_events()  # CR 603.2c: one event per instruction

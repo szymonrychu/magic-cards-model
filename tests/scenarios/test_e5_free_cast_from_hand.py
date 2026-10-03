@@ -151,9 +151,7 @@ def test_barals_expertise_returns_up_to_three_then_casts_free():
 def test_kari_zevs_expertise_steals_untaps_hastes_then_casts_free():
     scenario = (
         Scenario()
-        .player(
-            "alice", hand=["Kari Zev's Expertise", "Shock"], battlefield=["Mountain"] * 3
-        )
+        .player("alice", hand=["Kari Zev's Expertise", "Shock"], battlefield=["Mountain"] * 3)
         .player("bob", battlefield=["Hill Giant"])
         .build()
     )
@@ -167,5 +165,5 @@ def test_kari_zevs_expertise_steals_untaps_hastes_then_casts_free():
     )
     scenario.resolve_top()
     assert scenario.game.controller_of(giant).username == "alice"
-    assert scenario.game.characteristics_of(giant).has_keyword("haste")
+    assert any("haste" in a.lower() for a in scenario.game.characteristics_of(giant).abilities)
     assert scenario.player("bob").life == 18
