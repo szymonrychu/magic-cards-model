@@ -21865,6 +21865,12 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         return _self_deals_damage_equal_to_its_stat(match.group("stat").lower())
 
+    if not for_spell and (
+        lose_life_equal_to_sacrificed
+        := _parse_target_player_loses_life_equal_to_sacrificed_creature_clause(clause)
+    ):
+        return lose_life_equal_to_sacrificed
+
     if for_spell and (match := _DAMAGE_EQUAL_TO_SACRIFICED_CREATURE_POWER_RE.fullmatch(clause)):
         if not _targets_understood(match.group("phrase"), allow_player_targets=True):
             return None
@@ -30275,6 +30281,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         # draw half needs the activation's own cost-sacrificed card, which no
         # per-clause parser below has access to.
         return draw_equal_to_sacrificed_then_discard
+    gain_life_equal_to_sacrificed = _parse_gain_life_equal_to_sacrificed_creature_clause(
+        effect_text
+    )
+    if gain_life_equal_to_sacrificed is not None:
+        return gain_life_equal_to_sacrificed
     may_transform_self_if_you_do = _parse_may_transform_self_if_you_do_clause(effect_text)
     if may_transform_self_if_you_do is not None:
         return may_transform_self_if_you_do
@@ -68470,14 +68481,7 @@ def _parse_draw_equal_to_sacrificed_creature_power_then_discard_clause(
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = game.controller_of(ability)
-        total_power = 0
-        for card_id in ability.cost_sacrificed_card_ids:
-            sacrificed = game.find_by_id(card_id)
-            if sacrificed is None:
-                continue
-            printed = sacrificed.card.power
-            if printed is not None and printed.lstrip("-").isdigit():
-                total_power += int(printed)
+        total_power = _cost_sacrificed_stat_total(game, ability, "power")
         if total_power > 0:
             game.draw_cards(controller.username, total_power)
         _discard_cards(
@@ -68487,6 +68491,90 @@ def _parse_draw_equal_to_sacrificed_creature_power_then_discard_clause(
             ability.source_name,
             source_id=source_id_of(ability),
         )
+
+    return effect
+
+
+def _cost_sacrificed_stat_total(game: "Game", ability: AbilityOnStack, attribute: str) -> int:
+    """The summed power or toughness of every creature this activation's own
+    cost sacrificed, as CR 608.2h's last known information. Read off the
+    snapshot `Game.activate_ability` took as the cost was paid, so a pumped
+    creature counts as pumped and a sacrificed token that has since ceased to
+    exist (CR 704.5d) still counts. A `*` that never became a number counts 0.
+    """
+    snapshot = (
+        ability.cost_sacrificed_powers
+        if attribute == "power"
+        else ability.cost_sacrificed_toughnesses
+    )
+    if not snapshot and ability.cost_sacrificed_card_ids:
+        found = (game.find_by_id(card_id) for card_id in ability.cost_sacrificed_card_ids)
+        snapshot = tuple(getattr(state, attribute) for state in found if state is not None)
+    return sum(value for value in snapshot if value is not None)
+
+
+#: "You gain life equal to the sacrificed creature's toughness." - Ayli,
+#: Eternal Pilgrim's own "{1}, Sacrifice another creature:" ability, and
+#: Temple of Aclazotz's (Arguel's Blood Fast's transformed back)
+#: "{T}, Sacrifice a creature:" ability, word for word. The identical CR
+#: 602.2b timing `_DRAW_EQUAL_TO_SACRIFICED_CREATURE_POWER_THEN_DISCARD_RE`
+#: above already documents: the creature paid as the activation's own cost is
+#: gone (CR 400.7) before this ability is even on the stack, so its power/
+#: toughness is `_cost_sacrificed_stat_total`'s last-known snapshot.
+#: `attribute` is read generically - power or toughness - rather than pinned
+#: to Ayli's own "toughness".
+_GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE = re.compile(
+    r"^you gain life equal to the sacrificed creature'?s (?P<attribute>power|toughness)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_gain_life_equal_to_sacrificed_creature_clause(text: str) -> AbilityEffect | None:
+    """`_GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE`'s shape."""
+    match = _GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    attribute = match.group("attribute").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        total = _cost_sacrificed_stat_total(game, ability, attribute)
+        if total > 0:
+            game.gain_life(game.controller_of(ability).username, total)
+
+    return effect
+
+
+#: "Target opponent loses life equal to the sacrificed creature's toughness."
+#: - Catapult Captain's own "{2}{B}, {T}, Sacrifice another creature:"
+#: ability: `_GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE`'s loss twin, with the
+#: affected player a target chosen as the ability was put on the stack
+#: (CR 601.2c via 602.2b) rather than the controller.
+_TARGET_PLAYER_LOSES_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE = re.compile(
+    r"^target (?P<who>player|opponent) loses life equal to the sacrificed "
+    r"creature'?s (?P<attribute>power|toughness)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_loses_life_equal_to_sacrificed_creature_clause(
+    clause: str,
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_LOSES_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE`'s shape.
+    Ability-only: a spell has no activation cost to have sacrificed to."""
+    match = _TARGET_PLAYER_LOSES_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE.fullmatch(clause.strip())
+    if match is None or not _targets_understood(
+        f"target {match.group('who')}", allow_player_targets=True
+    ):
+        return None
+    attribute = match.group("attribute").lower()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        total = _cost_sacrificed_stat_total(game, stack_object, attribute)
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player) and total > 0:
+                game.lose_life(target, total)
 
     return effect
 
