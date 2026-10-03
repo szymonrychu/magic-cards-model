@@ -3056,9 +3056,14 @@ def condition_matches(
             # attackers`' own subject-less event, not once per attacker.
             return (
                 event.subject_id is None
-                and bool(batch)
+                and len(batch) >= batched_attack_minimum(condition)
                 and (event.player == controller or not _ONE_OR_MORE_ATTACK_YOURS.search(condition))
             )
+        if batched_attack_minimum(condition) > 1:
+            # "two or more <description> attack" counts the whole
+            # declaration; a description this file cannot read must not
+            # fall through to the one-attacker reading below.
+            return False
         # CR 508.3d: "Whenever [a player] attacks, ..." triggers once when one
         # or more creatures that player controls are declared as attackers -
         # not once per attacker. `Game.declare_attackers` emits that as its
@@ -7891,10 +7896,21 @@ def abilities_triggered_by(
 #: or more" is one trigger for the declaration, and how many of the
 #: attackers fit the description is the event's count, which a later "that
 #: many" reads (`machines/effects.that_many`).
+#: Flummoxed Cyclops' "two or more creatures your opponents control attack"
+#: is the same batched declaration with a minimum count: the trigger event
+#: still occurs once (CR 603.2c), and only when at least that many of the
+#: declared attackers fit the description.
 _ONE_OR_MORE_ATTACK_RE = re.compile(
-    r"^one or more (?P<description>.+?) attack(?:\s+(?P<defender>.+))?$", re.IGNORECASE
+    r"^(?P<minimum>one|two|three|four|five) or more (?P<description>.+?) "
+    r"attack(?:\s+(?P<defender>.+))?$",
+    re.IGNORECASE,
 )
 _ONE_OR_MORE_ATTACK_YOURS = re.compile(r"\byou control\b", re.IGNORECASE)
+#: "creatures your opponents control" (Flummoxed Cyclops): attackers under
+#: the control of anyone but the ability's own controller.
+_ONE_OR_MORE_ATTACK_THEIRS = re.compile(
+    r"\s*\b(?:your opponents control|an opponent controls)\b", re.IGNORECASE
+)
 
 #: "one of your opponents[ or a planeswalker they control]" - Frenzied
 #: Gorespawn's own defender phrase and Frontier Warmonger's widened compound
@@ -7951,6 +7967,15 @@ def _batched_attack_match(condition: str) -> "re.Match[str] | None":
     if you_attack is not None:
         text = f"one or more {you_attack.group('description')} you control attack"
     return _ONE_OR_MORE_ATTACK_RE.fullmatch(text)
+
+
+def batched_attack_minimum(condition: str) -> int:
+    """How many fitting attackers a batched attack condition needs: the
+    "`<N>` or more" count (`_ONE_OR_MORE_ATTACK_RE`), 1 for anything else."""
+    match = _batched_attack_match(condition)
+    if match is None:
+        return 1
+    return parse_count(match.group("minimum")) or 1
 
 
 def is_batched_attack_condition(condition: str) -> bool:
@@ -8011,6 +8036,8 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
 
     description = match.group("description")
     yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
+    theirs = _ONE_OR_MORE_ATTACK_THEIRS.search(description) is not None
+    description = _ONE_OR_MORE_ATTACK_THEIRS.sub("", description)
     requirement = permanent_description(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip())
     if requirement is None:
         return None
@@ -8024,6 +8051,7 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
         attacker
         for attacker in game.attacking_creatures()
         if (not yours or game.controller_of(attacker).username == controller)
+        and (not theirs or game.controller_of(attacker).username != controller)
         and requirement.rejects(attacker, controller, game) is None
         and (
             not opponent_only

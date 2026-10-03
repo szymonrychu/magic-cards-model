@@ -4607,7 +4607,8 @@ class Game(EngineModel):
     #: `LeaveBattlefieldExile` (Whip of Erebos' "If it would leave the
     #: battlefield, exile it instead of putting it anywhere else", one
     #: permanent for as long as it stays the same object - CR 614.1a,
-    #: CR 400.7), reachable from `Game.created_replacements`.
+    #: CR 400.7), reachable from `Game.created_replacements`; `Duration`
+    #: gained `UNTIL_END_OF_COMBAT` ("can't block this combat", CR 500.5a/511.2).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -20908,7 +20909,10 @@ class Game(EngineModel):
         return assigned
 
     def end_of_combat(self) -> None:
-        """Everything is removed from combat as the step ends (CR 511.3)."""
+        """Everything is removed from combat as the step ends (CR 511.3), and
+        "until end of combat" / "this combat" effects end with the phase (CR
+        500.5a, CR 511.2)."""
+        self.continuous_effects.end_the_combat(self)
         self.combat.clear()
         self.blocks_triggered = []
         self.attacks_unblocked_triggered = []
@@ -26947,7 +26951,10 @@ class Game(EngineModel):
             self._note_step_began(self.turn.advance())
             # CR 500.5a, the same reading `_advance_past_checks` uses above:
             # firebending's "until end of combat" mana expires exactly when
-            # the combat phase this boundary just left behind ends.
+            # the combat phase this boundary just left behind ends, and so do
+            # "until end of combat" / "this combat" effects (CR 511.2).
+            if previous_step is Step.END_OF_COMBAT:
+                self.continuous_effects.end_the_combat(self)
             self.empty_mana_pools(
                 expiring=frozenset({ManaRetentionScope.END_OF_COMBAT})
                 if previous_step is Step.END_OF_COMBAT

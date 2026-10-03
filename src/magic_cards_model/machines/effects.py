@@ -31383,6 +31383,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     remove_n_counters_from_self = _parse_remove_n_counters_from_self_clause(effect_text)
     if remove_n_counters_from_self is not None:
         return remove_n_counters_from_self
+    self_cant_block = _parse_self_cant_block_clause(effect_text)
+    if self_cant_block is not None:
+        return self_cant_block
     put_its_counters_on_target = _parse_put_its_counters_on_target_clause(
         effect_text, for_spell=False
     )
@@ -37257,7 +37260,21 @@ _RIDER_CANT_BE_BLOCKED_RE = re.compile(
 #: its own mirror keyword: the self line "This creature can't block."
 #: `machines/combat.py`'s blocker restriction already reads, for the rest of
 #: the turn (CR 611.2a).
-_RIDER_CANT_BLOCK_RE = re.compile(rf"^{_OBJECT_ANAPHOR} can'?t block this turn$", re.IGNORECASE)
+#: "This combat" (Forgestoker Dragon's "That creature can't block this
+#: combat.") is the same restriction for the rest of the combat phase only
+#: (`Duration.UNTIL_END_OF_COMBAT`, CR 500.5a/511.2).
+_RIDER_CANT_BLOCK_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} can'?t block (?P<span>this turn|this combat)$", re.IGNORECASE
+)
+
+
+def _block_restriction_duration(span: str) -> Duration:
+    """ "this turn" (CR 611.2a, ended by CR 514.2) or "this combat" (ended
+    with the combat phase, CR 500.5a/511.2)."""
+    if span.lower() == "this combat":
+        return Duration.UNTIL_END_OF_COMBAT
+    return Duration.UNTIL_END_OF_TURN
+
 
 #: "Put twice X `<kind>` counters on it." - SOS's Procrastinate: "Tap target
 #: creature. Put twice X stun counters on it." CR 107.3a's announced X,
@@ -37342,6 +37359,44 @@ def _parse_remove_n_counters_from_self_clause(text: str) -> AbilityEffect | None
         present = source.counter_count(kind)
         if present:
             source.remove_counters(kind, min(count, present))
+
+    return effect
+
+
+#: "This creature can't block this combat." / "It can't block this turn." as
+#: an ability's whole effect - Flummoxed Cyclops' attack trigger. CR 509.1b's
+#: restriction on the ability's own source (`_SELF_ANAPHOR`), granted the
+#: way `_RIDER_CANT_BLOCK_RE` grants it to a rider's referent: the self line
+#: "This creature can't block." that `machines/combat.py` already reads, for
+#: the printed span.
+_SELF_CANT_BLOCK_RE = re.compile(
+    rf"^{_SELF_ANAPHOR} can'?t block (?P<span>this turn|this combat)\.?$", re.IGNORECASE
+)
+
+
+def _parse_self_cant_block_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_CANT_BLOCK_RE`'s shape; see the banner above."""
+    match = _SELF_CANT_BLOCK_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    span = match.group("span").lower()
+    block_duration = _block_restriction_duration(span)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        effects = game.continuous_effects
+        effects.add(
+            ContinuousEffect(
+                description=f"{source.name} can't block {span}",
+                layer=Layer.ABILITY,
+                timestamp=effects.tick(),
+                duration=block_duration,
+                selector=only_this_incarnation(source, source.zone_change_stamp),
+                modification=grant_ability("This creature can't block."),
+            )
+        )
 
     return effect
 
@@ -37785,7 +37840,9 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
 
         return cant_be_blocked
 
-    if _RIDER_CANT_BLOCK_RE.fullmatch(rider):
+    if cant_block_match := _RIDER_CANT_BLOCK_RE.fullmatch(rider):
+        span = cant_block_match.group("span").lower()
+        block_duration = _block_restriction_duration(span)
 
         def cant_block(
             game: "Game", referents: list[CardState], stack_object: "StackObject"
@@ -37796,10 +37853,10 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
                     continue
                 effects.add(
                     ContinuousEffect(
-                        description=f"{referent.name} can't block this turn",
+                        description=f"{referent.name} can't block {span}",
                         layer=Layer.ABILITY,
                         timestamp=effects.tick(),
-                        duration=Duration.UNTIL_END_OF_TURN,
+                        duration=block_duration,
                         selector=only_this_incarnation(referent, referent.zone_change_stamp),
                         modification=grant_ability("This creature can't block."),
                     )

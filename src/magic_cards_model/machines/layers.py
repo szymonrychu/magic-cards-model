@@ -251,6 +251,13 @@ class Duration(StrEnum):
     #: ordinary `UNTIL_END_OF_TURN` effect as `until_next_turn_of`'s next turn
     #: begins, so that turn's cleanup (CR 514.2) ends it.
     UNTIL_END_OF_YOUR_NEXT_TURN = "until the end of your next turn"
+    #: Forgestoker Dragon's "That creature can't block this combat." and
+    #: Flummoxed Cyclops' "this creature can't block this combat.": CR 500.5a
+    #: and CR 511.2 end effects that last "until end of combat" at the end of
+    #: the combat phase, and "this combat" names that same span.
+    #: `ContinuousEffects.end_the_combat` is that moment; `end_the_turn` ends
+    #: any left over, since no combat outlives its turn.
+    UNTIL_END_OF_COMBAT = "until end of combat"
     INDEFINITE = "indefinite"
 
 
@@ -17238,7 +17245,8 @@ class ContinuousEffects(EngineModel):
         ended = [
             effect
             for effect in self.effects
-            if effect.duration is Duration.UNTIL_END_OF_TURN or not effect.holds(game)
+            if effect.duration in (Duration.UNTIL_END_OF_TURN, Duration.UNTIL_END_OF_COMBAT)
+            or not effect.holds(game)
         ]
         gone = {effect.id for effect in ended}
         self.effects = [effect for effect in self.effects if effect.id not in gone]
@@ -17251,6 +17259,23 @@ class ContinuousEffects(EngineModel):
                 if permanent.saddled or permanent.saddled_by:
                     permanent.saddled = False
                     permanent.saddled_by = ()
+        return ended
+
+    def end_the_combat(self, game: Game | None = None) -> list[ContinuousEffect]:
+        """End every "until end of combat" / "this combat" effect as the
+        combat phase ends (CR 500.5a, CR 511.2: "at the end of the combat
+        phase", not at the beginning of the end of combat step). Called from
+        `Game.end_of_combat`, the moment CR 511.3 removes everything from
+        combat. Returns what ended."""
+        ended = [
+            effect for effect in self.effects if effect.duration is Duration.UNTIL_END_OF_COMBAT
+        ]
+        if not ended:
+            return []
+        gone = {effect.id for effect in ended}
+        self.effects = [effect for effect in self.effects if effect.id not in gone]
+        if game is not None:
+            _ungrant_ended_stored_texts(ended, self.effects, game)
         return ended
 
     def end_for_next_turn(self, username: str) -> list[ContinuousEffect]:

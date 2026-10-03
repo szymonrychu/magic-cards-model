@@ -2871,6 +2871,18 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     back_creature = _back_face(card, ability) and "Creature" in (
         (card.card_faces or [])[1].type_line or ""
     )
+    # "Whenever two or more creatures your opponents control attack"
+    # (Flummoxed Cyclops, CR 603.2c): the attacking side declares that many
+    # attackers - distinct vanilla partners alongside the probe.
+    group = re.match(r"^(two|three|four|five) or more\b", lowered)
+    group_partners: tuple[str, ...] = ()
+    if group is not None:
+        needed = (parse_count(group.group(1), article=False) or 1) - 1
+        group_partners = tuple(name for name in _GROUP_ATTACK_PARTNERS if name != card.name)[
+            :needed
+        ]
+        if not partners:
+            partners = group_partners
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
         if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle or back_creature):
@@ -2898,7 +2910,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 else:
                     scenario = _board(
                         battlefield=(case.card,),
-                        bob_battlefield=extra,
+                        bob_battlefield=(*extra, *group_partners),
                         active=BOB,
                         step=Step.DECLARE_ATTACKERS,
                     )
@@ -2913,7 +2925,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 alongside = (
                     [_staged(scenario, partner, side) for partner in partners]
                     if side == ALICE
-                    else []
+                    else [_staged(scenario, partner, side) for partner in group_partners]
                 )
                 for partner in alongside:
                     if crew_number(partner.card) is not None:
@@ -2947,6 +2959,11 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             return scenario, source, fresh, BOB
 
         yield _combat_stages(case, fresh_attacker, lowered)
+
+
+#: Distinct vanilla creatures to attack alongside the probe for a "two or
+#: more ... attack" condition.
+_GROUP_ATTACK_PARTNERS = ("Grizzly Bears", "Craw Wurm", "Raging Goblin", "Memnite")
 
 
 #: A Vehicle with nothing but crew (CR 702.122a), and a creature that crews
