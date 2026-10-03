@@ -2226,10 +2226,12 @@ _EMPOWER_KEYWORD_LOOKBEHIND = r"(?<!(?i:empower ))"
 #: Curse's own "becomes a green Lizard creature" names the Lizard creature
 #: type (CR 205.3m), not the card calling itself "Lizard". Without this the
 #: sentence read "becomes a green this permanent creature" and the whole
-#: layer effect went unread.
+#: layer effect went unread. "target " is the same: Assembly-Worker's own
+#: "Target Assembly-Worker creature gets +1/+1" names the creature type a
+#: target must have (CR 115.1), never the card itself.
 _TYPE_NOUN_LOOKBEHIND = (
     r"(?<!(?i:\ba ))(?<!(?i:\ban ))(?<!(?i:white ))(?<!(?i:blue ))(?<!(?i:black ))"
-    r"(?<!(?i:red ))(?<!(?i:green ))(?<!(?i:colorless ))"
+    r"(?<!(?i:red ))(?<!(?i:green ))(?<!(?i:colorless ))(?<!(?i:target ))"
 )
 
 #: A candidate self-name is never a match when what follows it in the text is
