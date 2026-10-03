@@ -1061,17 +1061,20 @@ def _precondition_material(condition: str) -> tuple[Material, ...]:
         r"there(?:'s| is) an? (?P<subtype>[\w-]+) card in your graveyard", condition.lower()
     )
     if subtype_card is not None:
-        wanted_subtype = subtype_card.group("subtype")
-        found = next(
-            (
-                card.name
-                for card in _format_pool()
-                if not card.card_faces
-                and wanted_subtype in (subtype.lower() for subtype in card.subtypes)
-            ),
-            None,
-        )
+        found = _subtype_printing(subtype_card.group("subtype"))
         return (Material(found, ALICE, Zone.GRAVEYARD),) if found else ()
+    # "the number of other Caves you control plus the number of Cave cards in
+    # your graveyard is three or greater" (Cavernous Maw, CR 602.5b): that
+    # many cards of the subtype in the graveyard alone meet it.
+    subtype_sum = re.search(
+        r"the number of other [\w-]+ you control plus the number of (?P<subtype>[\w-]+) "
+        r"cards in your graveyard is (?P<count>\w+) or greater",
+        condition.lower(),
+    )
+    if subtype_sum is not None:
+        found = _subtype_printing(subtype_sum.group("subtype"))
+        needed = parse_count(subtype_sum.group("count")) or 0
+        return tuple(Material(found, ALICE, Zone.GRAVEYARD) for _ in range(needed)) if found else ()
     match = re.search(r"an opponent controls more (\w+) than you", condition.lower())
     if match is None:
         return ()
@@ -1092,6 +1095,19 @@ def _precondition_material(condition: str) -> tuple[Material, ...]:
         _STAGING.variant, _STAGING.material = saved
     more = counts[ALICE] + 1 - counts[BOB]
     return tuple(Material(_MORE_OF[wanted], BOB, Zone.BATTLEFIELD) for _ in range(max(0, more)))
+
+
+def _subtype_printing(wanted_subtype: str) -> str | None:
+    """The first single-faced pool printing with that subtype."""
+    return next(
+        (
+            card.name
+            for card in _format_pool()
+            if not card.card_faces
+            and wanted_subtype in (subtype.lower() for subtype in card.subtypes)
+        ),
+        None,
+    )
 
 
 @cache
