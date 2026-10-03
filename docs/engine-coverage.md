@@ -4369,11 +4369,12 @@ rules:find`: 101.2, 109.2, 109.5, 113.6, 113.6k, 117.1a, 117.3c, 201.5,
 | "Whenever `<you/a player/an opponent>` activates an ability [of `<type list>`] that isn't a mana ability" (CR 602.2, 605.1a; a type without "card" is a permanent on the battlefield, CR 109.2) | `triggers._ABILITY_ACTIVATED_CONDITION` on `ExtraTriggerEvent.ABILITY_ACTIVATED`, raised by `Game.activate_ability` (non-mana path) and `KeywordActivation` (cycling, equip, every keyword activation); `abilities._ACTIVATES_TYPE_LIST_CONDITION_BOUNDARY` keeps the serial type list in the condition | Flamescroll Celebrant | Burning-Tree Shaman ("a player"), Immolation Shaman (type list) | `test_opponent_activates_trigger.py` |
 | "Your opponents can't cast spells [or activate planeswalkers' loyalty abilities] this turn." on a resolving spell (CR 601.3, 602.5, 606.3, 611.2c, 514.2) | `casting_restrictions._OPPONENTS_CANT_CAST_THIS_TURN_RE` records `OPPONENTS_CANT_CAST` / `OPPONENTS_CANT_ACTIVATE_LOYALTY`; read by `blanket_cant_cast_restriction` and `Game.why_cannot_activate` (`loyalty_activation_restriction`) | Revel in Silence | Silence | `test_turn_long_cast_lock.py` |
 | Casting a modal double-faced card as its instant or sorcery back face (CR 712.11b/c; on the stack it has only that face, CR 712.8f) | `casting.modal_dfc_spell_back_faces`, `castable_faces`, `Casting.cast_as_split_half` (now split or MDFC), `CardState.up_face`, `legal_actions._base_cost_options` | Revel in Silence | none read (every other legal creature/artifact // instant/sorcery MDFC has an unread back face) | `test_modal_dfc_spell_back_face.py` |
+| Casting a modal double-faced card as its permanent back face, entering with that face up (CR 712.11b, 712.13), front face again off the battlefield (CR 712.8a), turned over onto its front by a transform (CR 701.27a) - s7c | `casting.modal_dfc_spell_back_faces` now offers every nonland back face; `CardState.move_to` copies `face_played` into `land_face_played` on a stack-to-battlefield move and clears `land_face_played` on any move off the battlefield (a played land face used to keep it in the hand); `CardState.transform` clears it instead of setting `transformed` | Esika, God of the Tree // The Prismatic Bridge | Witch Enchanter // Witch-Blessed Meadow (the CR 712.8a reset) | `test_modal_dfc_permanent_back_face.py` |
+| "`<group>` have `<keyword>` and "`<quoted ability>`"" as a static grant, including a quoted mana ability with a spend restriction ("Spend this mana only to cast a creature spell", CR 106.6) - s7c | `layers._INDEFINITE_KEYWORD_AND_QUOTED_GRANT_RE`: layer 6 grants of the keyword and the quoted line to every member of the group, re-evaluated each read, so a creature entering later has it and the grant ends when the source leaves (CR 611.3a, 613.1f); the "three or more mana from creatures" intervening if reads `CastRecord.creature_mana_spent` | Inga and Esika | Esika, God of the Tree ("other legendary creatures", no restriction); Tocasia, Dig Site Mentor (a non-mana quoted ability) | `test_group_keyword_and_quoted_ability_grants.py`, `test_condition_cast_record.py` |
+| "Creatures you control have base power and toughness N/N and are `<subtype>`s in addition to their other types" as a static - s7c | `layers._GROUP_BASE_PT_AND_TYPE_RE`: a layer 4 subtype add and a sublayer 7b set with one timestamp (CR 613.1d, 613.4b); counters and pumps still apply in 7c (CR 613.4c), and a later 7b set wins by timestamp (CR 613.7); March of the World Ooze's "if it's not their turn" token trigger reads `conditions/timing.py` | March of the World Ooze | - | `test_group_base_pt_and_type_statics.py` |
 
 Not read: Harsh Mentor's "..., if it isn't a mana ability," intervening-if
-form of the activation punisher. A *permanent* back face of a modal DFC
-(Esika's Prismatic Bridge) is still not offered as a cast: it would have to
-enter the battlefield with that face up (CR 712.8f), which nothing records.
+form of the activation punisher.
 
 ## S29: day and night (CR 731), daybound and nightbound (CR 702.145)
 
@@ -5682,7 +5683,7 @@ Wisdom's "as long as" static, Puca's Eye's "becomes the chosen color",
 Quicksilver Fountain, Haphazard Bombardment, Sothera, Siege Dragon's "each
 creature without flying that player controls", Haunted Plate Mail's
 animation, Anti-Venom's prevention replacement, Ana Battlemage's {1}{B}
-effect, Inga and Esika's granted mana ability. Jadar's own "token with
+effect. (Inga and Esika's granted mana ability is closed by s7c, below.) Jadar's own "token with
 decayed" is closed by the regaudit-decayed round below (`_TOKEN_KEYWORDS`).
 ### EC4: turn-history conditions (clusters H1-H5)
 
