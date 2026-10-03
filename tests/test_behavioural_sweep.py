@@ -5365,7 +5365,15 @@ def _off_zone_pieces(ability: ActivatedAbility) -> list[tuple[str, Any]]:
             ("exile", "exiling"),
         ):
             if lowered.startswith(verb) and not re.match(rf"{verb} (this|~)", lowered):
-                pieces.append((keyword, cost_component_for_phrase(phrase)))
+                # "Sacrifice a Swamp and a Forest" (Jarad) is two pieces.
+                pair = re.fullmatch(
+                    rf"{verb} ((?:an?|one) [\w-]+) and ((?:an?|one) [\w-]+)", phrase, re.I
+                )
+                halves = (
+                    [f"{verb} {pair.group(1)}", f"{verb} {pair.group(2)}"] if pair else [phrase]
+                )
+                for half in halves:
+                    pieces.append((keyword, cost_component_for_phrase(half)))
     return pieces
 
 
@@ -5380,13 +5388,16 @@ def _off_zone_choices(
     chosen: dict[str, list[CardState]] = {}
     for keyword, component in _off_zone_pieces(ability):
         wanted = max(1, getattr(component, "required", 1) or 1)
+        taken = chosen.get(keyword, [])
         found = [
             candidate
             for candidate in sorted(_off_zone_pool(game, keyword, component), key=_land_last)
-            if candidate is not state and _pays(component, candidate, game)
+            if candidate is not state
+            and candidate not in taken
+            and _pays(component, candidate, game)
         ]
         if found:
-            chosen[keyword] = found[:wanted]
+            chosen[keyword] = taken + found[:wanted]
     return chosen
 
 
