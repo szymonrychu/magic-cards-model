@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 6.6% |
+| Tested | 19 | 7.4% |
 | Works (untested) | 133 | 52.0% |
 | Partial (unaudited) | 19 | 7.4% |
-| Not working | 87 | 34.0% |
+| Not working | 85 | 33.2% |
 
 ## Cards needing work
 
@@ -104,8 +104,6 @@
 | Demonic Junker | notice | When this Vehicle enters, for each player, destroy up to one target creature that player controls. If a creature you controlled was destroyed this way, put two  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Gastal Blockbuster | notice | When this creature enters, you may sacrifice a creature or Vehicle. When you do, destroy target artifact an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Grim Javelineer | notice | Whenever you attack, target attacking creature gets +1/+0 until end of turn. When that creature dies this turn, surveil 1. | unparsed remainder: When that creature dies this turn, surveil 1. | Y/Y/Y | not_working |
-| Guardian Sunmare | notice | Whenever this creature attacks while saddled, search your library for a nonland permanent card with mana value 3 or less, put it onto the battlefield, then shuf | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| March of the World Ooze | notice | Creatures you control have base power and toughness 6/6 and are Oozes in addition to their other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Oildeep Gearhulk | notice | When this creature enters, look at target player's hand. You may choose a card from it. If you do, that player discards that card, then draws a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Push the Limit | notice | Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become art | unparsed remainder: Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become artifact creatures until end of turn. | Y/Y/Y | not_working |
 | Racers' Scoreboard | notice | Max speed — Spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -269,7 +267,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>19 cards</summary>
 
 - Boommobile
 - Captain Howler, Sea Scourge
@@ -278,9 +276,11 @@
 - Fearless Swashbuckler
 - Gloryheath Lynx
 - Greenbelt Guardian
+- Guardian Sunmare
 - Ketramose, the New Dawn
 - Lumbering Worldwagon
 - Marauding Mako
+- March of the World Ooze
 - Perilous Snare
 - Radiant Lotus
 - Shefet Archfiend
@@ -313,7 +313,6 @@
 | choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. then that player shuffles. | 1 | Ancient Vendetta | dft |
 | choose target creature, planeswalker, or vehicle. mill two cards, then destroy the chosen permanent if its mana value is less than or equal to the number of car | 1 | Quag Feast | dft |
 | choose target opponent. create two N/N colorless thopter artifact creature tokens with flying. then the chosen player loses N life and you gain N life, where N  | 1 | Haunt the Network | dft |
-| creatures you control have base power and toughness N/N and are oozes in addition to their other types. | 1 | March of the World Ooze | dft |
 | during turns other than yours, ~ is an artifact creature. | 1 | Midnight Mangler | dft |
 | during your turn, as long as you haven"..."t been activated. | 1 | Elvish Refueler | dft |
 | each creature that's attacking one of your opponents has trample. | 1 | Oviya, Automech Artisan | dft |
@@ -362,7 +361,6 @@
 | whenever you activate an exhaust ability, return ~ from your graveyard to the battlefield. | 1 | Afterburner Expert | dft |
 | whenever you attack, target attacking creature gets +N/+N until end of turn. when that creature dies ~, surveil N. | 1 | Grim Javelineer | dft |
 | whenever you discard one or more cards, ~ deals that much damage to each opponent. | 1 | Magmakin Artillerist | dft |
-| whenever ~ attacks while saddled, search your library for a nonland permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Guardian Sunmare | dft |
 | whenever ~ attacks while saddled, untap it and put a +N/+N counter on it. | 1 | Brightfield Mustang | dft |
 | whenever ~ saddles a mount or crews a vehicle during your main phase, that mount or vehicle gains flying until end of turn. | 1 | Canyon Vaulter | dft |
 | whenever ~ saddles a mount or crews a vehicle during your main phase, that mount or vehicle gets +N/+N and gains trample until end of turn. | 1 | Reckless Velocitaur | dft |

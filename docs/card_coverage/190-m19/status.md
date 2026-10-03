@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 7.8% |
-| Works (untested) | 127 | 70.6% |
+| Works (untested) | 128 | 71.1% |
 | Partial (unaudited) | 2 | 1.1% |
-| Not working | 37 | 20.6% |
+| Not working | 36 | 20.0% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Cleansing Nova | notice | Choose one — • Destroy all creatures. • Destroy all artifacts and enchantments. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Court Cleric | notice | This creature gets +1/+1 as long as you control an Ajani planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Declare Dominance | notice | Target creature gets +3/+3 until end of turn. All creatures able to block it this turn do so. | unparsed remainder: All creatures able to block it this turn do so. | Y/Y/- | not_working |
-| Isareth the Awakener | notice | Whenever Isareth attacks, you may pay {X}. When you do, return target creature card with mana value X from your graveyard to the battlefield with a corpse count | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nightmare's Thirst | notice | You gain 1 life. Target creature gets -X/-X until end of turn, where X is the amount of life you gained this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Palladia-Mors, the Ruiner | notice | Palladia-Mors has hexproof as long as it hasn't dealt damage yet. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vaevictis Asmadi, the Dire | notice | Whenever Vaevictis Asmadi attacks, for each player, choose target permanent that player controls. Those players sacrifice those permanents. Each player who sacr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -119,6 +118,7 @@
 | Hieromancer's Cage | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hired Blade | handled | Flash | machines/casting.py (timing) | Y/Y/- | not_tested |
 | Hostile Minotaur | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
+| Isareth the Awakener | handled | Whenever Isareth attacks, you may pay {X}. When you do, return target creature card with mana value X from your graveyard to the battlefield with a corpse count | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Isolate | handled | Exile target permanent with mana value 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kargan Dragonrider | handled | As long as you control a Dragon, this creature has flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Knight of the Tusk | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
@@ -241,7 +241,6 @@
 | when ~ enters, target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Skilled Animator | m19 |
 | whenever equipped creature attacks, create a N/N white knight creature token with vigilance that's attacking. | 1 | Sigiled Sword of Valeron | m19 |
 | whenever goreclaw attacks, each creature you control with power N or greater gets +N/+N and gains trample until end of turn. | 1 | Goreclaw, Terror of Qal Sisma | m19 |
-| whenever isareth attacks, you may pay {M}. when you do, return target creature card with mana value N from your graveyard to the battlefield with a corpse count | 1 | Isareth the Awakener | m19 |
 | whenever one or more creature cards leave your graveyard, create a N/N black bat creature token with flying. | 1 | Desecrated Tomb | m19 |
 | whenever vaevictis asmadi attacks, for each player, choose target permanent that player controls. those players sacrifice those permanents. each player who sacr | 1 | Vaevictis Asmadi, the Dire | m19 |
 | whenever you activate an ability of a sarkhan planeswalker, ~ deals N damage to any target. | 1 | Sarkhan's Whelp | m19 |

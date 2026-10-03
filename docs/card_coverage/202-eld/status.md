@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 12.3% |
+| Tested | 34 | 12.6% |
 | Works (untested) | 136 | 50.6% |
 | Partial (unaudited) | 24 | 8.9% |
-| Not working | 76 | 28.3% |
+| Not working | 75 | 27.9% |
 
 ## Cards needing work
 
@@ -96,7 +96,6 @@
 | Outmuscle | notice | Put a +1/+1 counter on target creature you control, then it fights target creature you don't control. (Each deals damage equal to its power to the other.) Adama | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Return of the Wildspeaker | notice | Choose one — • Draw cards equal to the greatest power among non-Human creatures you control. • Non-Human creatures you control get +3/+3 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Roving Keep | notice | {7}: This creature gets +2/+0 and gains trample until end of turn. It can attack this turn as though it didn't have defender. | unparsed remainder: It can attack this turn as though it didn't have defender. | Y/Y/- | not_working |
-| Scorching Dragonfire | notice | Scorching Dragonfire deals 3 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Searing Barrage | notice | Searing Barrage deals 5 damage to target creature. Adamant — If at least three red mana was spent to cast this spell, Searing Barrage deals 3 damage to that cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Slaying Fire | notice | Slaying Fire deals 3 damage to any target. Adamant — If at least three red mana was spent to cast this spell, it deals 4 damage instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Syr Elenora, the Discerning | notice | Spells your opponents cast that target Syr Elenora cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -266,7 +265,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Banish into Fable
 - Bartered Cow
@@ -297,6 +296,7 @@
 - Reaper of Night // Harvest Fear
 - Rimrock Knight // Boulder Rush
 - Run Away Together
+- Scorching Dragonfire
 - Steelclaw Lance
 - Tall as a Beanstalk
 - Torbran, Thane of Red Fell
@@ -396,7 +396,6 @@
 | ~ deals N damage divided as you choose among one, two, or three targets. if at least seven red mana was spent to cast ~, instead ~ deals N damage to each of tho | 1 | Sundering Stroke | eld |
 | ~ deals N damage to any target. adamant — if at least three red mana was spent to cast ~, it deals N damage instead. | 1 | Slaying Fire | eld |
 | ~ deals N damage to target creature or planeswalker. if a nonred permanent is dealt damage ~, you sacrifice a land. | 1 | Redcap Melee | eld |
-| ~ deals N damage to target creature or planeswalker. if that creature or planeswalker would die ~, exile it instead. | 1 | Scorching Dragonfire | eld |
 | ~ deals N damage to target creature. adamant — if at least three red mana was spent to cast ~, ~ deals N damage to that creature's controller. | 1 | Searing Barrage | eld |
 | ~'s power is equal to the number of artifacts and/or enchantments you control. | 1 | Shambling Suit | eld |
 | ~'s toughness is equal to the number of knights you control. | 1 | Wintermoor Commander | eld |

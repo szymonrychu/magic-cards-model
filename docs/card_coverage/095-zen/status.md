@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 10.9% |
-| Works (untested) | 117 | 53.2% |
+| Tested | 27 | 12.3% |
+| Works (untested) | 120 | 54.5% |
 | Partial (unaudited) | 7 | 3.2% |
-| Not working | 72 | 32.7% |
+| Not working | 66 | 30.0% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Adventuring Gear | silent | Landfall — Whenever a land you control enters, equipped creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Armament Master | silent | Other Kor creatures you control get +2/+2 for each Equipment attached to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bala Ged Thief | silent | Whenever this creature or another Ally you control enters, target player reveals a number of cards from their hand equal to the number of Allies you control. Yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bladetusk Boar | silent | Intimidate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Blood Seeker | silent | Whenever a creature an opponent controls enters, you may have that player lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blood Tribute | silent | Kicker—Tap an untapped Vampire you control. (You may tap a Vampire you control in addition to any other costs as you cast this spell.) Target opponent loses hal | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodchief Ascension | silent | Whenever a card is put into an opponent's graveyard from anywhere, if this enchantment has three or more quest counters on it, you may have that player lose 2 l | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -44,9 +43,7 @@
 | Gigantiform | silent | Enchanted creature has base power and toughness 8/8 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gomazoa | silent | {T}: Put this creature and each creature it's blocking on top of their owners' libraries, then those players shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grappling Hook | silent | Whenever equipped creature attacks, you may have target creature block it this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Guul Draz Vampire | silent | As long as an opponent has 10 or less life, this creature gets +2/+1 and has intimidate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hagra Diabolist | silent | Whenever this creature or another Ally you control enters, you may have target player lose life equal to the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Halo Hunter | silent | Intimidate | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Highland Berserker | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Joraga Bard | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Journey to Nowhere | silent | When this enchantment leaves the battlefield, return the exiled card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -81,7 +78,6 @@
 | Seascape Aerialist | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shoal Serpent | silent | Landfall — Whenever a land you control enters, this creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spreading Seas | silent | Enchanted land is an Island. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Surrakar Marauder | silent | Landfall — Whenever a land you control enters, this creature gains intimidate until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tajuru Archer | silent | Whenever this creature or another Ally you control enters, you may have this creature deal damage to target creature with flying equal to the number of Allies y | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tanglesap | silent | Prevent all combat damage that would be dealt this turn by creatures without trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trapfinder's Trick | silent | Target player reveals their hand and discards all Trap cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -90,12 +86,10 @@
 | Vines of Vastwood | silent | Kicker {G} (You may pay an additional {G} as you cast this spell.) Target creature can't be the target of spells or abilities your opponents control this turn.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | World Queller | silent | At the beginning of your upkeep, you may choose a card type. If you do, each player sacrifices a permanent of their choice of that type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beastmaster Ascension | notice | As long as this enchantment has seven or more quest counters on it, creatures you control get +5/+5. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Bloodghast | notice | This creature has haste as long as an opponent has 10 or less life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Desecrated Earth | notice | Destroy target land. Its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Elemental Appeal | notice | Kicker {5} (You may pay an additional {5} as you cast this spell.) Create a 7/1 red Elemental creature token with trample and haste. Exile it at the beginning o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Guul Draz Specter | notice | This creature gets +3/+3 as long as an opponent has no cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kalitas, Bloodchief of Ghet | notice | {B}{B}{B}, {T}: Destroy target creature. If that creature dies this way, create a black Vampire creature token. Its power is equal to that creature's power and  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Mark of Mutiny | notice | Gain control of target creature until end of turn. Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn. (It can attack and {T} t | unparsed remainder: Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn. | Y/-/- | not_working |
 | Obsidian Fireheart | notice | {1}{R}{R}: Put a blaze counter on target land without a blaze counter on it. For as long as that land has a blaze counter on it, it has "At the beginning of you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Primal Bellow | notice | Target creature gets +1/+1 until end of turn for each Forest you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aether Figment | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -138,6 +132,7 @@
 | Greenweaver Druid | handled |  |  | Y/-/- | not_tested |
 | Grim Discovery | handled | Choose one or both — • Return target creature card from your graveyard to your hand. • Return target land card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hagra Crocodile | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Halo Hunter | handled | When this creature enters, destroy target Angel. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heartstabber Mosquito | handled | When this creature enters, if it was kicked, destroy target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hedron Crab | handled | Landfall — Whenever a land you control enters, target player mills three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hedron Scrabbler | handled | Landfall — Whenever a land you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -158,6 +153,7 @@
 | Lavaball Trap | handled | If an opponent had two or more lands enter the battlefield under their control this turn, you may pay {3}{R}{R} rather than pay this spell's mana cost. Destroy  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magma Rift | handled | As an additional cost to cast this spell, sacrifice a land. Magma Rift deals 5 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Makindi Shieldmate | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mark of Mutiny | handled | Gain control of target creature until end of turn. Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn. (It can attack and {T} t | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merfolk Seastalkers | handled | {2}{U}: Tap target creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merfolk Wayfinder | handled | When this creature enters, reveal the top three cards of your library. Put all Island cards revealed this way into your hand and the rest on the bottom of your  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindless Null | handled | This creature can't block unless you control a Vampire. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -202,6 +198,7 @@
 | Summoner's Bane | handled | Counter target creature spell. Create a 2/2 blue Illusion creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Summoning Trap | handled | If a creature spell you cast this turn was countered by a spell or ability an opponent controlled, you may pay {0} rather than pay this spell's mana cost. Look  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sunspring Expedition | handled | Landfall — Whenever a land you control enters, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Surrakar Marauder | handled | Landfall — Whenever a land you control enters, this creature gains intimidate until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Teetering Peaks | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tempest Owl | handled | When this creature enters, if it was kicked, tap up to three target permanents. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Terra Stomper | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -226,16 +223,19 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>27 cards</summary>
 
 - Archive Trap
 - Arid Mesa
 - Blade of the Bloodchief
+- Bladetusk Boar
 - Blazing Torch
+- Bloodghast
 - Burst Lightning
 - Caller of Gales
 - Expedition Map
 - Goblin Guide
+- Guul Draz Vampire
 - Hellkite Charger
 - Khalni Gem
 - Lotus Cobra
@@ -259,10 +259,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Landfall | 7 | Adventuring Gear, Eternity Vessel, Ob Nixilis, the Fallen, Roil Elemental, Shoal Serpent | zen |
-| intimidate | 2 | Bladetusk Boar, Halo Hunter | zen |
+| Landfall | 6 | Adventuring Gear, Eternity Vessel, Ob Nixilis, the Fallen, Roil Elemental, Shoal Serpent | zen |
 | +N: search your library for a card named nissa's chosen, put it onto the battlefield, then shuffle. | 1 | Nissa Revane | zen |
-| as long as an opponent has N or less life, ~ gets +N/+N and has intimidate. | 1 | Guul Draz Vampire | zen |
 | as long as ~ has seven or more quest counters on it, creatures you control get +N/+N. | 1 | Beastmaster Ascension | zen |
 | as long as ~ has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into your hand, then  | 1 | Archmage Ascension | zen |
 | as long as ~ is equipped, it has double strike. | 1 | Kor Duelist | zen |
@@ -276,7 +274,6 @@
 | enchanted creature has base power and toughness N/N and has trample. | 1 | Gigantiform | zen |
 | enchanted land is an island. | 1 | Spreading Seas | zen |
 | equipped creature has nonbasic landwalk. | 1 | Trailblazer's Boots | zen |
-| gain control of target creature until end of turn. put a +N/+N counter on it and untap it. that creature gains haste until end of turn. (it can attack and {M} ~ | 1 | Mark of Mutiny | zen |
 | if an opponent drew three or more cards ~, you may pay {M} rather than pay ~ mana cost. ~ deals damage to target player equal to the number of cards in that pla | 1 | Runeflare Trap | zen |
 | if three or more creatures are attacking, you may pay {M} rather than pay ~ mana cost. attacking creatures get -N/-N until end of turn. | 1 | Lethargy Trap | zen |
 | if ~ was kicked, it enters with two +N/+N counters on it. | 1 | Aether Figment | zen |
@@ -329,7 +326,6 @@
 | {M}{M}{M}: put a blaze counter on target land without a blaze counter on it. for as long as that land has a blaze counter on it, it has "..." | 1 | Obsidian Fireheart | zen |
 | ~ can block only creatures with flying. | 1 | Welkin Tern | zen |
 | ~ gets +N/+N as long as an opponent has no cards in hand. | 1 | Guul Draz Specter | zen |
-| ~ has haste as long as an opponent has N or less life. | 1 | Bloodghast | zen |
 | −N: cast any number of red instant and/or sorcery cards from your graveyard without paying their mana costs. | 1 | Chandra Ablaze | zen |
 
 ## Notes

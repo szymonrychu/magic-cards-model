@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 8.3% |
+| Tested | 23 | 8.6% |
 | Works (untested) | 142 | 53.4% |
 | Partial (unaudited) | 8 | 3.0% |
-| Not working | 94 | 35.3% |
+| Not working | 93 | 35.0% |
 
 ## Cards needing work
 
@@ -107,7 +107,6 @@
 | Become Brutes | notice | One or two target creatures each gain haste until end of turn. For each of those creatures, create a Monster Role token attached to it. (If you control another  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Cheeky House-Mouse // Squeak By | notice | Target creature you control gets +1/+1 until end of turn. It can't be blocked by creatures with power 3 or greater this turn. | unparsed remainder: It can't be blocked by creatures with power 3 or greater this turn. | Y/Y/Y | not_working |
 | Curse of the Werefox | notice | Create a Monster Role token attached to target creature you control. When you do, that creature fights up to one target creature you don't control. (If you cont | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Extraordinary Journey | notice | When this enchantment enters, exile up to X target creatures. For each of those cards, its owner may play it for as long as it remains exiled. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Gnawing Crescendo | notice | Creatures you control get +2/+0 until end of turn. Whenever a nontoken creature you control dies this turn, create a 1/1 black Rat creature token with "This tok | unparsed remainder: Whenever a nontoken creature you control dies this turn, create a 1/1 black Rat creature token with "This token can't block." | Y/Y/Y | not_working |
 | Howling Galefang | notice | This creature has haste as long as you own a card in exile that has an Adventure. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kellan, the Fae-Blooded // Birthright Boon | notice | Other creatures you control get +1/+0 for each Aura and Equipment attached to Kellan. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -274,13 +273,14 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Agatha's Champion
 - Agatha's Soul Cauldron
 - Archive Dragon
 - Bramble Familiar // Fetch Quest
 - Decadent Dragon // Expensive Taste
+- Extraordinary Journey
 - Fell Horseman // Deathly Ride
 - Frantic Firebolt
 - Gruff Triplets
@@ -361,7 +361,6 @@
 | when ~ enters, choose one — • create a N/N black rat creature token with "..." • you may sacrifice another creature. if you do, scry N, then draw a card. • crea | 1 | Lord Skitter's Butcher | woe |
 | when ~ enters, create a N/N black rat creature token with "..." then for each rat you control, create a wicked role token attached to that rat. | 1 | Twisted Sewer-Witch | woe |
 | when ~ enters, create half N food tokens, rounded up. | 1 | The Goose Mother | woe |
-| when ~ enters, exile up to N target creatures. for each of those cards, its owner may play it for as long as it remains exiled. | 1 | Extraordinary Journey | woe |
 | when ~ enters, sacrifice any number of artifacts, enchantments, and/or tokens, then draw that many cards. | 1 | Malevolent Witchkite | woe |
 | when ~ enters, you may exile one or more creature cards from your graveyard. when you do, each other creature gets -N/-N until end of turn, where N is the numbe | 1 | Specter of Mortality | woe |
 | whenever a legendary creature you control enters, you may have ~ become a legendary equipment artifact named everflame, heroes' legacy. if you do, it gains equi | 1 | The Irencrag | woe |

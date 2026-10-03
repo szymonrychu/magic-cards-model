@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 16.3% |
-| Works (untested) | 11 | 22.4% |
+| Works (untested) | 12 | 24.5% |
 | Partial (unaudited) | 5 | 10.2% |
-| Not working | 25 | 51.0% |
+| Not working | 24 | 49.0% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Tranquil Frillback | silent | When this creature enters, you may pay {G} up to three times. When you pay this cost one or more times, choose up to that many — • Destroy target artifact or en | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tyvar the Bellicose | silent | Whenever one or more Elves you control attack, they gain deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vesuvan Drifter | silent | At the beginning of each combat, you may reveal the top card of your library. If you reveal a creature card this way, this creature becomes a copy of that card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nahiri's Resolve | notice | At the beginning of your end step, exile any number of nontoken artifacts and/or creatures you control. Return those cards to the battlefield under their owner' | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nahiri, Forged in Fury | notice | Whenever an equipped creature you control attacks, exile the top card of your library. You may play that card this turn. You may cast Equipment spells this way  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Undercity Upheaval | notice | Undergrowth — Distribute X +1/+1 counters among any number of target creatures you control, where X is the number of creature cards in your graveyard as you cas | unparsed remainder: Undergrowth — Distribute X +1/+1 counters among any number of target creatures you control, where X is the number of creature cards in your graveyard as you cast this spell. | Y/Y/- | not_working |
 | Urborg Scavengers | notice | This creature has flying as long as a card exiled with it has flying. The same is true for first strike, double strike, deathtouch, haste, hexproof, indestructi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -64,6 +63,7 @@
 | Jirina, Dauntless General | handled | When Jirina enters, exile target player's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kolaghan Warmonger | handled | Whenever this creature attacks, look at the top six cards of your library. You may reveal a Dragon card from among them and put it into your hand. Put the rest  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Markov Baron | handled | Other Vampires you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Nahiri's Resolve | handled | Creatures you control get +1/+0 and have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nissa, Resurgent Animist | handled | Landfall — Whenever a land you control enters, add one mana of any color. Then if this is the second time this ability has resolved this turn, reveal cards from | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Open the Way | handled | X can't be greater than the number of players in the game. Reveal cards from the top of your library until you reveal X land cards. Put those land cards onto th | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pia Nalaar, Consul of Revival | handled | Thopters you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -92,7 +92,6 @@
 | as ~ enters, choose a planeswalker type. | 1 | Deification | mat |
 | at the beginning of each combat, you may reveal the top card of your library. if you reveal a creature card ~, ~ becomes a copy of that card until end of turn,  | 1 | Vesuvan Drifter | mat |
 | at the beginning of your end step, each player exiles the top card of their library. until your next end step, each player may play the card they exiled ~. | 1 | Rocco, Street Chef | mat |
-| at the beginning of your end step, exile any number of nontoken artifacts and/or creatures you control. return those cards to the battlefield under their owner' | 1 | Nahiri's Resolve | mat |
 | at the beginning of your end step, for each opponent, choose up to one target creature they control with a rejection counter on it. that creature's owner puts i | 1 | Tolarian Contempt | mat |
 | at the beginning of your end step, if one or more creatures died ~, you gain that much life and distribute that many +N/+N counters among any number of creature | 1 | Feast of the Victorious Dead | mat |
 | at the beginning of your upkeep, each player exiles cards from the top of their library until they exile a nonland card. an opponent chooses a nonland card exil | 1 | Plargg and Nassari | mat |

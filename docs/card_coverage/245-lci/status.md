@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 18.9% |
+| Tested | 53 | 19.3% |
 | Works (untested) | 140 | 50.9% |
 | Partial (unaudited) | 13 | 4.7% |
-| Not working | 70 | 25.5% |
+| Not working | 69 | 25.1% |
 
 ## Cards needing work
 
@@ -84,7 +84,6 @@
 | Zoyowa's Justice | silent | The owner of target artifact or creature with mana value 1 or greater shuffles it into their library. Then that player discovers X, where X is its mana value. ( | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bonehoard Dracosaur | notice | At the beginning of your upkeep, exile the top two cards of your library. You may play them this turn. If you exiled a land card this way, create a 3/1 red Dino | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Brackish Blunder | notice | Return target creature to its owner's hand. If it was tapped, create a Map token. (It's an artifact with "{1}, {T}, Sacrifice this token: Target creature you co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Cavernous Maw | notice | {2}: This land becomes a 3/3 Elemental creature until end of turn. It's still a Cave land. Activate only if the number of other Caves you control plus the numbe | unparsed remainder: It's still a Cave land. | Y/Y/Y | not_working |
 | Cosmium Confluence | notice | Choose three. You may choose the same mode more than once. • Search your library for a Cave card, put it onto the battlefield tapped, then shuffle. • Put three  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Disturbed Slumber | notice | Until end of turn, target land you control becomes a 4/4 Dinosaur creature with reach and haste. It's still a land. It must be blocked this turn if able. | unparsed remainder: It must be blocked this turn if able. | Y/Y/Y | not_working |
 | Grasping Shadows // Shadows' Lair | notice | Whenever a creature you control attacks alone, it gains deathtouch and lifelink until end of turn. Put a dread counter on this enchantment. Then if there are th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -253,7 +252,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>53 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
@@ -265,6 +264,7 @@
 - Calamitous Cave-In
 - Captivating Cave
 - Cartographer's Companion
+- Cavernous Maw
 - Chimil, the Inner Sun
 - Clay-Fired Bricks // Cosmium Kiln
 - Coati Scavenger
@@ -381,7 +381,6 @@
 | you may mill two cards. then return up to two creature cards from your graveyard to your hand. (to mill two cards, put the top two cards of your library into yo | 1 | Another Chance | lci |
 | {M}: add one mana of any of the exiled cards' colors. | 1 | Pit of Offerings | lci |
 | {M}: you may cast a creature spell from your graveyard ~. if you do, it enters with a finality counter on it and is a vampire in addition to its other types. | 1 | Tarrian's Journal // The Tomb of Aclazotz | lci |
-| {M}: ~ becomes a N/N elemental creature until end of turn. it's still a cave land. activate only if the number of other caves you control plus the number of cav | 1 | Cavernous Maw | lci |
 | {M}{M}, {M}: create a token that"..."s an artifact in addition to its other types. it gains haste. sacrifice it at the beginning of the next end step. | 1 | Saheeli, the Sun's Brilliance | lci |
 | {M}{M}, {M}: look at the top four cards of your library. you may reveal a creature card from among them and put that card into your hand. put the rest on the bo | 1 | Twists and Turns // Mycoid Maze | lci |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Cavern Stomper | lci |

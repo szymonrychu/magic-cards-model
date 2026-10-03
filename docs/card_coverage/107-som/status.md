@@ -28,7 +28,7 @@
 |---|---|---|---|---|---|
 | Auriok Replica | silent | {W}, Sacrifice this creature: Prevent all damage a source of your choice would deal to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Sunchaser | silent | Metalcraft — As long as you control three or more artifacts, this creature gets +2/+2 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bellowing Tanglewurm | silent | Intimidate | no machine in the engine executes this keyword | Y/-/- | not_working |
+| Bellowing Tanglewurm | silent | Other green creatures you control have intimidate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blunt the Assault | silent | You gain 1 life for each creature on the battlefield. Prevent all combat damage that would be dealt this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carapace Forger | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carnifex Demon | silent | {B}, Remove a -1/-1 counter from this creature: Put a -1/-1 counter on each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -270,9 +270,9 @@
 | equipped creature can block an additional creature each combat. | 1 | Echo Circlet | som |
 | equipped creature gets +N/+N for each land on the battlefield with the same name as the exiled card. | 1 | Strata Scythe | som |
 | equipped creature gets +N/+N, has intimidate, and is a black zombie. | 1 | Nim Deathmantle | som |
-| intimidate | 1 | Bellowing Tanglewurm | som |
 | other blue creatures you control get +N/+N. | 1 | Grand Architect | som |
 | other creatures you control with infect get +N/+N. | 1 | Hand of the Praetors | som |
+| other green creatures you control have intimidate. | 1 | Bellowing Tanglewurm | som |
 | players can't search libraries. any player may pay {M} for that player to ignore ~ until end of turn. | 1 | Leonin Arbiter | som |
 | prevent all damage one or two target creatures would deal ~. | 1 | Soul Parry | som |
 | reveal the top N cards of your library. you may put any number of permanent cards with mana value N or less from among them onto the battlefield. then put all c | 1 | Genesis Wave | som |

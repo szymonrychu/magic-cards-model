@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.4% |
-| Works (untested) | 134 | 52.3% |
+| Tested | 26 | 10.2% |
+| Works (untested) | 136 | 53.1% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 87 | 34.0% |
+| Not working | 83 | 32.4% |
 
 ## Cards needing work
 
@@ -103,14 +103,10 @@
 | Mishra's Command | notice | Choose two — • Choose target player. They may discard up to X cards. Then they draw a card for each card discarded this way. • This spell deals X damage to targ | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mishra's Research Desk | notice | {1}, {T}, Sacrifice this artifact: Exile the top two cards of your library. Choose one of them. Until the end of your next turn, you may play that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mishra, Lost to Phyrexia | notice | Whenever Mishra enters or attacks, choose three — • Target opponent discards two cards. • Mishra deals 3 damage to any target. • Destroy target artifact or plan | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Obliterating Bolt | notice | Obliterating Bolt deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Portal to Phyrexia | notice | At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. It's a Phyrexian in addition to its other ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Recommission | notice | Return target artifact or creature card with mana value 3 or less from your graveyard to the battlefield. If a creature enters this way, it enters with an addit | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sibling Rivalry | notice | Gain control of target artifact or creature until end of turn. Untap it. It gains haste until end of turn. Create a tapped Powerstone token. (It's an artifact w | unparsed remainder: Untap it. It gains haste until end of turn. Create a tapped Powerstone token. | Y/Y/- | not_working |
-| Soul Partition | notice | Exile target nonland permanent. For as long as that card remains exiled, its owner may play it. A spell cast by an opponent this way costs {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spectrum Sentinel | notice | Protection | protection from a quality the engine does not read: multicolored (This creature can't be blocked | Y/Y/- | not_working |
 | Titania, Gaea Incarnate | notice | {3}{G}: Put four +1/+1 counters on target land you control. It becomes a 0/0 Elemental creature with haste. It's still a land. | unparsed remainder: It's still a land. | Y/Y/- | not_working |
-| Tocasia, Dig Site Mentor | notice | Creatures you control have vigilance and "{T}: Surveil 1." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unleash Shell | notice | Unleash Shell deals 5 damage to target creature or planeswalker and 2 damage to that permanent's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urza's Command | notice | Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Argoth, Sanctum of Nature | unaudited | This land enters tapped unless you control a legendary green creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -195,6 +191,7 @@
 | Mishra's Onslaught | handled | Choose one — • Create two 1/1 colorless Soldier artifact creature tokens. • Creatures you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moment of Defiance | handled | Target creature gets +2/+1 and gains lifelink until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | No One Left Behind | handled | This spell costs {3} less to cast if it targets a creature card with mana value 3 or less. Return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Obliterating Bolt | handled | Obliterating Bolt deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Overwhelming Remorse | handled | This spell costs {1} less to cast for each creature card in your graveyard. Exile target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Perennial Behemoth | handled | You may play lands from your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Perimeter Patrol | handled | Whenever an artifact you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -215,6 +212,7 @@
 | Scrapwork Mutt | handled | When this creature enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scrapwork Rager | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shoot Down | handled | Exile target artifact, enchantment, or creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sibling Rivalry | handled | Gain control of target artifact or creature until end of turn. Untap it. It gains haste until end of turn. Create a tapped Powerstone token. (It's an artifact w | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siege Veteran | handled | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simian Simulacrum | handled | When this creature enters, put two +1/+1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skystrike Officer | handled | Whenever this creature attacks, create a 1/1 colorless Soldier artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -262,7 +260,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>26 cards</summary>
 
 - Aeronaut Cavalry
 - Awaken the Woods
@@ -282,9 +280,11 @@
 - Penregon Strongbull
 - Power Plant Worker
 - Recruitment Officer
+- Soul Partition
 - Tawnos's Tinkering
 - The Stone Brain
 - The Temporal Anchor
+- Tocasia, Dig Site Mentor
 - Tower Worker
 - Visions of Phyrexia
 - Yotian Tactician
@@ -310,7 +310,6 @@
 | at the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. it's a phyrexian in addition to its other ty | 1 | Portal to Phyrexia | bro |
 | at the beginning of your upkeep, tap ~ unless you pay {M}. | 1 | Heavyweight Demolisher | bro |
 | choose target opponent. destroy target land that player controls. ~ deals N damage to that player and N damage to each creature they control. | 1 | The Fall of Kroog | bro |
-| creatures you control have vigilance and "..." | 1 | Tocasia, Dig Site Mentor | bro |
 | creatures you control with mana value N or less get +N/+N. | 1 | Hero of the Dunes | bro |
 | draw cards equal to the mana value of target artifact or creature you control. an opponent gains control of that permanent. | 1 | Fateful Handoff | bro |
 | during turns other than yours, ~ costs {M} more to cast. return all nonland permanents to their owners' hands. end the turn. (exile all spells and abilities fro | 1 | Hurkyl's Final Meditation | bro |
@@ -323,9 +322,7 @@
 | exile all graveyards. players can't cast noncreature spells ~. exile ~. | 1 | Calamity's Wake | bro |
 | exile target creature with mana value less than or equal to the number of plains you control. its controller gains N life. | 1 | Lay Down Arms | bro |
 | exile target nonland permanent an opponent controls and all tokens that player controls with the same name as that permanent. | 1 | Legions to Ashes | bro |
-| exile target nonland permanent. for as long as that card remains exiled, its owner may play it. a spell cast by an opponent ~ costs {M} more to cast. | 1 | Soul Partition | bro |
 | exile the top three cards of your library in a face-down pile, then exile the top three cards of your library in another face-down pile. look at the cards in ea | 1 | Hostile Negotiations | bro |
-| gain control of target artifact or creature until end of turn. untap it. it gains haste until end of turn. create a tapped powerstone token. (it"..."t be spent  | 1 | Sibling Rivalry | bro |
 | if a red or artifact source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus N instead. | 1 | Mechanized Warfare | bro |
 | look at the top seven cards of your library. put up to N artifact and/or creature cards with mana value N or less from among them onto the battlefield. put the  | 1 | Kayla's Reconstruction | bro |
 | permanents you control have "..." | 1 | Mishra, Tamer of Mak Fawa | bro |
@@ -373,7 +370,6 @@
 | {M}{M}{M}: return ~ from your graveyard to the battlefield with a +N/+N counter on it. ~ costs {M} less to activate if an opponent controls four or more nonbasi | 1 | Razorlash Transmogrant | bro |
 | ~ can't be countered. destroy target artifact. if its mana value was N or less, draw a card. | 1 | Raze to the Ground | bro |
 | ~ deals N damage to target creature or planeswalker and N damage to that permanent's controller. | 1 | Unleash Shell | bro |
-| ~ deals N damage to target creature or planeswalker. if that creature or planeswalker would die ~, exile it instead. | 1 | Obliterating Bolt | bro |
 | ~ enters tapped unless you control a legendary green creature. | 1 | Argoth, Sanctum of Nature | bro |
 | ~ enters with two +N/+N counters on it unless two or more colors of mana were spent to cast it. | 1 | Steel Exemplar | bro |
 | ~ gets +N/+N as long as you control an island. | 1 | Coastal Bulwark | bro |

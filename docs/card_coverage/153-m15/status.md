@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 7.0% |
-| Works (untested) | 72 | 50.3% |
+| Works (untested) | 73 | 51.0% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 56 | 39.2% |
+| Not working | 55 | 38.5% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Invasive Species | silent | When this creature enters, return another permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, the Living Guildpact | silent | +1: Look at the top two cards of your library. Put one of them into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jalira, Master Polymorphist | silent | {2}{U}, {T}, Sacrifice another creature: Reveal cards from the top of your library until you reveal a nonlegendary creature card. Put that card onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Krenko's Enforcer | silent | Intimidate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Kurkesh, Onakke Ancient | silent | Whenever you activate an ability of an artifact, if it isn't a mana ability, you may pay {R}. If you do, copy that ability. You may choose new targets for the c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Leeching Sliver | silent | Whenever a Sliver you control attacks, defending player loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Master of Predicaments | silent | Whenever this creature deals combat damage to a player, choose a card in your hand. That player guesses whether the card's mana value is greater than 4. If the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -116,6 +115,7 @@
 | Inferno Fist | handled | Enchanted creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kalonian Twingrove | handled | Kalonian Twingrove's power and toughness are each equal to the number of Forests you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kapsho Kitefins | handled | Whenever this creature or another creature you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Krenko's Enforcer | handled | Intimidate | machines/keywords.py | Y/Y/- | not_tested |
 | Living Totem | handled | When this creature enters, you may put a +1/+1 counter on another target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Marked by Honor | handled | Enchanted creature gets +2/+2 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Meditation Puzzle | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) You gain 8  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -194,7 +194,6 @@
 | enchanted creature has lifelink and "..." | 1 | Eternal Thirst | m15 |
 | for each attacking creature, its owner puts it on their choice of the top or bottom of their library. | 1 | Aetherspouts | m15 |
 | if a source would deal damage to equipped creature, prevent N of that damage, where N is the number of creatures you control. | 1 | Shield of the Avatar | m15 |
-| intimidate | 1 | Krenko's Enforcer | m15 |
 | nonblack creatures get -N/-N until end of turn. | 1 | Festergloom | m15 |
 | other black creatures you control get +N/+N. | 1 | Paragon of Open Graves | m15 |
 | other blue creatures you control get +N/+N. | 1 | Paragon of Gathering Mists | m15 |

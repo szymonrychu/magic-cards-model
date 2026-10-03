@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 6.9% |
+| Tested | 18 | 7.3% |
 | Works (untested) | 135 | 54.9% |
 | Partial (unaudited) | 27 | 11.0% |
-| Not working | 67 | 27.2% |
+| Not working | 66 | 26.8% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Elspeth's Devotee | silent | When this creature enters, you may search your library and/or graveyard for a card named Elspeth, Undaunted Hero, reveal it, and put it into your hand. If you s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth's Nightmare | silent | III — Exile target opponent's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth, Undaunted Hero | silent | −2: Search your library and/or graveyard for a card named Sunlit Hoplite and put it onto the battlefield. If you search your library this way, shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Flummoxed Cyclops | silent | Whenever two or more creatures your opponents control attack, this creature can't block this combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Furious Rise | silent | At the beginning of your end step, if you control a creature with power 4 or greater, exile the top card of your library. You may play that card until you exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gallia of the Endless Dance | silent | Whenever you attack with three or more creatures, you may discard a card at random. If you do, draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grasping Giant | silent | Whenever this creature becomes blocked by a creature, exile that creature until this creature leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -259,13 +258,14 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Cling to Dust
 - Dawn Evangel
 - Dryad of the Ilysian Grove
 - Enigmatic Incarnation
 - Flicker of Fate
+- Flummoxed Cyclops
 - Klothys, God of Destiny
 - Kroxa, Titan of Death's Hunger
 - Kunoros, Hound of Athreos
@@ -351,7 +351,6 @@
 | whenever another nontoken creature you control dies, you may exile it. if you do, create a token that"..."s N/N and it's a nightmare in addition to its other ty | 1 | Nightmare Shepherd | thb |
 | whenever one or more cards are put into your graveyard from your library, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Devourer of Memory | thb |
 | whenever taranika attacks, untap another target creature you control. until end of turn, that creature has base power and toughness N/N and gains indestructible | 1 | Taranika, Akroan Veteran | thb |
-| whenever two or more creatures your opponents control attack, ~ can't block ~. | 1 | Flummoxed Cyclops | thb |
 | whenever you attack with three or more creatures, you may discard a card at random. if you do, draw two cards. | 1 | Gallia of the Endless Dance | thb |
 | whenever ~ attacks or becomes the target of a spell an opponent controls, choose one — • ~ deals N damage to each opponent. • exile the top two cards of your li | 1 | Tectonic Giant | thb |
 | whenever ~ becomes blocked by a creature, exile that creature until ~ leaves the battlefield. | 1 | Grasping Giant | thb |

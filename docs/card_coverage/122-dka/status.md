@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 10.4% |
-| Works (untested) | 71 | 46.1% |
+| Works (untested) | 73 | 47.4% |
 | Partial (unaudited) | 5 | 3.2% |
-| Not working | 62 | 40.3% |
+| Not working | 60 | 39.0% |
 
 ## Cards needing work
 
@@ -48,9 +48,7 @@
 | Havengul Lich | silent | {1}: You may cast target creature card in a graveyard this turn. When you cast it this turn, this creature gains all activated abilities of that card until end  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Runebinder | silent | {2}{U}, {T}, Exile a creature card from your graveyard: Create a 2/2 black Zombie creature token, then put a +1/+1 counter on each Zombie creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Helvault | silent | When Helvault is put into a graveyard from the battlefield, return all cards exiled with it to the battlefield under their owners' control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Highborn Ghoul | silent | Intimidate | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hollowhenge Spirit | silent | When this creature enters, remove target attacking or blocking creature from combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Immerwolf | silent | Intimidate | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Increasing Ambition | silent | Search your library for a card and put that card into your hand. If this spell was cast from a graveyard, instead search your library for two cards and put thos | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Increasing Confusion | silent | Target player mills X cards. If this spell was cast from a graveyard, that player mills twice that many cards instead. Flashback {X}{U} (You may cast this card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Increasing Devotion | silent | Create five 1/1 white Human creature tokens. If this spell was cast from a graveyard, create ten of those tokens instead. Flashback {7}{W}{W} (You may cast this | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -89,9 +87,9 @@
 | Sudden Disappearance | notice | Exile all nonland permanents target player controls. Return the exiled cards to the battlefield under their owner's control at the beginning of the next end ste | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Séance | notice | At the beginning of each upkeep, you may exile target creature card from your graveyard. If you do, create a token that's a copy of that card, except it's a Spi | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Curse of Bloodletting | unaudited | If a source would deal damage to enchanted player, it deals double that damage to that player instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Executioner's Hood | unaudited | Equipped creature has intimidate. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gravecrawler | unaudited | You may cast this card from your graveyard as long as you control a Zombie. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Heavy Mattock | unaudited | As long as equipped creature is a Human, it gets an additional +1/+1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Immerwolf | unaudited | Non-Human Werewolves you control can't transform. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Warden of the Wall | unaudited | During turns other than yours, this artifact is a 2/3 Gargoyle artifact creature with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Altar of the Lost | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Artful Dodge | handled | Target creature can't be blocked this turn. Flashback {U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -111,6 +109,7 @@
 | Drogskol Reaver | handled | Whenever you gain life, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elgaud Inquisitor | handled | When this creature dies, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Erdwal Ripper | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Executioner's Hood | handled | Equipped creature has intimidate. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Falkenrath Aristocrat | handled | Sacrifice a creature: This creature gains indestructible until end of turn. If the sacrificed creature was a Human, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Falkenrath Torturer | handled | Sacrifice a creature: This creature gains flying until end of turn. If the sacrificed creature was a Human, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Farbog Boneflinger | handled | When this creature enters, target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -124,6 +123,7 @@
 | Griptide | handled | Put target creature on top of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Harrowing Journey | handled | Target player draws three cards and loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Headless Skaab | handled | As an additional cost to cast this spell, exile a creature card from your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Highborn Ghoul | handled | Intimidate | machines/keywords.py | Y/-/- | not_tested |
 | Hinterland Hermit // Hinterland Scourge | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hollowhenge Beast | handled |  |  | Y/-/- | not_tested |
 | Hunger of the Howlpack | handled | Put a +1/+1 counter on target creature. Morbid — Put three +1/+1 counters on that creature instead if a creature died this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -195,7 +195,6 @@
 |---|---|---|---|
 | undying | 11 | Geralf's Messenger, Geralf's Mindcrusher, Nearheath Stalker, Pyreheart Wolf, Relentless Skaabs | dka |
 | Fateful hour | 3 | Gavony Ironwright, Thraben Doomsayer, Village Survivors | dka |
-| intimidate | 2 | Highborn Ghoul, Immerwolf | dka |
 | as long as equipped creature is a human, it gets an additional +N/+N. | 1 | Heavy Mattock | dka |
 | at the beginning of each upkeep, you may exile target creature card from your graveyard. if you do, create a token that"..."s a spirit in addition to its other  | 1 | Séance | dka |
 | at the beginning of enchanted player's upkeep, ~ deals damage to that player equal to the number of curses attached to them. | 1 | Curse of Thirst | dka |
@@ -211,9 +210,9 @@
 | destroy target land. ~ deals N damage to each human creature. | 1 | Scorch the Fields | dka |
 | discard all the cards in your hand, then draw that many cards. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Shattered Perception | dka |
 | during turns other than yours, ~ is a N/N gargoyle artifact creature with flying. | 1 | Warden of the Wall | dka |
-| equipped creature has intimidate. | 1 | Executioner's Hood | dka |
 | exile all nonland permanents target player controls. return the exiled cards to the battlefield under their owner's control at the beginning of the next end ste | 1 | Sudden Disappearance | dka |
 | if a source would deal damage to enchanted player, it deals double that damage to that player instead. | 1 | Curse of Bloodletting | dka |
+| non-human werewolves you control can't transform. | 1 | Immerwolf | dka |
 | other spirit creatures you control get +N/+N and have hexproof. | 1 | Drogskol Captain | dka |
 | other vampire creatures you control get +N/+N and have first strike. | 1 | Stromkirk Captain | dka |
 | prevent all combat damage that would be dealt ~. fateful hour — if you have N or less life, tap all attacking creatures. those creatures don"..."s next untap st | 1 | Clinging Mists | dka |

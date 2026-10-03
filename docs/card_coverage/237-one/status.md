@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.7% |
-| Works (untested) | 105 | 41.7% |
+| Tested | 30 | 11.9% |
+| Works (untested) | 107 | 42.5% |
 | Partial (unaudited) | 9 | 3.6% |
-| Not working | 111 | 44.0% |
+| Not working | 106 | 42.1% |
 
 ## Cards needing work
 
@@ -120,14 +120,10 @@
 | Charge of the Mites | notice | Choose one — • Charge of the Mites deals damage equal to the number of creatures you control to target creature or planeswalker. • Create two 1/1 colorless Phyr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Compleat Devotion | notice | Target creature you control gets +2/+2 until end of turn. If that creature has toxic, draw a card. | unparsed remainder: If that creature has toxic, draw a card. | Y/Y/- | not_working |
 | Evolved Spinoderm | notice | This creature has trample as long as it has two or fewer oil counters on it. Otherwise, it has hexproof. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Evolving Adaptive | notice | This creature gets +1/+1 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Exuberant Fuseling | notice | This creature gets +1/+0 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Forgehammer Centurion | notice | Whenever this creature attacks, you may remove two oil counters from it. When you do, target creature can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Geth, Thane of Contracts | notice | {1}{B}{B}, {T}: Return target creature card from your graveyard to the battlefield. It gains "If this creature would leave the battlefield, exile it instead of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gleeful Demolition | notice | Destroy target artifact. If you controlled that artifact, create three 1/1 red Phyrexian Goblin creature tokens. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hexgold Slash | notice | Hexgold Slash deals 2 damage to target creature. If that creature has toxic, Hexgold Slash deals 4 damage to that creature instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kethek, Crucible Goliath | notice | At the beginning of your end step, you may sacrifice another creature. If you do, reveal cards from the top of your library until you reveal a nonlegendary crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Necrosquito | notice | This creature gets +1/+1 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Noxious Assault | notice | Creatures you control get +2/+2 until end of turn. Whenever a creature blocks this turn, its controller gets a poison counter. | unparsed remainder: Whenever a creature blocks this turn, its controller gets a poison counter. | Y/Y/- | not_working |
 | Orthodoxy Enforcer | notice | This creature gets +2/+0 as long as you control two or more artifacts. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Porcelain Zealot | notice | At the beginning of combat on your turn, target creature you control gets +1/+1 until end of turn. If that creature has toxic, instead it gets +2/+2 until end o | unparsed remainder: If that creature has toxic, instead it gets +2/+2 until end of turn. | Y/Y/- | not_working |
@@ -135,7 +131,6 @@
 | Red Sun's Twilight | notice | Destroy up to X target artifacts. If X is 5 or more, for each artifact destroyed this way, create a token that's a copy of it. Those tokens gain haste. Exile th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Resistance Reunited | notice | Target creature gets +2/+2 until end of turn. Equipped creatures you control gain indestructible until end of turn. (Damage and effects that say "destroy" don't | unparsed remainder: Equipped creatures you control gain indestructible until end of turn. | Y/Y/- | not_working |
 | Serum Snare | notice | Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate. (Choose any number of permanents and/or players, t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Trawler Drake | notice | This creature gets +1/+1 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urabrask's Forge | notice | At the beginning of combat on your turn, put an oil counter on this artifact, then create an X/1 red Phyrexian Horror creature token with trample and haste, whe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bladegraft Aspirant | unaudited | Activated abilities of Equipment you control that target this creature cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Cinderslash Ravager | unaudited | This spell costs {1} less to cast for each permanent you control with oil counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -199,6 +194,7 @@
 | Myr Kinsmith | handled | When this creature enters, you may search your library for a Myr card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nahiri's Sacrifice | handled | As an additional cost to cast this spell, sacrifice an artifact or creature with mana value X. Nahiri's Sacrifice deals X damage divided as you choose among any | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Necrogen Communion | handled | Enchanted creature has toxic 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Necrosquito | handled | This creature enters with two oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nimraiser Paladin | handled | When this creature enters, return target creature card with mana value 3 or less from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Norn's Wellspring | handled | Whenever a creature you control dies, scry 1 and put an oil counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Offer Immortality | handled | Target creature gains deathtouch and indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -238,6 +234,7 @@
 | The Surgical Bay | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thirsting Roots | handled | Choose one — • Search your library for a basic land card, reveal it, put it into your hand, then shuffle. • Proliferate. (Choose any number of permanents and/or | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Transplant Theorist | handled | Whenever this creature or another artifact you control enters, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Trawler Drake | handled | This creature enters with an oil counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tyrranax Atrocity | handled | Toxic | machines/combat.py | Y/Y/- | not_tested |
 | Tyrranax Rex | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tyvar's Stand | handled | Target creature you control gets +X/+X and gains hexproof and indestructible until end of turn. (It can't be the target of spells or abilities your opponents co | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -255,7 +252,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>30 cards</summary>
 
 - Ambulatory Edifice
 - Atraxa, Grand Unifier
@@ -265,6 +262,9 @@
 - Churning Reservoir
 - Cruel Grimnarch
 - Elesh Norn, Mother of Machines
+- Evolving Adaptive
+- Exuberant Fuseling
+- Geth, Thane of Contracts
 - Koth, Fire of Resistance
 - Malcator, Purity Overseer
 - Mindsplice Apparatus
@@ -293,7 +293,6 @@
 |---|---|---|---|
 | for mirrodin! | 7 | Barbed Batterfist, Bladehold War-Whip, Dragonwing Glider, Goldwarden's Helm, Mirran Bardiche | one |
 | Corrupted | 5 | Apostle of Invasion, Bonepicker Skirge, Phyrexian Atlas, The Seedcore, Zealot's Conviction | one |
-| ~ gets +N/+N for each oil counter on it. | 4 | Evolving Adaptive, Exuberant Fuseling, Necrosquito, Trawler Drake | one |
 | when ~ dies, create a N/N colorless phyrexian mite artifact creature token with toxic N and "..." | 2 | Crawling Chorus, Stinging Hivemaster | one |
 | Choose one | 1 | Charge of the Mites | one |
 | +N: until your next turn, up to one target creature gets -N/-N. | 1 | Jace, the Perfected Mind | one |
@@ -387,7 +386,6 @@
 | {M}: until end of turn, target creature you control becomes a blue artifact in addition to its other colors and types. activate only as a sorcery. | 1 | Unctus, Grand Metatect | one |
 | {M}: ~ becomes a N/N phyrexian construct artifact creature, loses all abilities, and gains indestructible and toxic N. activate only if there are nine or more l | 1 | Monument to Perfection | one |
 | {M}{M}: each other creature you control with toxic gains toxic N until end of turn. activate only once each turn. | 1 | Plague Nurse | one |
-| {M}{M}{M}, {M}: return target creature card from your graveyard to the battlefield. it gains "..." activate only as a sorcery. | 1 | Geth, Thane of Contracts | one |
 | ~ costs {M} less to cast for each permanent you control with oil counters on it. | 1 | Cinderslash Ravager | one |
 | ~ costs {M} more to cast if it targets a creature. exile target nonland permanent. | 1 | Vanish into Eternity | one |
 | ~ deals N damage to each creature your opponents control. creatures your opponents control can't block ~. | 1 | Hazardous Blast | one |

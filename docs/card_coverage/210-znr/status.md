@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 9.8% |
+| Tested | 27 | 10.6% |
 | Works (untested) | 121 | 47.5% |
 | Partial (unaudited) | 22 | 8.6% |
-| Not working | 87 | 34.1% |
+| Not working | 85 | 33.3% |
 
 ## Cards needing work
 
@@ -62,7 +62,6 @@
 | Moraug, Fury of Akoum | silent | Landfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, un | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri's Lithoforming | silent | Sacrifice X lands. For each land sacrificed this way, draw a card. You may play X additional lands this turn. Lands you control enter tapped this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri, Heir of the Ancients | silent | +1: Create a 1/1 white Kor Warrior creature token. You may attach an Equipment you control to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nimana Skitter-Sneak | silent | As long as an opponent has eight or more cards in their graveyard, this creature gets +1/+0 and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa of Shadowed Boughs | silent | −5: You may put a creature card with mana value less than or equal to the number of lands you control onto the battlefield from your hand or graveyard with two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oran-Rief Ooze | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pelakka Predation // Pelakka Caverns | silent | Target opponent reveals their hand. You choose a card from it with mana value 3 or greater. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -100,7 +99,6 @@
 | Zagras, Thief of Heartbeats | silent | Whenever a creature you control deals combat damage to a planeswalker, destroy that planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zareth San, the Trickster | silent | {2}{U}{B}, Return an unblocked attacking Rogue you control to its owner's hand: Put this card from your hand onto the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Allied Assault | notice | Up to two target creatures each get +X/+X until end of turn, where X is the number of creatures in your party. (Your party consists of up to one each of Cleric, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Blackbloom Rogue // Blackbloom Bog | notice | This creature gets +3/+0 as long as an opponent has eight or more cards in their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Charix, the Raging Isle | notice | Spells your opponents cast that target Charix cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crawling Barrens | notice | {4}: Put two +1/+1 counters on this land. Then you may have it become a 0/0 Elemental creature until end of turn. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Expedition Champion | notice | This creature gets +2/+0 as long as you control another Warrior. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -260,13 +258,14 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>27 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
 - Ancient Greenwarden
 - Angel of Destiny
 - Beyeen Veil // Beyeen Coast
+- Blackbloom Rogue // Blackbloom Bog
 - Cleansing Wildfire
 - Dauntless Unity
 - Farsight Adept
@@ -276,6 +275,7 @@
 - Jwari Disruption // Jwari Ruins
 - Might of Murasa
 - Nighthawk Scavenger
+- Nimana Skitter-Sneak
 - Nimble Trapfinder
 - Omnath, Locus of Creation
 - Resolute Strike
@@ -300,7 +300,6 @@
 | ~ is also a cleric, rogue, warrior, and wizard. | 2 | Stonework Packbeast, Veteran Adventurer | znr |
 | +N: create a N/N white kor warrior creature token. you may attach an equipment you control to it. | 1 | Nahiri, Heir of the Ancients | znr |
 | as long as an opponent has eight or more cards in their graveyard, rogues you control get +N/+N. | 1 | Soaring Thought-Thief | znr |
-| as long as an opponent has eight or more cards in their graveyard, ~ gets +N/+N and has menace. | 1 | Nimana Skitter-Sneak | znr |
 | as long as there are four or more instant and/or sorcery cards in your graveyard, ~ gets +N/+N. | 1 | Magmatic Channeler | znr |
 | as long as you control a cleric, ~ has "..." | 1 | Relic Vial | znr |
 | as long as you control another wizard, ~ has "..." | 1 | Expedition Diviner | znr |
@@ -388,7 +387,6 @@
 | ~ costs {M} less to cast for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, and wizard.) search your library for | 1 | Coveted Prize | znr |
 | ~ costs {M} less to cast if it targets a creature whose controller has eight or more cards in their graveyard. gain control of target creature with mana value N | 1 | Lullmage's Domination | znr |
 | ~ deals N damage to target creature and N damage to that creature's controller, where N is the number of creatures in your party. (your party consists of up to  | 1 | Synchronized Spellcraft | znr |
-| ~ gets +N/+N as long as an opponent has eight or more cards in their graveyard. | 1 | Blackbloom Rogue // Blackbloom Bog | znr |
 | ~ gets +N/+N as long as you control another warrior. | 1 | Expedition Champion | znr |
 | ~'s power and toughness are each equal to N minus the highest life total among players. | 1 | Scourge of the Skyclaves | znr |
 | ~'s power is equal to the number of creatures in your party. | 1 | Archpriest of Iona | znr |

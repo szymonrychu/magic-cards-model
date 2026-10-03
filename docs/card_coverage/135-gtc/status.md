@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 6.0% |
-| Works (untested) | 115 | 49.6% |
+| Works (untested) | 116 | 50.0% |
 | Partial (unaudited) | 8 | 3.4% |
-| Not working | 95 | 40.9% |
+| Not working | 94 | 40.5% |
 
 ## Cards needing work
 
@@ -85,7 +85,6 @@
 | Realmwright | silent | Lands you control are the chosen type in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rubblebelt Raiders | silent | Whenever this creature attacks, put a +1/+1 counter on it for each attacking creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sepulchral Primordial | silent | When this creature enters, for each opponent, you may put up to one target creature card from that player's graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shadow Alley Denizen | silent | Whenever another black creature you control enters, target creature gains intimidate until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadow Slice | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shambleshark | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shielded Passage | silent | Prevent all damage that would be dealt to target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -217,6 +216,7 @@
 | Scab-Clan Charger | handled | Bloodrush — {1}{G}, Discard this card: Target attacking creature gets +2/+4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scatter Arc | handled | Counter target noncreature spell. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scorchwalker | handled | Bloodrush — {1}{R}{R}, Discard this card: Target attacking creature gets +5/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Shadow Alley Denizen | handled | Whenever another black creature you control enters, target creature gains intimidate until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shattering Blow | handled | Exile target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Charm | handled | Choose one — • Target creature gets +3/+3 until end of turn. • Permanents you control gain hexproof until end of turn. • Return target creature to its owner's h | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Keyrune | handled | {G}{U}: This artifact becomes a 2/3 green and blue Crab artifact creature with hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -329,7 +329,6 @@
 | whenever a +N/+N counter is put on ~, you may draw a card. | 1 | Fathom Mage | gtc |
 | whenever a creature card is put into an opponent"..."s legendary in addition to its other types, and it has hexproof and ~. | 1 | Lazav, Dimir Mastermind | gtc |
 | whenever an ability of equipped creature is activated, if it isn't a mana ability, copy that ability. you may choose new targets for the copy. | 1 | Illusionist's Bracers | gtc |
-| whenever another black creature you control enters, target creature gains intimidate until end of turn. | 1 | Shadow Alley Denizen | gtc |
 | whenever you cast your second spell each turn, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Incursion Specialist | gtc |
 | whenever ~ attacks, put a +N/+N counter on it for each attacking creature you control. | 1 | Rubblebelt Raiders | gtc |
 | whenever ~ becomes blocked, defending player discards a card. | 1 | Slate Street Ruffian | gtc |

@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 5.5% |
-| Works (untested) | 104 | 47.9% |
-| Partial (unaudited) | 17 | 7.8% |
+| Works (untested) | 105 | 48.4% |
+| Partial (unaudited) | 16 | 7.4% |
 | Not working | 84 | 38.7% |
 
 ## Cards needing work
@@ -62,7 +62,6 @@
 | Guise of Fire | silent | Enchanted creature gets +1/-1 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hanweir Lancer | silent | As long as this creature is paired with another creature, both creatures have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Skaab | silent | Whenever this creature attacks, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Heirs of Stromkirk | silent | Intimidate | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Homicidal Seclusion | silent | As long as you control exactly one creature, that creature gets +3/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hound of Griselbrand | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Howlgeist | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -77,6 +76,7 @@
 | Nightshade Peddler | silent | As long as this creature is paired with another creature, both creatures have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Outwit | silent | Counter target spell that targets a player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pathbreaker Wurm | silent | As long as this creature is paired with another creature, both creatures have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Predator's Gambit | silent | Enchanted creature has intimidate as long as its controller controls no other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primal Surge | silent | Exile the top card of your library. If it's a permanent card, you may put it onto the battlefield. If you do, repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Riot Ringleader | silent | Whenever this creature attacks, Human creatures you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rite of Ruin | silent | Choose an order for artifacts, creatures, and lands. Each player sacrifices one permanent of their choice of the first type, sacrifices two of their choice of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -122,7 +122,6 @@
 | Gloom Surgeon | unaudited | If combat damage would be dealt to this creature, prevent that damage and exile that many cards from the top of your library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Grounded | unaudited | Enchanted creature loses flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Misthollow Griffin | unaudited | You may cast this card from exile. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Predator's Gambit | unaudited | Enchanted creature has intimidate as long as its controller controls no other creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Riders of Gavony | unaudited | Human creatures you control have protection from creatures of the chosen type. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Scrapskin Drake | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sigarda, Host of Herons | unaudited | Spells and abilities your opponents control can't cause you to sacrifice permanents. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -168,6 +167,7 @@
 | Harvester of Souls | handled | Whenever another nontoken creature dies, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Haunted Guardian | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Havengul Vampire | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Heirs of Stromkirk | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Holy Justiciar | handled | {2}{W}, {T}: Tap target creature. If that creature is a Zombie, exile it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Human Frailty | handled | Destroy target Human creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hunted Ghoul | handled | This creature can't block Humans. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -302,7 +302,6 @@
 | if a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead. | 1 | Gisela, Blade of Goldnight | avr |
 | if combat damage would be dealt to ~, prevent that damage and exile that many cards from the top of your library. | 1 | Gloom Surgeon | avr |
 | instant and sorcery spells cost {M} less to cast. | 1 | Arcane Melee | avr |
-| intimidate | 1 | Heirs of Stromkirk | avr |
 | other permanents you control have indestructible. | 1 | Avacyn, Angel of Hope | avr |
 | players can't pay life or sacrifice creatures to cast spells or activate abilities. | 1 | Angel of Jubilation | avr |
 | prevent all combat damage that would be dealt by creatures other than target creature ~. | 1 | Terrifying Presence | avr |

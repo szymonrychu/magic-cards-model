@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 7.7% |
+| Tested | 12 | 8.5% |
 | Works (untested) | 61 | 43.0% |
 | Partial (unaudited) | 15 | 10.6% |
-| Not working | 55 | 38.7% |
+| Not working | 54 | 38.0% |
 
 ## Cards needing work
 
@@ -77,7 +77,6 @@
 | Nemesis Trap | notice | If a white creature is attacking, you may pay {B}{B} rather than pay this spell's mana cost. Exile target attacking creature. Create a token that's a copy of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Quest for the Goblin Lord | notice | As long as this enchantment has five or more quest counters on it, creatures you control get +2/+0. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Roiling Terrain | notice | Destroy target land, then Roiling Terrain deals damage to that land's controller equal to the number of land cards in that player's graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Ruthless Cullblade | notice | This creature gets +2/+1 as long as an opponent has 10 or less life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thada Adel, Acquisitor | notice | Whenever Thada Adel deals combat damage to a player, search that player's library for an artifact card and exile it. Then that player shuffles. Until end of tur | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tuktuk Scrapper | notice | Whenever this creature or another Ally you control enters, you may destroy target artifact. If that artifact is put into a graveyard this way, this creature dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Urge to Feed | notice | Target creature gets -3/-3 until end of turn. You may tap any number of untapped Vampire creatures you control. If you do, put a +1/+1 counter on each of those  | unparsed remainder: You may tap any number of untapped Vampire creatures you control. If you do, put a +1/+1 counter on each of those Vampires. | Y/-/- | not_working |
@@ -161,7 +160,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Amulet of Vigor
 - Bestial Menace
@@ -172,6 +171,7 @@
 - Nature's Claim
 - Omnath, Locus of Mana
 - Ricochet Trap
+- Ruthless Cullblade
 - Searing Blaze
 - Tectonic Edge
 
@@ -242,7 +242,6 @@
 | ~ costs {M} less to cast for each attacking creature. create a N/N colorless construct artifact creature token with trample. exile it at the beginning of your n | 1 | Stone Idol Trap | wwk |
 | ~ deals N damage to each creature, where N is the number of creatures on the battlefield. | 1 | Chain Reaction | wwk |
 | ~ enters with a charge counter on it for each time it was kicked. | 1 | Everflowing Chalice | wwk |
-| ~ gets +N/+N as long as an opponent has N or less life. | 1 | Ruthless Cullblade | wwk |
 | ~ gets +N/+N as long as you control a forest. | 1 | Loam Lion | wwk |
 | ~ gets -N/-N, where N is your life total. | 1 | Death's Shadow | wwk |
 

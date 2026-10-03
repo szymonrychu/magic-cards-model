@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 37 | 14.0% |
-| Works (untested) | 110 | 41.5% |
+| Works (untested) | 111 | 41.9% |
 | Partial (unaudited) | 14 | 5.3% |
-| Not working | 104 | 39.2% |
+| Not working | 103 | 38.9% |
 
 ## Cards needing work
 
@@ -129,7 +129,6 @@
 | Toby, Beastie Befriender | notice | As long as you control four or more creature tokens, creature tokens you control have flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Turn Inside Out | notice | Target creature gets +3/+0 until end of turn. When it dies this turn, manifest dread. (Look at the top two cards of your library. Put one onto the battlefield f | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Untimely Malfunction | notice | Choose one — • Destroy target artifact. • Change the target of target spell or ability with a single target. • One or two target creatures can't block this turn | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Vengeful Possession | notice | Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card. | unparsed remainder: Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card. | Y/Y/Y | not_working |
 | Charred Foyer // Warped Space | unaudited | Once each turn, you may pay {0} rather than pay the mana cost for a spell you cast from exile. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dazzling Theater // Prop Room | unaudited | Untap each creature you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Fear of Exposure | unaudited | As an additional cost to cast this spell, tap two untapped creatures and/or lands you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -249,6 +248,7 @@
 | Valgavoth's Faithful | handled | {3}{B}, Sacrifice this creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Valgavoth's Lair | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vanish from Sight | handled | Target nonland permanent's owner puts it on their choice of the top or bottom of their library. Surveil 1. (Look at the top card of your library. You may put it | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Vengeful Possession | handled | Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vicious Clown | handled | Whenever another creature you control with power 2 or less enters, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wary Watchdog | handled | When this creature enters or dies, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wickerfolk Thresher | handled | Delirium — Whenever this creature attacks, if there are four or more card types among cards in your graveyard, look at the top card of your library. If it's a l | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -327,7 +327,6 @@
 | discard your hand. then draw N cards, where N is the number of card types among cards in your graveyard. | 1 | Peer Past the Veil | dsk |
 | draw two cards. create a N/N white glimmer enchantment creature token. | 1 | Glimmerburst | dsk |
 | enchanted creature gets -N/-N and loses all abilities. | 1 | Duskmourn's Domination | dsk |
-| gain control of target creature until end of turn. untap it. it gains haste until end of turn. you may discard a card. if you do, draw a card. | 1 | Vengeful Possession | dsk |
 | if a card you didn"..."s graveyard from anywhere, exile it instead. | 1 | Valgavoth, Terror Eater | dsk |
 | manifest dread N times, then put N +N/+N counters on each of those creatures. (to manifest dread, look at the top two cards of your library, then put one onto t | 1 | Valgavoth's Onslaught | dsk |
 | manifest dread. (look at the top two cards of your library. put one onto the battlefield face down as a N/N creature and the other into your graveyard. turn it  | 1 | Under the Skin | dsk |

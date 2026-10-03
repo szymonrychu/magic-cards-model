@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 14.0% |
+| Tested | 37 | 14.3% |
 | Works (untested) | 120 | 46.5% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 90 | 34.9% |
+| Not working | 89 | 34.5% |
 
 ## Cards needing work
 
@@ -114,7 +114,6 @@
 | Flay Essence | notice | Exile target creature or planeswalker. You gain life equal to the number of counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mount Velus Manticore | notice | At the beginning of combat on your turn, you may discard a card. When you do, this creature deals X damage to any target, where X is the number of card types th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unmarked Grave | notice | Search your library for a nonlegendary card, put that card into your graveyard, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Verdant Command | notice | Choose two — • Target player creates two tapped 1/1 green Squirrel creature tokens. • Counter target loyalty ability of a planeswalker. • Exile target card from | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Young Necromancer | notice | When this creature enters, you may exile two cards from your graveyard. When you do, return target creature card from your graveyard to the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Academy Manufactor | unaudited | If you would create a Clue, Food, or Treasure token, instead create one of each. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aeve, Progenitor Ooze | unaudited | Aeve isn't legendary if it's a token. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -252,7 +251,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Abiding Grace
 - Archon of Cruelty
@@ -288,6 +287,7 @@
 - Tireless Provisioner
 - Unholy Heat
 - Urza's Saga
+- Verdant Command
 - Void Mirror
 - Yavimaya, Cradle of Growth
 
@@ -302,7 +302,6 @@
 | Delirium | 4 | Bloodbraid Marauder, Foul Watcher, Gouged Zealot, Scuttletide | mh2 |
 | eternalize | 2 | Timeless Dragon, Timeless Witness | mh2 |
 | reinforce | 2 | Break Ties, Wren's Run Hydra | mh2 |
-| Choose two | 1 | Verdant Command | mh2 |
 | Hellbent | 1 | Necromancer's Familiar | mh2 |
 | Metalcraft | 1 | Vedalken Infiltrator | mh2 |
 | aeve isn"..."s a token. | 1 | Aeve, Progenitor Ooze | mh2 |

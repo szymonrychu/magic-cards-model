@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 7.8% |
-| Works (untested) | 141 | 57.8% |
+| Works (untested) | 142 | 58.2% |
 | Partial (unaudited) | 16 | 6.6% |
-| Not working | 68 | 27.9% |
+| Not working | 67 | 27.5% |
 
 ## Cards needing work
 
@@ -87,7 +87,6 @@
 | Vizier of the Scorpion | silent | Zombie tokens you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Widespread Brutality | silent | Amass Zombies 2, then the Army you amassed deals damage equal to its power to each non-Army creature. (To amass Zombies 2, put two +1/+1 counters on an Army you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakening of Vitu-Ghazi | notice | Put nine +1/+1 counters on target land you control. It becomes a legendary 0/0 Elemental creature with haste named Vitu-Ghazi. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Bond of Passion | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Bond of Passion deals 2 damage to any other target. | unparsed remainder: Untap that creature. It gains haste until end of turn. Bond of Passion deals 2 damage to any other target. | Y/Y/- | not_working |
 | Gideon's Battle Cry | notice | Put a +1/+1 counter on each creature you control. You may search your library and/or graveyard for a card named Gideon, the Oathsworn, reveal it, and put it int | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kasmina, Enigmatic Mentor | notice | Spells your opponents cast that target a creature or planeswalker you control cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Planewide Celebration | notice | Choose four. You may choose the same mode more than once. • Create a 2/2 Citizen creature token that's all colors. • Return target permanent card from your grav | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -125,6 +124,7 @@
 | Bloom Hulk | handled | When this creature enters, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bond of Discipline | handled | Tap all creatures your opponents control. Creatures you control gain lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bond of Flourishing | handled | Look at the top three cards of your library. You may reveal a permanent card from among them and put it into your hand. Put the rest on the bottom of your libra | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bond of Passion | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Bond of Passion deals 2 damage to any other target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bond of Revival | handled | Return target creature card from your graveyard to the battlefield. It gains haste until your next turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bulwark Giant | handled | When this creature enters, you gain 5 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burning Prophet | handled | Whenever you cast a noncreature spell, this creature gets +1/+0 until end of turn, then scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -310,7 +310,6 @@
 | enchanted creature loses all abilities and has base power and toughness N/N. | 1 | Kasmina's Transmutation | war |
 | exile all multicolored permanents. | 1 | Ravnica at War | war |
 | exile target permanent you control. return that card to the battlefield under its owner's control at the beginning of the next end step. if it enters as a creat | 1 | Teferi's Time Twist | war |
-| gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. ~ deals N damage to any other target. | 1 | Bond of Passion | war |
 | if another red source you control would deal damage to a permanent or player, it deals that much damage plus N to that permanent or player instead. | 1 | Jaya, Venerated Firemage | war |
 | if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove that many +N/+N counters from ~. | 1 | Ugin's Conjurant | war |
 | if one or more +N/+N counters would be put on mowu, that many plus one +N/+N counters are put on it instead. | 1 | Mowu, Loyal Companion | war |

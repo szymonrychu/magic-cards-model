@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 11.7% |
-| Works (untested) | 75 | 46.3% |
+| Works (untested) | 76 | 46.9% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 57 | 35.2% |
+| Not working | 56 | 34.6% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Arm with Aether | silent | Until end of turn, creatures you control gain "Whenever this creature deals damage to an opponent, you may return target creature that player controls to its ow | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Batterskull | silent | {3}: Return this Equipment to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blind Zealot | silent | Intimidate | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cathedral Membrane | silent | When this creature dies during combat, it deals 6 damage to each creature it blocked this combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chancellor of the Annex | silent | Whenever an opponent casts a spell, counter it unless that player pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chancellor of the Spires | silent | When this creature enters, you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -101,6 +100,7 @@
 | Birthing Pod | handled | {1}{G/P}, {T}, Sacrifice a creature: Search your library for a creature card with mana value equal to 1 plus the sacrificed creature's mana value, put that card | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blade Splicer | handled | When this creature enters, create a 3/3 colorless Phyrexian Golem artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blighted Agent | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blind Zealot | handled | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, destroy target creature that player controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blinding Souleater | handled | {W/P}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Caress of Phyrexia | handled | Target player draws three cards, loses 3 life, and gets three poison counters. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conversion Chamber | handled | {2}, {T}: Exile target artifact card from a graveyard. Put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -223,7 +223,6 @@
 | golem creatures you control have flying. | 1 | Wing Splicer | nph |
 | golem creatures you control have trample. | 1 | Maul Splicer | nph |
 | golem creatures you control have vigilance. | 1 | Sensor Splicer | nph |
-| intimidate | 1 | Blind Zealot | nph |
 | permanents enter tapped ~. draw a card. | 1 | Due Respect | nph |
 | players can't cast spells with the same name as the exiled card. | 1 | Exclusion Ritual | nph |
 | return target creature to its owner's hand. its controller loses N life. | 1 | Vapor Snag | nph |

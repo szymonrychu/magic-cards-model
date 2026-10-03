@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 56 | 20.6% |
-| Works (untested) | 97 | 35.7% |
+| Tested | 57 | 21.0% |
+| Works (untested) | 98 | 36.0% |
 | Partial (unaudited) | 6 | 2.2% |
-| Not working | 113 | 41.5% |
+| Not working | 111 | 40.8% |
 
 ## Cards needing work
 
@@ -122,7 +122,6 @@
 | Ghalta and Mavren | notice | Whenever you attack, choose one — • Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other atta | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Halo Forager | notice | When this creature enters, you may pay {X}. When you do, you may cast target instant or sorcery card with mana value X from a graveyard without paying its mana  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | notice | Spells you cast cost {1} less to cast for each card your opponents have drawn this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Inga and Esika | notice | Creatures you control have vigilance and "{T}: Add one mana of any color. Spend this mana only to cast a creature spell." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Into the Fire | notice | Choose one — • Into the Fire deals 2 damage to each creature, planeswalker, and battle. • Put any number of cards from your hand on the bottom of your library,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Joyful Stormsculptor | notice | Whenever you cast a spell that has convoke, this creature deals 1 damage to each opponent and each battle they protect. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kroxa and Kunoros | notice | Whenever Kroxa and Kunoros enters or attacks, you may exile five cards from your graveyard. When you do, return target creature card from your graveyard to the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -135,7 +134,6 @@
 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | notice | Whenever this creature attacks, create a tapped and attacking token that's a copy of it. Put a +1/+1 counter on that token for each +1/+1 counter on this creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swordsworn Cavalier | notice | This creature has first strike as long as another Knight entered the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tandem Takedown | notice | Up to two target creatures you control each get +1/+0 until end of turn. They each deal damage equal to their power to another target creature, planeswalker, or | unparsed remainder: They each deal damage equal to their power to another target creature, planeswalker, or battle. | Y/Y/- | not_working |
-| Tenured Oilcaster | notice | This creature gets +3/+0 as long as an opponent has eight or more cards in their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Terror of Towashi | notice | Whenever this creature attacks, you may pay {3}{B}. When you do, return target creature card from your graveyard to the battlefield. It's a Phyrexian in additio | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | War Historian | notice | This creature has indestructible as long as it attacked a battle this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wicked Slumber | notice | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Tap up to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -228,6 +226,7 @@
 | Stormclaw Rager | handled | {1}, Sacrifice another creature or artifact: Put a +1/+1 counter on this creature and draw a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Surrak and Goreclaw | handled | Other creatures you control have trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tarkir Duneshaper // Burnished Dunestomper | handled | {4}{G/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tenured Oilcaster | handled | This creature gets +3/+0 as long as an opponent has eight or more cards in their graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thrashing Frontliner | handled | Whenever this creature attacks a battle, it gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thunderhead Squadron | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Tidal Terror | handled | Whenever this creature attacks, you may tap two other untapped creatures you control. If you do, this creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,7 +245,7 @@
 ## Fully supported
 
 <details>
-<summary>56 cards</summary>
+<summary>57 cards</summary>
 
 - Archangel Elspeth
 - Borborygmos and Fblthp
@@ -257,6 +256,7 @@
 - Flywheel Racer
 - Glistening Deluge
 - Ichor Shade
+- Inga and Esika
 - Invasion of Alara // Awaken the Maelstrom
 - Invasion of Amonkhet // Lazotep Convert
 - Invasion of Arcavios // Invocation of the Founders
@@ -326,7 +326,6 @@
 | at the beginning of your first main phase, look at the top card of your library. you may reveal that card if it has three or more colored mana symbols in its ma | 1 | Omnath, Locus of All | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) tap up to two target creature | 1 | Wicked Slumber | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) you may cast sorcery spells ~ | 1 | Complete the Circuit | mom |
-| creatures you control have vigilance and "..." | 1 | Inga and Esika | mom |
 | draw cards equal to the number of cards in your hand. you have no maximum hand size for as long as you control ~. | 1 | Jin-Gitaxias // The Great Synthesis | mom |
 | each player mills ten cards. for each player, choose a creature or planeswalker card in that player's graveyard. put those cards onto the battlefield under your | 1 | Breach the Multiverse | mom |
 | each player mills three cards. then you return up to two creature cards from your graveyard to your hand. (to mill three cards, a player puts the top three card | 1 | Unseal the Necropolis | mom |
@@ -396,7 +395,6 @@
 | ~ can't be countered. ~ deals N damage to target creature or planeswalker. it deals N damage instead if that target is white and/or blue. | 1 | Lithomantic Barrage | mom |
 | ~ deals N damage to target creature, planeswalker, or battle. look at the top N cards of your library, where N is the excess damage dealt ~. you may exile one o | 1 | Nahiri's Warcrafting | mom |
 | ~ enters with two +N/+N counters on it for each creature that convoked it. | 1 | Ancient Imperiosaur | mom |
-| ~ gets +N/+N as long as an opponent has eight or more cards in their graveyard. | 1 | Tenured Oilcaster | mom |
 | ~ gets +N/+N for each transformed permanent you control. | 1 | Mutagen Connoisseur | mom |
 | ~ has first strike as long as another knight entered the battlefield under your control ~. | 1 | Swordsworn Cavalier | mom |
 | ~ has indestructible as long as it attacked a battle ~. | 1 | War Historian | mom |

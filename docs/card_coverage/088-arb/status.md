@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 7.0% |
-| Works (untested) | 70 | 49.0% |
+| Works (untested) | 71 | 49.7% |
 | Partial (unaudited) | 10 | 7.0% |
-| Not working | 53 | 37.1% |
+| Not working | 52 | 36.4% |
 
 ## Cards needing work
 
@@ -77,7 +77,6 @@
 | Aven Mimeomancer | notice | At the beginning of your upkeep, you may put a feather counter on target creature. If you do, that creature has base power and toughness 3/1 and has flying for  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Slave of Bolas | notice | Gain control of target creature. Untap that creature. It gains haste until end of turn. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vengeful Rebirth | notice | Return target card from your graveyard to your hand. If you return a nonland card to your hand this way, Vengeful Rebirth deals damage equal to that card's mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Wargate | notice | Search your library for a permanent card with mana value X or less, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Zealous Persecution | notice | Until end of turn, creatures you control get +1/+1 and creatures your opponents control get -1/-1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Arsenal Thresher | unaudited | As this creature enters, you may reveal any number of other artifact cards from your hand. This creature enters with a +1/+1 counter on it for each card reveale | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fieldmist Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -158,6 +157,7 @@
 | Vedalken Heretic | handled | Whenever this creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vithian Renegades | handled | When this creature enters, destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wall of Denial | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Wargate | handled | Search your library for a permanent card with mana value X or less, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Winged Coatl | handled | Deathtouch | machines/combat.py | Y/-/- | not_tested |
 
 ## Fully supported
@@ -208,7 +208,6 @@
 | if you would draw a card, instead reveal the top three cards of your library. put all creature cards revealed ~ into your hand and the rest on the bottom of you | 1 | Sages of the Anima | arb |
 | return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | 1 | Soulquake | arb |
 | return target card from your graveyard to your hand. if you return a nonland card to your hand ~, ~ deals damage equal to that card's mana value to any target.  | 1 | Vengeful Rebirth | arb |
-| search your library for a permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Wargate | arb |
 | target opponent reveals cards from the top of their library until four land cards are revealed. that player puts all cards revealed ~ into their graveyard. | 1 | Mind Funeral | arb |
 | until end of turn, creatures you control get +N/+N and creatures your opponents control get -N/-N. | 1 | Zealous Persecution | arb |
 | when enchanted creature becomes the target of a spell or ability, exile that creature. | 1 | Crystallization | arb |

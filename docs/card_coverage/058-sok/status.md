@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 4.8% |
+| Tested | 9 | 5.5% |
 | Works (untested) | 58 | 35.2% |
 | Partial (unaudited) | 11 | 6.7% |
-| Not working | 88 | 53.3% |
+| Not working | 87 | 52.7% |
 
 ## Cards needing work
 
@@ -111,7 +111,6 @@
 | Akuta, Born of Ash | notice | At the beginning of your upkeep, if you have more cards in hand than each opponent, you may sacrifice a Swamp. If you do, return Akuta from your graveyard to th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Charge Across the Araba | notice | Sweep — Return any number of Plains you control to their owner's hand. Creatures you control get +1/+1 until end of turn for each Plains returned this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ideas Unbound | notice | Draw three cards. Discard three cards at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Iname as One | notice | When Iname as One enters, if you cast it from your hand, you may search your library for a Spirit permanent card, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Inner Calm, Outer Strength | notice | Target creature gets +X/+X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Plow Through Reito | notice | Sweep — Return any number of Plains you control to their owner's hand. Target creature gets +1/+1 until end of turn for each Plains returned this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cowed by Wisdom | unaudited | Enchanted creature can't attack or block unless its controller pays {1} for each card in your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -145,6 +144,7 @@
 | Godo's Irregulars | handled | {R}: This creature deals 1 damage to target creature blocking it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hail of Arrows | handled | Hail of Arrows deals X damage divided as you choose among any number of target attacking creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Haru-Onna | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Iname as One | handled | When Iname as One enters, if you cast it from your hand, you may search your library for a Spirit permanent card, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Into the Fray | handled | Target creature attacks this turn if able. Splice onto Arcane {R} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ivory Crane Netsuke | handled | At the beginning of your upkeep, if you have seven or more cards in hand, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jiwari, the Earth Aflame | handled | {X}{R}, {T}: Jiwari deals X damage to target creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -156,7 +156,6 @@
 | Manriki-Gusari | handled | Equipped creature gets +1/+2 and has "{T}: Destroy target Equipment." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Michiko Konda, Truth Seeker | handled | Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mikokoro, Center of the Sea | handled | {2}, {T}: Each player draws a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Miren, the Moaning Well | handled | {3}, {T}, Sacrifice a creature: You gain life equal to the sacrificed creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molting Skin | handled | Return this enchantment to its owner's hand: Regenerate target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moonwing Moth | handled | {W}: This creature gets +0/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nikko-Onna | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -187,13 +186,14 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Burning-Eye Zubera
 - Evermind
 - Feral Lightning
 - Kaho, Minamo Historian
 - Kitsune Bonesetter
+- Miren, the Moaning Well
 - Pithing Needle
 - Reverence
 - Rushing-Tide Zubera
@@ -266,7 +266,6 @@
 | when a creature you control dies, sacrifice ~. if you do, create four N/N colorless spirit creature tokens. | 1 | Promise of Bunrei | sok |
 | when homura dies, return it to the battlefield flipped. | 1 | Homura, Human Ascendant // Homura's Essence | sok |
 | when you have N or more life, flip rune-tail. | 1 | Rune-Tail, Kitsune Ascendant // Rune-Tail's Essence | sok |
-| when ~ enters, if you cast it from your hand, you may search your library for a spirit permanent card, put it onto the battlefield, then shuffle. | 1 | Iname as One | sok |
 | whenever a land enters, its controller creates a N/N green snake creature token. | 1 | Seed the Land | sok |
 | whenever a spell or ability an opponent controls causes you to discard cards ~, return those cards from your graveyard to your hand. when a spell or ability an  | 1 | Pure Intentions | sok |
 | whenever another card is put into your graveyard from anywhere, target opponent gains control of ~. | 1 | Measure of Wickedness | sok |

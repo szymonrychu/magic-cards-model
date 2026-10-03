@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 69 | 26.3% |
-| Works (untested) | 90 | 34.4% |
+| Tested | 70 | 26.7% |
+| Works (untested) | 91 | 34.7% |
 | Partial (unaudited) | 19 | 7.3% |
-| Not working | 84 | 32.1% |
+| Not working | 82 | 31.3% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Fowl Strike | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Frogmyr Enforcer | silent | Prototype | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Genku, Future Shaper | silent | Whenever another nontoken permanent you control leaves the battlefield, choose one that hasn't been chosen this turn. Create a creature token with those charact | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gift of the Viper | silent | Put a +1/+1 counter, a reach counter, and a deathtouch counter on target creature. Untap it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glyph Elemental | silent | Enchanted creature gets +1/+1 for each +1/+1 counter on this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Golden-Tail Trainer | silent | Whenever this creature attacks, other modified creatures you control get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grim Servant | silent | When this creature enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -105,7 +104,6 @@
 | Charitable Levy | notice | Whenever a player casts a noncreature spell, put a collection counter on this enchantment. Then if there are three or more collection counters on it, sacrifice  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Estrid's Invocation | notice | You may have this enchantment enter as a copy of an enchantment you control, except it has "At the beginning of your upkeep, you may exile this enchantment. If  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Etched Slith | notice | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. When you do, you may remove a counter from another target permanent or oppone | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Fanged Flames | notice | Devoid (This card has no color.) Fanged Flames deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Glimpse the Impossible | notice | Exile the top three cards of your library. You may play those cards this turn. At the beginning of the next end step, if any of those cards remain exiled, put t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Obstinate Gargoyle | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Propagator Drone | notice | Creature tokens you control have evolve. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -152,6 +150,7 @@
 | Eviscerator's Insight | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. Draw two cards. Flashback {4}{B} (You may cast this card from your graveyard for it | the engine reads this text and performs it | Y/-/- | not_tested |
 | Evolution Witness | handled | {1}{G}: Adapt 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faithful Watchdog | handled | This creature enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fanged Flames | handled | Devoid (This card has no color.) Fanged Flames deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fell the Profane // Fell Mire | handled | Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fetid Gargantua | handled | {2}{B}: Adapt 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flare of Denial | handled | You may sacrifice a nontoken blue creature rather than pay this spell's mana cost. Counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -159,6 +158,7 @@
 | Foreboding Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Swamp, Forest, or Island card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Furnace Hellkite | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghostfire Slice | handled | Devoid (This card has no color.) This spell costs {2} less to cast if an opponent controls a multicolored permanent. Ghostfire Slice deals 4 damage to any targe | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gift of the Viper | handled | Put a +1/+1 counter, a reach counter, and a deathtouch counter on target creature. Untap it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glasswing Grace // Age-Graced Chapel | handled | Enchanted creature gets +2/+2 and has flying and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gravedig | handled | Choose one — • Target player creates a 2/2 black Zombie creature token. • Return target creature card from your graveyard to your hand. Entwine {2} (Choose both | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian of the Forgotten | handled | Whenever a modified creature you control dies, manifest the top card of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -213,7 +213,6 @@
 | Urza's Cave | handled | {3}, {T}, Sacrifice this land: Search your library for a land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Warped Tusker | handled | When you cast or cycle Warped Tusker, create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Warren Soultrader | handled | Pay 1 life, Sacrifice another creature: Create a Treasure token. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Wastescape Battlemage | handled | When you cast this spell, if it was kicked with its {G} kicker, exile target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wight of the Reliquary | handled | This creature gets +1/+1 for each creature card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wing It | handled | Target creature gets +2/+2 until end of turn. Put a flying counter on it. Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wither and Bloom | handled | Target creature gets -3/-3 until end of turn. {1}{B}, Exile this card from your graveyard: Put a +1/+1 counter on target creature you control. Activate only as  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -223,7 +222,7 @@
 ## Fully supported
 
 <details>
-<summary>69 cards</summary>
+<summary>70 cards</summary>
 
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
 - Archway of Innovation
@@ -289,6 +288,7 @@
 - Ulamog, the Defiler
 - Vexing Bauble
 - Voltstorm Angel
+- Wastescape Battlemage
 - Waterlogged Teachings // Inundated Archive
 - White Orchid Phantom
 - Witch Enchanter // Witch-Blessed Meadow
@@ -325,7 +325,6 @@
 | devoid (~ has no color.) draw three cards and create a N/N colorless eldrazi spawn creature token with "..." | 1 | Unfathomable Truths | mh3 |
 | devoid (~ has no color.) exile target nonland permanent. you may cast that card for as long as it remains exiled, and you may spend colorless mana as though it  | 1 | Abstruse Appropriation | mh3 |
 | devoid (~ has no color.) return target nonland permanent you don"..."s hand. whenever you cast a colorless spell with mana value N or greater, you may exile ~ f | 1 | Ugin's Binding | mh3 |
-| devoid (~ has no color.) ~ deals N damage to target creature or planeswalker. if that creature or planeswalker would die ~, exile it instead. | 1 | Fanged Flames | mh3 |
 | draw two cards. then discard a card at random unless you pay {M}{M} (two energy counters). | 1 | Rush of Inspiration // Crackling Falls | mh3 |
 | during your turn, nonland permanent cards in your graveyard have retrace. | 1 | Six | mh3 |
 | eldrazi you control have "..." | 1 | Path of Annihilation | mh3 |
@@ -352,7 +351,6 @@
 | players can't untap more than one nonbasic land during their untap steps. | 1 | Winter Moon | mh3 |
 | prototype | 1 | Frogmyr Enforcer | mh3 |
 | put a +N/+N counter on target creature you control, then each modified creature you control deals damage equal to its power to target creature you don't control | 1 | Signature Slam | mh3 |
-| put a +N/+N counter, a reach counter, and a deathtouch counter on target creature. untap it. | 1 | Gift of the Viper | mh3 |
 | reinforce | 1 | Fowl Strike | mh3 |
 | return target artifact or creature card from your graveyard to your hand. ~ deals damage equal to that card's mana value to up to one target creature or planesw | 1 | Pyretic Rebirth | mh3 |
 | sacrifice another creature: create a blood token. if you sacrificed an angel ~, create a number of blood tokens equal to its toughness instead. | 1 | Shilgengar, Sire of Famine | mh3 |

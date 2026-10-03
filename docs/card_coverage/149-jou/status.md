@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 9 | 5.6% |
-| Works (untested) | 92 | 57.1% |
+| Works (untested) | 94 | 58.4% |
 | Partial (unaudited) | 7 | 4.3% |
-| Not working | 53 | 32.9% |
+| Not working | 51 | 31.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Akroan Line Breaker | silent | Heroic — Whenever you cast a spell that targets this creature, this creature gets +2/+0 and gains intimidate until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Armament of Nyx | silent | Enchanted creature has double strike as long as it's an enchantment. Otherwise, prevent all damage that would be dealt by enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Athreos, God of Passage | silent | Whenever another creature you own dies, return it to your hand unless target opponent pays 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blinding Flare | silent | Strive — This spell costs {R} more to cast for each target beyond the first. Any number of target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -38,7 +37,6 @@
 | Daring Thief | silent | Inspired — Whenever this creature becomes untapped, you may exchange control of target nonland permanent you control and target permanent an opponent controls t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deicide | silent | Exile target enchantment. If the exiled card is a God card, search its controller's graveyard, hand, and library for any number of cards with the same name as t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Disciple of Deceit | silent | Inspired — Whenever this creature becomes untapped, you may discard a nonland card. If you do, search your library for a card with the same mana value as that c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dreadbringer Lampads | silent | Constellation — Whenever this creature or another enchantment you control enters, target creature gains intimidate until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Feast of Dreams | silent | Destroy target enchanted creature or enchantment creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Felhide Petrifier | silent | Other Minotaur creatures you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gnarled Scarhide | silent | Enchanted creature gets +2/+1 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -89,6 +87,7 @@
 | Agent of Erebos | handled | Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Presence | handled | Strive — This spell costs {2}{W} more to cast for each target beyond the first. Any number of target creatures each get +1/+1 and gain indestructible until end  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani, Mentor of Heroes | handled | +1: Distribute three +1/+1 counters among one, two, or three target creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Akroan Line Breaker | handled | Heroic — Whenever you cast a spell that targets this creature, this creature gets +2/+0 and gains intimidate until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Mastiff | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Armory of Iroas | handled | Whenever equipped creature attacks, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aspect of Gorgon | handled | Enchanted creature gets +1/+3 and has deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -109,6 +108,7 @@
 | Dictate of Kruphix | handled | At the beginning of each player's draw step, that player draws an additional card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dictate of the Twin Gods | handled | If a source would deal damage to a permanent or player, it deals double that damage to that permanent or player instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Doomwake Giant | handled | Constellation — Whenever this creature or another enchantment you control enters, creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dreadbringer Lampads | handled | Constellation — Whenever this creature or another enchantment you control enters, target creature gains intimidate until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eagle of the Watch | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Eidolon of Blossoms | handled | Constellation — Whenever this creature or another enchantment you control enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eidolon of Rhetoric | handled | Each player can't cast more than one spell each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -201,9 +201,8 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Strive | 8 | Blinding Flare, Colossal Heroics, Harness by Force, Hour of Need, Nature's Panoply | jou |
-| Constellation | 3 | Dreadbringer Lampads, Goldenhide Ox, Harvestguard Alseids | jou |
 | Inspired | 3 | Daring Thief, Disciple of Deceit, King Macar, the Gold-Cursed | jou |
-| Heroic | 1 | Akroan Line Breaker | jou |
+| Constellation | 2 | Goldenhide Ox, Harvestguard Alseids | jou |
 | as an additional cost to cast ~, sacrifice a creature. target player discards a number of cards equal to the sacrificed creature's power. | 1 | Tormented Thoughts | jou |
 | at the beginning of your upkeep, return an enchantment you control to its owner's hand. | 1 | Riptide Chimera | jou |
 | counter target spell. its controller mills four cards. | 1 | Countermand | jou |

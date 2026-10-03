@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 6.4% |
-| Works (untested) | 125 | 53.6% |
+| Works (untested) | 126 | 54.1% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 82 | 35.2% |
+| Not working | 81 | 34.8% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Herald of Dromoka | silent | Other Warrior creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herdchaser Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusory Gains | silent | Whenever a creature an opponent controls enters, attach this Aura to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Inspiring Call | silent | Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn. (Damage and effects that say "destr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kolaghan Aspirant | silent | Whenever this creature becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Learn from the Past | silent | Target player shuffles their graveyard into their library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Living Lore | silent | Living Lore's power and toughness are each equal to the exiled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -171,6 +170,7 @@
 | Hand of Silumgar | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Haven of the Spirit Dragon | handled | {2}, {T}, Sacrifice this land: Return target Dragon creature card or Ugin planeswalker card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hidden Dragonslayer | handled | When this creature is turned face up, destroy target creature with power 4 or greater an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Inspiring Call | handled | Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn. (Damage and effects that say "destr | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ire Shaman | handled | When this creature is turned face up, exile the top card of your library. Until end of turn, you may play that card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kolaghan Forerunners | handled | Kolaghan Forerunners's power is equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kolaghan Monument | handled | {4}{B}{R}: This artifact becomes a 4/4 black and red Dragon artifact creature with flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -295,7 +295,6 @@
 | destroy any number of target creatures. for each creature destroyed ~, its controller creates a N/N red dragon creature token with flying. | 1 | Descent of the Dragons | dtk |
 | destroy target attacking or blocking creature. bolster N. (choose a creature with the least toughness among creatures you control and put a +N/+N counter on it. | 1 | Enduring Victory | dtk |
 | destroy target creature with flying. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Pinion Feast | dtk |
-| draw a card for each creature you control with a +N/+N counter on it. those creatures gain indestructible until end of turn. (damage and effects that say "..."  | 1 | Inspiring Call | dtk |
 | enchanted creature gets +N/+N for each +N/+N counter on other creatures you control. | 1 | Gleam of Authority | dtk |
 | enchanted land has "..." | 1 | Sheltered Aerie | dtk |
 | exile target creature an opponent controls. that player reveals cards from the top of their library until a creature card is revealed. the player puts that card | 1 | Blessed Reincarnation | dtk |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 7.5% |
-| Works (untested) | 140 | 61.9% |
+| Works (untested) | 141 | 62.4% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 63 | 27.9% |
+| Not working | 62 | 27.4% |
 
 ## Cards needing work
 
@@ -80,7 +80,6 @@
 | Zada, Hedron Grinder | silent | Whenever you cast an instant or sorcery spell that targets only Zada, copy that spell for each other creature you control that the spell could target. Each copy | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Akoum Hellkite | notice | Landfall — Whenever a land you control enters, this creature deals 1 damage to any target. If that land is a Mountain, this creature deals 2 damage instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Barrage Tyrant | notice | {2}{R}, Sacrifice another colorless creature: This creature deals damage equal to the sacrificed creature's power to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Brutal Expulsion | notice | Devoid (This card has no color.) Choose one or both — • Return target spell or creature to its owner's hand. • Brutal Expulsion deals 2 damage to target creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emeria Shepherd | notice | Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Guardian of Tazeem | notice | Landfall — Whenever a land you control enters, tap target creature an opponent controls. If that land is an Island, that creature doesn't untap during its contr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Guul Draz Overseer | notice | Landfall — Whenever a land you control enters, other creatures you control get +1/+0 until end of turn. If that land is a Swamp, those creatures get +2/+0 until | unparsed remainder: If that land is a Swamp, those creatures get +2/+0 until end of turn instead. | Y/Y/- | not_working |
@@ -113,6 +112,7 @@
 | Brood Butcher | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brood Monitor | handled | When this creature enters, create three 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Broodhunter Wurm | handled |  |  | Y/Y/- | not_tested |
+| Brutal Expulsion | handled | Devoid (This card has no color.) Choose one or both — • Return target spell or creature to its owner's hand. • Brutal Expulsion deals 2 damage to target creatur | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Carrier Thrall | handled | When this creature dies, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Catacomb Sifter | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chasm Guide | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -276,7 +276,6 @@
 | as ~ enters, you may put two cards your opponents own from exile into their owners' graveyards. if you do, ~ enters with four +N/+N counters on it. | 1 | Ulamog's Despoiler | bfz |
 | at the beginning of your upkeep, sacrifice a creature. | 1 | Smothering Abomination | bfz |
 | colorless spells you cast cost {M} less to cast. | 1 | Herald of Kozilek | bfz |
-| devoid (~ has no color.) choose one or both — • return target spell or creature to its owner's hand. • ~ deals N damage to target creature or planeswalker. if t | 1 | Brutal Expulsion | bfz |
 | devoid (~ has no color.) create two N/N colorless eldrazi scion creature tokens. they have "..." | 1 | Call the Scions | bfz |
 | devoid (~ has no color.) creatures you control get +N/+N until end of turn. colorless creatures you control also gain first strike until end of turn. | 1 | Swarm Surge | bfz |
 | devoid (~ has no color.) exile target creature and target land. | 1 | Grip of Desolation | bfz |

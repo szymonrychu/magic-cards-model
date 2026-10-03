@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 114 | 44.7% |
-| Works (untested) | 140 | 54.9% |
+| Tested | 115 | 45.1% |
+| Works (untested) | 139 | 54.5% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 1 | 0.4% |
 
@@ -31,7 +31,6 @@
 | Abstract Paintmage | handled | At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Additive Evolution | handled | When this enchantment enters, create a 0/0 green and blue Fractal creature token. Put three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Adventurous Eater // Have a Bite | handled | Put a +1/+1 counter on target creature. You gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Ajani's Response | handled | This spell costs {3} less to cast if it targets a tapped creature. Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ark of Hunger | handled | Whenever one or more cards leave your graveyard, this artifact deals 1 damage to each opponent and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Arnyn, Deathbloom Botanist | handled | Whenever a creature you control with power or toughness 1 or less dies, target opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ascendant Dustspeaker | handled | When this creature enters, put a +1/+1 counter on another target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -171,9 +170,10 @@
 ## Fully supported
 
 <details>
-<summary>114 cards</summary>
+<summary>115 cards</summary>
 
 - Aberrant Manawurm
+- Ajani's Response
 - Ambitious Augmenter
 - Antiquities on the Loose
 - Applied Geometry

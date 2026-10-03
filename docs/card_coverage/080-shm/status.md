@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 10.2% |
+| Tested | 29 | 10.6% |
 | Works (untested) | 125 | 45.6% |
 | Partial (unaudited) | 12 | 4.4% |
-| Not working | 109 | 39.8% |
+| Not working | 108 | 39.4% |
 
 ## Cards needing work
 
@@ -131,7 +131,6 @@
 | Rattleblaze Scarecrow | notice | This creature has persist as long as you control a black creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rite of Consumption | notice | As an additional cost to cast this spell, sacrifice a creature. Rite of Consumption deals damage equal to the sacrificed creature's power to target player or pl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thornwatch Scarecrow | notice | This creature has wither as long as you control a green creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Traitor's Roar | notice | Tap target untapped creature. It deals damage equal to its power to its controller. Conspire (As you cast this spell, you may tap two untapped creatures you con | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Watchwing Scarecrow | notice | This creature has vigilance as long as you control a white creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wicker Warcrawler | notice | Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wingrattle Scarecrow | notice | This creature has flying as long as you control a blue creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -276,7 +275,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Beseech the Queen
 - Blowfly Infestation
@@ -304,6 +303,7 @@
 - Tatterkite
 - Thought Reflection
 - Tower Above
+- Traitor's Roar
 - Umbral Mantle
 - Wort, the Raidmother
 
@@ -368,7 +368,6 @@
 | sacrifice ~: choose a basic land type. each land you control becomes that type until end of turn. | 1 | Elsewhere Flask | shm |
 | sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}. | 1 | Cursecatcher | shm |
 | starting with you, each player may pay any amount of life. repeat ~ until no one pays life. each player creates a N/N black rat creature token for each N life t | 1 | Plague of Vermin | shm |
-| tap target untapped creature. it deals damage equal to its power to its controller. conspire (as you cast ~, you may tap two untapped creatures you control that | 1 | Traitor's Roar | shm |
 | target creature becomes black and gains fear until end of turn. (it can't be blocked except by artifact creatures and/or black creatures.) draw a card. | 1 | Aphotic Wisps | shm |
 | target creature becomes green and gets +N/+N until end of turn. draw a card. | 1 | Viridescent Wisps | shm |
 | target creature becomes red and gains haste until end of turn. (it can attack and {M} ~.) draw a card. | 1 | Crimson Wisps | shm |

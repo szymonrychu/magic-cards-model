@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 7.9% |
-| Works (untested) | 83 | 32.8% |
+| Tested | 21 | 8.3% |
+| Works (untested) | 84 | 33.2% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 140 | 55.3% |
+| Not working | 138 | 54.5% |
 
 ## Cards needing work
 
@@ -149,12 +149,10 @@
 | Blood Petal Celebrant | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bloodcrazed Socialite | notice | Whenever this creature attacks, you may sacrifice a Blood token. If you do, it gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bloody Betrayal | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Blood token. (It's an artifact with "{1}, {T} | unparsed remainder: Untap that creature. It gains haste until end of turn. Create a Blood token. | Y/Y/- | not_working |
-| Catapult Fodder // Catapult Captain | notice | {2}{B}, {T}, Sacrifice another creature: Target opponent loses life equal to the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cemetery Desecrator | notice | When this creature enters or dies, exile another card from a graveyard. When you do, choose one — • Remove X counters from target permanent, where X is the mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dormant Grove // Gnarled Grovestrider | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has toughness 6 or greater, transform this en | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dreamshackle Geist | notice | At the beginning of combat on your turn, choose up to one — • Tap target creature. • Target creature doesn't untap during its controller's next untap step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Edgar, Charmed Groom // Edgar Markov's Coffin | notice | At the beginning of your upkeep, create a 1/1 white and black Vampire creature token with lifelink and put a bloodline counter on Edgar Markov's Coffin. Then if | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Flame-Blessed Bolt | notice | Flame-Blessed Bolt deals 2 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Geralf, Visionary Stitcher | notice | {U}, {T}, Sacrifice another nontoken creature: Create an X/X blue Zombie creature token, where X is the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lacerate Flesh | notice | Lacerate Flesh deals 4 damage to target creature. Create a number of Blood tokens equal to the amount of excess damage dealt to that creature this way. (They're | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Manaform Hellkite | notice | Whenever you cast a noncreature spell, create an X/X red Dragon Illusion creature token with flying and haste, where X is the amount of mana spent to cast that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -203,6 +201,7 @@
 | Dying to Serve | handled | Whenever you discard one or more cards, create a tapped 2/2 black Zombie creature token. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Estwald Shieldbasher | handled | Whenever this creature attacks, you may pay {1}. If you do, it gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fearful Villager // Fearsome Werewolf | handled | Transform | no code needed | Y/Y/- | not_tested |
+| Flame-Blessed Bolt | handled | Flame-Blessed Bolt deals 2 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frenzied Devils | handled | Whenever you cast a noncreature spell, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glorious Sunrise | handled | At the beginning of combat on your turn, choose one — • Creatures you control get +1/+1 and gain trample until end of turn. • Target land gains "{T}: Add {G}{G} | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gluttonous Guest | handled | When this creature enters, create a Blood token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -263,12 +262,13 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
 - Bleed Dry
 - Cartographer's Survey
+- Catapult Fodder // Catapult Captain
 - Chill of the Grave
 - Crawling Infestation
 - Creepy Puppeteer
@@ -401,7 +401,6 @@
 | {M}, {M}, sacrifice another nontoken creature: create an N/N blue zombie creature token, where N is the sacrificed creature's toughness. | 1 | Geralf, Visionary Stitcher | vow |
 | {M}, {M}: create a blood token. ~ costs {M} less to activate for each vampire you control. | 1 | Voldaren Estate | vow |
 | {M}: draw a card, then exile a card from your hand face down. you may look at that card for as long as it remains exiled. you may pay {M}{M}{M}. if you do, tran | 1 | Jacob Hauken, Inspector // Hauken's Insight | vow |
-| {M}{M}, {M}, sacrifice another creature: target opponent loses life equal to the sacrificed creature's toughness. | 1 | Catapult Fodder // Catapult Captain | vow |
 | {M}{M}, {M}: look at the top two cards of your library. put one of them into your graveyard. | 1 | Soulcipher Board // Cipherbound Spirit | vow |
 | {M}{M}, {M}: ~ deals damage equal to the number of wolves and werewolves you control to target opponent. | 1 | Runebound Wolf | vow |
 | {M}{M}: exile enchanted creature. create a blood token. | 1 | Sigarda's Imprisonment | vow |
@@ -411,7 +410,6 @@
 | ~ can't attack alone. | 1 | Militia Rallier | vow |
 | ~ costs {M} less to cast if you control a spirit. it also costs {M} less to cast if you control an enchantment. counter target spell unless its controller pays  | 1 | Geistlight Snare | vow |
 | ~ deals N damage to each non-vampire creature. create a blood token. (it's an artifact with "...") | 1 | Vampires' Vengeance | vow |
-| ~ deals N damage to target creature or planeswalker. if that creature or planeswalker would die ~, exile it instead. | 1 | Flame-Blessed Bolt | vow |
 | ~ deals N damage to target creature or planeswalker. if that permanent is a spirit, ~ also deals N damage to that permanent's controller. | 1 | Rending Flame | vow |
 | ~ deals N damage to target creature. create a number of blood tokens equal to the amount of excess damage dealt to that creature ~. (they're artifacts with "... | 1 | Lacerate Flesh | vow |
 | ~ enters with a +N/+N counter on it if you control a permanent with mana value N or greater. | 1 | Ascendant Packleader | vow |

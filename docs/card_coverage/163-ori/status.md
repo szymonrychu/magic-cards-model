@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 8.3% |
-| Works (untested) | 103 | 56.9% |
+| Works (untested) | 104 | 57.5% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 56 | 30.9% |
+| Not working | 55 | 30.4% |
 
 ## Cards needing work
 
@@ -80,7 +80,6 @@
 | Kytheon's Tactics | notice | Creatures you control get +2/+1 until end of turn. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, those creatures also | unparsed remainder: If there are two or more instant and/or sorcery cards in your graveyard, those creatures also gain vigilance until end of turn. | Y/Y/- | not_working |
 | Necromantic Summons | notice | Put target creature card from a graveyard onto the battlefield under your control. Spell mastery — If there are two or more instant and/or sorcery cards in your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ramroller | notice | This creature gets +2/+0 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ravaging Blaze | notice | Ravaging Blaze deals X damage to target creature. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, Ravaging Blaze also d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Woodland Bellower | notice | When this creature enters, you may search your library for a nonlegendary green creature card with mana value 3 or less, put it onto the battlefield, then shuff | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Alhammarret, High Arbiter | unaudited | As Alhammarret enters, each opponent reveals their hand. You choose the name of a nonland card revealed this way. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Archangel of Tithes | unaudited | As long as this creature is untapped, creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -165,6 +164,7 @@
 | Prism Ring | handled | As this artifact enters, choose a color. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyromancer's Goggles | handled |  |  | Y/Y/Y | not_tested |
 | Rabid Bloodsucker | handled | When this creature enters, each player loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ravaging Blaze | handled | Ravaging Blaze deals X damage to target creature. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, Ravaging Blaze also d | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reave Soul | handled | Destroy target creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reclusive Artificer | handled | When this creature enters, you may have it deal damage to target creature equal to the number of artifacts you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rhox Maulers | handled | Renown | machines/keywords.py | Y/Y/- | not_tested |
@@ -279,7 +279,6 @@
 | whenever ~ deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | 1 | Graveblade Marauder | ori |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Harbinger of the Tides | ori |
 | ~ can't attack alone. | 1 | Bonded Construct | ori |
-| ~ deals N damage to target creature. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, ~ also deals N damage to that crea | 1 | Ravaging Blaze | ori |
 | ~ gets +N/+N as long as you control another artifact. | 1 | Ramroller | ori |
 | −N: chandra deals N damage to each opponent. each player dealt damage ~ gets an emblem with "..." | 1 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | ori |
 | −N: create ashaya, the awoken world, a legendary N/N green elemental creature token. | 1 | Nissa, Vastwood Seer // Nissa, Sage Animist | ori |

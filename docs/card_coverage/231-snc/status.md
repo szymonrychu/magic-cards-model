@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 9.1% |
-| Works (untested) | 132 | 52.2% |
+| Tested | 24 | 9.5% |
+| Works (untested) | 133 | 52.6% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 87 | 34.4% |
+| Not working | 85 | 33.6% |
 
 ## Cards needing work
 
@@ -97,12 +97,10 @@
 | Wiretapping | silent | Whenever you draw your first card during each of your draw steps, draw a card. Then if you have nine or more cards in hand, you may play the exiled card without | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Workshop Warchief | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ziatora's Envoy | silent | Whenever this creature deals combat damage to a player, look at the top card of your library. You may play a land from the top of your library or cast a spell w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bouncer's Beatdown | notice | This spell costs {2} less to cast if it targets a black permanent. Bouncer's Beatdown deals X damage to target creature or planeswalker, where X is the greatest | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crew Captain | notice | This creature has indestructible as long as it entered this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extract the Truth | notice | Choose one — • Target opponent reveals their hand. You may choose a creature, enchantment, or planeswalker card from it. That player discards that card. • Targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extraction Specialist | notice | When this creature enters, return target creature card with mana value 2 or less from your graveyard to the battlefield. That creature can't attack or block for | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hostile Takeover | notice | Up to one target creature has base power and toughness 1/1 until end of turn. Up to one other target creature has base power and toughness 4/4 until end of turn | unparsed remainder: Up to one other target creature has base power and toughness 4/4 until end of turn. | Y/Y/- | not_working |
-| Involuntary Employment | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Treasure token. (It's an artifact with "{T},  | unparsed remainder: Untap that creature. It gains haste until end of turn. Create a Treasure token. | Y/Y/Y | not_working |
 | Revelation of Power | notice | Target creature gets +2/+2 until end of turn. If it has a counter on it, it also gains flying and lifelink until end of turn. | unparsed remainder: If it has a counter on it, it also gains flying and lifelink until end of turn. | Y/Y/- | not_working |
 | Rhox Pummeler | notice | This creature has trample as long as it has a shield counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sewer Crocodile | notice | {3}{U}: This creature can't be blocked this turn. This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | unparsed remainder: This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | Y/Y/- | not_working |
@@ -186,6 +184,7 @@
 | Illicit Shipment | handled | Casualty 3 (As you cast this spell, you may sacrifice a creature with power 3 or greater. When you do, copy this spell.) Search your library for a card, put it  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Illuminator Virtuoso | handled | Whenever this creature becomes the target of a spell you control, it connives. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspiring Overseer | handled | When this creature enters, you gain 1 life and draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Involuntary Employment | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Treasure token. (It's an artifact with "{T},  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Jackhammer | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jetmir's Garden | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jewel Thief | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -260,10 +259,11 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
+- Bouncer's Beatdown
 - Expendable Lackey
 - Fight Rigging
 - For the Family
@@ -330,7 +330,6 @@
 | equipped creature has double strike as long as two or more equipment are attached to it. | 1 | Brass Knuckles | snc |
 | exile the top ten cards of your library. you may cast spells with exactly three colors from among them ~. add {M}{M}{M}{M}{M}{M}{M}{M}{M}{M}. spend ~ only to ca | 1 | Meeting of the Five | snc |
 | for each color, return up to one target creature card of that color from your graveyard to your hand. | 1 | Rogues' Gallery | snc |
-| gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. create a treasure token. (it's an artifact with "...") | 1 | Involuntary Employment | snc |
 | if you would create one or more tokens, you may instead create that many N/N green cat creature tokens with haste or that many N/N green dog creature tokens wit | 1 | Jinnie Fay, Jetmir's Second | snc |
 | once during each of your turns, you may cast an instant or sorcery spell from your graveyard by sacrificing a creature in addition to paying its other costs. if | 1 | Maestros Ascendancy | snc |
 | put a +N/+N counter on target creature. it phases out. (treat it and anything attached to it as though they don"..."s next turn.) | 1 | Slip Out the Back | snc |
@@ -371,7 +370,6 @@
 | {M}, {M}, sacrifice a creature: count the colors of the sacrificed creature, then search your library for a creature card that's exactly that many colors plus o | 1 | Evolving Door | snc |
 | {M}{M}, {M}: copy target spell you control that wasn't cast. you may choose new targets for the copy. | 1 | Errant, Street Artist | snc |
 | {M}{M}: ~ can't be blocked ~. ~ costs {M} less to activate if there are five or more mana values among cards in your graveyard. | 1 | Sewer Crocodile | snc |
-| ~ costs {M} less to cast if it targets a black permanent. ~ deals N damage to target creature or planeswalker, where N is the greatest power among creatures you | 1 | Bouncer's Beatdown | snc |
 | ~ deals N damage to each nontoken creature. | 1 | Incandescent Aria | snc |
 | ~ deals N damage to target creature or planeswalker. when it deals excess damage ~, destroy target artifact or enchantment an opponent controls with mana value  | 1 | Unleash the Inferno | snc |
 | ~ has flash as long as there are five or more mana values among cards in your graveyard. return target creature card from your graveyard to the battlefield. | 1 | Graveyard Shift | snc |
