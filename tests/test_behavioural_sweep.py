@@ -319,6 +319,30 @@ class _OneOptionalTarget(ScriptedAnswer):
         return True
 
 
+@dataclass
+class _SomeOfAnyNumberExiled(ScriptedAnswer):
+    """`_OneOptionalTarget`'s sibling for the untargeted "exile any number of
+    <permanents>" choice (CR 107.1c - zero is a legal answer, and the
+    engine's own default): the case card's own non-exact `CHOOSE_CARDS`
+    question whose prompt is that exile is answered with the first card
+    offered, so the recorded resolution exiles something and its delayed
+    return is armed. Keyed by the prompt's shape, never by card; declined is
+    the second golden, as for an optional target."""
+
+    card: str = ""
+
+    def matches(self, decision: Decision) -> bool:
+        if decision.kind is not DecisionKind.CHOOSE_CARDS or decision.exact:
+            return False
+        if not decision.cards or not decision.prompt.lower().startswith("exile any number of"):
+            return False
+        if decision.source is None or not _same_card(decision.source, self.card):
+            return False
+        self.value = tuple(decision.cards[:1])
+        _STAGING.optional_chosen = True
+        return True
+
+
 class _Halt(Exception):  # noqa: N818 - control flow, not an error
     """`staged_board`'s stop: the fully staged board of a recorded recipe."""
 
@@ -470,6 +494,11 @@ def build_recorded(
         played.game.decisions.add(
             _OneOptionalTarget(
                 kind=DecisionKind.CHOOSE_TARGETS, value=(), uses=None, card=case.card
+            )
+        )
+        played.game.decisions.add(
+            _SomeOfAnyNumberExiled(
+                kind=DecisionKind.CHOOSE_CARDS, value=(), uses=None, card=case.card
             )
         )
     if before is not None:

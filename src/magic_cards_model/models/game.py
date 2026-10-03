@@ -345,7 +345,14 @@ from .card_state import (
 )
 from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect, SymbolKind
 from .player import Player, PlayerTargetingGrant
-from .token import TokenDefinition, TokenState, is_token, move_refused, tokens_that_cease_to_exist
+from .token import (
+    TokenDefinition,
+    TokenState,
+    copiable_card_of,
+    is_token,
+    move_refused,
+    tokens_that_cease_to_exist,
+)
 from .zone import Zone
 
 #: Anything a spell can point at and then affect (CR 115.1).
@@ -4541,9 +4548,14 @@ class Game(EngineModel):
     #: Geometer's Arthropod, read off `Game.cast_record_as_last_known` once
     #: the cast spell has left the stack - CR 608.2h - rather than lost the
     #: moment a countered spell's zone change stamps it fresh).
-    #: 107: `machines/triggers.AbilityOnStack` gained `cost_sacrificed_powers`/
-    #: `cost_sacrificed_toughnesses` (CR 608.2h last known information for
-    #: "the sacrificed creature's power/toughness").
+    #: 107 (stream s7c, one bump): `machines/triggers.AbilityOnStack` gained
+    #: `cost_sacrificed_powers`/`cost_sacrificed_toughnesses` (CR 608.2h last
+    #: known information for "the sacrificed creature's power/toughness");
+    #: `machines/delayed` gained the `create_token_copy_of_last_known`
+    #: effect kind (Ochre Jelly's Split) and `CardState` gained
+    #: `last_known_copiable` (CR 707.2 as it last existed); a counter-count
+    #: intervening "if" now reads the past tense ("it had") off the last
+    #: known counters, and a returning Aura chooses its host (CR 303.4f/g).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -11850,6 +11862,10 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        # CR 707.2 for a look-back copy ("a copy of it", Ochre Jelly's Split):
+        # a copy effect stops applying once it is not a permanent.
+        copiable = copiable_card_of(self, permanent)
+        permanent.last_known_copiable = None if copiable is permanent.card else copiable
         permanent.note_departure_epoch(self._departure_epoch)
         if permanent in self.battlefield:
             self._left_battlefield_characteristics[permanent.id] = self.characteristics_of(
@@ -12039,6 +12055,7 @@ class Game(EngineModel):
         transformed: bool = False,
         was_cast: bool,
         attach_to: "Targetable | None" = None,
+        counters: Mapping[str, int] | None = None,
     ) -> CardState:
         """A permanent enters the battlefield, replacement effects first (CR 614.12).
 
@@ -12096,6 +12113,7 @@ class Game(EngineModel):
                 destination=Zone.BATTLEFIELD,
                 tapped=tapped,
                 was_cast=was_cast,
+                counters=dict(counters or {}),
             )
             card_state.controller = controller
             # CR 614.12: which replacement applies is judged on the permanent
@@ -12360,6 +12378,7 @@ class Game(EngineModel):
         *,
         tapped: bool = False,
         transformed: bool = False,
+        counters: Mapping[str, int] | None = None,
     ) -> CardState:
         """Put a card onto the battlefield without casting it (CR 110.2a).
 
@@ -12377,10 +12396,19 @@ class Game(EngineModel):
         loyalty CR 306.5b puts on as it enters, which is the only way a
         creature face like Ajani, Nacatl Pariah becomes a planeswalker with any
         loyalty at all.
+
+        `counters` is the effect's own "it enters with N `<kind>` counters on
+        it" (CR 614.1c) - Ochre Jelly's token copy's "half that many" - put on
+        the entering event alongside every other entering counter.
         """
         with self._id_allocator_scope():
             return self.enter_the_battlefield(
-                card_state, controller, tapped=tapped, transformed=transformed, was_cast=False
+                card_state,
+                controller,
+                tapped=tapped,
+                transformed=transformed,
+                was_cast=False,
+                counters=counters,
             )
 
         # -- the pregame sequence (CR 103.5, CR 103.6) ----------------------------
