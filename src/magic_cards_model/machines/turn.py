@@ -625,9 +625,46 @@ class TurnMachine(EngineModel):
         a nested call, made while an earlier extra phase is still in
         progress or still queued, leaves the original return point alone.
         """
-        if self.resume_index is None:
-            self.resume_index = TURN_ORDER.index(self.step) + 1
-        self.extra_phase_queue = list(steps) + self.extra_phase_queue
+        rest_of_phase = self._rest_of_current_phase()
+        self.extra_phase_queue = rest_of_phase + list(steps) + self.extra_phase_queue
+
+    def _rest_of_current_phase(self) -> list[Step]:
+        """The steps of the phase in progress that have not happened yet, in
+        order, with `resume_index` moved past them.
+
+        CR 500.8: added phases come "directly after the specified phase", so
+        "after this phase" (Fear of Missing Out's attack trigger, resolving in
+        the declare attackers step) must not cut the phase in progress short -
+        its declare blockers, combat damage and end of combat steps still run
+        first. Those remaining steps are the ordinary walk's own (`TURN_ORDER`
+        entries after the current one that share its `Phase`), plus whatever an
+        earlier extra phase or CR 510.4's second damage step already queued
+        for this same phase. A single-step phase (a main phase) has none.
+        """
+        phase = PHASE_OF.get(self.step)
+        current = TURN_ORDER.index(self.step) if self.step in TURN_ORDER else None
+        if phase is None or current is None:
+            if self.resume_index is None:
+                self.resume_index = TURN_ORDER.index(self.step) + 1
+            return []
+        last = current
+        while last + 1 < len(TURN_ORDER) and PHASE_OF.get(TURN_ORDER[last + 1]) is phase:
+            last += 1
+        if self.step is TURN_ORDER[last]:
+            if self.resume_index is None:
+                self.resume_index = current + 1
+            return []
+        phase_end = TURN_ORDER[last]
+        if phase_end in self.extra_phase_queue:
+            cut = self.extra_phase_queue.index(phase_end) + 1
+        else:
+            cut = len(self.extra_phase_queue)
+        queued = self.extra_phase_queue[:cut]
+        self.extra_phase_queue = self.extra_phase_queue[cut:]
+        resume = current + 1 if self.resume_index is None else self.resume_index
+        tail = list(TURN_ORDER[resume : last + 1]) if resume <= last else []
+        self.resume_index = max(resume, last + 1)
+        return queued + tail
 
     def add_second_combat_damage_step(self) -> None:
         """Queue CR 510.4's second combat damage step, directly after the first.

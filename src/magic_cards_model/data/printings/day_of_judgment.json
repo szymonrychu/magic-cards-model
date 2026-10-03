@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "96e84bdc-8a9a-4c58-ba8b-9f052fd60069",
+  "oracle_id": "d057289d-5e28-43d5-8ff3-4a1bc723477d",
+  "multiverse_ids": [
+    679882
+  ],
+  "mtgo_id": 133306,
+  "arena_id": 93853,
+  "tcgplayer_id": 557922,
+  "cardmarket_id": 795119,
+  "name": "Day of Judgment",
+  "lang": "en",
+  "released_at": "2024-11-15",
+  "uri": "https://api.scryfall.com/cards/96e84bdc-8a9a-4c58-ba8b-9f052fd60069",
+  "scryfall_uri": "https://scryfall.com/card/fdn/140/day-of-judgment?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:18:06Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.jpg?1783909086",
+    "normal": "https://cards.scryfall.io/normal/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.jpg?1783909086",
+    "large": "https://cards.scryfall.io/large/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.jpg?1783909086",
+    "png": "https://cards.scryfall.io/png/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.png?1783909086",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.jpg?1783909086",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.jpg?1783909086",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.webp?1783909086",
+    "grid": "https://cards.scryfall.io/grid/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.webp?1783909086",
+    "display": "https://cards.scryfall.io/display/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.webp?1783909086",
+    "art": "https://cards.scryfall.io/art/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.webp?1783909086",
+    "crop": "https://cards.scryfall.io/crop/front/9/6/96e84bdc-8a9a-4c58-ba8b-9f052fd60069.webp?1783909086"
+  },
+  "mana_cost": "{2}{W}{W}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Destroy all creatures.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set": "fdn",
+  "set_name": "Foundations",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fdn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/96e84bdc-8a9a-4c58-ba8b-9f052fd60069/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad057289d-5e28-43d5-8ff3-4a1bc723477d&unique=prints",
+  "collector_number": "140",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Clerics on both sides prayed for divine intervention to end the war. The gods didn't play favorites.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Vincent Proce",
+  "artist_ids": [
+    "d82b1138-76d3-49f7-9d8c-bc2e2d3e0b0a"
+  ],
+  "illustration_id": "77c74ec0-420b-442e-ac45-63b2dee88b94",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1931,
+  "penny_rank": 211,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://twitter.com/wizards_magic/status/1806645164796227786",
+    "previewed_at": "2024-06-28"
+  },
+  "prices": {
+    "usd": "0.94",
+    "usd_foil": "1.52",
+    "usd_etched": null,
+    "eur": "0.97",
+    "eur_foil": "1.25",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=679882&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDay%2Bof%2BJudgment",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDay%2Bof%2BJudgment",
+    "edhrec": "https://edhrec.com/route/?cc=Day+of+Judgment"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F557922%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=795119&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/133306?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

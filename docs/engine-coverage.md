@@ -6997,3 +6997,148 @@ Fingerprint drift accepted with this branch (`tests/dispatch_fingerprint_baselin
 | "exile up to X target creatures / target nonland permanent. For each of those cards (for as long as it remains exiled), its owner may play/cast it" | `_parse_exile_targets_then_owner_play_permission_clauses` | Extraordinary Journey, Soul Partition, Release to the Wind | `test_exile_up_to_x_owner_may_play_while_exiled.py` |
 
 Extraordinary Journey's second ability (draw when a nontoken creature enters from or is cast from exile, once each turn) is scenario-proven there; the sweep driver cannot stage it, so its sweep case is the existing strict `SWEEP_DRIVER_GAPS` xfail ("entered from exile or was cast from exile").
+
+## R0b-T1: conditional enters-tapped lands, bounce/scry/MDFC lands, conditional dual mana
+
+Proof-only for the already-handled readers, one scenario per listed card
+(`tests/scenarios/test_r0b_conditional_enters_tapped_lands.py`,
+`tests/scenarios/test_r0b_conditional_dual_mana_and_utility_lands.py`):
+
+- Fast lands (Blooming Marsh, Inspiring Vantage, Concealed Courtyard): enter
+  tapped from three other lands (CR 614.1d, CR 614.12); slow lands (Shattered
+  Sanctum, Stormcarved Coast, Sundown Pass): tapped with zero or one other
+  lands. The land never counts itself; opponents' lands do not count.
+- Castle Locthwain (a nonbasic Swamp counts; draw then lose life equal to the
+  hand size after the draw) and The Lonely Mountain (Equipment; Dwarf ability
+  costs {1} less per Equipment, never below {R}; sorcery speed, CR 602.5d).
+- Temple of Enlightenment (scry 1, CR 701.22a), Selesnya Sanctuary (bounce
+  land, may return itself), Hidden Lair / Gleaming Bastion (coloured mana only
+  if entered this turn or a basic land is controlled; {C} always), Fell the
+  Profane // Fell Mire (instant; pay 3 life or tapped, CR 712.12, CR 119.4).
+
+Two engine fixes the proofs exposed:
+
+- `Game.activation_cost_reduction_for` now reads a **subtype** quality ("for
+  each Equipment / Island / Shrine you control", CR 205.3) - it previously
+  recorded a `CostModifierNotice` and reduced by nothing. Second printings:
+  Waterbending Scroll (Island), Sanctum of Tranquil Light (Shrine).
+- `CardState.turn_entered` is now stamped and compared as
+  `TurnMachine.turns_taken`, not `turn_number` (rounds): "entered this turn"
+  no longer stayed true through the opponent's turn of the same round.
+
+## R0b-T2: Verges, Pathways, painlands (proofs) - a Pathway's back face is playable, the auto-payer prefers a painland's free ability
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| A Verge's conditional second mana ability ("Activate only if you control a X or a Y") - first colour unconditional, second refused without either land type, nonbasic typed lands count, turning off when the land is lost, auto-payer never plans around the unavailable colour | CR 605.1a, 205.3i, 602.5b | `Game._activation_condition_holds` (already handled; proofs only) | `scenarios/test_r0b_verge_mana.py` (all six Verges) |
+| A modal double-faced land plays as either land face (a Pathway's front is a land too, so the back was unreachable): `Game.play_land(..., face=...)`, `Card.land_faces`, one `PLAY_LAND` offer per land face in `legal_actions` | CR 712.12, 712.8f, 712.8d, 305.2 | `models/card.py` (`land_faces`), `Game.play_land`, `machines/legal_actions.py` (`_land_actions`) | `scenarios/test_r0b_pathway_faces.py` (all four Pathways) |
+| A painland's / painland-artifact's coloured ability deals 1 damage to you from the permanent as part of the mana ability (no stack); the `{C}` ability is free; the auto-payer pays a generic cost with the free ability instead of taking the damage (`_prefer_painless_mana`) | CR 605.1a, 405.6c, 120.1 | `machines/cost.py` (`_entry_life_loss`, `_prefer_painless_mana`) | `scenarios/test_r0b_painland_mana_riders.py` (Llanowar Wastes, Caves of Koilos, Talisman of Curiosity) |
+## R0b utility, sacrifice and manland proofs (T3)
+
+| Area | Rules | Where | Tests |
+|---|---|---|---|
+| A mana ability's "Each opponent gains/loses N life." rider (Grove of the Burnwillows) | CR 405.6c, 605.3b, 102.2 | `abilities._RIDER_OPPONENTS_LIFE` -> `ManaAbilityRider(kind="opponents_gain_life"/"opponents_lose_life")`, applied to every non-controller by `Game.apply_mana_ability_rider` | `scenarios/test_r0b_restricted_and_filter_mana_lands.py` |
+| A filter land's multi-mana choice ("Add {G}{G}, {G}{U}, or {U}{U}") named as the whole pair | CR 605.1a, 106.1b | `ManaAbility.resolve` matches a spelled-out pair to a printed multi-mana option | same file (Flooded Grove, Sunken Ruins) |
+| Mana restricted to an artifact spell (Castle Doom) and its sorcery-speed sacrifice-an-artifact token maker | CR 106.6, 602.5d, 307.5, 701.21a, 111.1 | existing spend-restriction grammar; no new code | same file |
+| "Becomes a N/N artifact creature" keeps creature types it does not set (Firdoch Core, changeling) | CR 205.1a, 702.73a, 205.3d, 613.1d | `layers._animation_type_modifications` appends `SetCreatureTypes` only when a subtype is named | `scenarios/test_r0b_restless_manlands_and_animated_artifact.py` (Alloy Animist on Obsidian Battle-Axe) |
+| Restless Cottage / Reef: enter tapped, animate to a 4/4 land creature, attack-only triggers (Food + graveyard exile; mill four), deathtouch | CR 613.1d, 205.1b, 514.2, 302.6, 508.3a, 701.17a, 702.2b | existing animation and attack-trigger readers; no new code | same file |
+| A "token" / "nontoken" quality in a sacrifice cost (Fountainport) | CR 111.1, 602.2, 701.21a | `CardRequirement.token`, read by `cost._requirement` | `scenarios/test_r0b_sacrifice_and_utility_lands.py` (Hardened Tactician) |
+| "if you control N or more Plains" as an intervening-if count (Emeria, the Sky Ruin) | CR 603.4, 608.2a, 205.3i | `triggers._controlled_subtype_count_holds` accepts the subtype's own trailing s | same file (Duergar Hedge-Mage) |
+| Sacrifice-and-search lands, Promising Vein, Escape Tunnel's unblockable mode, Mistveil Plains' white-permanent gate, Glimpse the Core's two modes, Horizon Canopy's life cost | CR 119.4, 701.23a, 701.24a, 305.6, 700.2, 509.1b | existing readers; no new code | same file |
+
+## R0b-T4: "[cost] or [cost]" additional costs, optional exile-from-hand discounts, bargain through the seat's cast, and "dealt damage by this spell" exile-instead
+
+| Mechanic | CR | Reader / machine | Reported card | Proof printing | Test |
+|---|---|---|---|---|---|
+| "[cost] or pay [mana]" written mana-first ("pay {4} or sacrifice an artifact or creature"), or with a life fallback ("discard a card or pay 3 life"), or a comma list of alternatives ("sacrifice a creature, discard a card, or pay 4 life") - each alternative is announced by nominating its objects; with nothing nominated the default (mana or life) half is paid; neither half payable refuses the cast | CR 601.2b, 601.2f, 601.2h, 118.3, 119.4, 118.8a | `casting.or_additional_cost_halves`/`or_additional_cost_alternatives` (the three spellings), `mandatory_additional_costs(primary_alternatives=)` (now an index -> alternative map), `Casting._additional_cost_primary_alternatives`, `Game.or_cost_choices_for_judging` for `legal_actions` affordability and `Game._resolution_cast_option_is_legal` object check | Bitter Triumph, Deadly Precision | Annihilating Glare (mana first), Dusk Mangler (three-way, uncastable before) | `scenarios/test_r0b_or_additional_costs.py` |
+| "Pay {4} or sacrifice an artifact or creature" / "sacrifice an artifact or creature or pay {4}" (Stir Up Trouble, Deadly Precision), a mandatory sacrifice (Dusk Rose Reliquary) with ward {2} and an exile-until-it-leaves enters trigger | CR 118.8a, 702.21a, 610.3 | the readers above; ward and the until-leaves delayed return already existed | Stir Up Trouble, Dusk Rose Reliquary | - | `scenarios/test_r0b_or_additional_costs.py` |
+| "As an additional cost to cast this spell, you may exile any number of `<colour>` cards from your hand. This spell costs {2} less to cast for each card exiled this way." - the exile twin of Rottenmouth Viper's sacrifice discount; generic only, floored at the generic part | CR 118.8b, 118.7a, 107.1c, 601.2b | `Casting.exile_for_cost_reduction`, `casting._OPTIONAL_EXILE_ANY_NUMBER_FROM_HAND`, `cost.per_object_exile_cost_reduction`, `casting.reads_optional_exile_reduction_line` (support credit), `Game.cast(exile_for_cost_reduction=)`; `optional_additional_costs` enumerates it as `exile any number`, understood | March of Wretched Sorrow | March of Swirling Mist; March of Otherworldly Light is the same template (was the one `understood=False` optional cost in the pool) | `scenarios/test_r0b_pitch_alternative_costs.py` |
+| "Up to X target creatures phase out." | CR 702.26b | `effects._TARGET_PHASES_OUT_RE` accepts a leading "up to X/N" count | - | March of Swirling Mist | `scenarios/test_r0b_pitch_alternative_costs.py` |
+| Pitch alternative costs read off the card ("exile two black cards from your hand", "exile a green card with mana value X from your hand"), proven end to end | CR 118.9, 601.2b, 107.3a | `Casting.use_pitch_cost`/`alternative_costs` (existing) | Soul Spike, Nourishing Shoal | - | `scenarios/test_r0b_pitch_alternative_costs.py` |
+| `Game.cast(bargain=, collect_evidence=, reveal_for_cost=)` on a targeted spell: those additional costs are announced before the targets (CR 601.2b before 601.2c) - they used to raise "cannot go back to modes from targets" | CR 601.2b, 601.2c, 702.166a | `Game.cast` announcement order | Torch the Tower | - | `scenarios/test_r0b_bargain_burn_and_exile_replacement.py` |
+| "If this spell was bargained, instead it deals 3 damage to that permanent and you scry 1." - the alternative is no longer reduced to its renumbered damage (the scry was silently dropped); "that permanent" names a target of any permanent types; "you scry N" reads like the bare "scry N" | CR 614.1a, 701.22a, 702.166b | `effects._amount_substituted_base` refuses an alternative with an extra instruction, `_anaphoric_target_substitution` ("that permanent"), `_SCRY_RE` | Torch the Tower | no other Modern/Pioneer/Standard-legal card prints this shape | `scenarios/test_r0b_bargain_burn_and_exile_replacement.py` |
+| "If a permanent dealt damage by `<this spell>` would die this turn, exile it instead." - the "dealt damage by [name]" spelling of the this-way rider (it used to be ignored, so the creature went to the graveyard) | CR 614.1a, 700.4 | `effects._DEALT_DAMAGE_THIS_WAY_DIE_TO_EXILE_RE` | Torch the Tower | no other legal spell prints it (Frostwielder-style creature statics are a different shape) | `scenarios/test_r0b_bargain_burn_and_exile_replacement.py` |
+| Proof-only (already worked, each ability now proven through the engine): Day of Judgment, Sear, Vanishing Verse (monocolored only, colorless and multicolored refused), Reckless Rage (two targets, illegal with no creature of yours), Mana Tithe (pays, declines, cannot pay, pays with a land) | CR 702.12b, 120.3c, 105.2a-c, 601.2c, 118.12a, 608.2g | existing readers | - | - | `scenarios/test_r0b_removal_spells.py`, `scenarios/test_r0b_bargain_burn_and_exile_replacement.py` |
+
+## R0b-T5: temporary token copies, mana-value-qualified enters triggers, and Equipment/hone/Vehicle/token-maker proofs
+
+| Mechanic | Where | Proof |
+|---|---|---|
+| "Create a token that's a copy of target `<X>`[, except `<...>`]. [It\|That token] gains haste[ until end of turn]. (Sacrifice\|Exile) it at the beginning of the next end step." - CR 707.2 copy, a layer 6 haste grant on the token only, and a CR 603.7a delayed trigger (CR 701.21a sacrifice, or exile) on the token's own incarnation; a token already gone by then is left alone, and the targeted original is never touched | `effects._CREATE_TOKEN_COPY_OF_TARGET_RE`/`_parse_create_token_copy_of_target_clause`, read whole in `_parse_mixed_clauses` | The Fire Crystal; Cogwork Assembler (exile, "That token gains haste.", any player's artifact) and Molten Duplication (spell, "until end of turn") as second printings - `test_r0b_copy_token_sacrifice_next_end_step.py` |
+| CR 707.9b card-type exception, "except it's an artifact in addition to its other types" | `effects._EXCEPT_ADDED_CARD_TYPE_RE`, `token_copy_of(added_card_type=)` | Molten Duplication - same file |
+| "Whenever `<permanent>` ... with mana value N or greater/or less/... enters" - CR 202.3 qualifier on the entering object, read off its computed characteristics | `triggers._entering_mana_value_qualifier_holds` (ENTERS_THE_BATTLEFIELD branch of `condition_matches`) | Simulacrum Synthesizer; Doc Ock's Tentacles as the second printing - `test_r0b_artifact_synergy_engines.py` |
+| The Fire Crystal statics: red spells you cast cost {1} less (generic only, CR 601.2f), creatures you control have haste | already read | `test_r0b_copy_token_sacrifice_next_end_step.py` |
+| Equipment grants: +1/+0 haste ward {1} (Lavaspur Boots), +1/+1 double strike trample and the CR 103.6a opening-hand line (Leyline Axe), deathtouch and lifelink (Basilisk Collar); hone counters (CR 122.1j) from Dwalin, Weaponmaster's enters-or-attacks trigger; Giott's two separate enters events (Dwarf, Equipment) with an optional loot | already read | `test_r0b_equipment_and_hone_counters.py` |
+| Esika's Chariot (Cat tokens, crew 4, attack-copy of a target token), Thundering Broodwagon (reach, menace, crew 3, enters destroy MV <= 4, cycling), Warleader's Call (anthem, a ping per creature entering), Hop to It | already read | `test_r0b_vehicles_and_token_makers.py` |
+| Simulacrum Synthesizer (scry 2, Construct that counts itself), Repurposing Bay (sacrifice-another-artifact search for MV exactly 1 + the sacrificed MV, last known for a token, sorcery speed) | already read | `test_r0b_artifact_synergy_engines.py` |
+
+Fixed along the way: `_CREATE_TOKEN_COPIES_EXCEPT_RE`'s and `_TARGET_PLAYER_CREATES_TOKEN_COPY_RE`'s `phrase` group (`target .+?` under DOTALL) swallowed every following sentence into the target description, so The Fire Crystal's "Sacrifice it ..." was silently dropped; it now stops at the sentence end.
+
+## R0b-T6: life-gain payoffs, dies/ETB value creatures, sacrifice artifacts
+
+Proof-only for eleven already-handled cards (Hinterland Sanctifier, Starscape
+Cleric, Leonardo Cutting Edge, Moseo, Professor Dellian Fel, Dream Beavers,
+Greedy Freebooter, Callous Inspector, Curious Farm Animals, Vinereap Mentor,
+Candy Trail, Giant's Boulder); one reader widened because a proof exposed it.
+
+| Mechanic | Reader | Cards | Second printing | Test |
+|---|---|---|---|---|
+| "target opponent loses that much life" off a trigger event's amount (CR 603.2c / 608.2c); before this, the clause parsed to nothing and the Dellian emblem trigger resolved as a silent no-op | `effects._THAT_MUCH_LIFE_LOSS_RE` in `parse_clause_effect` (fails closed with a notice when the event carries no amount) | Professor Dellian Fel (emblem) | Vito, Thorn of the Dusk Rose | `test_r0b_life_gain_payoffs.py` |
+| Gain-life triggers, offspring, sneak, Infusion intervening-if, Pest token attack trigger, emblem persistence | existing readers, each proven per card | Hinterland Sanctifier, Starscape Cleric, Leonardo, Moseo, Dellian | - | `test_r0b_life_gain_payoffs.py` |
+| ETB/dies value triggers (scry, Treasure/Clue/Food, gain, self-damage with last-known source) | existing readers | Dream Beavers, Greedy Freebooter, Callous Inspector, Curious Farm Animals, Vinereap Mentor | - | `test_r0b_etb_and_dies_value_creatures.py` |
+| Sacrifice-for-value artifacts, "up to one target" with zero targets | existing readers | Candy Trail, Giant's Boulder, Curious Farm Animals | - | `test_r0b_sacrificial_value_artifacts.py` |
+
+## R0b-T7: landfall and counter doubling, sacrifice and discard payoffs, protection tricks, becomes-target triggers
+
+Twelve cards, each proven through the engine (`test_r0b_landfall_and_counter_doubling.py`,
+`test_r0b_sacrifice_and_discard_payoffs.py`,
+`test_r0b_protection_tricks_and_target_triggers.py`): Mossborn Hydra, Sapling
+Nursery, Sakura-Tribe Scout, Gene Pollinator; Biotech Specialist, Cryogen
+Relic, Iron-Shield Elf, Monument to Endurance; Kami of False Hope, Snakeskin
+Veil, Surrak, Elusive Hunter, Emberheart Challenger. Three real gaps were
+found by the proofs and closed:
+
+- **A subtype subject names every permanent with that subtype, not only
+  creatures** - Sapling Nursery's "Treefolk and Forests you control gain
+  indestructible" (`effects` mass-subtype subject reader) now reaches the
+  Forests (CR 205.3i land types) as well as the Treefolk (CR 205.3m); it used
+  to filter on `is_creature` first and silently skipped every land. No second
+  Modern/Pioneer/Standard printing carries a land- or artifact-type subject
+  list (searched on Scryfall); the existing creature-subtype subjects
+  (Along the Crooked Way) are the unchanged regression proof.
+- **A Lander token is a Lander artifact** - CR 111.10u is now a
+  `models/token.PREDEFINED` row (`LANDER`), so the token carries the Lander
+  subtype (CR 205.3g); proven on Biotech Specialist and on Sami's Curiosity
+  (a spell that creates it rather than an enters trigger).
+- **Becomes-the-target triggers with an "or" subject, and spells on the
+  stack as targets** - Surrak, Elusive Hunter's "a creature you control or a
+  creature spell you control becomes the target of a spell or ability an
+  opponent controls" was classed handled but never fired
+  (`triggers._OBJECT_TARGET_SUBJECT` read exactly one object). The subject
+  now joins alternatives with "or", an alternative saying "spell" names an
+  object on the stack and one that does not names a permanent, and
+  `Casting._emit_becomes_target`/`Game._emit_ability_becomes_target` raise
+  the event for a spell on the stack too (a counterspell's target). The
+  general "a player or permanent" condition (Loki) ignores a stack object.
+  Battle Mammoth ("a permanent you control") is the second-printing proof
+  that a permanent-only condition does not see a countered creature spell.
+
+## R0b-T8 proofs: evoke, exile-until-leaves, charms, learn, prepare, transform, extra combat, warp
+
+Twelve already-handled cards now have their own scenario proofs (files
+`tests/scenarios/test_r0b_*.py`) and real printings in the pool. Three engine
+gaps the proofs exposed were fixed test-first:
+
+| Mechanic | Rules | Where | Tests |
+|---|---|---|---|
+| "Exile ... until this enchantment/Aura leaves the battlefield" moves nothing when the source already left after the ability triggered | CR 610.3b | `effects._parse_exile_until_leaves_battlefield_clause` now checks `source.zone is BATTLEFIELD`, like `linked_exile` and the for-each-opponent reader always did. Second printings: Prayer of Binding, Dimensional Exile | `test_r0b_exile_until_leaves_enchantments.py` |
+| Passive "Whenever a/another `<type>` you control is dealt damage" reads the recipient's controller and types, and a bare "it" in the effect is the damaged creature | CR 120.1 | `triggers.condition_matches` (DEALS_DAMAGE, passive voice) and `effects._damage_recipient_is_its_subject`. Second printing: Rite of Passage | `test_r0b_learn_prepare_transform_extra_combat_warp.py` |
+| "After this phase, there is an additional combat phase" resolving mid-phase runs the rest of the phase in progress first (declare blockers, combat damage, end of combat), then the added phase | CR 500.8 | `TurnMachine.insert_extra_phase` / `_rest_of_current_phase`. Second printing: Desert Were-Worm, Hellkite Charger (their tests in `test_total_power_extra_combat.py` asserted the old mid-combat interleaving and now assert the corrected order) | same file, plus `test_total_power_extra_combat.py` |
+
+Proof-only (no engine change): Emptiness (hybrid evoke, two mana-spent
+intervening ifs), Yathan Roadwatcher (cast-only ETB, reflexive reanimate),
+Snapcaster Mage (granted flashback via `PlayPermission.flashback`, used with
+`Casting.use_permission`), Prismari Charm and Archenemy's Charm (every mode),
+Professor of Symbology (learn, CR 701.48a), Jadzi (enters prepared, Oracle's
+Gift X), Jennifer Walters (CR 101.2 cast prohibition, sorcery-speed transform),
+Fear of Missing Out (delirium extra combat), Nova Hellkite (warp, CR 702.185a).

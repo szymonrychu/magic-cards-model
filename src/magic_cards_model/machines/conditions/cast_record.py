@@ -365,7 +365,7 @@ def _keyword_cost_paid(context: "ConditionContext", match: re.Match[str]) -> boo
         return True
     source = context.source
     turn = context.game.turn
-    return source is not None and turn is not None and source.turn_entered == turn.turn_number
+    return source is not None and turn is not None and source.turn_entered == turn.turns_taken
 
 
 def _bargained(context: "ConditionContext", match: re.Match[str]) -> bool:

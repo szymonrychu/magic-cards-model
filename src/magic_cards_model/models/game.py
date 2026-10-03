@@ -40,7 +40,6 @@ from ..machines.abilities import (
 from ..machines.casting import (
     _BLIGHT_PHRASE,
     _OPTIONAL_ADDITIONAL_COST,
-    _OR_PAY_TAIL,
     AlternativeCostOption,
     AlternativeCostSource,
     Casting,
@@ -60,6 +59,7 @@ from ..machines.casting import (
     linked_exile_play_source,
     marker_cast_options,
     optional_additional_costs,
+    or_additional_cost_alternatives,
     play_permissions_on,
     player_keyword_grant_of_line,
     split_second_restriction_source,
@@ -442,6 +442,11 @@ _PLAYER_PROTECTION_FROM_CHOSEN_NAME = re.compile(
 #: ability's source is the object it is printed on, so "this" is that object and
 #: only the caller building the cost knows which it is.
 _SELF_REFERENCE = re.compile(r"\bthis\b", re.IGNORECASE)
+
+
+_SACRIFICE_OR_DISCARD = re.compile(
+    r"^sacrifice (?P<sacrifice>[\w ,]+?) or discard (?P<discard>[\w ,]+)$", re.IGNORECASE
+)
 
 
 def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
@@ -8512,10 +8517,20 @@ class Game(EngineModel):
             if _OPTIONAL_ADDITIONAL_COST.match(phrase):
                 continue
             cost = total_cost_for_phrase(phrase, caster)
-            if cost is None and _OR_PAY_TAIL.match(phrase) is not None:
-                # CR 601.2b's "[cost] or pay [mana]": the mana half is always a
-                # way to pay it, and mana is not counted here (see above).
-                continue
+            alternatives = or_additional_cost_alternatives(phrase) if cost is None else None
+            if alternatives is not None:
+                # CR 601.2b's "[cost] or [cost]": a mana half is always a way
+                # to pay it, and mana is not counted here (see above); a
+                # non-mana set is payable when any one alternative's objects
+                # and life are (CR 118.3).
+                if alternatives[-1].startswith("{"):
+                    continue
+                if any(
+                    option is not None and self._cost_objects_available(option, caster, taken)
+                    for option in (total_cost_for_phrase(half, caster) for half in alternatives)
+                ):
+                    continue
+                return False
             if cost is None or not self._cost_objects_available(cost, caster, taken):
                 return False
         return True
@@ -8598,6 +8613,35 @@ class Game(EngineModel):
             if len([state for state in pool if state.id not in taken]) < component.required:
                 return False
         return True
+
+    def or_cost_choices_for_judging(self, card: CardState, caster: str) -> dict[int, int]:
+        """Which alternative of each CR 601.2b "[cost] or [cost]" additional cost
+        to judge `card`'s castability by. An object alternative that can be
+        paid is chosen over a mana default - it adds no mana, so it is never
+        harder to afford (Deadly Precision with a creature and a single Swamp)
+        - and over a life default only when the life cannot be paid (Bitter
+        Triumph at 2 life judged by its discard). A sentence no alternative of
+        which is payable keeps its default, so the judgement fails on it.
+        """
+        chosen: dict[int, int] = {}
+        taken: set[UUID] = set()
+        for index, printed in enumerate(additional_cost_phrases(card.card)):
+            alternatives = or_additional_cost_alternatives(substitute_x(printed, 0))
+            if alternatives is None:
+                continue
+            costs = [total_cost_for_phrase(alt, caster) for alt in alternatives]
+            default = costs[-1]
+            if (
+                not alternatives[-1].startswith("{")
+                and default is not None
+                and self._cost_objects_available(default, caster, taken)
+            ):
+                continue
+            for pick, option in enumerate(costs[:-1]):
+                if option is not None and self._cost_objects_available(option, caster, taken):
+                    chosen[index] = pick
+                    break
+        return chosen
 
     def _cost_payable_on_top_of(
         self, casting: Casting, extra: TotalCost, caster: str, taken: set[UUID]
@@ -11323,14 +11367,18 @@ class Game(EngineModel):
             if not target.is_card or target.card_id is None:
                 continue
             targeted = self.find_by_id(target.card_id)
-            if targeted is None or targeted.zone is not Zone.BATTLEFIELD:
+            if targeted is None or targeted.zone not in (Zone.BATTLEFIELD, Zone.STACK):
                 continue
             self.emit(
                 GameEvent(
                     event=TriggerEvent.BECOMES_TARGET,
                     subject_id=targeted.id,
                     subject_name=targeted.name,
-                    subject_controller=targeted.controller,
+                    subject_controller=(
+                        targeted.controller
+                        if targeted.zone is Zone.BATTLEFIELD
+                        else self.controller_of(targeted).username
+                    ),
                     subject_card=targeted.card,
                     targeted_by=ability.id,
                     player=ability.controller,
@@ -12369,7 +12417,7 @@ class Game(EngineModel):
             # not just a boolean, the same way `ExileAnnotation.turn_exiled` is -
             # see `CardState.turn_entered`. Stamped here, the one choke point
             # every route onto the battlefield runs through.
-            card_state.turn_entered = self.turn.turn_number if self.turn is not None else None
+            card_state.turn_entered = self.turn.turns_taken if self.turn is not None else None
             # CR 613.5: from here on this permanent's power and toughness are
             # whatever the layer engine says they are. A characteristic-defining
             # ability (CR 604.3, 613.4a) gives Tarmogoyf a power the printing does
@@ -19724,7 +19772,7 @@ class Game(EngineModel):
             entered_this_turn_ids=frozenset(
                 permanent.id
                 for permanent in self.battlefield
-                if self.turn is not None and permanent.turn_entered == self.turn.turn_number
+                if self.turn is not None and permanent.turn_entered == self.turn.turns_taken
             ),
         )
         # The effects a board is built from are rebuilt on every computation and
@@ -22033,6 +22081,7 @@ class Game(EngineModel):
         reveal_for_cost: CardState | None = None,
         casualty: Sequence[CardState] | None = None,
         conspire: Sequence[Sequence[CardState]] | None = None,
+        exile_for_cost_reduction: Sequence[CardState] | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -22104,6 +22153,10 @@ class Game(EngineModel):
         702.166a's bargain; `collect_evidence` pays a printed "you may collect
         evidence N" (CR 701.59a); `reveal_for_cost` is the card revealed for a
         printed "you may reveal a <quality> card from your hand".
+        `exile_for_cost_reduction` is the cards exiled from hand for a printed
+        "you may exile any number of <quality> cards from your hand. This spell
+        costs {N} less to cast for each card exiled this way." (March of
+        Wretched Sorrow; CR 118.8b, CR 118.7a).
         `casualty` is the creature sacrificed for each casualty instance paid
         (CR 702.153a/b), in order - printed instances first, then granted.
         They join `offspring`, `blight` and `gift` as this method's whole
@@ -22155,6 +22208,17 @@ class Game(EngineModel):
             # with the rest of CR 601.2b's additional costs.
             for pair in conspire or ():
                 casting.pay_conspire(list(pair))
+            if exile_for_cost_reduction is not None:
+                casting.exile_for_cost_reduction(exile_for_cost_reduction)
+            # CR 601.2b announces every additional cost before CR 601.2c's
+            # targets; `add_additional_cost` refuses once targets are chosen,
+            # so a targeted bargained/evidence/reveal cast failed here.
+            if bargain is not None:
+                casting.pay_bargain(bargain)
+            if collect_evidence:
+                casting.collect_evidence()
+            if reveal_for_cost is not None:
+                casting.reveal_for_cost(reveal_for_cost)
             if targets:
                 casting.choose_targets(list(targets))
             for card_id in splice or ():
@@ -22164,12 +22228,6 @@ class Game(EngineModel):
             for cost in kicker_costs or ():
                 # CR 702.33b: a card with two kicker costs names each one paid.
                 casting.pay_kicker(1, which=cost)
-            if bargain is not None:
-                casting.pay_bargain(bargain)
-            if collect_evidence:
-                casting.collect_evidence()
-            if reveal_for_cost is not None:
-                casting.reveal_for_cost(reveal_for_cost)
             if replicate:
                 casting.pay_replicate(replicate)
             if offspring:
@@ -22233,7 +22291,7 @@ class Game(EngineModel):
         """
         return self.why_cannot_play_land(username) is None
 
-    def play_land(self, land: CardState, username: str) -> CardState:
+    def play_land(self, land: CardState, username: str, face: str | None = None) -> CardState:
         """Play a land: a special action, so it uses no stack and no priority.
 
         Nobody gets a chance to respond, because nothing is ever put on the
@@ -22249,9 +22307,22 @@ class Game(EngineModel):
         "playing an MDFC's land face" special action in the rules - it is the
         same CR 305.1 land drop, so it is checked and counted exactly like any
         other land below.
+
+        `face` is CR 712.12's choice of "one of its faces that's a land" for a
+        modal double-faced card with more than one (a Pathway's front *and*
+        back are lands). `None` keeps the default: the front face when it is a
+        land, otherwise the card's land face.
         """
         self._refuse_if_over()
         land_face = land.card.land_face
+        if face is not None:
+            chosen = next((each for each in land.card.land_faces if each.name == face), None)
+            if chosen is None:
+                raise ValueError(
+                    f"{face!r} is not a land face of {land.name} (CR 712.12: the player "
+                    "chooses one of its faces that's a land)"
+                )
+            land_face = chosen
         if not land.card.is_land and land_face is None:
             raise ValueError(f"{land.name} is not a land")
         refusal = self.why_cannot_play_land(username)
@@ -22298,7 +22369,7 @@ class Game(EngineModel):
         # counted. A land PUT onto the battlefield (CR 305.4) must not.
         self.lands_played[username] = self.lands_played.get(username, 0) + 1
 
-        if not land.card.is_land and land_face is not None:
+        if land_face is not None and (not land.card.is_land or face is not None):
             land.land_face_played = land_face.name
 
         # Playing a land is not casting it (CR 116.2a, 305.1), so `was_cast` is
@@ -24184,7 +24255,7 @@ class Game(EngineModel):
 
         if match := _CONDITION_ENTERED_THIS_TURN.fullmatch(text):
             needed = parse_count(match.group("count"))
-            turn_number = getattr(self.turn, "turn_number", None)
+            turn_number = getattr(self.turn, "turns_taken", None)
             if needed is None:
                 return None
             if turn_number is None:
@@ -24814,7 +24885,7 @@ class Game(EngineModel):
         return (
             permanent.turn_entered is not None
             and self.turn is not None
-            and permanent.turn_entered == self.turn.turn_number
+            and permanent.turn_entered == self.turn.turns_taken
         )
 
     def _activation_count(self, permanent: CardState, index: int) -> int:
@@ -24837,6 +24908,7 @@ class Game(EngineModel):
         controller: str,
         builder: Callable[..., CostComponent],
         x_value: int = 0,
+        targets: list[object] | None = None,
     ) -> CostComponent:
         """One `[Sacrifice|Discard]` cost piece, self-reference and quality
         requirement both handled (CR 602.1a, CR 118.3).
@@ -24856,19 +24928,34 @@ class Game(EngineModel):
         word "this", not a number, so `cost_component_for_phrase` cannot read
         it as one).
         """
-        component = cost_component_for_phrase(text, payer=controller)
+        # Kozilek's "Discard a card with mana value X": the X is the target
+        # spell's mana value (CR 107.3), so once a target is chosen the
+        # discarded card is held to it; before one is, the phrase asks for "a
+        # card" and the requirement is added below.
+        reading = re.sub(r" with mana value X$", "", text, flags=re.IGNORECASE)
+        linked_mana_value = None
+        if reading != text:
+            for target in targets or []:
+                state = target if isinstance(target, CardState) else self.find_by_id(target)
+                if isinstance(state, CardState):
+                    linked_mana_value = int(state.mana_value)
+                    break
+        component = cost_component_for_phrase(reading, payer=controller)
         if component is None:
-            if pool:
-                chosen = [pool.pop(0)]
-            elif _cost_refers_to_self(text, permanent):
-                chosen = [permanent]
-            else:
-                chosen = []
+            if not _cost_refers_to_self(text, permanent):
+                # CR 602.5: a quality word nobody taught the reader must not
+                # make the cost "sacrifice/discard anything" - refuse instead.
+                raise ValueError(f"cannot build a cost for {text!r}")
+            chosen = [pool.pop(0)] if pool else [permanent]
             return builder(*chosen, payer=controller, required=1, description=text)
 
         # "Sacrifice X Goats" / "Sacrifice one or more artifacts": the count is
         # the announced X or every nominated object (CR 107.3a).
         component = announce_count(component, x_value, len(pool))
+        if linked_mana_value is not None and component.requirement is not None:
+            component.requirement = component.requirement.model_copy(
+                update={"mana_value": linked_mana_value}
+            )
         if component.requirement is not None and component.requirement.excludes_source:
             # "Sacrifice another ..." (CR 601.2c/113.6): only here is the
             # source known, the same fill-in `CostKind.OTHER` does below.
@@ -24950,16 +25037,51 @@ class Game(EngineModel):
                 # read. CR 602.5a gates both symbols the same way for a
                 # creature, and `why_cannot_activate` already checks that pair.
                 components.append(untap_cost(permanent, payer=controller, description=piece.text))
+            elif piece.kind is CostKind.SACRIFICE and (
+                either := _SACRIFICE_OR_DISCARD.match(piece.text)
+            ):
+                # CR 118.1: "Sacrifice an artifact or discard a nonland card"
+                # is one cost paid either way; the nominated cards pick which.
+                if discards and not sacrifices:
+                    components.append(
+                        self._choice_cost(
+                            "Discard " + either.group("discard"),
+                            permanent,
+                            discards,
+                            controller,
+                            discard_cost,
+                            x_value,
+                            targets,
+                        )
+                    )
+                else:
+                    components.append(
+                        self._choice_cost(
+                            "Sacrifice " + either.group("sacrifice"),
+                            permanent,
+                            sacrifices,
+                            controller,
+                            sacrifice_cost,
+                            x_value,
+                            targets,
+                        )
+                    )
             elif piece.kind is CostKind.SACRIFICE:
                 components.append(
                     self._choice_cost(
-                        piece.text, permanent, sacrifices, controller, sacrifice_cost, x_value
+                        piece.text,
+                        permanent,
+                        sacrifices,
+                        controller,
+                        sacrifice_cost,
+                        x_value,
+                        targets,
                     )
                 )
             elif piece.kind is CostKind.DISCARD:
                 components.append(
                     self._choice_cost(
-                        piece.text, permanent, discards, controller, discard_cost, x_value
+                        piece.text, permanent, discards, controller, discard_cost, x_value, targets
                     )
                 )
             elif piece.kind is CostKind.PAY_LIFE:
@@ -25406,6 +25528,7 @@ class Game(EngineModel):
         words = reduction.quality.strip().lower().split()
         supertypes: list[Supertype] = []
         types: list[Type] = []
+        subtypes: list[str] = []
         for word in words:
             singular = word.removesuffix("s")
             try:
@@ -25418,7 +25541,9 @@ class Game(EngineModel):
                 continue
             except ValueError:
                 pass
-        if not types:
+            # CR 205.3: anything else in the quality is a subtype ("Equipment").
+            subtypes.append(singular)
+        if not types and not subtypes:
             already_noticed = any(
                 notice.source_id == permanent.id for notice in self.cost_modifier_notices
             )
@@ -25439,6 +25564,7 @@ class Game(EngineModel):
             if state.zone is Zone.BATTLEFIELD
             and all(t in board.of(state).types for t in types)
             and all(s in board.of(state).supertypes for s in supertypes)
+            and all(sub in {have.lower() for have in board.of(state).subtypes} for sub in subtypes)
         )
         amount = reduction.amount * (min(count, 1) if reduction.if_you_control else count)
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
@@ -25938,6 +26064,16 @@ class Game(EngineModel):
             self.lose_life(self.player(controller), rider.amount)
         elif rider.kind == "gain_life":
             self.gain_life(controller, rider.amount)
+        else:
+            # CR 405.6c, aimed at "each opponent" (CR 102.2): everyone still
+            # in the game who is not the controller, in turn order.
+            for opponent in self.players_in_game:
+                if opponent.username == controller:
+                    continue
+                if rider.kind == "opponents_gain_life":
+                    self.gain_life(opponent, rider.amount)
+                else:
+                    self.lose_life(opponent, rider.amount)
 
     def _activated_source_types(self, permanent: CardState) -> tuple[Type, ...]:
         """The card types of an activated ability's source as it was
@@ -26227,34 +26363,46 @@ class Game(EngineModel):
                     if ability.mana.could_produce is not None
                     else None
                 )
-                produced_mana = ability.mana.resolve(
-                    land_types,
-                    own_counters,
-                    color,
-                    has_imprinted_card,
-                    count=devotion if devotion is not None else expression_count,
-                    could_produce_colors=could_produce_colors,
-                    chosen_color=chosen_color,
-                )
-                # CR 106.5, for the third narrowing: "of any color among legendary
-                # creatures and planeswalkers you control" (Mox Amber). The colour
-                # the activating player named has to be one the board actually
-                # defines - an empty board defines none, and an ability that would
-                # produce mana of an undefined type produces no mana instead.
-                # `machines/cost.py` already applies this on the payment path; a
-                # direct activation reached the same ability without it, so the
-                # same Mox Amber made nothing when tapped for a spell and one mana
-                # of any colour when activated on its own.
-                allowed = among_colors(ability.effect, self, controller)
-                if allowed is not None:
-                    undefined = [produced for produced in produced_mana if produced not in allowed]
-                    if undefined:
-                        raise ValueError(
-                            f"{permanent.name} cannot add "
-                            f"{''.join(f'{{{produced.value}}}' for produced in undefined)}: "
-                            f"no permanent it surveys defines that color, so the ability "
-                            f"produces no mana (CR 106.5)"
-                        )
+                try:
+                    produced_mana = ability.mana.resolve(
+                        land_types,
+                        own_counters,
+                        color,
+                        has_imprinted_card,
+                        count=devotion if devotion is not None else expression_count,
+                        could_produce_colors=could_produce_colors,
+                        chosen_color=chosen_color,
+                    )
+                    # CR 106.5, for the third narrowing: "of any color among legendary
+                    # creatures and planeswalkers you control" (Mox Amber). The colour
+                    # the activating player named has to be one the board actually
+                    # defines - an empty board defines none, and an ability that would
+                    # produce mana of an undefined type produces no mana instead.
+                    # `machines/cost.py` already applies this on the payment path; a
+                    # direct activation reached the same ability without it, so the
+                    # same Mox Amber made nothing when tapped for a spell and one mana
+                    # of any colour when activated on its own.
+                    allowed = among_colors(ability.effect, self, controller)
+                    if allowed is not None:
+                        undefined = [
+                            produced for produced in produced_mana if produced not in allowed
+                        ]
+                        if undefined:
+                            raise ValueError(
+                                f"{permanent.name} cannot add "
+                                f"{''.join(f'{{{produced.value}}}' for produced in undefined)}: "
+                                f"no permanent it surveys defines that color, so the ability "
+                                f"produces no mana (CR 106.5)"
+                            )
+                except ValueError:
+                    # The cost was already paid by the caller (`{T}` tapped the
+                    # source). A refused activation returns to the moment before
+                    # it began (CR 601.6 / CR 733.1 by analogy), so the source
+                    # is not left tapped with no mana to show for it.
+                    if paid is not None:
+                        paid.rewind()
+                    raise
+
                 # CR 106.6: a "Spend this mana only to ..." sentence in this
                 # ability's own effect text restricts the mana it just made. The
                 # tag goes on the mana in the pool, not on `permanent` - the mana

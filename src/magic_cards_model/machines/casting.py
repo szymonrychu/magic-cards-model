@@ -18,7 +18,7 @@ machine and the announcement side is another.
 """
 
 import re
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from enum import StrEnum
 from functools import lru_cache
@@ -68,6 +68,8 @@ from .cost import (
     cost_component_for_phrase,
     mana_value_cap_for,
     pay_life_cost,
+    per_object_exile_cost_reduction,
+    per_object_exile_reduction_of_sentence,
     per_object_sacrifice_cost_reduction,
     per_object_sacrifice_reduction_of_sentence,
     place_counters_cost,
@@ -3095,6 +3097,15 @@ _OPTIONAL_BEHOLD = re.compile(r"^you may (?P<cost>behold an? [\w' -]+?)$", re.IG
 _OPTIONAL_SACRIFICE_ANY_NUMBER = re.compile(
     r"^you may (?P<cost>sacrifice any number of [\w ,]+)$", re.IGNORECASE
 )
+#: March of Wretched Sorrow's (and every "March of ..." sibling's) "you may
+#: exile any number of black cards from your hand" - CR 118.8b's optional
+#: additional cost, the exile-from-hand twin of the sacrifice above. Paid by
+#: `Casting.exile_for_cost_reduction`, which also applies the linked "This
+#: spell costs {2} less to cast for each card exiled this way." sentence
+#: (`machines.cost.per_object_exile_cost_reduction`).
+_OPTIONAL_EXILE_ANY_NUMBER_FROM_HAND = re.compile(
+    r"^you may (?P<cost>exile any number of [\w ]+ from your hand)$", re.IGNORECASE
+)
 
 
 #: Each keyword of `ADDITIONAL_COST_KEYWORDS` that prints its own cost on its
@@ -3253,6 +3264,12 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
                 OptionalAdditionalCost(
                     keyword="sacrifice any number", cost=phrase, rule="CR 118.8b"
                 )
+            )
+        elif _OPTIONAL_EXILE_ANY_NUMBER_FROM_HAND.match(phrase) is not None:
+            # Charged by `Casting.exile_for_cost_reduction` (CR 118.7a,
+            # CR 118.8b).
+            found.append(
+                OptionalAdditionalCost(keyword="exile any number", cost=phrase, rule="CR 118.8b")
             )
         else:
             found.append(
@@ -3954,6 +3971,48 @@ _OPTIONAL_ADDITIONAL_COST = re.compile(r"^you may\b", re.IGNORECASE)
 #: tried first and this is only reached for a phrase that is not blight, so
 #: the two never disagree about a blight sentence.
 _OR_PAY_TAIL = re.compile(r"^(?P<primary>.+?) or pay (?P<mana>(?:\{[^{}]+\})+)$", re.IGNORECASE)
+#: The same choice with the mana written first - Deadly Precision's "pay {4} or
+#: sacrifice an artifact or creature".
+_PAY_FIRST_OR = re.compile(r"^pay (?P<mana>(?:\{[^{}]+\})+) or (?P<primary>.+)$", re.IGNORECASE)
+#: The same choice with a life payment as the fallback instead of mana -
+#: Bitter Triumph's "discard a card or pay 3 life".
+_OR_PAY_LIFE_TAIL = re.compile(r"^(?P<primary>.+?),? or (?P<mana>pay \d+ life)$", re.IGNORECASE)
+
+
+def or_additional_cost_halves(phrase: str) -> tuple[str, str] | None:
+    """CR 601.2b's "[cost] or [cost]" additional-cost sentence as its two halves
+    `(primary, default)`, or `None` when it is not one.
+
+    `default` is the half paid when the caster nominates nothing for the
+    other: the mana of "[cost] or pay [mana]" and "pay [mana] or [cost]", or
+    the life of "[cost] or pay N life". `primary` is the other half, the one
+    `Casting._additional_cost_primary_alternatives` infers from nominated
+    objects (or, for a life payment, from an explicit announcement).
+    """
+    for pattern in (_OR_PAY_TAIL, _PAY_FIRST_OR, _OR_PAY_LIFE_TAIL):
+        match = pattern.match(phrase)
+        if match is not None:
+            return match.group("primary"), match.group("mana")
+    return None
+
+
+def _primary_alternatives_of(primary: str) -> list[str]:
+    """The comma-separated alternatives inside an or-cost's `primary` half -
+    Dusk Mangler's "sacrifice a creature, discard a card, or pay 4 life" has
+    the two, in printed order. A half with no comma is the one alternative
+    (a bare " or " is part of a single cost's own noun, "an artifact or
+    creature")."""
+    return [part.strip() for part in primary.split(",") if part.strip()]
+
+
+def or_additional_cost_alternatives(phrase: str) -> list[str] | None:
+    """Every way to pay a CR 601.2b "[cost] or [cost]" additional-cost
+    sentence, in printed order with the default (mana or life) half last, or
+    `None` when `phrase` is not one."""
+    halves = or_additional_cost_halves(phrase)
+    if halves is None:
+        return None
+    return [*_primary_alternatives_of(halves[0]), halves[1]]
 
 
 def life_or_mana_additional_costs(card: Card) -> list[tuple[int, CostComponent]]:
@@ -3971,10 +4030,10 @@ def life_or_mana_additional_costs(card: Card) -> list[tuple[int, CostComponent]]
     for index, printed in enumerate(additional_cost_phrases(card)):
         if _BLIGHT_PHRASE.match(printed) is not None:
             continue
-        or_pay = _OR_PAY_TAIL.match(printed)
-        if or_pay is None:
+        halves = or_additional_cost_halves(printed)
+        if halves is None or not halves[1].startswith("{"):
             continue
-        component = cost_component_for_phrase(or_pay.group("primary"))
+        component = cost_component_for_phrase(halves[0])
         if component is not None and component.kind is ComponentKind.PAY_LIFE:
             found.append((index, component))
     return found
@@ -3986,7 +4045,7 @@ def mandatory_additional_costs(
     x_value: int | None,
     *,
     blighted: bool = False,
-    primary_alternatives: frozenset[int] = frozenset(),
+    primary_alternatives: Mapping[int, int] | None = None,
     face: str | None = None,
 ) -> list[TotalCost]:
     """The spell's own printed "As an additional cost to cast this spell, ..."
@@ -3999,9 +4058,10 @@ def mandatory_additional_costs(
     mandatory sentence that cannot be read raises, because CR 118.3 does not
     let the spell be cast without paying it.
 
-    `primary_alternatives` is which of CR 601.2b's "[cost] or pay [mana]"
+    `primary_alternatives` maps which of CR 601.2b's "[cost] or pay [mana]"
     sentences (by position among `additional_cost_phrases`) are being paid
-    with their non-mana half; every other one defaults to the mana half, the
+    with their non-default half to which of that half's comma-separated
+    alternatives (usually the one, 0); every other one defaults to the mana half, the
     same default blight's own copy of this shape already uses when
     `blighted` is left false - a caller judging affordability with no
     objects chosen yet (`legal_actions`) always gets a single, cheap-to-
@@ -4027,13 +4087,13 @@ def mandatory_additional_costs(
             # CR 601.2b: "blight 2 or pay {1}" not blighted is the mana.
             phrase = blight.group("instead")
         elif blight is None:
-            or_pay = _OR_PAY_TAIL.match(phrase)
-            if or_pay is not None:
-                phrase = (
-                    or_pay.group("primary")
-                    if index in primary_alternatives
-                    else or_pay.group("mana")
-                )
+            halves = or_additional_cost_halves(phrase)
+            if halves is not None:
+                if index in (primary_alternatives or {}):
+                    parts = _primary_alternatives_of(halves[0])
+                    phrase = parts[(primary_alternatives or {})[index]]
+                else:
+                    phrase = halves[1]
         cost = total_cost_for_phrase(phrase, caster)
         if cost is None:
             raise ValueError(
@@ -4393,6 +4453,12 @@ class Casting(EngineModel):
     caster announced it but chose to sacrifice nothing, so this alone never
     answers "was the cost paid" the way `evidence_collected`'s bare boolean
     does; nothing printed in the pool needs that distinction yet."""
+    exiled_for_cost_reduction: int = 0
+    """How many cards were exiled from hand for an optional "you may exile any
+    number of <quality> cards from your hand. This spell costs <amount> less
+    to cast for each card exiled this way." additional cost (CR 118.7a, CR
+    118.8b), set by `exile_for_cost_reduction` - March of Wretched Sorrow's
+    own. Zero both before the cost is announced and when none were exiled."""
     gift_chosen_player: str | None = None
     """The opponent chosen when the gift was promised (CR 702.174a's own
     additional cost, "you may choose an opponent") - who "the chosen player"
@@ -6432,6 +6498,45 @@ class Casting(EngineModel):
         self.beheld_for_cost = True
         return self.step
 
+    def exile_for_cost_reduction(self, cards: Sequence[CardState] = ()) -> CastingStep:
+        """Pay a printed "you may exile any number of <quality> cards from your
+        hand" as the optional additional cost it is (CR 118.8b), and apply the
+        linked "This spell costs <amount> less to cast for each card exiled
+        this way" reduction (CR 118.7a) - March of Wretched Sorrow's own.
+
+        The exile twin of `sacrifice_for_cost_reduction`: `cards` is CR
+        601.2b's one choice of everything exiled this way, an empty sequence
+        is a legal answer (CR 107.1c), and the reduction is exactly
+        `len(cards)` times the card's own generic amount, floored at the
+        generic part of the cost by `reduce_cost`.
+        """
+        if self.exiled_for_cost_reduction:
+            raise ValueError(f"{self.spell.name}'s exile cost was already paid")
+        phrase = self._optional_sentence(
+            _OPTIONAL_EXILE_ANY_NUMBER_FROM_HAND, "exile any number", "CR 118.8b"
+        )
+        chosen = list(cards)
+        component = cost_component_for_phrase(phrase, self.caster)
+        if component is None:
+            raise ValueError(f"{self.spell.name}'s {phrase!r} could not be read (CR 118.8b)")
+        component.cards = chosen
+        component.required = len(chosen)
+        component.source = self.spell.name
+        if self.game is not None and chosen:
+            refusal = component.why_not(self.game)
+            if refusal is not None:
+                raise ValueError(refusal)
+        if chosen:
+            per_card = per_object_exile_cost_reduction(self.spell.card)
+            if per_card is None:
+                raise ValueError(
+                    f"{self.spell.name} prints no per-card cost reduction to apply (CR 118.7a)"
+                )
+            self.add_additional_cost(TotalCost(components=[component]))
+            self.reduce_cost(ManaCost(generic=per_card.generic * len(chosen)))
+        self.exiled_for_cost_reduction = len(chosen)
+        return self.step
+
     def sacrifice_for_cost_reduction(self, cards: Sequence[CardState] = ()) -> CastingStep:
         """Pay a printed "you may sacrifice any number of <quality>" as the
         optional additional cost it is (CR 118.8b), and apply the linked
@@ -7242,14 +7347,15 @@ class Casting(EngineModel):
 
     def _additional_cost_primary_alternatives(
         self, pools: dict[ComponentKind, list[CardState]]
-    ) -> frozenset[int]:
-        """Which of CR 601.2b's "[cost] or pay [mana]" additional-cost
-        sentences (`_OR_PAY_TAIL`) the caster is paying with their non-mana
-        half, inferred from whether objects were nominated for it - the same
-        way `sacrificing=[...]` already says "pay Fling's plain sacrifice
-        cost" without a separate flag. A phrase with no matching objects in
-        its pool defaults to the mana half, exactly like an unblighted
-        "blight N or pay {M}" already defaults to the mana (`blighted`).
+    ) -> dict[int, int]:
+        """Which of CR 601.2b's "[cost] or [cost]" additional-cost sentences
+        (`or_additional_cost_halves`) the caster is paying with their
+        non-default half, and which of its alternatives, inferred from whether
+        objects were nominated for it - the same way `sacrificing=[...]`
+        already says "pay Fling's plain sacrifice cost" without a separate
+        flag. A phrase with no matching objects in any pool defaults to its
+        mana (or life) half, exactly like an unblighted "blight N or pay {M}"
+        already defaults to the mana (`blighted`).
 
         A `ComponentKind.PAY_LIFE` primary (Redirect Lightning's own "pay 5
         life or pay {2}") has no object to nominate at all, so the pool
@@ -7260,22 +7366,24 @@ class Casting(EngineModel):
         Blight's own "or pay" sentences are excluded: they are resolved by
         `blight_paid`/`pay_blight`, never by this.
         """
-        chosen: set[int] = set()
+        chosen: dict[int, int] = {}
         for index, printed in enumerate(additional_cost_phrases(self.spell.card, face=self.face)):
             if _BLIGHT_PHRASE.match(printed) is not None:
                 continue
-            or_pay = _OR_PAY_TAIL.match(substitute_x(printed, self.x_value))
-            if or_pay is None:
+            halves = or_additional_cost_halves(substitute_x(printed, self.x_value))
+            if halves is None:
                 continue
-            component = cost_component_for_phrase(or_pay.group("primary"), self.caster)
-            if component is None:
-                continue
-            if pools.get(component.kind) or (
-                component.kind is ComponentKind.PAY_LIFE
-                and index in self.paying_life_for_additional_cost
-            ):
-                chosen.add(index)
-        return frozenset(chosen)
+            for pick, part in enumerate(_primary_alternatives_of(halves[0])):
+                component = cost_component_for_phrase(part, self.caster)
+                if component is None:
+                    continue
+                if pools.get(component.kind) or (
+                    component.kind is ComponentKind.PAY_LIFE
+                    and index in self.paying_life_for_additional_cost
+                ):
+                    chosen[index] = pick
+                    break
+        return chosen
 
     def _printed_additional_costs(self) -> list[TotalCost]:
         """The card's own additional costs as payable `TotalCost`s, built fresh
@@ -7949,22 +8057,28 @@ class Casting(EngineModel):
         `Game.put_on_stack` then flushes it alongside the cast triggers, which
         is CR 603.3's "the next time a player would receive priority".
 
-        Only permanents are asked: CR 702.21a says "whenever **this permanent**
-        becomes the target", and an object that is not on the battlefield is not
-        a permanent (CR 110.1).
+        Permanents and spells on the stack are asked: CR 702.21a says
+        "whenever **this permanent** becomes the target" (an object that is
+        not on the battlefield is not a permanent, CR 110.1), and a spell
+        targeted by a counterspell is an object a "creature spell you control
+        becomes the target of ..." condition (Surrak, Elusive Hunter) watches.
         """
         for target in self.targets:
             if not target.is_card or target.card_id is None:
                 continue
             targeted = self.game.find_by_id(target.card_id)
-            if targeted is None or targeted.zone is not Zone.BATTLEFIELD:
+            if targeted is None or targeted.zone not in (Zone.BATTLEFIELD, Zone.STACK):
                 continue
             self.game.emit(
                 GameEvent(
                     event=TriggerEvent.BECOMES_TARGET,
                     subject_id=targeted.id,
                     subject_name=targeted.name,
-                    subject_controller=targeted.controller,
+                    subject_controller=(
+                        targeted.controller
+                        if targeted.zone is Zone.BATTLEFIELD
+                        else self.game.controller_of(targeted).username
+                    ),
                     subject_card=targeted.card,
                     targeted_by=self.spell.id,
                     player=self.caster,
@@ -8722,16 +8836,17 @@ def reads_mandatory_additional_cost_line(text: str) -> bool:
     if (
         _OPTIONAL_ADDITIONAL_COST.match(phrase)
         or _BLIGHT_PHRASE.match(phrase)
-        or _OR_PAY_TAIL.match(phrase)
+        or or_additional_cost_halves(phrase) is not None
     ):
         return False
     return total_cost_for_phrase(phrase) is not None
 
 
 def reads_or_pay_additional_cost_line(text: str) -> bool:
-    """Whether one printed line is a "[cost] or pay [mana]" additional cost
-    whose two halves `mandatory_additional_costs` can both charge (the mana
-    half by default, the other when the caster picks it) - `support.py`'s
+    """Whether one printed line is a "[cost] or pay [mana]" (or "pay [mana] or
+    [cost]", or "[cost] or pay N life") additional cost whose two halves
+    `mandatory_additional_costs` can both charge (the default half unless the
+    caster picks the other) - `support.py`'s
     credit for it on a permanent card (Bayou Groff, Titania, Rugged
     Rumbler)."""
     match = _ADDITIONAL_COST_LINE.match(text.strip())
@@ -8740,11 +8855,11 @@ def reads_or_pay_additional_cost_line(text: str) -> bool:
     phrase = match.group("what")
     if _OPTIONAL_ADDITIONAL_COST.match(phrase) or _BLIGHT_PHRASE.match(phrase):
         return False
-    or_pay = _OR_PAY_TAIL.match(phrase)
+    halves = or_additional_cost_halves(phrase)
     return (
-        or_pay is not None
-        and total_cost_for_phrase(or_pay.group("primary")) is not None
-        and total_cost_for_phrase(or_pay.group("mana")) is not None
+        halves is not None
+        and total_cost_for_phrase(halves[0]) is not None
+        and total_cost_for_phrase(halves[1]) is not None
     )
 
 
@@ -8781,6 +8896,22 @@ def reads_optional_sacrifice_reduction_line(text: str) -> bool:
     if sacrifice is None or cost_component_for_phrase(sacrifice.group("cost"), None) is None:
         return False
     amount = per_object_sacrifice_reduction_of_sentence(match.group("reduction"))
+    return amount is not None and amount == ManaCost(generic=amount.generic)
+
+
+def reads_optional_exile_reduction_line(text: str) -> bool:
+    """`reads_optional_sacrifice_reduction_line`'s exile twin: whether one
+    printed line is wholly a CR 118.8b optional "you may exile any number of
+    <quality> cards from your hand" additional cost with its linked
+    per-card generic reduction that `Casting.exile_for_cost_reduction` pays
+    and applies - March of Wretched Sorrow, March of Otherworldly Light."""
+    match = _OPTIONAL_SACRIFICE_REDUCTION_LINE.match(text.strip())
+    if match is None:
+        return False
+    exile = _OPTIONAL_EXILE_ANY_NUMBER_FROM_HAND.match(match.group("what"))
+    if exile is None or cost_component_for_phrase(exile.group("cost"), None) is None:
+        return False
+    amount = per_object_exile_reduction_of_sentence(match.group("reduction"))
     return amount is not None and amount == ManaCost(generic=amount.generic)
 
 

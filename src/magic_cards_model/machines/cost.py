@@ -74,6 +74,7 @@ from ..models.mana import (
     _candidate_options,
     _demand_list,
 )
+from ..models.token import is_token
 from ..models.zone import Zone
 from ..numbers import (
     QuantitySource,
@@ -1617,34 +1618,96 @@ def _plan_life_loss(
     ever asked to rule a plan *out*, and leaving a gain uncounted can only
     make that answer more cautious, never let an unpayable plan through.
     """
-    loss = 0
-    for source, colors, restriction in plan:
-        wanted_text = restriction.text if restriction is not None else None
-        matches = [
-            (index, options)
-            for scanned_source, options, scanned_restriction, _any, index in (
-                _scan_mana_candidates(context, [source])
-            )
-            if scanned_source is source
-            and (scanned_restriction.text if scanned_restriction is not None else None)
-            == wanted_text
-        ]
-        chosen = sorted(colors)
-        index = next(
-            (
-                index
-                for index, options in sorted(matches, key=lambda item: item[0])
-                if any(sorted(option) == chosen for option in options)
-            ),
-            min((index for index, _options in matches), default=None),
+    return sum(
+        _entry_life_loss(context, source, colors, restriction)
+        for source, colors, restriction in plan
+    )
+
+
+def _entry_life_loss(
+    context: "CostPayment | _SpendContext",
+    source: CardState,
+    colors: Sequence[Color],
+    restriction: ManaRestriction | None,
+) -> int:
+    """The life one plan entry's mana ability takes (`_plan_life_loss`'s
+    per-entry half): 0 unless the ability `tap_for_mana` would activate for
+    these colours carries a damage or life-loss rider."""
+    wanted_text = restriction.text if restriction is not None else None
+    matches = [
+        (index, options)
+        for scanned_source, options, scanned_restriction, _any, index in (
+            _scan_mana_candidates(context, [source])
         )
-        if index is None:
+        if scanned_source is source
+        and (scanned_restriction.text if scanned_restriction is not None else None) == wanted_text
+    ]
+    chosen = sorted(colors)
+    index = next(
+        (
+            index
+            for index, options in sorted(matches, key=lambda item: item[0])
+            if any(sorted(option) == chosen for option in options)
+        ),
+        min((index for index, _options in matches), default=None),
+    )
+    if index is None:
+        return 0
+    activation = dict(tappable_mana_activations(source, context.game)).get(index)
+    rider = activation.mana.rider if activation is not None and activation.mana else None
+    if rider is not None and rider.kind in ("damage_to_controller", "lose_life"):
+        return rider.amount
+    return 0
+
+
+def _prefer_painless_mana(
+    context: "CostPayment | _SpendContext",
+    plan: "TapPlan",
+    *,
+    owed: ManaCost,
+    base_floating: dict[Color, int],
+    base_snow: dict[Color, int],
+    base_restricted: list[Any],
+    life_available: int,
+) -> "TapPlan":
+    """Swap a plan entry that takes damage or life (a painland's coloured
+    ability, CR 405.6c) for a rider-free ability of the same source with the
+    same CR 106.6 restriction when the plan still pays - Llanowar Wastes
+    pays a generic {1} with `{T}: Add {C}.`, not by hurting its controller."""
+    plan = list(plan)
+    for position, (source, colors, restriction) in enumerate(plan):
+        if not _entry_life_loss(context, source, colors, restriction):
             continue
-        activation = dict(tappable_mana_activations(source, context.game)).get(index)
-        rider = activation.mana.rider if activation is not None and activation.mana else None
-        if rider is not None and rider.kind in ("damage_to_controller", "lose_life"):
-            loss += rider.amount
-    return loss
+        wanted_text = restriction.text if restriction is not None else None
+        for scanned_source, options, scanned_restriction, _any, _index in _scan_mana_candidates(
+            context, [source]
+        ):
+            scanned_text = scanned_restriction.text if scanned_restriction is not None else None
+            if scanned_source is not source or scanned_text != wanted_text:
+                continue
+            swapped = False
+            for option in options:
+                if _entry_life_loss(context, source, option, restriction):
+                    continue
+                trial_plan = (
+                    plan[:position] + [(source, list(option), restriction)] + plan[position + 1 :]
+                )
+                trial = ManaPool(
+                    floating=dict(base_floating),
+                    snow=dict(base_snow),
+                    restricted=[entry.model_copy(deep=True) for entry in base_restricted],
+                )
+                for each, each_colors, each_restriction in trial_plan:
+                    trial.add_all(
+                        each_colors, snow=is_snow_source(each), restriction=each_restriction
+                    )
+                if trial.can_pay(owed, life_available=life_available, spend=context.spend):
+                    plan = trial_plan
+                    swapped = True
+                    break
+            if swapped:
+                break
+    return plan
 
 
 def _solve_colours(
@@ -2264,7 +2327,15 @@ def _solve_auto_tap_flow(
                     base_restricted=base_restricted,
                     life_available=life_available,
                 )
-            return plan
+            return _prefer_painless_mana(
+                context,
+                plan,
+                owed=owed,
+                base_floating=base_floating,
+                base_snow=base_snow,
+                base_restricted=base_restricted,
+                life_available=life_available,
+            )
     return None
 
 
@@ -2590,6 +2661,9 @@ class CardRequirement(EngineModel):
     """Web-slinging's "return a *tapped* creature you control" (CR
     702.188a): True asks for a tapped permanent, False an untapped one, None
     either (CR 110.5's status)."""
+    token: bool | None = None
+    """Fountainport's "Sacrifice a token" (CR 111.1): True asks for a token,
+    False ("a nontoken creature") for a card, None either."""
 
     @property
     def is_empty(self) -> bool:
@@ -2602,6 +2676,7 @@ class CardRequirement(EngineModel):
             or self.same_name_as
             or self.mana_value is not None
             or self.tapped is not None
+            or self.token is not None
         )
 
     def why_not(self, card: CardState, game: Any = None, payer: str | None = None) -> str | None:
@@ -2633,6 +2708,8 @@ class CardRequirement(EngineModel):
             return f"{self.description or 'this cost'} excludes the ability's own source"
         if self.tapped is not None and card.tapped != self.tapped:
             return f"{card.name} is not {'tapped' if self.tapped else 'untapped'}"
+        if self.token is not None and is_token(card) != self.token:
+            return f"{card.name} is {'not ' if self.token else ''}a token"
         if game is not None and card.zone is Zone.BATTLEFIELD:
             try:
                 characteristics = game.characteristics_of(card)
@@ -5167,6 +5244,14 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
     return offers
 
 
+def _per_object_reduction_re(verb: str) -> re.Pattern[str]:
+    return re.compile(
+        r"this spell costs (?P<amount>\{[^}]+\}(?:\{[^}]+\})*) less to cast for each "
+        rf"(?P<noun>[a-z]+) {verb} this way\.?",
+        re.IGNORECASE,
+    )
+
+
 #: Rottenmouth Viper's own second sentence of its own additional cost
 #: paragraph: "As an additional cost to cast this spell, you may sacrifice
 #: any number of nonland permanents. This spell costs {1} less to cast for
@@ -5180,11 +5265,18 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
 #: how many objects the payer chose to sacrifice for *this* announced
 #: additional cost (CR 601.2b), so it is read by `Casting.
 #: sacrifice_for_cost_reduction` itself rather than by that generic reader.
-_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE = re.compile(
-    r"this spell costs (?P<amount>\{[^}]+\}(?:\{[^}]+\})*) less to cast for each "
-    r"(?P<noun>[a-z]+) sacrificed this way\.?",
-    re.IGNORECASE,
-)
+_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE = _per_object_reduction_re("sacrificed")
+#: March of Wretched Sorrow's and its siblings' own linked sentence, the exile
+#: twin of the one above: "As an additional cost to cast this spell, you may
+#: exile any number of black cards from your hand. This spell costs {2} less
+#: to cast for each card exiled this way." Read by `Casting.
+#: exile_for_cost_reduction`, again only ever as a generic `{N}` (CR 118.7a).
+_PER_OBJECT_EXILE_COST_REDUCTION_RE = _per_object_reduction_re("exiled")
+
+
+def _per_object_reduction(pattern: re.Pattern[str], text: str, *, whole: bool) -> ManaCost | None:
+    match = pattern.fullmatch(text.strip()) if whole else pattern.search(text)
+    return None if match is None else ManaCost.try_parse(match.group("amount"))
 
 
 def per_object_sacrifice_cost_reduction(card: Card) -> ManaCost | None:
@@ -5193,17 +5285,29 @@ def per_object_sacrifice_cost_reduction(card: Card) -> ManaCost | None:
     to printing one this engine cannot read, which `Casting.
     sacrifice_for_cost_reduction` tells apart by trying to parse the amount
     and raising when that fails rather than silently reducing nothing."""
-    match = _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE.search(card.oracle_text or "")
-    if match is None:
-        return None
-    return ManaCost.try_parse(match.group("amount"))
+    return _per_object_reduction(
+        _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE, card.oracle_text or "", whole=False
+    )
 
 
 def per_object_sacrifice_reduction_of_sentence(sentence: str) -> ManaCost | None:
     """`per_object_sacrifice_cost_reduction`'s amount when `sentence` is
     wholly that reduction sentence, else None."""
-    match = _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE.fullmatch(sentence.strip())
-    return None if match is None else ManaCost.try_parse(match.group("amount"))
+    return _per_object_reduction(_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE, sentence, whole=True)
+
+
+def per_object_exile_cost_reduction(card: Card) -> ManaCost | None:
+    """`per_object_sacrifice_cost_reduction`'s exile twin: the per-card amount
+    of "This spell costs {N} less to cast for each card exiled this way."."""
+    return _per_object_reduction(
+        _PER_OBJECT_EXILE_COST_REDUCTION_RE, card.oracle_text or "", whole=False
+    )
+
+
+def per_object_exile_reduction_of_sentence(sentence: str) -> ManaCost | None:
+    """`per_object_exile_cost_reduction`'s amount when `sentence` is wholly
+    that reduction sentence, else None."""
+    return _per_object_reduction(_PER_OBJECT_EXILE_COST_REDUCTION_RE, sentence, whole=True)
 
 
 def alternative_cost_phrase_of_line(text: str) -> str | None:
@@ -5745,6 +5849,7 @@ def _requirement(quality: str) -> CardRequirement | None:
     subtypes: list[str] = []
     supertypes: list[Supertype] = []
     tapped: bool | None = None
+    token: bool | None = None
     for raw_word in words:
         word = raw_word.strip(",")
         if not word:
@@ -5756,6 +5861,10 @@ def _requirement(quality: str) -> CardRequirement | None:
             # CR 110.5's status: web-slinging's "a tapped creature you
             # control" (CR 702.188a).
             tapped = lowered == "tapped"
+            continue
+        if lowered in ("token", "nontoken", "non-token"):
+            # CR 111.1: a token is a permanent no card represents.
+            token = lowered == "token"
             continue
         negated_type = lowered.removeprefix("non-").removeprefix("non")
         if lowered.startswith("non") and negated_type in {type_.value for type_ in Type}:
@@ -5797,6 +5906,7 @@ def _requirement(quality: str) -> CardRequirement | None:
         supertypes=supertypes,
         description=quality.strip(),
         tapped=tapped,
+        token=token,
     )
 
 

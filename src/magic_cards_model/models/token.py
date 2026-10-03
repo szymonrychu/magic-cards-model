@@ -571,6 +571,20 @@ MUTAGEN = TokenDefinition(
     ),
 )
 
+#: CR 111.10u: "A Lander token is a colorless Lander artifact token with
+#: '{2}, {T}, Sacrifice this token: Search your library for a basic land card,
+#: put it onto the battlefield tapped, then shuffle.'" - a data row like every
+#: other CR 111.10 entry, so the token carries the Lander artifact type
+#: (CR 205.3g) wherever a card prints "create a Lander token".
+LANDER = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Lander",),
+    rules_text=(
+        "{2}, {T}, Sacrifice this token: Search your library for a basic land card, "
+        "put it onto the battlefield tapped, then shuffle."
+    ),
+)
+
 #: CR 111.10x: "A Heartwood token is a red and green Heartwood artifact token
 #: with '{T}: Add {R} or {G}.'" - Reality Fracture's own addition to CR 111.10,
 #: read the same way every other predefined token is: as a data row, not a
@@ -618,6 +632,7 @@ PREDEFINED: dict[str, TokenDefinition] = {
     "Powerstone": POWERSTONE,
     "Mutagen": MUTAGEN,
     "Heartwood": HEARTWOOD,
+    "Lander": LANDER,
     "Jace": JACE,
     "Monster": MONSTER_ROLE,
     "Cursed": CURSED_ROLE,
@@ -974,6 +989,27 @@ def _type_line_with_added_creature_type(type_line: str, subtype: str) -> str:
     return f"{new_left} \u2014 {' '.join(right_words)}" if right_words else new_left
 
 
+def _type_line_with_added_card_type(type_line: str, card_type: str) -> str:
+    """`type_line` with `card_type` added "in addition to its other types"
+    (CR 205.1b, CR 707.9b) - Molten Duplication's own "except it's an artifact
+    in addition to its other types". The card type goes after any supertype
+    (CR 205.4a's basic, legendary, ongoing, snow and world) and before the other
+    card types, the order a printed "Legendary Artifact Creature" reads in;
+    a type line already carrying it is returned unchanged. Each half of a
+    split type line takes it."""
+    halves = []
+    for half in type_line.split(" // "):
+        left, dash, right = half.partition("\u2014")
+        words = left.split()
+        if card_type not in words:
+            supertypes = ("Legendary", "Basic", "Ongoing", "Snow", "World")
+            at = next((i for i, word in enumerate(words) if word not in supertypes), len(words))
+            words.insert(at, card_type)
+        new_left = " ".join(words)
+        halves.append(f"{new_left} {dash}{right}" if dash else new_left)
+    return " // ".join(halves)
+
+
 def _type_line_with_creature_types(type_line: str, creature_types: Sequence[str]) -> str:
     """`type_line` with its creature types replaced by `creature_types` (CR
     205.1a: setting a subtype replaces the old subtypes of that kind, and
@@ -1008,6 +1044,7 @@ def token_copy_of(
     colors: Sequence[Color] | None = None,
     creature_types: Sequence[str] | None = None,
     enters_with_counters: Sequence[tuple[str, int]] = (),
+    added_card_type: str | None = None,
     **options: Any,
 ) -> list[TokenState]:
     """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
@@ -1073,6 +1110,17 @@ def token_copy_of(
     many +1/+1 counters" - `(kind, amount)` pairs put on each copy's own
     entering event, not counters added after it arrived.
 
+    `added_card_type` is CR 707.9b's card-type exception - Molten
+    Duplication's "except it's an artifact in addition to its other types":
+    the named card type joins the copiable type line (CR 205.1b's "in
+    addition to" keeps every other type), so the copy is an artifact even
+    though its original is not.
+
+    `tapped` and `attacking` (options) are Flamerush Rider's and Thousand-Faced
+    Shadow's "tapped and attacking" (CR 508.4): the copies enter tapped and, with
+    `attacking` naming the defender (`TargetRef | str`), already in combat
+    without having been declared.
+
     `colors` and `creature_types` are CR 707.9b's *replacing* exception -
     Croaking Counterpart's "except it's a 1/1 green Frog": the copiable colour
     is set to exactly `colors` and the creature types to exactly
@@ -1114,6 +1162,7 @@ def token_copy_of(
             added_abilities = ()
             power = toughness = None
             added_creature_type = None
+            added_card_type = None
             not_legendary = False
             colors = creature_types = None
 
@@ -1124,6 +1173,7 @@ def token_copy_of(
             power is not None
             or toughness is not None
             or added_creature_type is not None
+            or added_card_type is not None
             or not_legendary
             or colors is not None
             or creature_types is not None
@@ -1137,6 +1187,25 @@ def token_copy_of(
                 update["type_line"] = _type_line_with_added_creature_type(
                     copiable.type_line, added_creature_type
                 )
+            if added_card_type is not None:
+                update["type_line"] = _type_line_with_added_card_type(
+                    update.get("type_line", copiable.type_line), added_card_type
+                )
+                if copiable.card_faces:
+                    # Each face's own type line is what a double-faced
+                    # original reads its characteristics off (CR 712.8d).
+                    update["card_faces"] = [
+                        face.model_copy(
+                            update={
+                                "type_line": _type_line_with_added_card_type(
+                                    face.type_line, added_card_type
+                                )
+                            }
+                        )
+                        if face.type_line
+                        else face
+                        for face in update.get("card_faces", copiable.card_faces)
+                    ]
             if creature_types is not None:
                 update["type_line"] = _type_line_with_creature_types(
                     update.get("type_line", copiable.type_line), creature_types
@@ -1184,6 +1253,7 @@ def token_copy_of(
                 NAMESPACE_OID,
                 f"{_TOKEN_CARD_ID_PREFIX}:{copiable.id}:pt:{power}/{toughness}:type:{added_creature_type}"
                 + (":nonlegendary" if not_legendary else "")
+                + (f":cardtype:{added_card_type}" if added_card_type is not None else "")
                 + (f":colors:{''.join(c.value for c in colors)}" if colors is not None else "")
                 + (f":types:{' '.join(creature_types)}" if creature_types is not None else ""),
             )
@@ -1208,6 +1278,13 @@ def token_copy_of(
                 )
                 game.put_onto_battlefield(addition, controller)
                 created.append(addition)
+        attacking = options.get("attacking")
+        if attacking is not None:
+            # CR 508.4: put onto the battlefield attacking, never declared. A
+            # token a replacement effect sent elsewhere is not attacking.
+            for copy in created:
+                if copy.zone is Zone.BATTLEFIELD:
+                    _put_onto_the_battlefield_attacking(game, copy, attacking)
         return created
 
 

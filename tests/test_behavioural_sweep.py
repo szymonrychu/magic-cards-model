@@ -114,6 +114,7 @@ from magic_cards_model.machines.keywords import (
     crew_activation,
     crew_number,
     cycling_activation,
+    ninjutsu_activation,
     off_zone_abilities,
     off_zone_activation,
 )
@@ -1360,6 +1361,9 @@ def _board_threshold(scenario: PlayedScenario, source: CardState | None, conditi
             return
 
 
+_BASIC_LANDS = ("Plains", "Island", "Swamp", "Mountain", "Forest")
+
+
 @cache
 def _board_candidates() -> tuple[str, ...]:
     """Nonlegendary single-faced permanent printings of the pool, for a
@@ -1431,6 +1435,15 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
             name for name in _board_candidates() if _passes(game, source, test, card_state(name))
         ]
         names = passing[:6]
+        # A land quality ("seven or more Plains", Emeria): `_board_candidates`
+        # leaves lands out, so the basic lands that pass the quality are tried
+        # here, in the counts a land threshold needs.
+        basics = [
+            name
+            for name in _BASIC_LANDS
+            if name not in names and _passes(game, source, test, card_state(name))
+        ]
+        names = [*names, *basics]
         if " with different " in _clause(condition):
             # "N or more Demons with different names" (CR 201.2b): one copy
             # each of distinct printings, grown until the engine's own
@@ -1445,7 +1458,7 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
                 except (_Unavailable, ValueError, KeyError):
                     break
         for name in [*names, *PREDEFINED]:
-            for copies in (1, 2, 3):
+            for copies in (1, 2, 3, *range(4, 10)) if name in _BASIC_LANDS else (1, 2, 3):
                 material = tuple(Material(name, ALICE, Zone.BATTLEFIELD) for _ in range(copies))
                 try:
                     if confirmed(material):
@@ -4216,6 +4229,44 @@ def _animated_attack(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]
     yield animated
 
 
+def _ninjutsu_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "When this enters from your hand, if it's attacking": the source is
+    put onto the battlefield tapped and attacking by its own ninjutsu,
+    returning an unblocked attacker (CR 702.49a). A vanilla partner attacks
+    too, for an "another target attacking creature"."""
+    card = case.printing
+    if "ninjutsu" not in {k.canonical.lower() for k in keyword_abilities(card)}:
+        return
+
+    def ninjutsu() -> tuple[PlayedScenario, Any]:
+        scenario = _board(
+            hand=(card.name,),
+            battlefield=("Grizzly Bears", *_extra_lands_for(card)),
+            step=Step.DECLARE_ATTACKERS,
+            busy=False,
+        )
+        game = scenario.game
+        bears = _last(scenario, "Grizzly Bears", Zone.BATTLEFIELD, ALICE)
+        returning = _last(scenario, "Memnite", Zone.BATTLEFIELD, ALICE)
+        source = _last(scenario, card.name, Zone.HAND, ALICE)
+        try:
+            scenario.attack_with(bears, returning, defending=BOB)
+            scenario.turn.advance_to(Step.DECLARE_BLOCKERS)
+            game.sync_priority_with_step()
+            scenario.no_blocks()
+            activation = ninjutsu_activation(game, source, returning, ALICE)
+            activation.begin_paying()
+            activation.payment.auto_tap(game.permanents_controlled_by(ALICE))
+            activation.payment.pay()
+            activation.activate()
+            activation.resolve()
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(str(error)) from error
+        return scenario, source.id
+
+    yield ninjutsu
+
+
 def _attempts(case: Case) -> Iterator[Attempt]:
     ability = _trigger_ability(case.printing, case.text)
     if ability.event_qualifier:
@@ -4315,6 +4366,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _enlisting(case, ability)
         elif kind == "attacks":
             yield from _animated_attack(case, ability)
+        elif kind == TriggerEvent.ENTERS_THE_BATTLEFIELD.value:
+            yield from _ninjutsu_entering(case, ability)
 
 
 #: Attempts whose event happens later in the turn (or in the next ones), so
@@ -5042,6 +5095,9 @@ def _cost_card(component: Any) -> Material | None:
         zone = component.zone
     else:
         zone = Zone.BATTLEFIELD
+    if requirement is not None and requirement.token and zone is Zone.BATTLEFIELD:
+        # "Sacrifice a token" (Fountainport): any predefined token (CR 111.10).
+        return Material("Treasure", ALICE, Zone.BATTLEFIELD)
     if requirement is not None and zone is Zone.BATTLEFIELD:
         for token in PREDEFINED:
             if token.lower() in _subtype_stems(requirement.subtypes):

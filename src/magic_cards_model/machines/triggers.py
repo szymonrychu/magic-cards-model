@@ -2382,6 +2382,36 @@ _MANA_VALUE_LESS_THAN = re.compile(r"mana value (?:of )?less than (\d+)")
 _MANA_VALUE_EQUALS = re.compile(r"mana value (?:of )?(\d+)\b")
 
 
+def _entering_mana_value_qualifier_holds(
+    game: "Game", condition: str, subject_id: UUID | None
+) -> bool | None:
+    """Whether "`<permanent>` ... with mana value N or greater/or less/..."
+    holds for the entering object (CR 202.3, read off its computed
+    characteristics, CR 613.5) - Simulacrum Synthesizer's own "another
+    artifact you control with mana value 3 or greater enters". `None` when
+    the condition names no literal mana-value qualifier at all; unread, the
+    trigger fired on every artifact - its own 0/0 Construct token included,
+    which retriggered it forever."""
+    lowered = condition.lower()
+    if "with mana value" not in lowered:
+        return None
+    comparison = _mana_value_comparison(lowered)
+    if comparison is None:
+        return None
+    subject = game.find_by_id(subject_id) if subject_id is not None else None
+    if subject is None:
+        return False
+    threshold, comparator = comparison
+    ops = {
+        ">=": operator.ge,
+        "<=": operator.le,
+        ">": operator.gt,
+        "<": operator.lt,
+        "==": operator.eq,
+    }
+    return bool(ops[comparator](game.characteristics_of(subject).mana_value, threshold))
+
+
 def _mana_value_comparison(condition: str) -> tuple[int, str] | None:
     """The `(threshold, comparator)` a "with mana value ..." clause names, or
     `None` when the condition names no mana-value restriction at all.
@@ -2513,10 +2543,25 @@ def _controller_clause_holds(
 #: subject looked up here already carries its real entering state.
 _ENTERS_TAPPED_RE = re.compile(r"\benters?\b(?:[^.]*\bthe battlefield\b)?[^.]*?\btapped\b")
 _ENTERS_UNTAPPED_RE = re.compile(r"\benters?\b(?:[^.]*\bthe battlefield\b)?[^.]*?\buntapped\b")
+#: "enters from your hand" (Thousand-Faced Shadow) / "enters from a graveyard":
+#: CR 603.6a's enters event remembers the zone the permanent came from
+#: (`GameEvent.origin_zone`, set by `Game.enter_the_battlefield`), and the
+#: qualifier narrows the CR 603.2 event match itself.
+_ENTERS_FROM_ZONE_RE = re.compile(
+    r"\benters?\b[^.]*?\bfrom (?:your|a|their|an opponent's) "
+    r"(?P<zone>hand|graveyard|library|exile)\b"
+)
 _ENTERS_WITH_COUNTER_RE = re.compile(
     r"\benters?\b[^.]*?\bwith\s+(?:a|an|one or more|\d+)\s+"
     r"(?P<kind>[+/\-\w]+(?:[ \-][+/\-\w]+)*?)\s+counters?\s+on\s+(?:it|them)\b"
 )
+
+
+def required_entry_origin(condition: str) -> Zone | None:
+    """The zone an ENTERS_THE_BATTLEFIELD condition says the permanent must
+    come from ("enters from your hand"), or `None` when it names none."""
+    match = _ENTERS_FROM_ZONE_RE.search(condition.lower())
+    return Zone(match.group("zone")) if match is not None else None
 
 
 def _entry_qualifier_matches(game: "Game", condition: str, event: "GameEvent") -> bool:
@@ -2537,6 +2582,10 @@ def _entry_qualifier_matches(game: "Game", condition: str, event: "GameEvent") -
     if _ENTERS_TAPPED_RE.search(lowered) is not None and (subject is None or not subject.tapped):
         return False
     if _ENTERS_UNTAPPED_RE.search(lowered) is not None and (subject is None or subject.tapped):
+        return False
+
+    required_origin = required_entry_origin(condition)
+    if required_origin is not None and event.origin_zone is not required_origin:
         return False
 
     counter_match = _ENTERS_WITH_COUNTER_RE.search(lowered)
@@ -2976,7 +3025,10 @@ def _condition_matches(
         # specific to blocking, and leaving it unread here silently dropped
         # Garruk's own filter, firing his draw on any creature at all.
         power_or_toughness = _power_or_toughness_qualifier_holds(game, condition, event.subject_id)
-        return power_or_toughness is None or power_or_toughness
+        if power_or_toughness is False:
+            return False
+        mana_value = _entering_mana_value_qualifier_holds(game, condition, event.subject_id)
+        return mana_value is None or mana_value
 
     if ability.event is TriggerEvent.DIES:
         if "enchanted" in lowered:
@@ -3554,6 +3606,10 @@ def _condition_matches(
             condition = lowered
         elif not _target_subject_matches(condition):
             return False
+        elif (targeted_spell := game.find_by_id(event.subject_id)) is not None and (
+            targeted_spell.zone is Zone.STACK
+        ):
+            return False  # "a player or permanent": a spell on the stack is neither
         if not _targeting_object_matches(game, condition, event):
             return False
         if "an opponent controls" in lowered:
@@ -3596,6 +3652,19 @@ def _condition_matches(
                     return False
             elif "opponent" in lowered:
                 if event.player is None or event.player == controller:
+                    return False
+            elif event.target_id is not None and re.search(
+                r"\b(?:a|an|another)\b[^,]*\b(?:creature|planeswalker|permanent)\b", lowered
+            ):
+                # CR 120.1's recipient with a type and controller clause:
+                # The Sensational She-Hulk's "Whenever a creature you control
+                # is dealt damage" ("another" excludes the source itself).
+                if "another" in lowered and event.target_id == source.id:
+                    return False
+                if not (
+                    _controller_clause_holds(condition, controller, event.target_controller)
+                    and _types_match(event.target_types, condition)
+                ):
                     return False
             else:
                 return False
@@ -3834,10 +3903,14 @@ _ANY_TARGET_SUBJECT = re.compile(r"^(?:a player or permanent|a permanent or play
 #: affect"): "a creature you control", "another permanent an opponent
 #: controls". `by` is the rest - "a spell", "a spell or ability an opponent
 #: controls" - which is about the targeting object, not the targeted one.
-_OBJECT_TARGET_SUBJECT = re.compile(
-    r"^(?P<subject>(?:a|an|another) (?:[a-z]+ )*?"
+_TARGETED_OBJECT = (
+    r"(?:a|an|another) (?:[a-z]+ )*?"
     r"(?:creature|permanent|artifact|enchantment|land|planeswalker)"
-    r"(?: you control| an opponent controls)?) becomes the target of (?P<by>.+)$"
+    r"(?: spell)?(?: you control| an opponent controls)?"
+)
+_OBJECT_TARGET_SUBJECT = re.compile(
+    rf"^(?P<subject>{_TARGETED_OBJECT}(?: or {_TARGETED_OBJECT})*)"
+    r" becomes the target of (?P<by>.+)$"
 )
 
 
@@ -3847,22 +3920,37 @@ def _targeted_object_matches(
     """Whether the object a becomes-target event names fits `subject`'s type
     and controller words, read off the computed board (CR 613.5) - the
     targeted object is a permanent, so an animated land is a creature there
-    and nowhere else."""
+    and nowhere else.
+
+    `subject` may join several objects with "or" (Surrak, Elusive Hunter's "a
+    creature you control or a creature spell you control"); the event matches
+    when any one of them fits. An alternative that says "spell" names an
+    object on the stack (CR 601.2c lets a spell be targeted there) and one
+    that does not names a permanent on the battlefield (CR 110.1), so a
+    creature spell is never a "creature you control" and the reverse."""
     if event.subject_id is None:
-        return False
-    if subject.startswith("another ") and event.subject_id == source.id:
         return False
     targeted = game.find_by_id(event.subject_id)
     if targeted is None:
         return False
-    types = (
-        game.characteristics_of(targeted).types
-        if targeted.zone is Zone.BATTLEFIELD
-        else targeted.types
-    )
-    return _types_match(tuple(types), subject) and _controller_clause_holds(
-        subject, controller, event.subject_controller
-    )
+    for alternative in subject.split(" or "):
+        if alternative.startswith("another ") and event.subject_id == source.id:
+            continue
+        names_spell = " spell" in alternative
+        if names_spell != (targeted.zone is Zone.STACK):
+            continue
+        if not names_spell and targeted.zone is not Zone.BATTLEFIELD:
+            continue
+        types = (
+            game.characteristics_of(targeted).types
+            if targeted.zone is Zone.BATTLEFIELD
+            else targeted.types
+        )
+        if _types_match(tuple(types), alternative) and _controller_clause_holds(
+            alternative, controller, event.subject_controller
+        ):
+            return True
+    return False
 
 
 def _target_subject_matches(condition: str) -> bool:
@@ -6930,7 +7018,9 @@ def _controlled_subtype_count_holds(game: "Game", clause: str, source: CardState
         if card_type is not None:
             if card_type in characteristics.types:
                 count += 1
-        elif any(word.lower() == subtype for word in characteristics.subtypes):
+        elif any(word.lower() in (subtype, f"{subtype}s") for word in characteristics.subtypes):
+            # "Plains" is its own plural, so the `s$` above strips the letter
+            # the subtype ends in ("plain"): accept the word with it restored.
             count += 1
 
     return _SUBTYPE_COUNT_COMPARISONS[comparison_word](count, wanted)

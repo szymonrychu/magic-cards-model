@@ -68,6 +68,7 @@ from magic_cards_model.machines.casting import (
     reads_granted_zone_keyword_line,
     reads_linked_exile_static_cast_line,
     reads_mandatory_additional_cost_line,
+    reads_optional_exile_reduction_line,
     reads_optional_sacrifice_reduction_line,
     reads_or_pay_additional_cost_line,
     reads_play_cards_exiled_with_line,
@@ -200,6 +201,7 @@ from magic_cards_model.machines.triggers import (
     intervening_if_readable,
     is_additional_trigger_line,
     is_batched_attack_condition,
+    required_entry_origin,
     total_power_attack_threshold,
     triggers_only_off_the_stack,
 )
@@ -2168,6 +2170,10 @@ def _static_ability_category(
         # CR 118.8b / CR 118.7a: `Casting.sacrifice_for_cost_reduction` pays
         # it and applies the linked per-object reduction (Rottenmouth Viper).
         return HANDLED
+    if reads_optional_exile_reduction_line(text):
+        # CR 118.8b / CR 118.7a: `Casting.exile_for_cost_reduction` pays it
+        # and applies the linked per-card reduction (March of Wretched Sorrow).
+        return HANDLED
     if static_free_cast_grant(text) is not None:
         # CR 118.9: "you may cast ... without paying its mana cost" off a
         # permanent (Omniscience; Zaffai and the Tempests' once each turn) -
@@ -2821,6 +2827,7 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
             subject_subtypes=tuple(subject.subtypes) if subject is not None else None,
             related_id=subject.id if subject is not None else None,
             player=player,
+            origin_zone=required_entry_origin(ability.condition) if entering else None,
             # CR 506.5/506.6: a lone attacker (nothing else declared this
             # combat, and so also nothing else attacking the same defending
             # player) is an entirely ordinary board state, reachable in a

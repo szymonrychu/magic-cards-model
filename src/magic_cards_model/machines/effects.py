@@ -3075,16 +3075,21 @@ def _mass_creature_group_targets(
             for part in re.split(r",\s*|\s+and\s+", subtype_match.group("subtypes"))
             if part.strip()
         }
-        base_selector = (
-            creatures_controlled_by(controller)
-            if subtype_match.group("whose") == "you control"
-            else creatures_controlled_by_opponents_of(controller)
-        )
+        # A subtype word names every permanent carrying it, not only
+        # creatures: Sapling Nursery's "Treefolk and Forests you control"
+        # reaches the Forests (a CR 205.3i land type) as well as the Treefolk
+        # (a CR 205.3m creature type), so the controller check carries no
+        # creature requirement.
+        you = subtype_match.group("whose") == "you control"
         board = game.computed_board()
         return [
             permanent
             for permanent in game.battlefield
-            if base_selector(board.of(permanent), board.characteristics)
+            if (
+                board.of(permanent).controller == controller
+                if you
+                else board.of(permanent).controller not in (None, controller)
+            )
             and subtypes & {word.lower() for word in board.of(permanent).subtypes}
         ]
     color_filter_match = _MASS_COLOR_FILTER_RE.match(text.strip())
@@ -10634,8 +10639,11 @@ _GAIN_LIFE_RE = re.compile(
 _LOSE_LIFE_RE = re.compile(
     rf"you loses? (?P<n>{COUNT}) life(?: for each (?P<each>.+))?", re.IGNORECASE
 )
-
-
+#: "<player> loses that much life" - an amount carried by the triggering
+#: event or an earlier instruction (`that_many`, CR 608.2c / 603.2c): Professor
+#: Dellian Fel's emblem "Whenever you gain life, target opponent loses that
+#: much life." The player is whoever the dispatcher runs the clause for.
+_THAT_MUCH_LIFE_LOSS_RE = re.compile(r"^you loses? that much life\.?$", re.IGNORECASE)
 #: A life total changed by a counted amount: "Target player gains X life,
 #: where X is the greatest power among creatures they control" (Inscription
 #: of Abundance), "Target opponent loses life equal to the number of
@@ -11348,7 +11356,9 @@ _SURVEIL_RE = re.compile(rf"surveils? (?P<n>{AMOUNT}){where_x_pattern()}", re.IG
 #: "Scry N" (Preordain, most spells) and "Target player scries N" (Kozilek's
 #: Command's third-person mode) - `scr(?:y|ies)` reads both conjugations.
 #: "Scry X, where X is `<expr>`" (Oath of Jace) reads the same way.
-_SCRY_RE = re.compile(rf"scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
+#: The explicit-subject spelling "you scry N" (Torch the Tower's bargained
+#: "... and you scry 1") reads as the bare one.
+_SCRY_RE = re.compile(rf"(?:you )?scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
 #: "shuffle" (Ponder's, Pondering Mage's own "You may shuffle.") or "shuffle
 #: your library" - CR 701.24a's action alone, with nothing else attached. A
 #: search's own mandatory shuffle reads through `Game.search_library`
@@ -12431,6 +12441,17 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             game.lose_life(player, total)
 
         return lose_life
+
+    if _THAT_MUCH_LIFE_LOSS_RE.fullmatch(clause):
+
+        def lose_that_much_life(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            amount = _that_many_or_notice(game, clause, source_id=source_id, source_name=source)
+            if amount:
+                game.lose_life(player, amount)
+
+        return lose_that_much_life
 
     counted_life = _parse_counted_life_change_clause(clause)
     if counted_life is not None:
@@ -17239,7 +17260,9 @@ def _parse_counter_on_it_trigger_subject_clause(clause: str) -> TargetedClause |
         if not isinstance(stack_object, AbilityOnStack):
             return
         event = stack_object.event
-        if event is not None and event.subject_id is not None:
+        if event is not None and _damage_recipient_is_its_subject(stack_object):
+            subject = game.find_by_id(event.target_id)
+        elif event is not None and event.subject_id is not None:
             subject = game.find_by_id(event.subject_id)
         elif _names_its_source(stack_object):
             # "At end of combat, if this Vehicle attacked or blocked this
@@ -17255,6 +17278,19 @@ def _parse_counter_on_it_trigger_subject_clause(clause: str) -> TargetedClause |
             game.add_counters(subject, kind, amount)
 
     return effect
+
+
+def _damage_recipient_is_its_subject(ability: AbilityOnStack) -> bool:
+    """Whether a triggered ability's condition is the passive "`<X>` is dealt
+    damage" (CR 120.1's recipient), so the bare "it" its effect then names is
+    the creature that was dealt the damage (`GameEvent.target_id`), not the
+    source of the damage (`GameEvent.subject_id`) - Rite of Passage's "Whenever
+    a creature you control is dealt damage, put a +1/+1 counter on it."."""
+    event = ability.event
+    printed = ability.ability
+    if event is None or event.target_id is None or not isinstance(printed, TriggeredAbility):
+        return False
+    return re.search(r"\b(?:is|are) dealt\b", (printed.condition or "").lower()) is not None
 
 
 def _names_its_source(ability: AbilityOnStack) -> bool:
@@ -18618,8 +18654,8 @@ def _parse_exile_until_leaves_battlefield_clause(
         if not targets:
             return  # CR 608.2b/115.6: no (legal) target chosen; nothing to exile.
         source = ability.source(game)
-        if source is None:
-            return  # CR 113.7a: the source is already gone; nothing left to watch leave.
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return  # CR 610.3b: the source already left after this triggered; nothing moves.
         for target in targets:
             exiled = game.exile_permanent(target)
             if exiled.zone is not Zone.EXILE:
@@ -21945,9 +21981,11 @@ _TARGET_CANT_BLOCK_RE = re.compile(
 #: creature you control phases out.". The restriction is whatever
 #: `machines/targeting.py` reads off the phrase; the reminder text
 #: ("(Treat it and anything attached to it ...)") is stripped before this
-#: sees the clause.
+#: sees the clause. A leading "up to X"/"up to N" count (March of Swirling
+#: Mist's "Up to X target creatures phase out.") rides on the phrase, which
+#: `machines/targeting.py` reads in full.
 _TARGET_PHASES_OUT_RE = re.compile(
-    r"^(?P<phrase>(?:another )?target .+?) phases? out\.?$", re.IGNORECASE
+    r"^(?P<phrase>(?:up to \w+ )?(?:another )?target .+?) phases? out\.?$", re.IGNORECASE
 )
 
 #: "`<target phrase>` gains `<keyword>`[, `<keyword>`, and `<keyword>`] until
@@ -32575,7 +32613,7 @@ def _parse_mass_destroy_predicate(
             return False
         if entered_this_turn:
             turn = game.turn
-            if turn is None or permanent.turn_entered != turn.turn_number:
+            if turn is None or permanent.turn_entered != turn.turns_taken:
                 return False
         if mv_comparison is not None and not mv_comparison(game, chars, source, x_value):
             return False
@@ -35234,8 +35272,15 @@ def _parse_draw_x_from_target_graveyard_from_library_clause(text: str) -> Effect
 #: targeted rather than a group damage clause. CR 614.1a: a replacement effect
 #: the resolving spell creates, naming exactly the permanents its own damage
 #: clause dealt damage to (CR 120.3 - damage prevented is never dealt).
+#:
+#: The same rider also reads "dealt damage by `<this spell's name>`" (Torch the
+#: Tower's "If a permanent dealt damage by Torch the Tower would die this turn,
+#: exile it instead."), where the source is the resolving spell itself - the
+#: rider is printed on that spell, so a capitalised name or "this spell" can
+#: only mean it; a lower-case group ("creatures you control") is not read.
 _DEALT_DAMAGE_THIS_WAY_DIE_TO_EXILE_RE = re.compile(
-    r"^(?P<rest>.+?\.)\s+if an? (?P<quality>[a-z]+(?: or [a-z]+)*) dealt damage this way "
+    r"^(?P<rest>.+?\.)\s+if an? (?P<quality>[a-z]+(?: or [a-z]+)*) dealt damage "
+    r"(?:this way|by (?:this spell|(?-i:[A-Z][\w',\- ]*))) "
     r"would die this turn, exile it instead\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -46545,17 +46590,20 @@ def _parse_put_creature_from_hand_attacking_then_return(text: str) -> AbilityEff
             return
         by_id = {state.id: state for state in candidates}
         chosen = by_id[chosen_ids[0]]
-        permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
-        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
-            return
-        defender = _defender_of_controllers_attack(game, controller.username)
-        if defender is not None:
-            # CR 508.4, via `models/token.py`'s own primitive: it is annotated
-            # for a `TokenState` because the token half was written first, but
-            # everything it reads - `is_creature`, `controller`, `id` - is
-            # `CardState`'s, and CR 508.4 draws no distinction between a token
-            # and a card put onto the battlefield attacking.
-            _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
+        # Attacking before the enters event is raised (CR 508.4, CR 603.6a).
+        with game.entering_together():
+            permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
+            if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+                return
+            defender = _defender_of_controllers_attack(game, controller.username)
+            if defender is not None:
+                # CR 508.4, via `models/token.py`'s own primitive: it is
+                # annotated for a `TokenState` because the token half was
+                # written first, but everything it reads - `is_creature`,
+                # `controller`, `id` - is `CardState`'s, and CR 508.4 draws no
+                # distinction between a token and a card put onto the
+                # battlefield attacking.
+                _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
         trigger = anaphoric_delayed_trigger(
             delayed_clause,
             subject=permanent,
@@ -46637,12 +46685,13 @@ def _parse_put_creature_mv_x_from_hand_attacking(text: str) -> AbilityEffect | N
             return
         by_id = {state.id: state for state in candidates}
         chosen = by_id[chosen_ids[0]]
-        permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
-        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
-            return
-        defender = _defender_of_controllers_attack(game, controller.username)
-        if defender is not None:
-            _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
+        with game.entering_together():
+            permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
+            if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+                return
+            defender = _defender_of_controllers_attack(game, controller.username)
+            if defender is not None:
+                _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
 
     return effect
 
@@ -53126,9 +53175,55 @@ def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
 #: `token_copy_of` the same way `_parse_city_blessing_token_copy_clause`
 #: below reuses it for Ocelot Pride's anaphoric "it" instead of a real
 #: target.
+#:
+#: Widened (R0b-T5) with the temporary-copy tail every "copy it for a turn"
+#: printing carries, each part optional and each about the token just made
+#: (CR 608.2c), never the targeted original:
+#:
+#: - CR 707.9b's ", except it's an artifact in addition to its other types"
+#:   (Molten Duplication) - a card type written into the copiable values -
+#:   or any exception `_read_copy_exception_list`/`_read_token_copy_except`
+#:   already reads;
+#: - "It gains haste[ until end of turn]." / "That token gains haste."
+#:   (Molten Duplication, Cogwork Assembler) - a layer 6 grant on the token;
+#: - "(Sacrifice|Exile) it at the beginning of the next end step." (The Fire
+#:   Crystal, Molten Duplication, Cogwork Assembler) - CR 603.7a's delayed
+#:   trigger, built by `anaphoric_delayed_trigger` against the token's own
+#:   incarnation, so a token already gone by then is left alone.
+#:
+#: The target's "you control" is optional too: Cogwork Assembler's bare
+#: "target artifact" may name an opponent's artifact, and the token is still
+#: created under the ability's controller (CR 111.2).
+#:
+#: Widened again (E5-U8) with the "tapped and attacking" family and
+#: "another" (Chrome Dome's "another target artifact you control", Flamerush
+#: Rider's "another target attacking creature"), each part optional:
+#:
+#: - ", and that's tapped and attacking" / "The token enters tapped and
+#:   attacking." (CR 508.4): the token enters tapped and already attacking
+#:   whatever its original attacks, never declared as an attacker (CR 508.4c),
+#:   so no "whenever this creature attacks" ability of the copy triggers;
+#: - "Exile the token at end of combat." (Flamerush Rider): the same CR 603.7a
+#:   delayed trigger, at CR 511.2's end of combat step.
 _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
-    r"^create a token that'?s a copy of "
-    r"(?P<phrase>target [a-z]+(?: or [a-z]+)? you control)\.?$",
+    r"^create a token that['’]?s a copy of "
+    r"(?P<phrase>(?:another )?target (?:(?:attacking|blocking|nonlegendary|nontoken) )?"
+    r"[a-z]+(?: or [a-z]+)?(?: you control)?)"
+    r"(?:, except (?P<except>[^.]+?))?"
+    r"(?P<attacking>,? and that['’]?s tapped and attacking)?\.?"
+    r"(?P<haste>\s*(?:it|that token) gains haste(?P<eot> until end of turn)?\.)?"
+    r"(?P<enters_attacking>\s*the token enters tapped and attacking\.?)?"
+    r"(?P<end_step>\s*(?:(?:exile|sacrifice) it at the beginning of the next end step"
+    r"|exile the token at end of combat)\.?)?\s*$",
+    re.IGNORECASE,
+)
+
+#: CR 707.9b's card-type exception - "except it's an artifact in addition to
+#: its other types" (Molten Duplication): the named card type joins the
+#: copy's copiable type line (CR 205.1b's "in addition to").
+_EXCEPT_ADDED_CARD_TYPE_RE = re.compile(
+    r"^(?:it['’]?s|it is) an? (?P<card_type>artifact|enchantment) "
+    r"in addition to its other types$",
     re.IGNORECASE,
 )
 
@@ -53137,17 +53232,119 @@ def _parse_create_token_copy_of_target_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_CREATE_TOKEN_COPY_OF_TARGET_RE`'s shape, or `None` if this is not it."""
-    match = _CREATE_TOKEN_COPY_OF_TARGET_RE.fullmatch(clause.strip())
+    match = _CREATE_TOKEN_COPY_OF_TARGET_RE.fullmatch(" ".join(clause.strip().split()))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase")):
         return None
+    added: tuple[str, ...] = ()
+    power: int | None = None
+    toughness: int | None = None
+    added_type: str | None = None
+    added_card_type: str | None = None
+    colors: tuple[Color, ...] | None = None
+    creature_types: tuple[str, ...] | None = None
+    not_legendary = False
+    except_text = match.group("except")
+    if except_text is not None:
+        # The same exception readers, in the same order, as
+        # `_parse_create_token_copies_except_clause` - plus CR 707.9b's card
+        # type, which neither of them reads.
+        card_type = _EXCEPT_ADDED_CARD_TYPE_RE.fullmatch(except_text.strip())
+        replacing = _read_token_copy_replacing_except(except_text)
+        listed = _read_copy_exception_list(except_text)
+        if card_type is not None:
+            added_card_type = card_type.group("card_type").title()
+        elif replacing is not None:
+            power, toughness, colors, creature_types = replacing
+        elif listed is not None:
+            added, power, toughness, added_type = (
+                listed.added_abilities,
+                listed.power,
+                listed.toughness,
+                listed.added_creature_type,
+            )
+            not_legendary = listed.not_legendary
+        else:
+            exception = _read_token_copy_except(except_text)
+            if exception is None:
+                return None
+            added, power, toughness, added_type = exception
+    haste = match.group("haste") is not None
+    haste_duration = (
+        Duration.UNTIL_END_OF_TURN if match.group("eot") is not None else Duration.INDEFINITE
+    )
+    end_step = match.group("end_step")
+    tapped_and_attacking = (
+        match.group("attacking") is not None or match.group("enters_attacking") is not None
+    )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .dies_this_turn import source_id_of_object
+
         controller = game.controller_of(stack_object)
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
         for target in game.resolve_targets(stack_object):
-            if isinstance(target, CardState):
-                token_copy_of(game, target, controller.username)
+            if not isinstance(target, CardState):
+                continue
+            options: dict[str, Any] = {}
+            if tapped_and_attacking:
+                # CR 508.4: the copy attacks whatever its original attacks, or
+                # else whatever the controller's attack already names.
+                original_attack = game.combat.attack_by(target.id)
+                options = {
+                    "tapped": True,
+                    "attacking": (
+                        original_attack.defender
+                        if original_attack is not None
+                        else _defender_of_controllers_attack(game, controller.username)
+                    ),
+                }
+                if options["attacking"] is None:
+                    del options["attacking"]
+            created = token_copy_of(
+                game,
+                target,
+                controller.username,
+                added_abilities=added,
+                power=power,
+                toughness=toughness,
+                added_creature_type=added_type,
+                added_card_type=added_card_type,
+                colors=colors,
+                creature_types=creature_types,
+                not_legendary=not_legendary,
+                **options,
+            )
+            store = continuous_effects(game)
+            for token in created:
+                if token.zone is not Zone.BATTLEFIELD:
+                    continue
+                if haste:
+                    store.add(
+                        ContinuousEffect(
+                            description=f"{source_name}: {token.name} gains haste",
+                            layer=Layer.ABILITY,
+                            timestamp=store.tick(),
+                            selector=only_this_incarnation(token, token.zone_change_stamp),
+                            modification=grant_ability("Haste"),
+                            duration=haste_duration,
+                        ),
+                        game,
+                    )
+                if end_step:
+                    trigger = anaphoric_delayed_trigger(
+                        end_step.strip(),
+                        subject=token,
+                        controller=controller.username,
+                        source_id=source_id_of_object(stack_object),
+                        source_name=source_name,
+                        game=game,
+                    )
+                    if trigger is not None:
+                        game.create_delayed_trigger(trigger)
 
     return effect
 
@@ -53377,7 +53574,7 @@ def _parse_for_each_creature_you_control_copy_clause(
 _CREATE_TOKEN_COPIES_EXCEPT_RE = re.compile(
     rf"^create {count_pattern('count')} tokens? "
     r"that(?: are copies|'s a copy|’s a copy| is a copy) of "
-    r"(?P<phrase>(?:another )?target .+?)"
+    r"(?P<phrase>(?:another )?target [^.]+?)"
     r"(?:, except (?P<except>.+?))?"
     rf"(?:\.\s*put {count_pattern('counters')} \+1/\+1 counters? on (?:it|them))?\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -53734,7 +53931,7 @@ def _parse_city_blessing_token_copy_clause(
         player = game.player(controller)
         if not player.has_citys_blessing:
             return
-        turn_number = getattr(game.turn, "turn_number", None)
+        turn_number = getattr(game.turn, "turns_taken", None)
         if turn_number is None:
             return
         entered_this_turn = [
@@ -54812,6 +55009,17 @@ _TARGET_PHRASE_ANYWHERE_RE = re.compile(
 )
 
 
+#: A target noun made only of permanent-type words ("creature or planeswalker",
+#: "artifact", "nonland permanent") - the targets "that permanent" can stand
+#: for (CR 110.1).
+_PERMANENT_TYPES_ONLY_RE = re.compile(
+    r"(?:non)?(?:creature|planeswalker|artifact|enchantment|land|battle|permanent)s?"
+    r"(?:(?:,\s*|\s+or\s+|\s+and/or\s+)(?:non)?"
+    r"(?:creature|planeswalker|artifact|enchantment|land|battle|permanent)s?)*",
+    re.IGNORECASE,
+)
+
+
 def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str | None:
     """CR 400.7's "that `<noun>`" is anaphora back to the base clause's own
     already-fixed target (CR 601.2c), not a second, elided one - Colossal
@@ -54839,6 +55047,13 @@ def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str
     anaphor = re.compile(rf"\bthat\s+{re.escape(bare_noun)}\b", re.IGNORECASE)
     if anaphor.search(alternative_text):
         return anaphor.sub(match.group("phrase"), alternative_text, count=1)
+    # "that permanent" names a target of any permanent type (CR 110.1) - Torch
+    # the Tower's bargained "instead it deals 3 damage to that permanent" over
+    # its "target creature or planeswalker".
+    if _PERMANENT_TYPES_ONLY_RE.fullmatch(bare_noun):
+        permanent_anaphor = re.compile(r"\bthat\s+permanent\b", re.IGNORECASE)
+        if permanent_anaphor.search(alternative_text):
+            return permanent_anaphor.sub(match.group("phrase"), alternative_text, count=1)
     # The pronoun form, "it", as the alternative's own subject - You're Not
     # Alone's "If you control three or more creatures, it gets +4/+4 until
     # end of turn instead" - refers back to the same fixed target. Only the
@@ -54852,6 +55067,11 @@ def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str
 
 _DAMAGE_AMOUNT_TO_RE = re.compile(
     rf"\b(?P<n>{COUNT}) damage to (?P<to>that |target |any )", re.IGNORECASE
+)
+
+
+_ALTERNATIVE_EXTRA_INSTRUCTION_RE = re.compile(
+    r",|\band\s+(?:you|it|that|each|its)\b|\bthen\b", re.IGNORECASE
 )
 
 
@@ -54871,6 +55091,11 @@ def _amount_substituted_base(base_text: str, alternative_text: str) -> str | Non
     if not base_amounts or len(base_amounts) != len(alternative_amounts):
         return None
     if any(found.group("to").lower() != "that " for found in alternative_amounts):
+        return None
+    if _ALTERNATIVE_EXTRA_INSTRUCTION_RE.search(alternative_text[alternative_amounts[-1].end() :]):
+        # The alternative does more than renumber the base (Torch the Tower's
+        # "... damage to that permanent and you scry 1"): substituting only
+        # the amounts would silently drop that instruction.
         return None
     pieces: list[str] = []
     cursor = 0
@@ -61101,7 +61326,7 @@ def _parse_you_and_target_player_each_clause(clause: str) -> TargetedClause | No
 _TARGET_PLAYER_CREATES_TOKEN_COPY_RE = re.compile(
     rf"^(?P<player>target (?:player|opponent)) creates? {count_pattern('count')} tokens? "
     r"that(?: are copies|['’]s a copy| is a copy) of "
-    r"(?P<phrase>(?:another )?target .+?)"
+    r"(?P<phrase>(?:another )?target [^.]+?)"
     r"(?:, except (?P<except>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -62640,6 +62865,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     copy_target_spell_whole = _parse_copy_target_spell_clause(text, for_spell=for_spell)
     if copy_target_spell_whole is not None:
         return [copy_target_spell_whole]
+    token_copy_of_target_whole = _parse_create_token_copy_of_target_clause(
+        text, for_spell=for_spell
+    )
+    if token_copy_of_target_whole is not None:
+        # Read whole: "It gains haste" and "Sacrifice it at the beginning of
+        # the next end step" point back across the period at the token the
+        # first sentence made (CR 608.2c), not at anything they name.
+        return [token_copy_of_target_whole]
     from .dies_this_turn import parse_then_when_that_creature_dies_this_turn
     from .exile_until_casts import exile_until_casts_whole_text
     from .stack_sweeps import parse_mass_stack_whole_text
@@ -64887,7 +65120,7 @@ def _parse_mass_return_entered_this_turn_clause(
     predicate` already shares for a mass destruction's own subject. "Entered
     this turn" is `CardState.turn_entered` (stamped once, in `Game.
     enter_the_battlefield`) compared against the *current* turn number
-    (`Game.turn.turn_number`) - the identical reading `machines/targeting.py`
+    (`Game.turn.turns_taken`) - the identical reading `machines/targeting.py`
     already gives the same phrase for a *targeted* restriction, applied here
     to every matching permanent at once rather than to one chosen target.
     "Each other" excludes only the resolving ability's own source by id -
@@ -64911,7 +65144,7 @@ def _parse_mass_return_entered_this_turn_clause(
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        turn_number = game.turn.turn_number if game.turn is not None else None
+        turn_number = game.turn.turns_taken if game.turn is not None else None
         if turn_number is None:
             return
         source_id = ability.source_id

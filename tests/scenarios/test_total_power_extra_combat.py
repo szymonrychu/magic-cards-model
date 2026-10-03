@@ -93,8 +93,9 @@ def test_two_attackers_whose_combined_power_crosses_the_threshold_trigger_it():
         step = scenario.advance()
 
     assert scenario.step is Step.DECLARE_ATTACKERS, "the additional combat phase (CR 500.8)"
-    assert scenario.game.combat.attack_by(worm.id) is not None, (
-        "still attacking from the paused original combat (CR 511.3 hasn't run yet)"
+    assert scenario.game.combat.attack_by(worm.id) is None, (
+        "the original combat phase ended first (CR 500.8, CR 511.3): the additional "
+        "phase begins after it, not in the middle of it"
     )
 
 
@@ -217,8 +218,8 @@ def test_hellkite_charger_untaps_and_inserts_an_extra_combat_too():
         step = scenario.advance()
 
     assert scenario.step is Step.DECLARE_ATTACKERS, "the additional combat phase (CR 500.8)"
-    assert scenario.game.combat.attack_by(charger.id) is not None, (
-        "still attacking from the paused original combat"
+    assert scenario.game.combat.attack_by(charger.id) is None, (
+        "the original combat phase ended first (CR 500.8, CR 511.3)"
     )
 
 

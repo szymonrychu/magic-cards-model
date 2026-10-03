@@ -582,7 +582,12 @@ def _cast_action(
     # unpayable at every X, and one payable at X=0 is a castable spell.
     x_value = 0 if announces_x else None
     try:
-        extras = mandatory_additional_costs(card, player, x_value)
+        extras = mandatory_additional_costs(
+            card,
+            player,
+            x_value,
+            primary_alternatives=game.or_cost_choices_for_judging(card, player),
+        )
     except ValueError as refusal:
         extras, unpayable = [], unpayable or str(refusal)
     # `judged_total` is the X=0 stand-in `_cost_affordability` is asked about
@@ -1155,8 +1160,12 @@ def _land_actions(game: Any, player: str, card: CardState) -> list[Action]:
                 affordable=Affordability.YES,
             )
         )
-    land_face = card.card.land_face
-    if land_face is not None:
+    # CR 712.12: one offer per land face the player could choose. A land front
+    # is the plain offer above; a Pathway's back is the only extra one.
+    front = card.card.front_face
+    for land_face in card.card.land_faces:
+        if card.card.is_land and front is not None and land_face.name == front.name:
+            continue
         actions.append(
             Action(
                 kind=ActionKind.PLAY_LAND,

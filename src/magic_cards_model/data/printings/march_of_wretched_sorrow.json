@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "050a604e-6146-4e2e-88a5-863ecb3dfa1f",
+  "oracle_id": "6e638332-fba1-4e91-9237-fdff23826640",
+  "multiverse_ids": [
+    548411
+  ],
+  "mtgo_id": 97146,
+  "arena_id": 79538,
+  "tcgplayer_id": 262443,
+  "cardmarket_id": 607533,
+  "name": "March of Wretched Sorrow",
+  "lang": "en",
+  "released_at": "2022-02-18",
+  "uri": "https://api.scryfall.com/cards/050a604e-6146-4e2e-88a5-863ecb3dfa1f",
+  "scryfall_uri": "https://scryfall.com/card/neo/111/march-of-wretched-sorrow?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:24:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.jpg?1783923880",
+    "normal": "https://cards.scryfall.io/normal/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.jpg?1783923880",
+    "large": "https://cards.scryfall.io/large/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.jpg?1783923880",
+    "png": "https://cards.scryfall.io/png/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.png?1783923880",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.jpg?1783923880",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.jpg?1783923880",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.webp?1783923880",
+    "grid": "https://cards.scryfall.io/grid/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.webp?1783923880",
+    "display": "https://cards.scryfall.io/display/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.webp?1783923880",
+    "art": "https://cards.scryfall.io/art/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.webp?1783923880",
+    "crop": "https://cards.scryfall.io/crop/front/0/5/050a604e-6146-4e2e-88a5-863ecb3dfa1f.webp?1783923880"
+  },
+  "mana_cost": "{X}{B}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "As an additional cost to cast this spell, you may exile any number of black cards from your hand. This spell costs {2} less to cast for each card exiled this way.\nMarch of Wretched Sorrow deals X damage to target creature or planeswalker and you gain X life.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59a2059f-5482-433f-8761-eb2e17859b71",
+  "set": "neo",
+  "set_name": "Kamigawa: Neon Dynasty",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59a2059f-5482-433f-8761-eb2e17859b71",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aneo&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/neo?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/050a604e-6146-4e2e-88a5-863ecb3dfa1f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6e638332-fba1-4e91-9237-fdff23826640&unique=prints",
+  "collector_number": "111",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tyler Jacobson",
+  "artist_ids": [
+    "522af130-8db4-4b4b-950c-6e2b246339cf"
+  ],
+  "illustration_id": "a3a68bde-03a4-40ce-980a-91a5ec93423a",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 9471,
+  "penny_rank": 1396,
+  "preview": {
+    "source": "ComicBook.com",
+    "source_uri": "https://comicbook.com/gaming/news/mtg-magic-the-gathering-spoilers-kamigawa-neon-dynasty-march-of-wretched-sorrow/",
+    "previewed_at": "2022-02-01"
+  },
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": "0.42",
+    "usd_etched": null,
+    "eur": "0.40",
+    "eur_foil": "0.66",
+    "tix": "0.11"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548411&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMarch%2Bof%2BWretched%2BSorrow",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMarch%2Bof%2BWretched%2BSorrow",
+    "edhrec": "https://edhrec.com/route/?cc=March+of+Wretched+Sorrow"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262443%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=607533&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/97146?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

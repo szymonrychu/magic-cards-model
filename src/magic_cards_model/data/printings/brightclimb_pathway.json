@@ -1,0 +1,176 @@
+{
+  "object": "card",
+  "id": "d24c3d51-795d-4c01-a34a-3280fccd2d78",
+  "oracle_id": "1c633e02-95ef-445e-b4e0-fbfbc5ed9cc9",
+  "multiverse_ids": [
+    491911,
+    491912
+  ],
+  "mtgo_id": 83515,
+  "arena_id": 73472,
+  "tcgplayer_id": 221817,
+  "cardmarket_id": 494779,
+  "name": "Brightclimb Pathway // Grimclimb Pathway",
+  "lang": "en",
+  "released_at": "2020-09-25",
+  "uri": "https://api.scryfall.com/cards/d24c3d51-795d-4c01-a34a-3280fccd2d78",
+  "scryfall_uri": "https://scryfall.com/card/znr/259/brightclimb-pathway-grimclimb-pathway?utm_source=api",
+  "layout": "modal_dfc",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:55:13Z",
+  "cmc": 0.0,
+  "type_line": "Land // Land",
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "B",
+    "W"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Brightclimb Pathway",
+      "mana_cost": "",
+      "type_line": "Land",
+      "oracle_text": "{T}: Add {W}.",
+      "colors": [],
+      "flavor_text": "\"Why risk life and limb exploring the wilds? For this.\"\n\u2014Yavotz, Sea Gate Expeditionary House",
+      "artist": "Johannes Voss",
+      "artist_id": "3593dd7e-c547-4a32-81cd-7da725f60118",
+      "illustration_id": "79d90b4a-dd78-4880-a00e-aa58d1ad03af",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "normal": "https://cards.scryfall.io/normal/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "large": "https://cards.scryfall.io/large/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "png": "https://cards.scryfall.io/png/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.png?1783929313",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "thumb": "https://cards.scryfall.io/thumb/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313",
+        "grid": "https://cards.scryfall.io/grid/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313",
+        "display": "https://cards.scryfall.io/display/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313",
+        "art": "https://cards.scryfall.io/art/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313",
+        "crop": "https://cards.scryfall.io/crop/front/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Grimclimb Pathway",
+      "mana_cost": "",
+      "type_line": "Land",
+      "oracle_text": "{T}: Add {B}.",
+      "colors": [],
+      "flavor_text": "\"My mother wanted me to take over the family dry goods business, but no. I had to come here.\"\n\u2014Yavotz, Sea Gate Expeditionary House",
+      "artist": "Johannes Voss",
+      "artist_id": "3593dd7e-c547-4a32-81cd-7da725f60118",
+      "illustration_id": "1e493142-fbbb-42df-b13d-968f828d3917",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "normal": "https://cards.scryfall.io/normal/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "large": "https://cards.scryfall.io/large/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "png": "https://cards.scryfall.io/png/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.png?1783929313",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.jpg?1783929313",
+        "thumb": "https://cards.scryfall.io/thumb/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313",
+        "grid": "https://cards.scryfall.io/grid/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313",
+        "display": "https://cards.scryfall.io/display/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313",
+        "art": "https://cards.scryfall.io/art/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313",
+        "crop": "https://cards.scryfall.io/crop/back/d/2/d24c3d51-795d-4c01-a34a-3280fccd2d78.webp?1783929313"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "f4e01fa7-b254-42dd-849f-69b58027a8c4",
+  "set": "znr",
+  "set_name": "Zendikar Rising",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/f4e01fa7-b254-42dd-849f-69b58027a8c4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aznr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/znr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d24c3d51-795d-4c01-a34a-3280fccd2d78/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1c633e02-95ef-445e-b4e0-fbfbc5ed9cc9&unique=prints",
+  "collector_number": "259",
+  "digital": false,
+  "rarity": "rare",
+  "artist": "Johannes Voss",
+  "artist_ids": [
+    "3593dd7e-c547-4a32-81cd-7da725f60118"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 813,
+  "penny_rank": 339,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "http://twitch.tv/videos/728086792",
+    "previewed_at": "2020-09-01"
+  },
+  "prices": {
+    "usd": "4.63",
+    "usd_foil": "4.66",
+    "usd_etched": null,
+    "eur": "4.59",
+    "eur_foil": "4.60",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=491911&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrightclimb%2BPathway%2B%252F%252F%2BGrimclimb%2BPathway",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrightclimb%2BPathway%2B%252F%252F%2BGrimclimb%2BPathway",
+    "edhrec": "https://edhrec.com/route/?cc=Brightclimb+Pathway"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F221817%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=494779&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/83515?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

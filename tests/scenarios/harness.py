@@ -1163,7 +1163,11 @@ class PlayedScenario:
     # -- special actions --------------------------------------------------
 
     def play_land(
-        self, name: str, username: str | None = None, from_zone: Zone = Zone.HAND
+        self,
+        name: str,
+        username: str | None = None,
+        from_zone: Zone = Zone.HAND,
+        face: str | None = None,
     ) -> CardState:
         """Play a land. A special action: no stack, no priority pass.
 
@@ -1178,7 +1182,7 @@ class PlayedScenario:
         # owner filter there.
         find_username = None if from_zone in self.game.shared_zones else player.username
         land = self.find(name, from_zone, find_username)
-        return self.game.play_land(land, player.username)
+        return self.game.play_land(land, player.username, face=face)
 
     # -- combat -----------------------------------------------------------
 

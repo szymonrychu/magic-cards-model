@@ -2538,6 +2538,7 @@ _ANAPHOR_AGREEMENT: dict[str, Callable[[CardState, "Game | None"], bool]] = {
     ),
     "that card": lambda state, game: not state.token,  # CR 108.2b
     "that token": lambda state, game: state.token,  # CR 111.1
+    "the token": lambda state, game: state.token,  # CR 111.1
     "that creature": lambda state, game: Type.CREATURE in _agreement_types(state, game),
     "that creature token": lambda state, game: (
         state.token and Type.CREATURE in _agreement_types(state, game)
