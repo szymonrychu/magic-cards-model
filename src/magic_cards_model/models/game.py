@@ -332,7 +332,15 @@ from ..numbers import MULTIPLIER, count_pattern, parse_count, parse_multiplier
 from ..serialization import SortedFrozenSet, SortedSet
 from ..snapshot import EngineModel, board_snapshot, cached_board, command, scan_pin
 from .action import Action
-from .card import Card, Color, Layout, Supertype, Type
+from .card import (
+    Card,
+    Color,
+    Layout,
+    Supertype,
+    Type,
+    has_changeling,
+    with_every_creature_type,
+)
 from .card_state import (
     CardState,
     ChoiceKind,
@@ -382,6 +390,11 @@ StackObject = Annotated[CardState | TokenState | AbilityOnStack, Field(discrimin
 #: [quality]'." CR 702.16g makes "protection from A and from B" two abilities,
 #: so the qualities are split apart rather than kept as one phrase.
 _PROTECTION = re.compile(r"protection from ([^.;\n]+)", re.IGNORECASE)
+
+#: CR 207.2: reminder text is "italicized text within parentheses", which has
+#: no effect on game play. It can hold a full stop and a comma, so it is cut
+#: out before the quality phrase is read.
+_REMINDER_TEXT = re.compile(r"\s*\([^)]*\)")
 
 #: The *unresolved* half of a protection phrase: a grant that names the quality
 #: by a choice still to be made rather than by the quality itself. Mother of
@@ -821,7 +834,10 @@ def _qualities_from_text(text: str | None) -> list[str]:
     keyword-and-protection grant, Akroma's Memorial) the same way.
     """
     qualities: list[str] = []
-    for match in _PROTECTION.finditer(text or ""):
+    # CR 702.16a's quality ends where the keyword's own reminder text starts:
+    # "protection from black (This creature can't be blocked ... by anything
+    # black.)" - the parenthesised CR reminder (CR 207.2) is not a quality.
+    for match in _PROTECTION.finditer(_REMINDER_TEXT.sub("", text or "")):
         # A comma ends the phrase unless another "from" follows it: Emrakul,
         # the Aeons Torn's "protection from spells that are one or more
         # colors, annihilator 6" names one quality, then another keyword.
@@ -1676,6 +1692,50 @@ def _spell_colour_quality(quality: str) -> Callable[[Iterable[Color]], bool] | N
     return None
 
 
+#: "mana value 3 or greater" (Mistmeadow Skulk): CR 202.3's mana value against
+#: a number, exactly or with "or greater/more" / "or less/fewer".
+_MANA_VALUE_QUALITY_RE = re.compile(
+    r"^mana values? (?P<number>\d+)(?: or (?P<bound>greater|more|less|fewer))?$", re.IGNORECASE
+)
+
+
+def _characteristic_quality(quality: str) -> Callable[[Characteristics], bool] | None:
+    """A protection quality that is a test on the source's computed
+    characteristics (CR 702.16a: "any characteristic value or information"),
+    or `None` when it is not one: a mana-value comparator, or a counted noun
+    phrase `_permanent_quality` reads - a creature type or other subtype in the
+    plural ("Demons", "Elves", "Arcane"), a supertype ("snow"), or a type
+    qualified by one ("God creatures")."""
+    wanted = quality.strip()
+    match = _MANA_VALUE_QUALITY_RE.match(wanted)
+    if match is not None:
+        number = int(match.group("number"))
+        bound = (match.group("bound") or "").lower()
+        if bound in ("greater", "more"):
+            return lambda chars: chars.mana_value >= number
+        if bound in ("less", "fewer"):
+            return lambda chars: chars.mana_value <= number
+        return lambda chars: chars.mana_value == number
+    return _permanent_quality(wanted)
+
+
+def _card_characteristics(card: Card, mana_value: float | None = None) -> Characteristics:
+    """A bare printing's characteristics as a protection source: changeling's
+    every creature type (CR 702.73a) included, since it works everywhere."""
+    subtypes = tuple(card.subtypes)
+    if has_changeling(card.oracle_text):
+        subtypes = with_every_creature_type(tuple(card.types), subtypes)
+    return Characteristics(
+        card_id=card.id,
+        name=card.name,
+        mana_value=card.cmc if mana_value is None else mana_value,
+        supertypes=tuple(card.supertypes),
+        types=tuple(card.types),
+        subtypes=subtypes,
+        colors=tuple(card.colors),
+    )
+
+
 def protection_quality_readable(quality: str) -> bool:
     """Whether the engine's protection readers (`Game.source_has_quality`,
     `Game.source_has_quality_of_card`, `Game._player_quality_protects`) can
@@ -1691,6 +1751,7 @@ def protection_quality_readable(quality: str) -> bool:
         or _EACH_OPPONENT_PROTECTION_QUALITY.match(quality.strip()) is not None
         or _CAST_THIS_TURN_QUALITY_RE.match(quality.strip()) is not None
         or _spell_colour_quality(quality) is not None
+        or _characteristic_quality(quality) is not None
     )
 
 
@@ -10048,6 +10109,11 @@ class Game(EngineModel):
                     source_controller=owner,
                     is_spell=isinstance(subject, CardState),
                     source_state=None if isinstance(subject, CardState) else subject.source(self),
+                    source_mana_value=(
+                        self._protection_characteristics(subject).mana_value
+                        if isinstance(subject, CardState)
+                        else None
+                    ),
                 )
                 is not None
             ):
@@ -16534,6 +16600,11 @@ class Game(EngineModel):
                 source_controller=self.controller_of(spell).username,
                 is_spell=isinstance(spell, CardState),
                 source_state=None if isinstance(spell, CardState) else spell.source(self),
+                source_mana_value=(
+                    self._protection_characteristics(spell).mana_value
+                    if isinstance(spell, CardState)
+                    else None
+                ),
             )
             is not None
         ):
@@ -16959,6 +17030,7 @@ class Game(EngineModel):
         source_controller: str | None = None,
         is_spell: bool = False,
         source_state: CardState | None = None,
+        source_mana_value: float | None = None,
     ) -> str | None:
         """Why protection stops this source touching this target, or None (CR 702.16b).
 
@@ -17005,7 +17077,11 @@ class Game(EngineModel):
             if self._player_quality_protects(
                 target, quality, source_controller
             ) or self.source_has_quality_of_card(
-                source, quality, is_spell=is_spell, source_state=source_state
+                source,
+                quality,
+                is_spell=is_spell,
+                source_state=source_state,
+                source_mana_value=source_mana_value,
             ):
                 return (
                     f"{target.name} has protection from {quality}, so {source.name} "
@@ -17403,8 +17479,15 @@ class Game(EngineModel):
         *,
         is_spell: bool = False,
         source_state: CardState | None = None,
+        source_mana_value: float | None = None,
     ) -> bool:
         """`source_has_quality` for a bare `Card` rather than a `CardState`.
+
+        `source_mana_value` is a spell's mana value on the stack, X as chosen
+        (CR 202.3e), for a "mana value 3 or greater" quality - a bare `Card`
+        only knows X as 0. A live `source_state` (an ability's permanent) is
+        read through `characteristics_of` instead; with neither, the printed
+        value.
 
         The targeting half of CR 702.16b is asked about the *card* behind a
         spell or an ability's source, while the damage half (CR 702.16e) is
@@ -17440,7 +17523,15 @@ class Game(EngineModel):
         negated = _negated_card_type_named(wanted)
         if negated is not None:
             return negated not in source.types
-        return bool(_has_color_quality(wanted, source.colors))
+        colour = _has_color_quality(wanted, source.colors)
+        if colour is not None:
+            return colour
+        test = _characteristic_quality(wanted)
+        if test is None:
+            return False
+        if source_state is not None and source_state.zone is Zone.BATTLEFIELD:
+            return test(self.characteristics_of(source_state))
+        return test(_card_characteristics(source, source_mana_value))
 
     def protection_quality_against(self, target: CardState, source: CardState) -> str | None:
         """The quality `target` has protection from that `source` has, or None.
@@ -17508,6 +17599,11 @@ class Game(EngineModel):
             source_controller=self.controller_of(spell).username,
             is_spell=isinstance(spell, CardState),
             source_state=None if isinstance(spell, CardState) else spell.source(self),
+            source_mana_value=(
+                self._protection_characteristics(spell).mana_value
+                if isinstance(spell, CardState)
+                else None
+            ),
         )
 
     def spell_fizzles(self, spell: StackObject) -> bool:
@@ -17972,7 +18068,31 @@ class Game(EngineModel):
         negated = _negated_card_type_named(wanted)
         if negated is not None:
             return negated not in types
-        return bool(_has_color_quality(wanted, colors))
+        colour = _has_color_quality(wanted, colors)
+        if colour is not None:
+            return colour
+        test = _characteristic_quality(wanted)
+        return test is not None and test(self._protection_characteristics(source))
+
+    def _protection_characteristics(self, source: CardState) -> Characteristics:
+        """The characteristics a damage, blocking or attachment source is asked
+        about (CR 702.16a): computed on the battlefield (CR 613.5), the printed
+        ones elsewhere - changeling's creature types included (CR 702.73a) -
+        with a spell's mana value counting the X it was cast with (CR 202.3e)."""
+        if source.zone is Zone.BATTLEFIELD:
+            return self.characteristics_of(source)
+        mana_value = source.mana_value
+        if source.zone is Zone.STACK:
+            mana_value += (source.mana_cost or "").count("{X}") * self.cast_record(source).x_value
+        return Characteristics(
+            card_id=source.id,
+            name=source.name,
+            mana_value=mana_value,
+            supertypes=source.supertypes,
+            types=source.types,
+            subtypes=source.subtypes,
+            colors=source.colors,
+        )
 
     def protection_from_damage(self, event: ReplaceableEvent) -> str | None:
         """Why protection prevents this damage, or None (CR 702.16e).

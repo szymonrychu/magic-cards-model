@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "058eb32f-2ae2-4276-ae1a-242bbb150418",
+  "oracle_id": "2572add6-c0b1-44bd-8713-1e94e3fe69d6",
+  "multiverse_ids": [
+    417479
+  ],
+  "tcgplayer_id": 122256,
+  "cardmarket_id": 292431,
+  "name": "Pestilence Demon",
+  "lang": "en",
+  "released_at": "2016-09-02",
+  "uri": "https://api.scryfall.com/cards/058eb32f-2ae2-4276-ae1a-242bbb150418",
+  "scryfall_uri": "https://scryfall.com/card/ddr/56/pestilence-demon?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:07:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.jpg?1783937260",
+    "normal": "https://cards.scryfall.io/normal/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.jpg?1783937260",
+    "large": "https://cards.scryfall.io/large/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.jpg?1783937260",
+    "png": "https://cards.scryfall.io/png/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.png?1783937260",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.jpg?1783937260",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.jpg?1783937260",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.webp?1783937260",
+    "grid": "https://cards.scryfall.io/grid/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.webp?1783937260",
+    "display": "https://cards.scryfall.io/display/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.webp?1783937260",
+    "art": "https://cards.scryfall.io/art/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.webp?1783937260",
+    "crop": "https://cards.scryfall.io/crop/front/0/5/058eb32f-2ae2-4276-ae1a-242bbb150418.webp?1783937260"
+  },
+  "mana_cost": "{5}{B}{B}{B}",
+  "cmc": 8.0,
+  "type_line": "Creature \u2014 Demon",
+  "oracle_text": "Flying\n{B}: This creature deals 1 damage to each creature and each player.",
+  "power": "7",
+  "toughness": "6",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "20e10d8d-c2b0-4d3f-942d-28ae9e137c6e",
+  "set": "ddr",
+  "set_name": "Duel Decks: Nissa vs. Ob Nixilis",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/20e10d8d-c2b0-4d3f-942d-28ae9e137c6e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/058eb32f-2ae2-4276-ae1a-242bbb150418/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2572add6-c0b1-44bd-8713-1e94e3fe69d6&unique=prints",
+  "collector_number": "56",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"I have schemed too long to be supplanted by dead gods. If I cannot have this world, no one can.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Justin Sweet",
+  "artist_ids": [
+    "bb15780e-8f96-4823-b258-a7a9fd79b02c"
+  ],
+  "illustration_id": "499526df-88c1-4b22-9e95-8df8a8aeed64",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 10273,
+  "penny_rank": 10436,
+  "prices": {
+    "usd": "0.54",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.53",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=417479&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPestilence%2BDemon",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPestilence%2BDemon",
+    "edhrec": "https://edhrec.com/route/?cc=Pestilence+Demon"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F122256%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=292431&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Pestilence+Demon&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
