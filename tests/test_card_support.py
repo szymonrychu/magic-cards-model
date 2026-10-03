@@ -283,7 +283,18 @@ def _reference_workload_seconds() -> float:
 #: 11 units is the old wall-clock 5.0s budget restated, not loosened.
 #: Measured there (load 6-10): base 3dfb7e9a 9.4-9.7 units (4.5-4.7s CPU),
 #: EC7 strict classifier 7.9-9.0 units (3.7-3.8s CPU).
-_COLD_BUDGET_UNITS = 11.0
+#:
+#: The ratio is noisy for a reason the reference cannot fix: the reference is
+#: a small-footprint loop, classification is allocation- and cache-heavy, so
+#: cache/memory contention from other busy processes (a parallel suite)
+#: stretches the pool pass more than the reference. 36 fresh-process runs
+#: (12 idle, 12 under 10 spinners, 12 under 24) measured 8.8-10.5 units
+#: against the reference taken before the pass (cold CPU 4.3-5.0s on its
+#: own, +-7%), median 9.6; a full-suite run at load 10-14 once crossed the old
+#: 11.0. 13.0 is 24% above the worst measured and 35% above the median: it
+#: still fails a 1.4x classification slowdown, and the pass is only there to
+#: catch a blow-up (the 5.0s wall-clock figure it replaced), not drift.
+_COLD_BUDGET_UNITS = 13.0
 
 
 def _clear_engine_caches() -> int:
@@ -321,6 +332,9 @@ def test_the_full_pool_classifies_within_budget():
     for printing in printings:
         card_support(printing)
     warm = time.process_time() - start
+    # Interleaved: the reference is also taken after the pass, and the
+    # smaller (least-disturbed) of the two is the yardstick.
+    reference = min(reference, _reference_workload_seconds())
     units = cold / reference
     assert units < _COLD_BUDGET_UNITS, (
         f"cold pool classification took {cold:.2f}s CPU = {units:.1f} reference workloads "

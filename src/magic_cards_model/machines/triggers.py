@@ -1299,7 +1299,7 @@ def _self_reference_type_words() -> frozenset[str]:
 _SELF_REFERENCE_WORD_RE = re.compile(r"\bthis ([a-z]+(?: [a-z]+)?)\b")
 
 
-def _has_self_reference_type_word(condition: str) -> bool:
+def has_self_reference_type_word(condition: str) -> bool:
     """Whether `condition` (already lowercased by the caller) names its own
     source through "this `<type or subtype word>`" (CR 700.7).
 
@@ -1418,7 +1418,7 @@ def _self_referential(condition: str, source_name: str, *, legendary: bool = Tru
     mistaken for this source naming itself.
     """
     lowered = condition.lower()
-    if _has_self_reference_type_word(lowered):
+    if has_self_reference_type_word(lowered):
         return True
     # Case-sensitive, like `self_normalized_effect_text`'s own substitution:
     # Oracle templating always spells a card's own name (and its shortened
