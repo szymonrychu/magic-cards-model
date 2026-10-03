@@ -52,7 +52,7 @@ _COLORS = {
 Matches = Callable[["Characteristics"], bool]
 #: One step: `None` untaps the pumped group; otherwise a grant sentence on the
 #: creatures you control that satisfy the predicate.
-Step = tuple[str, Matches] | None
+FollowupStep = tuple[str, Matches] | None
 
 
 def _filter(word: str) -> Matches | None:
@@ -68,10 +68,10 @@ def _filter(word: str) -> Matches | None:
     return lambda chars: subtype in {name.lower() for name in chars.subtypes}
 
 
-def parse(remainder: str) -> list[Step] | None:
+def parse(remainder: str) -> list[FollowupStep] | None:
     """The follow-up steps `remainder` is made of, or `None` when any of its
     sentences is not one of the two shapes above."""
-    steps: list[Step] = []
+    steps: list[FollowupStep] = []
     for sentence in re.split(r"(?<=\.)\s+", remainder.strip()):
         text = sentence.strip().rstrip(".").strip()
         if not text:
@@ -90,7 +90,7 @@ def parse(remainder: str) -> list[Step] | None:
 
 
 def _run(
-    steps: list[Step],
+    steps: list[FollowupStep],
     game: "Game",
     source: CardState,
     controller: str,
