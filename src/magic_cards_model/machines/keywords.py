@@ -183,6 +183,8 @@ def executes(keyword: str) -> bool:
         # CR 702.118b: an evasion restriction `machines/combat.block_refusal`
         # enforces.
         "skulk",
+        # CR 702.36b: likewise, fear in `block_refusal`.
+        "fear",
         # CR 702.101a: `_extort_ability` (`_TRIGGER_EXPANSIONS`).
         "extort",
         # CR 702.191a: `_increment_ability` (`_TRIGGER_EXPANSIONS`); its
