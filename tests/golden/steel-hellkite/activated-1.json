@@ -36,9 +36,19 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Dragonfire Blade@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Icehide Golem@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Shadowspear@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
     "players": {},
     "stack": []
   },
