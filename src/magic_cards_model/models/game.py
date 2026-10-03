@@ -40,7 +40,6 @@ from ..machines.abilities import (
 from ..machines.casting import (
     _BLIGHT_PHRASE,
     _OPTIONAL_ADDITIONAL_COST,
-    _OR_PAY_TAIL,
     AlternativeCostOption,
     AlternativeCostSource,
     Casting,
@@ -60,6 +59,7 @@ from ..machines.casting import (
     linked_exile_play_source,
     marker_cast_options,
     optional_additional_costs,
+    or_additional_cost_alternatives,
     play_permissions_on,
     player_keyword_grant_of_line,
     split_second_restriction_source,
@@ -8350,10 +8350,20 @@ class Game(EngineModel):
             if _OPTIONAL_ADDITIONAL_COST.match(phrase):
                 continue
             cost = total_cost_for_phrase(phrase, caster)
-            if cost is None and _OR_PAY_TAIL.match(phrase) is not None:
-                # CR 601.2b's "[cost] or pay [mana]": the mana half is always a
-                # way to pay it, and mana is not counted here (see above).
-                continue
+            alternatives = or_additional_cost_alternatives(phrase) if cost is None else None
+            if alternatives is not None:
+                # CR 601.2b's "[cost] or [cost]": a mana half is always a way
+                # to pay it, and mana is not counted here (see above); a
+                # non-mana set is payable when any one alternative's objects
+                # and life are (CR 118.3).
+                if alternatives[-1].startswith("{"):
+                    continue
+                if any(
+                    option is not None and self._cost_objects_available(option, caster, taken)
+                    for option in (total_cost_for_phrase(half, caster) for half in alternatives)
+                ):
+                    continue
+                return False
             if cost is None or not self._cost_objects_available(cost, caster, taken):
                 return False
         return True
@@ -8436,6 +8446,35 @@ class Game(EngineModel):
             if len([state for state in pool if state.id not in taken]) < component.required:
                 return False
         return True
+
+    def or_cost_choices_for_judging(self, card: CardState, caster: str) -> dict[int, int]:
+        """Which alternative of each CR 601.2b "[cost] or [cost]" additional cost
+        to judge `card`'s castability by. An object alternative that can be
+        paid is chosen over a mana default - it adds no mana, so it is never
+        harder to afford (Deadly Precision with a creature and a single Swamp)
+        - and over a life default only when the life cannot be paid (Bitter
+        Triumph at 2 life judged by its discard). A sentence no alternative of
+        which is payable keeps its default, so the judgement fails on it.
+        """
+        chosen: dict[int, int] = {}
+        taken: set[UUID] = set()
+        for index, printed in enumerate(additional_cost_phrases(card.card)):
+            alternatives = or_additional_cost_alternatives(substitute_x(printed, 0))
+            if alternatives is None:
+                continue
+            costs = [total_cost_for_phrase(alt, caster) for alt in alternatives]
+            default = costs[-1]
+            if (
+                not alternatives[-1].startswith("{")
+                and default is not None
+                and self._cost_objects_available(default, caster, taken)
+            ):
+                continue
+            for pick, option in enumerate(costs[:-1]):
+                if option is not None and self._cost_objects_available(option, caster, taken):
+                    chosen[index] = pick
+                    break
+        return chosen
 
     def _cost_payable_on_top_of(
         self, casting: Casting, extra: TotalCost, caster: str, taken: set[UUID]
@@ -21563,6 +21602,7 @@ class Game(EngineModel):
         reveal_for_cost: CardState | None = None,
         casualty: Sequence[CardState] | None = None,
         conspire: Sequence[Sequence[CardState]] | None = None,
+        exile_for_cost_reduction: Sequence[CardState] | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -21634,6 +21674,10 @@ class Game(EngineModel):
         702.166a's bargain; `collect_evidence` pays a printed "you may collect
         evidence N" (CR 701.59a); `reveal_for_cost` is the card revealed for a
         printed "you may reveal a <quality> card from your hand".
+        `exile_for_cost_reduction` is the cards exiled from hand for a printed
+        "you may exile any number of <quality> cards from your hand. This spell
+        costs {N} less to cast for each card exiled this way." (March of
+        Wretched Sorrow; CR 118.8b, CR 118.7a).
         `casualty` is the creature sacrificed for each casualty instance paid
         (CR 702.153a/b), in order - printed instances first, then granted.
         They join `offspring`, `blight` and `gift` as this method's whole
@@ -21685,6 +21729,17 @@ class Game(EngineModel):
             # with the rest of CR 601.2b's additional costs.
             for pair in conspire or ():
                 casting.pay_conspire(list(pair))
+            if exile_for_cost_reduction is not None:
+                casting.exile_for_cost_reduction(exile_for_cost_reduction)
+            # CR 601.2b announces every additional cost before CR 601.2c's
+            # targets; `add_additional_cost` refuses once targets are chosen,
+            # so a targeted bargained/evidence/reveal cast failed here.
+            if bargain is not None:
+                casting.pay_bargain(bargain)
+            if collect_evidence:
+                casting.collect_evidence()
+            if reveal_for_cost is not None:
+                casting.reveal_for_cost(reveal_for_cost)
             if targets:
                 casting.choose_targets(list(targets))
             for card_id in splice or ():
@@ -21694,12 +21749,6 @@ class Game(EngineModel):
             for cost in kicker_costs or ():
                 # CR 702.33b: a card with two kicker costs names each one paid.
                 casting.pay_kicker(1, which=cost)
-            if bargain is not None:
-                casting.pay_bargain(bargain)
-            if collect_evidence:
-                casting.collect_evidence()
-            if reveal_for_cost is not None:
-                casting.reveal_for_cost(reveal_for_cost)
             if replicate:
                 casting.pay_replicate(replicate)
             if offspring:

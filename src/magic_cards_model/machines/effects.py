@@ -11013,7 +11013,9 @@ _SURVEIL_RE = re.compile(rf"surveils? (?P<n>{AMOUNT}){where_x_pattern()}", re.IG
 #: "Scry N" (Preordain, most spells) and "Target player scries N" (Kozilek's
 #: Command's third-person mode) - `scr(?:y|ies)` reads both conjugations.
 #: "Scry X, where X is `<expr>`" (Oath of Jace) reads the same way.
-_SCRY_RE = re.compile(rf"scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
+#: The explicit-subject spelling "you scry N" (Torch the Tower's bargained
+#: "... and you scry 1") reads as the bare one.
+_SCRY_RE = re.compile(rf"(?:you )?scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
 #: "shuffle" (Ponder's, Pondering Mage's own "You may shuffle.") or "shuffle
 #: your library" - CR 701.24a's action alone, with nothing else attached. A
 #: search's own mandatory shuffle reads through `Game.search_library`
@@ -21439,9 +21441,11 @@ _TARGET_CANT_BLOCK_RE = re.compile(
 #: creature you control phases out.". The restriction is whatever
 #: `machines/targeting.py` reads off the phrase; the reminder text
 #: ("(Treat it and anything attached to it ...)") is stripped before this
-#: sees the clause.
+#: sees the clause. A leading "up to X"/"up to N" count (March of Swirling
+#: Mist's "Up to X target creatures phase out.") rides on the phrase, which
+#: `machines/targeting.py` reads in full.
 _TARGET_PHASES_OUT_RE = re.compile(
-    r"^(?P<phrase>(?:another )?target .+?) phases? out\.?$", re.IGNORECASE
+    r"^(?P<phrase>(?:up to \w+ )?(?:another )?target .+?) phases? out\.?$", re.IGNORECASE
 )
 
 #: "`<target phrase>` gains `<keyword>`[, `<keyword>`, and `<keyword>`] until
@@ -34387,8 +34391,15 @@ def _parse_draw_x_from_target_graveyard_from_library_clause(text: str) -> Effect
 #: targeted rather than a group damage clause. CR 614.1a: a replacement effect
 #: the resolving spell creates, naming exactly the permanents its own damage
 #: clause dealt damage to (CR 120.3 - damage prevented is never dealt).
+#:
+#: The same rider also reads "dealt damage by `<this spell's name>`" (Torch the
+#: Tower's "If a permanent dealt damage by Torch the Tower would die this turn,
+#: exile it instead."), where the source is the resolving spell itself - the
+#: rider is printed on that spell, so a capitalised name or "this spell" can
+#: only mean it; a lower-case group ("creatures you control") is not read.
 _DEALT_DAMAGE_THIS_WAY_DIE_TO_EXILE_RE = re.compile(
-    r"^(?P<rest>.+?\.)\s+if an? (?P<quality>[a-z]+(?: or [a-z]+)*) dealt damage this way "
+    r"^(?P<rest>.+?\.)\s+if an? (?P<quality>[a-z]+(?: or [a-z]+)*) dealt damage "
+    r"(?:this way|by (?:this spell|(?-i:[A-Z][\w',\- ]*))) "
     r"would die this turn, exile it instead\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -53466,6 +53477,17 @@ _TARGET_PHRASE_ANYWHERE_RE = re.compile(
 )
 
 
+#: A target noun made only of permanent-type words ("creature or planeswalker",
+#: "artifact", "nonland permanent") - the targets "that permanent" can stand
+#: for (CR 110.1).
+_PERMANENT_TYPES_ONLY_RE = re.compile(
+    r"(?:non)?(?:creature|planeswalker|artifact|enchantment|land|battle|permanent)s?"
+    r"(?:(?:,\s*|\s+or\s+|\s+and/or\s+)(?:non)?"
+    r"(?:creature|planeswalker|artifact|enchantment|land|battle|permanent)s?)*",
+    re.IGNORECASE,
+)
+
+
 def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str | None:
     """CR 400.7's "that `<noun>`" is anaphora back to the base clause's own
     already-fixed target (CR 601.2c), not a second, elided one - Colossal
@@ -53493,6 +53515,13 @@ def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str
     anaphor = re.compile(rf"\bthat\s+{re.escape(bare_noun)}\b", re.IGNORECASE)
     if anaphor.search(alternative_text):
         return anaphor.sub(match.group("phrase"), alternative_text, count=1)
+    # "that permanent" names a target of any permanent type (CR 110.1) - Torch
+    # the Tower's bargained "instead it deals 3 damage to that permanent" over
+    # its "target creature or planeswalker".
+    if _PERMANENT_TYPES_ONLY_RE.fullmatch(bare_noun):
+        permanent_anaphor = re.compile(r"\bthat\s+permanent\b", re.IGNORECASE)
+        if permanent_anaphor.search(alternative_text):
+            return permanent_anaphor.sub(match.group("phrase"), alternative_text, count=1)
     # The pronoun form, "it", as the alternative's own subject - You're Not
     # Alone's "If you control three or more creatures, it gets +4/+4 until
     # end of turn instead" - refers back to the same fixed target. Only the
@@ -53506,6 +53535,11 @@ def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str
 
 _DAMAGE_AMOUNT_TO_RE = re.compile(
     rf"\b(?P<n>{COUNT}) damage to (?P<to>that |target |any )", re.IGNORECASE
+)
+
+
+_ALTERNATIVE_EXTRA_INSTRUCTION_RE = re.compile(
+    r",|\band\s+(?:you|it|that|each|its)\b|\bthen\b", re.IGNORECASE
 )
 
 
@@ -53525,6 +53559,11 @@ def _amount_substituted_base(base_text: str, alternative_text: str) -> str | Non
     if not base_amounts or len(base_amounts) != len(alternative_amounts):
         return None
     if any(found.group("to").lower() != "that " for found in alternative_amounts):
+        return None
+    if _ALTERNATIVE_EXTRA_INSTRUCTION_RE.search(alternative_text[alternative_amounts[-1].end() :]):
+        # The alternative does more than renumber the base (Torch the Tower's
+        # "... damage to that permanent and you scry 1"): substituting only
+        # the amounts would silently drop that instruction.
         return None
     pieces: list[str] = []
     cursor = 0
