@@ -43,7 +43,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.keywords import executes
 from magic_cards_model.models import CardState, Zone
 from magic_cards_model.models.card_state import Counter
-from magic_cards_model.models.token import PREDEFINED, create_tokens
+from magic_cards_model.models.token import PREDEFINED, TokenState, create_tokens
 
 from .harness import Scenario
 
@@ -389,3 +389,291 @@ def test_choosing_among_two_jace_tokens_you_control():
 
     assert first.loyalty == 3, "not chosen, untouched"
     assert second.loyalty == 7, "chosen: 5 + empower Jace 2"
+
+
+# ---------------------------------------------------------------------------
+# Round 293-fra T1: the remaining empower cards, on their real printings, and
+# the corner cases of CR 701.71a every one of them shares. No Modern/Pioneer/
+# Standard printing outside the 293-fra round carries "Empower Jace", so the
+# proofs below are on the round's own printings.
+# ---------------------------------------------------------------------------
+
+
+def test_scryfalls_own_keyword_spelling_is_reported_as_executed():
+    """Scryfall names the keyword "Empower Jace", not "Empower"."""
+    assert executes("Empower Jace") is True
+    assert executes("empower jace") is True
+
+
+def test_keeper_of_the_quiet_hour_empowers_two_from_its_etb_trigger():
+    scenario = Scenario().player("alice", hand=["Keeper of the Quiet Hour"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.put_onto_battlefield("Keeper of the Quiet Hour")
+    scenario.pass_until_resolved()
+
+    assert _jace_token(scenario).loyalty == 2
+
+
+def test_mindseeker_oculus_empowers_four_from_its_etb_trigger():
+    scenario = Scenario().player("alice", hand=["Mindseeker Oculus"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.put_onto_battlefield("Mindseeker Oculus")
+    scenario.pass_until_resolved()
+
+    assert _jace_token(scenario).loyalty == 4
+
+
+def test_no_admittance_deals_three_then_empowers_one():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["No Admittance"], battlefield=["Mountain", "Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain")
+
+    scenario.cast_and_resolve("No Admittance", *sources, targets=["bob"])
+
+    assert scenario.player("bob").life == 17
+    assert _jace_token(scenario).loyalty == 1
+
+
+def test_hexhaven_battalion_makes_three_cadets_and_empowers_two():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Hexhaven Battalion"], battlefield=["Plains"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Plains"] * 6)
+
+    scenario.cast_and_resolve("Hexhaven Battalion", *sources)
+
+    cadets = [
+        permanent
+        for permanent in scenario.game.battlefield
+        if permanent.name == "Cadet" and permanent.controller == "alice"
+    ]
+    assert len(cadets) == 3
+    assert all(
+        scenario.game.power_of(c) == 2 and scenario.game.toughness_of(c) == 2 for c in cadets
+    )
+    assert _jace_token(scenario).loyalty == 2
+
+
+def test_hexhaven_battalion_basic_landcycling_finds_a_basic_land():
+    """CR 702.29e: basic landcycling searches for a basic land card."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Hexhaven Battalion"],
+            library=["Lightning Bolt", "Plains", "Counterspell"],
+            battlefield=["Plains", "Plains"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    battalion = scenario.find("Hexhaven Battalion", Zone.HAND, "alice")
+    plains = scenario.find("Plains", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(plains, username="alice", source="Hexhaven Battalion")
+
+    scenario.cycle(battalion, *scenario.untapped_sources("Plains", "Plains"))
+
+    assert plains.zone is Zone.HAND
+    assert battalion.zone is Zone.GRAVEYARD
+    assert _jace_tokens(scenario) == [], "cycling is not casting: nothing empowers"
+
+
+def test_fatehold_charm_other_modes_do_not_empower():
+    """Only the draw mode carries "Empower Jace 2"."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Fatehold Charm"],
+            battlefield=["Plains", "Island", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bear = scenario.creature("Grizzly Bears", "alice")
+
+    casting = scenario.cast("Fatehold Charm")
+    casting.choose_modes([3])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Plains", "Island"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.game.power_of(bear) == 3
+    assert _jace_tokens(scenario) == []
+
+
+def _countersculpt_board(**alice):
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", **alice)
+        .build()
+    )
+
+
+def _bolt_alice(scenario):
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    scenario.pass_priority("bob")
+    return bolt
+
+
+def test_countersculpt_paying_one_counters_the_spell_and_empowers_one():
+    scenario = _countersculpt_board(
+        hand=["Countersculpt"], battlefield=["Island", "Island", "Island"]
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = _bolt_alice(scenario)
+    sources = scenario.untapped_sources("Island", "Island", "Island", username="alice")
+
+    scenario.cast_and_resolve("Countersculpt", *sources, username="alice", targets=[bolt])
+
+    assert bolt.zone is Zone.GRAVEYARD
+    assert scenario.player("alice").life == 20
+    assert _jace_token(scenario).loyalty == 1
+
+
+def test_countersculpt_beholding_a_jace_skips_the_extra_mana():
+    """CR 701.4a: a Jace card revealed from hand pays the additional cost, so
+    only {U}{U} is spent."""
+    scenario = _countersculpt_board(
+        hand=["Countersculpt", "Jace, Reality Sculptor"], battlefield=["Island", "Island"]
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = _bolt_alice(scenario)
+    jace_card = scenario.find("Jace, Reality Sculptor", Zone.HAND, "alice")
+    sources = scenario.untapped_sources("Island", "Island", username="alice")
+
+    scenario.cast_and_resolve(
+        "Countersculpt", *sources, username="alice", targets=[bolt], beholding=[jace_card]
+    )
+
+    assert bolt.zone is Zone.GRAVEYARD
+    assert jace_card.zone is Zone.HAND, "beholding reveals, it does not move the card"
+    assert _jace_token(scenario).loyalty == 1
+
+
+def test_countersculpt_does_nothing_when_its_target_is_gone_on_resolution():
+    """CR 608.2b: the only target is illegal, so the whole spell does nothing
+    - no counter and, with it, no empower."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "bob",
+            hand=["Lightning Bolt", "Counterspell"],
+            battlefield=["Mountain", "Island", "Island"],
+        )
+        .player("alice", hand=["Countersculpt"], battlefield=["Island", "Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    scenario.pass_priority("bob")
+    sources = scenario.untapped_sources("Island", "Island", "Island", username="alice")
+    scenario.cast_onto_stack("Countersculpt", *sources, username="alice", targets=[bolt])
+    scenario.pass_priority("alice")
+    islands = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.cast_onto_stack("Counterspell", *islands, username="bob", targets=[bolt])
+
+    scenario.resolve_top()
+    assert bolt.zone is Zone.GRAVEYARD
+    scenario.resolve_top()
+
+    assert _jace_tokens(scenario) == []
+
+
+def test_overwrite_the_multiverse_with_no_creatures_empowers_zero():
+    """X = 0 creatures exiled: the token is still created (CR 701.71a's first
+    sentence does not depend on N) but gets no counters, so it sits at 0
+    loyalty until state-based actions put it into the graveyard (CR 704.5i)."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Overwrite the Multiverse"], battlefield=["Swamp"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*["Swamp"] * 6)
+
+    scenario.cast_and_resolve("Overwrite the Multiverse", *sources)
+    scenario.state_based_actions()
+
+    assert _jace_tokens(scenario) == []
+
+
+def test_a_nonlegal_token_at_zero_loyalty_is_put_into_the_graveyard_by_sba():
+    """CR 704.5i, on a freshly made Jace token."""
+    scenario = Scenario().player("alice").player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (jace,) = create_tokens(scenario.game, PREDEFINED["Jace"], "alice", count=1)
+    assert jace.loyalty == 0
+
+    scenario.state_based_actions()
+
+    assert jace not in scenario.game.battlefield
+
+
+def test_a_nontoken_jace_planeswalker_does_not_stand_in_for_the_token():
+    """CR 701.71a says "Jace planeswalker *token*": a real Jace card on the
+    battlefield leaves the first sentence to create a token."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Arcane Amphisbaena"],
+            battlefield=["Jace, Reality Sculptor"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sculptor = scenario.find("Jace, Reality Sculptor", Zone.BATTLEFIELD, "alice")
+    before = sculptor.loyalty
+
+    scenario.put_onto_battlefield("Arcane Amphisbaena")
+    scenario.pass_until_resolved()
+
+    tokens = [t for t in _jace_tokens(scenario) if isinstance(t, TokenState)]
+    assert len(tokens) == 1 and tokens[0].loyalty == 2
+    assert sculptor.loyalty == before
+
+
+def test_the_jace_tokens_minus_one_surveils_and_minus_three_draws():
+    """CR 606.3/606.6: the token's two printed abilities are real loyalty
+    abilities, payable only with enough loyalty counters."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Mindseeker Oculus"], library=["Forest"] * 5)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Mindseeker Oculus")
+    scenario.pass_until_resolved()
+    jace = _jace_token(scenario)
+    assert jace.loyalty == 4
+
+    top = scenario.top_of_library(1)[0]
+    scenario.surveil_to_graveyard(top)
+    scenario.activate(jace, index=0, username="alice")
+    scenario.pass_until_resolved()
+    assert jace.loyalty == 3
+    assert top.zone is Zone.GRAVEYARD, "[-1]: Surveil 1"

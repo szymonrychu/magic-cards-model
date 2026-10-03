@@ -23901,6 +23901,13 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     # mode) as the bare `create_continuous_effect` sentinel, which builds its
     # effect off the *whole* card's text - for a modal card, a bulleted list
     # `LAYER_EFFECTS` does not read, so the mode silently did nothing.
+    # A mass pump ("Creatures you control get +1/+2 until end of turn.",
+    # Fatehold Charm's third mode, Charge the Sanctum's second) fixes its
+    # group at resolution (CR 611.2c) through `_run_mass_pump`; the scoped
+    # layer composer below resolves no group, so it would build no effect.
+    mass_pump_mode = _mass_pump_spell_effect(text)
+    if mass_pump_mode is not None:
+        return mass_pump_mode
     layer_mode = _compose_layer_effect_with_remainder_for_mode(text)
     if layer_mode is not None:
         return layer_mode

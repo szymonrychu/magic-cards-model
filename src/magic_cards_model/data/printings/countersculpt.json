@@ -3,6 +3,8 @@
   "id": "145b928d-a7ff-4fe5-ae4d-bbae7b1d955b",
   "oracle_id": "fc3353e9-fe24-4ca7-bff8-9da767f2903a",
   "multiverse_ids": [],
+  "resource_id": "0BC627826151C3C73904442102C63EB23B6F482DC3FA5D6A5DA796F1BF3EBE40",
+  "mtgo_id": 155756,
   "tcgplayer_id": 715899,
   "cardmarket_id": 907289,
   "name": "Countersculpt",
@@ -39,32 +41,51 @@
   ],
   "keywords": [
     "Surveil",
+    "Empower Jace",
     "Behold"
   ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8d1e424f-6407-4f8c-bed2-eaf148237c81",
+      "component": "token",
+      "name": "Jace",
+      "type_line": "Token Planeswalker \u2014 Jace",
+      "uri": "https://api.scryfall.com/cards/8d1e424f-6407-4f8c-bed2-eaf148237c81"
+    },
+    {
+      "object": "related_card",
+      "id": "145b928d-a7ff-4fe5-ae4d-bbae7b1d955b",
+      "component": "combo_piece",
+      "name": "Countersculpt",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/145b928d-a7ff-4fe5-ae4d-bbae7b1d955b"
+    }
+  ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -107,14 +128,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 28432,
+  "edhrec_rank": 19124,
   "prices": {
-    "usd": "2.99",
-    "usd_foil": null,
+    "usd": "0.38",
+    "usd_foil": "0.47",
     "usd_etched": null,
-    "eur": "0.45",
-    "eur_foil": "1.39",
-    "tix": null
+    "eur": "0.09",
+    "eur_foil": "0.10",
+    "tix": "0.02"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCountersculpt",
@@ -124,6 +145,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715899%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907289&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Countersculpt&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155756?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }
