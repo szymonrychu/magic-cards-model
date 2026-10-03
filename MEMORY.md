@@ -577,6 +577,7 @@ home of its own memory.
 
 Each line: a change to pre-existing test content, flagged by `scripts/regression_guard.py`, judged by an independent reviewer.
 
+- 2026-10-03 seat-pair integration (api repo magic-cards-model-api, base 949ea52) guard: 33 flagged protected-test/golden changes, fresh sonnet reviewer APPROVE all - compose aivai defaults Opus->Sonnet (test_compose_aivai), 27->28 tools with pass_baton (test_advise_mode), buddy stays Opus via advisor_default (test_ai_seat_settings, test_buddy_lifecycle), --require-baton in the stdio mcp config (test_k8s_seats), pass_baton in EXEMPT_TOOLS (test_reasoning_gate), SERVED_SURFACE_BUDGET 45000->46500 (measured 46226), role label added to activity/metrics/webhook series. Assertions kept as strict as before; renamed tests have equivalents.
 - 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/falkenrath-pit-fighter/activated-0.json: APPROVE - filler churn only (Alley Assailant, a new Vampire Rogue, now pays "Sacrifice a Vampire"); draw-two delta unchanged.
 - 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/grave-scrabbler/triggered-0.json: APPROVE - option repr gained the new additional_cost/enters_with_counters fields; behaviour unchanged.
 - 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/latchkey-faerie/triggered-0.json: APPROVE - repr-only (new fields).
