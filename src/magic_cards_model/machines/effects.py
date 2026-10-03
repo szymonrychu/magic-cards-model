@@ -108,7 +108,7 @@ from ..numbers import (
 )
 from ..snapshot import EngineModel
 from . import combat as combat_rules
-from . import map_tokens, mass_pump_followups, token_riders
+from . import map_tokens, mass_pump_conditions, mass_pump_followups, token_riders
 from .abilities import (
     _ABILITY_WORD,
     KEYWORD_ABILITY_NAMES,
@@ -3541,6 +3541,16 @@ def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
         return None
     template, magnitude_expr, remainder = parsed
 
+    gated = mass_pump_conditions.rider_effect(template, remainder, magnitude_expr, _run_mass_pump)
+    if gated is not None:
+
+        def gated_ability_effect(game: "Game", ability: AbilityOnStack) -> None:
+            source = ability.source(game)
+            if source is not None:
+                gated(game, source, ability.controller, ability)
+
+        return gated_ability_effect
+
     instead_upgrade = (
         _parse_mass_pump_instead_upgrade(remainder)
         if remainder and magnitude_expr is None
@@ -3554,7 +3564,14 @@ def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
             source = ability.source(game)
             if source is None:
                 return
-            holds = game.condition_holds(ability.controller, condition_text, source)
+            holds = game.condition_holds(
+                ability.controller,
+                condition_text,
+                source,
+                ability=ability.ability,
+                event=ability.event,
+                source_stamp=ability.source_stamp,
+            )
             chosen = upgraded_template if holds else template
             _run_mass_pump(game, source, ability.controller, chosen, None)
             if holds is None:
@@ -4509,6 +4526,14 @@ def _mass_pump_spell_effect(effect_text: str) -> Effect | None:
     if parsed is None:
         return None
     template, magnitude_expr, remainder = parsed
+
+    gated = mass_pump_conditions.rider_effect(template, remainder, magnitude_expr, _run_mass_pump)
+    if gated is not None:
+
+        def gated_spell_effect(game: "Game", spell: CardState) -> None:
+            gated(game, spell, game.controller_of(spell).username, None)
+
+        return gated_spell_effect
 
     instead_upgrade = (
         _parse_mass_pump_instead_upgrade(remainder)
@@ -31584,6 +31609,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     pump_for_each_color_spent = _parse_pump_for_each_color_spent_on_that_spell_clause(effect_text)
     if pump_for_each_color_spent is not None:
         return pump_for_each_color_spent
+    same_is_true = mass_pump_conditions.same_is_true_effect(effect_text)
+    if same_is_true is not None:
+        return same_is_true
     mass_pump = _mass_pump_ability_effect(effect_text)
     if mass_pump is not None:
         return mass_pump
