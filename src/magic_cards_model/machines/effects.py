@@ -31824,7 +31824,7 @@ def _parse_mass_destroy_predicate(
             return False
         if entered_this_turn:
             turn = game.turn
-            if turn is None or permanent.turn_entered != turn.turn_number:
+            if turn is None or permanent.turn_entered != turn.turns_taken:
                 return False
         return mv_comparison is None or mv_comparison(game, chars, source)
 
@@ -52388,7 +52388,7 @@ def _parse_city_blessing_token_copy_clause(
         player = game.player(controller)
         if not player.has_citys_blessing:
             return
-        turn_number = getattr(game.turn, "turn_number", None)
+        turn_number = getattr(game.turn, "turns_taken", None)
         if turn_number is None:
             return
         entered_this_turn = [
@@ -63463,7 +63463,7 @@ def _parse_mass_return_entered_this_turn_clause(
     predicate` already shares for a mass destruction's own subject. "Entered
     this turn" is `CardState.turn_entered` (stamped once, in `Game.
     enter_the_battlefield`) compared against the *current* turn number
-    (`Game.turn.turn_number`) - the identical reading `machines/targeting.py`
+    (`Game.turn.turns_taken`) - the identical reading `machines/targeting.py`
     already gives the same phrase for a *targeted* restriction, applied here
     to every matching permanent at once rather than to one chosen target.
     "Each other" excludes only the resolving ability's own source by id -
@@ -63487,7 +63487,7 @@ def _parse_mass_return_entered_this_turn_clause(
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        turn_number = game.turn.turn_number if game.turn is not None else None
+        turn_number = game.turn.turns_taken if game.turn is not None else None
         if turn_number is None:
             return
         source_id = ability.source_id

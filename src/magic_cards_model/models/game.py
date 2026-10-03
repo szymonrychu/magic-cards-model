@@ -12174,7 +12174,7 @@ class Game(EngineModel):
             # not just a boolean, the same way `ExileAnnotation.turn_exiled` is -
             # see `CardState.turn_entered`. Stamped here, the one choke point
             # every route onto the battlefield runs through.
-            card_state.turn_entered = self.turn.turn_number if self.turn is not None else None
+            card_state.turn_entered = self.turn.turns_taken if self.turn is not None else None
             # CR 613.5: from here on this permanent's power and toughness are
             # whatever the layer engine says they are. A characteristic-defining
             # ability (CR 604.3, 613.4a) gives Tarmogoyf a power the printing does
@@ -19346,7 +19346,7 @@ class Game(EngineModel):
             entered_this_turn_ids=frozenset(
                 permanent.id
                 for permanent in self.battlefield
-                if self.turn is not None and permanent.turn_entered == self.turn.turn_number
+                if self.turn is not None and permanent.turn_entered == self.turn.turns_taken
             ),
         )
         # The effects a board is built from are rebuilt on every computation and
@@ -23617,7 +23617,7 @@ class Game(EngineModel):
 
         if match := _CONDITION_ENTERED_THIS_TURN.fullmatch(text):
             needed = parse_count(match.group("count"))
-            turn_number = getattr(self.turn, "turn_number", None)
+            turn_number = getattr(self.turn, "turns_taken", None)
             if needed is None:
                 return None
             if turn_number is None:
@@ -24247,7 +24247,7 @@ class Game(EngineModel):
         return (
             permanent.turn_entered is not None
             and self.turn is not None
-            and permanent.turn_entered == self.turn.turn_number
+            and permanent.turn_entered == self.turn.turns_taken
         )
 
     def _activation_count(self, permanent: CardState, index: int) -> int:
@@ -24836,6 +24836,7 @@ class Game(EngineModel):
         words = reduction.quality.strip().lower().split()
         supertypes: list[Supertype] = []
         types: list[Type] = []
+        subtypes: list[str] = []
         for word in words:
             singular = word.removesuffix("s")
             try:
@@ -24848,7 +24849,9 @@ class Game(EngineModel):
                 continue
             except ValueError:
                 pass
-        if not types:
+            # CR 205.3: anything else in the quality is a subtype ("Equipment").
+            subtypes.append(singular)
+        if not types and not subtypes:
             already_noticed = any(
                 notice.source_id == permanent.id for notice in self.cost_modifier_notices
             )
@@ -24869,6 +24872,7 @@ class Game(EngineModel):
             if state.zone is Zone.BATTLEFIELD
             and all(t in board.of(state).types for t in types)
             and all(s in board.of(state).supertypes for s in supertypes)
+            and all(sub in {have.lower() for have in board.of(state).subtypes} for sub in subtypes)
         )
         amount = reduction.amount * count
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()

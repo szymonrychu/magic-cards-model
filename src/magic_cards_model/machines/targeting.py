@@ -1330,7 +1330,7 @@ class TargetRequirement(EngineModel):
         "did not" rather than an unknown to fail open over."""
         if not self.must_have_entered_this_turn:
             return None
-        turn_number = getattr(getattr(game, "turn", None), "turn_number", None)
+        turn_number = getattr(getattr(game, "turn", None), "turns_taken", None)
         if turn_number is None:
             return None
         missing = object()

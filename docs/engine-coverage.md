@@ -6968,3 +6968,31 @@ documented exception" rule rather than left silently asserted.
   description` rather than pinned to "artifact"/"enchantment"; Mentor's
   Guidance prints a related but genuinely different single-condition,
   multi-type-list "or" shape the regex correctly does not match).
+
+## R0b-T1: conditional enters-tapped lands, bounce/scry/MDFC lands, conditional dual mana
+
+Proof-only for the already-handled readers, one scenario per listed card
+(`tests/scenarios/test_r0b_conditional_enters_tapped_lands.py`,
+`tests/scenarios/test_r0b_conditional_dual_mana_and_utility_lands.py`):
+
+- Fast lands (Blooming Marsh, Inspiring Vantage, Concealed Courtyard): enter
+  tapped from three other lands (CR 614.1d, CR 614.12); slow lands (Shattered
+  Sanctum, Stormcarved Coast, Sundown Pass): tapped with zero or one other
+  lands. The land never counts itself; opponents' lands do not count.
+- Castle Locthwain (a nonbasic Swamp counts; draw then lose life equal to the
+  hand size after the draw) and The Lonely Mountain (Equipment; Dwarf ability
+  costs {1} less per Equipment, never below {R}; sorcery speed, CR 602.5d).
+- Temple of Enlightenment (scry 1, CR 701.22a), Selesnya Sanctuary (bounce
+  land, may return itself), Hidden Lair / Gleaming Bastion (coloured mana only
+  if entered this turn or a basic land is controlled; {C} always), Fell the
+  Profane // Fell Mire (instant; pay 3 life or tapped, CR 712.12, CR 119.4).
+
+Two engine fixes the proofs exposed:
+
+- `Game.activation_cost_reduction_for` now reads a **subtype** quality ("for
+  each Equipment / Island / Shrine you control", CR 205.3) - it previously
+  recorded a `CostModifierNotice` and reduced by nothing. Second printings:
+  Waterbending Scroll (Island), Sanctum of Tranquil Light (Shrine).
+- `CardState.turn_entered` is now stamped and compared as
+  `TurnMachine.turns_taken`, not `turn_number` (rounds): "entered this turn"
+  no longer stayed true through the opponent's turn of the same round.

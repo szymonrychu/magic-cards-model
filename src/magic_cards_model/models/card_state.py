@@ -1195,8 +1195,11 @@ class CardState(EngineModel):
     """
 
     turn_entered: int | None = None
-    """The turn number this permanent arrived on the battlefield, or `None` if
-    nothing was counting (built outside a game, or before a turn existed).
+    """The `TurnMachine.turns_taken` ordinal of the turn this permanent arrived
+    on the battlefield, or `None` if nothing was counting (built outside a
+    game, or before a turn existed). `turns_taken`, not `turn_number`: the
+    round counter stays put when the next player's turn begins (CR 500.7), so
+    it cannot tell "this turn" from the opponent's turn of the same round.
 
     Stamped once, in `Game.enter_the_battlefield` - the single choke point
     every route onto the battlefield runs through (CR 110.2a, CR 111.7,
