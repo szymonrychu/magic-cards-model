@@ -20970,26 +20970,7 @@ class Game(EngineModel):
                     if pair in self.blocks_triggered:
                         continue
                     self.blocks_triggered.append(pair)
-                    # CR 613.5: the blocker's characteristics for this event
-                    # are the computed ones - Tetsuko Umezawa, Pursuer's own
-                    # "a creature an opponent controls with power or
-                    # toughness 1 or less blocks" needs both the up-face
-                    # type/subtype and the live power/toughness, and the
-                    # blocker is still on the battlefield here (CR 509.1a).
-                    blocker_chars = self.characteristics_of(blocker)
-                    self.emit(
-                        GameEvent(
-                            event=TriggerEvent.BLOCKS,
-                            subject_id=blocker.id,
-                            subject_name=blocker.name,
-                            subject_controller=self.controller_of(blocker).username,
-                            subject_card=blocker.card,
-                            subject_types=blocker_chars.types,
-                            subject_subtypes=blocker_chars.subtypes,
-                            related_id=attacker.id,
-                            player=self.controller_of(blocker).username,
-                        )
-                    )
+                    self._emit_blocks(blocker, attacker)
 
             # CR 508.3f/509.3g: "Whenever [a creature] attacks and isn't
             # blocked, ..." - a separate event from `TriggerEvent.ATTACKS`,
@@ -21026,6 +21007,50 @@ class Game(EngineModel):
                     )
                 )
             self.put_triggers_on_stack()
+
+    def _emit_blocks(self, blocker: CardState, attacker: CardState) -> None:
+        """`blocker` blocked `attacker`: one `TriggerEvent.BLOCKS` for the pair."""
+        # CR 613.5: the blocker's characteristics for this event are the
+        # computed ones - Tetsuko Umezawa, Pursuer's own "a creature an
+        # opponent controls with power or toughness 1 or less blocks" needs
+        # both the up-face type/subtype and the live power/toughness, and the
+        # blocker is still on the battlefield here (CR 509.1a).
+        blocker_chars = self.characteristics_of(blocker)
+        self.emit(
+            GameEvent(
+                event=TriggerEvent.BLOCKS,
+                subject_id=blocker.id,
+                subject_name=blocker.name,
+                subject_controller=self.controller_of(blocker).username,
+                subject_card=blocker.card,
+                subject_types=blocker_chars.types,
+                subject_subtypes=blocker_chars.subtypes,
+                related_id=attacker.id,
+                player=self.controller_of(blocker).username,
+            )
+        )
+
+    def block_by_effect(self, blocker: CardState, attacker: CardState) -> None:
+        """A resolving effect makes `blocker` block `attacker` - not a
+        declaration, so no CR 509.1b/509.1c check (`CombatMachine.add_blocker`).
+
+        CR 509.3b/509.3d: "Whenever [a creature] blocks a creature" and
+        "becomes blocked by a creature" trigger when an effect causes the
+        block, "but only if it wasn't already blocking that attacking creature
+        at that time" - so the pair fires here even when it was declared (and
+        so fired) earlier this combat, once it had since stopped blocking.
+        """
+        attack = self.combat.attack_by(attacker.id)
+        if attack is None:
+            return
+        already_blocking = blocker.id in attack.blockers
+        self.combat.add_blocker(blocker.id, attacker.id)
+        if already_blocking:
+            return
+        pair = f"{blocker.id}:{attacker.id}"
+        if pair not in self.blocks_triggered:
+            self.blocks_triggered.append(pair)
+        self._emit_blocks(blocker, attacker)
 
     def attacking_creatures(self) -> list[CardState]:
         found = (self.find_by_id(card_id) for card_id in self.combat.attacker_ids)

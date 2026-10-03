@@ -5143,20 +5143,34 @@ def _activation_board(
     card = case.printing
     if combat and _needs_a_blocker(ability):
         # "target creature blocking or blocked by [this]" (CR 509.1g): the
-        # source attacks and the opponent's first creature blocks it.
+        # source attacks and the opponent's first creature blocks it. A
+        # source whose cost taps it (Balduvian Warlord's "{T}: Remove target
+        # blocking creature from combat") cannot be that attacker - it would
+        # be tapped by the attack (CR 508.1f) - so the controller's stock
+        # creature attacks instead, the source stays home, and combat moves
+        # on to the step an "Activate only during ..." names.
         scenario = _board(battlefield=(card.name,), step=Step.DECLARE_ATTACKERS)
         source = _source(scenario, case, ability)
+        attacker = _first(scenario, "Memnite", ALICE) if "{T}" in ability.cost else source
         blocker = next(
             (p for p in scenario.game.permanents_controlled_by(BOB) if Type.CREATURE in p.types),
             None,
         )
         try:
-            scenario.attack_with(source, defending=BOB)
+            scenario.attack_with(attacker, defending=BOB)
             if blocker is None:
                 raise _Unavailable("the opponent has no creature to block with")
-            scenario.block(source, blocker)
+            scenario.block(attacker, blocker)
         except (ValueError, AssertionError) as error:
             raise _Unavailable(f"combat: {error}") from error
+        window = _activation_step(ability)
+        if attacker is not source and window in (
+            Step.DECLARE_BLOCKERS,
+            Step.COMBAT_DAMAGE,
+            Step.END_OF_COMBAT,
+        ):
+            scenario.turn.advance_to(window)
+            scenario.game.sync_priority_with_step()
     elif combat:
         # "target attacking or blocking creature" (CR 506.3): the
         # controller's own stock creature attacks, the source stays home -
