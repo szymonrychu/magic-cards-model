@@ -1610,7 +1610,7 @@ _COMPOUND_PUT_RE = re.compile(
 _ONE_COUNTER_RE = re.compile(_ONE_COUNTER)
 #: Words that end the noun phrase of a "target <noun phrase>" for the purpose
 #: of naming it again as "that <noun>".
-_TARGET_PHRASE_STOP = frozenset({"you", "an", "opponent", "that", "with", "without", "or", "of"})
+_TARGET_PHRASE_STOP = frozenset({"you", "an", "opponent", "that", "with", "without", "of"})
 
 
 def _later_mention(recipient: str) -> str | None:
@@ -1618,11 +1618,16 @@ def _later_mention(recipient: str) -> str | None:
     `None` when it cannot be said without guessing."""
     if recipient.startswith(("that ", "this ")) or recipient == "it":
         return recipient
-    match = re.fullmatch(r"(?:up to (?:one|two|three) )?(?:another )?target (?P<phrase>.+)", recipient)
+    match = re.fullmatch(
+        r"(?:up to (?:one|two|three) )?(?:another )?target (?P<phrase>.+)", recipient
+    )
     if match is None:
         return None
+    words = match.group("phrase").split()
+    if "or" in words or "and" in words:
+        return None  # "target creature or planeswalker": "that creature" would guess the type
     noun = ""
-    for word in match.group("phrase").split():
+    for word in words:
         if word in _TARGET_PHRASE_STOP:
             break
         noun = word

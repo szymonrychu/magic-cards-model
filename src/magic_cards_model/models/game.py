@@ -23136,6 +23136,24 @@ class Game(EngineModel):
                 "cannot be activated (CR 119.4)"
             )
 
+        for piece in ability.costs:
+            # CR 118.3: "Remove an indestructible counter from Arwen" cannot be
+            # paid by a permanent without one, so the ability is not offered -
+            # the same check `CostPayment.pay` makes, made before announcing.
+            removal = cost_component_for_phrase(piece.text, payer=controller)
+            if (
+                removal is None
+                or removal.kind is not ComponentKind.REMOVE_COUNTERS
+                or removal.from_among
+                or removal.cards
+                or removal.amount < 1
+                or not _cost_refers_to_self(piece.text, permanent)
+            ):
+                continue
+            refused = removal.model_copy(update={"cards": [permanent]}).why_not(self)
+            if refused is not None:
+                return f"{permanent.name}'s ability cannot be activated: {refused}"
+
         needs_tapping = any(piece.kind in {CostKind.TAP, CostKind.UNTAP} for piece in ability.costs)
         if needs_tapping and not self.can_activate_tap_ability(permanent):
             return (

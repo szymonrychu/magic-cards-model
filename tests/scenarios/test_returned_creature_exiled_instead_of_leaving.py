@@ -79,7 +79,9 @@ def _geth_returns(scenario, name="Grizzly Bears"):
     geth = scenario.find("Geth, Thane of Contracts", Zone.BATTLEFIELD, "alice")
     target = scenario.find(name, Zone.GRAVEYARD, "alice")
     scenario.activate(
-        geth, *scenario.untapped_sources("Swamp", "Swamp", "Swamp", username="alice"), targets=[target]
+        geth,
+        *scenario.untapped_sources("Swamp", "Swamp", "Swamp", username="alice"),
+        targets=[target],
     )
     scenario.pass_until_resolved()
     return scenario.find(name, Zone.BATTLEFIELD, "alice")
@@ -100,7 +102,10 @@ def _whip_returns(scenario, name="Grizzly Bears"):
 def _bob_casts(scenario, spell, source_land, target):
     scenario.pass_priority("alice")
     scenario.cast_and_resolve(
-        spell, *scenario.untapped_sources(source_land, username="bob"), targets=[target], username="bob"
+        spell,
+        *scenario.untapped_sources(source_land, username="bob"),
+        targets=[target],
+        username="bob",
     )
 
 
@@ -129,7 +134,7 @@ def test_geth_returns_the_creature_and_it_gains_the_quoted_replacement():
 
 
 def test_geths_minus_one_minus_one_applies_to_the_returned_creature_but_not_geth():
-    """"Other creatures you control get -1/-1." - Grizzly Bears 2/2 becomes 1/1."""
+    """ "Other creatures you control get -1/-1." - Grizzly Bears 2/2 becomes 1/1."""
     scenario = _geth_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = _geth_returns(scenario)
@@ -147,7 +152,9 @@ def test_a_one_toughness_creature_dies_to_geths_shrink_and_is_exiled_not_buried(
     geth = scenario.find("Geth, Thane of Contracts", Zone.BATTLEFIELD, "alice")
     elves = scenario.find("Llanowar Elves", Zone.GRAVEYARD, "alice")
     scenario.activate(
-        geth, *scenario.untapped_sources("Swamp", "Swamp", "Swamp", username="alice"), targets=[elves]
+        geth,
+        *scenario.untapped_sources("Swamp", "Swamp", "Swamp", username="alice"),
+        targets=[elves],
     )
     scenario.pass_until_resolved()
     scenario.state_based_actions()
@@ -232,7 +239,10 @@ def test_a_bounce_spell_exiles_it(printing):
     scenario, bears = printing
     scenario.pass_priority("alice")
     scenario.cast_and_resolve(
-        "Unsummon", *scenario.untapped_sources("Island", username="bob"), targets=[bears], username="bob"
+        "Unsummon",
+        *scenario.untapped_sources("Island", username="bob"),
+        targets=[bears],
+        username="bob",
     )
     assert bears.zone is Zone.EXILE
 

@@ -40,7 +40,9 @@ def _board(*, battlefield=(), graveyard=()) -> Scenario:
 
 def _animate(scenario):
     maw = scenario.find("Cavernous Maw", Zone.BATTLEFIELD, "alice")
-    scenario.activate(maw, *scenario.untapped_sources("Forest", "Forest", username="alice"), index=1)
+    scenario.activate(
+        maw, *scenario.untapped_sources("Forest", "Forest", username="alice"), index=1
+    )
     scenario.pass_until_resolved()
     return maw
 

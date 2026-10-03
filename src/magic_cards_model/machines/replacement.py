@@ -2249,9 +2249,7 @@ def _leave_exile_line_replacements(lines: Iterable[str]) -> list[CardReplacement
                 and event.card.id == source.id
             )
 
-        found.append(
-            CardReplacement(label=line.strip(), applies=applies, apply=_exile_instead)
-        )
+        found.append(CardReplacement(label=line.strip(), applies=applies, apply=_exile_instead))
     return found
 
 
@@ -8198,9 +8196,7 @@ def exile_instead_of_leaving(
     lasts as long as the object does (CR 611.2a)."""
     game.created_replacements.append(
         CreatedReplacement(
-            spec=LeaveBattlefieldExile(
-                object_id=permanent.id, stamp=permanent.zone_change_stamp
-            ),
+            spec=LeaveBattlefieldExile(object_id=permanent.id, stamp=permanent.zone_change_stamp),
             label="if it would leave the battlefield, exile it instead",
             controller=controller,
             source_id=source_id,

@@ -91,7 +91,7 @@ def test_with_no_indestructible_counter_left_the_ability_cannot_be_activated():
 
 def test_arwen_without_the_counter_to_begin_with_cannot_activate():
     scenario, arwen, bears = _board()
-    scenario.game.remove_counters(arwen, "indestructible", 1)
+    arwen.remove_counters("indestructible", 1)
     assert scenario.why_cannot_activate(arwen) is not None
 
 

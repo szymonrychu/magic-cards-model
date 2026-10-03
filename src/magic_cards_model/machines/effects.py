@@ -62267,6 +62267,21 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 parsed.append(paired)
                 index += 2
                 continue
+            # CR 608.2c: a run of riders that all name the antecedent's object
+            # ("Put a +1/+1 counter on that creature. Put a lifelink counter on
+            # that creature.") is one antecedent with several riders, not a
+            # pair followed by a rider with no antecedent of its own.
+            run_end = index + 1
+            while run_end < len(clauses) and _OBJECT_ANAPHOR_RE.search(clauses[run_end]):
+                run_end += 1
+            if run_end - index > 2:
+                series = _parse_object_anaphor_clause_series(
+                    clauses[index], clauses[index + 1 : run_end], for_spell=for_spell
+                )
+                if series is not None:
+                    parsed.append(series)
+                    index = run_end
+                    continue
             paired = _parse_object_anaphor_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
