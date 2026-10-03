@@ -4346,6 +4346,11 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
     ),
     DriverGap(
         kind="enters_the_battlefield",
+        event="the source put onto the battlefield attacking from hand (ninjutsu)",
+        precondition=r"enters from your hand, if it's attacking",
+    ),
+    DriverGap(
+        kind="enters_the_battlefield",
         event="a creature type chosen for the source as it entered (CR 614.12a)",
         precondition=r"of the chosen type enters",
     ),
