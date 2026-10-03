@@ -3,6 +3,8 @@
   "id": "a5e1a7dd-8c49-4435-935c-bcc78704082b",
   "oracle_id": "0d60c095-4c6c-4618-8ef3-508f3d454efa",
   "multiverse_ids": [],
+  "resource_id": "42F67C1C93E311E59214DCE9AA3F75AEF326F7D97B26839593DD9E676262EA8B",
+  "mtgo_id": 155536,
   "tcgplayer_id": 706969,
   "cardmarket_id": 905774,
   "name": "Ajani Resolute",
@@ -50,6 +52,14 @@
     },
     {
       "object": "related_card",
+      "id": "7801c326-d740-4cec-9268-05348ace8302",
+      "component": "token",
+      "name": "Ajani's Pridemate",
+      "type_line": "Token Creature \u2014 Cat Soldier",
+      "uri": "https://api.scryfall.com/cards/7801c326-d740-4cec-9268-05348ace8302"
+    },
+    {
+      "object": "related_card",
       "id": "595a628e-218b-4df2-8bd2-d84ad22d302f",
       "component": "combo_piece",
       "name": "Ajani Resolute Emblem",
@@ -58,29 +68,29 @@
     }
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -124,14 +134,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 18640,
+  "edhrec_rank": 14392,
   "prices": {
-    "usd": "33.34",
-    "usd_foil": null,
+    "usd": "10.29",
+    "usd_foil": "10.36",
     "usd_etched": null,
-    "eur": "14.66",
-    "eur_foil": "24.99",
-    "tix": null
+    "eur": "5.20",
+    "eur_foil": "7.16",
+    "tix": "6.44"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAjani%2BResolute",
@@ -141,6 +151,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F706969%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=905774&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Ajani+Resolute&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155536?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

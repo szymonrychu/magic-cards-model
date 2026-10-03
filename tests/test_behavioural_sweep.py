@@ -1584,6 +1584,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         player = scenario.game.player(source.controller)
         increase_speed(player, by=4 - effective_speed(player))
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
+    _counter_to_remove(scenario, source, getattr(ability, "text", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _target_damage_history(scenario, source, getattr(ability, "text", None))
     _board_threshold(scenario, source, getattr(ability, "intervening_if", None) or "")
@@ -1593,6 +1594,24 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     _equip_for_condition(scenario, source, ability)
     _enter_for_condition(scenario, ability)
     return source
+
+
+_REMOVES_OWN_COUNTER = re.compile(
+    r"remove (?:a|an|one) (?P<kind>\+1/\+1|[a-z]+) counters? from (?:this|it)\b", re.IGNORECASE
+)
+
+
+def _counter_to_remove(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
+    """ "you may remove a `<kind>` counter from this creature" (CR 122.1): a
+    source that carries none has nothing to remove - and, a creature that
+    enters with X counters (Guiding Hydra), is a 0/0 that dies at the first
+    state-based check (CR 704.5f) - so it is staged carrying one."""
+    found = _REMOVES_OWN_COUNTER.search(text or "")
+    if found is None or source.zone is not Zone.BATTLEFIELD:
+        return
+    kind = found.group("kind")
+    if source.counters[kind] == 0:
+        scenario.game.add_counters(source, kind, 1)
 
 
 def _target_damage_history(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
@@ -1756,7 +1775,7 @@ def _damage_history(scenario: PlayedScenario, source: CardState, lowered: str, c
         game.deal_damage(game.player(BOB), 1, source=source)
     if re.search(r"\byou were dealt \w+ or more damage this turn", lowered):
         game.deal_damage(game.player(ALICE), count)
-    if re.search(r"\ban opponent (?:was|has been) dealt damage this turn", lowered):
+    if re.search(r"\ban opponent (?:was|has been) dealt (?:noncombat )?damage this turn", lowered):
         game.deal_damage(game.player(BOB), 1)
     if re.search(r"damage was dealt to (?:it|this creature) this turn", lowered):
         game.deal_damage(source, count)
@@ -1886,6 +1905,10 @@ def _action_history(scenario: PlayedScenario, source: CardState, lowered: str, c
                 combat=color is None,
             )
         )
+    if "activated a loyalty ability this turn" in lowered:
+        from magic_cards_model.machines.conditions.history import LOYALTY_ABILITY_ACTIVATED
+
+        game.record_turn_fact(LOYALTY_ABILITY_ACTIVATED, ALICE)
     if "from anywhere other than your hand" in lowered:
         from magic_cards_model.machines.conditions.history import PLAYED_NOT_FROM_HAND
 
@@ -2895,6 +2918,10 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         ]
         if not partners:
             partners = group_partners
+    # "Whenever a creature an opponent controls with <quality> blocks"
+    # (Tetsuko Umezawa, Pursuer, CR 509.1a): the probe is the opponent's
+    # blocker, and the source (or any creature of its controller) attacks.
+    opposing_blocker = re.match(r"^an? [^,]*\ban opponent controls\b.*\bblocks\b", lowered)
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
         if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle or back_creature):
@@ -2902,12 +2929,20 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         if not is_vehicle:
             attackers += [p for p in _probes(case, ability, entering=False) if p != card.name]
         for probe in attackers:
+            if opposing_blocker and (side != ALICE or probe is None):
+                continue
 
             def fight(probe: str | None = probe, side: str = side) -> tuple[Any, ...]:
                 extra: tuple[str, ...] = (probe,) if probe is not None else ()
                 if is_vehicle:
                     extra = (crew_kin or "Serra Angel",)
-                if side == ALICE:
+                if opposing_blocker:
+                    scenario = _board(
+                        battlefield=(case.card, *_equipment_partner(ability)),
+                        bob_battlefield=extra,
+                        step=Step.DECLARE_ATTACKERS,
+                    )
+                elif side == ALICE:
                     scenario = _board(
                         battlefield=(
                             case.card,
@@ -2929,7 +2964,9 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 source = _source(scenario, case, ability)
                 if is_vehicle and side == ALICE:
                     _crew(scenario, source, (crew_kin,) if crew_kin else ())
-                attacker = source if probe is None else _staged(scenario, probe, side)
+                attacker = (
+                    source if probe is None or opposing_blocker else _staged(scenario, probe, side)
+                )
                 if attacker is not source and "equipped" in lowered:
                     holder = _staged(scenario, _EQUIPMENT, ALICE) if equipment else source
                     holder.attachment = TargetRef.to_card(attacker)
@@ -2948,7 +2985,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                     raise _Unavailable(str(error)) from error
                 return scenario, source, attacker, defender
 
-            yield _combat_stages(case, fight, lowered)
+            yield _combat_stages(case, fight, lowered, blocking=probe if opposing_blocker else None)
 
     if re.search(
         r"\bthat creature entered (?:the battlefield )?this turn\b",
@@ -3004,7 +3041,12 @@ def _simplest_creature_of(subtype_word: str) -> str | None:
     return candidates[0].name if candidates else None
 
 
-def _combat_stages(case: Case, fight: Callable[[], tuple[Any, ...]], lowered: str) -> Attempt:
+def _combat_stages(
+    case: Case,
+    fight: Callable[[], tuple[Any, ...]],
+    lowered: str,
+    blocking: str | None = None,
+) -> Attempt:
     """Declare the attack, then block (with the source when it is on the
     defending side, CR 509.1), then deal combat damage (CR 510) - checking
     for the ability after each."""
@@ -3025,7 +3067,9 @@ def _combat_stages(case: Case, fight: Callable[[], tuple[Any, ...]], lowered: st
                     (
                         p
                         for p in game.permanents_controlled_by(defender)
-                        if Type.CREATURE in p.types and not p.tapped
+                        if Type.CREATURE in p.types
+                        and not p.tapped
+                        and (blocking is None or _named(p, blocking))
                     ),
                     None,
                 )
@@ -3127,10 +3171,32 @@ def _turns(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         yield entered
 
 
+#: A creature with a prepare spell (CR 722.2a) and nothing else to stage.
+_PREPARE_PROBE = "Emergency Phytomedic"
+
+
 def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     lowered = ability.condition.lower()
     if "this spell" in lowered:
         yield from _self_entering(case, ability)
+        return
+
+    if "prepared spell" in lowered:
+        # "Whenever you cast a prepared spell" (Codie, Ravenous Codex, CR
+        # 722.3c): a prepare creature on the battlefield becomes prepared, and
+        # its exile copy is the spell cast.
+
+        def prepared() -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability, battlefield=(_PREPARE_PROBE,))
+            probe = _first(scenario, _PREPARE_PROBE, ALICE)
+            if scenario.game.become_prepared(probe) is None:
+                raise _Unavailable(f"{_PREPARE_PROBE} cannot become prepared")
+            copy = scenario.game.find_by_id(probe.prepared_copy_id)
+            _cast(scenario, copy.name, ALICE, from_zone=Zone.EXILE)
+            _drive(scenario, case, source_id)
+            return scenario, source_id
+
+        yield prepared
         return
 
     if "from exile" in lowered or "other than your hand" in lowered:
@@ -3805,6 +3871,34 @@ def _activating(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         yield activate
 
 
+#: A pool planeswalker whose first loyalty ability needs no target, activated
+#: by whoever the trigger watches (CR 606.2).
+_LOYALTY_PROBE = "Archangel Elspeth"
+
+
+def _loyalty_activating(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """CR 606.2/606.3: a player activates a loyalty ability - sorcery speed
+    (CR 606.3), so the opponent does it on their own turn."""
+    opponent = "opponent" in ability.condition.lower()
+    player = BOB if opponent else ALICE
+
+    def activate() -> tuple[PlayedScenario, Any]:
+        extra: dict[str, Any] = (
+            {"bob_battlefield": (_LOYALTY_PROBE,), "active": BOB}
+            if opponent
+            else {"battlefield": (_LOYALTY_PROBE,)}
+        )
+        scenario, source_id = _home(case, ability, **extra)
+        walker = _first(scenario, _LOYALTY_PROBE, player)
+        try:
+            scenario.activate(walker, index=0, username=player, auto=True)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(str(error)) from error
+        return scenario, source_id
+
+    yield activate
+
+
 def _activation_order(game: Any, player: str, condition: str) -> list[CardState]:
     """The player's permanents, those the condition's own quality names first
     ("an ability of a creature", "of an Elemental") so the activation is one
@@ -4257,6 +4351,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _cycling(case, ability)
         elif kind == "ability_activated":
             yield from _activating(case, ability)
+        elif kind == "loyalty_ability_activated":
+            yield from _loyalty_activating(case, ability)
     # Every kind also gets whole turns played with the source in play:
     # beginning-of-step, draw-step draws, untap steps and Saga chapters all
     # happen on their own there, and so does anything an attempt above

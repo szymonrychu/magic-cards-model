@@ -3,6 +3,8 @@
   "id": "e3c8a8b6-23ba-45ad-80d1-8e2dc79897f7",
   "oracle_id": "185c70c1-8403-4ae5-b45d-3679d4ee092a",
   "multiverse_ids": [],
+  "resource_id": "E383F1FF7C5D2CB0E22B4007FA9E91405DF527C1D34ECEEB62302BFB505EFBD8",
+  "mtgo_id": 156078,
   "tcgplayer_id": 715942,
   "cardmarket_id": 907324,
   "name": "Rockfall Vale",
@@ -42,8 +44,8 @@
     "R"
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
+    "standard": "legal",
+    "future": "legal",
     "historic": "legal",
     "timeless": "legal",
     "gladiator": "legal",
@@ -55,10 +57,10 @@
     "penny": "legal",
     "commander": "legal",
     "oathbreaker": "legal",
-    "standardbrawl": "not_legal",
+    "standardbrawl": "legal",
     "brawl": "legal",
     "competitivebrawl": "legal",
-    "alchemy": "not_legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
     "duel": "legal",
     "oldschool": "not_legal",
@@ -110,14 +112,14 @@
   "booster": false,
   "story_spotlight": false,
   "edhrec_rank": 226,
-  "penny_rank": 641,
+  "penny_rank": 647,
   "prices": {
-    "usd": null,
-    "usd_foil": null,
+    "usd": "0.71",
+    "usd_foil": "1.20",
     "usd_etched": null,
-    "eur": "1.71",
-    "eur_foil": null,
-    "tix": null
+    "eur": "0.47",
+    "eur_foil": "1.13",
+    "tix": "0.02"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRockfall%2BVale",
@@ -127,6 +129,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715942%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907324&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Rockfall+Vale&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/156078?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

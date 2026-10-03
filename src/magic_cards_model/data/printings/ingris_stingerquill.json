@@ -3,6 +3,8 @@
   "id": "6471b135-33a8-4005-9a07-ebb74e0bf145",
   "oracle_id": "bda098cb-31ec-41a1-a9d7-122877cc69d2",
   "multiverse_ids": [],
+  "resource_id": "A4A77E75F14C8C814D0AFE6A695EE39A89EF7B1F3693127E196B14063368E035",
+  "mtgo_id": 155980,
   "tcgplayer_id": 715923,
   "cardmarket_id": 907314,
   "name": "Ingris Stingerquill",
@@ -44,30 +46,48 @@
   "keywords": [
     "Flying"
   ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8f4534d8-2783-484f-8ebf-a47b1cc4c6df",
+      "component": "token",
+      "name": "Cadet",
+      "type_line": "Token Creature \u2014 Wizard Soldier",
+      "uri": "https://api.scryfall.com/cards/8f4534d8-2783-484f-8ebf-a47b1cc4c6df"
+    },
+    {
+      "object": "related_card",
+      "id": "a0686b23-2220-405b-8bc5-980f18af5fef",
+      "component": "combo_piece",
+      "name": "Ingris Stingerquill",
+      "type_line": "Legendary Creature \u2014 Elder Sphinx",
+      "uri": "https://api.scryfall.com/cards/a0686b23-2220-405b-8bc5-980f18af5fef"
+    }
+  ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -114,14 +134,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 21880,
+  "edhrec_rank": 16077,
   "prices": {
-    "usd": "38.00",
-    "usd_foil": null,
+    "usd": "9.11",
+    "usd_foil": "9.47",
     "usd_etched": null,
-    "eur": "19.79",
-    "eur_foil": null,
-    "tix": null
+    "eur": "2.25",
+    "eur_foil": "3.90",
+    "tix": "2.10"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIngris%2BStingerquill",
@@ -131,6 +151,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715923%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907314&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Ingris+Stingerquill&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155980?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

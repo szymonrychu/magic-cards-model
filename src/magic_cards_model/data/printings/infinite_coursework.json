@@ -3,6 +3,8 @@
   "id": "a5988272-faaa-463d-a0a1-a8e96b946bad",
   "oracle_id": "666b34b5-a0c2-43e3-befd-7c3979313682",
   "multiverse_ids": [],
+  "resource_id": "A01CE0213B5E2A31A687604DACE42FA31C86EC1E8A0E6434344D631B2C19C466",
+  "mtgo_id": 155768,
   "tcgplayer_id": 716633,
   "cardmarket_id": 908419,
   "name": "Infinite Coursework",
@@ -42,29 +44,29 @@
     "Prepared"
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
-    "pauper": "not_legal",
-    "vintage": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -111,19 +113,19 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 32186,
+  "edhrec_rank": 29400,
   "preview": {
     "source": "Wizards of the Coast",
     "source_uri": "https://bsky.app/profile/magic.wizards.com/post/3mv6vjeo4wm27",
     "previewed_at": "2026-09-10"
   },
   "prices": {
-    "usd": "1.99",
-    "usd_foil": null,
+    "usd": "0.61",
+    "usd_foil": "0.39",
     "usd_etched": null,
-    "eur": "0.14",
-    "eur_foil": null,
-    "tix": null
+    "eur": "0.04",
+    "eur_foil": "0.22",
+    "tix": "0.01"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInfinite%2BCoursework",
@@ -133,6 +135,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716633%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908419&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Infinite+Coursework&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155768?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }
