@@ -677,3 +677,33 @@ def test_the_jace_tokens_minus_one_surveils_and_minus_three_draws():
     scenario.pass_until_resolved()
     assert jace.loyalty == 3
     assert top.zone is Zone.GRAVEYARD, "[-1]: Surveil 1"
+
+
+def test_charge_the_sanctums_mass_pump_mode_pumps_only_your_creatures():
+    """Second printing of the modal mass-pump reader (`parse_mode_effect`):
+    "Creatures you control get +2/+0 until end of turn." read off one mode."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Charge the Sanctum"],
+            battlefield=["Plains", "Plains", "Plains", "Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mine = scenario.creature("Grizzly Bears", "alice")
+    theirs = scenario.creature("Grizzly Bears", "bob")
+
+    casting = scenario.cast("Charge the Sanctum")
+    casting.choose_modes([1])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Plains", "Plains", "Plains"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.game.power_of(mine) == 4
+    assert scenario.game.toughness_of(mine) == 2
+    assert scenario.game.power_of(theirs) == 2
+    assert _jace_tokens(scenario) == []
