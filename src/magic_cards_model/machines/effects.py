@@ -36715,6 +36715,16 @@ _RIDER_BECOMES_TYPE_IN_ADDITION_RE = re.compile(
 )
 
 
+#: "... to its controller" / "... to its owner" - the damage goes to the player
+#: who controls (CR 108.4's controller, CR 108.3's owner) the very object that
+#: deals it: Traitor's Roar and Ana Battlemage's "Tap target untapped
+#: creature. It deals damage equal to its power to its controller." The
+#: holder is read off the dealer as the rider runs, never targeted.
+_RIDER_DAMAGE_HOLDER_PHRASE = (
+    r"(?:its|that (?:creature|permanent)'s|their) (?P<holder>controller|owner)"
+)
+
+
 #: "It deals damage equal to its power to target creature." - Crush
 #: Underfoot's rider, after "Choose a Giant creature you control." The
 #: referent is the source of the damage (CR 120.1: "An object that deals damage is the
@@ -36722,7 +36732,8 @@ _RIDER_BECOMES_TYPE_IN_ADDITION_RE = re.compile(
 #: power as the rider runs (CR 608.2h). The target phrase is the resolving
 #: object's own target, rechecked on resolution (CR 608.2b).
 _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE = re.compile(
-    rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to (?P<phrase>.*\btarget\b.+)$",
+    rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to "
+    rf"(?:(?P<phrase>.*\btarget\b.+)|{_RIDER_DAMAGE_HOLDER_PHRASE})$",
     re.IGNORECASE,
 )
 
@@ -37295,6 +37306,27 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
         return becomes_type_in_addition
 
     if match := _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE.fullmatch(rider):
+        holder = match.group("holder")
+        if holder is not None:
+
+            def deals_damage_to_its_holder(
+                game: "Game", referents: list[CardState], stack_object: "StackObject"
+            ) -> None:
+                dealers = [r for r in referents if r.zone is Zone.BATTLEFIELD]
+                if not dealers:
+                    return
+                dealer = dealers[0]
+                amount = game.power_of(dealer) or 0
+                if amount <= 0:
+                    return
+                username = (
+                    game.controller_of(dealer).username
+                    if holder.lower() == "controller"
+                    else dealer.owner
+                )
+                game.deal_damage(game.player(username), amount, source=dealer)
+
+            return deals_damage_to_its_holder
         phrase = match.group("phrase").strip()
         if not _targets_understood(phrase, count_agnostic=True, allow_player_targets=True):
             return None
@@ -51281,6 +51313,129 @@ def _parse_exile_then_play_permission_clauses(
     return consumed, effect
 
 
+#: "For each of those cards, its owner may play it for as long as it remains
+#: exiled." / "... its owner may play it until the end of their next turn." -
+#: the permission goes to each exiled card's own **owner** (CR 108.3), not to
+#: the controller who did the exiling, the one thing `_PLAY_PERMISSION_RE`
+#: (always "you"/"they") cannot say. The "for each of those cards" lead and the
+#: "for as long as that card remains exiled" lead are both the same CR 607.1
+#: anaphora over whatever the exile clause moved; the pronoun is distributive,
+#: so it never has to agree in number with the exile clause.
+_OWNER_PLAY_PERMISSION_RE = re.compile(
+    r"^(?:for each (?:of (?:those|these) cards|card exiled this way), )?"
+    r"(?P<leading>for as long as (?:that card|it|they) (?:remains?) exiled, )?"
+    r"its owner may (?P<action>cast|play) (?:it|that card)"
+    r"(?P<free> without paying its mana cost)?"
+    r"(?P<trailing> for as long as it remains exiled| until the end of their next turn)?$",
+    re.IGNORECASE,
+)
+
+#: "A spell cast [by an opponent] this way costs {2} more to cast." - the
+#: CR 601.2f cost increase riding on `_OWNER_PLAY_PERMISSION_RE`'s grant.
+#: "By an opponent" restricts it to a permission whose owner is an opponent of
+#: the controller of the ability or spell that exiled the card (Soul
+#: Partition); without it the increase applies to every owner (Elite
+#: Spellbinder, whose only exiled card is an opponent's anyway).
+_OWNER_PERMISSION_COST_INCREASE_RE = re.compile(
+    r"^a spell cast (?P<opponent>by an opponent )?this way costs (?P<increase>(?:\{[^}]+\})+) "
+    r"more to cast$",
+    re.IGNORECASE,
+)
+
+#: "exile [up to X | up to N | any number of] target `<permanents>`" - the
+#: battlefield exile whose objects a trailing permission names. Targets are
+#: validated by `machines/targeting.py` (count words and X included) and
+#: rechecked on resolution (CR 608.2b); a token is exiled too (CR 701.13a) but
+#: is no card, so the permission skips it (CR 111.7).
+_EXILE_TARGET_PERMANENTS_RE = re.compile(
+    r"^exile (?P<phrase>(?:up to |any number of )?(?:\w+ )?target .+)$", re.IGNORECASE
+)
+
+
+def _parse_exile_target_permanents_antecedent(
+    clause: str,
+) -> "tuple[ExileAntecedent, bool] | None":
+    match = _EXILE_TARGET_PERMANENTS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=True):
+        return None
+
+    def exile_targets(game: "Game", stack_object: "StackObject") -> list[CardState]:
+        exiled = [
+            game.exile_permanent(card)
+            for card in game.resolve_card_targets(stack_object)
+            if card.zone is Zone.BATTLEFIELD
+        ]
+        return [card for card in exiled if card.zone is Zone.EXILE]
+
+    return exile_targets, True
+
+
+def _parse_exile_targets_then_owner_play_permission_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> "tuple[int, TargetedClause] | None":
+    """ "Exile up to X target creatures. For each of those cards, its owner may
+    play it for as long as it remains exiled." as one CR 608.2c instruction
+    (the permission sentence only means something against what the first
+    exiled). Each exiled card's owner gets a `PlayPermission` through
+    `Game.grant_play_permission`, which stamps the card's `zone_change_stamp`,
+    so it ends the moment the card leaves exile (CR 400.7)."""
+    if index + 1 >= len(clauses):
+        return None
+    permission = _OWNER_PLAY_PERMISSION_RE.fullmatch(clauses[index + 1].strip().rstrip(","))
+    if permission is None:
+        return None
+    leading, trailing = permission.group("leading"), permission.group("trailing")
+    if bool(leading) == bool(trailing):
+        return None
+    next_turn = bool(trailing) and "next turn" in trailing.lower()
+    antecedent = _parse_exile_target_permanents_antecedent(clauses[index])
+    if antecedent is None:
+        return None
+    exile, _ = antecedent
+    action = PlayAction.PLAY if permission.group("action").lower() == "play" else PlayAction.CAST
+    free = permission.group("free") is not None
+    consumed = 2
+    increase: ManaCost | None = None
+    increase_opponents_only = False
+    if index + 2 < len(clauses):
+        rider = _OWNER_PERMISSION_COST_INCREASE_RE.fullmatch(clauses[index + 2].strip())
+        if rider is not None:
+            if free:
+                return None
+            increase = ManaCost.parse(rider.group("increase"))
+            increase_opponents_only = rider.group("opponent") is not None
+            consumed = 3
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        controller = game.controller_of(stack_object).username
+        for card in exile(game, stack_object):  # type: ignore[arg-type]
+            if card.owner is None or is_token(card):
+                continue
+            game.grant_play_permission(
+                card,
+                card.owner,
+                action=action,
+                pays_mana_cost=not free,
+                source_name=source_name,
+                rule="CR 601.3",
+                zone=card.zone,
+                until_end_of_turn=False,
+                expires_end_of_next_turn=next_turn,
+                cost_increase=(
+                    None if increase_opponents_only and card.owner == controller else increase
+                ),
+            )
+
+    return consumed, effect
+
+
 #: "If `<condition>`, exile the top card of your library. You may play that
 #: card until the end of your next turn." - Elemental Mascot's own Opus
 #: rider. False, and CR 608.2c has nothing to run: nothing was exiled, so
@@ -62386,6 +62541,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += consumed
                 continue
             merged = _parse_exile_then_play_permission_clauses(clauses, index, for_spell=for_spell)
+            if merged is not None:
+                consumed, effect = merged
+                parsed.append(effect)
+                index += consumed
+                continue
+            merged = _parse_exile_targets_then_owner_play_permission_clauses(
+                clauses, index, for_spell=for_spell
+            )
             if merged is not None:
                 consumed, effect = merged
                 parsed.append(effect)
