@@ -103,9 +103,7 @@ def test_an_illegal_target_spares_the_whole_group():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     staticaster = scenario.creature(STATICASTER, "alice")
-    first, second = [
-        state for state in scenario.game.battlefield if state.name == "Grizzly Bears"
-    ]
+    first, second = [state for state in scenario.game.battlefield if state.name == "Grizzly Bears"]
     (mountain,) = scenario.untapped_sources("Mountain")
 
     scenario.activate(staticaster, targets=[first])

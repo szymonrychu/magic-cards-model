@@ -1486,6 +1486,16 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     if _back_face(source.card, ability):
         source.transformed = True
     face = getattr(ability, "face", None)
+    faces = source.card.card_faces or []
+    if (
+        source.zone is Zone.BATTLEFIELD
+        and source.card.layout is Layout.FLIP
+        and len(faces) > 1
+        and face == faces[1].name
+    ):
+        # A flip card's bottom-half ability exists only while it is flipped
+        # (CR 710.1b) - staged flipped (Goka the Unjust).
+        source.flip()
     if (
         source.zone is Zone.BATTLEFIELD
         and face
@@ -1524,6 +1534,32 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     _equip_for_condition(scenario, source, ability)
     _enter_for_condition(scenario, ability)
     return source
+
+
+def _object_damage_history(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
+    """A target restriction on the object itself - "target creature that was
+    dealt damage this turn" (Initiate of Blood, Goka the Unjust; CR 120.1) -
+    is satisfied on the stock board by playing that damage: every other
+    creature there was dealt 1 damage this turn."""
+    from magic_cards_model.models.game import DamageDealt
+
+    if not re.search(r"\btarget [a-z ]+? that was dealt damage this turn\b", (text or "").lower()):
+        return
+    game = scenario.game
+    for creature in list(game.battlefield):
+        if creature is source or Type.CREATURE not in creature.types:
+            continue
+        game.damage_dealt_this_turn.append(
+            DamageDealt(
+                source_id=uuid5(NAMESPACE_OID, "object-dealt"),
+                source_controller=BOB,
+                source_types=(Type.CREATURE,),
+                recipient_id=creature.id,
+                recipient_controller=creature.controller,
+                recipient_types=(Type.CREATURE,),
+                amount=1,
+            )
+        )
 
 
 def _target_damage_history(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
@@ -2696,6 +2732,20 @@ def _leaving(case: Case, ability: TriggeredAbility, kind: str) -> Iterator[Attem
                         )
                         scenario, source_id = _home(case, ability, **extra)
                         victim = _staged(scenario, probe, owner)
+                        if "dealt damage by" in lowered and victim.id == source_id:
+                            # A probe that shares the source's name (Vein
+                            # Drinker probing itself): the other copy is the
+                            # one that dies, not the source.
+                            victim = next(
+                                (
+                                    state
+                                    for state in scenario.game.battlefield
+                                    if state.name == probe
+                                    and state.controller == owner
+                                    and state.id != source_id
+                                ),
+                                victim,
+                            )
                         if as_token:
                             (victim,) = token_copy_of(scenario.game, victim, owner)
                         source = scenario.game.find_by_id(source_id)
@@ -4675,6 +4725,7 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
     target (CR 607.2a), an ability on the stack to target (CR 115.1c), and a
     this-turn "Activate only if" condition (`_history_threshold`)."""
     game = scenario.game
+    _object_damage_history(scenario, source, ability.effect)
     for condition in read_activation_instructions(ability.instructions).conditions:
         _counter_threshold(scenario, source, condition)
         _history_threshold(scenario, source, condition)

@@ -2851,9 +2851,7 @@ _PLAYER_WHO_RE = re.compile(r"^who (?P<tail>was dealt .+? this turn)\b", re.IGNO
 #: "that was dealt damage this turn" on a permanent noun (Goka the Unjust's
 #: "target creature that was dealt damage this turn") - the same tail as
 #: `_PLAYER_WHO_RE`, CR 115.1's restriction on the target object itself.
-_OBJECT_THAT_WAS_DEALT_RE = re.compile(
-    r"^that (?P<tail>was dealt .+? this turn)\b", re.IGNORECASE
-)
+_OBJECT_THAT_WAS_DEALT_RE = re.compile(r"^that (?P<tail>was dealt .+? this turn)\b", re.IGNORECASE)
 _ZONE_CLAUSE = re.compile(
     r"\b(?:from|in)\s+"
     r"(?:(?P<whose>your|their|an? opponent'?s?|that player'?s|a single|any single|a|an|any)\s+)?"

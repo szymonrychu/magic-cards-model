@@ -65,10 +65,7 @@ def test_a_swamp_landfall_deals_the_base_one():
 
 def test_the_landfall_damage_can_go_to_a_player():
     scenario = (
-        Scenario()
-        .player("alice", hand=["Mountain"], battlefield=[HELLKITE])
-        .player("bob")
-        .build()
+        Scenario().player("alice", hand=["Mountain"], battlefield=[HELLKITE]).player("bob").build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.choose_trigger_targets(HELLKITE, ["bob"])
@@ -79,12 +76,7 @@ def test_the_landfall_damage_can_go_to_a_player():
 
 
 def _scepter_board(*artifacts: str) -> Scenario:
-    scenario = (
-        Scenario()
-        .player("alice", battlefield=[SCEPTER, *artifacts])
-        .player("bob")
-        .build()
-    )
+    scenario = Scenario().player("alice", battlefield=[SCEPTER, *artifacts]).player("bob").build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     return scenario
 
@@ -130,7 +122,9 @@ def test_crown_taps_or_with_the_set_steals():
     crown = scenario.find(CROWN, Zone.BATTLEFIELD)
     bears = scenario.creature("Grizzly Bears", "bob")
 
-    scenario.activate(crown, *scenario.untapped_sources("Plains", "Plains", "Plains"), targets=[bears])
+    scenario.activate(
+        crown, *scenario.untapped_sources("Plains", "Plains", "Plains"), targets=[bears]
+    )
     scenario.pass_until_resolved()
 
     assert scenario.game.controller_of(bears).username == "alice"
@@ -148,7 +142,9 @@ def test_crown_without_the_set_only_taps():
     crown = scenario.find(CROWN, Zone.BATTLEFIELD)
     bears = scenario.creature("Grizzly Bears", "bob")
 
-    scenario.activate(crown, *scenario.untapped_sources("Plains", "Plains", "Plains"), targets=[bears])
+    scenario.activate(
+        crown, *scenario.untapped_sources("Plains", "Plains", "Plains"), targets=[bears]
+    )
     scenario.pass_until_resolved()
 
     assert scenario.game.controller_of(bears).username == "bob"
@@ -164,9 +160,7 @@ def _soldiers(scenario: Scenario) -> int:
 
 
 def test_throne_makes_one_soldier_or_five_with_the_set():
-    alone = (
-        Scenario().player("alice", battlefield=[THRONE, "Plains"]).player("bob").build()
-    )
+    alone = Scenario().player("alice", battlefield=[THRONE, "Plains"]).player("bob").build()
     alone.start_at(Step.PRECOMBAT_MAIN)
     alone.activate(alone.find(THRONE, Zone.BATTLEFIELD), *alone.untapped_sources("Plains"))
     alone.pass_until_resolved()

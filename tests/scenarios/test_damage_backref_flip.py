@@ -50,9 +50,7 @@ def _board(*bob: str, shocks: int = 2) -> Scenario:
 
 
 def _bobs(scenario: Scenario, name: str) -> list:
-    return [
-        state for state in scenario.game.permanents_controlled_by("bob") if state.name == name
-    ]
+    return [state for state in scenario.game.permanents_controlled_by("bob") if state.name == name]
 
 
 def test_an_undamaged_creature_is_not_a_legal_target():
@@ -110,7 +108,7 @@ def test_no_death_no_flip():
 
 
 def test_a_later_death_the_same_turn_still_flips():
-    """"When that creature dies this turn" watches the rest of the turn, not
+    """ "When that creature dies this turn" watches the rest of the turn, not
     only the Initiate's own damage."""
     scenario = _board("Vein Drinker", shocks=2)
     initiate = scenario.creature(INITIATE, "alice")
