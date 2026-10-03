@@ -142,3 +142,20 @@ def test_a_second_printing_of_the_template_also_prefers_its_free_ability():
     scenario, source = _board("Karplusan Forest", hand=["Lightning Bolt"])
     scenario.cast_onto_stack("Lightning Bolt", username="alice", targets=["bob"], auto=True)
     assert scenario.player("alice").life == 19
+
+
+@pytest.mark.parametrize("name,one,two,spell", PAINLANDS, ids=IDS)
+def test_a_colour_not_on_offer_refuses_without_tapping_the_source(name, one, two, spell):
+    # CR 601.6 / CR 733.1 by analogy: an activation refused after its cost was
+    # paid returns to the moment before it began - the source must not stay
+    # tapped with no mana to show for it.
+    scenario, source = _board(name)
+    wrong = R
+    with pytest.raises(ValueError):
+        scenario.activate(source, index=1, color=wrong)
+    assert not source.tapped
+    assert scenario.player("alice").mana_pool.floating == {}
+    assert scenario.player("alice").life == 20
+    scenario.activate(source, index=1, color=one)
+    assert scenario.player("alice").mana_pool.floating == {one: 1}
+    assert scenario.player("alice").life == 19

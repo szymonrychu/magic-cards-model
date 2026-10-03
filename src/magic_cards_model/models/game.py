@@ -25652,34 +25652,46 @@ class Game(EngineModel):
                     if ability.mana.could_produce is not None
                     else None
                 )
-                produced_mana = ability.mana.resolve(
-                    land_types,
-                    own_counters,
-                    color,
-                    has_imprinted_card,
-                    count=devotion if devotion is not None else expression_count,
-                    could_produce_colors=could_produce_colors,
-                    chosen_color=chosen_color,
-                )
-                # CR 106.5, for the third narrowing: "of any color among legendary
-                # creatures and planeswalkers you control" (Mox Amber). The colour
-                # the activating player named has to be one the board actually
-                # defines - an empty board defines none, and an ability that would
-                # produce mana of an undefined type produces no mana instead.
-                # `machines/cost.py` already applies this on the payment path; a
-                # direct activation reached the same ability without it, so the
-                # same Mox Amber made nothing when tapped for a spell and one mana
-                # of any colour when activated on its own.
-                allowed = among_colors(ability.effect, self, controller)
-                if allowed is not None:
-                    undefined = [produced for produced in produced_mana if produced not in allowed]
-                    if undefined:
-                        raise ValueError(
-                            f"{permanent.name} cannot add "
-                            f"{''.join(f'{{{produced.value}}}' for produced in undefined)}: "
-                            f"no permanent it surveys defines that color, so the ability "
-                            f"produces no mana (CR 106.5)"
-                        )
+                try:
+                    produced_mana = ability.mana.resolve(
+                        land_types,
+                        own_counters,
+                        color,
+                        has_imprinted_card,
+                        count=devotion if devotion is not None else expression_count,
+                        could_produce_colors=could_produce_colors,
+                        chosen_color=chosen_color,
+                    )
+                    # CR 106.5, for the third narrowing: "of any color among legendary
+                    # creatures and planeswalkers you control" (Mox Amber). The colour
+                    # the activating player named has to be one the board actually
+                    # defines - an empty board defines none, and an ability that would
+                    # produce mana of an undefined type produces no mana instead.
+                    # `machines/cost.py` already applies this on the payment path; a
+                    # direct activation reached the same ability without it, so the
+                    # same Mox Amber made nothing when tapped for a spell and one mana
+                    # of any colour when activated on its own.
+                    allowed = among_colors(ability.effect, self, controller)
+                    if allowed is not None:
+                        undefined = [
+                            produced for produced in produced_mana if produced not in allowed
+                        ]
+                        if undefined:
+                            raise ValueError(
+                                f"{permanent.name} cannot add "
+                                f"{''.join(f'{{{produced.value}}}' for produced in undefined)}: "
+                                f"no permanent it surveys defines that color, so the ability "
+                                f"produces no mana (CR 106.5)"
+                            )
+                except ValueError:
+                    # The cost was already paid by the caller (`{T}` tapped the
+                    # source). A refused activation returns to the moment before
+                    # it began (CR 601.6 / CR 733.1 by analogy), so the source
+                    # is not left tapped with no mana to show for it.
+                    if paid is not None:
+                        paid.rewind()
+                    raise
+
                 # CR 106.6: a "Spend this mana only to ..." sentence in this
                 # ability's own effect text restricts the mana it just made. The
                 # tag goes on the mana in the pool, not on `permanent` - the mana
