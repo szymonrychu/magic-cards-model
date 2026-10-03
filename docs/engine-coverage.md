@@ -7045,3 +7045,17 @@ Two engine fixes the proofs exposed:
 | Simulacrum Synthesizer (scry 2, Construct that counts itself), Repurposing Bay (sacrifice-another-artifact search for MV exactly 1 + the sacrificed MV, last known for a token, sorcery speed) | already read | `test_r0b_artifact_synergy_engines.py` |
 
 Fixed along the way: `_CREATE_TOKEN_COPIES_EXCEPT_RE`'s and `_TARGET_PLAYER_CREATES_TOKEN_COPY_RE`'s `phrase` group (`target .+?` under DOTALL) swallowed every following sentence into the target description, so The Fire Crystal's "Sacrifice it ..." was silently dropped; it now stops at the sentence end.
+
+## R0b-T6: life-gain payoffs, dies/ETB value creatures, sacrifice artifacts
+
+Proof-only for eleven already-handled cards (Hinterland Sanctifier, Starscape
+Cleric, Leonardo Cutting Edge, Moseo, Professor Dellian Fel, Dream Beavers,
+Greedy Freebooter, Callous Inspector, Curious Farm Animals, Vinereap Mentor,
+Candy Trail, Giant's Boulder); one reader widened because a proof exposed it.
+
+| Mechanic | Reader | Cards | Second printing | Test |
+|---|---|---|---|---|
+| "target opponent loses that much life" off a trigger event's amount (CR 603.2c / 608.2c); before this, the clause parsed to nothing and the Dellian emblem trigger resolved as a silent no-op | `effects._THAT_MUCH_LIFE_LOSS_RE` in `parse_clause_effect` (fails closed with a notice when the event carries no amount) | Professor Dellian Fel (emblem) | Vito, Thorn of the Dusk Rose | `test_r0b_life_gain_payoffs.py` |
+| Gain-life triggers, offspring, sneak, Infusion intervening-if, Pest token attack trigger, emblem persistence | existing readers, each proven per card | Hinterland Sanctifier, Starscape Cleric, Leonardo, Moseo, Dellian | - | `test_r0b_life_gain_payoffs.py` |
+| ETB/dies value triggers (scry, Treasure/Clue/Food, gain, self-damage with last-known source) | existing readers | Dream Beavers, Greedy Freebooter, Callous Inspector, Curious Farm Animals, Vinereap Mentor | - | `test_r0b_etb_and_dies_value_creatures.py` |
+| Sacrifice-for-value artifacts, "up to one target" with zero targets | existing readers | Candy Trail, Giant's Boulder, Curious Farm Animals | - | `test_r0b_sacrificial_value_artifacts.py` |
