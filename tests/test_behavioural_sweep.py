@@ -1315,6 +1315,9 @@ def _board_threshold(scenario: PlayedScenario, source: CardState | None, conditi
             return
 
 
+_BASIC_LANDS = ("Plains", "Island", "Swamp", "Mountain", "Forest")
+
+
 @cache
 def _board_candidates() -> tuple[str, ...]:
     """Nonlegendary single-faced permanent printings of the pool, for a
@@ -1386,6 +1389,15 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
             name for name in _board_candidates() if _passes(game, source, test, card_state(name))
         ]
         names = passing[:6]
+        # A land quality ("seven or more Plains", Emeria): `_board_candidates`
+        # leaves lands out, so the basic lands that pass the quality are tried
+        # here, in the counts a land threshold needs.
+        basics = [
+            name
+            for name in _BASIC_LANDS
+            if name not in names and _passes(game, source, test, card_state(name))
+        ]
+        names = [*names, *basics]
         if " with different " in _clause(condition):
             # "N or more Demons with different names" (CR 201.2b): one copy
             # each of distinct printings, grown until the engine's own
@@ -1400,7 +1412,7 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
                 except (_Unavailable, ValueError, KeyError):
                     break
         for name in [*names, *PREDEFINED]:
-            for copies in (1, 2, 3):
+            for copies in (1, 2, 3, *range(4, 10)) if name in _BASIC_LANDS else (1, 2, 3):
                 material = tuple(Material(name, ALICE, Zone.BATTLEFIELD) for _ in range(copies))
                 try:
                     if confirmed(material):
@@ -4846,6 +4858,9 @@ def _cost_card(component: Any) -> Material | None:
         zone = component.zone
     else:
         zone = Zone.BATTLEFIELD
+    if requirement is not None and requirement.token and zone is Zone.BATTLEFIELD:
+        # "Sacrifice a token" (Fountainport): any predefined token (CR 111.10).
+        return Material("Treasure", ALICE, Zone.BATTLEFIELD)
     if requirement is not None and zone is Zone.BATTLEFIELD:
         for token in PREDEFINED:
             if token.lower() in _subtype_stems(requirement.subtypes):

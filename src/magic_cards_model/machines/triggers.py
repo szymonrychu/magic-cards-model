@@ -6818,7 +6818,9 @@ def _controlled_subtype_count_holds(game: "Game", clause: str, source: CardState
         if card_type is not None:
             if card_type in characteristics.types:
                 count += 1
-        elif any(word.lower() == subtype for word in characteristics.subtypes):
+        elif any(word.lower() in (subtype, f"{subtype}s") for word in characteristics.subtypes):
+            # "Plains" is its own plural, so the `s$` above strips the letter
+            # the subtype ends in ("plain"): accept the word with it restored.
             count += 1
 
     return _SUBTYPE_COUNT_COMPARISONS[comparison_word](count, wanted)

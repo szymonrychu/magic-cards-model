@@ -460,7 +460,13 @@ class ManaAbilityRider(EngineModel):
     `Game.activate_ability` at the same instant the mana lands in the pool.
     """
 
-    kind: Literal["damage_to_controller", "lose_life", "gain_life"]
+    kind: Literal[
+        "damage_to_controller",
+        "lose_life",
+        "gain_life",
+        "opponents_gain_life",
+        "opponents_lose_life",
+    ]
     amount: int
 
 
@@ -472,6 +478,11 @@ class ManaAbilityRider(EngineModel):
 _RIDER_DAMAGE_TO_YOU = re.compile(r"^this \S+ deals (?P<n>\d+) damage to you\.?$", re.IGNORECASE)
 _RIDER_LOSE_LIFE = re.compile(r"^you lose (?P<n>\d+) life\.?$", re.IGNORECASE)
 _RIDER_GAIN_LIFE = re.compile(r"^you gain (?P<n>\d+) life\.?$", re.IGNORECASE)
+#: Grove of the Burnwillows' "Each opponent gains 1 life." - the same side
+#: effect aimed at every opponent instead of the controller (CR 405.6c).
+_RIDER_OPPONENTS_LIFE = re.compile(
+    r"^each opponent (?P<verb>gains|loses) (?P<n>\d+) life\.?$", re.IGNORECASE
+)
 #: Arena of Glory's "If that mana is spent on a creature spell, it gains
 #: haste until end of turn." CR 106.6's *other* two things a mana-producing
 #: sentence can do beyond restricting spend: "have an additional effect that
@@ -547,6 +558,15 @@ def _parse_mana_rider(rest: str) -> tuple[ManaAbilityRider | None, str | None, s
         gain = _RIDER_GAIN_LIFE.match(sentence)
         if gain:
             rider = ManaAbilityRider(kind="gain_life", amount=int(gain.group("n")))
+            continue
+        opponents = _RIDER_OPPONENTS_LIFE.match(sentence)
+        if opponents:
+            kind = (
+                "opponents_gain_life"
+                if opponents.group("verb") == "gains"
+                else "opponents_lose_life"
+            )
+            rider = ManaAbilityRider(kind=kind, amount=int(opponents.group("n")))
             continue
         unparsed = sentence
     return rider, unparsed, spend_effect
@@ -866,6 +886,15 @@ class ManaAbility(EngineModel):
                     "same colour"
                 )
             return chosen_colors
+
+        # A filter land's "Add {G}{G}, {G}{U}, or {U}{U}": each printed option
+        # is several mana, and the controller names the whole option picked by
+        # spelling it out (order is irrelevant - mana in a pool has none).
+        if chosen_colors is not None and single is None:
+            spelled = sorted(chosen_colors)
+            for option in options:
+                if len(option) > 1 and sorted(option) == spelled:
+                    return list(option)
 
         # Every remaining branch is a choice *between* printed options, one of
         # which is picked whole - so exactly one colour names it, and a longer

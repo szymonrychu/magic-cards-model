@@ -1,0 +1,71 @@
+{
+  "ability": "When this creature enters, if you control two or more Plains, you may destroy target enchantment.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Duergar Hedge-Mage@alice#1",
+    "targets": ["Abiding Grace@bob#1"],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Duergar Hedge-Mage"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "Abiding Grace"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Duergar Hedge-Mage",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "destroy target enchantment",
+        "source": "Duergar Hedge-Mage"
+      }
+    ],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
+    "notices": {},
+    "objects": {
+      "Abiding Grace@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
+    "players": {},
+    "stack": ["ability of Duergar Hedge-Mage@alice#1: When this creature enters, if you control two or more Mountains, you may destroy target artifact."]
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "enters_the_battlefield",
+  "number": 1,
+  "recipe": {
+    "attempt": "put",
+    "index": 0,
+    "params": {
+      "tapped": false
+    },
+    "variant": "quiet"
+  }
+}

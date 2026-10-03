@@ -25354,6 +25354,16 @@ class Game(EngineModel):
             self.lose_life(self.player(controller), rider.amount)
         elif rider.kind == "gain_life":
             self.gain_life(controller, rider.amount)
+        else:
+            # CR 405.6c, aimed at "each opponent" (CR 102.2): everyone still
+            # in the game who is not the controller, in turn order.
+            for opponent in self.players_in_game:
+                if opponent.username == controller:
+                    continue
+                if rider.kind == "opponents_gain_life":
+                    self.gain_life(opponent, rider.amount)
+                else:
+                    self.lose_life(opponent, rider.amount)
 
     def _activated_source_types(self, permanent: CardState) -> tuple[Type, ...]:
         """The card types of an activated ability's source as it was

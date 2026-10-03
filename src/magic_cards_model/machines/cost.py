@@ -74,6 +74,7 @@ from ..models.mana import (
     _candidate_options,
     _demand_list,
 )
+from ..models.token import is_token
 from ..models.zone import Zone
 from ..numbers import (
     QuantitySource,
@@ -2590,6 +2591,9 @@ class CardRequirement(EngineModel):
     """Web-slinging's "return a *tapped* creature you control" (CR
     702.188a): True asks for a tapped permanent, False an untapped one, None
     either (CR 110.5's status)."""
+    token: bool | None = None
+    """Fountainport's "Sacrifice a token" (CR 111.1): True asks for a token,
+    False ("a nontoken creature") for a card, None either."""
 
     @property
     def is_empty(self) -> bool:
@@ -2602,6 +2606,7 @@ class CardRequirement(EngineModel):
             or self.same_name_as
             or self.mana_value is not None
             or self.tapped is not None
+            or self.token is not None
         )
 
     def why_not(self, card: CardState, game: Any = None, payer: str | None = None) -> str | None:
@@ -2633,6 +2638,8 @@ class CardRequirement(EngineModel):
             return f"{self.description or 'this cost'} excludes the ability's own source"
         if self.tapped is not None and card.tapped != self.tapped:
             return f"{card.name} is not {'tapped' if self.tapped else 'untapped'}"
+        if self.token is not None and is_token(card) != self.token:
+            return f"{card.name} is {'not ' if self.token else ''}a token"
         if game is not None and card.zone is Zone.BATTLEFIELD:
             try:
                 characteristics = game.characteristics_of(card)
@@ -5726,6 +5733,7 @@ def _requirement(quality: str) -> CardRequirement | None:
     subtypes: list[str] = []
     supertypes: list[Supertype] = []
     tapped: bool | None = None
+    token: bool | None = None
     for raw_word in words:
         word = raw_word.strip(",")
         if not word:
@@ -5737,6 +5745,10 @@ def _requirement(quality: str) -> CardRequirement | None:
             # CR 110.5's status: web-slinging's "a tapped creature you
             # control" (CR 702.188a).
             tapped = lowered == "tapped"
+            continue
+        if lowered in ("token", "nontoken", "non-token"):
+            # CR 111.1: a token is a permanent no card represents.
+            token = lowered == "token"
             continue
         negated_type = lowered.removeprefix("non-").removeprefix("non")
         if lowered.startswith("non") and negated_type in {type_.value for type_ in Type}:
@@ -5778,6 +5790,7 @@ def _requirement(quality: str) -> CardRequirement | None:
         supertypes=supertypes,
         description=quality.strip(),
         tapped=tapped,
+        token=token,
     )
 
 
