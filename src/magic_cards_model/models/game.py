@@ -24275,6 +24275,7 @@ class Game(EngineModel):
         controller: str,
         builder: Callable[..., CostComponent],
         x_value: int = 0,
+        targets: list[object] | None = None,
     ) -> CostComponent:
         """One `[Sacrifice|Discard]` cost piece, self-reference and quality
         requirement both handled (CR 602.1a, CR 118.3).
@@ -24294,10 +24295,18 @@ class Game(EngineModel):
         word "this", not a number, so `cost_component_for_phrase` cannot read
         it as one).
         """
-        # Kozilek's "Discard a card with mana value X": the X is the discarded
-        # card's own mana value (the target spell is matched to it), so the
-        # payment itself asks only for "a card".
+        # Kozilek's "Discard a card with mana value X": the X is the target
+        # spell's mana value (CR 107.3), so once a target is chosen the
+        # discarded card is held to it; before one is, the phrase asks for "a
+        # card" and the requirement is added below.
         reading = re.sub(r" with mana value X$", "", text, flags=re.IGNORECASE)
+        linked_mana_value = None
+        if reading != text:
+            for target in targets or []:
+                state = target if isinstance(target, CardState) else self.find_by_id(target)
+                if isinstance(state, CardState):
+                    linked_mana_value = int(state.mana_value)
+                    break
         component = cost_component_for_phrase(reading, payer=controller)
         if component is None:
             if not _cost_refers_to_self(text, permanent):
@@ -24310,6 +24319,10 @@ class Game(EngineModel):
         # "Sacrifice X Goats" / "Sacrifice one or more artifacts": the count is
         # the announced X or every nominated object (CR 107.3a).
         component = announce_count(component, x_value, len(pool))
+        if linked_mana_value is not None and component.requirement is not None:
+            component.requirement = component.requirement.model_copy(
+                update={"mana_value": linked_mana_value}
+            )
         if component.requirement is not None and component.requirement.excludes_source:
             # "Sacrifice another ..." (CR 601.2c/113.6): only here is the
             # source known, the same fill-in `CostKind.OTHER` does below.
@@ -24402,6 +24415,7 @@ class Game(EngineModel):
                             controller,
                             discard_cost,
                             x_value,
+                            targets,
                         )
                     )
                 else:
@@ -24413,18 +24427,25 @@ class Game(EngineModel):
                             controller,
                             sacrifice_cost,
                             x_value,
+                            targets,
                         )
                     )
             elif piece.kind is CostKind.SACRIFICE:
                 components.append(
                     self._choice_cost(
-                        piece.text, permanent, sacrifices, controller, sacrifice_cost, x_value
+                        piece.text,
+                        permanent,
+                        sacrifices,
+                        controller,
+                        sacrifice_cost,
+                        x_value,
+                        targets,
                     )
                 )
             elif piece.kind is CostKind.DISCARD:
                 components.append(
                     self._choice_cost(
-                        piece.text, permanent, discards, controller, discard_cost, x_value
+                        piece.text, permanent, discards, controller, discard_cost, x_value, targets
                     )
                 )
             elif piece.kind is CostKind.PAY_LIFE:
