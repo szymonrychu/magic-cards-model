@@ -2256,3 +2256,131 @@ def test_generate_all_writes_round0_status_md_filtered_to_not_full(tmp_path: Pat
     plan_text = (out_dir / "plan.md").read_text()
     assert "000-metagame/status.md" in plan_text
     assert "(1 cards not full)" in plan_text
+
+
+# ---------------------------------------------------------------------------
+# Support baseline (the regression guard's committed ratchet floor)
+# ---------------------------------------------------------------------------
+
+
+def test_card_text_hash_tracks_oracle_text_and_keywords_only():
+    base = make_card("Hash Card", oracle_text="Flying", keywords=["Flying"], oracle_id="o1")
+    reprint = make_card(
+        "Hash Card", oracle_text="Flying", keywords=["Flying"], oracle_id="o1", set_code="zzz"
+    )
+    reworded = make_card("Hash Card", oracle_text="Flying, haste", keywords=["Flying"])
+    rekeyworded = make_card("Hash Card", oracle_text="Flying", keywords=["Flying", "Haste"])
+
+    assert cc.card_text_hash(base) == cc.card_text_hash(reprint)
+    assert cc.card_text_hash(base) != cc.card_text_hash(reworded)
+    assert cc.card_text_hash(base) != cc.card_text_hash(rekeyworded)
+
+
+def test_card_text_hash_covers_every_face_of_a_multi_face_card():
+    card = make_card("Front // Back", oracle_text=None)
+    card["card_faces"] = [{"oracle_text": "Draw a card."}, {"oracle_text": "Scry 1."}]
+    other = json.loads(json.dumps(card))
+    other["card_faces"][1]["oracle_text"] = "Scry 2."
+
+    assert cc.card_text_hash(card) != cc.card_text_hash(other)
+
+
+def test_target_format_pool_keeps_eligible_legal_cards_once_each():
+    legal = make_card("Legal Card", oracle_id="a")
+    pioneer_only = make_card("Pioneer Card", legal_modern="not_legal", legal_pioneer="legal")
+    banned = make_card("Banned Card", legal_modern="banned")
+    not_legal = make_card("Nowhere Card", legal_modern="not_legal")
+    digital = make_card("Digital Card", digital=True)
+    token = make_card("Token Card", layout="token")
+    duplicate = make_card("Legal Card", oracle_id="a", set_code="dup")
+
+    pool = cc.target_format_pool(
+        [legal, pioneer_only, banned, not_legal, digital, token, duplicate]
+    )
+
+    assert sorted(c["name"] for c in pool) == ["Banned Card", "Legal Card", "Pioneer Card"]
+
+
+def test_render_support_baseline_one_sorted_line_per_card_and_round_trips():
+    zebra = make_card("Zebra Card", oracle_text="Flying", keywords=["Flying"], oracle_id="z")
+    apple = make_card("Apple Card", oracle_text=None, oracle_id="a")
+    results = cc.classify_many([zebra, apple])
+
+    text = cc.render_support_baseline([zebra, apple], results)
+
+    lines = text.splitlines()
+    assert lines[0] == "["
+    assert lines[-1] == "]"
+    body = lines[1:-1]
+    assert len(body) == 2
+    assert '"name": "Apple Card"' in body[0]
+    assert '"name": "Zebra Card"' in body[1]
+    parsed = cc.parse_support_baseline(text)
+    assert set(parsed) == {"a", "z"}
+    assert parsed["z"] == {
+        "oracle_id": "z",
+        "name": "Zebra Card",
+        "status": results[0].status,
+        "text_hash": cc.card_text_hash(zebra),
+    }
+    # Deterministic: same input, byte-identical output, in any input order.
+    assert cc.render_support_baseline([apple, zebra], [results[1], results[0]]) == text
+
+
+def test_generate_all_writes_support_baseline_for_every_legal_card(tmp_path: Path):
+    legal = make_card("Legal Bear", set_code="old", set_name="Old Set", oracle_id="bear")
+    flier = make_card(
+        "Legal Flier",
+        set_code="old",
+        set_name="Old Set",
+        oracle_text="Flying",
+        keywords=["Flying"],
+        oracle_id="flier",
+    )
+    out_of_format = make_card("Old Relic", set_code="old", legal_modern="not_legal")
+    bulk_path = tmp_path / "oracle-cards.json"
+    bulk_path.write_text(json.dumps([legal, flier, out_of_format]))
+    out_dir = tmp_path / "docs" / "card_coverage"
+    tests_dir = tmp_path / "tests"
+    (tests_dir / "golden").mkdir(parents=True)
+    printings_dir = tmp_path / "printings"
+    printings_dir.mkdir()
+
+    cc.generate_all(
+        bulk_path=bulk_path,
+        out_dir=out_dir,
+        printings_dir=printings_dir,
+        tests_dir=tests_dir,
+        golden_dir=tests_dir / "golden",
+        decks_dirs=[],
+        workers=1,
+    )
+
+    baseline_path = out_dir / cc.SUPPORT_BASELINE_FILENAME
+    assert baseline_path.exists()
+    parsed = cc.parse_support_baseline(baseline_path.read_text())
+    assert set(parsed) == {"bear", "flier"}
+    assert parsed["flier"]["status"] == cc.classify_card_raw(flier).status
+    assert parsed["bear"]["text_hash"] == cc.card_text_hash(legal)
+
+
+def test_main_baseline_only_writes_just_the_baseline(tmp_path: Path):
+    card = make_card("Only Card", oracle_id="only")
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    (cache_dir / "oracle-cards.jsonl.gz").write_bytes(
+        cc.gzip.compress(json.dumps(card).encode() + b"\n")
+    )
+    out_dir = tmp_path / "out"
+
+    assert (
+        cc.main(["--baseline-only", "--cache-dir", str(cache_dir), "--out-dir", str(out_dir)]) == 0
+    )
+
+    assert sorted(p.name for p in out_dir.iterdir()) == [cc.SUPPORT_BASELINE_FILENAME]
+    parsed = cc.parse_support_baseline((out_dir / cc.SUPPORT_BASELINE_FILENAME).read_text())
+    assert parsed["only"]["name"] == "Only Card"
+
+
+def test_default_support_baseline_path_is_under_card_coverage_docs():
+    assert cc.SUPPORT_BASELINE_PATH == "docs/card_coverage/support-baseline.json"

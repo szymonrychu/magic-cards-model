@@ -122,8 +122,14 @@ run = "scripts/cr.sh"
 # card or a previously passing test. See scripts/regression_guard.py's own
 # docstring for what each of the two checks does.
 [tasks."regression:guard"]
-description = "Protected-test report (+ --ratchet for the card-status ratchet): mise run regression:guard -- --repo <path> --base <sha> [--ratchet]"
+description = "Protected-test report (+ --ratchet: card-status ratchet over the printings pool AND every Modern/Pioneer/Standard-legal oracle card, held to docs/card_coverage/support-baseline.json): mise run regression:guard -- --repo <path> --base <sha> [--ratchet] [--bulk <oracle-cards>]"
 run = "uv run python scripts/regression_guard.py"
+
+# The committed per-card floor the ratchet holds every target-format card to.
+# A full `card_coverage.py` run rewrites it too; this writes just the file.
+[tasks."coverage:baseline"]
+description = "Regenerate docs/card_coverage/support-baseline.json (the regression guard's oracle-wide floor) from the cached oracle-cards bulk"
+run = "uv run python scripts/card_coverage.py --baseline-only --workers 6"
 
 # -------------------------------------------------------------- metagame --
 # Round 0 of the card-coverage campaign: a 30-day competitive-metagame
