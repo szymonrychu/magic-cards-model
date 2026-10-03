@@ -19172,6 +19172,44 @@ _TAP_UNTAP_TARGET_RE = re.compile(r"(?P<verb>tap|untap) (?P<phrase>.*target.+)",
 #: the shield is actually spent.
 _REGENERATE_TARGET_RE = re.compile(r"regenerate (?P<phrase>.*target.+)", re.IGNORECASE)
 
+#: "Remove target attacking or blocking creature from combat." (Hollowhenge
+#: Spirit, Labyrinth of Skophos), "Remove target blocking creature from
+#: combat" (Balduvian Warlord's first sentence), and the riders that share the
+#: clause: "... from combat and untap it." (Reconnaissance, "attacking creature
+#: you control") and the reversed "Untap target attacking creature an opponent
+#: controls and remove it from combat." (Thaumatic Compass). CR 506.4: "if an
+#: effect specifically removes it from combat" the permanent is removed from
+#: combat; the phrase itself (attacking and/or blocking) is `targeting.py`'s.
+_REMOVE_FROM_COMBAT_RE = re.compile(
+    r"remove (?P<phrase>(?:up to )?(?:\S+ )?target [^.]+?) from combat"
+    r"(?P<untap> and untap (?:it|them))?",
+    re.IGNORECASE,
+)
+_UNTAP_AND_REMOVE_FROM_COMBAT_RE = re.compile(
+    r"untap (?P<phrase>(?:up to )?(?:\S+ )?target [^.]+?) and remove (?:it|them) from combat",
+    re.IGNORECASE,
+)
+
+
+def remove_ability_targets_from_combat(game: "Game", stack_object: "StackObject") -> None:
+    """Remove each target this still legally targets from combat (CR 506.4).
+
+    `CombatMachine.remove` is the whole of it: a removed attacker takes its
+    attack with it, a removed blocker leaves its attacker blocked (CR 509.1h).
+    """
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, CardState):
+            game.combat.remove(target.id)
+
+
+def remove_ability_targets_from_combat_and_untap(game: "Game", stack_object: "StackObject") -> None:
+    """Remove each still-legal target from combat and untap it (CR 506.4, 701.26b)."""
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+            game.combat.remove(target.id)
+            target.untap()
+
+
 #: "Regenerate this creature/permanent/artifact." - Ancient Silverback's
 #: `{G}` ability, the same self-reference shape `_COUNTER_ON_SELF_RE` reads
 #: (CR 201.5, CR 700.7), rather than a target at all (CR 115.1a: a permanent
@@ -22402,6 +22440,20 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     )
     if owner_puts_it_into_library is not None:
         return owner_puts_it_into_library
+
+    if match := _REMOVE_FROM_COMBAT_RE.fullmatch(clause):
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+        return (
+            remove_ability_targets_from_combat_and_untap
+            if match.group("untap")
+            else remove_ability_targets_from_combat
+        )
+
+    if match := _UNTAP_AND_REMOVE_FROM_COMBAT_RE.fullmatch(clause):
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+        return remove_ability_targets_from_combat_and_untap
 
     if match := _TAP_UNTAP_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
