@@ -3638,8 +3638,12 @@ def why_cannot_cast_now(
 #: the shape's generality rests on `condition_holds`, the shared reader
 #: "Activate only if <condition>" (CR 602.5b) already uses across many
 #: unrelated cards, rather than on a second card proving this exact gate.
+#: "Cast this spell only if <condition>." (Hewed Stone Retainers, Talara's
+#: Battalion) is CR 601.3's same prohibition worded as a permission; "only
+#: during ..." timing restrictions are read elsewhere and never match.
 _CANNOT_CAST_UNLESS_RE = re.compile(
-    r"you can'?t cast this spell unless (?P<condition>[^.]+)\.", re.IGNORECASE
+    r"(?:you can'?t cast this spell unless|cast this spell only if) (?P<condition>[^.]+)\.",
+    re.IGNORECASE,
 )
 
 
@@ -3665,9 +3669,8 @@ def why_cannot_cast_self_restriction(spell: CardState, caster: str, game: Any = 
     held = game.condition_holds(caster, condition, source=spell)
     if held is None:
         return (
-            f"{spell.name}'s casting restriction \"you can't cast this spell unless "
-            f'{condition}" is not read by this engine, so the cast is refused rather '
-            "than allowed unchecked (CR 601.2e)"
+            f'{spell.name}\'s casting restriction "{condition}" is not read by this engine, '
+            "so the cast is refused rather than allowed unchecked (CR 601.2e)"
         )
     if not held:
         return f"{spell.name} can't be cast: {condition} is not true right now (CR 601.2e)"

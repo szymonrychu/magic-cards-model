@@ -241,3 +241,43 @@ def test_the_exiled_card_keeps_its_own_timing():
         casting = scenario.cast("Grizzly Bears", username="alice", from_zone=Zone.EXILE)
         casting.use_permission()
         casting.begin_paying()
+
+
+def _taster_board() -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Taster of Wares"],
+            battlefield=["Mountain", "Mountain", "Swamp", "Forest"],
+        )
+        .player("bob", hand=["Lightning Bolt"])
+    )
+
+
+def test_second_printing_the_permission_reader_is_shared_with_taster_of_wares():
+    """Clause (c): `PlayPermission.while_controlling` - the field Null Summoner's
+    sibling-static reader now sets - is the same CR 611.2b reader Taster of Wares'
+    own "for as long as you control this creature" grant uses. Usable while the
+    Taster is under its caster's control, refused once it leaves (CR 113.6)."""
+    scenario = _taster_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Swamp", username="alice")
+    scenario.choose_trigger_targets("Taster of Wares", ["bob"])
+    scenario.will_choose_cards(bolt, username="alice")
+    scenario.cast_and_resolve("Taster of Wares", *sources, username="alice")
+    scenario.pass_until_resolved()
+    assert bolt.zone is Zone.EXILE
+    permission = _permission_for(scenario, bolt)
+    assert permission is not None
+    assert permission.any_type_mana is True
+    assert permission.while_controlling is not None
+    assert _usable(scenario, bolt)
+
+    scenario.game.destroy(scenario.find("Taster of Wares", Zone.BATTLEFIELD, "alice"))
+
+    assert bolt.zone is Zone.EXILE
+    assert not _usable(scenario, bolt)
+    refusal = permission.why_not(bolt, "alice", scenario.game)
+    assert refusal is not None and "Taster of Wares" in refusal and "CR 611.2b" in refusal

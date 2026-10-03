@@ -120,3 +120,28 @@ def test_proft_on_the_battlefield_has_menace():
         scenario.block(proft, first)
     scenario.block(proft, first, second)
     assert scenario.game.is_blocked(proft)
+
+
+def test_second_printing_cast_only_if_another_spell_was_cast_this_turn():
+    """Clause (c), CR 601.3's other template: "Cast this spell only if you've
+    cast another spell this turn." (Hewed Stone Retainers, Modern/Pioneer legal)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Hewed Stone Retainers", "Opt"],
+            library=["Grizzly Bears"] * 3,
+            battlefield=["Island", "Island", "Swamp", "Swamp", "Forest", "Forest"],
+        )
+        .player("bob")
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    with pytest.raises(ValueError, match="601"):
+        scenario.cast("Hewed Stone Retainers", username="alice")
+
+    (island,) = scenario.untapped_sources("Island", username="alice")
+    scenario.cast_and_resolve("Opt", island, username="alice")
+    sources = scenario.untapped_sources("Island", "Swamp", "Swamp", "Forest", username="alice")
+    retainers = scenario.cast_and_resolve("Hewed Stone Retainers", *sources, username="alice")
+
+    assert retainers.name == "Hewed Stone Retainers"

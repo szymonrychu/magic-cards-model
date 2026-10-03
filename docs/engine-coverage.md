@@ -7192,3 +7192,12 @@ Extraordinary Journey's second ability (draw when a nontoken creature enters fro
 | Mechanic | CR | Where | Proof |
 |---|---|---|---|
 | A sacrifice cost naming two objects of different qualities ("Sacrifice a Swamp and a Forest") - two sacrifices, each paid by a nominated object with its own quality; two Swamps refuse | CR 118.3, 602.2 | `Game.activation_cost` (`_SACRIFICE_A_AND_A`) | `scenarios/test_sacrifice_two_named_permanents_cost.py` (Jarad, Golgari Lich Lord, the only in-format printing) |
+
+## T6 (FRA): Threshold-gated cast statics
+
+| Mechanic | CR | Implementation | Proof cards | Scenario tests |
+|---|---|---|---|---|
+| "As long as `<condition>`, you may cast the exiled card, and mana of any type can be spent to cast that spell." - a static ability linked to the card its own source exiled; the grant functions only while that source is on the battlefield (`while_controlling`) and re-reads the condition live; Threshold itself is an ability word with no rules meaning | CR 207.2c, 113.6, 601.3, 604.1, 607.2a, 609.4b | `effects._grant_cast_exiled_card_permission_from_sibling_static` (`while_controlling=once_per_turn_key`), `casting.PlayPermission.why_not` | Null Summoner. Second printing of the shared `while_controlling` reader: Taster of Wares (Gonti, Lord of Luxury and Thief of Sanity sweep `silent` on their own look-at-top-N triggers, so cannot prove it) | `test_threshold_gated_cast_permission.py` (6 vs 7 cards, drop below 7 mid-turn, Summoner leaves, two Summoners linked separately, not cast, timing, Taster of Wares) |
+| "You can't cast this spell unless `<condition>`." and "Cast this spell only if `<condition>`." - one CR 601.2e prohibition read by `Game.condition_holds`; "you've cast another `<spell>` this turn" (quality optional) newly read | CR 601.2e, 601.3, 601.2i | `casting._CANNOT_CAST_UNLESS_RE`, `conditions/history.py` cast-a-spell reader | Proft, Sinister Mastermind; Hewed Stone Retainers (Talara's Battalion, "another green spell", is the same reader and not separately staged) | `test_self_cast_restriction.py` (Proft below/at 7, Hewed with and without a prior spell) |
+
+Fingerprint drift accepted: "if you've cast another spell this turn, ..." and "if you didn't cast a spell this turn, ..." now read (were `<none>`).
