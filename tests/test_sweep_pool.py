@@ -1495,23 +1495,33 @@ def test_tiered_registration_is_conditioned_on_the_profile_being_understood(monk
 # -- T01: OWNER RULE - a legal card cannot rest on a fail-closed notice -----
 
 
-def _a_legal_notice_card() -> str:
-    """The first pool card legal in Modern, Pioneer or Standard whose worst
-    clause is `NOTICE`. Chosen dynamically: the owner rule makes every such
-    card the next one the campaign reads, so any fixed name here goes stale
-    (Final Showdown stood here until S21 read its last two Spree modes)."""
-    for name in sorted(pool()):
-        printing = card(name)
-        if in_target_formats(printing) and classify_card(printing)[0] == NOTICE:
-            return name
-    pytest.fail("no legal pool card fails closed with a notice any more - pick a new vehicle")
+def _a_legal_notice_card(monkeypatch) -> str:
+    """A card whose worst clause really is `NOTICE`, counted as legal in
+    Modern, Pioneer or Standard. The owner rule closed every legal notice card
+    in the pool (s7c), so no pool card is both any more: Bank Job keeps its
+    real `NOTICE` classification (asserted below, so this vehicle cannot go
+    stale silently) and only its format legality is stood in for, which is the
+    one input `legal_cards_failing_closed` reads besides the classification.
+    (A dynamically chosen legal notice card stood here until s7c closed the
+    last one; Final Showdown before that, until S21.)"""
+    import scripts.sweep_pool as sweep_pool
+
+    vehicle = "Bank Job"
+    assert classify_card(card(vehicle))[0] == NOTICE
+    real = sweep_pool.in_target_formats
+    monkeypatch.setattr(
+        sweep_pool,
+        "in_target_formats",
+        lambda printing: printing.name == vehicle or real(printing),
+    )
+    return vehicle
 
 
-def test_legal_cards_failing_closed_lists_a_legal_notice_card_as_a_gap():
+def test_legal_cards_failing_closed_lists_a_legal_notice_card_as_a_gap(monkeypatch):
     """A legal card that classifies `NOTICE` is a gap under the owner rule, not
     a clean pass, so it must be listed. Metamorphic Blast reads both modes
     since T05 (`test_changeling.py`), so it is not one."""
-    vehicle = _a_legal_notice_card()
+    vehicle = _a_legal_notice_card(monkeypatch)
     gaps = dict(legal_cards_failing_closed([vehicle, "Metamorphic Blast"]))
     assert vehicle in gaps
     assert "Metamorphic Blast" not in gaps
@@ -1535,13 +1545,13 @@ def test_legal_cards_failing_closed_excludes_a_handled_card():
     assert "Lightning Bolt" not in gaps
 
 
-def test_report_effects_prints_the_legal_gap_section():
+def test_report_effects_prints_the_legal_gap_section(monkeypatch):
     import io
     from contextlib import redirect_stdout
 
     from scripts.sweep_pool import report_effects
 
-    vehicle = _a_legal_notice_card()
+    vehicle = _a_legal_notice_card(monkeypatch)
     buffer = io.StringIO()
     with redirect_stdout(buffer):
         report_effects([vehicle, "Metamorphic Blast", "Lightning Bolt"])
