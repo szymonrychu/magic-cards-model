@@ -52,8 +52,8 @@ baseline (`new_cards`), cards the engine now beats the baseline on
 (`improved_vs_baseline`, with a hint to regenerate it) and baseline cards
 gone from the bulk (`left_pool`) are reported, never failed. Each offender
 names its `source` (`pool` or `oracle`). A missing or unreadable bulk fails
-closed (exit 2), never a silent pass. At most 6 workers per side (the
-suite-lock budget).
+closed (exit 2), never a silent pass. At most 6 workers in all (the
+suite-lock budget), split across the base and head sides, which run at once.
 
 "Tested" here means the card's name is quoted somewhere under `tests/*.py`
 or it has a `tests/golden/<slug>/` directory - being one of the probe
@@ -79,6 +79,7 @@ import tempfile
 import time
 import uuid
 from collections.abc import Iterable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -846,19 +847,30 @@ def run_ratchet(
             stems = _printing_stems(_printings_dir(base_dir))
             base_index = build_tested_index(base_dir)
             head_index = build_tested_index(head_dir)
-            sides = {}
-            side_seconds = {}
-            for side, side_dir in (("base", base_dir), ("head", head_dir)):
+            # Both sides run at once, splitting the worker budget, so one
+            # side's process start-up and bulk load overlap the other's
+            # classification instead of idling the cores.
+            per_side = max(1, workers // 2)
+
+            def classify(side_dir: Path) -> tuple[dict[str, Any], float]:
                 t0 = time.monotonic()
-                sides[side] = _classify_worktree(
+                classified = _classify_worktree(
                     side_dir,
                     list(stems),
-                    workers=workers,
+                    workers=per_side,
                     tmp_dir=tmp_path,
                     oracle_file=oracle_file,
                     oracle_count=len(oracle_pool),
                 )
-                side_seconds[side] = round(time.monotonic() - t0, 1)
+                return classified, round(time.monotonic() - t0, 1)
+
+            with ThreadPoolExecutor(max_workers=2) as sides_pool:
+                futures = {
+                    side: sides_pool.submit(classify, side_dir)
+                    for side, side_dir in (("base", base_dir), ("head", head_dir))
+                }
+                sides = {side: future.result()[0] for side, future in futures.items()}
+                side_seconds = {side: future.result()[1] for side, future in futures.items()}
         finally:
             _remove_worktree(repo, base_dir)
             _remove_worktree(repo, head_dir)
@@ -926,7 +938,7 @@ def main(argv: list[str] | None = None) -> int:
         "--workers",
         type=int,
         default=None,
-        help=f"classification workers per side (default and cap: {MAX_WORKERS})",
+        help=f"classification workers, split across base and head (default and cap: {MAX_WORKERS})",
     )
     args = parser.parse_args(argv)
 
