@@ -103,11 +103,22 @@ def test_an_exiled_opposing_creature_counts():
     saw - Path to Exile on bob's Bears."""
     scenario = _scenario("Insatiable Skittermaw", "Plains", hand=("Path to Exile",))
     bears = scenario.creature("Grizzly Bears", "bob")
-    scenario.cast_and_resolve("Path to Exile", *scenario.untapped_sources("Plains"), targets=[bears])
+    scenario.cast_and_resolve(
+        "Path to Exile", *scenario.untapped_sources("Plains"), targets=[bears]
+    )
 
     _to_end_step(scenario)
 
     assert _counters(scenario, "Insatiable Skittermaw") == 1
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_insatiable_skittermaw_gets_nothing_on_a_quiet_turn():
+    scenario = _scenario("Insatiable Skittermaw", "Plains")
+
+    _to_end_step(scenario)
+
+    assert _counters(scenario, "Insatiable Skittermaw") == 0
     assert scenario.game.intervening_if_notices == []
 
 
@@ -139,7 +150,9 @@ def test_a_warped_spell_makes_elegy_acolytes_robot():
     )
     casting = scenario.cast("Bygone Colossus")
     casting.use_keyword("Warp")
-    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Island", "Island", "Island"))
+    scenario.pay_with(
+        casting.begin_paying(), *scenario.untapped_sources("Island", "Island", "Island")
+    )
     scenario.put_on_stack(casting)
     scenario.resolve_top()
 
@@ -161,9 +174,7 @@ def test_a_spell_cast_for_its_mana_cost_is_not_warped():
 
     _to_end_step(scenario)
 
-    assert not any(
-        permanent.token for permanent in scenario.game.permanents_controlled_by("alice")
-    )
+    assert not any(permanent.token for permanent in scenario.game.permanents_controlled_by("alice"))
 
 
 def test_elegy_acolyte_without_either_fact_makes_nothing():
@@ -171,9 +182,7 @@ def test_elegy_acolyte_without_either_fact_makes_nothing():
 
     _to_end_step(scenario)
 
-    assert not any(
-        permanent.token for permanent in scenario.game.permanents_controlled_by("alice")
-    )
+    assert not any(permanent.token for permanent in scenario.game.permanents_controlled_by("alice"))
     assert scenario.game.intervening_if_notices == []
 
 
@@ -233,9 +242,7 @@ def test_kavaron_skywarden_gets_a_counter_after_a_departure():
 def test_roving_actuator_casts_a_free_copy_of_a_cheap_instant():
     """The enters trigger with the condition true: Shock exiled from the
     graveyard, copied, and the copy cast for free at bob (CR 707.12)."""
-    scenario = _scenario(
-        *["Mountain"] * 4, hand=("Roving Actuator",), graveyard=("Shock",)
-    )
+    scenario = _scenario(*["Mountain"] * 4, hand=("Roving Actuator",), graveyard=("Shock",))
     scenario.game.exile_permanent(scenario.creature("Grizzly Bears", "bob"))
     shock = scenario.find("Shock", Zone.GRAVEYARD, "alice")
     scenario.choose_trigger_targets("Roving Actuator", [shock])
@@ -262,11 +269,9 @@ def test_roving_actuator_does_not_trigger_without_the_condition():
 
 
 def test_roving_actuator_cannot_target_a_three_mana_sorcery():
-    """"mana value 2 or less" - Divination (3) is not a legal target, so the
+    """ "mana value 2 or less" - Divination (3) is not a legal target, so the
     "up to one" trigger exiles nothing."""
-    scenario = _scenario(
-        *["Mountain"] * 4, hand=("Roving Actuator",), graveyard=("Divination",)
-    )
+    scenario = _scenario(*["Mountain"] * 4, hand=("Roving Actuator",), graveyard=("Divination",))
     scenario.game.exile_permanent(scenario.creature("Grizzly Bears", "bob"))
 
     scenario.cast_and_resolve("Roving Actuator", *scenario.untapped_sources(*["Mountain"] * 4))

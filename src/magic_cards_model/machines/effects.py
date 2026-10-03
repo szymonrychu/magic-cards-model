@@ -65886,7 +65886,7 @@ _SUSPECT_THE_CREATED_TOKEN_RE = re.compile(r"^suspect (?:it|them)\.?$", re.IGNOR
 def _merge_create_token_then_suspect_it_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """"create `<token>` and suspect it": "it" is the token just created (CR
+    """ "create `<token>` and suspect it": "it" is the token just created (CR
     608.2c reads the sentence as one instruction), not the trigger event's
     subject `_parse_suspect_clause`'s own "suspect it" would read - so the
     two clauses are rejoined here. Every token the creation clause made is

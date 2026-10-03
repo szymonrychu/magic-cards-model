@@ -46,7 +46,7 @@
         "source": "Lashweed Lurker"
       }
     ],
-    "fields_changed": ["permanents_left_battlefield_this_turn", "reveals"],
+    "fields_changed": ["permanents_left_battlefield_this_turn", "reveals", "turn_history"],
     "notices": {},
     "objects": {
       "Memnite@alice#1": {

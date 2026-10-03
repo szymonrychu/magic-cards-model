@@ -25,7 +25,9 @@ from tests.scenarios.harness import PlayedScenario, Scenario
 SATORU = "Satoru, the Infiltrator"
 
 
-def _scenario(*, battlefield=(SATORU,), hand=(), graveyard=(), lands=("Swamp",) * 4) -> PlayedScenario:
+def _scenario(
+    *, battlefield=(SATORU,), hand=(), graveyard=(), lands=("Swamp",) * 4
+) -> PlayedScenario:
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -109,7 +111,7 @@ def test_satoru_cast_with_mana_does_not_draw():
 
 
 def test_a_token_entering_does_not_trigger_it():
-    """"nontoken creatures": Case of the Stashed Skeleton's Skeleton token
+    """ "nontoken creatures": Case of the Stashed Skeleton's Skeleton token
     (and the Case itself, not a creature) enter without triggering it."""
     scenario = _scenario(hand=("Case of the Stashed Skeleton",))
     scenario.cast_and_resolve(
@@ -148,13 +150,17 @@ def test_creatures_returned_together_trigger_once():
 
 def test_the_recheck_still_holds_after_the_creature_is_gone():
     scenario = _scenario(
-        hand=("Unearth", "Lightning Bolt"), graveyard=("Grizzly Bears",), lands=("Swamp", "Mountain")
+        hand=("Unearth", "Lightning Bolt"),
+        graveyard=("Grizzly Bears",),
+        lands=("Swamp", "Mountain"),
     )
     bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
     scenario.cast_and_resolve("Unearth", *scenario.untapped_sources("Swamp"), targets=[bears])
     scenario.game.put_triggers_on_stack()
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
-    scenario.cast_and_resolve("Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[bears])
+    scenario.cast_and_resolve(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[bears]
+    )
     scenario.state_based_actions()
     before = _hand(scenario)
 

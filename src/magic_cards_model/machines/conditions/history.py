@@ -1671,19 +1671,18 @@ def _them_entered(context: "ConditionContext") -> list["TurnHistoryEntry"] | Non
     found: list[TurnHistoryEntry] = []
     for member_id, origin in pairs:
         member = game.find_by_id(member_id)
-        if member_id != event.subject_id and isinstance(member, CardState):
-            if (
-                member.zone is Zone.BATTLEFIELD
-                and isinstance(ability, TriggeredAbility)
-                and context.source is not None
+        if (
+            member_id != event.subject_id
+            and isinstance(member, CardState)
+            and member.zone is Zone.BATTLEFIELD
+            and isinstance(ability, TriggeredAbility)
+            and context.source is not None
+        ):
+            member_event = game._enters_event(member).model_copy(update={"origin_zone": origin})
+            if not condition_matches(
+                game, ability, context.source, context.controller, member_event
             ):
-                member_event = game._enters_event(member).model_copy(
-                    update={"origin_zone": origin}
-                )
-                if not condition_matches(
-                    game, ability, context.source, context.controller, member_event
-                ):
-                    continue
+                continue
         entries = [entry for entry in entered if entry.object_id == member_id]
         if entries:
             found.append(entries[-1])
@@ -1994,7 +1993,5 @@ READERS: tuple[ConditionReader, ...] = (
         _cast_both,
     ),
     ConditionReader(re.compile(r"none of them (?:were|was) cast"), _none_of_them_cast),
-    ConditionReader(
-        re.compile(r"no mana was spent to cast them"), _no_mana_spent_to_cast_them
-    ),
+    ConditionReader(re.compile(r"no mana was spent to cast them"), _no_mana_spent_to_cast_them),
 )

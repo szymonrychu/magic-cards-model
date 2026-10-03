@@ -23,7 +23,14 @@ KNIGHT = "Breathless Knight"
 URO = "Uro, Titan of Nature's Wrath"
 
 
-def _scenario(*, battlefield=(KNIGHT,), hand=("Unearth",), graveyard=("Grizzly Bears",), lands=("Swamp",) * 4, bob_graveyard=()):
+def _scenario(
+    *,
+    battlefield=(KNIGHT,),
+    hand=("Unearth",),
+    graveyard=("Grizzly Bears",),
+    lands=("Swamp",) * 4,
+    bob_graveyard=(),
+):
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -72,7 +79,7 @@ def test_a_creature_cast_from_hand_does_not():
 
 
 def test_the_knight_itself_returning_from_a_graveyard_counts():
-    """"this creature ... enters" - the Knight reanimated is "that creature"."""
+    """ "this creature ... enters" - the Knight reanimated is "that creature"."""
     scenario = _scenario(battlefield=(), graveyard=(KNIGHT,))
     knight = scenario.find(KNIGHT, Zone.GRAVEYARD, "alice")
     scenario.cast_and_resolve("Unearth", *scenario.untapped_sources("Swamp"), targets=[knight])
@@ -120,7 +127,9 @@ def test_the_recheck_still_holds_after_the_creature_is_gone():
     scenario.cast_and_resolve("Unearth", *scenario.untapped_sources("Swamp"), targets=[bears])
     scenario.game.put_triggers_on_stack()
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
-    scenario.cast_and_resolve("Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[bears])
+    scenario.cast_and_resolve(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[bears]
+    )
     scenario.state_based_actions()
     assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
 

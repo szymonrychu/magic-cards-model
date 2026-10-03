@@ -109,9 +109,10 @@ def test_two_noncreature_spells_are_not_both():
 
 
 def test_an_opponents_spells_do_not_count_for_you():
-    scenario = _scenario(ESHKI, hand=())
+    scenario = _scenario(ESHKI)
     scenario.game.spells_cast_this_turn["bob"] = [
-        scenario.find("Island", Zone.LIBRARY, "bob")
+        scenario.find("Grizzly Bears", Zone.HAND, "alice"),
+        scenario.find("Shock", Zone.HAND, "alice"),
     ]
 
     _to_combat(scenario)
@@ -147,3 +148,19 @@ def test_fae_offering_makes_nothing_on_a_quiet_turn():
 
     assert _tokens(scenario) == []
     assert scenario.game.intervening_if_notices == []
+
+
+def test_the_recheck_on_resolution_still_holds_after_the_creature_died():
+    """CR 603.4's second check reads the turn's casts, not the battlefield:
+    the Bears that was cast dies with the trigger waiting on the stack."""
+    scenario = _scenario(FAE)
+    _cast_shock(scenario)
+    _cast_bears(scenario)
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()
+    scenario.game.put_triggers_on_stack()
+    assert scenario.game.stack
+    scenario.game.destroy(scenario.creature("Grizzly Bears", "alice"))
+    _resolve_all(scenario)
+
+    assert _tokens(scenario) == ["Clue", "Food", "Treasure"]
