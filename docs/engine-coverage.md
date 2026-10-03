@@ -6968,3 +6968,12 @@ documented exception" rule rather than left silently asserted.
   description` rather than pinned to "artifact"/"enchantment"; Mentor's
   Guidance prints a related but genuinely different single-condition,
   multi-type-list "or" shape the regex correctly does not match).
+
+### S7c: kicker tap-and-self-damage rider, exile with owner-play permission
+
+| Clause | Parser | Cards | Tests |
+|---|---|---|---|
+| "tap target untapped creature and that creature deals damage equal to its power to its controller/owner" (rider on any `kicked with its [A] kicker` trigger or spell) | `_parse_mixed_clause` rider | Ana Battlemage, Wastescape Battlemage, Traitor's Roar | `test_kicker_tap_untapped_self_damage.py` |
+| "exile up to X target creatures / target nonland permanent. For each of those cards (for as long as it remains exiled), its owner may play/cast it" | `_parse_exile_targets_then_owner_play_permission_clauses` | Extraordinary Journey, Soul Partition, Release to the Wind | `test_exile_up_to_x_owner_may_play_while_exiled.py` |
+
+Extraordinary Journey's second ability (draw when a nontoken creature enters from or is cast from exile, once each turn) is scenario-proven there; the sweep driver cannot stage it, so its sweep case is the existing strict `SWEEP_DRIVER_GAPS` xfail ("entered from exile or was cast from exile").
