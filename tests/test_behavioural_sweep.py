@@ -5444,8 +5444,8 @@ def _off_zone_pieces(ability: ActivatedAbility) -> list[tuple[str, Any]]:
     card itself, as (keyword, `CostComponent`) - read by the engine's own
     `cost_component_for_phrase`."""
     pieces = []
-    for part in ability.cost.split(","):
-        phrase = part.strip()
+    for part in ability.costs:
+        phrase = part.text.strip()
         lowered = phrase.lower()
         for verb, keyword in (
             ("sacrifice", "sacrificing"),
@@ -5471,10 +5471,14 @@ def _off_zone_choices(
         found = [
             candidate
             for candidate in sorted(_off_zone_pool(game, keyword, component), key=_land_last)
-            if candidate is not state and _pays(component, candidate, game)
+            if candidate is not state
+            and candidate not in chosen.get(keyword, [])
+            and _pays(component, candidate, game)
         ]
         if found:
-            chosen[keyword] = found[:wanted]
+            # "Sacrifice a Swamp and a Forest" is two pieces of one keyword:
+            # each adds its own objects rather than replacing the other's.
+            chosen.setdefault(keyword, []).extend(found[:wanted])
     return chosen
 
 

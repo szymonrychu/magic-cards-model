@@ -3032,6 +3032,31 @@ def _merge_disjunctive_sacrifice_cost(parts: list[str]) -> list[str]:
     return merged
 
 
+#: "Sacrifice a Swamp and a Forest" (Jarad, Golgari Lich Lord): one cost
+#: piece naming two objects, each held to its own quality. Split into one
+#: sacrifice per object so each is built and checked on its own; CR 601.2h
+#: still pays the whole total cost or none of it.
+_CONJUNCTIVE_SACRIFICE_RE = re.compile(
+    r"^(?P<verb>sacrifice) (?P<first>(?:an?|another|one|two|three|\d+) [^,]+?) and "
+    r"(?P<second>(?:an?|another|one|two|three|\d+) [^,]+)$",
+    re.IGNORECASE,
+)
+
+
+def _split_conjunctive_sacrifice_cost(parts: list[str]) -> list[str]:
+    """`_CONJUNCTIVE_SACRIFICE_RE`'s piece as its two sacrifices; every other
+    piece unchanged."""
+    split: list[str] = []
+    for part in parts:
+        match = _CONJUNCTIVE_SACRIFICE_RE.fullmatch(part.strip())
+        if match is None or " or " in part.lower():
+            split.append(part)
+            continue
+        verb = match.group("verb")
+        split.extend([f"{verb} {match.group('first')}", f"{verb} {match.group('second')}"])
+    return split
+
+
 def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
     text, reminder = _strip_reminder(raw)
     if not text:
@@ -4170,7 +4195,9 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
     # never see the "Add" at all. `effect` on the returned ability keeps the
     # full printed text, unchanged.
     add = _ADD.match(_CHOOSE_A_COLOR_PREAMBLE.sub("", effect_text))
-    cost_parts = _merge_disjunctive_sacrifice_cost(_split_top_level(cost))
+    cost_parts = _split_conjunctive_sacrifice_cost(
+        _merge_disjunctive_sacrifice_cost(_split_top_level(cost))
+    )
     costs = [_classify_cost(part) for part in cost_parts]
     # CR 606.2 makes an ability a loyalty ability when a loyalty symbol is in
     # its cost, and CR 107.7 prints the symbol as the whole cost, so a single
