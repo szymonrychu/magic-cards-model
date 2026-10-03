@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "22081f95-dc8e-41ed-b609-b6a22ee5428b",
+  "oracle_id": "44c7c6bb-2592-4d7c-8485-1815093e70be",
+  "multiverse_ids": [
+    368967
+  ],
+  "mtgo_id": 48510,
+  "tcgplayer_id": 67992,
+  "cardmarket_id": 261579,
+  "name": "Ready // Willing",
+  "lang": "en",
+  "released_at": "2013-05-03",
+  "uri": "https://api.scryfall.com/cards/22081f95-dc8e-41ed-b609-b6a22ee5428b",
+  "scryfall_uri": "https://scryfall.com/card/dgm/132/ready-willing?utm_source=api",
+  "layout": "split",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:53:34Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.jpg?1783940014",
+    "normal": "https://cards.scryfall.io/normal/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.jpg?1783940014",
+    "large": "https://cards.scryfall.io/large/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.jpg?1783940014",
+    "png": "https://cards.scryfall.io/png/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.png?1783940014",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.jpg?1783940014",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.jpg?1783940014",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.webp?1783940014",
+    "grid": "https://cards.scryfall.io/grid/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.webp?1783940014",
+    "display": "https://cards.scryfall.io/display/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.webp?1783940014",
+    "art": "https://cards.scryfall.io/art/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.webp?1783940014",
+    "crop": "https://cards.scryfall.io/crop/front/2/2/22081f95-dc8e-41ed-b609-b6a22ee5428b.webp?1783940014"
+  },
+  "mana_cost": "{1}{G}{W} // {1}{W}{B}",
+  "cmc": 6.0,
+  "type_line": "Instant // Instant",
+  "colors": [
+    "B",
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "G",
+    "W"
+  ],
+  "keywords": [
+    "Fuse"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Ready",
+      "mana_cost": "{1}{G}{W}",
+      "type_line": "Instant",
+      "oracle_text": "Creatures you control gain indestructible until end of turn. Untap each creature you control.\nFuse (You may cast one or both halves of this card from your hand.)",
+      "watermark": "selesnya",
+      "artist": "Zoltan Boros",
+      "artist_id": "1885e6cb-c827-4896-994e-3d0a027d602f",
+      "illustration_id": "a07a8a78-1b86-42b9-b886-bc8ef583c666"
+    },
+    {
+      "object": "card_face",
+      "name": "Willing",
+      "mana_cost": "{1}{W}{B}",
+      "type_line": "Instant",
+      "oracle_text": "Creatures you control gain deathtouch and lifelink until end of turn.\nFuse (You may cast one or both halves of this card from your hand.)",
+      "watermark": "orzhov",
+      "artist": "Zoltan Boros",
+      "artist_id": "1885e6cb-c827-4896-994e-3d0a027d602f"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c8bd8520-cd98-45cd-b533-8d40c2087426",
+  "set": "dgm",
+  "set_name": "Dragon's Maze",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/c8bd8520-cd98-45cd-b533-8d40c2087426",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adgm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dgm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/22081f95-dc8e-41ed-b609-b6a22ee5428b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A44c7c6bb-2592-4d7c-8485-1815093e70be&unique=prints",
+  "collector_number": "132",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zoltan Boros",
+  "artist_ids": [
+    "1885e6cb-c827-4896-994e-3d0a027d602f"
+  ],
+  "illustration_id": "a07a8a78-1b86-42b9-b886-bc8ef583c666",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16085,
+  "penny_rank": 10110,
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": "0.64",
+    "usd_etched": null,
+    "eur": "0.49",
+    "eur_foil": "0.89",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=368967&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DReady%2B%252F%252F%2BWilling",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DReady%2B%252F%252F%2BWilling",
+    "edhrec": "https://edhrec.com/route/?cc=Ready+%2F%2F+Willing"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F67992%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=261579&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/48510?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

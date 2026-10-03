@@ -108,7 +108,7 @@ from ..numbers import (
 )
 from ..snapshot import EngineModel
 from . import combat as combat_rules
-from . import map_tokens, token_riders
+from . import map_tokens, mass_pump_followups, token_riders
 from .abilities import (
     _ABILITY_WORD,
     KEYWORD_ABILITY_NAMES,
@@ -3394,6 +3394,7 @@ def _run_mass_pump(
     controller: str,
     template: str,
     magnitude_expr: MassPumpMagnitude | None,
+    restrict: Callable[[CardState], bool] | None = None,
 ) -> list[CardState]:
     """Resolve one mass-pump clause: substitute its magnitude (if it has one),
     fix the group of creatures it affects, and hand the literal sentence to
@@ -3422,6 +3423,8 @@ def _run_mass_pump(
             literal, magnitude_expr(game, controller, str(source.id))
         )
     targets = _mass_creature_group_targets(game, controller, source.id, literal)
+    if targets and restrict is not None:
+        targets = [creature for creature in targets if restrict(creature)]
     if not targets:
         return []
     parseable = _mass_pump_parseable(literal)
@@ -3583,6 +3586,9 @@ def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
                     game.add_counters(target, counter_kind, counter_amount)
 
         return counter_effect
+
+    if followup := mass_pump_followups.ability_effect(remainder, template, magnitude_expr):
+        return followup
 
     remainder_effect = parse_mixed_effect(remainder) if remainder else None
 
@@ -4544,6 +4550,9 @@ def _mass_pump_spell_effect(effect_text: str) -> Effect | None:
                     game.add_counters(target, counter_kind, counter_amount)
 
         return counter_effect
+
+    if followup := mass_pump_followups.spell_effect(remainder, template, magnitude_expr):
+        return followup
 
     remainder_effect = parse_mixed_effect_for_spell(remainder) if remainder else None
 
