@@ -2372,6 +2372,36 @@ _MANA_VALUE_LESS_THAN = re.compile(r"mana value (?:of )?less than (\d+)")
 _MANA_VALUE_EQUALS = re.compile(r"mana value (?:of )?(\d+)\b")
 
 
+def _entering_mana_value_qualifier_holds(
+    game: "Game", condition: str, subject_id: UUID | None
+) -> bool | None:
+    """Whether "`<permanent>` ... with mana value N or greater/or less/..."
+    holds for the entering object (CR 202.3, read off its computed
+    characteristics, CR 613.5) - Simulacrum Synthesizer's own "another
+    artifact you control with mana value 3 or greater enters". `None` when
+    the condition names no literal mana-value qualifier at all; unread, the
+    trigger fired on every artifact - its own 0/0 Construct token included,
+    which retriggered it forever."""
+    lowered = condition.lower()
+    if "with mana value" not in lowered:
+        return None
+    comparison = _mana_value_comparison(lowered)
+    if comparison is None:
+        return None
+    subject = game.find_by_id(subject_id) if subject_id is not None else None
+    if subject is None:
+        return False
+    threshold, comparator = comparison
+    ops = {
+        ">=": operator.ge,
+        "<=": operator.le,
+        ">": operator.gt,
+        "<": operator.lt,
+        "==": operator.eq,
+    }
+    return bool(ops[comparator](game.characteristics_of(subject).mana_value, threshold))
+
+
 def _mana_value_comparison(condition: str) -> tuple[int, str] | None:
     """The `(threshold, comparator)` a "with mana value ..." clause names, or
     `None` when the condition names no mana-value restriction at all.
@@ -2906,7 +2936,10 @@ def condition_matches(
         # specific to blocking, and leaving it unread here silently dropped
         # Garruk's own filter, firing his draw on any creature at all.
         power_or_toughness = _power_or_toughness_qualifier_holds(game, condition, event.subject_id)
-        return power_or_toughness is None or power_or_toughness
+        if power_or_toughness is False:
+            return False
+        mana_value = _entering_mana_value_qualifier_holds(game, condition, event.subject_id)
+        return mana_value is None or mana_value
 
     if ability.event is TriggerEvent.DIES:
         if "enchanted" in lowered:

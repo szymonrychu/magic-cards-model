@@ -568,6 +568,11 @@ home of its own memory.
 - 2026-10-03 r0b-t3-proofs: harness quirk, not an engine change: `PlayedScenario.activate` pays costs (a life cost included) before `activate_ability` validates the chosen colour, so a refused colour on Horizon Canopy still costs the life in a scenario; tests assert only the empty pool.
 - 2026-10-03 r0b-t3-proofs: CR 119.4 verified: Canopy's pay-1-life is payable at exactly 1 life (life 0, then CR 704.5a loses the game); the unpayable-at-0 case is not asserted.
 
+- 2026-10-03: R0b-T5 - `_CREATE_TOKEN_COPY_OF_TARGET_RE` widened to the temporary-copy tail (CR 707.9b except-clause incl. an added card type, "It/That token gains haste[ until end of turn].", "(Sacrifice|Exile) it at the beginning of the next end step." via `anaphoric_delayed_trigger`), read whole in `_parse_mixed_clauses`; the target's "you control" is optional. Closes The Fire Crystal, Molten Duplication and Cogwork Assembler - the planner called Cogwork "already handled", but it was `notice` on main, so it is a proof of the widening, not a regression guard.
+- 2026-10-03: R0b-T5 - `_CREATE_TOKEN_COPIES_EXCEPT_RE`/`_TARGET_PLAYER_CREATES_TOKEN_COPY_RE` `phrase` was `target .+?` under DOTALL and swallowed later sentences into the target description (The Fire Crystal's sacrifice sentence was dropped while the copy still happened); now `[^.]+?`. `sweep_pool.py --effects` before/after: only the three cards above moved (notice -> handled).
+- 2026-10-03: R0b-T5 bug - an enters trigger's "with mana value N or greater/less" qualifier was never read: Simulacrum Synthesizer fired for every artifact, its own 0/0 Construct token included, and looped forever (hung the scenario); Doc Ock's Tentacles fired for any creature (its old test only asserted nothing got attached). `triggers._entering_mana_value_qualifier_holds`, proven on both.
+- 2026-10-03: R0b-T5 - Giott's "you may discard a card" with an empty hand is an illegal option the engine refuses to accept (CR 608.2d), so the empty-hand scenario scripts no answer rather than a "yes".
+
 ## Regression-guard approvals
 
 Each line: a change to pre-existing test content, flagged by `scripts/regression_guard.py`, judged by an independent reviewer.

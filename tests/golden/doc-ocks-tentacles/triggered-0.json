@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Doc Ock's Tentacles"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "A.I.M. Scientists"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Aang, at the Crossroads // Aang, Destined Savior"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -42,19 +42,19 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "attach Doc Ock's Tentacles to A.I.M. Scientists",
+        "prompt": "attach Doc Ock's Tentacles to Aang, at the Crossroads",
         "source": "Doc Ock's Tentacles"
       }
     ],
     "fields_changed": [],
     "notices": {},
     "objects": {
-      "A.I.M. Scientists@alice#1": {
+      "Aang, at the Crossroads@alice#1": {
         "power": [3, 7],
         "toughness": [3, 7]
       },
       "Doc Ock's Tentacles@alice#1": {
-        "attached_to": [null, "A.I.M. Scientists@alice#1"]
+        "attached_to": [null, "Aang, at the Crossroads@alice#1"]
       }
     },
     "players": {},
@@ -66,10 +66,10 @@
   "number": 0,
   "recipe": {
     "attempt": "put",
-    "index": 3,
+    "index": 4,
     "params": {
       "owner": "alice",
-      "probe": "A.I.M. Scientists",
+      "probe": "Aang, at the Crossroads // Aang, Destined Savior",
       "tapped": false
     },
     "variant": "quiet"
