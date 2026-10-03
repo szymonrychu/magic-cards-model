@@ -418,6 +418,11 @@ _PLAYER_PROTECTION_FROM_CHOSEN_NAME = re.compile(
 _SELF_REFERENCE = re.compile(r"\bthis\b", re.IGNORECASE)
 
 
+_SACRIFICE_OR_DISCARD = re.compile(
+    r"^sacrifice (?P<sacrifice>[\w ,]+?) or discard (?P<discard>[\w ,]+)$", re.IGNORECASE
+)
+
+
 def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
     """Whether a printed cost sentence names *this* permanent (CR 602.1a).
 
@@ -24283,6 +24288,7 @@ class Game(EngineModel):
         controller: str,
         builder: Callable[..., CostComponent],
         x_value: int = 0,
+        targets: list[object] | None = None,
     ) -> CostComponent:
         """One `[Sacrifice|Discard]` cost piece, self-reference and quality
         requirement both handled (CR 602.1a, CR 118.3).
@@ -24302,19 +24308,34 @@ class Game(EngineModel):
         word "this", not a number, so `cost_component_for_phrase` cannot read
         it as one).
         """
-        component = cost_component_for_phrase(text, payer=controller)
+        # Kozilek's "Discard a card with mana value X": the X is the target
+        # spell's mana value (CR 107.3), so once a target is chosen the
+        # discarded card is held to it; before one is, the phrase asks for "a
+        # card" and the requirement is added below.
+        reading = re.sub(r" with mana value X$", "", text, flags=re.IGNORECASE)
+        linked_mana_value = None
+        if reading != text:
+            for target in targets or []:
+                state = target if isinstance(target, CardState) else self.find_by_id(target)
+                if isinstance(state, CardState):
+                    linked_mana_value = int(state.mana_value)
+                    break
+        component = cost_component_for_phrase(reading, payer=controller)
         if component is None:
-            if pool:
-                chosen = [pool.pop(0)]
-            elif _cost_refers_to_self(text, permanent):
-                chosen = [permanent]
-            else:
-                chosen = []
+            if not _cost_refers_to_self(text, permanent):
+                # CR 602.5: a quality word nobody taught the reader must not
+                # make the cost "sacrifice/discard anything" - refuse instead.
+                raise ValueError(f"cannot build a cost for {text!r}")
+            chosen = [pool.pop(0)] if pool else [permanent]
             return builder(*chosen, payer=controller, required=1, description=text)
 
         # "Sacrifice X Goats" / "Sacrifice one or more artifacts": the count is
         # the announced X or every nominated object (CR 107.3a).
         component = announce_count(component, x_value, len(pool))
+        if linked_mana_value is not None and component.requirement is not None:
+            component.requirement = component.requirement.model_copy(
+                update={"mana_value": linked_mana_value}
+            )
         if component.requirement is not None and component.requirement.excludes_source:
             # "Sacrifice another ..." (CR 601.2c/113.6): only here is the
             # source known, the same fill-in `CostKind.OTHER` does below.
@@ -24393,16 +24414,51 @@ class Game(EngineModel):
                 # read. CR 602.5a gates both symbols the same way for a
                 # creature, and `why_cannot_activate` already checks that pair.
                 components.append(untap_cost(permanent, payer=controller, description=piece.text))
+            elif piece.kind is CostKind.SACRIFICE and (
+                either := _SACRIFICE_OR_DISCARD.match(piece.text)
+            ):
+                # CR 118.1: "Sacrifice an artifact or discard a nonland card"
+                # is one cost paid either way; the nominated cards pick which.
+                if discards and not sacrifices:
+                    components.append(
+                        self._choice_cost(
+                            "Discard " + either.group("discard"),
+                            permanent,
+                            discards,
+                            controller,
+                            discard_cost,
+                            x_value,
+                            targets,
+                        )
+                    )
+                else:
+                    components.append(
+                        self._choice_cost(
+                            "Sacrifice " + either.group("sacrifice"),
+                            permanent,
+                            sacrifices,
+                            controller,
+                            sacrifice_cost,
+                            x_value,
+                            targets,
+                        )
+                    )
             elif piece.kind is CostKind.SACRIFICE:
                 components.append(
                     self._choice_cost(
-                        piece.text, permanent, sacrifices, controller, sacrifice_cost, x_value
+                        piece.text,
+                        permanent,
+                        sacrifices,
+                        controller,
+                        sacrifice_cost,
+                        x_value,
+                        targets,
                     )
                 )
             elif piece.kind is CostKind.DISCARD:
                 components.append(
                     self._choice_cost(
-                        piece.text, permanent, discards, controller, discard_cost, x_value
+                        piece.text, permanent, discards, controller, discard_cost, x_value, targets
                     )
                 )
             elif piece.kind is CostKind.PAY_LIFE:
@@ -25371,6 +25427,16 @@ class Game(EngineModel):
             self.lose_life(self.player(controller), rider.amount)
         elif rider.kind == "gain_life":
             self.gain_life(controller, rider.amount)
+        else:
+            # CR 405.6c, aimed at "each opponent" (CR 102.2): everyone still
+            # in the game who is not the controller, in turn order.
+            for opponent in self.players_in_game:
+                if opponent.username == controller:
+                    continue
+                if rider.kind == "opponents_gain_life":
+                    self.gain_life(opponent, rider.amount)
+                else:
+                    self.lose_life(opponent, rider.amount)
 
     def _activated_source_types(self, permanent: CardState) -> tuple[Type, ...]:
         """The card types of an activated ability's source as it was

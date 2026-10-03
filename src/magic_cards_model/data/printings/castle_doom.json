@@ -1,0 +1,162 @@
+{
+  "object": "card",
+  "id": "6b39d7a6-ca2d-4376-a18e-efd0138e83bc",
+  "oracle_id": "9bd013df-ad75-4099-940b-1765c58faf26",
+  "multiverse_ids": [],
+  "resource_id": "01D40E40BA83C90680BEE62144CFDD84F9EBCF29B2C17DE2AA654939DCD4A0B9",
+  "mtgo_id": 152715,
+  "arena_id": 105159,
+  "tcgplayer_id": 696674,
+  "cardmarket_id": 891346,
+  "name": "Castle Doom",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/6b39d7a6-ca2d-4376-a18e-efd0138e83bc",
+  "scryfall_uri": "https://scryfall.com/card/msh/263/castle-doom?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:34:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.jpg?1783902886",
+    "normal": "https://cards.scryfall.io/normal/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.jpg?1783902886",
+    "large": "https://cards.scryfall.io/large/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.jpg?1783902886",
+    "png": "https://cards.scryfall.io/png/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.png?1783902886",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.jpg?1783902886",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.jpg?1783902886",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.webp?1783902886",
+    "grid": "https://cards.scryfall.io/grid/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.webp?1783902886",
+    "display": "https://cards.scryfall.io/display/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.webp?1783902886",
+    "art": "https://cards.scryfall.io/art/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.webp?1783902886",
+    "crop": "https://cards.scryfall.io/crop/front/6/b/6b39d7a6-ca2d-4376-a18e-efd0138e83bc.webp?1783902886"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Land",
+  "oracle_text": "{T}: Add {C}.\n{T}: Add one mana of any color. Spend this mana only to cast an artifact spell.\n{3}, {T}, Sacrifice an artifact: Create a 3/3 colorless Robot Villain artifact creature token named Doombot. Activate only as a sorcery.",
+  "colors": [],
+  "color_identity": [],
+  "keywords": [],
+  "produced_mana": [
+    "B",
+    "C",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "452680b5-5032-413a-bb5a-3fc8cfe88be9",
+      "component": "token",
+      "name": "Doombot",
+      "type_line": "Token Artifact Creature \u2014 Robot Villain",
+      "uri": "https://api.scryfall.com/cards/452680b5-5032-413a-bb5a-3fc8cfe88be9"
+    },
+    {
+      "object": "related_card",
+      "id": "daaf180d-074d-4ade-8954-0b3a90d56ce5",
+      "component": "combo_piece",
+      "name": "Castle Doom",
+      "type_line": "Land",
+      "uri": "https://api.scryfall.com/cards/daaf180d-074d-4ade-8954-0b3a90d56ce5"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6b39d7a6-ca2d-4376-a18e-efd0138e83bc/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9bd013df-ad75-4099-940b-1765c58faf26&unique=prints",
+  "collector_number": "263",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Those in Doom's shadow know his protection. And his wrath.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Nino Is",
+  "artist_ids": [
+    "ae717001-28ec-46e3-a07e-f16b6deaf9e2"
+  ],
+  "illustration_id": "c8978a2d-ca5d-4a95-9744-3396df89d0c3",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 8603,
+  "penny_rank": 3297,
+  "preview": {
+    "source": "Star City Games",
+    "source_uri": "https://articles.starcitygames.com/magic-the-gathering/rare-land-from-mtg-marvel-super-heroes-helps-cast-artifacts-and-brings-the-doom/",
+    "previewed_at": "2026-06-05"
+  },
+  "prices": {
+    "usd": "0.58",
+    "usd_foil": "1.11",
+    "usd_etched": null,
+    "eur": "0.64",
+    "eur_foil": "0.97",
+    "tix": "0.12"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCastle%2BDoom",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCastle%2BDoom",
+    "edhrec": "https://edhrec.com/route/?cc=Castle+Doom"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696674%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891346&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152715?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

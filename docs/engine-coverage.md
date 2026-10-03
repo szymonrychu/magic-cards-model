@@ -6969,6 +6969,7 @@ documented exception" rule rather than left silently asserted.
   Guidance prints a related but genuinely different single-condition,
   multi-type-list "or" shape the regex correctly does not match).
 
+
 ## R0b-T1: conditional enters-tapped lands, bounce/scry/MDFC lands, conditional dual mana
 
 Proof-only for the already-handled readers, one scenario per listed card
@@ -7004,3 +7005,15 @@ Two engine fixes the proofs exposed:
 | A Verge's conditional second mana ability ("Activate only if you control a X or a Y") - first colour unconditional, second refused without either land type, nonbasic typed lands count, turning off when the land is lost, auto-payer never plans around the unavailable colour | CR 605.1a, 205.3i, 602.5b | `Game._activation_condition_holds` (already handled; proofs only) | `scenarios/test_r0b_verge_mana.py` (all six Verges) |
 | A modal double-faced land plays as either land face (a Pathway's front is a land too, so the back was unreachable): `Game.play_land(..., face=...)`, `Card.land_faces`, one `PLAY_LAND` offer per land face in `legal_actions` | CR 712.12, 712.8f, 712.8d, 305.2 | `models/card.py` (`land_faces`), `Game.play_land`, `machines/legal_actions.py` (`_land_actions`) | `scenarios/test_r0b_pathway_faces.py` (all four Pathways) |
 | A painland's / painland-artifact's coloured ability deals 1 damage to you from the permanent as part of the mana ability (no stack); the `{C}` ability is free; the auto-payer pays a generic cost with the free ability instead of taking the damage (`_prefer_painless_mana`) | CR 605.1a, 405.6c, 120.1 | `machines/cost.py` (`_entry_life_loss`, `_prefer_painless_mana`) | `scenarios/test_r0b_painland_mana_riders.py` (Llanowar Wastes, Caves of Koilos, Talisman of Curiosity) |
+## R0b utility, sacrifice and manland proofs (T3)
+
+| Area | Rules | Where | Tests |
+|---|---|---|---|
+| A mana ability's "Each opponent gains/loses N life." rider (Grove of the Burnwillows) | CR 405.6c, 605.3b, 102.2 | `abilities._RIDER_OPPONENTS_LIFE` -> `ManaAbilityRider(kind="opponents_gain_life"/"opponents_lose_life")`, applied to every non-controller by `Game.apply_mana_ability_rider` | `scenarios/test_r0b_restricted_and_filter_mana_lands.py` |
+| A filter land's multi-mana choice ("Add {G}{G}, {G}{U}, or {U}{U}") named as the whole pair | CR 605.1a, 106.1b | `ManaAbility.resolve` matches a spelled-out pair to a printed multi-mana option | same file (Flooded Grove, Sunken Ruins) |
+| Mana restricted to an artifact spell (Castle Doom) and its sorcery-speed sacrifice-an-artifact token maker | CR 106.6, 602.5d, 307.5, 701.21a, 111.1 | existing spend-restriction grammar; no new code | same file |
+| "Becomes a N/N artifact creature" keeps creature types it does not set (Firdoch Core, changeling) | CR 205.1a, 702.73a, 205.3d, 613.1d | `layers._animation_type_modifications` appends `SetCreatureTypes` only when a subtype is named | `scenarios/test_r0b_restless_manlands_and_animated_artifact.py` (Alloy Animist on Obsidian Battle-Axe) |
+| Restless Cottage / Reef: enter tapped, animate to a 4/4 land creature, attack-only triggers (Food + graveyard exile; mill four), deathtouch | CR 613.1d, 205.1b, 514.2, 302.6, 508.3a, 701.17a, 702.2b | existing animation and attack-trigger readers; no new code | same file |
+| A "token" / "nontoken" quality in a sacrifice cost (Fountainport) | CR 111.1, 602.2, 701.21a | `CardRequirement.token`, read by `cost._requirement` | `scenarios/test_r0b_sacrifice_and_utility_lands.py` (Hardened Tactician) |
+| "if you control N or more Plains" as an intervening-if count (Emeria, the Sky Ruin) | CR 603.4, 608.2a, 205.3i | `triggers._controlled_subtype_count_holds` accepts the subtype's own trailing s | same file (Duergar Hedge-Mage) |
+| Sacrifice-and-search lands, Promising Vein, Escape Tunnel's unblockable mode, Mistveil Plains' white-permanent gate, Glimpse the Core's two modes, Horizon Canopy's life cost | CR 119.4, 701.23a, 701.24a, 305.6, 700.2, 509.1b | existing readers; no new code | same file |

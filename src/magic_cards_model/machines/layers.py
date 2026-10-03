@@ -6260,7 +6260,11 @@ def _animation_type_modifications(
         return added
     if Type.ARTIFACT in types:
         added = [add_type(card_type) for card_type in types]
-        added.append(SetCreatureTypes(subtypes=subtypes))
+        if subtypes:
+            # CR 205.1a: only an effect that *sets* a creature type replaces
+            # the old ones. "Becomes a 4/4 artifact creature" (Firdoch Core,
+            # Alloy Animist) names none, so every creature type stays.
+            added.append(SetCreatureTypes(subtypes=subtypes))
         return added
     return [SetTypesAndSubtypes(types=tuple(types), subtypes=subtypes)]
 
