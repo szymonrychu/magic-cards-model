@@ -1210,11 +1210,18 @@ class ControlledQuality(EngineModel):
 
     card_types: tuple[Type, ...] = ()
     subtype: str | None = None
+    color: Color | None = None
+    """"a black or green permanent" (Temur Runemark's family): the permanent's
+    computed colour (CR 105.2); a bare "permanent" names no card type."""
 
     def matches(self, other: Characteristics) -> bool:
-        return all(card_type in other.types for card_type in self.card_types) and (
-            self.subtype is None
-            or any(each.lower() == self.subtype.lower() for each in other.subtypes)
+        return (
+            all(card_type in other.types for card_type in self.card_types)
+            and (
+                self.subtype is None
+                or any(each.lower() == self.subtype.lower() for each in other.subtypes)
+            )
+            and (self.color is None or self.color in other.colors)
         )
 
 
@@ -1307,11 +1314,43 @@ class SelfIfControlsCounted(SelectorBase):
     card_id: UUID
     username: str | None = None
     requirements: tuple[ControlledCountRequirement, ...] = ()
+    of_its_controller: bool = False
+    """Predator's Gambit's "its controller controls no other creatures": the
+    player counted is the selected object's own computed controller (CR
+    613.1b has already settled it), not a fixed `username` - the object is the
+    enchanted creature, and the Aura's controller may be someone else."""
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
+        username = chars.controller if self.of_its_controller else self.username
         return chars.card_id == self.card_id and all(
-            requirement.holds(self.username, board, exclude_id=self.card_id)
+            requirement.holds(username, board, exclude_id=self.card_id)
             for requirement in self.requirements
+        )
+
+
+class SelfIfAttachedCount(SelectorBase):
+    """ "Equipped creature has double strike as long as two or more Equipment
+    are attached to it." (Brass Knuckles) - `Only`'s identity test (the object
+    the attachments are attached to) plus CR 611.3a's live condition: at least
+    `threshold` permanents with `subtype` are attached to it (CR 301.5), read
+    off `Characteristics.attached_to` on every CR 613.5 computation, the same
+    link `CountAttachedWithSubtype` counts."""
+
+    kind: Literal["self_if_attached_count"] = "self_if_attached_count"
+    card_id: UUID
+    subtype: str
+    threshold: int = 1
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.card_id == self.card_id
+            and sum(
+                1
+                for other in board.values()
+                if other.attached_to == self.card_id
+                and any(word.lower() == self.subtype.lower() for word in other.subtypes)
+            )
+            >= self.threshold
         )
 
 
@@ -1761,6 +1800,7 @@ Selector = Annotated[
     | SelfIfControls
     | SelfIfControlsAnyOf
     | SelfIfControlsCounted
+    | SelfIfAttachedCount
     | CreaturesControlledByWhereToughnessExceedsPower
     | EquippedCreatureIfToughnessExceedsPower
     | CreaturesControlledByWherePowerOrToughnessAtMost
@@ -10278,15 +10318,20 @@ def _controlled_quality(phrase: str) -> ControlledQuality | None:
         return None
     card_types: list[Type] = []
     subtype: str | None = None
+    color: Color | None = None
     for word in words:
         card_type = _card_type_word(word) if word == word.lower() else None
-        if card_type is not None:
+        if word == "permanent":
+            continue
+        if word in _COLOR_WORDS and color is None:
+            color = _COLOR_WORDS[word]
+        elif card_type is not None:
             card_types.append(card_type)
         elif word[:1].isupper() and subtype is None and canonical_subtype(word) is not None:
             subtype = canonical_subtype(word)
         else:
             return None
-    return ControlledQuality(card_types=tuple(card_types), subtype=subtype)
+    return ControlledQuality(card_types=tuple(card_types), subtype=subtype, color=color)
 
 
 #: "This creature gets +1/+0 as long as any player controls a black
@@ -11253,6 +11298,110 @@ def _attached_creature_static_builder(
                 )
             )
         return effects
+
+    return builder
+
+
+#: "Enchanted creature has intimidate as long as its controller controls no
+#: other creatures." (Predator's Gambit); "Enchanted creature has trample as
+#: long as you control a blue or red permanent." (Temur Runemark and its four
+#: sibling Runemarks); "Equipped creature has double strike as long as two or
+#: more Equipment are attached to it." (Brass Knuckles) - the attached
+#: creature's keyword grant (CR 303.4b / CR 301.5a, layer 6, CR 613.1f)
+#: behind a live board condition (CR 611.3a), read as a `Selector` rather than
+#: at build time so it is re-asked on every CR 613.5 computation. The grant
+#: lands on the attached creature, so "its controller" is *that creature's*
+#: controller (an Aura on an opponent's creature asks the opponent), while
+#: "you" stays the source's own controller. "other" (CR 700.4) excludes the
+#: attached creature itself. A condition outside these shapes leaves the
+#: sentence unparsed (a notice), never a guess.
+_ATTACHED_CREATURE_GATED_GRANT_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature (?:has|have) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) "
+    r"as long as (?P<condition>[^,.]+)\.?$",
+    re.IGNORECASE,
+)
+_ITS_CONTROLLER_CONTROLS_NO_OTHER_RE = re.compile(
+    r"^its controller controls no other (?P<noun>[a-z]+)$", re.IGNORECASE
+)
+_YOU_CONTROL_ALTERNATIVES_RE = re.compile(r"^you control (?P<alternatives>an? .+)$", re.IGNORECASE)
+_N_OR_MORE_ATTACHED_TO_IT_RE = re.compile(
+    rf"^(?P<count>{COUNT}) or more (?P<subtype>[a-z]+) (?:are|is) attached to it$", re.IGNORECASE
+)
+
+
+def _attached_condition_selector(
+    condition: str,
+) -> Callable[[CardState, UUID], Selector] | None:
+    """`_ATTACHED_CREATURE_GATED_GRANT_RE`'s condition as a factory taking the
+    source (the Aura or Equipment) and the id of the creature it is attached to, or
+    `None` for a condition not read."""
+    text = condition.strip()
+    if match := _ITS_CONTROLLER_CONTROLS_NO_OTHER_RE.fullmatch(text):
+        card_type = _card_type_word(match.group("noun"))
+        if card_type is None:
+            return None
+        requirement = ControlledCountRequirement(
+            card_type=card_type, threshold=0, comparison="eq", other=True
+        )
+        return lambda source, attached_id: SelfIfControlsCounted(
+            card_id=attached_id, of_its_controller=True, requirements=(requirement,)
+        )
+    if match := _YOU_CONTROL_ALTERNATIVES_RE.fullmatch(text):
+        qualities = [
+            _controlled_quality(phrase)
+            for phrase in re.split(r" or ", match.group("alternatives"), flags=re.IGNORECASE)
+        ]
+        if any(quality is None for quality in qualities):
+            return None
+        alternatives = tuple(quality for quality in qualities if quality is not None)
+        return lambda source, attached_id: SelfIfControlsAnyOf(
+            card_id=attached_id, username=source.controller, alternatives=alternatives
+        )
+    if match := _N_OR_MORE_ATTACHED_TO_IT_RE.fullmatch(text):
+        threshold = parse_count(match.group("count"), article=False)
+        subtype = canonical_subtype(match.group("subtype"))
+        if threshold is None or subtype is None:
+            return None
+        return lambda source, attached_id: SelfIfAttachedCount(
+            card_id=attached_id, subtype=subtype, threshold=threshold
+        )
+    return None
+
+
+def _attached_creature_gated_grant_builder(
+    keywords: list[str],
+    condition: Callable[[CardState, UUID], Selector],
+    *,
+    subject: str,
+    line: str,
+) -> EffectBuilder:
+    """One layer-6 grant per keyword (CR 613.1f) on the attached creature,
+    selected through `condition` so it holds only while the board condition
+    does. An unattached source produces no effect (CR 303.4b)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached_id = source.attached_to
+        if attached_id is None:
+            return []
+        selector = condition(source, attached_id)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} creature has {keyword} (gated)",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
 
     return builder
 
@@ -14983,6 +15132,14 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             subject=match.group("attachment").lower(),
             granted=match.group("granted").strip() or None,
             line=sentence,
+        )
+    if match := _ATTACHED_CREATURE_GATED_GRANT_RE.fullmatch(sentence):
+        condition = _attached_condition_selector(match.group("condition"))
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if condition is None or keywords is None:
+            return None
+        return _attached_creature_gated_grant_builder(
+            keywords, condition, subject=match.group("attachment").lower(), line=sentence
         )
     if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(sentence):
         raw_keywords = (
