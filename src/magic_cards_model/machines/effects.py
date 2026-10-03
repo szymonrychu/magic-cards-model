@@ -6502,20 +6502,61 @@ def exile_all_graveyards(game: "Game", stack_object: "StackObject") -> None:
             game.exile_permanent(card_state)
 
 
-#: "Exile all cards from all hands and graveyards." (Worldfire) - every
-#: player's hand and graveyard (CR 402.1, CR 404.1), no target.
-_EXILE_ALL_CARDS_FROM_ALL_HANDS_AND_GRAVEYARDS_RE = re.compile(
-    r"^exile all cards from all hands and graveyards\.?$", re.IGNORECASE
+#: "Exile all cards from `<players>` hand(s) and graveyard(s)." - one
+#: instruction (CR 406.2) emptying two of each named player's own zones (CR
+#: 402.1, CR 404.1), over every player scope it is printed with: "all"
+#: (Worldfire: every player), "all opponents'" (Ashiok, Nightmare Weaver's
+#: `-10`: CR 102.2/102.3's opponents, sparing the controller), and "target
+#: player's" (Identity Crisis: a CR 115.1 player target). The two zones may
+#: be listed in either order, singular or plural.
+_EXILE_ALL_CARDS_FROM_HANDS_AND_GRAVEYARDS_RE = re.compile(
+    r"^exile all cards from "
+    r"(?:(?P<all>all)|(?P<opponents>all opponents'|each opponent's)|"
+    r"(?P<phrase>target (?:player|opponent)'s)) "
+    r"(?:hands? and graveyards?|graveyards? and hands?)\.?$",
+    re.IGNORECASE,
 )
 
 
-def exile_all_hands_and_graveyards(game: "Game", stack_object: "StackObject") -> None:
-    """Worldfire: "Exile all cards from all hands and graveyards." Every
-    player's hand and graveyard (CR 402.1, CR 404.1) is exiled as one
-    instruction (CR 406.2)."""
-    for player in game.players_in_game:
-        game.exile_cards(list(player.hand))
-        game.exile_cards(list(player.graveyard))
+def _exile_hands_and_graveyards(players: Iterable[Player], game: "Game") -> None:
+    """Every card in each of `players`' hand and graveyard, exiled as one
+    instruction (CR 406.2) - one `Game.exile_cards` batch, so a "one or more
+    cards leave your graveyard" trigger sees one event per graveyard."""
+    cards: list[CardState] = []
+    for player in players:
+        cards.extend(player.hand)
+        cards.extend(player.graveyard)
+    game.exile_cards(cards)
+
+
+def _parse_exile_all_cards_from_hands_and_graveyards_clause(
+    clause: str,
+) -> TargetedClause | None:
+    """`_EXILE_ALL_CARDS_FROM_HANDS_AND_GRAVEYARDS_RE`'s shape, or `None`."""
+    match = _EXILE_ALL_CARDS_FROM_HANDS_AND_GRAVEYARDS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if match.group("all"):
+
+        def exile_every_players(game: "Game", stack_object: "StackObject") -> None:
+            _exile_hands_and_graveyards(list(game.players_in_game), game)
+
+        return exile_every_players
+    if match.group("opponents"):
+
+        def exile_opponents(game: "Game", stack_object: "StackObject") -> None:
+            controller = game.controller_of(stack_object)
+            _exile_hands_and_graveyards(_opponents(game, controller.username), game)
+
+        return exile_opponents
+    if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+        return None
+
+    def exile_target_players(game: "Game", stack_object: "StackObject") -> None:
+        targets = [t for t in game.resolve_targets(stack_object) if isinstance(t, Player)]
+        _exile_hands_and_graveyards(targets, game)
+
+    return exile_target_players
 
 
 def exile_each_opponents_graveyard(game: "Game", stack_object: "StackObject") -> None:
@@ -10520,49 +10561,6 @@ _GAIN_LIFE_RE = re.compile(
 _LOSE_LIFE_RE = re.compile(
     rf"you loses? (?P<n>{COUNT}) life(?: for each (?P<each>.+))?", re.IGNORECASE
 )
-#: "Your life total becomes 26." (Providence's own reveal rider and its
-#: direct line, Captive Audience's upkeep mode, Angel of Grace's graveyard
-#: activation, Elderscale Wurm's enters trigger) and "Your life total becomes
-#: equal to your starting life total." (Exquisite Archangel's own "if you
-#: would lose the game" replacement, read through this same clause reader
-#: where a replacement's own apply function needs one). CR 119.5: "If an
-#: effect sets a player's life total to a specific number, the player gains
-#: or loses the necessary amount of life to end up with the new total" -
-#: `Game.set_life_total` is the one place that gain-or-loss is worked out, so
-#: every reader of this shape (this one, and `machines/replacement.py`'s own
-#: "if you would lose the game, instead ..." compilers) calls it rather than
-#: writing `player.life` directly. Named `life_total_becomes` rather than
-#: folded anonymously into `parse_clause_effect`, so a second "life total
-#: becomes" reader (built in parallel for statics/replacements elsewhere)
-#: can find this one and the two can be merged instead of duplicated.
-_LIFE_TOTAL_BECOMES_RE = re.compile(
-    r"your life total becomes (?:(?P<n>\d+)|equal to your starting life total)",
-    re.IGNORECASE,
-)
-
-
-def life_total_becomes_effect_for(clause: str) -> ClauseEffect | None:
-    """`_LIFE_TOTAL_BECOMES_RE`'s shape, or `None`. See that pattern's own
-    docstring - this is the "life total becomes" primitive `parse_clause_
-    effect` dispatches to, exposed under its own name for
-    `machines/replacement.py`'s "if you would lose the game" compilers and
-    `machines/opening_hand.py`'s rider reader to call directly."""
-    match = _LIFE_TOTAL_BECOMES_RE.fullmatch(clause.strip().rstrip("."))
-    if match is None:
-        return None
-    to_starting = match.group("n") is None
-    amount = None if to_starting else parse_count(match.group("n"))
-    if not to_starting and amount is None:
-        return None
-
-    def life_total_becomes(
-        game: "Game", player: Player, source: str, source_id: str | None
-    ) -> None:
-        target = player.starting_life if to_starting else amount
-        assert target is not None
-        game.set_life_total(player, target)
-
-    return life_total_becomes
 
 
 #: A life total changed by a counted amount: "Target player gains X life,
@@ -10689,7 +10687,14 @@ def _parse_half_life_loss_clause(clause: str) -> ClauseEffect | None:
 #: amount_reader`'s: a number, "equal to `<expr>`", "half `<expr>`, rounded
 #: up/down" (through `_amount_term`'s own "your/their starting life total"
 #: term), "the number of `<expr>`", "that number", or "the highest/lowest
-#: life total among all players".
+#: life total among all players". The one "life total becomes" reader for
+#: the controller's own life total: `parse_clause_effect` dispatches to it,
+#: and `machines/replacement.py`'s "if you would lose the game, instead ..."
+#: compilers (Exquisite Archangel's "your life total becomes equal to your
+#: starting life total") call it directly; the other subjects ("target
+#: player's", "each player's", "that player's") share its amount reader and
+#: `Game.set_life_total`, which is where CR 119.5's gain-or-loss is worked
+#: out.
 _YOUR_LIFE_TOTAL_BECOMES_RE = re.compile(
     r"^(?:your life total|it) becomes (?P<amount>.+)$", re.IGNORECASE
 )
@@ -10707,7 +10712,7 @@ def _life_total_becomes_amount_reader(expr: str) -> "AmountReader | None":
     return amount_expression(text)
 
 
-def _parse_your_life_total_becomes_clause(clause: str) -> ClauseEffect | None:
+def life_total_becomes_effect_for(clause: str) -> ClauseEffect | None:
     """`_YOUR_LIFE_TOTAL_BECOMES_RE`'s shape, or `None`."""
     match = _YOUR_LIFE_TOTAL_BECOMES_RE.fullmatch(clause.strip())
     if match is None:
@@ -12167,9 +12172,9 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
     # (an energy counter)" and "surveil 1 (Look at ...)" both carry one.
     clause = re.sub(r"\s*\([^()]*\)\s*$", "", clause).strip().rstrip(".").strip()
 
-    your_life_total_becomes = _parse_your_life_total_becomes_clause(clause)
-    if your_life_total_becomes is not None:
-        return your_life_total_becomes
+    life_total_becomes = life_total_becomes_effect_for(clause)
+    if life_total_becomes is not None:
+        return life_total_becomes
 
     double_life_total = _parse_double_your_life_total_clause(clause)
     if double_life_total is not None:
@@ -12219,10 +12224,6 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             game.gain_life(player, total)
 
         return gain_life
-
-    life_total_becomes = life_total_becomes_effect_for(clause)
-    if life_total_becomes is not None:
-        return life_total_becomes
 
     if match := _PLAYER_GAINS_HEXPROOF_RE.fullmatch(clause):
         return _player_gains_hexproof_clause(match)
@@ -12815,11 +12816,13 @@ _YOU_AND_TARGET_PLAYER_SUBJECT_AND_RE = re.compile(
 _QUALITY_LIST_AND_FROM_RE = re.compile(r"\bfrom\s+[^.\n]*?\s+and\s+from\b", re.IGNORECASE)
 
 #: "all hands and graveyards" (Worldfire's "Exile all cards from all hands and
-#: graveyards.") - a list of zones one instruction acts on (CR 400.1), not two
-#: instructions. Bounded to a plural zone pair so a trailing "and draw ..."
-#: after "hand" still splits.
+#: graveyards.") / "target player's hand and graveyard" (Identity Crisis) - a
+#: list of zones one instruction acts on (CR 400.1), not two instructions.
+#: Bounded to a zone noun on *both* sides of the "and", so a trailing "and
+#: draw ..." after "hand" still splits.
 _ZONE_PAIR_AND_RE = re.compile(
-    r"\b(?:hands|graveyards|libraries) and (?:hands|graveyards|libraries)\b", re.IGNORECASE
+    r"\b(?:hands?|graveyards?|librar(?:y|ies)) and (?:hands?|graveyards?|librar(?:y|ies))\b",
+    re.IGNORECASE,
 )
 
 #: A "then" standing at the **head** of its own sentence - "Look at the top
@@ -22122,6 +22125,13 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     if becomes_unprepared is not None:
         return becomes_unprepared
 
+    # Ahead of `_EXILE_TARGET_PLAYERS_GRAVEYARD_RE`/`_EXILE_TARGET_RE` for the
+    # same reason that one is ahead of `_EXILE_TARGET_RE`: "target player's
+    # hand and graveyard" would otherwise be committed to a player-blind read.
+    exile_hands_and_graveyards = _parse_exile_all_cards_from_hands_and_graveyards_clause(clause)
+    if exile_hands_and_graveyards is not None:
+        return exile_hands_and_graveyards
+
     if match := _EXILE_TARGET_PLAYERS_GRAVEYARD_RE.fullmatch(clause):
         # Ahead of `_EXILE_TARGET_RE`: that pattern's phrase is a superset of
         # this one's and would otherwise commit first, read the player target
@@ -22137,9 +22147,6 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
 
     if _EXILE_EACH_OPPONENTS_GRAVEYARD_RE.fullmatch(clause):
         return exile_each_opponents_graveyard  # type: ignore[return-value]
-
-    if _EXILE_ALL_CARDS_FROM_ALL_HANDS_AND_GRAVEYARDS_RE.fullmatch(clause):
-        return exile_all_hands_and_graveyards  # type: ignore[return-value]
 
     exile_all_but_bottom = _parse_exile_all_but_bottom_of_library_clause(
         clause, for_spell=for_spell

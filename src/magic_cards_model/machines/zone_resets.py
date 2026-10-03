@@ -93,14 +93,16 @@ def parse_each_player_may_shuffle_hand_graveyard_then_draw_clause(
 def merge_each_player_may_shuffle_hand_graveyard_then_draw_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, Any] | None:
-    """Rejoins `machines.effects.split_effect_clauses`'s own three-way cut of
-    Turtles in Time's second sentence: its `_CLAUSE_SEPARATOR` splits on a
-    bare " and " as well as a period and ", then", so "shuffle their hand
-    **and** graveyard into their library, **then** each player who does
-    draws seven cards" comes back as three fragments - "shuffle their hand",
-    "graveyard into their library", "each player who does draws N cards" (its
-    own leading "then" already stripped by that same splitter) - none of
-    which is CR 608.2c's one instruction on its own.
+    """Rejoins `machines.effects.split_effect_clauses`'s own two-way cut of
+    Turtles in Time's second sentence (and Step Between Worlds' two
+    sentences): its `_CLAUSE_SEPARATOR` splits on a period and ", then", so
+    "shuffle their hand and graveyard into their library, **then** each
+    player who does draws seven cards" comes back as two fragments - "each
+    player may shuffle their hand and graveyard into their library" (its
+    "hand and graveyard" kept whole by `_ZONE_PAIR_AND_RE`, CR 400.1's list
+    of zones) and "each player who does draws N cards" (its own leading
+    "then" already stripped by that same splitter) - neither of which is
+    CR 608.2c's one instruction on its own.
 
     One `Game.may` per player still in the game (CR 101.4/CR 608.2d), in
     seating order - the same order `_parse_each_player_may_discard_hand_and_
@@ -115,11 +117,9 @@ def merge_each_player_may_shuffle_hand_graveyard_then_draw_clauses(
     then the whole thing is shuffled - the identical two-step order Day's
     Undoing's own per-player step already performs for the mandatory shape.
     """
-    if index + 2 >= len(clauses):
+    if index + 1 >= len(clauses):
         return None
-    combined = (
-        f"{clauses[index].strip()} and {clauses[index + 1].strip()}. {clauses[index + 2].strip()}"
-    )
+    combined = f"{clauses[index].strip()}. {clauses[index + 1].strip()}"
     match = EACH_PLAYER_MAY_SHUFFLE_HAND_GRAVEYARD_THEN_DRAW_RE.fullmatch(
         " ".join(combined.split())
     )
@@ -128,6 +128,6 @@ def merge_each_player_may_shuffle_hand_graveyard_then_draw_clauses(
     count = parse_count(match.group("count"))
     if count is None:
         return None
-    return 3, _build_each_player_may_shuffle_hand_graveyard_then_draw_effect(
+    return 2, _build_each_player_may_shuffle_hand_graveyard_then_draw_effect(
         count, for_spell=for_spell
     )
