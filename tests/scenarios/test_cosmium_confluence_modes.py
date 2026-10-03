@@ -124,7 +124,12 @@ def test_with_two_caves_the_controller_chooses_which_one_each_time():
 def test_with_no_cave_the_counter_mode_does_nothing():
     scenario = (
         Scenario()
-        .player("alice", hand=["Cosmium Confluence"], battlefield=["Forest"] * 5, library=["Forest"])
+        .player(
+            "alice",
+            hand=["Cosmium Confluence"],
+            battlefield=["Forest"] * 5,
+            library=["Forest"],
+        )
         .player("bob", library=["Island"])
         .build()
     )

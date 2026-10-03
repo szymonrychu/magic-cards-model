@@ -2264,11 +2264,11 @@ def _probes(case: Case, ability: TriggeredAbility, *, entering: bool) -> list[st
 _BASIC_OF = {"W": "Plains", "U": "Island", "B": "Swamp", "R": "Mountain", "G": "Forest"}
 
 
-def _extra_lands_for(card: Card) -> tuple[str, ...]:
+def _extra_lands_for(card: Card, cost: str | None = None) -> tuple[str, ...]:
     """Basics beyond the stock board's three of each, so a spell with more
     coloured pips than that (Doomsday Excruciator's six {B}) can be cast
     for its mana cost (CR 601.2g-h)."""
-    pips = re.findall(r"\{([WUBRG])\}", card.mana_cost or "")
+    pips = re.findall(r"\{([WUBRG])\}", card.mana_cost or "" if cost is None else cost)
     stock = _LANDS.count("Plains")
     return tuple(
         basic
@@ -4995,7 +4995,10 @@ def _activation_board(
             scenario.game.resolve_top()
             _settle(scenario)
     else:
-        scenario = _board(battlefield=(card.name,), step=_activation_step(ability))
+        scenario = _board(
+            battlefield=(card.name, *_extra_lands_for(card, ability.cost)),
+            step=_activation_step(ability),
+        )
         source = _source(scenario, case, ability)
     indexes = [
         i for i, a in enumerate(scenario.game.activated_abilities(source)) if a.text == case.text

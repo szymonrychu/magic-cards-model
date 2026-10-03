@@ -6436,9 +6436,7 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
     retained_word = match.group("retained") or match.group("retained_inline")
     # "It's still a Cave land." names a subtype before the card type; CR 205.1b
     # keeps every prior subtype anyway, so only the card type word matters.
-    retained = (
-        _card_type_word(retained_word.split()[-1]) if retained_word is not None else None
-    )
+    retained = _card_type_word(retained_word.split()[-1]) if retained_word is not None else None
     if retained_word is not None and retained is None:
         return None
     keywords: list[str] = []
