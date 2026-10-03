@@ -5050,6 +5050,65 @@ def _parse_prevent_all_damage_to_you_until_next_turn_clause(clause: str) -> Targ
     return effect
 
 
+#: "Prevent all [combat ]damage that would be dealt to him this turn." - the
+#: rider on Oko, the Trickster's copy and the Gideons' animations, and on
+#: any ability naming its own source ("him"/"her", or "this creature"/
+#: "this permanent", which `_self_normalized_effect_text` makes of the
+#: card's own name, CR 201.5). CR 615.1a's prevention effect as a shield
+#: around the ability's source, lasting CR 514.2's "this turn". A bare "it"
+#: is not read: on Djeru's Resolve it is the spell's target, not a source.
+_PREVENT_ALL_DAMAGE_TO_SELF_THIS_TURN_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that would be dealt to "
+    r"(?:him|her|this creature|this permanent) this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_prevent_all_damage_to_self_this_turn_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_PREVENT_ALL_DAMAGE_TO_SELF_THIS_TURN_RE`'s shape, on an ability.
+
+    The shield names the source *as this object* (CR 400.7): `lasts_while`
+    holds only while that incarnation stays on the battlefield, so an Oko
+    flickered out and back is a new object it never shielded."""
+    if for_spell:
+        return None
+    match = _PREVENT_ALL_DAMAGE_TO_SELF_THIS_TURN_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    combat_only = match.group("combat") is not None
+
+    def effect(game: "Game", ability: "StackObject") -> None:
+        from ..models.game import PreventionShield, ShieldKind
+
+        if not isinstance(ability, AbilityOnStack):
+            return
+        source = ability.source(game)
+        if (
+            source is None
+            or source.zone is not Zone.BATTLEFIELD
+            or source.zone_change_stamp is None
+            or ability.source_stamp not in (None, source.zone_change_stamp)
+        ):
+            return
+        game.create_prevention_shield(
+            PreventionShield(
+                kind=ShieldKind.ALL,
+                label=(
+                    f"prevent all {'combat ' if combat_only else ''}damage that would be "
+                    f"dealt to {source.name} this turn"
+                ),
+                controller=game.controller_of(ability).username,
+                card_id=source.id,
+                combat_only=combat_only,
+                lasts_while=RemainsOnBattlefield(card_id=source.id, stamp=source.zone_change_stamp),
+            )
+        )
+
+    return effect
+
+
 #: ecl-T8: a card's own trailing "Exile `<its own name>`." - CR 201.5's own
 #: self-reference, the same shape Worlds Within Worlds' and Burning Wish's
 #: printings already carry (see `_EXILE_ALL_CREATURES_THEN_HAND_REFILL_RE`'s
@@ -61740,6 +61799,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     prevent_all_to_you_next_turn = _parse_prevent_all_damage_to_you_until_next_turn_clause(clause)
     if prevent_all_to_you_next_turn is not None:
         return prevent_all_to_you_next_turn
+    prevent_all_to_self = _parse_prevent_all_damage_to_self_this_turn_clause(
+        clause, for_spell=for_spell
+    )
+    if prevent_all_to_self is not None:
+        return prevent_all_to_self
     exile_self = _parse_exile_self_clause(clause, for_spell=for_spell)
     if exile_self is not None:
         return exile_self
