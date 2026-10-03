@@ -53261,6 +53261,31 @@ def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
 #:   so no "whenever this creature attacks" ability of the copy triggers;
 #: - "Exile the token at end of combat." (Flamerush Rider): the same CR 603.7a
 #:   delayed trigger, at CR 511.2's end of combat step.
+#: The token copy's own "tapped and attacking" sentence (CR 508.4), shared by
+#: `_CREATE_TOKEN_COPY_OF_TARGET_RE` (Flamerush Rider) and
+#: `_CREATE_TOKEN_COPIES_EXCEPT_RE` (Thousand-Faced Shadow).
+_TOKEN_COPY_ENTERS_TAPPED_AND_ATTACKING = r"(?:the tokens? enters?|they enter) tapped and attacking"
+
+
+def _token_copy_tapped_and_attacking(
+    game: "Game", original: CardState, controller: str
+) -> dict[str, Any]:
+    """`token_copy_of`'s options for a copy that enters tapped and attacking
+    (CR 508.4: its controller chooses what it attacks): whatever its original
+    attacks, or else whatever the controller's attack already names. With
+    neither, the copy enters tapped but not attacking."""
+    original_attack = game.combat.attack_by(original.id)
+    defender = (
+        original_attack.defender
+        if original_attack is not None
+        else _defender_of_controllers_attack(game, controller)
+    )
+    options: dict[str, Any] = {"tapped": True}
+    if defender is not None:
+        options["attacking"] = defender
+    return options
+
+
 _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
     r"^create a token that['’]?s a copy of "
     r"(?P<phrase>(?:another )?target (?:(?:attacking|blocking|nonlegendary|nontoken) )?"
@@ -53268,7 +53293,7 @@ _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
     r"(?:, except (?P<except>[^.]+?))?"
     r"(?P<attacking>,? and that['’]?s tapped and attacking)?\.?"
     r"(?P<haste>\s*(?:it|that token) gains haste(?P<eot> until end of turn)?\.)?"
-    r"(?P<enters_attacking>\s*the token enters tapped and attacking\.?)?"
+    rf"(?P<enters_attacking>\s*{_TOKEN_COPY_ENTERS_TAPPED_AND_ATTACKING}\.?)?"
     r"(?P<end_step>\s*(?:(?:exile|sacrifice) it at the beginning of the next end step"
     r"|exile the token at end of combat)\.?)?\s*$",
     re.IGNORECASE,
@@ -53345,21 +53370,11 @@ def _parse_create_token_copy_of_target_clause(
         for target in game.resolve_targets(stack_object):
             if not isinstance(target, CardState):
                 continue
-            options: dict[str, Any] = {}
-            if tapped_and_attacking:
-                # CR 508.4: the copy attacks whatever its original attacks, or
-                # else whatever the controller's attack already names.
-                original_attack = game.combat.attack_by(target.id)
-                options = {
-                    "tapped": True,
-                    "attacking": (
-                        original_attack.defender
-                        if original_attack is not None
-                        else _defender_of_controllers_attack(game, controller.username)
-                    ),
-                }
-                if options["attacking"] is None:
-                    del options["attacking"]
+            options = (
+                _token_copy_tapped_and_attacking(game, target, controller.username)
+                if tapped_and_attacking
+                else {}
+            )
             created = token_copy_of(
                 game,
                 target,
@@ -53634,7 +53649,7 @@ _CREATE_TOKEN_COPIES_EXCEPT_RE = re.compile(
     r"(?:, except (?P<except>.+?))?"
     rf"(?:\.\s*put {count_pattern('counters')} \+1/\+1 counters? on (?:it|them))?"
     # CR 508.4: Thousand-Faced Shadow's "The token enters tapped and attacking."
-    r"(?P<enters_attacking>\.\s*(?:the tokens? enters?|they enter) tapped and attacking)?\.?$",
+    rf"(?P<enters_attacking>\.\s*{_TOKEN_COPY_ENTERS_TAPPED_AND_ATTACKING})?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -53904,13 +53919,8 @@ def _parse_create_token_copies_except_clause(
         controller = game.controller_of(stack_object)
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState):
-                # CR 508.4: put onto the battlefield attacking what its
-                # controller is already attacking.
                 attacking = (
-                    {
-                        "tapped": True,
-                        "attacking": _defender_of_controllers_attack(game, controller.username),
-                    }
+                    _token_copy_tapped_and_attacking(game, target, controller.username)
                     if enters_attacking
                     else {}
                 )
