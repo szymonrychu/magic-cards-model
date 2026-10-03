@@ -1765,6 +1765,10 @@ class KeywordActivation(EngineModel):
     """The permanent whose "you may pay {0} rather than pay the equip cost of
     the first equip ability you activate ..." this equip activation took
     (`free_first_equip_source`, CR 118.9), or None for the printed cost."""
+    x_value: int = 0
+    """CR 107.3a's X, announced with this activation (CR 602.2b) and carried to
+    the `AbilityOnStack` - Roaring Earth's Channel "{X}{G}{G}, Discard this
+    card: Put X +1/+1 counters ...". Zero when the cost carries no `{X}`."""
     generic_effect: bool = False
     """True for a printed, non-keyword activated ability (CR 602.1) whose
     effect is whatever `machines/effects.py` already makes of its own text -
@@ -1976,6 +1980,7 @@ class KeywordActivation(EngineModel):
             source_name=self.card.name,
             controller=self.player,
             targets=list(self.targets),
+            x_value=self.x_value,
             # The link back, so the effect is findable from the object on the
             # stack rather than only from here (CR 113.1c, CR 608.2) - unset
             # for `generic_effect`, so `Game._effect_of` reaches the ordinary
@@ -4045,6 +4050,7 @@ def off_battlefield_activation(
     sacrificing: list[CardState] | None = None,
     discarding: list[CardState] | None = None,
     exiling: list[CardState] | None = None,
+    x_value: int = 0,
 ) -> KeywordActivation:
     """Build the activation for one of this card's printed activated abilities
     that functions off the battlefield (CR 113.6j, CR 113.6m).
@@ -4095,6 +4101,7 @@ def off_battlefield_activation(
         sacrificing=sacrificing,
         discarding=discarding,
         exiling=exiling,
+        x_value=x_value,
     )
     return KeywordActivation(
         card=card,
@@ -4105,6 +4112,7 @@ def off_battlefield_activation(
         cost=cost,
         ability=ability,
         targets=[TargetRef.coerce(target) for target in targets or []],
+        x_value=x_value,
         generic_effect=True,
         game=game,
         forecast=ability.forecast,

@@ -7230,7 +7230,9 @@ _LEADING_THEN_RE = re.compile(r"^then,?\s+", re.IGNORECASE)
 #: The period may sit inside a closing quote - Den of the Bugbear's granted
 #: `"Whenever this creature attacks, ... tapped and attacking." It's still a
 #: land.` - which `quote` keeps so the quoted ability stays whole.
-_TRAILING_RETENTION_RE = re.compile(r"\.(?P<quote>[\"”]?)\s+(?P<clause>[Ii]t's still an? [a-z]+)$")
+_TRAILING_RETENTION_RE = re.compile(
+    r"\.(?P<quote>[\"”]?)\s+(?P<clause>[Ii]t's still an? (?:[A-Z][A-Za-z]+ )*[a-z]+)$"
+)
 
 
 def _normalize_duration_first(sentence: str) -> str:
