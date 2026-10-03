@@ -71122,9 +71122,13 @@ def _parse_draw_if_power_at_least(text: str) -> AbilityEffect | None:
 #: Horror) - CR 111.2: the player the instruction names creates the token, so
 #: that player owns and controls it. The token phrase is read by the same
 #: named (CR 111.4 appositive) and counted token readers "create" already
-#: uses.
+#: uses. The subject may also be a group - "each opponent creates five 2/2
+#: black Zombie creature tokens" (Captive Audience), "each player creates a
+#: Food token" (Party Dude) - and then every player in the group creates the
+#: tokens for themself, in turn order from the ability's controller.
 _TARGET_PLAYER_CREATES_RE = re.compile(
-    r"^target (?:player|opponent) creates? (?P<phrase>.+)$", re.IGNORECASE | re.DOTALL
+    r"^(?P<subject>target (?:player|opponent)|each opponent|each player) creates? (?P<phrase>.+)$",
+    re.IGNORECASE | re.DOTALL,
 )
 
 
@@ -71166,11 +71170,19 @@ def _parse_target_player_creates_token(text: str) -> AbilityEffect | None:
         if definition is None:
             return None
     token = definition
+    subject = match.group("subject").lower()
+
+    def creators(game: "Game", ability: AbilityOnStack) -> list[str]:
+        controller = game.controller_of(ability).username
+        if subject == "each opponent":
+            return [player.username for player in _opponents(game, controller)]
+        if subject == "each player":
+            return [player.username for player in game.players_in_game]
+        return [t.username for t in game.resolve_targets(ability) if isinstance(t, Player)]
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        for target in game.resolve_targets(ability):
-            if isinstance(target, Player):
-                create_tokens(game, token, target.username, count, tapped=tapped)
+        for username in creators(game, ability):
+            create_tokens(game, token, username, count, tapped=tapped)
 
     return effect
 
