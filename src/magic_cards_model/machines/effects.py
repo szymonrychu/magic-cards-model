@@ -7606,6 +7606,8 @@ def _named_type_word_is_readable(word: str) -> bool:
     lowered = word.strip().lower()
     if lowered == "double-faced":
         return True  # CR 712.1's own shape, read by `_named_type_matcher`
+    if lowered == "permanent":
+        return True  # CR 110.4a's six-type umbrella, read by `_named_type_matcher`
     if lowered.startswith("non"):
         try:
             Type(lowered[3:])
@@ -7631,6 +7633,10 @@ def _card_description_is_readable(quality: str) -> bool:
     lowered = quality.strip().lower()
     if lowered.startswith("basic "):
         return _card_description_is_readable(lowered.removeprefix("basic "))
+    # "nonland permanent card" (Guardian Sunmare): `_quality_matcher` stacks
+    # the negation on the rest of the phrase, so the rest is what must read.
+    if lowered.startswith("nonland ") and not re.search(r",|\bor\b", lowered):
+        return _card_description_is_readable(lowered.removeprefix("nonland "))
     # CR 205.4g/205.4a's "snow "/"legendary " prefixes stack on the rest of
     # the phrase exactly as `_quality_matcher` already reads them (see that
     # function's own docstring) - a search whose matcher can read "legendary
@@ -13161,7 +13167,12 @@ def _strip_non_effect_preamble(text: str) -> str:
 #: general: this only ever sees text already narrowed to one resolving
 #: object's own effect body (see `_plain_resolution_sentences`'s docstring),
 #: never a run-on abbreviation or a decimal number.
-_SENTENCE_BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z(0-9])|\n+")
+#:
+#: "this permanent" also opens a sentence: `abilities.self_normalized_effect_
+#: text` rewrites a sentence-initial self-name ("Adrestia becomes an Assassin
+#: ...") to that lowercase CR 201.5 spelling, so the capital the boundary
+#: looked for is gone.
+_SENTENCE_BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z(0-9]|this permanent\b)|\n+")
 
 
 def _plain_resolution_sentences(text: str) -> list[str]:

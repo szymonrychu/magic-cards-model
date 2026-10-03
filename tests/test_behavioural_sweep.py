@@ -2744,6 +2744,13 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             wanted.append(kin)
         else:
             partners = tuple(wanted)
+    # "if an Assassin crewed it this turn" (Adrestia, CR 702.122c): the
+    # Vehicle is crewed by the simplest creature of that subtype alone.
+    crewed_by = re.search(
+        r"\ban? (\w+) crewed (?:it|this vehicle) this turn\b",
+        (ability.intervening_if or "").lower(),
+    )
+    crew_kin = _simplest_creature_of(crewed_by.group(1)) if crewed_by is not None else None
     # "Whenever an equipped creature you control attacks" on a non-Equipment
     # source (Swordsman, Sharp Scoundrel, CR 301.5a): a real Equipment is
     # staged and attached to the attacker.
@@ -2767,7 +2774,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             def fight(probe: str | None = probe, side: str = side) -> tuple[Any, ...]:
                 extra: tuple[str, ...] = (probe,) if probe is not None else ()
                 if is_vehicle:
-                    extra = ("Serra Angel",)
+                    extra = (crew_kin or "Serra Angel",)
                 if side == ALICE:
                     scenario = _board(
                         battlefield=(
@@ -2789,7 +2796,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                     )
                 source = _source(scenario, case, ability)
                 if is_vehicle and side == ALICE:
-                    _crew(scenario, source)
+                    _crew(scenario, source, (crew_kin,) if crew_kin else ())
                 attacker = source if probe is None else _staged(scenario, probe, side)
                 if attacker is not source and "equipped" in lowered:
                     holder = _staged(scenario, _EQUIPMENT, ALICE) if equipment else source
