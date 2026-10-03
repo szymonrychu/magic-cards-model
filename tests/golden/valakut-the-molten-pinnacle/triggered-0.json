@@ -5,18 +5,18 @@
     "modes": [],
     "on_stack": true,
     "source": "Valakut, the Molten Pinnacle@alice#1",
-    "targets": ["Icehide Golem@alice#1"],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
-    "busy_turn": true,
+    "busy_turn": false,
     "entering": [],
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Valakut, the Molten Pinnacle", "Intangible Virtue", "Serra Angel", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Snow-Covered Forest", "Snow-Covered Forest", "Snow-Covered Forest"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Valakut, the Molten Pinnacle", "Mountain", "Mountain"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Blood Crypt", "Giant Growth", "Memnite", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Blood Crypt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -29,7 +29,7 @@
     "step": "precombat_main",
     "tapped": [],
     "tokens": [],
-    "variant": "busy",
+    "variant": "quiet",
     "war_turn": false
   },
   "card": "Valakut, the Molten Pinnacle",
@@ -46,11 +46,11 @@
         "source": "Valakut, the Molten Pinnacle"
       }
     ],
-    "fields_changed": ["damage_dealt_this_turn"],
+    "fields_changed": ["creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {
-      "Icehide Golem@alice#1": {
-        "damage": [0, 3]
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "graveyard"]
       }
     },
     "players": {},
@@ -68,6 +68,6 @@
       "probe": "Blood Crypt",
       "tapped": false
     },
-    "variant": "busy"
+    "variant": "quiet"
   }
 }
