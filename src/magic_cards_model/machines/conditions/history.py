@@ -91,6 +91,9 @@ COMMITTED_CRIME = "committed_crime"
 PLAYED_NOT_FROM_HAND = "played_not_from_hand"
 PLAYED_FROM_EXILE = "played_from_exile"
 LOYALTY_ABILITY_ACTIVATED = "loyalty_ability_activated"
+#: CR 702.185c: "a spell was warped this turn" - a spell cast for its warp
+#: cost, per caster.
+SPELL_WARPED = "spell_warped"
 
 
 # -- recording -------------------------------------------------------------------
@@ -161,8 +164,21 @@ def _record_entered(game: "Game", event: "GameEvent") -> None:
             object_id=event.subject_id,
             characteristics=_light_characteristics(event, state, controller),
             face_down=bool(state is not None and state.face_down),
+            cast_mana_spent=_cast_mana_spent(game, state),
         )
     )
+
+
+def _cast_mana_spent(game: "Game", state: "CardState | None") -> int | None:
+    """The mana spent to cast the spell `state` was (CR 601.2h, CR 400.7d), or
+    None when it was not cast - no record, or a copy that was never cast
+    (CR 707.10)."""
+    if state is None:
+        return None
+    record = game.cast_record_of(state)
+    if record is None or record.is_copy:
+        return None
+    return sum(record.mana_spent.values())
 
 
 def _record_departure(game: "Game", event: "GameEvent", kind: str) -> None:
@@ -303,6 +319,18 @@ def _record_played(game: "Game", event: "GameEvent") -> None:
         game.record_turn_fact(PLAYED_NOT_FROM_HAND, event.player)
     if event.origin_zone is Zone.EXILE:
         game.record_turn_fact(PLAYED_FROM_EXILE, event.player)
+    if event.subject_stamp is not None:
+        # CR 702.185c: "a spell was warped this turn" means one was cast for
+        # its warp cost - the spell's own `CastRecord` (CR 601.2b announced
+        # the alternative cost, CR 601.2h paid it). A warped card cast later
+        # from exile is cast for its mana cost, not its warp cost.
+        record = game.cast_records.get(event.subject_stamp)
+        if (
+            record is not None
+            and (record.keyword or "").lower() == "warp"
+            and record.keyword_cost_paid
+        ):
+            game.record_turn_fact(SPELL_WARPED, event.player)
 
 
 def _record_damage(game: "Game", event: "GameEvent") -> None:
@@ -1582,6 +1610,104 @@ def _spells_of_types_cast(context: "ConditionContext", match: re.Match[str]) -> 
     )
 
 
+def _left_the_battlefield(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "a nonland permanent left the battlefield this turn" (Void, an ability
+    word, CR 207.2c): any permanent of the quality, whoever controlled it and
+    wherever it went, as it last existed on the battlefield (CR 603.10a) -
+    `Game.turn_history`'s "left_battlefield" entries, one per departure. An
+    unread quality makes the clause false rather than guessed."""
+    quality = _quality(match.group("quality"))
+    needed = parse_count(match.group("count")) if match.group("count") else 1
+    if quality is None or needed is None:
+        return False
+    return sum(1 for entry in _entries(context, "left_battlefield") if quality(entry)) >= needed
+
+
+def _spell_warped(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "a spell was warped this turn" - CR 702.185c: "This means that a spell
+    was cast for its warp cost this turn", by anyone (`SPELL_WARPED`)."""
+    return bool(context.game.turn_facts.get(SPELL_WARPED))
+
+
+def _cast_both(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "you've cast both a creature spell and a noncreature spell this turn"
+    (Eshki Dragonclaw, Fae Offering): two different spells cast this turn
+    (CR 601.2i, `Game.spells_cast_this_turn`), one of each quality (CR
+    205.2a's card types as a spell). An unread quality makes it false."""
+    first = _spell_quality(match.group("first"))
+    second = _spell_quality(match.group("second"))
+    if first is None or second is None:
+        return False
+    cast = [
+        state
+        for player in _players(context, match.group("who"))
+        for state in context.game.spells_cast_this_turn.get(player, [])
+    ]
+    return any(
+        first(one) and second(other)
+        for index, one in enumerate(cast)
+        for other_index, other in enumerate(cast)
+        if index != other_index
+    )
+
+
+def _them_entered(context: "ConditionContext") -> list["TurnHistoryEntry"] | None:
+    """The "entered" entries of every permanent "them" names for a "one or
+    more ... enter" trigger (CR 603.6a, `GameEvent.entered_together`): the
+    event's own subject, and each other member its trigger condition is true
+    of (CR 603.2) - a member that has left since is kept, its facts were
+    fixed as it entered. None without an event to read."""
+    from ...models.card_state import CardState
+    from ..abilities import TriggeredAbility
+    from ..triggers import condition_matches
+
+    event = context.event
+    if event is None or event.subject_id is None:
+        return None
+    game = context.game
+    ability = context.ability
+    pairs = event.entered_together or ((event.subject_id, event.origin_zone),)
+    entered = _entries(context, "entered")
+    found: list[TurnHistoryEntry] = []
+    for member_id, origin in pairs:
+        member = game.find_by_id(member_id)
+        if member_id != event.subject_id and isinstance(member, CardState):
+            if (
+                member.zone is Zone.BATTLEFIELD
+                and isinstance(ability, TriggeredAbility)
+                and context.source is not None
+            ):
+                member_event = game._enters_event(member).model_copy(
+                    update={"origin_zone": origin}
+                )
+                if not condition_matches(
+                    game, ability, context.source, context.controller, member_event
+                ):
+                    continue
+        entries = [entry for entry in entered if entry.object_id == member_id]
+        if entries:
+            found.append(entries[-1])
+    return found
+
+
+def _none_of_them_cast(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "none of them were cast" - not one of the permanents that entered was
+    cast (CR 601.2)."""
+    entries = _them_entered(context)
+    if entries is None:
+        return False
+    return all(entry.cast_mana_spent is None for entry in entries)
+
+
+def _no_mana_spent_to_cast_them(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "no mana was spent to cast them" (CR 601.2h): of the permanents that
+    entered, none that was cast had any mana spent on it."""
+    entries = _them_entered(context)
+    if entries is None:
+        return False
+    return all(not entry.cast_mana_spent for entry in entries)
+
+
 # -- the readers ---------------------------------------------------------------------
 
 _WHO = r"(?P<who>you|an opponent|a player|that player|they)"
@@ -1850,5 +1976,25 @@ READERS: tuple[ConditionReader, ...] = (
             r"(?P<whose>your|an opponent's) graveyard from anywhere this turn"
         ),
         _card_put_into_graveyard_from_anywhere,
+    ),
+    # U2
+    ConditionReader(
+        re.compile(
+            rf"(?:(?P<count>{COUNT}) or more |an? |one or more )"
+            r"(?P<quality>[a-z-]+(?: [a-z-]+)?) left the battlefield this turn"
+        ),
+        _left_the_battlefield,
+    ),
+    ConditionReader(re.compile(r"a spell was warped this turn"), _spell_warped),
+    ConditionReader(
+        re.compile(
+            rf"{_WHO}(?:'ve| have| has)? cast both an? (?P<first>[a-z-]+) spell "
+            r"and an? (?P<second>[a-z-]+) spell this turn"
+        ),
+        _cast_both,
+    ),
+    ConditionReader(re.compile(r"none of them (?:were|was) cast"), _none_of_them_cast),
+    ConditionReader(
+        re.compile(r"no mana was spent to cast them"), _no_mana_spent_to_cast_them
     ),
 )

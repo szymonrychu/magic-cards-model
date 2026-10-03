@@ -2556,7 +2556,11 @@ _TOKEN_WORD = re.compile(r"\btokens?\b")
 #: name in any shortened form `self_reference_names` reads (Mabel, Valley
 #: Hero's own "Whenever Mabel or another creature you control enters" -
 #: CR 201.5c's short name before the comma, not "this planeswalker").
-_SELF_OR_OTHER_ENTERS_TAIL = r" or (?P<other>(?:an?|another) .+ enters?)$"
+#: Satoru, the Infiltrator's "Satoru and/or one or more other nontoken
+#: creatures you control enter" is the batched spelling of the same pair.
+_SELF_OR_OTHER_ENTERS_TAIL = (
+    r" (?:and/)?or (?P<other>(?:an?|another|one or more other) .+ enters?)$"
+)
 _SELF_OR_OTHER_ENTERS_GENERIC_RE = re.compile(
     rf"^this [a-z]+{_SELF_OR_OTHER_ENTERS_TAIL}", re.IGNORECASE
 )
@@ -2565,7 +2569,7 @@ _SELF_OR_OTHER_ENTERS_GENERIC_RE = re.compile(
 def _self_or_other_enters_match(
     condition: str, source_name: str, *, legendary: bool = True
 ) -> re.Match[str] | None:
-    if " or " not in condition.lower():
+    if " or " not in condition.lower() and " and/or " not in condition.lower():
         return None
     generic = _SELF_OR_OTHER_ENTERS_GENERIC_RE.match(condition)
     if generic is not None:
@@ -2643,6 +2647,12 @@ def _subject_has_required_counter(condition: str, game: "Game", subject_id: obje
     return kind.lower() in counters
 
 
+#: A batched entry condition - "one or more `<subject>` enter", alone or
+#: after a self half ("Satoru and/or one or more other nontoken creatures you
+#: control enter").
+_ONE_OR_MORE_WORDS = re.compile(r"\bone or more\b")
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -2650,7 +2660,54 @@ def condition_matches(
     controller: str,
     event: GameEvent,
 ) -> bool:
-    """Whether this printed condition is matched by this event (CR 603.2).
+    """Whether this printed condition is matched by this event (CR 603.2) -
+    `_condition_matches`, plus CR 603.2c's "An ability triggers only once
+    each time its trigger event occurs": a batched "one or more ... enter"
+    condition triggers once for one event that put several permanents onto
+    the battlefield (CR 603.6a, `GameEvent.entered_together`), on the first
+    member it matches, never again on the others."""
+    if not _condition_matches(game, ability, source, controller, event):
+        return False
+    return not _earlier_batch_member_matched(game, ability, source, controller, event)
+
+
+def _earlier_batch_member_matched(
+    game: "Game",
+    ability: TriggeredAbility,
+    source: CardState,
+    controller: str,
+    event: GameEvent,
+) -> bool:
+    """Whether a member entering ahead of `event`'s own subject in the same
+    batch already matched this batched entry condition (CR 603.2c)."""
+    if (
+        ability.event is not TriggerEvent.ENTERS_THE_BATTLEFIELD
+        or len(event.entered_together) < 2
+        or not _ONE_OR_MORE_WORDS.search(ability.condition.lower())
+    ):
+        return False
+    for member_id, origin in event.entered_together:
+        if member_id == event.subject_id:
+            return False
+        member = game.find_by_id(member_id)
+        if not isinstance(member, CardState) or member.zone is not Zone.BATTLEFIELD:
+            continue
+        member_event = game._enters_event(member).model_copy(
+            update={"origin_zone": origin, "entered_together": event.entered_together}
+        )
+        if _condition_matches(game, ability, source, controller, member_event):
+            return True
+    return False
+
+
+def _condition_matches(
+    game: "Game",
+    ability: TriggeredAbility,
+    source: CardState,
+    controller: str,
+    event: GameEvent,
+) -> bool:
+    """Whether this printed condition is matched by this one event (CR 603.2).
 
     The shapes read, one per `TriggerEvent`:
 
@@ -6249,9 +6306,11 @@ def _typed_turn_fact_holds(game: "Game", clause: str, source: CardState) -> bool
 
 
 #: One alternative of Prized Amalgam's and Archfiend's Vessel's clause: "it
-#: entered from your graveyard" / "you cast it from your graveyard".
+#: entered from your graveyard" / "you cast it from your graveyard", and
+#: Breathless Knight's "that creature entered from a graveyard" - the same
+#: trigger-event subject (CR 603.2) named by a demonstrative instead.
 _FROM_GRAVEYARD_ALTERNATIVE = re.compile(
-    r"^(?:it entered(?: the battlefield)? from (?P<entered>your|a) graveyard"
+    r"^(?:(?:it|that creature) entered(?: the battlefield)? from (?P<entered>your|a) graveyard"
     r"|you cast it from (?P<cast>your|a) graveyard)$"
 )
 
