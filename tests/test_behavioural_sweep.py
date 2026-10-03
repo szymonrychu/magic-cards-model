@@ -319,6 +319,30 @@ class _OneOptionalTarget(ScriptedAnswer):
         return True
 
 
+@dataclass
+class _SomeOfAnyNumberExiled(ScriptedAnswer):
+    """`_OneOptionalTarget`'s sibling for the untargeted "exile any number of
+    <permanents>" choice (CR 107.1c - zero is a legal answer, and the
+    engine's own default): the case card's own non-exact `CHOOSE_CARDS`
+    question whose prompt is that exile is answered with the first card
+    offered, so the recorded resolution exiles something and its delayed
+    return is armed. Keyed by the prompt's shape, never by card; declined is
+    the second golden, as for an optional target."""
+
+    card: str = ""
+
+    def matches(self, decision: Decision) -> bool:
+        if decision.kind is not DecisionKind.CHOOSE_CARDS or decision.exact:
+            return False
+        if not decision.cards or not decision.prompt.lower().startswith("exile any number of"):
+            return False
+        if decision.source is None or not _same_card(decision.source, self.card):
+            return False
+        self.value = tuple(decision.cards[:1])
+        _STAGING.optional_chosen = True
+        return True
+
+
 class _Halt(Exception):  # noqa: N818 - control flow, not an error
     """`staged_board`'s stop: the fully staged board of a recorded recipe."""
 
@@ -470,6 +494,11 @@ def build_recorded(
         played.game.decisions.add(
             _OneOptionalTarget(
                 kind=DecisionKind.CHOOSE_TARGETS, value=(), uses=None, card=case.card
+            )
+        )
+        played.game.decisions.add(
+            _SomeOfAnyNumberExiled(
+                kind=DecisionKind.CHOOSE_CARDS, value=(), uses=None, card=case.card
             )
         )
     if before is not None:
@@ -1061,17 +1090,20 @@ def _precondition_material(condition: str) -> tuple[Material, ...]:
         r"there(?:'s| is) an? (?P<subtype>[\w-]+) card in your graveyard", condition.lower()
     )
     if subtype_card is not None:
-        wanted_subtype = subtype_card.group("subtype")
-        found = next(
-            (
-                card.name
-                for card in _format_pool()
-                if not card.card_faces
-                and wanted_subtype in (subtype.lower() for subtype in card.subtypes)
-            ),
-            None,
-        )
+        found = _subtype_printing(subtype_card.group("subtype"))
         return (Material(found, ALICE, Zone.GRAVEYARD),) if found else ()
+    # "the number of other Caves you control plus the number of Cave cards in
+    # your graveyard is three or greater" (Cavernous Maw, CR 602.5b): that
+    # many cards of the subtype in the graveyard alone meet it.
+    subtype_sum = re.search(
+        r"the number of other [\w-]+ you control plus the number of (?P<subtype>[\w-]+) "
+        r"cards in your graveyard is (?P<count>\w+) or greater",
+        condition.lower(),
+    )
+    if subtype_sum is not None:
+        found = _subtype_printing(subtype_sum.group("subtype"))
+        needed = parse_count(subtype_sum.group("count")) or 0
+        return tuple(Material(found, ALICE, Zone.GRAVEYARD) for _ in range(needed)) if found else ()
     match = re.search(r"an opponent controls more (\w+) than you", condition.lower())
     if match is None:
         return ()
@@ -1092,6 +1124,19 @@ def _precondition_material(condition: str) -> tuple[Material, ...]:
         _STAGING.variant, _STAGING.material = saved
     more = counts[ALICE] + 1 - counts[BOB]
     return tuple(Material(_MORE_OF[wanted], BOB, Zone.BATTLEFIELD) for _ in range(max(0, more)))
+
+
+def _subtype_printing(wanted_subtype: str) -> str | None:
+    """The first single-faced pool printing with that subtype."""
+    return next(
+        (
+            card.name
+            for card in _format_pool()
+            if not card.card_faces
+            and wanted_subtype in (subtype.lower() for subtype in card.subtypes)
+        ),
+        None,
+    )
 
 
 @cache
@@ -1498,6 +1543,18 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     if _back_face(source.card, ability):
         source.transformed = True
     face = getattr(ability, "face", None)
+    faces = source.card.card_faces or []
+    if (
+        source.zone is Zone.BATTLEFIELD
+        and source.card.layout is Layout.MODAL_DFC
+        and not source.transformed
+        and len(faces) > 1
+        and face == faces[1].name
+    ):
+        # A modal permanent back face (The Prismatic Bridge) is up only when
+        # it was cast as that face (CR 712.11b, CR 712.13) - staged the way
+        # `move_to` records that resolution.
+        source.land_face_played = face
     if (
         source.zone is Zone.BATTLEFIELD
         and face
@@ -2807,6 +2864,13 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             wanted.append(kin)
         else:
             partners = tuple(wanted)
+    # "if an Assassin crewed it this turn" (Adrestia, CR 702.122c): the
+    # Vehicle is crewed by the simplest creature of that subtype alone.
+    crewed_by = re.search(
+        r"\ban? (\w+) crewed (?:it|this vehicle) this turn\b",
+        (ability.intervening_if or "").lower(),
+    )
+    crew_kin = _simplest_creature_of(crewed_by.group(1)) if crewed_by is not None else None
     # "Whenever an equipped creature you control attacks" on a non-Equipment
     # source (Swordsman, Sharp Scoundrel, CR 301.5a): a real Equipment is
     # staged and attached to the attacker.
@@ -2819,6 +2883,18 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     back_creature = _back_face(card, ability) and "Creature" in (
         (card.card_faces or [])[1].type_line or ""
     )
+    # "Whenever two or more creatures your opponents control attack"
+    # (Flummoxed Cyclops, CR 603.2c): the attacking side declares that many
+    # attackers - distinct vanilla partners alongside the probe.
+    group = re.match(r"^(two|three|four|five) or more\b", lowered)
+    group_partners: tuple[str, ...] = ()
+    if group is not None:
+        needed = (parse_count(group.group(1), article=False) or 1) - 1
+        group_partners = tuple(name for name in _GROUP_ATTACK_PARTNERS if name != card.name)[
+            :needed
+        ]
+        if not partners:
+            partners = group_partners
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
         if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle or back_creature):
@@ -2830,7 +2906,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             def fight(probe: str | None = probe, side: str = side) -> tuple[Any, ...]:
                 extra: tuple[str, ...] = (probe,) if probe is not None else ()
                 if is_vehicle:
-                    extra = ("Serra Angel",)
+                    extra = (crew_kin or "Serra Angel",)
                 if side == ALICE:
                     scenario = _board(
                         battlefield=(
@@ -2846,13 +2922,13 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 else:
                     scenario = _board(
                         battlefield=(case.card,),
-                        bob_battlefield=extra,
+                        bob_battlefield=(*extra, *group_partners),
                         active=BOB,
                         step=Step.DECLARE_ATTACKERS,
                     )
                 source = _source(scenario, case, ability)
                 if is_vehicle and side == ALICE:
-                    _crew(scenario, source)
+                    _crew(scenario, source, (crew_kin,) if crew_kin else ())
                 attacker = source if probe is None else _staged(scenario, probe, side)
                 if attacker is not source and "equipped" in lowered:
                     holder = _staged(scenario, _EQUIPMENT, ALICE) if equipment else source
@@ -2861,7 +2937,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 alongside = (
                     [_staged(scenario, partner, side) for partner in partners]
                     if side == ALICE
-                    else []
+                    else [_staged(scenario, partner, side) for partner in group_partners]
                 )
                 for partner in alongside:
                     if crew_number(partner.card) is not None:
@@ -2895,6 +2971,11 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             return scenario, source, fresh, BOB
 
         yield _combat_stages(case, fresh_attacker, lowered)
+
+
+#: Distinct vanilla creatures to attack alongside the probe for a "two or
+#: more ... attack" condition.
+_GROUP_ATTACK_PARTNERS = ("Grizzly Bears", "Craw Wurm", "Raging Goblin", "Memnite")
 
 
 #: A Vehicle with nothing but crew (CR 702.122a), and a creature that crews

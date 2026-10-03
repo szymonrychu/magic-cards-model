@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 46 | 18.3% |
-| Works (untested) | 129 | 51.2% |
+| Works (untested) | 132 | 52.4% |
 | Partial (unaudited) | 12 | 4.8% |
-| Not working | 65 | 25.8% |
+| Not working | 62 | 24.6% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Betor, Kin to All | silent | At the beginning of your end step, if creatures you control have total toughness 10 or greater, draw a card. Then if creatures you control have total toughness  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bloomvine Regent // Claim Territory | silent | Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call the Spirit Dragons | silent | At the beginning of your upkeep, for each color, put a +1/+1 counter on a Dragon you control of that color. If you put +1/+1 counters on five Dragons this way,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Champion of Dusan | silent | Renew — {1}{G}, Exile this card from your graveyard: Put a +1/+1 counter and a trample counter on target creature. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Death Begets Life | silent | Destroy all creatures and enchantments. Draw a card for each permanent destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Descendant of Storms | silent | Whenever this creature attacks, you may pay {1}{W}. If you do, it endures 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dragon's Prey | silent | This spell costs {2} more to cast if it targets a Dragon. Destroy target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -59,12 +58,10 @@
 | Narset, Jeskai Waymaster | silent | At the beginning of your end step, you may discard your hand. If you do, draw cards equal to the number of spells you've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | New Way Forward | silent | The next time a source of your choice would deal damage to you this turn, prevent that damage. When damage is prevented this way, New Way Forward deals that muc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Perennation | silent | Return target permanent card from your graveyard to the battlefield with a hexproof counter and an indestructible counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Qarsi Revenant | silent | Renew — {2}{B}, Exile this card from your graveyard: Put a flying counter, a deathtouch counter, and a lifelink counter on target creature. Activate only as a s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Reverberating Summons | silent | At the beginning of each combat, if you've cast two or more spells this turn, this enchantment becomes a 3/3 Monk creature with haste in addition to its other t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rite of Renewal | silent | Return up to two target permanent cards from your graveyard to your hand. Target player shuffles up to four target cards from their graveyard into their library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Riverwheel Sweep | silent | Tap target creature. Put three stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.) Exile the top two ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roar of Endless Song | silent | III — Double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sagu Pummeler | silent | Renew — {4}{G}, Exile this card from your graveyard: Put two +1/+1 counters and a reach counter on target creature. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Scavenger Regent // Exude Toxin | silent | Each non-Dragon creature gets -X/-X until end of turn. (Then shuffle this card into its owner's library.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Severance Priest | silent | When this creature enters, target opponent reveals their hand. You may choose a nonland card from it. If you do, exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sinkhole Surveyor | silent | Whenever this creature attacks, you lose 1 life and this creature endures 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -118,6 +115,7 @@
 | Bewildering Blizzard | handled | Draw three cards. Creatures your opponents control get -3/-0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bone-Cairn Butcher | handled | Attacking tokens you control have deathtouch. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boulderborn Dragon | handled | Whenever this creature attacks, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Champion of Dusan | handled | Renew — {1}{G}, Exile this card from your graveyard: Put a +1/+1 counter and a trample counter on target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Channeled Dragonfire | handled | Channeled Dragonfire deals 2 damage to any target. Harmonize {5}{R}{R} (You may cast this card from your graveyard for its harmonize cost. You may tap a creatur | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Constrictor Sage | handled | When this creature enters, tap target creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Coordinated Maneuver | handled | Choose one — • Coordinated Maneuver deals damage equal to the number of creatures you control to target creature or planeswalker. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -175,6 +173,7 @@
 | Overwhelming Surge | handled | Choose one or both — • Overwhelming Surge deals 3 damage to target creature. • Destroy target noncreature artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Piercing Exhale | handled | As an additional cost to cast this spell, you may behold a Dragon. (You may choose a Dragon you control or reveal a Dragon card from your hand.) Target creature | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Poised Practitioner | handled | Flurry — Whenever you cast your second spell each turn, put a +1/+1 counter on this creature. Scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Qarsi Revenant | handled | Renew — {2}{B}, Exile this card from your graveyard: Put a flying counter, a deathtouch counter, and a lifelink counter on target creature. Activate only as a s | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rainveil Rejuvenator | handled | When this creature enters, you may mill three cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rakshasa's Bargain | handled | Look at the top four cards of your library. Put two of them into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rally the Monastery | handled | This spell costs {2} less to cast if you've cast another spell this turn. Choose one — • Create two 1/1 white Monk creature tokens with prowess. • Up to two tar | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -190,6 +189,7 @@
 | Roiling Dragonstorm | handled | When this enchantment enters, draw two cards, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Runescale Stormbrood // Chilling Screech | handled | Counter target spell with mana value 2 or less. (Then shuffle this card into its owner's library.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sage of the Fang | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sagu Pummeler | handled | Renew — {4}{G}, Exile this card from your graveyard: Put two +1/+1 counters and a reach counter on target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sagu Wildling // Roost Seek | handled | Search your library for a basic land card, reveal it, put it into your hand, then shuffle. (Also shuffle this card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Salt Road Packbeast | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Salt Road Skirmish | handled | Destroy target creature. Create two 1/1 red Warrior creature tokens. They gain haste until end of turn. Sacrifice them at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -291,8 +291,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Renew | 4 | Champion of Dusan, Naga Fleshcrafter, Qarsi Revenant, Sagu Pummeler | tdm |
 | Flurry | 1 | Taigam, Master Opportunist | tdm |
+| Renew | 1 | Naga Fleshcrafter | tdm |
 | as long as there are three or more different kinds of counters among creatures you control, ~ gets +N/+N. | 1 | Hundred-Battle Veteran | tdm |
 | as long as you control a creature with a counter on it, ~ gets +N/+N. | 1 | Formation Breaker | tdm |
 | as ~ enters, choose abzan or mardu. | 1 | Barrensteppe Siege | tdm |

@@ -109,6 +109,10 @@ class Keyword(StrEnum):
     #: shadow can't be blocked by creatures with shadow." Read in
     #: `block_refusal`, both directions.
     SHADOW = "shadow"
+    #: CR 702.13a-b: "Intimidate is an evasion ability." "A creature with
+    #: intimidate can't be blocked except by artifact creatures and/or
+    #: creatures that share a color with it." Read in `block_refusal`.
+    INTIMIDATE = "intimidate"
     #: CR 702.2a-c: a static ability that changes what counts as lethal damage
     #: when this creature assigns it, and adds a state-based action (CR 704.5h).
     DEATHTOUCH = "deathtouch"
@@ -2486,6 +2490,20 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
             f"{blocker.name} has shadow, so it cannot block {attacker.name} - a creature "
             f"without shadow (CR 702.28b)"
         )
+    if has_keyword(attacker, Keyword.INTIMIDATE, game):
+        # CR 702.13b, off the computed board (colors and types are layer-4/5
+        # results, CR 613): artifact creatures and creatures sharing a color
+        # with the attacker may block it; nothing else may.
+        attacker_chars = game.characteristics_of(attacker)
+        blocker_chars = game.characteristics_of(blocker)
+        if Type.ARTIFACT not in blocker_chars.types and not (
+            set(attacker_chars.colors) & set(blocker_chars.colors)
+        ):
+            return (
+                f"{attacker.name} has intimidate, so {blocker.name} - neither an artifact "
+                f"creature nor a creature sharing a color with it - cannot block it "
+                f"(CR 702.13b)"
+            )
     if has_keyword(attacker, "skulk", game):
         # CR 702.118b: "A creature with skulk can't be blocked by creatures
         # with greater power." Both powers off the computed board (CR 613).

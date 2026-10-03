@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 8.6% |
-| Works (untested) | 105 | 39.2% |
+| Works (untested) | 106 | 39.6% |
 | Partial (unaudited) | 27 | 10.1% |
-| Not working | 113 | 42.2% |
+| Not working | 112 | 41.8% |
 
 ## Cards needing work
 
@@ -127,7 +127,6 @@
 | Wurmcalling | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Yavimaya Dryad | silent | When this creature enters, you may search your library for a Forest card, put it onto the battlefield tapped under target player's control, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zealot il-Vec | silent | Whenever this creature attacks and isn't blocked, you may have it deal 1 damage to target creature. If you do, prevent all combat damage this creature would dea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Amrou Scout | notice | {4}, {T}: Search your library for a Rebel permanent card with mana value 3 or less, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chronatog Totem | notice | {0}: This creature gets +3/+3 until end of turn. You skip your next turn. Activate only once each turn and only if this permanent is a creature. | unparsed remainder: You skip your next turn. | Y/-/- | not_working |
 | Goblin Skycutter | notice | Sacrifice this creature: It deals 2 damage to target creature with flying. That creature loses flying until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gorgon Recluse | notice | Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -167,6 +166,7 @@
 | Vesuvan Shapeshifter | unaudited | As this creature enters or is turned face up, you may choose another creature on the battlefield. If you do, until this creature is turned face down, it becomes | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Weathered Bodyguards | unaudited | As long as this creature is untapped, all combat damage that would be dealt to you by unblocked creatures is dealt to this creature instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Academy Ruins | handled | {1}{U}, {T}: Put target artifact card from your graveyard on top of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Amrou Scout | handled | {4}, {T}: Search your library for a Rebel permanent card with mana value 3 or less, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ancient Grudge | handled | Destroy target artifact. Flashback {G} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashcoat Bear | handled | Flash | machines/casting.py (timing) | Y/-/- | not_tested |
 | Aspect of Mongoose | handled | Enchanted creature has shroud. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -399,7 +399,6 @@
 | {M}, {M}: choose a card name, then reveal a card at random from your hand. if that card has the chosen name, ~ deals N damage to any target. | 1 | Magus of the Scroll | tsp |
 | {M}, {M}: create a N/N creature token of the chosen color and type. | 1 | Sarpadian Empires, Vol. VII | tsp |
 | {M}, {M}: reveal the top card of your library. if it has the same name as a card in your graveyard, put it into your graveyard. otherwise, draw a card. | 1 | Candles of Leng | tsp |
-| {M}, {M}: search your library for a rebel permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Amrou Scout | tsp |
 | {M}: choose target permanent you control or suspended card you own. if that permanent or card has a time counter on it, you may remove a time counter from it or | 1 | Jhoira's Timebug | tsp |
 | {M}: each N/N creature you control gets +N/+N until end of turn. | 1 | Pendelhaven Elder | tsp |
 | {M}: enchanted creature gets +N/+N until end of turn. | 1 | Ghitu Firebreathing | tsp |

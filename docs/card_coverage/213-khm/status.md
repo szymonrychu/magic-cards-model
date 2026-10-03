@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 7.0% |
+| Tested | 21 | 7.3% |
 | Works (untested) | 138 | 48.1% |
 | Partial (unaudited) | 15 | 5.2% |
-| Not working | 114 | 39.7% |
+| Not working | 113 | 39.4% |
 
 ## Cards needing work
 
@@ -124,7 +124,6 @@
 | Bind the Monster | notice | When this Aura enters, tap enchanted creature. It deals damage to you equal to its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Divine Gambit | notice | Exile target artifact, creature, or enchantment an opponent controls. That player may put a permanent card from their hand onto the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Draugr Thought-Thief | notice | When this creature enters, look at the top card of target player's library. You may put that card into their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Esika, God of the Tree // The Prismatic Bridge | notice | Other legendary creatures you control have vigilance and "{T}: Add one mana of any color." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Forging the Tyrite Sword | notice | III — Search your library for a card named Halvar, God of Battle or an Equipment card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kaya the Inexorable | notice | +1: Put a ghostform counter on up to one target nontoken creature. It gains "When this creature dies or is put into exile, return it to its owner's hand and cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | King Harald's Revenge | notice | Until end of turn, target creature gets +1/+1 for each creature you control and gains trample. It must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -297,7 +296,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Axgard Braggart
 - Cleaving Reaper
@@ -307,6 +306,7 @@
 - Deathknell Berserker
 - Dual Strike
 - Duskwielder
+- Esika, God of the Tree // The Prismatic Bridge
 - Faceless Haven
 - Littjara Kinseekers
 - Magda, Brazen Outlaw
@@ -380,7 +380,6 @@
 | look at the top three cards of your library. put one of them into your hand and the rest on the bottom of your library in any order. as long as you control a gi | 1 | Glimpse the Cosmos | khm |
 | mill three cards, then return a land card or elf card from your graveyard to your hand. if you can't, draw a card. (to mill a card, put the top card of your lib | 1 | Roots of Wisdom | khm |
 | mill three cards. you may put an elf or tyvar card from your graveyard onto the battlefield. | 1 | Harald Unites the Elves | khm |
-| other legendary creatures you control have vigilance and "..." | 1 | Esika, God of the Tree // The Prismatic Bridge | khm |
 | other snow and zombie creatures you control get +N/+N. | 1 | Narfi, Betrayer King | khm |
 | protection | 1 | Sigrid, God-Favored | khm |
 | return target creature card from your graveyard to the battlefield. if it's an elf, create two N/N green elf warrior creature tokens. foretell {M}{M} (during yo | 1 | Return Upon the Tide | khm |

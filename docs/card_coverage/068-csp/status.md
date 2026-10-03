@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 5.6% |
-| Works (untested) | 59 | 41.3% |
+| Works (untested) | 60 | 42.0% |
 | Partial (unaudited) | 12 | 8.4% |
-| Not working | 64 | 44.8% |
+| Not working | 63 | 44.1% |
 
 ## Cards needing work
 
@@ -81,7 +81,6 @@
 | Ursine Fylgja | silent | Remove a healing counter from this creature: Prevent the next 1 damage that would be dealt to this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woolly Razorback | silent | As long as this creature has an ice counter on it, prevent all combat damage it would deal and it has defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blizzard Specter | notice | Whenever this creature deals combat damage to a player, choose one — • That player returns a permanent they control to its owner's hand. • That player discards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Earthen Goo | notice | This creature gets +1/+1 for each age counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Frostweb Spider | notice | Whenever this creature blocks a creature with flying, put a +1/+1 counter on this creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kjeldoran War Cry | notice | Creatures you control get +X/+X until end of turn, where X is 1 plus the number of cards named Kjeldoran War Cry in all graveyards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mystic Melting | notice | Destroy target artifact or enchantment. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -115,6 +114,7 @@
 | Deepfire Elemental | handled | {X}{X}{1}: Destroy target artifact or creature with mana value X. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disciple of Tevesh Szat | handled | {T}: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drelnoch | handled | Whenever this creature becomes blocked, you may draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Earthen Goo | handled | This creature gets +1/+1 for each age counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flashfreeze | handled | Counter target red or green spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frost Marsh | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frost Raptor | handled | {S}{S}: This creature gains shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -242,7 +242,6 @@
 | ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |
 | ~ deals N damage to target creature and you gain N life, where N is N plus the number of cards named ~ in all graveyards. | 1 | Feast of Flesh | csp |
 | ~ deals damage to target creature equal to the number of snow permanents you control. | 1 | Skred | csp |
-| ~ gets +N/+N for each age counter on it. | 1 | Earthen Goo | csp |
 | ~'s power and toughness are each equal to the number of illusions on the battlefield. | 1 | Krovikan Mist | csp |
 | ~'s power and toughness are each equal to the number of snow permanents on the battlefield. | 1 | Rimefeather Owl | csp |
 | ~'s power is equal to the number of nonbasic lands your opponents control. | 1 | Wilderness Elemental | csp |

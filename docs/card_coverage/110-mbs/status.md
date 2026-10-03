@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 7.7% |
-| Works (untested) | 89 | 62.7% |
+| Works (untested) | 90 | 63.4% |
 | Partial (unaudited) | 7 | 4.9% |
-| Not working | 35 | 24.6% |
+| Not working | 34 | 23.9% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Ardent Recruit | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bonehoard | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Choking Fumes | silent | Put a -1/-1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Concussive Bolt | silent | Concussive Bolt deals 4 damage to target player or planeswalker. Metalcraft — If you control three or more artifacts, creatures controlled by that player or by  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Contested War Zone | silent | Whenever a creature deals combat damage to you, that creature's controller gains control of this land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Copper Carapace | silent | Equipped creature gets +2/+2 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cryptoplasm | silent | At the beginning of your upkeep, you may have this creature become a copy of another target creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -56,8 +55,8 @@
 | Tezzeret, Agent of Bolas | silent | −1: Target artifact becomes an artifact creature with base power and toughness 5/5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victory's Herald | silent | Whenever this creature attacks, attacking creatures gain flying and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Burn the Impure | notice | Burn the Impure deals 3 damage to target creature. If that creature has infect, Burn the Impure deals 3 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Concussive Bolt | notice | Concussive Bolt deals 4 damage to target player or planeswalker. Metalcraft — If you control three or more artifacts, creatures controlled by that player or by  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gore Vassal | notice | Sacrifice this creature: Put a -1/-1 counter on target creature. Then if that creature's toughness is 1 or greater, regenerate it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Gruesome Encore | notice | Put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. Exile it at the beginning of the next end step. I | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pistus Strike | notice | Destroy target creature with flying. Its controller gets a poison counter. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vedalken Anatomist | notice | {2}{U}, {T}: Put a -1/-1 counter on target creature. You may tap or untap that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Virulent Wound | notice | Put a -1/-1 counter on target creature. When that creature dies this turn, its controller gets a poison counter. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -92,6 +91,7 @@
 | Gnathosaur | handled | Sacrifice an artifact: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Go for the Throat | handled | Destroy target nonartifact creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Wardriver | handled | Battle Cry | machines/keywords.py | Y/-/- | not_tested |
+| Gruesome Encore | handled | Put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. Exile it at the beginning of the next end step. I | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gust-Skimmer | handled | {U}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hellkite Igniter | handled | {1}{R}: This creature gets +X/+0 until end of turn, where X is the number of artifacts you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hero of Bladehold | handled | Whenever this creature attacks, create two 1/1 white Soldier creature tokens that are tapped and attacking. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -195,7 +195,6 @@
 | look at the top seven cards of your library. you may put one of those cards onto the battlefield if it has the same name as a permanent. put the rest on the bot | 1 | Mitotic Manipulation | mbs |
 | put a -N/-N counter on each attacking creature. | 1 | Choking Fumes | mbs |
 | put a -N/-N counter on target creature. when that creature dies ~, its controller gets a poison counter. | 1 | Virulent Wound | mbs |
-| put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. exile it at the beginning of the next end step. i | 1 | Gruesome Encore | mbs |
 | return all cards from your graveyard to your hand. exile ~. you have no maximum hand size for the rest of the game. | 1 | Praetor's Counsel | mbs |
 | sacrifice ~: put a -N/-N counter on target creature. then if that creature's toughness is N or greater, regenerate it. | 1 | Gore Vassal | mbs |
 | search your library for a card, exile it, then shuffle. any opponent may have you put that card into your hand. if no player does, you draw three cards. | 1 | Distant Memories | mbs |

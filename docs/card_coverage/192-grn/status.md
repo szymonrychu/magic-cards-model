@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 6.4% |
-| Works (untested) | 129 | 55.4% |
+| Works (untested) | 130 | 55.8% |
 | Partial (unaudited) | 5 | 2.1% |
-| Not working | 84 | 36.1% |
+| Not working | 83 | 35.6% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | House Guildmage | silent | {1}{U}, {T}: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invert // Invent | silent | Switch the power and toughness of each of up to two target creatures until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ionize | silent | Counter target spell. Ionize deals 2 damage to that spell's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Join Shields | silent | Untap all creatures you control. They gain hexproof and indestructible until end of turn. (They can't be the targets of spells or abilities your opponents contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Justice Strike | silent | Target creature deals damage to itself equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | League Guildmage | silent | {X}{R}, {T}: Copy target instant or sorcery spell you control with mana value X. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ledev Champion | silent | Whenever this creature attacks, you may tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -177,6 +176,7 @@
 | Intrusive Packbeast | handled | When this creature enters, tap up to two target creatures your opponents control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Izoni, Thousand-Eyed | handled | Undergrowth — When Izoni enters, create a 1/1 black and green Insect creature token for each creature card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Izzet Locket | handled | {U/R}{U/R}{U/R}{U/R}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Join Shields | handled | Untap all creatures you control. They gain hexproof and indestructible until end of turn. (They can't be the targets of spells or abilities your opponents contr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Knight of Autumn | handled | When this creature enters, choose one — • Put two +1/+1 counters on this creature. • Destroy target artifact or enchantment. • You gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kraul Foragers | handled | Undergrowth — When this creature enters, you gain 1 life for each creature card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kraul Raider | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
@@ -309,7 +309,6 @@
 | target creature you control deals damage equal to its power to target player. jump-start (you may cast ~ from your graveyard by discarding a card in addition to | 1 | Gravitic Punch | grn |
 | target opponent may have ~ deal N damage to them. if that player doesn't, you draw three cards. jump-start (you may cast ~ from your graveyard by discarding a c | 1 | Risk Factor | grn |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. | 1 | Never Happened | grn |
-| untap all creatures you control. they gain hexproof and indestructible until end of turn. (they can"..."t destroy them.) | 1 | Join Shields | grn |
 | when ~ enters, each player sacrifices a creature or planeswalker of their choice. each player who can't discards a card. | 1 | Plaguecrafter | grn |
 | when ~ enters, mill three cards. you may put a land card from your graveyard on top of your library. | 1 | Glowspore Shaman | grn |
 | when ~ enters, put a +N/+N counter on each creature that convoked it. | 1 | Venerated Loxodon | grn |

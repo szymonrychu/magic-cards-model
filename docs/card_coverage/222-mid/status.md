@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 12.0% |
-| Works (untested) | 123 | 49.4% |
+| Works (untested) | 124 | 49.8% |
 | Partial (unaudited) | 15 | 6.0% |
-| Not working | 81 | 32.5% |
+| Not working | 80 | 32.1% |
 
 ## Cards needing work
 
@@ -100,7 +100,6 @@
 | Hungry for More | notice | Create a 3/1 black and red Vampire creature token with trample, lifelink, and haste. Sacrifice it at the beginning of the next end step. Flashback {1}{B}{R} (Yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Light Up the Night | notice | Light Up the Night deals X damage to any target. It deals X plus 1 damage instead if that target is a creature or planeswalker. Flashback—{3}{R}, Remove X loyal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Olivia's Midnight Ambush | notice | Target creature gets -2/-2 until end of turn. If it's night, that creature gets -13/-13 until end of turn instead. | unparsed remainder: If it's night, that creature gets -13/-13 until end of turn instead. | Y/Y/- | not_working |
-| Pack's Betrayal | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If you control a Wolf or Werewolf, scry 2. (Look at th | unparsed remainder: Untap that creature. It gains haste until end of turn. If you control a Wolf or Werewolf, scry 2. | Y/Y/- | not_working |
 | Purifying Dragon | notice | Whenever this creature attacks, it deals 1 damage to target creature defending player controls. If that creature is a Zombie, this creature deals 2 damage to it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Stolen Vitality | notice | Target creature gets +3/+1 until end of turn. If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of tu | unparsed remainder: If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of turn. | Y/Y/- | not_working |
 | Unnatural Moonrise | notice | It becomes night. Until end of turn, target creature gets +1/+0 and gains trample and "Whenever this creature deals combat damage to a player, draw a card." Fla | unparsed remainder: It becomes night. | Y/Y/- | not_working |
@@ -205,6 +204,7 @@
 | Ominous Roost | handled | When this enchantment enters and whenever you cast a spell from your graveyard, create a 1/1 blue Bird creature token with flying and "This token can block only | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Organ Hoarder | handled | When this creature enters, look at the top three cards of your library, then put one of them into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Outland Liberator // Frenzied Trapbreaker | handled | {1}, Sacrifice this creature: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pack's Betrayal | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If you control a Wolf or Werewolf, scry 2. (Look at th | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Patrician Geist | handled | Other Spirits you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pestilent Wolf | handled | {2}{G}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phantom Carriage | handled | When this creature enters, you may search your library for a card with flashback or disturb, put it into your graveyard, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -314,7 +314,6 @@
 | destroy target creature or planeswalker. its controller investigates. (they create a clue token. it's an artifact with "...") | 1 | Fateful Absence | mid |
 | enchanted creature has vigilance and "..." | 1 | Cathar's Call | mid |
 | exile target nonlegendary creature, then return it to the battlefield under its owner's control. if it entered under your control, put a +N/+N counter on it. ot | 1 | Hallowed Respite | mid |
-| gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if you control a wolf or werewolf, scry N. (look at th | 1 | Pack's Betrayal | mid |
 | human creatures you control have "..." | 1 | Katilda, Dawnhart Prime | mid |
 | if a spell would deal damage to you or another permanent you control, prevent that damage. | 1 | Rem Karolus, Stalwart Slayer | mid |
 | instant and sorcery spells you cast cost {M} less to cast, where N is vadrik's power. | 1 | Vadrik, Astral Archmage | mid |

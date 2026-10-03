@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 7.5% |
+| Tested | 9 | 8.4% |
 | Works (untested) | 57 | 53.3% |
 | Partial (unaudited) | 2 | 1.9% |
-| Not working | 40 | 37.4% |
+| Not working | 39 | 36.4% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Blood Reckoning | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Cathedral of War | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Chandra's Fury | silent | Chandra's Fury deals 4 damage to target player or planeswalker and 1 damage to each creature that player or that planeswalker's controller controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crippling Blight | silent | Enchanted creature gets -1/-1 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Disciple of Bolas | silent | When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duskmantle Prowler | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -58,10 +57,10 @@
 | Tricks of the Trade | silent | Enchanted creature gets +2/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Void Stalker | silent | {2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arctic Aven | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Chandra's Fury | notice | Chandra's Fury deals 4 damage to target player or planeswalker and 1 damage to each creature that player or that planeswalker's controller controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crimson Muckwader | notice | This creature gets +1/+1 as long as you control a Swamp. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flinthoof Boar | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Harbor Bandit | notice | This creature gets +1/+1 as long as you control an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Jace's Phantasm | notice | This creature gets +4/+4 as long as an opponent has ten or more cards in their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Predatory Rampage | notice | Creatures you control get +3/+3 until end of turn. Each creature your opponents control blocks this turn if able. | unparsed remainder: Each creature your opponents control blocks this turn if able. | Y/-/- | not_working |
 | Prized Elephant | notice | This creature gets +1/+1 as long as you control a Forest. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Timberpack Wolf | notice | This creature gets +1/+1 for each other creature you control named Timberpack Wolf. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -129,11 +128,12 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Augur of Bolas
 - Elderscale Wurm
 - Faith's Reward
+- Jace's Phantasm
 - Mind Sculpt
 - Omniscience
 - Switcheroo
@@ -174,7 +174,6 @@
 | {M}{M}, {M}: put ~ and target creature on top of their owners' libraries, then those players shuffle their libraries. | 1 | Void Stalker | m13 |
 | ~ deals N damage to each creature without flying and each planeswalker. | 1 | Magmaquake | m13 |
 | ~ deals N damage to target player or planeswalker and N damage to each creature that player or that planeswalker's controller controls. | 1 | Chandra's Fury | m13 |
-| ~ gets +N/+N as long as an opponent has ten or more cards in their graveyard. | 1 | Jace's Phantasm | m13 |
 | ~ gets +N/+N as long as you control a forest. | 1 | Prized Elephant | m13 |
 | ~ gets +N/+N as long as you control a mountain. | 1 | Flinthoof Boar | m13 |
 | ~ gets +N/+N as long as you control a plains. | 1 | Arctic Aven | m13 |

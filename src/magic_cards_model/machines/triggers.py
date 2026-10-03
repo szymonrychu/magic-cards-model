@@ -986,6 +986,16 @@ class AbilityOnStack(EngineModel):
     token has ceased to exist (CR 704.5d), which happens before this ability
     resolves; see `CastRecord.additional_cost_mana_values`, its spell twin."""
 
+    cost_sacrificed_powers: tuple[int | None, ...] = ()
+    """`cost_sacrificed_card_ids`' powers, aligned by position and taken by
+    `Game.activate_ability` as this object is created - CR 608.2h's last known
+    information for "the sacrificed creature's power". Pumps, counters and
+    anthems are in it, and it survives a sacrificed token ceasing to exist
+    (CR 704.5d). `None` where the creature's power was not a number."""
+
+    cost_sacrificed_toughnesses: tuple[int | None, ...] = ()
+    """`cost_sacrificed_powers`' toughness twin."""
+
     mana_spent: dict[Color, int] = Field(default_factory=dict)
     """How much mana of each colour paid this ability's own activation cost
     (CR 601.2h, imported for activation by CR 602.2b), taken from `machines/
@@ -1299,7 +1309,7 @@ def _self_reference_type_words() -> frozenset[str]:
 _SELF_REFERENCE_WORD_RE = re.compile(r"\bthis ([a-z]+(?: [a-z]+)?)\b")
 
 
-def _has_self_reference_type_word(condition: str) -> bool:
+def has_self_reference_type_word(condition: str) -> bool:
     """Whether `condition` (already lowercased by the caller) names its own
     source through "this `<type or subtype word>`" (CR 700.7).
 
@@ -1418,7 +1428,7 @@ def _self_referential(condition: str, source_name: str, *, legendary: bool = Tru
     mistaken for this source naming itself.
     """
     lowered = condition.lower()
-    if _has_self_reference_type_word(lowered):
+    if has_self_reference_type_word(lowered):
         return True
     # Case-sensitive, like `self_normalized_effect_text`'s own substitution:
     # Oracle templating always spells a card's own name (and its shortened
@@ -3114,9 +3124,14 @@ def condition_matches(
             # attackers`' own subject-less event, not once per attacker.
             return (
                 event.subject_id is None
-                and bool(batch)
+                and len(batch) >= batched_attack_minimum(condition)
                 and (event.player == controller or not _ONE_OR_MORE_ATTACK_YOURS.search(condition))
             )
+        if batched_attack_minimum(condition) > 1:
+            # "two or more <description> attack" counts the whole
+            # declaration; a description this file cannot read must not
+            # fall through to the one-attacker reading below.
+            return False
         # CR 508.3d: "Whenever [a player] attacks, ..." triggers once when one
         # or more creatures that player controls are declared as attackers -
         # not once per attacker. `Game.declare_attackers` emits that as its
@@ -6419,8 +6434,11 @@ def _entered_or_cast_from_graveyard_holds(
 #: more quest counters on it". "It" is the source itself - the only subject
 #: this shape is printed with in this pool, and CR 603.4's clause is read about
 #: the ability's own source unless it plainly names something else.
+#: The past tense ("it had two or more +1/+1 counters on it", Ochre Jelly's
+#: dies trigger) asks the same question of the object as it last existed on
+#: the battlefield (CR 603.10a), whose counters CR 122.2 has already ended.
 _COUNTER_COUNT_CLAUSE = re.compile(
-    r"^(?:it|this [a-z]+) has "
+    r"^(?:it|this [a-z]+) (?P<tense>has|had) "
     rf"(?:(?P<comparison>fewer than|more than|at least|exactly) (?P<count>{COUNT})"
     rf"|(?P<suffix_count>{COUNT}) or (?P<direction>more|fewer)"
     r"|(?P<none>no))"
@@ -6451,7 +6469,11 @@ def _counter_count_holds(clause: str, source: CardState) -> bool | None:
     match = _COUNTER_COUNT_CLAUSE.match(clause)
     if match is None:
         return None
-    on_it = source.counter_count(match.group("kind"))
+    on_it = (
+        source.last_known_counters[match.group("kind")]
+        if match.group("tense") == "had"
+        else source.counter_count(match.group("kind"))
+    )
     if match.group("none") is not None:
         return on_it == 0
     if match.group("suffix_count") is not None:
@@ -7989,10 +8011,21 @@ def abilities_triggered_by(
 #: or more" is one trigger for the declaration, and how many of the
 #: attackers fit the description is the event's count, which a later "that
 #: many" reads (`machines/effects.that_many`).
+#: Flummoxed Cyclops' "two or more creatures your opponents control attack"
+#: is the same batched declaration with a minimum count: the trigger event
+#: still occurs once (CR 603.2c), and only when at least that many of the
+#: declared attackers fit the description.
 _ONE_OR_MORE_ATTACK_RE = re.compile(
-    r"^one or more (?P<description>.+?) attack(?:\s+(?P<defender>.+))?$", re.IGNORECASE
+    r"^(?P<minimum>one|two|three|four|five) or more (?P<description>.+?) "
+    r"attack(?:\s+(?P<defender>.+))?$",
+    re.IGNORECASE,
 )
 _ONE_OR_MORE_ATTACK_YOURS = re.compile(r"\byou control\b", re.IGNORECASE)
+#: "creatures your opponents control" (Flummoxed Cyclops): attackers under
+#: the control of anyone but the ability's own controller.
+_ONE_OR_MORE_ATTACK_THEIRS = re.compile(
+    r"\s*\b(?:your opponents control|an opponent controls)\b", re.IGNORECASE
+)
 
 #: "one of your opponents[ or a planeswalker they control]" - Frenzied
 #: Gorespawn's own defender phrase and Frontier Warmonger's widened compound
@@ -8049,6 +8082,15 @@ def _batched_attack_match(condition: str) -> "re.Match[str] | None":
     if you_attack is not None:
         text = f"one or more {you_attack.group('description')} you control attack"
     return _ONE_OR_MORE_ATTACK_RE.fullmatch(text)
+
+
+def batched_attack_minimum(condition: str) -> int:
+    """How many fitting attackers a batched attack condition needs: the
+    "`<N>` or more" count (`_ONE_OR_MORE_ATTACK_RE`), 1 for anything else."""
+    match = _batched_attack_match(condition)
+    if match is None:
+        return 1
+    return parse_count(match.group("minimum")) or 1
 
 
 def is_batched_attack_condition(condition: str) -> bool:
@@ -8109,6 +8151,8 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
 
     description = match.group("description")
     yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
+    theirs = _ONE_OR_MORE_ATTACK_THEIRS.search(description) is not None
+    description = _ONE_OR_MORE_ATTACK_THEIRS.sub("", description)
     requirement = permanent_description(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip())
     if requirement is None:
         return None
@@ -8122,6 +8166,7 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
         attacker
         for attacker in game.attacking_creatures()
         if (not yours or game.controller_of(attacker).username == controller)
+        and (not theirs or game.controller_of(attacker).username != controller)
         and requirement.rejects(attacker, controller, game) is None
         and (
             not opponent_only

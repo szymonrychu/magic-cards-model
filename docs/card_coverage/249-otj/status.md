@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 9.7% |
+| Tested | 27 | 10.4% |
 | Works (untested) | 129 | 49.8% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 98 | 37.8% |
+| Not working | 96 | 37.1% |
 
 ## Cards needing work
 
@@ -105,7 +105,6 @@
 | Kellan Joins Up | notice | When Kellan Joins Up enters, you may exile a nonland card with mana value 3 or less from your hand. If you do, it becomes plotted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Map the Frontier | notice | Search your library for up to two basic land cards and/or Desert cards, put them onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Mystical Tether | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Omenport Vigilante | notice | This creature has double strike as long as you've committed a crime this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | One Last Job | notice | Spree (Choose one or more additional costs.) + {2} — Return target creature card from your graveyard to the battlefield. + {1} — Return target Mount or Vehicle  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Quick Draw | notice | Target creature you control gets +1/+1 and gains first strike until end of turn. Creatures target opponent controls lose first strike and double strike until en | unparsed remainder: Creatures target opponent controls lose first strike and double strike until end of turn. | Y/Y/Y | not_working |
 | Return the Favor | notice | Spree (Choose one or more additional costs.) + {1} — Copy target instant spell, sorcery spell, activated ability, or triggered ability. You may choose new targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -115,7 +114,6 @@
 | Satoru, the Infiltrator | notice | Whenever Satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card. | unread intervening "if": "none of them were cast or no mana was spent to cast them" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/Y/Y | not_working |
 | Shepherd of the Clouds | notice | When this creature enters, return target permanent card with mana value 3 or less from your graveyard to your hand. Return that card to the battlefield instead  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shifting Grift | notice | Spree (Choose one or more additional costs.) + {2} — Exchange control of two target creatures. + {1} — Exchange control of two target artifacts. + {1} — Exchang | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Slickshot Vault-Buster | notice | This creature gets +2/+0 as long as you've committed a crime this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Steer Clear | notice | Steer Clear deals 2 damage to target attacking or blocking creature. Steer Clear deals 4 damage to that creature instead if you controlled a Mount as you cast t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Stingerback Terror | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Stoic Sphinx | notice | This creature has hexproof as long as you haven't cast a spell this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -264,7 +262,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>27 cards</summary>
 
 - Armored Armadillo
 - Drover Grizzly
@@ -283,11 +281,13 @@
 - Metamorphic Blast
 - Mine Raider
 - Neutralize the Guards
+- Omenport Vigilante
 - Outcaster Greenblade
 - Prairie Dog
 - Servant of the Stinger
 - Shoot the Sheriff
 - Slickshot Show-Off
+- Slickshot Vault-Buster
 - Smuggler's Surprise
 - Step Between Worlds
 - Three Steps Ahead
@@ -394,9 +394,7 @@
 | ~ deals N damage to target creature. create a number of tapped treasure tokens equal to the amount of excess damage dealt to that creature ~. | 1 | Hell to Pay | otj |
 | ~ enters with a +N/+N counter on it plus an additional +N/+N counter on it for each other creature you control. | 1 | Sheriff of Safe Passage | otj |
 | ~ enters with two +N/+N counters on it if it wasn't cast or no mana was spent to cast it. | 1 | Freestrider Commando | otj |
-| ~ gets +N/+N as long as you've committed a crime ~. | 1 | Slickshot Vault-Buster | otj |
 | ~ gets -N/-N for each card in your hand. | 1 | Stingerback Terror | otj |
-| ~ has double strike as long as you've committed a crime ~. | 1 | Omenport Vigilante | otj |
 | ~ has flash as long as you control a desert. | 1 | Colossal Rattlewurm | otj |
 | ~ has flash as long as you've committed a crime ~. (targeting opponents, anything they control, and/or cards in their graveyards is a crime.) gain control of ta | 1 | Take for a Ride | otj |
 | ~ has haste as long as you control a mount. | 1 | Mobile Homestead | otj |

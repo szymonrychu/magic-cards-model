@@ -1044,6 +1044,7 @@ def token_copy_of(
     colors: Sequence[Color] | None = None,
     creature_types: Sequence[str] | None = None,
     added_card_type: str | None = None,
+    enters_with_counters: Sequence[tuple[str, int]] = (),
     **options: Any,
 ) -> list[TokenState]:
     """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
@@ -1109,6 +1110,11 @@ def token_copy_of(
     the named card type joins the copiable type line (CR 205.1b's "in
     addition to" keeps every other type), so the copy is an artifact even
     though its original is not.
+
+    `enters_with_counters` is the creating effect's own "The token enters
+    with N `<kind>` counters on it" (CR 614.1c) - Ochre Jelly's "half that
+    many +1/+1 counters" - `(kind, amount)` pairs put on each copy's own
+    entering event, not counters added after it arrived.
 
     `colors` and `creature_types` are CR 707.9b's *replacing* exception -
     Croaking Counterpart's "except it's a 1/1 green Frog": the copiable colour
@@ -1254,7 +1260,12 @@ def token_copy_of(
                 copy = TokenState(
                     card=copiable, zone=Zone.STACK, controller=controller, owner=owner
                 )
-                game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
+                game.put_onto_battlefield(
+                    copy,
+                    controller,
+                    tapped=bool(options.get("tapped")),
+                    counters=dict(enters_with_counters) or None,
+                )
                 created.append(copy)
             defender = options.get("attacking")
             if defender is not None:

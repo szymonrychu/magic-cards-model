@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 8.5% |
-| Works (untested) | 34 | 32.1% |
+| Tested | 11 | 10.4% |
+| Works (untested) | 35 | 33.0% |
 | Partial (unaudited) | 6 | 5.7% |
-| Not working | 57 | 53.8% |
+| Not working | 54 | 50.9% |
 
 ## Cards needing work
 
@@ -73,15 +73,12 @@
 | The Aesir Escape Valhalla | silent | I — Exile a permanent card from your graveyard. You gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viewpoint Synchronization | silent | Freerunning {2}{G} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Search you | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Yggdrasil, Rebirth Engine | silent | When Yggdrasil enters, exile all creature cards from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Adrestia | notice | Whenever Adrestia attacks, if an Assassin crewed it this turn, draw a card. Adrestia becomes an Assassin in addition to its other types until end of turn. | unparsed remainder: draw a card. this permanent becomes an Assassin in addition to its other types until end of turn. | Y/-/- | not_working |
 | Altaïr Ibn-La'Ahad | notice | Whenever Altaïr attacks, exile up to one target Assassin creature card from your graveyard with a memory counter on it. Then for each creature card you own in e | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Apple of Eden, Isu Relic | notice | {T}, Pay 4 life, Sacrifice Apple of Eden: Look at target opponent's hand and exile those cards face down. You may play those cards this turn, and mana of any ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Auditore Ambush | notice | Choose one or both — • Return target creature to its owner's hand. • Target player searches their library and/or graveyard for a card named Ezio, Blade of Venge | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Basim Ibn Ishaq | notice | Whenever you cast a historic spell, draw a card. Basim Ibn Ishaq can't be blocked this turn. This ability triggers only once each turn. | unparsed remainder: draw a card. this permanent can't be blocked this turn. | Y/-/- | not_working |
 | Battlefield Improvisation | notice | Target creature gets +2/+2 until end of turn. If that creature is attacking, you may attach any number of Equipment you control to it. | unparsed remainder: If that creature is attacking, you may attach any number of Equipment you control to it. | Y/-/- | not_working |
 | Bleeding Effect | notice | At the beginning of combat on your turn, creatures you control gain flying until end of turn if a creature card in your graveyard has flying. The same is true f | unparsed remainder: The same is true for first strike, double strike, deathtouch, hexproof, indestructible, lifelink, menace, reach, trample, and vigilance. | Y/-/- | not_working |
 | Havi, the All-Father | notice | Havi has indestructible as long as there are four or more historic cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Misthios's Fury | notice | Misthios's Fury deals 3 damage to target creature. If you control an Equipment, Misthios's Fury also deals 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | What Must Be Done | notice | Choose one — • Let the World Burn — Destroy all artifacts and creatures. • Release Juno — Return target historic permanent card from your graveyard to the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Bureau Headmaster | unaudited | Equip abilities you activate cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Crystal Skull, Isu Spyglass | unaudited | You may play historic lands and cast historic spells from the top of your library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -94,6 +91,7 @@
 | Assassin Den | handled | {3}{U}: Put a +1/+1 counter on target creature you control. It can't be blocked this turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Assassin Initiate | handled | {1}: This creature gains your choice of flying, deathtouch, or lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aya of Alexandria | handled | Whenever a historic creature you control deals combat damage to a player, create a 1/1 black Assassin creature token with menace. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Basim Ibn Ishaq | handled | Whenever you cast a historic spell, draw a card. Basim Ibn Ishaq can't be blocked this turn. This ability triggers only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Black Market Connections | handled | At the beginning of your first main phase, choose one or more — • Sell Contraband — Create a Treasure token. You lose 1 life. • Buy Information — Draw a card. Y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brotherhood Headquarters | handled |  |  | Y/-/- | not_tested |
 | Brotherhood Patriarch | handled | When this creature dies, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -127,9 +125,10 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>11 cards</summary>
 
 - Abstergo Entertainment
+- Adrestia
 - Ballad of the Black Flag
 - Eivor, Battle-Ready
 - Evie Frye
@@ -137,6 +136,7 @@
 - Hidden Blade
 - Jacob Frye
 - Labyrinth Adversary
+- Misthios's Fury
 - Smoke Bomb
 
 </details>
@@ -191,9 +191,7 @@
 | whenever altaïr attacks, exile up to one target assassin creature card from your graveyard with a memory counter on it. then for each creature card you own in e | 1 | Altaïr Ibn-La'Ahad | acr |
 | whenever eivor deals combat damage to a player, you mill that many cards. you may put a saga card and/or a land card from among them onto the battlefield. | 1 | Eivor, Wolf-Kissed | acr |
 | whenever equipped creature attacks, tap target creature defending player controls and put a stun counter on it. then mjölnir deals damage to each opponent equal | 1 | Mjölnir, Storm Hammer | acr |
-| whenever you cast a historic spell, draw a card. ~ can't be blocked ~. ~ triggers only once each turn. | 1 | Basim Ibn Ishaq | acr |
 | whenever you discard an island, pirate, or vehicle card, create a tapped treasure token. | 1 | Mary Read and Anne Bonny | acr |
-| whenever ~ attacks, if an assassin crewed it ~, draw a card. ~ becomes an assassin in addition to its other types until end of turn. | 1 | Adrestia | acr |
 | whenever ~ deals combat damage to a player, surveil N, where N is the amount of damage it dealt to that player. | 1 | Desmond Miles | acr |
 | you may play historic lands and cast historic spells from the top of your library. | 1 | Crystal Skull, Isu Spyglass | acr |
 | {M}, pay N life, sacrifice apple of eden: look at target opponent"..."s hand. activate only as a sorcery. | 1 | Apple of Eden, Isu Relic | acr |
@@ -201,7 +199,6 @@
 | {M}: draw a card for each permanent you control but don't own. | 1 | Staff of Eden, Vault's Key | acr |
 | {M}{M}{M}: until end of turn, thopters you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Leonardo da Vinci | acr |
 | ~ costs {M} less to cast, where N is the total mana value of historic permanents you control. | 1 | Excalibur, Sword of Eden | acr |
-| ~ deals N damage to target creature. if you control an equipment, ~ also deals N damage to that creature's controller. | 1 | Misthios's Fury | acr |
 
 ## Notes
 

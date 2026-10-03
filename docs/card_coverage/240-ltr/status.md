@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 9.6% |
+| Tested | 28 | 10.0% |
 | Works (untested) | 133 | 47.3% |
 | Partial (unaudited) | 20 | 7.1% |
-| Not working | 101 | 35.9% |
+| Not working | 100 | 35.6% |
 
 ## Cards needing work
 
@@ -105,7 +105,6 @@
 | Witch-king of Angmar | silent | Whenever one or more creatures deal combat damage to you, each opponent sacrifices a creature of their choice that dealt combat damage to you this turn. The Rin | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Witch-king, Bringer of Ruin | silent | Whenever Witch-king attacks, defending player sacrifices a creature with the least power among creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Éowyn, Lady of Rohan | silent | At the beginning of combat on your turn, target creature gains your choice of first strike or vigilance until end of turn. If that creature is equipped, it gain | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arwen, Mortal Queen | notice | {1}, Remove an indestructible counter from Arwen: Another target creature gains indestructible until end of turn. Put a +1/+1 counter and a lifelink counter on  | unparsed remainder: Put a +1/+1 counter and a lifelink counter on that creature and a +1/+1 counter and a lifelink counter on this permanent. | Y/-/- | not_working |
 | Bill Ferny, Bree Swindler | notice | Whenever Bill Ferny becomes blocked, choose one — • Create a Treasure token. • Target opponent gains control of target Horse you control. If they do, remove Bil | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eastfarthing Farmer | notice | When this creature enters, create a Food token. When you do, target creature you control gets +1/+1 until end of turn for each Food you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Esquire of the King | notice | {4}{W}, {T}: Creatures you control get +1/+1 until end of turn. This ability costs {2} less to activate if you control a legendary creature. | unparsed remainder: This ability costs {2} less to activate if you control a legendary creature. | Y/-/- | not_working |
@@ -284,8 +283,9 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
+- Arwen, Mortal Queen
 - Bill the Pony
 - Butterbur, Bree Innkeeper
 - Claim the Precious
@@ -425,7 +425,6 @@
 | you may cast spells ~ as though they had flash. draw a card. | 1 | Borne Upon a Wind | ltr |
 | you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Pippin's Bravery | ltr |
 | your opponents can't gain life. | 1 | Gríma Wormtongue | ltr |
-| {M}, remove an indestructible counter from arwen: another target creature gains indestructible until end of turn. put a +N/+N counter and a lifelink counter on  | 1 | Arwen, Mortal Queen | ltr |
 | {M}: another target creature you control gains protection from the card type of your choice until end of turn. | 1 | Pippin, Guard of the Citadel | ltr |
 | {M}: move a counter of each kind not on goldberry from another target permanent you control onto goldberry. | 1 | Goldberry, River-Daughter | ltr |
 | {M}{M}, {M}: creatures you control get +N/+N until end of turn. ~ costs {M} less to activate if you control a legendary creature. | 1 | Esquire of the King | ltr |

@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "30c9c0f0-2668-4163-8158-fada2d953cb3",
+  "oracle_id": "2d92a035-dd7a-4426-a8c0-f04e0b836dad",
+  "multiverse_ids": [
+    376308
+  ],
+  "mtgo_id": 51158,
+  "mtgo_foil_id": 51159,
+  "tcgplayer_id": 72094,
+  "cardmarket_id": 264825,
+  "name": "Disciple of Griselbrand",
+  "lang": "en",
+  "released_at": "2013-11-01",
+  "uri": "https://api.scryfall.com/cards/30c9c0f0-2668-4163-8158-fada2d953cb3",
+  "scryfall_uri": "https://scryfall.com/card/c13/74/disciple-of-griselbrand?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:47:56Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.jpg?1783939676",
+    "normal": "https://cards.scryfall.io/normal/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.jpg?1783939676",
+    "large": "https://cards.scryfall.io/large/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.jpg?1783939676",
+    "png": "https://cards.scryfall.io/png/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.png?1783939676",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.jpg?1783939676",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.jpg?1783939676",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.webp?1783939676",
+    "grid": "https://cards.scryfall.io/grid/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.webp?1783939676",
+    "display": "https://cards.scryfall.io/display/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.webp?1783939676",
+    "art": "https://cards.scryfall.io/art/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.webp?1783939676",
+    "crop": "https://cards.scryfall.io/crop/front/3/0/30c9c0f0-2668-4163-8158-fada2d953cb3.webp?1783939676"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Cleric",
+  "oracle_text": "{1}, Sacrifice a creature: You gain life equal to the sacrificed creature's toughness.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "c62e6d4f-af8c-4f27-9bc8-361291890146",
+  "set": "c13",
+  "set_name": "Commander 2013",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/c62e6d4f-af8c-4f27-9bc8-361291890146",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac13&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c13?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/30c9c0f0-2668-4163-8158-fada2d953cb3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2d92a035-dd7a-4426-a8c0-f04e0b836dad&unique=prints",
+  "collector_number": "74",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "The demon Griselbrand dared to stand against Avacyn, earning him the loathing of thousands and the admiration of a few.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Clint Cearley",
+  "artist_ids": [
+    "03b75350-d5a0-4e3a-b3b4-8d4a5554385b"
+  ],
+  "illustration_id": "9796157c-844d-43c3-bd10-2db43fdd7428",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 12328,
+  "penny_rank": 14698,
+  "prices": {
+    "usd": "0.30",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.23",
+    "eur_foil": null,
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=376308&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDisciple%2Bof%2BGriselbrand",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDisciple%2Bof%2BGriselbrand",
+    "edhrec": "https://edhrec.com/route/?cc=Disciple+of+Griselbrand"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F72094%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=264825&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/51158?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

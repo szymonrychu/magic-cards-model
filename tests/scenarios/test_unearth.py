@@ -14,11 +14,12 @@ activation is built from the rule's own wording the same way cycling's is
 it joins `off_zone_abilities`'s single index space (CR 113.6j/113.6m)
 alongside cycling and any printed off-battlefield ability.
 
-**Deliberately not modelled**: CR 702.84a's own replacement clause, "If it
-would leave the battlefield, exile it instead of putting it anywhere else" -
-this engine has no general "redirect this specific object's next zone
-change" replacement yet. What *is* built and tested below is the primary
-half every unearthed permanent actually needs in an ordinary game: it
+CR 702.84a's replacement clause, "If it would leave the battlefield, exile
+it instead of putting it anywhere else", is `machines/replacement.
+exile_instead_of_leaving`'s replacement bound to the unearthed object; its
+own corner cases (destroyed, bounced, sacrificed, the source gone) are in
+`test_returned_creature_exiled_instead_of_leaving.py`, shared with Geth,
+Thane of Contracts and Whip of Erebos. Below is the primary half: it
 returns, it has haste, and it is exiled at the next end step if nothing else
 happened to it first. See `docs/engine-coverage.md`.
 

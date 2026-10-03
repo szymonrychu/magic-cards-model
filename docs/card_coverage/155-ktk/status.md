@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 6.2% |
-| Works (untested) | 160 | 71.1% |
+| Tested | 15 | 6.7% |
+| Works (untested) | 159 | 70.7% |
 | Partial (unaudited) | 9 | 4.0% |
 | Not working | 42 | 18.7% |
 
@@ -139,7 +139,6 @@
 | Jeskai Windscout | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Jungle Hollow | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kheru Bloodsucker | handled | Whenever a creature you control with toughness 4 or greater dies, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Kheru Dreadmaw | handled | {1}{G}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kill Shot | handled | Destroy target attacking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kin-Tree Invocation | handled | Create an X/X black and green Spirit Warrior creature token, where X is the greatest toughness among creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kin-Tree Warden | handled | {2}: Regenerate this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -241,7 +240,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
@@ -251,6 +250,7 @@
 - Hardened Scales
 - Hooting Mandrills
 - Jeering Instigator
+- Kheru Dreadmaw
 - Kheru Spellsnatcher
 - Monastery Swiftspear
 - Necropolis Fiend

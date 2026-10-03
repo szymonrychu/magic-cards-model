@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 12.8% |
+| Tested | 34 | 13.2% |
 | Works (untested) | 123 | 47.7% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 95 | 36.8% |
+| Not working | 94 | 36.4% |
 
 ## Cards needing work
 
@@ -104,7 +104,6 @@
 | Wax-Wane Witness | silent | Whenever you gain or lose life during your turn, this creature gets +1/+0 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Whiskervale Forerunner | silent | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, look at the top five cards of your library.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wick, the Whorled Mind | silent | Whenever Wick or another Rat you control enters, create a 1/1 black Snail creature token if you don't control a Snail. Otherwise, put a +1/+1 counter on a Snail | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Blooming Blast | notice | Gift a Treasure (You may promise an opponent a gift as you cast this spell. If you do, they create a Treasure token before its other effects. It's an artifact w | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dragonhawk, Fate's Tempest | notice | Whenever Dragonhawk enters or attacks, exile the top X cards of your library, where X is the number of creatures you control with power 4 or greater. You may pl | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Early Winter | notice | Choose one — • Exile target creature. • Target opponent exiles an enchantment they control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fireglass Mentor | notice | At the beginning of your second main phase, if an opponent lost life this turn, exile the top two cards of your library. Choose one of them. Until end of turn,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -255,11 +254,12 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
 - Beza, the Bounding Spring
+- Blooming Blast
 - Brambleguard Captain
 - Cache Grab
 - Caretaker's Talent
@@ -333,7 +333,6 @@
 | gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) as | 1 | Sazacap's Brew | blb |
 | gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) ch | 1 | Longstalk Brawl | blb |
 | gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) ex | 1 | Parting Gust | blb |
-| gift a treasure (you may promise an opponent a gift as you cast ~. if you do, they create a treasure token before its other effects. it"..."s controller. | 1 | Blooming Blast | blb |
 | if a lizard, mouse, otter, or raccoon you control would deal damage to a permanent or player, it deals that much damage plus N instead. | 1 | Valley Flamecaller | blb |
 | look at twice N cards from the top of your library. put N cards from among them into your hand and the rest into your graveyard. you lose N life. | 1 | Stargaze | blb |
 | other creatures you control enter with an additional +N/+N counter on them for each opponent who lost life ~. | 1 | Gev, Scaled Scorch | blb |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 7.8% |
+| Tested | 21 | 8.2% |
 | Works (untested) | 117 | 45.5% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 103 | 40.1% |
+| Not working | 102 | 39.7% |
 
 ## Cards needing work
 
@@ -116,7 +116,6 @@
 | Iymrith, Desert Doom | notice | Iymrith has ward {4} as long as it's untapped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lair of the Hydra | notice | {X}{G}: Until end of turn, this land becomes an X/X green Hydra creature. It's still a land. X can't be 0. | unparsed remainder: 0 can't be 0. | Y/Y/- | not_working |
 | Nadaar, Selfless Paladin | notice | Other creatures you control get +1/+1 as long as you've completed a dungeon. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ochre Jelly | notice | Split — When this creature dies, if it had two or more +1/+1 counters on it, create a token that's a copy of it at the beginning of the next end step. The token | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Orcus, Prince of Undeath | notice | When Orcus enters, choose one — • Each other creature gets -X/-X until end of turn. You lose X life. • Return up to X target creature cards with total mana valu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Paladin Class | notice | Spells your opponents cast during your turn cost {1} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Price of Loyalty | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If mana from a Treasure was spent to cast this spell,  | unparsed remainder: Untap that creature. It gains haste until end of turn. If mana from a Treasure was spent to cast this spell, that creature gets +2/+0 until end of turn. | Y/Y/- | not_working |
@@ -267,7 +266,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Bar the Gate
 - Boots of Speed
@@ -282,6 +281,7 @@
 - Hive of the Eye Tyrant
 - Minsc, Beloved Ranger
 - Mordenkainen's Polymorph
+- Ochre Jelly
 - Orb of Dragonkind
 - Tasha's Hideous Laughter
 - Thieves' Tools
@@ -316,7 +316,6 @@
 | Search the Room | 1 | Arcane Investigator | afr |
 | Siege Monster | 1 | Earth-Cult Elemental | afr |
 | Sneak Attack | 1 | Lightfoot Rogue | afr |
-| Split | 1 | Ochre Jelly | afr |
 | Teleport | 1 | Blink Dog | afr |
 | Tie Up | 1 | Fifty Feet of Rope | afr |
 | Tragic Backstory | 1 | Grim Wanderer | afr |

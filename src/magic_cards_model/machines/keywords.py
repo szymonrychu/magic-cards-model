@@ -183,6 +183,9 @@ def executes(keyword: str) -> bool:
         # CR 702.118b: an evasion restriction `machines/combat.block_refusal`
         # enforces.
         "skulk",
+        # CR 702.13b: an evasion restriction `machines/combat.block_refusal`
+        # enforces.
+        "intimidate",
         # CR 702.101a: `_extort_ability` (`_TRIGGER_EXPANSIONS`).
         "extort",
         # CR 702.191a: `_increment_ability` (`_TRIGGER_EXPANSIONS`); its
@@ -2306,15 +2309,6 @@ def unearth_activation(
     every other delayed-creating ability in this engine happens inside the
     effect, not the activation (`_parse_delayed_reanimate_haste_exile_
     clauses`, `machines/casting.exile_warped`).
-
-    **Deliberately narrower than CR 702.84a's own second sentence.** "If it
-    would leave the battlefield, exile it instead of putting it anywhere
-    else" is a replacement effect scoped to this one permanent for as long
-    as it is out there, independent of and in addition to the delayed
-    end-step exile - this engine has no general "redirect any zone change of
-    this object" replacement to hang that on yet, and building one is out of
-    scope for a cost/casting-keywords wave. Recorded in
-    `docs/engine-coverage.md`'s Not-modelled table rather than built halfway.
     """
     printed = unearth_abilities(card.card)
     if index >= len(printed):
@@ -2362,7 +2356,13 @@ def _unearth_effect(activation: KeywordActivation) -> CardState | None:
     `only_this_incarnation`-scoped `ContinuousEffect` (CR 611.2a's default
     duration, since nothing states one), and the delayed exile through
     `anaphoric_delayed_trigger`/`Game.create_delayed_trigger` (CR 603.7a).
+
+    The last sentence, "If it would leave the battlefield, exile it instead
+    of putting it anywhere else", is `replacement.exile_instead_of_leaving`'s
+    stored replacement bound to this one object (CR 614.1a).
     """
+    from .replacement import exile_instead_of_leaving  # replacement imports this module's siblings
+
     game = activation.game
     card = activation.card
     if game is None or card.zone is not Zone.GRAVEYARD:
@@ -2381,6 +2381,14 @@ def _unearth_effect(activation: KeywordActivation) -> CardState | None:
                 selector=only_this_incarnation(entered, entered.zone_change_stamp),
                 modification=grant_ability("Haste"),
             )
+        )
+        # CR 702.84a's last replacement sentence: bound to this object only.
+        exile_instead_of_leaving(
+            game,
+            entered,
+            controller=activation.player,
+            source_id=entered.id,
+            source_name=entered.name,
         )
         trigger = anaphoric_delayed_trigger(
             "Exile it at the beginning of the next end step.",

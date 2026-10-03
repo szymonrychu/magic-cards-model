@@ -826,8 +826,11 @@ class CardState(EngineModel):
     """The name of the face this permanent entered as, when it was played as
     the land face of a modal double-faced card (CR 712.12).
 
-    Set only by `Game.play_land`, and only when it chose the back face -
-    Witch-Blessed Meadow rather than Witch Enchanter. CR 712.8f: "While a
+    Set by `Game.play_land` when it chose the back face - Witch-Blessed
+    Meadow rather than Witch Enchanter - and by `move_to` when a modal spell
+    cast as its nonland back face (CR 712.11b) resolves onto the battlefield
+    with that face up (CR 712.13): The Prismatic Bridge rather than Esika.
+    Cleared by `move_to` on any move off the battlefield (CR 712.8a). CR 712.8f: "While a
     modal double-faced ... permanent is on the battlefield, it has only the
     characteristics of the face that's up," so `types`, `subtypes`,
     `oracle_text`, `mana_cost` and `name` below read this face instead of the
@@ -1303,6 +1306,19 @@ class CardState(EngineModel):
     sacrificed Clone's "sacrificed creature's mana value" is 0, not the 4 its
     own card prints. `None` when the card's own `mana_value` already is the
     answer, taken with `last_known_power`."""
+
+    last_known_copiable: Card | None = None
+    """This object's copiable values (CR 707.2) the last time it left the
+    battlefield, when a copy effect made them differ from its own card - a
+    Clone that entered as a copy of Ochre Jelly *was* Ochre Jelly there, so
+    Split's "create a token that's a copy of it" (CR 603.10a's look-back,
+    CR 608.2h) copies Ochre Jelly, not the Clone card in the graveyard.
+    Stamped by `Game._note_left_battlefield` (the layer engine is gone by
+    `move_to`) on every departure from the battlefield, and kept across later
+    moves exactly as `last_known_counters` is, so a dies trigger still on the
+    stack reads the same answer after the card was exiled from the graveyard
+    in response. Only a look-back reads it; a card in a graveyard copied as
+    a card is its own printing. `None` when the card is the answer."""
 
     last_known_colors: tuple[Color, ...] | None = None
     """The colours this object had the last time it left the battlefield
@@ -2664,7 +2680,9 @@ class CardState(EngineModel):
         faces = self.card.card_faces or []
         if len(faces) < 2:
             return None
-        return faces[0] if self.transformed else faces[1]
+        # A modal permanent that entered with its back face up (CR 712.12,
+        # CR 712.13) turns over onto its front.
+        return faces[0] if self.transformed or self.land_face_played else faces[1]
 
     def transform(self, *, day_night: bool = False) -> None:
         """Turn this permanent over so its other face is up (CR 701.27a).
@@ -2707,7 +2725,10 @@ class CardState(EngineModel):
         target_types = types_of(target.type_line or "")
         if Type.INSTANT in target_types or Type.SORCERY in target_types:
             return  # CR 701.27d, CR 712.10
-        self.transformed = not self.transformed
+        if self.land_face_played is not None:
+            self.land_face_played = None
+        else:
+            self.transformed = not self.transformed
         self.times_transformed += 1
 
     def turn_face_up(self) -> None:
@@ -3010,11 +3031,24 @@ class CardState(EngineModel):
             # It has only just arrived, so it has not been here since the turn
             # began (CR 302.6).
             self.summoning_sick = True
+            if (
+                origin is Zone.STACK
+                and self.card.layout is Layout.MODAL_DFC
+                and self.face_played is not None
+            ):
+                # CR 712.13: "a resolving double-faced spell that becomes a
+                # permanent is put onto the battlefield with the same face up
+                # that was face up on the stack" - a modal back face cast
+                # under CR 712.11b stays up, read through `land_face_played`.
+                self.land_face_played = self.face_played
             if place_intrinsic_counters:
                 self._enter_with_intrinsic_counters()
         else:
             self.tapped = False
             self.transformed = False
+            # CR 712.8a: off the battlefield and stack a double-faced card
+            # has only its front face's characteristics again.
+            self.land_face_played = None
             self.damage = 0
             if not (zone is Zone.STACK and self.face_down_characteristics is not None):
                 # CR 708.9: a face-down object leaving the stack or the

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 7.5% |
-| Works (untested) | 86 | 53.8% |
-| Partial (unaudited) | 9 | 5.6% |
-| Not working | 53 | 33.1% |
+| Tested | 13 | 8.1% |
+| Works (untested) | 88 | 55.0% |
+| Partial (unaudited) | 8 | 5.0% |
+| Not working | 51 | 31.9% |
 
 ## Cards needing work
 
@@ -65,7 +65,6 @@
 | Thassa's Rebuff | silent | Counter target spell unless its controller pays {X}, where X is your devotion to blue. (Each {U} in the mana costs of permanents you control counts toward your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thunderous Might | silent | Whenever enchanted creature attacks, it gets +X/+0 until end of turn, where X is your devotion to red. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vortex Elemental | silent | {U}: Put this creature and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Warchanter of Mogis | silent | Inspired — Whenever this creature becomes untapped, target creature you control gains intimidate until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whelming Wave | silent | Return all creatures to their owners' hands except for Krakens, Leviathans, Octopuses, and Serpents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whims of the Fates | silent | Starting with you, each player separates all permanents they control into three piles. Then each player chooses one of their piles at random and sacrifices thos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aspect of Hydra | notice | Target creature gets +X/+X until end of turn, where X is your devotion to green. (Each {G} in the mana costs of permanents you control counts toward your devoti | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -74,7 +73,6 @@
 | Eye Gouge | notice | Target creature gets -1/-1 until end of turn. If it's a Cyclops, destroy it. | unparsed remainder: If it's a Cyclops, destroy it. | Y/Y/- | not_working |
 | Fated Return | notice | Put target creature card from a graveyard onto the battlefield under your control. It gains indestructible. If it's your turn, scry 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Felhide Spiritbinder | notice | Inspired — Whenever this creature becomes untapped, you may pay {1}{R}. If you do, create a token that's a copy of another target creature, except it's an encha | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Forgestoker Dragon | notice | {1}{R}: This creature deals 1 damage to target creature. That creature can't block this combat. Activate only if this creature is attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ragemonger | notice | Minotaur spells you cast cost {B}{R} less to cast. This effect reduces only the amount of colored mana you pay. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Retraction Helix | notice | Until end of turn, target creature gains "{T}: Return target nonland permanent to its owner's hand." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Satyr Firedancer | notice | Whenever an instant or sorcery spell you control deals damage to an opponent, this creature deals that much damage to target creature that player controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -82,7 +80,6 @@
 | Archetype of Endurance | unaudited | Creatures your opponents control lose hexproof and can't have or gain hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Courser of Kruphix | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Floodtide Serpent | unaudited | This creature can't attack unless you return an enchantment you control to its owner's hand. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Grisly Transformation | unaudited | Enchanted creature has intimidate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kraken of the Straits | unaudited | Creatures with power less than the number of Islands you control can't block this creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Loyal Pegasus | unaudited | This creature can't attack or block alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Noble Quarry | unaudited | All creatures able to block this creature or enchanted creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -122,6 +119,7 @@
 | Graverobber Spider | handled | {3}{B}: This creature gets +X/+X until end of turn, where X is the number of creature cards in your graveyard. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Great Hart | handled |  |  | Y/Y/- | not_tested |
 | Griffin Dreamfinder | handled | When this creature enters, return target enchantment card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Grisly Transformation | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herald of Torment | handled | At the beginning of your upkeep, you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hero of Iroas | handled | Aura spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hold at Bay | handled | Prevent the next 7 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -173,17 +171,19 @@
 | Thunder Brute | handled | When this creature enters, if tribute wasn't paid, it gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unravel the Aether | handled | Choose target artifact or enchantment. Its owner shuffles it into their library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vanguard of Brimaz | handled | Heroic — Whenever you cast a spell that targets this creature, create a 1/1 white Cat Soldier creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Warchanter of Mogis | handled | Inspired — Whenever this creature becomes untapped, target creature you control gains intimidate until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weight of the Underworld | handled | Enchanted creature gets -3/-2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Deepwater Hypnotist
 - Ephara, God of the Polis
 - Fate Unraveler
 - Felhide Brawler
+- Forgestoker Dragon
 - Heroes' Podium
 - Kiora's Follower
 - Ornitharch
@@ -199,7 +199,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Inspired | 10 | Aerie Worshippers, Arbiter of the Ideal, Felhide Spiritbinder, Forlorn Pseudamma, God-Favored General | bng |
+| Inspired | 9 | Aerie Worshippers, Arbiter of the Ideal, Felhide Spiritbinder, Forlorn Pseudamma, God-Favored General | bng |
 | Heroic | 1 | Hero of Leina Tower | bng |
 | +N: until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | 1 | Kiora, the Crashing Wave | bng |
 | all creatures able to block ~ or enchanted creature do so. | 1 | Noble Quarry | bng |
@@ -216,7 +216,6 @@
 | destroy all creatures and planeswalkers. if it's your turn, scry N. | 1 | Fated Retribution | bng |
 | enchanted creature can block only creatures with flying. | 1 | Stratus Walk | bng |
 | enchanted creature gets +N/+N and can't be blocked. | 1 | Flitterstep Eidolon | bng |
-| enchanted creature has intimidate. | 1 | Grisly Transformation | bng |
 | exile target creature. create a gold token. (it's an artifact with "...") | 1 | Gild | bng |
 | minotaur spells you cast cost {M}{M} less to cast. ~ reduces only the amount of colored mana you pay. | 1 | Ragemonger | bng |
 | play with the top card of your library revealed. | 1 | Courser of Kruphix | bng |
@@ -245,7 +244,6 @@
 | {M}: choose a color. add one mana of that color for each charge counter on ~. | 1 | Astral Cornucopia | bng |
 | {M}: put ~ and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | 1 | Vortex Elemental | bng |
 | {M}: ~ gets +N/+N until end of turn. if it's an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Everflame Eidolon | bng |
-| {M}{M}: ~ deals N damage to target creature. that creature can't block ~. activate only if ~ is attacking. | 1 | Forgestoker Dragon | bng |
 | ~ and enchanted creature each get +N/+N for each creature you control and +N/+N for each aura you control. | 1 | Eidolon of Countless Battles | bng |
 | ~ can"..."s hand. | 1 | Floodtide Serpent | bng |
 | ~ can't attack or block alone. | 1 | Loyal Pegasus | bng |

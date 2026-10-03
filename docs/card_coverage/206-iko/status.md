@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 7.5% |
-| Works (untested) | 95 | 41.7% |
+| Tested | 18 | 7.9% |
+| Works (untested) | 97 | 42.5% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 94 | 41.2% |
+| Not working | 91 | 39.9% |
 
 ## Cards needing work
 
@@ -94,7 +94,6 @@
 | The Ozolith | silent | Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thwart the Enemy | silent | Prevent all damage that would be dealt this turn by creatures your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trumpeting Gnarr | silent | Whenever this creature mutates, create a 3/3 green Beast creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Unexpected Fangs | silent | Put a +1/+1 counter and a lifelink counter on target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vadrok, Apex of Thunder | silent | Whenever this creature mutates, you may cast target noncreature card with mana value 3 or less from your graveyard without paying its mana cost. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Vivien, Monsters' Advocate | silent | +1: Create a 3/3 green Beast creature token. Put your choice of a reach counter, a vigilance counter, or a trample counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vulpikeet | silent | Whenever this creature mutates, put a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -105,7 +104,6 @@
 | Zagoth Mamba | silent | Whenever this creature mutates, target creature an opponent controls gets -2/-2 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Zenith Flare | silent | Zenith Flare deals X damage to any target and you gain X life, where X is the number of cards with a cycling ability in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Back for More | notice | Return target creature card from your graveyard to the battlefield. When you do, it fights up to one target creature you don't control. (Each deals damage equal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Blitz of the Thunder-Raptor | notice | Blitz of the Thunder-Raptor deals damage to target creature or planeswalker equal to the number of instant and sorcery cards in your graveyard. If that creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bushmeat Poacher | notice | {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Call of the Death-Dweller | notice | Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire Tactics | notice | Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -119,7 +117,6 @@
 | Rooting Moloch | notice | When this creature enters, exile target card with a cycling ability from your graveyard. Until the end of your next turn, you may play that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spelleater Wolverine | notice | This creature has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Will of the All-Hunter | notice | Target creature gets +2/+2 until end of turn. If it's blocking, instead put two +1/+1 counters on it. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: If it's blocking, instead put two +1/+1 counters on it. | Y/Y/- | not_working |
-| Yorion, Sky Nomad | notice | When Yorion enters, exile any number of other nonland permanents you own and control. Return those cards to the battlefield at the beginning of the next end ste | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Boot Nipper | unaudited | This creature enters with your choice of a deathtouch counter or a lifelink counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Cunning Nightbonder | unaudited | Spells with flash you cast cost {1} less to cast and can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Drannith Magistrate | unaudited | Your opponents can't cast spells from anywhere other than their hands. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -149,6 +146,7 @@
 | Barrier Breach | handled | Exile up to three target enchantments. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bastion of Remembrance | handled | When this enchantment enters, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blisterspit Gremlin | handled | {1}, {T}: This creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Blitz of the Thunder-Raptor | handled | Blitz of the Thunder-Raptor deals damage to target creature or planeswalker equal to the number of instant and sorcery cards in your graveyard. If that creature | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bonders' Enclave | handled | {3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boon of the Wish-Giver | handled | Draw four cards. Cycling {1} ({1}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Channeled Force | handled | As an additional cost to cast this spell, discard X cards. Target player draws X cards. Channeled Force deals X damage to up to one target creature or planeswal | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -229,6 +227,7 @@
 | Thieving Otter | handled | Whenever this creature deals damage to an opponent, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Titanoth Rex | handled | When you cycle this card, put a trample counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Titans' Nest | handled | At the beginning of your upkeep, surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Unexpected Fangs | handled | Put a +1/+1 counter and a lifelink counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valiant Rescuer | handled | Whenever you cycle another card for the first time each turn, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Void Beckoner | handled | When you cycle this card, put a deathtouch counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Voracious Greatshark | handled | When this creature enters, counter target artifact or creature spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -241,7 +240,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Blade Banish
 - Blitz Leech
@@ -260,6 +259,7 @@
 - Startling Development
 - Swallow Whole
 - Unbreakable Bond
+- Yorion, Sky Nomad
 
 </details>
 
@@ -301,7 +301,6 @@
 | look at the top five cards of your library. put any number of permanent cards from among them onto the battlefield and the rest into your hand. exile ~. | 1 | Genesis Ultimatum | iko |
 | once during each of your turns, you may cast a permanent spell with mana value N or less from your graveyard. | 1 | Lurrus of the Dream-Den | iko |
 | prevent all damage that would be dealt ~ by creatures your opponents control. | 1 | Thwart the Enemy | iko |
-| put a +N/+N counter and a lifelink counter on target creature. | 1 | Unexpected Fangs | iko |
 | return any number of permanent cards with different names from your graveyard to the battlefield. | 1 | Eerie Ultimatum | iko |
 | return target creature card from your graveyard to the battlefield. when you do, it fights up to one target creature you don't control. (each deals damage equal | 1 | Back for More | iko |
 | return up to two target creature cards with total mana value N or less from your graveyard to the battlefield. put a deathtouch counter on either of them. then  | 1 | Call of the Death-Dweller | iko |
@@ -312,7 +311,6 @@
 | target creature gets +N/+N until end of turn. up to one other target creature blocks it ~ if able. cycling {M} ({M}, discard ~: draw a card.) | 1 | Monstrous Step | iko |
 | target creature you control deals damage equal to its power to target creature you don"..."s controller instead. | 1 | Ram Through | iko |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. cycling {M} ({M}, discard ~: draw a card.) | 1 | Memory Leak | iko |
-| when yorion enters, exile any number of other nonland permanents you own and control. return those cards to the battlefield at the beginning of the next end ste | 1 | Yorion, Sky Nomad | iko |
 | when you cycle ~, put a first strike counter on target creature you control. | 1 | Sanctuary Smasher | iko |
 | when you cycle ~, shuffle it into your library from your graveyard. if you've cycled a card named ~ four or more times ~, put it onto the battlefield from your  | 1 | Yidaro, Wandering Monster | iko |
 | when ~ enters, exile target card with a cycling ability from your graveyard. until the end of your next turn, you may play that card. | 1 | Rooting Moloch | iko |
@@ -367,7 +365,6 @@
 | ~ deals N damage divided as you choose among any number of target creatures and/or planeswalkers. if {M}{M} was spent to cast ~, until your next turn, those per | 1 | Mythos of Vadrok | iko |
 | ~ deals N damage to any target and you gain N life, where N is the number of cards with a cycling ability in your graveyard. | 1 | Zenith Flare | iko |
 | ~ deals N damage to target creature. excess damage is dealt to that creature's controller instead. | 1 | Flame Spill | iko |
-| ~ deals damage to target creature or planeswalker equal to the number of instant and sorcery cards in your graveyard. if that creature or planeswalker would die | 1 | Blitz of the Thunder-Raptor | iko |
 | ~ enters with your choice of a deathtouch counter or a lifelink counter on it. | 1 | Boot Nipper | iko |
 | ~ enters with your choice of a flying counter or a first strike counter on it. | 1 | Helica Glider | iko |
 | ~ enters with your choice of a flying counter or a hexproof counter on it. | 1 | Wingfold Pteron | iko |

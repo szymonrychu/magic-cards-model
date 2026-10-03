@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 8.4% |
+| Tested | 13 | 9.1% |
 | Works (untested) | 71 | 49.7% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 55 | 38.5% |
+| Not working | 54 | 37.8% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Awe for the Guilds | silent | Monocolored creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battering Krasis | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Blast of Genius | silent | Choose any target. Draw three cards, then discard a card. Blast of Genius deals damage equal to the discarded card's mana value to that permanent or player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blood Baron of Vizkopa | silent | As long as you have 30 or more life and an opponent has 10 or less life, this creature gets +6/+6 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boros Battleshaper | silent | At the beginning of each combat, up to one target creature attacks or blocks this combat if able and up to one target creature can't attack or block this combat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Breaking // Entering | silent | Put a creature card from a graveyard onto the battlefield under your control. It gains haste until end of turn. Fuse (You may cast one or both halves of this ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Carnage Gladiator | silent | Whenever a creature blocks, that creature's controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -161,10 +160,11 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Aetherling
 - Beck // Call
+- Blood Baron of Vizkopa
 - Gleam of Battle
 - Korozda Gorgon
 - Master of Cruelties
@@ -184,7 +184,6 @@
 |---|---|---|---|
 | unleash | 2 | Exava, Rakdos Blood Witch, Rakdos Drake | dgm |
 | all creatures able to block target creature ~ do so. fuse (you may cast one or both halves of ~ from your hand.) | 1 | Armed // Dangerous | dgm |
-| as long as you have N or more life and an opponent has N or less life, ~ gets +N/+N and has flying. | 1 | Blood Baron of Vizkopa | dgm |
 | as ~ enters, choose a noncreature, nonland card name. | 1 | Council of the Absolute | dgm |
 | at the beginning of each combat, up to one target creature attacks or blocks ~ if able and up to one target creature can't attack or block ~. | 1 | Boros Battleshaper | dgm |
 | at the beginning of your upkeep, choose a card at random in your graveyard. if it's a creature card, put it onto the battlefield. otherwise, put it into your ha | 1 | Deadbridge Chant | dgm |

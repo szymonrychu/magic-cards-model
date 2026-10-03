@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 8.5% |
-| Works (untested) | 130 | 61.6% |
+| Tested | 19 | 9.0% |
+| Works (untested) | 132 | 62.6% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 55 | 26.1% |
+| Not working | 52 | 24.6% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Artisan of Forms | silent | Heroic — Whenever you cast a spell that targets this creature, you may have this creature become a copy of target creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok, Nightmare Weaver | silent | −X: Put a creature card with mana value X exiled with Ashiok onto the battlefield under your control. That creature is a Nightmare in addition to its other type | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bident of Thassa | silent | {1}{U}, {T}: Creatures your opponents control attack this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cavern Lampad | silent | Enchanted creature gets +2/+2 and has intimidate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coastline Chimera | silent | {1}{W}: This creature can block an additional creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Colossus of Akros | silent | As long as this creature is monstrous, it has trample and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Curse of the Swine | silent | Exile X target creatures. For each creature exiled this way, its controller creates a 2/2 green Boar creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -77,10 +76,8 @@
 | Gift of Immortality | notice | When enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gods Willing | notice | Target creature you control gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt damage, enchanted, or equipp | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hunt the Hunter | notice | Target green creature you control gets +2/+2 until end of turn. It fights target green creature an opponent controls. | unparsed remainder: It fights target green creature an opponent controls. | Y/Y/- | not_working |
-| Portent of Betrayal | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Scry 1. (Look at the top card of your library. You may | unparsed remainder: Untap that creature. It gains haste until end of turn. Scry 1. | Y/Y/- | not_working |
 | Rage of Purphoros | notice | Rage of Purphoros deals 4 damage to target creature. It can't be regenerated this turn. Scry 1. (Look at the top card of your library. You may put that card on  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rescue from the Underworld | notice | As an additional cost to cast this spell, sacrifice a creature. Choose target creature card in your graveyard. Return that card and the sacrificed card to the b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Whip of Erebos | notice | {2}{B}{B}, {T}: Return target creature card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step. If it would  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos, God of the Dead | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Medomai the Ageless | unaudited | Medomai can't attack during extra turns. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nighthowler | unaudited | This creature and enchanted creature each get +X/+X, where X is the number of creature cards in all graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -110,6 +107,7 @@
 | Breaching Hippocamp | handled | When this creature enters, untap another target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bronze Sable | handled |  |  | Y/Y/- | not_tested |
 | Burnished Hart | handled | {3}, Sacrifice this creature: Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Cavern Lampad | handled | Enchanted creature gets +2/+2 and has intimidate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Celestial Archon | handled | Enchanted creature gets +4/+4 and has flying and first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Centaur Battlemaster | handled | Heroic — Whenever you cast a spell that targets this creature, put three +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chained to the Rocks | handled | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -168,6 +166,7 @@
 | Pharika's Cure | handled | Pharika's Cure deals 2 damage to target creature and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pharika's Mender | handled | When this creature enters, you may return target creature or enchantment card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pheres-Band Centaurs | handled |  |  | Y/Y/- | not_tested |
+| Portent of Betrayal | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Scry 1. (Look at the top card of your library. You may | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prescient Chimera | handled | Whenever you cast an instant or sorcery spell, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Priest of Iroas | handled | {3}{W}, Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prognostic Sphinx | handled | Discard a card: This creature gains hexproof until end of turn. Tap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -223,7 +222,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
@@ -243,6 +242,7 @@
 - Reverent Hunter
 - Swan Song
 - Warriors' Lesson
+- Whip of Erebos
 
 </details>
 
@@ -258,12 +258,10 @@
 | choose target creature an opponent controls. when that creature dies ~, you gain N life. target creature you control fights that creature. (each deals damage eq | 1 | Time to Feed | ths |
 | discard a creature card: ~ gets +N/+N until end of turn. if ~ is an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Erebos's Emissary | ths |
 | each human creature you control has "..." | 1 | Titan of Eternal Fire | ths |
-| enchanted creature gets +N/+N and has intimidate. | 1 | Cavern Lampad | ths |
 | enchanted creature gets -N/-N, and its activated abilities can't be activated. | 1 | Viper's Kiss | ths |
 | enchanted land is every basic land type in addition to its other types. | 1 | Nylea's Presence | ths |
 | equipped creature can't be blocked except by walls. | 1 | Prowler's Helm | ths |
 | exile N target creatures. for each creature exiled ~, its controller creates a N/N green boar creature token. | 1 | Curse of the Swine | ths |
-| gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. scry N. (look at the top card of your library. you may | 1 | Portent of Betrayal | ths |
 | medomai can't attack during extra turns. | 1 | Medomai the Ageless | ths |
 | minotaur creatures you control have haste. | 1 | Kragma Warcaller | ths |
 | other minotaur creatures you control get +N/+N and have trample. | 1 | Rageblood Shaman | ths |
@@ -302,7 +300,6 @@
 | {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Returned Phalanx | ths |
 | {M}{M}: ~ can block an additional creature ~. | 1 | Coastline Chimera | ths |
 | {M}{M}: ~ must be blocked ~ if able. | 1 | Loathsome Catoblepas | ths |
-| {M}{M}{M}, {M}: return target creature card from your graveyard to the battlefield. it gains haste. exile it at the beginning of the next end step. if it would  | 1 | Whip of Erebos | ths |
 | {M}{M}{M}: create a N/N white cleric enchantment creature token. | 1 | Heliod, God of the Sun | ths |
 | {M}{M}{M}: monstrosity N. ~ costs {M} less to activate for each creature card in your graveyard. | 1 | Nemesis of Mortals | ths |
 | ~ and enchanted creature each get +N/+N, where N is the number of creature cards in all graveyards. | 1 | Nighthowler | ths |

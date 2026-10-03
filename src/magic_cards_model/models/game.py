@@ -345,7 +345,14 @@ from .card_state import (
 )
 from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect, SymbolKind
 from .player import Player, PlayerTargetingGrant
-from .token import TokenDefinition, TokenState, is_token, move_refused, tokens_that_cease_to_exist
+from .token import (
+    TokenDefinition,
+    TokenState,
+    copiable_card_of,
+    is_token,
+    move_refused,
+    tokens_that_cease_to_exist,
+)
 from .zone import Zone
 
 #: Anything a spell can point at and then affect (CR 115.1).
@@ -532,6 +539,19 @@ _COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE = re.compile(
 _COSTS_LESS_IF_TARGETS_SPELL_RE = re.compile(
     r"costs (?P<amount>(?:\{[^{}]+\})+) less to cast if it targets an? "
     r"(?P<quality>[a-z ,]+?) spell\b",
+    re.IGNORECASE,
+)
+
+#: The permanent twin of `_COSTS_LESS_IF_TARGETS_SPELL_RE`: "This spell
+#: costs `<mana>` less to cast if it targets a(n) `<description>`." with any
+#: description the target grammar reads - Bouncer's Beatdown's "a black
+#: permanent", Ajani's Response's "a tapped creature", Hunter's Mark's "a blue
+#: permanent you don't control". Read against `Casting.targets`, which CR
+#: 601.2c fixes before CR 601.2f determines the cost. Tried only when the
+#: spell shape above did not match.
+_COSTS_LESS_IF_TARGETS_DESCRIPTION_RE = re.compile(
+    r"costs (?P<amount>(?:\{[^{}]+\})+) less to cast if it targets an? "
+    r"(?P<description>[^.]+?)\.",
     re.IGNORECASE,
 )
 
@@ -4397,7 +4417,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 107
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 108
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4580,6 +4600,20 @@ class Game(EngineModel):
     #: `DamageLifeFloorReplacement` and the `EventKind.LOSE_THE_GAME`/
     #: `LOSE_LIFE` event kinds, and CR 119.5 "your life total becomes" got one
     #: reader (fix-archangel-beckett).
+    #: 108 (stream s7c, one bump): `machines/triggers.AbilityOnStack` gained
+    #: `cost_sacrificed_powers`/`cost_sacrificed_toughnesses` (CR 608.2h last
+    #: known information for "the sacrificed creature's power/toughness");
+    #: `machines/delayed` gained the `create_token_copy_of_last_known`
+    #: effect kind (Ochre Jelly's Split) and `CardState` gained
+    #: `last_known_copiable` (CR 707.2 as it last existed); a counter-count
+    #: intervening "if" now reads the past tense ("it had") off the last
+    #: known counters, and a returning Aura chooses its host (CR 303.4f/g);
+    #: `machines/replacement.CreatedReplacementSpec` gained
+    #: `LeaveBattlefieldExile` (Whip of Erebos' "If it would leave the
+    #: battlefield, exile it instead of putting it anywhere else", one
+    #: permanent for as long as it stays the same object - CR 614.1a,
+    #: CR 400.7), reachable from `Game.created_replacements`; `Duration`
+    #: gained `UNTIL_END_OF_COMBAT` ("can't block this combat", CR 500.5a/511.2).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -11935,6 +11969,10 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        # CR 707.2 for a look-back copy ("a copy of it", Ochre Jelly's Split):
+        # a copy effect stops applying once it is not a permanent.
+        copiable = copiable_card_of(self, permanent)
+        permanent.last_known_copiable = None if copiable is permanent.card else copiable
         permanent.note_departure_epoch(self._departure_epoch)
         if permanent in self.battlefield:
             self._left_battlefield_characteristics[permanent.id] = self.characteristics_of(
@@ -12124,6 +12162,7 @@ class Game(EngineModel):
         transformed: bool = False,
         was_cast: bool,
         attach_to: "Targetable | None" = None,
+        counters: Mapping[str, int] | None = None,
     ) -> CardState:
         """A permanent enters the battlefield, replacement effects first (CR 614.12).
 
@@ -12181,6 +12220,7 @@ class Game(EngineModel):
                 destination=Zone.BATTLEFIELD,
                 tapped=tapped,
                 was_cast=was_cast,
+                counters=dict(counters or {}),
             )
             card_state.controller = controller
             # CR 614.12: which replacement applies is judged on the permanent
@@ -12445,6 +12485,7 @@ class Game(EngineModel):
         *,
         tapped: bool = False,
         transformed: bool = False,
+        counters: Mapping[str, int] | None = None,
     ) -> CardState:
         """Put a card onto the battlefield without casting it (CR 110.2a).
 
@@ -12462,10 +12503,19 @@ class Game(EngineModel):
         loyalty CR 306.5b puts on as it enters, which is the only way a
         creature face like Ajani, Nacatl Pariah becomes a planeswalker with any
         loyalty at all.
+
+        `counters` is the effect's own "it enters with N `<kind>` counters on
+        it" (CR 614.1c) - Ochre Jelly's token copy's "half that many" - put on
+        the entering event alongside every other entering counter.
         """
         with self._id_allocator_scope():
             return self.enter_the_battlefield(
-                card_state, controller, tapped=tapped, transformed=transformed, was_cast=False
+                card_state,
+                controller,
+                tapped=tapped,
+                transformed=transformed,
+                was_cast=False,
+                counters=counters,
             )
 
         # -- the pregame sequence (CR 103.5, CR 103.6) ----------------------------
@@ -16138,6 +16188,21 @@ class Game(EngineModel):
         finally:
             self._returned_to_hand_batch = ()
 
+    def _left_battlefield_for(self, permanent: CardState, destination: Zone) -> Zone:
+        """Where `permanent` really goes when it would leave the battlefield
+        for `destination`, after every replacement effect (CR 614.1a) has had
+        its say - the same `ZONE_CHANGE` event `put_into_graveyard` raises,
+        for the hand and library routes that had none ("If it would leave the
+        battlefield, exile it instead")."""
+        event = ReplaceableEvent(
+            kind=EventKind.ZONE_CHANGE,
+            card=permanent,
+            origin=Zone.BATTLEFIELD,
+            destination=destination,
+        )
+        apply_replacements(self, event)
+        return event.destination or destination
+
     def return_to_hand(self, permanent: CardState) -> CardState:
         """Return a permanent to its owner's hand (CR 701.19a is "return").
 
@@ -16158,6 +16223,11 @@ class Game(EngineModel):
             if move_refused(permanent, Zone.HAND) is not None:
                 return permanent
             was_on_battlefield = permanent in self.battlefield
+            if was_on_battlefield and self._left_battlefield_for(permanent, Zone.HAND) is (
+                Zone.EXILE
+            ):
+                # CR 614.6: "exile it instead of putting it anywhere else".
+                return self.exile_permanent(permanent)
             # CR 603.10a: who controlled it as it last existed on the
             # battlefield - "another nonland permanent you control is
             # returned" asks about then, not about the hand it lands in.
@@ -16250,6 +16320,9 @@ class Game(EngineModel):
                     seen_going_in[card_state.id] = card_state.zone
                 graveyard_owner = self._graveyard_owner_of(card_state)
                 if card_state in self.battlefield:
+                    if self._left_battlefield_for(card_state, Zone.LIBRARY) is Zone.EXILE:
+                        self.exile_permanent(card_state)  # CR 614.6
+                        continue
                     self._note_left_battlefield(card_state)
                     self._detach_dependents(card_state)
                     left_battlefield.append(card_state)
@@ -16358,6 +16431,26 @@ class Game(EngineModel):
                     if state.id == card_id:
                         return state
         return None
+
+    def _last_known_stat(self, card_id: UUID, stat: str) -> int | None:
+        """A departed permanent's power or toughness as CR 608.2h reads it:
+        the snapshot taken as it left the battlefield when a continuous effect
+        made it differ, otherwise the printing plus the counters it left with
+        (CR 122.1a via `last_known_counters` - CR 122.2 took the counters
+        themselves, so the object's own `power` no longer has them). `None`
+        for an id nothing finds or a non-numeric (`*`) value."""
+        state = self.find_by_id(card_id)
+        if state is None:
+            return None
+        if state.zone is Zone.BATTLEFIELD:
+            return getattr(state, stat)
+        snapshot = getattr(state, f"last_known_{stat}")
+        if snapshot is not None:
+            return snapshot
+        printed = getattr(state, f"printed_{stat}")
+        if printed is None:
+            return None
+        return printed + state.last_known_counters.power_toughness_modifier
 
     def last_known_mana_value(self, card: "CardState | UUID") -> float:
         """An object's mana value as CR 608.2h reads it (CR 202.3): the
@@ -20864,7 +20957,10 @@ class Game(EngineModel):
         return assigned
 
     def end_of_combat(self) -> None:
-        """Everything is removed from combat as the step ends (CR 511.3)."""
+        """Everything is removed from combat as the step ends (CR 511.3), and
+        "until end of combat" / "this combat" effects end with the phase (CR
+        500.5a, CR 511.2)."""
+        self.continuous_effects.end_the_combat(self)
         self.combat.clear()
         self.blocks_triggered = []
         self.attacks_unblocked_triggered = []
@@ -22357,10 +22453,26 @@ class Game(EngineModel):
                     )
                 )
 
+        described_match = (
+            _COSTS_LESS_IF_TARGETS_DESCRIPTION_RE.search(text) if target_match is None else None
+        )
+        if described_match is not None and targets:
+            reduction = self._target_description_reduction(described_match, targets, owner)
+            if reduction is not None:
+                amount += reduction.generic
+                colored_reduction = ManaCost(
+                    symbols=tuple(
+                        symbol
+                        for symbol in reduction.symbols
+                        if symbol.kind is not SymbolKind.GENERIC
+                    )
+                )
+
         condition_match = _COSTS_LESS_IF_CONDITION_RE.search(text)
-        # Out of Air's "if it targets a creature spell" is the target shape
-        # above, not an open board condition - read once, never twice.
-        if condition_match is not None and target_match is None:
+        # Out of Air's "if it targets a creature spell" and Bouncer's
+        # Beatdown's "if it targets a black permanent" are the target shapes
+        # above, not open board conditions - read once, never twice.
+        if condition_match is not None and target_match is None and described_match is None:
             held = self.condition_holds(owner, condition_match.group("condition"), source=spell)
             if held:
                 amount += int(condition_match.group("amount"))
@@ -22443,6 +22555,27 @@ class Game(EngineModel):
             if target is None or target.zone is not Zone.STACK:
                 continue
             if spell_has_quality(target, quality):
+                return reduction
+        return None
+
+    def _target_description_reduction(
+        self, match: re.Match[str], targets: Sequence[TargetRef], caster: str
+    ) -> ManaCost | None:
+        """`_COSTS_LESS_IF_TARGETS_DESCRIPTION_RE`'s reduction when one of
+        `targets` fits the description, or None - also None when the
+        description is not one the target grammar reads, so an unread
+        condition never discounts a spell."""
+        from ..machines.targeting import chosen_target_description
+
+        reduction = ManaCost.try_parse(match.group("amount"))
+        requirement = chosen_target_description(match.group("description"))
+        if reduction is None or requirement is None:
+            return None
+        for ref in targets:
+            if ref.is_player:
+                continue
+            target = self.find_by_id(ref.card_id)
+            if target is not None and requirement.rejects(target, caster, self) is None:
                 return reduction
         return None
 
@@ -23417,6 +23550,24 @@ class Game(EngineModel):
                 f"{self.player(controller).life}, so {permanent.name}'s ability "
                 "cannot be activated (CR 119.4)"
             )
+
+        for piece in ability.costs:
+            # CR 118.3: "Remove an indestructible counter from Arwen" cannot be
+            # paid by a permanent without one, so the ability is not offered -
+            # the same check `CostPayment.pay` makes, made before announcing.
+            removal = cost_component_for_phrase(piece.text, payer=controller)
+            if (
+                removal is None
+                or removal.kind is not ComponentKind.REMOVE_COUNTERS
+                or removal.from_among
+                or removal.cards
+                or removal.amount < 1
+                or not _cost_refers_to_self(piece.text, permanent)
+            ):
+                continue
+            refused = removal.model_copy(update={"cards": [permanent]}).why_not(self)
+            if refused is not None:
+                return f"{permanent.name}'s ability cannot be activated: {refused}"
 
         needs_tapping = any(piece.kind in {CostKind.TAP, CostKind.UNTAP} for piece in ability.costs)
         if needs_tapping and not self.can_activate_tap_ability(permanent):
@@ -26205,6 +26356,14 @@ class Game(EngineModel):
             on_stack.cost_sacrificed_mana_values = tuple(
                 self.last_known_mana_value(card_id) for card_id in on_stack.cost_sacrificed_card_ids
             )
+            on_stack.cost_sacrificed_powers = tuple(
+                self._last_known_stat(card_id, "power")
+                for card_id in on_stack.cost_sacrificed_card_ids
+            )
+            on_stack.cost_sacrificed_toughnesses = tuple(
+                self._last_known_stat(card_id, "toughness")
+                for card_id in on_stack.cost_sacrificed_card_ids
+            )
             self.stack.append(on_stack)
             # CR 602.2b's target announcement has settled (CR 601.2c, imported
             # wholesale), and the ability is on the stack, so anything watching
@@ -26940,7 +27099,10 @@ class Game(EngineModel):
             self._note_step_began(self.turn.advance())
             # CR 500.5a, the same reading `_advance_past_checks` uses above:
             # firebending's "until end of combat" mana expires exactly when
-            # the combat phase this boundary just left behind ends.
+            # the combat phase this boundary just left behind ends, and so do
+            # "until end of combat" / "this combat" effects (CR 511.2).
+            if previous_step is Step.END_OF_COMBAT:
+                self.continuous_effects.end_the_combat(self)
             self.empty_mana_pools(
                 expiring=frozenset({ManaRetentionScope.END_OF_COMBAT})
                 if previous_step is Step.END_OF_COMBAT

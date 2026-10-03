@@ -1879,3 +1879,30 @@ def test_a_snapshot_written_before_life_total_shapes_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_LIFE_TOTAL_SHAPES}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before stream s7c's one shared bump: `CardState`
+#: gained `last_known_copiable` (Ochre Jelly's Split, CR 707.2),
+#: `AbilityOnStack` gained `cost_sacrificed_powers`/`cost_sacrificed_toughnesses`
+#: (CR 608.2h), `machines/delayed` gained `create_token_copy_of_last_known` and
+#: `CreatedReplacementSpec` gained `LeaveBattlefieldExile` (CR 614.1a).
+_SCHEMA_VERSION_BEFORE_S7C_LAST_KNOWN_SHAPES = 107
+
+
+def test_a_snapshot_written_before_the_s7c_last_known_shapes_is_refused() -> None:
+    """A version-107 dump's card states carry no `last_known_copiable`:
+    decoded as current each would default to none, and an Ochre Jelly copy
+    that died before the snapshot would make its delayed token copy from
+    nothing instead of the copiable values it last had. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_S7C_LAST_KNOWN_SHAPES
+    game = _a_played_game()
+    dumped = game.model_dump(mode="json")
+    assert dumped["shared_zones"]["battlefield"]
+    assert all("last_known_copiable" in state for state in dumped["shared_zones"]["battlefield"])
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_S7C_LAST_KNOWN_SHAPES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_S7C_LAST_KNOWN_SHAPES}",
+    ):
+        Game.model_validate(dumped)

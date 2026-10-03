@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 11.8% |
+| Tested | 22 | 12.4% |
 | Works (untested) | 93 | 52.2% |
 | Partial (unaudited) | 10 | 5.6% |
-| Not working | 54 | 30.3% |
+| Not working | 53 | 29.8% |
 
 ## Cards needing work
 
@@ -73,7 +73,6 @@
 | Hadana's Climb // Winged Temple of Orazca | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has three or more +1/+1 counters on it, trans | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitesail Corsair | notice | This creature has flying as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Profane Procession // Tomb of the Dusk Rose | notice | {3}{W}{B}: Exile target creature. Then if there are three or more cards exiled with Profane Procession, transform it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Release to the Wind | notice | Exile target nonland permanent. For as long as that card remains exiled, its owner may cast it without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Skymarcher Aspirant | notice | This creature has flying as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Snubhorn Sentry | notice | This creature gets +3/+0 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spire Winder | notice | This creature gets +1/+1 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -187,7 +186,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Arch of Orazca
 - Crafty Cutpurse
@@ -205,6 +204,7 @@
 - Paladin of Atonement
 - Pride of Conquerors
 - Ravenous Chupacabra
+- Release to the Wind
 - Resplendent Griffin
 - Secrets of the Golden City
 - See Red
@@ -237,7 +237,6 @@
 | enchanted creature gets +N/+N as long as it's a pirate. otherwise, it gets -N/-N. | 1 | Sea Legs | rix |
 | equipped creature gets +N/+N, has menace, and is a pirate in addition to its other creature types. | 1 | Captain's Hook | rix |
 | exile target creature with power greater than or equal to your life total. | 1 | Blazing Hope | rix |
-| exile target nonland permanent. for as long as that card remains exiled, its owner may cast it without paying its mana cost. | 1 | Release to the Wind | rix |
 | for each land you control, create a treasure token. (it's an artifact with "...") | 1 | Brass's Bounty | rix |
 | if a source would deal damage to another dinosaur you control, prevent all but N of that damage. | 1 | Temple Altisaur | rix |
 | if ~ would deal combat damage to a player, it deals double that damage to that player instead. | 1 | Charging Tuskodon | rix |

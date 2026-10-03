@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 9.3% |
-| Works (untested) | 64 | 39.5% |
+| Tested | 16 | 9.9% |
+| Works (untested) | 65 | 40.1% |
 | Partial (unaudited) | 12 | 7.4% |
-| Not working | 71 | 43.8% |
+| Not working | 69 | 42.6% |
 
 ## Cards needing work
 
@@ -87,8 +87,6 @@
 | Venarian Glimmer | silent | Target player reveals their hand. You choose a nonland card with mana value X or less from it. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Volcano Hellion | silent | When this creature enters, it deals an amount of damage of your choice to you and target creature. The damage can't be prevented. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Pair | silent | Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ana Battlemage | notice | When this creature enters, if it was kicked with its {1}{B} kicker, tap target untapped creature and that creature deals damage equal to its power to its contro | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Blightspeaker | notice | {4}, {T}: Search your library for a Rebel permanent card with mana value 3 or less, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fatal Frenzy | notice | Until end of turn, target creature you control gains trample and gets +X/+0, where X is its power. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fury Charm | notice | Choose one — • Destroy target artifact. • Target creature gets +1/+1 and gains trample until end of turn. • Remove two time counters from target permanent or su | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hedge Troll | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -111,6 +109,7 @@
 | Voidstone Gargoyle | unaudited | Spells with the chosen name can't be cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Akroma, Angel of Fury | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Big Game Hunter | handled | When this creature enters, destroy target creature with power 4 or greater. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blightspeaker | handled | {T}: Target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blood Knight | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Body Double | handled | You may have this creature enter as a copy of any creature card in a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boom // Bust | handled | Destroy target land you control and target land you don't control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -177,9 +176,10 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Aether Membrane
+- Ana Battlemage
 - Aven Riftwatcher
 - Brain Gorgers
 - Cradle to Grave
@@ -245,7 +245,6 @@
 | when the last time counter is removed from ~ while it's exiled, create a N/N black knight creature token with flanking, protection from white, and haste. | 1 | Riftmarked Knight | plc |
 | when you control no swamps, sacrifice ~. | 1 | Bog Serpent | plc |
 | when ~ enters, any player may sacrifice a land of their choice. if a player does, put ~ on top of its owner's library. | 1 | Shivan Wumpus | plc |
-| when ~ enters, if it was kicked with its {M}{M} kicker, tap target untapped creature and that creature deals damage equal to its power to its controller. | 1 | Ana Battlemage | plc |
 | when ~ enters, it deals an amount of damage of your choice to you and target creature. the damage can't be prevented. | 1 | Volcano Hellion | plc |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Stonecloaker | plc |
 | when ~ enters, return three creatures you control to their owner's hand. | 1 | Dust Elemental | plc |
@@ -262,7 +261,6 @@
 | whenever oros deals combat damage to a player, you may pay {M}{M}. if you do, oros deals N damage to each nonwhite creature. | 1 | Oros, the Avenger | plc |
 | whenever you play a card, draw a card. | 1 | Null Profusion | plc |
 | white creatures get +N/-N. | 1 | Sulfur Elemental | plc |
-| {M}, {M}: search your library for a rebel permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Blightspeaker | plc |
 | {M}, {M}: tap target creature you control and target creature of an opponent's choice they control. those creatures fight each other. | 1 | Magus of the Arena | plc |
 | {M}: draw a card and reveal it. if it isn't a land card, discard it. | 1 | Fa'adiyah Seer | plc |
 | {M}: switch target creature's power and toughness until end of turn. | 1 | Merfolk Thaumaturgist | plc |

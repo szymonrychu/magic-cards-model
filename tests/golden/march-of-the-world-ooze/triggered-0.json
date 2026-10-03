@@ -44,9 +44,9 @@
         "face_up": true,
         "granted": [],
         "monstrous": false,
-        "power": 4,
+        "power": 7,
         "tapped": false,
-        "toughness": 4,
+        "toughness": 7,
         "transformed": false,
         "zone": "battlefield"
       }

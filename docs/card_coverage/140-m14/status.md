@@ -18,16 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 5 | 4.4% |
-| Works (untested) | 60 | 53.1% |
+| Works (untested) | 64 | 56.6% |
 | Partial (unaudited) | 8 | 7.1% |
-| Not working | 40 | 35.4% |
+| Not working | 36 | 31.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Academy Raider | silent | Intimidate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Accursed Spirit | silent | Intimidate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ajani's Chosen | silent | Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Artificer's Hex | silent | At the beginning of your upkeep, if enchanted Equipment is attached to a creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blightcaster | silent | Whenever you cast an enchantment spell, you may have target creature get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -35,8 +33,7 @@
 | Bogbrew Witch | silent | {2}, {T}: Search your library for a card named Festering Newt or Bubbling Cauldron, put it onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bonescythe Sliver | silent | Sliver creatures you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bubbling Cauldron | silent | {1}, {T}, Sacrifice a creature named Festering Newt: Each opponent loses 4 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chandra, Pyromaster | silent | +1: Chandra deals 1 damage to target player or planeswalker and 1 damage to up to one target creature that player or that planeswalker's controller controls. Th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cyclops Tyrant | silent | Intimidate | no machine in the engine executes this keyword | Y/Y/- | not_working |
+| Chandra, Pyromaster | silent | −7: Exile the top ten cards of your library. Choose an instant or sorcery card exiled this way and copy it three times. You may cast the copies without paying t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Devout Invocation | silent | Tap any number of untapped creatures you control. Create a 4/4 white Angel creature token with flying for each creature tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dismiss into Dream | silent | Each creature your opponents control is an Illusion in addition to its other types and has "When this creature becomes the target of a spell or ability, sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elite Arcanist | silent | {X}, {T}: Copy the exiled card. You may cast the copy without paying its mana cost. X is the mana value of the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -46,7 +43,6 @@
 | Groundshaker Sliver | silent | Sliver creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guardian of the Ages | silent | When a creature attacks you or a planeswalker you control, if this creature has defender, it loses defender and gains trample. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Haunted Plate Mail | silent | {0}: Until end of turn, this permanent becomes a 4/4 Spirit artifact creature that's no longer an Equipment. Activate only if you control no creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lifebane Zombie | silent | Intimidate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Molten Birth | silent | Create two 1/1 red Elemental creature tokens, then flip a coin. If you win the flip, return Molten Birth to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rise of the Dark Realms | silent | Put all creature cards from all graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Savage Summoning | silent | This spell can't be countered. The next creature spell you cast this turn can be cast as though it had flash. That spell can't be countered. That creature enter | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -74,6 +70,8 @@
 | Shadowborn Apostle | unaudited | A deck can have any number of cards named Shadowborn Apostle. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Thorncaster Sliver | unaudited | Sliver creatures you control have "Whenever this creature attacks, it deals 1 damage to any target." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Warden of Evos Isle | unaudited | Creature spells with flying you cast cost {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Academy Raider | handled | Whenever this creature deals combat damage to a player, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Accursed Spirit | handled | Intimidate | machines/keywords.py | Y/Y/- | not_tested |
 | Advocate of the Beast | handled | At the beginning of your end step, put a +1/+1 counter on target Beast creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Archangel of Thune | handled | Whenever you gain life, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Banisher Priest | handled | When this creature enters, exile target creature an opponent controls until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -85,6 +83,7 @@
 | Charging Griffin | handled | Whenever this creature attacks, it gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Colossal Whale | handled | Whenever this creature attacks, you may exile target creature defending player controls until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Corpse Hauler | handled | {2}{B}, Sacrifice this creature: Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Cyclops Tyrant | handled | This creature can't block creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dark Prophecy | handled | Whenever a creature you control dies, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dawnstrike Paladin | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Deathgaze Cockatrice | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
@@ -100,6 +99,7 @@
 | Imposing Sovereign | handled | Creatures your opponents control enter tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Into the Wilds | handled | At the beginning of your upkeep, look at the top card of your library. If it's a land card, you may put it onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kalonian Tusker | handled |  |  | Y/Y/- | not_tested |
+| Lifebane Zombie | handled | When this creature enters, target opponent reveals their hand. You choose a green or white creature card from it and exile that card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liliana's Reaver | handled | Whenever this creature deals combat damage to a player, that player discards a card and you create a tapped 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liturgy of Blood | handled | Destroy target creature. Add {B}{B}{B}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Master of Diversion | handled | Whenever this creature attacks, tap target creature defending player controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -152,9 +152,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| intimidate | 4 | Academy Raider, Accursed Spirit, Cyclops Tyrant, Lifebane Zombie | m14 |
 | sliver creatures you control have "..." | 2 | Manaweft Sliver, Thorncaster Sliver | m14 |
-| +N: chandra deals N damage to target player or planeswalker and N damage to up to one target creature that player or that planeswalker"..."t block ~. | 1 | Chandra, Pyromaster | m14 |
 | a deck can have any number of cards named ~. | 1 | Shadowborn Apostle | m14 |
 | as long as you control eight or more lands, ~ gets +N/+N and has trample. | 1 | Woodborn Behemoth | m14 |
 | at the beginning of your upkeep, if enchanted equipment is attached to a creature, destroy that creature. | 1 | Artificer's Hex | m14 |
@@ -196,6 +194,7 @@
 | ~ attacks each combat if able unless you control a creature named advocate of the beast. | 1 | Marauding Maulhorn | m14 |
 | ~ can"..."t be countered. that creature enters with an additional +N/+N counter on it. | 1 | Savage Summoning | m14 |
 | ~ can't be the target of black or red spells your opponents control. | 1 | Fiendslayer Paladin | m14 |
+| −N: exile the top ten cards of your library. choose an instant or sorcery card exiled ~ and copy it three times. you may cast the copies without paying their ma | 1 | Chandra, Pyromaster | m14 |
 
 ## Notes
 

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 5 | 3.1% |
-| Works (untested) | 73 | 45.9% |
+| Works (untested) | 74 | 46.5% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 71 | 44.7% |
+| Not working | 70 | 44.0% |
 
 ## Cards needing work
 
@@ -95,7 +95,6 @@
 | Empty-Shrine Kannushi | notice | This creature has protection from each color among permanents you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | First Volley | notice | First Volley deals 1 damage to target creature and 1 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kodama of the Center Tree | notice | Kodama of the Center Tree has soulshift X, where X is the number of Spirits you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Lifespinner | notice | {T}, Sacrifice three Spirits: Search your library for a legendary Spirit permanent card, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unchecked Growth | notice | Target creature gets +4/+4 until end of turn. If it's a Spirit, it gains trample until end of turn. | unparsed remainder: If it's a Spirit, it gains trample until end of turn. | Y/-/- | not_working |
 | Clash of Realities | unaudited | All Spirits have "When this permanent enters, you may have it deal 3 damage to target non-Spirit creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fumiko the Lowblood | unaudited | Creatures your opponents control attack each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -136,6 +135,7 @@
 | Kira, Great Glass-Spinner | handled | Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kyoki, Sanity's Eclipse | handled | Whenever you cast a Spirit or Arcane spell, target opponent exiles a card from their hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lifegift | handled | Whenever a land enters, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lifespinner | handled | {T}, Sacrifice three Spirits: Search your library for a legendary Spirit permanent card, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loam Dweller | handled | Whenever you cast a Spirit or Arcane spell, you may put a land card from your hand onto the battlefield tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mark of Sakiko | handled | Enchanted creature has "Whenever this creature deals combat damage to a player, add that much {G}. Until end of turn, you don't lose this mana as steps and phas | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mark of the Oni | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -243,7 +243,6 @@
 | you may exile a white card with mana value N from your hand rather than pay ~ mana cost. the next N damage that a source of your choice would deal to you and/or | 1 | Shining Shoal | bok |
 | {M}, discard a spirit or arcane card: ~ becomes an N/N cat artifact creature until end of turn, where N is the discarded card's mana value. | 1 | Slumbering Tora | bok |
 | {M}, remove N ki counters from ~: for each counter removed, ~ gets +N/+N until end of turn. | 1 | Blademane Baku | bok |
-| {M}, sacrifice three spirits: search your library for a legendary spirit permanent card, put it onto the battlefield, then shuffle. | 1 | Lifespinner | bok |
 | {M}: enchanted forest becomes a N/N green spirit creature until end of turn. it's still a land. | 1 | Genju of the Cedars | bok |
 | {M}: enchanted island becomes a N/N blue spirit creature with flying until end of turn. it's still a land. | 1 | Genju of the Falls | bok |
 | {M}: enchanted land becomes a legendary N/N spirit creature with trample until end of turn. it's still a land. | 1 | Genju of the Realm | bok |
