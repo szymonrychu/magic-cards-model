@@ -6968,3 +6968,17 @@ documented exception" rule rather than left silently asserted.
   description` rather than pinned to "artifact"/"enchantment"; Mentor's
   Guidance prints a related but genuinely different single-condition,
   multi-type-list "or" shape the regex correctly does not match).
+
+## R0b-T5: temporary token copies, mana-value-qualified enters triggers, and Equipment/hone/Vehicle/token-maker proofs
+
+| Mechanic | Where | Proof |
+|---|---|---|
+| "Create a token that's a copy of target `<X>`[, except `<...>`]. [It\|That token] gains haste[ until end of turn]. (Sacrifice\|Exile) it at the beginning of the next end step." - CR 707.2 copy, a layer 6 haste grant on the token only, and a CR 603.7a delayed trigger (CR 701.21a sacrifice, or exile) on the token's own incarnation; a token already gone by then is left alone, and the targeted original is never touched | `effects._CREATE_TOKEN_COPY_OF_TARGET_RE`/`_parse_create_token_copy_of_target_clause`, read whole in `_parse_mixed_clauses` | The Fire Crystal; Cogwork Assembler (exile, "That token gains haste.", any player's artifact) and Molten Duplication (spell, "until end of turn") as second printings - `test_r0b_copy_token_sacrifice_next_end_step.py` |
+| CR 707.9b card-type exception, "except it's an artifact in addition to its other types" | `effects._EXCEPT_ADDED_CARD_TYPE_RE`, `token_copy_of(added_card_type=)` | Molten Duplication - same file |
+| "Whenever `<permanent>` ... with mana value N or greater/or less/... enters" - CR 202.3 qualifier on the entering object, read off its computed characteristics | `triggers._entering_mana_value_qualifier_holds` (ENTERS_THE_BATTLEFIELD branch of `condition_matches`) | Simulacrum Synthesizer; Doc Ock's Tentacles as the second printing - `test_r0b_artifact_synergy_engines.py` |
+| The Fire Crystal statics: red spells you cast cost {1} less (generic only, CR 601.2f), creatures you control have haste | already read | `test_r0b_copy_token_sacrifice_next_end_step.py` |
+| Equipment grants: +1/+0 haste ward {1} (Lavaspur Boots), +1/+1 double strike trample and the CR 103.6a opening-hand line (Leyline Axe), deathtouch and lifelink (Basilisk Collar); hone counters (CR 122.1j) from Dwalin, Weaponmaster's enters-or-attacks trigger; Giott's two separate enters events (Dwarf, Equipment) with an optional loot | already read | `test_r0b_equipment_and_hone_counters.py` |
+| Esika's Chariot (Cat tokens, crew 4, attack-copy of a target token), Thundering Broodwagon (reach, menace, crew 3, enters destroy MV <= 4, cycling), Warleader's Call (anthem, a ping per creature entering), Hop to It | already read | `test_r0b_vehicles_and_token_makers.py` |
+| Simulacrum Synthesizer (scry 2, Construct that counts itself), Repurposing Bay (sacrifice-another-artifact search for MV exactly 1 + the sacrificed MV, last known for a token, sorcery speed) | already read | `test_r0b_artifact_synergy_engines.py` |
+
+Fixed along the way: `_CREATE_TOKEN_COPIES_EXCEPT_RE`'s and `_TARGET_PLAYER_CREATES_TOKEN_COPY_RE`'s `phrase` group (`target .+?` under DOTALL) swallowed every following sentence into the target description, so The Fire Crystal's "Sacrifice it ..." was silently dropped; it now stops at the sentence end.

@@ -51780,9 +51780,40 @@ def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
 #: `token_copy_of` the same way `_parse_city_blessing_token_copy_clause`
 #: below reuses it for Ocelot Pride's anaphoric "it" instead of a real
 #: target.
+#:
+#: Widened (R0b-T5) with the temporary-copy tail every "copy it for a turn"
+#: printing carries, each part optional and each about the token just made
+#: (CR 608.2c), never the targeted original:
+#:
+#: - CR 707.9b's ", except it's an artifact in addition to its other types"
+#:   (Molten Duplication) - a card type written into the copiable values -
+#:   or any exception `_read_copy_exception_list`/`_read_token_copy_except`
+#:   already reads;
+#: - "It gains haste[ until end of turn]." / "That token gains haste."
+#:   (Molten Duplication, Cogwork Assembler) - a layer 6 grant on the token;
+#: - "(Sacrifice|Exile) it at the beginning of the next end step." (The Fire
+#:   Crystal, Molten Duplication, Cogwork Assembler) - CR 603.7a's delayed
+#:   trigger, built by `anaphoric_delayed_trigger` against the token's own
+#:   incarnation, so a token already gone by then is left alone.
+#:
+#: The target's "you control" is optional too: Cogwork Assembler's bare
+#: "target artifact" may name an opponent's artifact, and the token is still
+#: created under the ability's controller (CR 111.2).
 _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
-    r"^create a token that'?s a copy of "
-    r"(?P<phrase>target [a-z]+(?: or [a-z]+)? you control)\.?$",
+    r"^create a token that['’]?s a copy of "
+    r"(?P<phrase>target [a-z]+(?: or [a-z]+)?(?: you control)?)"
+    r"(?:, except (?P<except>[^.]+?))?\.?"
+    r"(?P<haste>\s*(?:it|that token) gains haste(?P<eot> until end of turn)?\.)?"
+    r"(?P<end_step>\s*(?:exile|sacrifice) it at the beginning of the next end step\.?)?\s*$",
+    re.IGNORECASE,
+)
+
+#: CR 707.9b's card-type exception - "except it's an artifact in addition to
+#: its other types" (Molten Duplication): the named card type joins the
+#: copy's copiable type line (CR 205.1b's "in addition to").
+_EXCEPT_ADDED_CARD_TYPE_RE = re.compile(
+    r"^(?:it['’]?s|it is) an? (?P<card_type>artifact|enchantment) "
+    r"in addition to its other types$",
     re.IGNORECASE,
 )
 
@@ -51791,17 +51822,100 @@ def _parse_create_token_copy_of_target_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_CREATE_TOKEN_COPY_OF_TARGET_RE`'s shape, or `None` if this is not it."""
-    match = _CREATE_TOKEN_COPY_OF_TARGET_RE.fullmatch(clause.strip())
+    match = _CREATE_TOKEN_COPY_OF_TARGET_RE.fullmatch(" ".join(clause.strip().split()))
     if match is None:
         return None
     if not _targets_understood(match.group("phrase")):
         return None
+    added: tuple[str, ...] = ()
+    power: int | None = None
+    toughness: int | None = None
+    added_type: str | None = None
+    added_card_type: str | None = None
+    colors: tuple[Color, ...] | None = None
+    creature_types: tuple[str, ...] | None = None
+    not_legendary = False
+    except_text = match.group("except")
+    if except_text is not None:
+        # The same exception readers, in the same order, as
+        # `_parse_create_token_copies_except_clause` - plus CR 707.9b's card
+        # type, which neither of them reads.
+        card_type = _EXCEPT_ADDED_CARD_TYPE_RE.fullmatch(except_text.strip())
+        replacing = _read_token_copy_replacing_except(except_text)
+        listed = _read_copy_exception_list(except_text)
+        if card_type is not None:
+            added_card_type = card_type.group("card_type").title()
+        elif replacing is not None:
+            power, toughness, colors, creature_types = replacing
+        elif listed is not None:
+            added, power, toughness, added_type = (
+                listed.added_abilities,
+                listed.power,
+                listed.toughness,
+                listed.added_creature_type,
+            )
+            not_legendary = listed.not_legendary
+        else:
+            exception = _read_token_copy_except(except_text)
+            if exception is None:
+                return None
+            added, power, toughness, added_type = exception
+    haste = match.group("haste") is not None
+    haste_duration = (
+        Duration.UNTIL_END_OF_TURN if match.group("eot") is not None else Duration.INDEFINITE
+    )
+    end_step = match.group("end_step")
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .dies_this_turn import source_id_of_object
+
         controller = game.controller_of(stack_object)
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
         for target in game.resolve_targets(stack_object):
-            if isinstance(target, CardState):
-                token_copy_of(game, target, controller.username)
+            if not isinstance(target, CardState):
+                continue
+            created = token_copy_of(
+                game,
+                target,
+                controller.username,
+                added_abilities=added,
+                power=power,
+                toughness=toughness,
+                added_creature_type=added_type,
+                added_card_type=added_card_type,
+                colors=colors,
+                creature_types=creature_types,
+                not_legendary=not_legendary,
+            )
+            store = continuous_effects(game)
+            for token in created:
+                if token.zone is not Zone.BATTLEFIELD:
+                    continue
+                if haste:
+                    store.add(
+                        ContinuousEffect(
+                            description=f"{source_name}: {token.name} gains haste",
+                            layer=Layer.ABILITY,
+                            timestamp=store.tick(),
+                            selector=only_this_incarnation(token, token.zone_change_stamp),
+                            modification=grant_ability("Haste"),
+                            duration=haste_duration,
+                        ),
+                        game,
+                    )
+                if end_step:
+                    trigger = anaphoric_delayed_trigger(
+                        end_step.strip(),
+                        subject=token,
+                        controller=controller.username,
+                        source_id=source_id_of_object(stack_object),
+                        source_name=source_name,
+                        game=game,
+                    )
+                    if trigger is not None:
+                        game.create_delayed_trigger(trigger)
 
     return effect
 
@@ -52031,7 +52145,7 @@ def _parse_for_each_creature_you_control_copy_clause(
 _CREATE_TOKEN_COPIES_EXCEPT_RE = re.compile(
     rf"^create {count_pattern('count')} tokens? "
     r"that(?: are copies|'s a copy|’s a copy| is a copy) of "
-    r"(?P<phrase>(?:another )?target .+?)"
+    r"(?P<phrase>(?:another )?target [^.]+?)"
     r"(?:, except (?P<except>.+?))?"
     rf"(?:\.\s*put {count_pattern('counters')} \+1/\+1 counters? on (?:it|them))?\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -59742,7 +59856,7 @@ def _parse_you_and_target_player_each_clause(clause: str) -> TargetedClause | No
 _TARGET_PLAYER_CREATES_TOKEN_COPY_RE = re.compile(
     rf"^(?P<player>target (?:player|opponent)) creates? {count_pattern('count')} tokens? "
     r"that(?: are copies|['’]s a copy| is a copy) of "
-    r"(?P<phrase>(?:another )?target .+?)"
+    r"(?P<phrase>(?:another )?target [^.]+?)"
     r"(?:, except (?P<except>.+))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -61261,6 +61375,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     copy_target_spell_whole = _parse_copy_target_spell_clause(text, for_spell=for_spell)
     if copy_target_spell_whole is not None:
         return [copy_target_spell_whole]
+    token_copy_of_target_whole = _parse_create_token_copy_of_target_clause(
+        text, for_spell=for_spell
+    )
+    if token_copy_of_target_whole is not None:
+        # Read whole: "It gains haste" and "Sacrifice it at the beginning of
+        # the next end step" point back across the period at the token the
+        # first sentence made (CR 608.2c), not at anything they name.
+        return [token_copy_of_target_whole]
     from .dies_this_turn import parse_then_when_that_creature_dies_this_turn
     from .exile_until_casts import exile_until_casts_whole_text
     from .stack_sweeps import parse_mass_stack_whole_text
