@@ -141,3 +141,20 @@ def test_ajani_unrelenting_minus_three_damages_every_creature_except_tokens_alic
     assert angel.zone is Zone.GRAVEYARD, "bob's Serra Angel is not alice's token either"
     assert cadet.zone is Zone.BATTLEFIELD, "alice's own token is excluded"
     assert cadet.damage == 0
+
+
+def test_the_activation_event_records_the_loyalty_the_cost_removed():
+    """`GameEvent.loyalty_removed` (CR 606.4: the cost as actually paid) on
+    Ajani Unrelenting's own trigger - 0 for a +1, 3 for its -3."""
+    scenario = Scenario().player("alice", battlefield=["Ajani Unrelenting"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ajani = scenario.find("Ajani Unrelenting", Zone.BATTLEFIELD, "alice")
+
+    scenario.activate(ajani, index=0)  # +1
+    scenario.game.put_triggers_on_stack()
+    (trigger,) = [
+        t
+        for t in scenario.game.stack
+        if t.event is not None and t.event.loyalty_removed is not None
+    ]
+    assert trigger.event.loyalty_removed == 0

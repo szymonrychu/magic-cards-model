@@ -519,6 +519,14 @@ class GameEvent(EngineModel):
     on-stack number, not the printed one, or a Chalice on 3 would never catch
     a Fireball cast for X=3."""
 
+    loyalty_removed: int | None = None
+    """On a `LOYALTY_ABILITY_ACTIVATED` event: how many loyalty counters the
+    activation's cost actually removed (CR 606.4 - the symbol's cost as
+    modified and combined, CR 606.5), 0 for a `[+N]` or `[0]`. Way of the Mind
+    Sculptor's "if you removed two or more loyalty counters to activate it"
+    reads this on the event and again on resolution (CR 603.4), so the second
+    check never depends on the board."""
+
     origin_zone: Zone | None = None
     """For a `TriggerEvent.ENTERS_THE_BATTLEFIELD` event, the zone the
     permanent entered from (`Game.enter_the_battlefield`; `Zone.STACK` for a

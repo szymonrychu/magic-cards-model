@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "1a59d5b1-12d6-486b-bd29-ca371359addd",
+  "oracle_id": "ce924285-f4c5-44e6-909b-f5f7d302ebaf",
+  "multiverse_ids": [],
+  "resource_id": "476A26221461F03A49512AE5BB1A83B4C4F1F3DEE8B612665C84A8462C5D51E0",
+  "mtgo_id": 155562,
+  "tcgplayer_id": 718473,
+  "cardmarket_id": 909246,
+  "name": "Way of the Mentor",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/1a59d5b1-12d6-486b-bd29-ca371359addd",
+  "scryfall_uri": "https://scryfall.com/card/fra/208/way-of-the-mentor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-18T11:05:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.jpg?1789729554",
+    "normal": "https://cards.scryfall.io/normal/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.jpg?1789729554",
+    "large": "https://cards.scryfall.io/large/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.jpg?1789729554",
+    "png": "https://cards.scryfall.io/png/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.png?1789729554",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.jpg?1789729554",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.jpg?1789729554",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.webp?1789729554",
+    "grid": "https://cards.scryfall.io/grid/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.webp?1789729554",
+    "display": "https://cards.scryfall.io/display/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.webp?1789729554",
+    "art": "https://cards.scryfall.io/art/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.webp?1789729554",
+    "crop": "https://cards.scryfall.io/crop/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.webp?1789729554"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Legendary Enchantment",
+  "oracle_text": "When Way of the Mentor enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\u22121]: Surveil 1\" and \"[\u22123]: Draw a card.\")\nWhenever you gain life, put a loyalty counter on each planeswalker you control.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Surveil",
+    "Empower Jace"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8d1e424f-6407-4f8c-bed2-eaf148237c81",
+      "component": "token",
+      "name": "Jace",
+      "type_line": "Token Planeswalker \u2014 Jace",
+      "uri": "https://api.scryfall.com/cards/8d1e424f-6407-4f8c-bed2-eaf148237c81"
+    },
+    {
+      "object": "related_card",
+      "id": "1a59d5b1-12d6-486b-bd29-ca371359addd",
+      "component": "combo_piece",
+      "name": "Way of the Mentor",
+      "type_line": "Legendary Enchantment",
+      "uri": "https://api.scryfall.com/cards/1a59d5b1-12d6-486b-bd29-ca371359addd"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1a59d5b1-12d6-486b-bd29-ca371359addd/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ace924285-f4c5-44e6-909b-f5f7d302ebaf&unique=prints",
+  "collector_number": "208",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Danny Schwartz",
+  "artist_ids": [
+    "48e30a4a-5b4d-48e2-9c53-03125085374e"
+  ],
+  "illustration_id": "bac14cfb-b3db-4f9b-a83d-2ea653da4ed9",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment",
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 19892,
+  "preview": {
+    "source": "Danny Schwartz",
+    "source_uri": "https://bsky.app/profile/dannyschwartzart.bsky.social/post/3mvih4yopm224",
+    "previewed_at": "2026-09-14"
+  },
+  "prices": {
+    "usd": "0.31",
+    "usd_foil": "0.68",
+    "usd_etched": null,
+    "eur": "0.02",
+    "eur_foil": "0.30",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BMentor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BMentor",
+    "edhrec": "https://edhrec.com/route/?cc=Way+of+the+Mentor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F718473%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909246&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/155562?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

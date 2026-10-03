@@ -24154,8 +24154,18 @@ class Game(EngineModel):
             name = match.group("name").strip()
             if needed is None or not name:
                 return None
+            # CR 205.3h / CR 201.5: "Jaces" is every planeswalker with the
+            # subtype Jace - the token and a nontoken Jace (Jace, Reality
+            # Sculptor, whose name is not "Jace") both count - plus anything
+            # whose printed name is exactly the word, as before.
+            wanted = name.lower()
             total = sum(
-                state.loyalty or 0 for state in controlled if state.name.lower() == name.lower()
+                state.loyalty or 0
+                for state in controlled
+                if state.name.lower() == wanted
+                or any(
+                    subtype.lower() == wanted for subtype in self.characteristics_of(state).subtypes
+                )
             )
             return total >= needed
 
@@ -25949,6 +25959,26 @@ class Game(EngineModel):
             return tuple(left.types)
         return tuple(permanent.types)
 
+    @staticmethod
+    def _loyalty_removed_by(paid: Any, ability: Any, x_value: int) -> int:
+        """How many loyalty counters an activation's cost removed (CR 606.4).
+
+        Read off the paid cost's own loyalty component, which is the amount
+        after any modification (CR 606.4) and combination (CR 606.5); a caller
+        that never opened a payment falls back to the printed symbol."""
+        if paid is not None:
+            return sum(
+                -component.amount
+                for component in paid.components
+                if component.kind is ComponentKind.LOYALTY and component.amount < 0
+            )
+        symbol = ability.loyalty
+        if symbol is None:
+            return 0
+        if symbol.amount is None:
+            return x_value if _is_minus_symbol(symbol.printed) else 0
+        return symbol.removes
+
     def activate_ability(
         self,
         permanent: CardState,
@@ -26150,6 +26180,7 @@ class Game(EngineModel):
                         subject_controller=controller,
                         subject_card=permanent.card,
                         player=controller,
+                        loyalty_removed=self._loyalty_removed_by(paid, ability, x_value),
                     )
                 )
                 self.record_turn_fact("loyalty_ability_activated", controller)

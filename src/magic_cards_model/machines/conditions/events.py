@@ -15,6 +15,12 @@ Rules verified with `mise run rules:find`:
   marks every event raised meanwhile (`GameEvent.during_cost_of`).
 - CR 702.119a (emerge) and CR 702.167a (craft) - the costs these sacrifice
   and exile with, whose keyword the mark carries.
+- CR 606.4 - a loyalty ability's cost is a loyalty symbol "that may be
+  modified by other effects"; CR 606.5 combines such costs. "you removed two
+  or more loyalty counters to activate it" (Way of the Mind Sculptor) reads
+  what the activation's cost actually removed, recorded on the event as
+  `GameEvent.loyalty_removed` - so CR 603.4's recheck on resolution reads the
+  activation, never the board it has since changed.
 - CR 701.22a - scry's "put any number of them on the bottom of your library",
   the choice `Game.scry` raises as `TriggerEvent.LIBRARY_BOTTOM_CHOSEN`.
 """
@@ -22,6 +28,7 @@ Rules verified with `mise run rules:find`:
 import re
 from typing import TYPE_CHECKING
 
+from ...numbers import COUNT, parse_count
 from . import ConditionReader
 
 if TYPE_CHECKING:
@@ -58,7 +65,22 @@ def _while_doing_a_keyword_action(context: "ConditionContext", match: re.Match[s
     return event.keyword_action == match.group("action")
 
 
+def _removed_loyalty_counters(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "you removed two or more loyalty counters to activate it": the loyalty
+    ability whose activation is the trigger event had a cost that removed at
+    least that many loyalty counters (CR 606.4)."""
+    event = context.event
+    if event is None or event.loyalty_removed is None:
+        return False
+    needed = parse_count(match.group("count"))
+    return needed is not None and event.loyalty_removed >= needed
+
+
 READERS: tuple[ConditionReader, ...] = (
+    ConditionReader(
+        re.compile(rf"you removed (?P<count>{COUNT}) or more loyalty counters? to activate it"),
+        _removed_loyalty_counters,
+    ),
     ConditionReader(
         re.compile(r"(?:you(?:'re| are) )?casting an? spell with (?P<keyword>[a-z][a-z-]*)"),
         _while_casting,
