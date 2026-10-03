@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "89a698a5-f4ac-4b04-96dc-32e1eeef6ac7",
+  "oracle_id": "98636623-bbc6-4935-a2bb-2234691eb6d8",
+  "multiverse_ids": [
+    548384
+  ],
+  "mtgo_id": 97092,
+  "arena_id": 79511,
+  "tcgplayer_id": 262130,
+  "cardmarket_id": 607100,
+  "name": "Thousand-Faced Shadow",
+  "lang": "en",
+  "released_at": "2022-02-18",
+  "uri": "https://api.scryfall.com/cards/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7",
+  "scryfall_uri": "https://scryfall.com/card/neo/86/thousand-faced-shadow?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:24:51Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.jpg?1783923891",
+    "normal": "https://cards.scryfall.io/normal/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.jpg?1783923891",
+    "large": "https://cards.scryfall.io/large/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.jpg?1783923891",
+    "png": "https://cards.scryfall.io/png/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.png?1783923891",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.jpg?1783923891",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.jpg?1783923891",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.webp?1783923891",
+    "grid": "https://cards.scryfall.io/grid/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.webp?1783923891",
+    "display": "https://cards.scryfall.io/display/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.webp?1783923891",
+    "art": "https://cards.scryfall.io/art/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.webp?1783923891",
+    "crop": "https://cards.scryfall.io/crop/front/8/9/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7.webp?1783923891"
+  },
+  "mana_cost": "{U}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Human Ninja",
+  "oracle_text": "Ninjutsu {2}{U}{U} ({2}{U}{U}, Return an unblocked attacker you control to hand: Put this card onto the battlefield from your hand tapped and attacking.)\nFlying\nWhen this creature enters from your hand, if it's attacking, create a token that's a copy of another target attacking creature. The token enters tapped and attacking.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Ninjutsu"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c",
+      "component": "token",
+      "name": "Copy",
+      "type_line": "Token",
+      "uri": "https://api.scryfall.com/cards/f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c"
+    },
+    {
+      "object": "related_card",
+      "id": "00632c03-be00-4722-85b3-2ce31bba5cc6",
+      "component": "combo_piece",
+      "name": "Thousand-Faced Shadow",
+      "type_line": "Creature \u2014 Human Ninja",
+      "uri": "https://api.scryfall.com/cards/00632c03-be00-4722-85b3-2ce31bba5cc6"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59a2059f-5482-433f-8761-eb2e17859b71",
+  "set": "neo",
+  "set_name": "Kamigawa: Neon Dynasty",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59a2059f-5482-433f-8761-eb2e17859b71",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aneo&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/neo?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/89a698a5-f4ac-4b04-96dc-32e1eeef6ac7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A98636623-bbc6-4935-a2bb-2234691eb6d8&unique=prints",
+  "collector_number": "86",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ekaterina Burmak",
+  "artist_ids": [
+    "2a9f3780-fcc8-4ec5-b403-ee1d1370d3b4"
+  ],
+  "illustration_id": "191e3801-5de1-409c-a90d-4261d9ed0625",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2673,
+  "penny_rank": 2698,
+  "preview": {
+    "source": "Sean Plott (Day9TV)",
+    "source_uri": "https://twitter.com/day9tv/status/1486738270549528579",
+    "previewed_at": "2022-01-27"
+  },
+  "prices": {
+    "usd": "1.48",
+    "usd_foil": "3.00",
+    "usd_etched": null,
+    "eur": "1.55",
+    "eur_foil": "1.58",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548384&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThousand-Faced%2BShadow",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThousand-Faced%2BShadow",
+    "edhrec": "https://edhrec.com/route/?cc=Thousand-Faced+Shadow"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262130%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=607100&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/97092?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

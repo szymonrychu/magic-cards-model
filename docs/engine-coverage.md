@@ -7114,3 +7114,11 @@ Snapcaster Mage (granted flashback via `PlayPermission.flashback`, used with
 Professor of Symbology (learn, CR 701.48a), Jadzi (enters prepared, Oracle's
 Gift X), Jennifer Walters (CR 101.2 cast prohibition, sorcery-speed transform),
 Fear of Missing Out (delirium extra combat), Nova Hellkite (warp, CR 702.185a).
+
+## R0b integration: enters-from-zone triggers, a token copy that enters attacking
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| An enters trigger narrowed by origin ("enters from your hand", "enters from your graveyard", "from a graveyard", "from exile") matches only an enters event whose `origin_zone` is that zone; "your" also requires the permanent's owner to be its controller. Such an enters ability functions from the battlefield, not the graveyard it names. | CR 603.6a, 400.3 | `machines/triggers.py` (`_entry_qualifier_matches`, `entering_origin_zone`, `zones_ability_functions_in`); `support._condition_can_fire` probes the named origin | `scenarios/test_enters_from_zone_trigger.py` (Phyrexian Dragon Engine reanimated by Unearth and put in from hand, Thousand-Faced Shadow cast from hand) |
+| A ninja put in by ninjutsu enters attacking: the enters event is raised only after it is attacking, so "if it's attacking" holds | CR 702.49c, 508.4, 603.4 | `machines/keywords._ninjutsu_effect` | `scenarios/test_token_copy_enters_tapped_and_attacking.py` |
+| "create a token that's a copy of another target attacking creature. The token enters tapped and attacking." - the copy enters tapped and attacking what its controller is attacking, unblocked in the declare blockers step; no attacking target means the trigger is removed | CR 707.2, 508.4, 508.4d, 603.3d | `machines/effects._CREATE_TOKEN_COPIES_EXCEPT_RE` (`enters_attacking`), `models/token.token_copy_of(attacking=)` | `scenarios/test_token_copy_enters_tapped_and_attacking.py` (Thousand-Faced Shadow, the only format-legal printing of this rider) |
