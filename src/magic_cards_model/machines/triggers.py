@@ -2543,25 +2543,10 @@ def _controller_clause_holds(
 #: subject looked up here already carries its real entering state.
 _ENTERS_TAPPED_RE = re.compile(r"\benters?\b(?:[^.]*\bthe battlefield\b)?[^.]*?\btapped\b")
 _ENTERS_UNTAPPED_RE = re.compile(r"\benters?\b(?:[^.]*\bthe battlefield\b)?[^.]*?\buntapped\b")
-#: "enters from your hand" (Thousand-Faced Shadow) / "enters from a graveyard":
-#: CR 603.6a's enters event remembers the zone the permanent came from
-#: (`GameEvent.origin_zone`, set by `Game.enter_the_battlefield`), and the
-#: qualifier narrows the CR 603.2 event match itself.
-_ENTERS_FROM_ZONE_RE = re.compile(
-    r"\benters?\b[^.]*?\bfrom (?:your|a|their|an opponent's) "
-    r"(?P<zone>hand|graveyard|library|exile)\b"
-)
 _ENTERS_WITH_COUNTER_RE = re.compile(
     r"\benters?\b[^.]*?\bwith\s+(?:a|an|one or more|\d+)\s+"
     r"(?P<kind>[+/\-\w]+(?:[ \-][+/\-\w]+)*?)\s+counters?\s+on\s+(?:it|them)\b"
 )
-
-
-def required_entry_origin(condition: str) -> Zone | None:
-    """The zone an ENTERS_THE_BATTLEFIELD condition says the permanent must
-    come from ("enters from your hand"), or `None` when it names none."""
-    match = _ENTERS_FROM_ZONE_RE.search(condition.lower())
-    return Zone(match.group("zone")) if match is not None else None
 
 
 def _entry_qualifier_matches(game: "Game", condition: str, event: "GameEvent") -> bool:
@@ -2582,10 +2567,6 @@ def _entry_qualifier_matches(game: "Game", condition: str, event: "GameEvent") -
     if _ENTERS_TAPPED_RE.search(lowered) is not None and (subject is None or not subject.tapped):
         return False
     if _ENTERS_UNTAPPED_RE.search(lowered) is not None and (subject is None or subject.tapped):
-        return False
-
-    required_origin = required_entry_origin(condition)
-    if required_origin is not None and event.origin_zone is not required_origin:
         return False
 
     counter_match = _ENTERS_WITH_COUNTER_RE.search(lowered)

@@ -202,7 +202,6 @@ from magic_cards_model.machines.triggers import (
     intervening_if_readable,
     is_additional_trigger_line,
     is_batched_attack_condition,
-    required_entry_origin,
     total_power_attack_threshold,
     triggers_only_off_the_stack,
 )
@@ -2828,7 +2827,6 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
             subject_subtypes=tuple(subject.subtypes) if subject is not None else None,
             related_id=subject.id if subject is not None else None,
             player=player,
-            origin_zone=required_entry_origin(ability.condition) if entering else None,
             # CR 506.5/506.6: a lone attacker (nothing else declared this
             # combat, and so also nothing else attacking the same defending
             # player) is an entirely ordinary board state, reachable in a

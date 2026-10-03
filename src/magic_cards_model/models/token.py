@@ -1287,13 +1287,6 @@ def token_copy_of(
                 )
                 game.put_onto_battlefield(addition, controller)
                 created.append(addition)
-        attacking = options.get("attacking")
-        if attacking is not None:
-            # CR 508.4: put onto the battlefield attacking, never declared. A
-            # token a replacement effect sent elsewhere is not attacking.
-            for copy in created:
-                if copy.zone is Zone.BATTLEFIELD:
-                    _put_onto_the_battlefield_attacking(game, copy, attacking)
         return created
 
 

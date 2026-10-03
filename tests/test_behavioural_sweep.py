@@ -4521,13 +4521,6 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="a creature type chosen for the source as it entered (CR 614.12a)",
         precondition=r"of the chosen type enters",
     ),
-    # R0b integration: proven by
-    # tests/scenarios/test_token_copy_enters_tapped_and_attacking.py.
-    DriverGap(
-        kind="enters_the_battlefield",
-        event="the source entering from hand already attacking (ninjutsu, CR 702.49c)",
-        precondition=r"enters from your hand, if it's attacking",
-    ),
 )
 
 
