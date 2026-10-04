@@ -19,8 +19,11 @@
 #   F1, F2 effects   F3 game   F4a layers   F4b replacement   F4c casting
 #   F4d triggers     F4e cost
 # Every re-run is split_lib.sh's split_step, the very function run_step.sh runs, so
-# the re-split tree is the tree the script-made split commits have: F2 measures
-# overlap.json on the F1 commit's parent (unless --overlap is given), and each step
+# the re-split tree is the tree the script-made split commits have: F2 reuses the
+# overlap json main's F2 commit recorded (scripts/split/state/f2-overlap.json), so its
+# edges are main's even when the code present now would measure others; only when
+# that commit has none (or --overlap is given) is overlap.json measured on the F1
+# commit's parent (or taken from --overlap). Each step
 # ends with ruff format and ruff check --fix on its package (F2 also on
 # tests/test_dispatch_order.py).
 # Environment: PORT_BRANCH_PYTHON overrides the python runner (default
@@ -37,7 +40,7 @@ die() {
 }
 
 usage() {
-    sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//' >&2
+    sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//' >&2
     exit "${1:-2}"
 }
 
@@ -180,13 +183,27 @@ if [ "$npending" -gt 0 ]; then
             surface="$work/$n-surface.json"
         fi
         f1=""
-        if [ "$step" = "F2" ] && [ -z "$overlap" ]; then
-            f1="$(git log -1 --format=%H -E --grep='^Split-Step: F1$' "$onto")"
-            [ -n "$f1" ] || die "no Split-Step: F1 commit on $onto, cannot measure the F2 overlap"
+        step_overlap="$overlap"
+        if [ "$step" = "F2" ] && [ -z "$step_overlap" ]; then
+            # the edges main's F2 used, recorded in its commit (SPLIT_F2_OVERLAP)
+            f2="$(git log -1 --format=%H -E --grep='^Split-Step: F2$' "$onto")"
+            if [ -n "$f2" ] && git cat-file -e "$f2:$SPLIT_F2_OVERLAP" 2>/dev/null; then
+                git show "$f2:$SPLIT_F2_OVERLAP" >"$work/$n-overlap.json"
+                step_overlap="$work/$n-overlap.json"
+                echo "port_branch: F2 reuses the overlap recorded in ${f2%"${f2#???????}"}"
+            else
+                f1="$(git log -1 --format=%H -E --grep='^Split-Step: F1$' "$onto")"
+                [ -n "$f1" ] || die "no Split-Step: F1 commit on $onto, cannot measure the F2 overlap"
+            fi
         fi
         SPLIT_LIB_WORK="$work/$n"
         mkdir "$SPLIT_LIB_WORK"
-        split_step "$step" "$manifest" "$f1" "$surface" "$overlap" </dev/null
+        split_step "$step" "$manifest" "$f1" "$surface" "$step_overlap" </dev/null
+        if [ -n "$f1" ]; then
+            # main's F2 recorded no overlap json, so neither does its re-split
+            rm -f "$SPLIT_F2_OVERLAP"
+            rmdir "$(dirname "$SPLIT_F2_OVERLAP")" 2>/dev/null || true
+        fi
         trailers="${trailers}Split-Step: $step"$'\n'
     done <<EOF
 $pending_steps

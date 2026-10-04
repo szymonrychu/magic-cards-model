@@ -347,3 +347,69 @@ def test_mise_task_runs_port_branch_help():
     assert res.returncode == 0, res.stdout + res.stderr
     assert "port_branch.sh <branch>" in res.stdout + res.stderr
     assert "split_lib.sh" in res.stdout + res.stderr
+
+
+STATE = "scripts/split/state/f2-overlap.json"
+
+
+def test_resplit_reuses_the_f2_edges_main_recorded(tmp_path):
+    """F2 records the overlap json it used in the committed tree; port_branch's F2 re-run
+    reuses exactly those edges instead of re-measuring them on the code present at port
+    time. Here the branch changes a rung so that it now double-matches another rung of
+    its segment: re-measured, that would add a before/after edge main's split never had."""
+    repo = tmp_path / "repo"
+    (repo / "scripts" / "split" / "manifest").mkdir(parents=True)
+    shutil.copytree(FIX / "reg" / "pkg", repo / "pkg")
+    manifest = "scripts/split/manifest/reg.toml"
+    shutil.copy(FIX / "reg" / "reg.toml", repo / manifest)
+    (repo / ".gitignore").write_text("__pycache__/\n")
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "commit.gpgsign", "false")
+    commit(repo, "pre-split")
+    git(repo, "branch", "feature")
+
+    corpus = tmp_path / "corpus.json"
+    corpus.write_text(json.dumps(CORPUS))
+    mdir = tmp_path / "manifests"
+    mdir.mkdir()
+    shutil.copy(FIX / "reg" / "reg.toml", mdir / "effects.toml")
+    step_env = {
+        **ENV,
+        "SPLIT_MANIFEST_DIR": str(mdir),
+        "SPLIT_PY": sys.executable,
+        "SPLIT_RUFF": f"{sys.executable} -m ruff",
+        "SPLIT_OVERLAP_ARGS": f"--corpus-json {corpus}",
+    }
+    for step in ("F1", "F2"):
+        res = subprocess.run(
+            ["bash", str(RUN_STEP), step], cwd=repo, capture_output=True, text=True, env=step_env
+        )
+        assert res.returncode == 0, res.stdout + res.stderr
+    recorded = repo / STATE
+    assert recorded.exists(), "F2 does not record the overlap json it used"
+    assert git(repo, "show", f"main:{STATE}") == recorded.read_text().rstrip("\n")
+    pairs = {
+        (p["a"], p["b"])
+        for ladder in json.loads(recorded.read_text())["ladders"].values()
+        for seg in ladder["segments"].values()
+        for p in seg["pairs"]
+    }
+    new_pair = ("alpha.parse_a_three", "beta.parse_b_three")
+    assert new_pair not in pairs
+
+    git(repo, "checkout", "-q", "feature")
+    edit(repo, "pkg/mono.py", 'if text == "bthree"', 'if text in ("bthree", "three")')
+    commit(repo, "feature: b_three also reads three")
+    out = subprocess.run(
+        ["bash", str(SCRIPT), "feature", "--step", f"F1={manifest}", "--step", f"F2={manifest}"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        env={**ENV, "SPLIT_OVERLAP_ARGS": f"--corpus-json {corpus}"},
+    )
+    assert out.returncode == 0, out.stdout + out.stderr
+    # main's edges, so against main only the branch's own edit differs
+    assert git(repo, "diff", "--name-only", "main", "HEAD") == "pkg/mono/beta.py"
+    assert "three" in git(repo, "diff", "main", "HEAD", "--", "pkg/mono/beta.py")
+    assert (repo / STATE).read_text() == git(repo, "show", f"main:{STATE}") + "\n"
+    assert git(repo, "status", "--porcelain") == ""

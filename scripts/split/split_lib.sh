@@ -8,8 +8,9 @@
 # Runs in the repository root and leaves the result uncommitted:
 #   F1 F3 F4a..F4e  codemod.py <manifest> [--surface <surface json>]
 #   F2              overlap.py on <f1 commit>^:<source> (skipped when <overlap json> is
-#                   given), then to_registry.py <package> --manifest <manifest>
-#                   --overlap <json> --tests-dir tests
+#                   given), copied to $SPLIT_F2_OVERLAP (committed with the step), then
+#                   to_registry.py <package> --manifest <manifest>
+#                   --overlap $SPLIT_F2_OVERLAP --tests-dir tests
 # then `ruff format` and `ruff check --fix` on the step's package (F2: also
 # tests/test_dispatch_order.py). The generators write lint-clean code, so a ruff
 # finding left over fails the step.
@@ -20,6 +21,9 @@
 # SPLIT_OVERLAP_ARGS adds overlap.py arguments (tests: --corpus-json <file>).
 # The python tools run with the repository root appended to PYTHONPATH (the
 # manifest's module is imported from there). bash 3.2 compatible.
+
+# Where F2 records the overlap json it used, relative to the repository root.
+SPLIT_F2_OVERLAP="scripts/split/state/f2-overlap.json"
 
 split_manifest_value() {
     sed -n "s/^$2 *= *\"\(.*\)\"/\1/p" "$1" | head -1
@@ -69,8 +73,12 @@ split_step() {
                 --manifest "$manifest" --module "$module" --out "$overlap" \
                 ${SPLIT_OVERLAP_ARGS:-}
         fi
+        # the overlap the edges come from is committed with F2, so a port re-split reuses
+        # exactly these edges instead of re-measuring them on the code present then
+        split_run mkdir -p "$(dirname "$SPLIT_F2_OVERLAP")"
+        split_run cp "$overlap" "$SPLIT_F2_OVERLAP"
         split_py "$SPLIT_LIB_TOOLS/to_registry.py" "$package" --manifest "$manifest" \
-            --overlap "$overlap" --tests-dir tests
+            --overlap "$SPLIT_F2_OVERLAP" --tests-dir tests
         targets="$package tests/test_dispatch_order.py"
     elif [ -n "$surface" ]; then
         split_py "$SPLIT_LIB_TOOLS/codemod.py" "$manifest" --surface "$surface"
