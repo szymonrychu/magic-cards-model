@@ -1,0 +1,16 @@
+module = "fxtop.game"
+source = "root/fxtop/game.py"
+package = "root/fxtop/game"
+mode = "class"
+class = "Game"
+targets = ["combat", "library", "records"]
+records = "records"
+stay = ["settle_pregame", "model_config"]
+
+[[rules]]
+pattern = "combat_.*|static_one"
+target = "combat"
+
+[[rules]]
+pattern = "draw_.*|cls_one"
+target = "library"

@@ -1,0 +1,9 @@
+{
+  "captured_at": "fixture",
+  "defined": [
+    "DISPATCH", "PATTERN", "TABLE_NAMES", "Wide", "_private_dispatch_tag", "decorate",
+    "dispatch_run", "stray_new_helper", "text_one", "text_two"
+  ],
+  "imported": ["Callable", "TYPE_CHECKING", "re", "sib", "top"],
+  "module": "fxtop.pk.mod"
+}

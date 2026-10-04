@@ -1,0 +1,13 @@
+module = "fxtop.pk.dfr"
+source = "root/fxtop/pk/dfr.py"
+package = "root/fxtop/pk/dfr"
+mode = "module"
+targets = ["a", "b"]
+
+[[rules]]
+pattern = "a_.*"
+target = "a"
+
+[[rules]]
+pattern = "b_.*"
+target = "b"

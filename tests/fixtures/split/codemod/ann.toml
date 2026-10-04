@@ -1,0 +1,12 @@
+module = "fxtop.pk.ann"
+source = "root/fxtop/pk/ann.py"
+package = "root/fxtop/pk/ann"
+mode = "module"
+targets = ["b", "a"]
+
+[names]
+Shape = "b"
+
+[[rules]]
+pattern = "a_.*"
+target = "a"

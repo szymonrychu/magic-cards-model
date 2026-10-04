@@ -1,0 +1,13 @@
+module = "fxtop.pk.cyc"
+source = "root/fxtop/pk/cyc.py"
+package = "root/fxtop/pk/cyc"
+mode = "module"
+targets = ["a", "b"]
+
+[[rules]]
+pattern = "a_.*|A_.*"
+target = "a"
+
+[[rules]]
+pattern = "b_.*|B_.*"
+target = "b"

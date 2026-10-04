@@ -1,0 +1,18 @@
+module = "fxtop.pk.mod"
+source = "root/fxtop/pk/mod.py"
+package = "root/fxtop/pk/mod"
+mode = "module"
+targets = ["dispatch", "text", "_common"]
+
+[names]
+Wide = "_common"
+decorate = "_common"
+
+[[rules]]
+pattern = "text_.*"
+target = "text"
+kinds = ["def"]
+
+[[rules]]
+pattern = "dispatch_.*|DISPATCH|_private_dispatch_tag"
+target = "dispatch"
