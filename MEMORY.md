@@ -579,6 +579,8 @@ home of its own memory.
 
 - 2026-10-03 E5 integration: a criss-cross merge (two merge bases, 72f52550 and 03365614) made taking main's side of a conflicted file drop E5's own edits to it; redo such a file through a scratch `git merge` (recursive virtual base), never `git checkout --theirs` or a hand `git merge-file` against one base.
 
+- 2026-10-04 game 891056b6 deadlock: a cast/activation by a player without priority was only refused by `Priority.retain` after `put_on_stack` had stacked its cast triggers, so a CR 603.3b order_triggers pause stood in front of a refusal and no seat could answer it. The gate (`Game.why_not_holding_priority`) is asked in `Game.cast` and `engine_api.cast_card` just before CR 601.2f, and in `begin_activating` for non-mana abilities - NOT in `Casting.model_post_init`/`why_cannot_cast_now`: there it broke 69 tests that probe an opponent's Casting for other refusals, and changed `legal_actions`/`blocked_casts` (which enumerate casts regardless of who holds priority; api seats and playscripts rely on that).
+
 ## Regression-guard approvals
 
 Each line: a change to pre-existing test content, flagged by `scripts/regression_guard.py`, judged by an independent reviewer.
