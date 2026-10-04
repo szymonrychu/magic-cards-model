@@ -5,14 +5,17 @@
 # design's order unchanged.
 #
 # How a def is placed (first hit wins, see manifest_lib "Resolution precedence"):
-# 1. [names]: the four ladders -> dispatch; EFFECTS, TRIGGER_EFFECTS,
-#    ACTIVATED_EFFECTS and the three *_effect_for -> registries; hub helpers ->
-#    _common (below).
+# 1. [names]: the four ladders and the clause-list rebind only
+#    _parse_mixed_clauses calls (_reorder_token_named_after_tail) -> dispatch;
+#    EFFECTS, TRIGGER_EFFECTS, ACTIVATED_EFFECTS and the three *_effect_for ->
+#    registries; hub helpers -> _common (below).
 # 2. classes -> _common (the 19 classes: notices and private records).
 # 3. `_merge_*` pair parsers -> merges; stream-named sub-ladders
 #    (`_r0a_t5_ability_effect` ...) and the generic clause readers (inline regex
 #    ladders parse_clause_effect/_parse_targeted_clause and the parse_*_effect
-#    entry points) -> dispatch.
+#    entry points) -> dispatch; the ladders' guard helpers, every
+#    `_unreadable_*` refusal check (used only by the ladders, plus
+#    _unreadable_end_the_turn_clause, used only by such a check) -> dispatch.
 # 4. One "first mechanic word" rule per family: a def goes to the family owning
 #    the FIRST mechanic word in its name (`_parse_each_opponent_loses_life_...`
 #    -> life, `_parse_exile_then_return_...` -> removal). Each pattern skips
@@ -26,11 +29,17 @@
 # 6. [placed] (bake): the rest by caller majority, then callee majority.
 # Constants: manifest_lib's constant rule (only user's family; shared -> _common).
 #
+# Ladder helpers shared with the families stay out of dispatch, because a
+# family must never import from dispatch (dispatch sits above every family and
+# after F2 the families register into it): _strip_non_effect_preamble, the
+# design's text "strip" normaliser, is called by ~170 parsers in 15 families
+# besides the ladders -> text; _fold_following_token_grant, the clause rebind
+# _parse_mixed_clauses shares with four token-list parsers -> tokens.
+#
 # Hubs: a def that no family word claims (bake or weak-word placed) and that is
 # referenced from 4+ other targets goes to _common; the list below was computed
 # to a fixed point at 92c43981. Family-named helpers used everywhere
-# (count_expression, _strip_non_effect_preamble ...) stay in their family as
-# the design lists them.
+# (count_expression ...) stay in their family as the design lists them.
 #
 # Lines vs the design's first-pass estimates (more than 50% off):
 # - text 2.7k vs 6.6k: the first pass counted referent/antecedent parsers as
@@ -68,6 +77,8 @@ ACTIVATED_EFFECTS = "registries"
 effect_for = "registries"
 trigger_effect_for = "registries"
 activated_effect_for = "registries"
+# rebinds the clause list inside _parse_mixed_clauses, its only caller
+_reorder_token_named_after_tail = "dispatch"
 # hubs: referenced from 4+ other targets, claimed by no family word
 _card_description_is_readable = "_common"
 _effect_condition_is_readable = "_common"
@@ -100,6 +111,11 @@ kinds = ["def"]
 
 [[rules]]  # the generic clause readers: inline regex ladders and their entry points
 pattern = '_?parse_(?:targeted|player|mixed|clause)_(?:effect|clauses?)(?:_for_spell)?'
+target = "dispatch"
+kinds = ["def"]
+
+[[rules]]  # the ladders' refusal guards: every "can't read this clause" check
+pattern = '_unreadable_.*'
 target = "dispatch"
 kinds = ["def"]
 
@@ -264,10 +280,6 @@ _source_relative_whole_text_spell_effect = "dispatch"
 _source_still_here = "counters"
 _subtypes_in = "dispatch"
 _turn_linked_face_up_then_put_permanents = "removal"
-_unreadable_cast_permission_clause = "dispatch"
-_unreadable_cost_reference_clause = "dispatch"
-_unreadable_end_the_turn_clause = "modal"
-_unreadable_event_player_target_clause = "dispatch"
 _with_unparsed_remainder = "continuous"
 activation_resolution_text = "registries"
 card_types_among_spells_cast_reader = "damage"

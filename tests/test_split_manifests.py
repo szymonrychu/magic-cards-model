@@ -8,6 +8,8 @@ explicitly (`[names]`, `stay`) still exists in the source.
 
 from __future__ import annotations
 
+import ast
+import textwrap
 from functools import cache
 from pathlib import Path
 
@@ -118,6 +120,17 @@ def test_effects_families_order_and_registries():
     assert {i.target for i in merges} == {"merges"}
 
 
+def test_effects_ladder_guard_helpers_in_dispatch():
+    # the ladders' guard helpers: every `_unreadable_*` refusal check (and the
+    # one helper only such a check calls) and the clause-list rebind only
+    # _parse_mixed_clauses uses
+    _, p = resolved("effects")
+    guards = [i for i in p.items if i.kind == "def" and i.key and i.key.startswith("_unreadable_")]
+    assert len(guards) >= 11
+    assert {i.key: i.target for i in guards} == dict.fromkeys((i.key for i in guards), "dispatch")
+    assert p.target_of("_reorder_token_named_after_tail") == "dispatch"
+
+
 def test_game_mixins_and_stay():
     manifest, p = resolved("game")
     assert manifest.mode == "class"
@@ -174,3 +187,123 @@ def _lines(module: str) -> list[str]:
 
 def _source_of(module: str, item: ml.Item) -> str:
     return "\n".join(_lines(module)[item.start - 1 : item.end])
+
+
+# A safe facade import order must exist.  The new modules import each other's
+# names at the top (eager uses) or at the bottom (deferred uses); a bottom
+# import that reaches a module still running its own top imports finds its
+# names missing.  Mirrors the split codemod's order search on the resolved
+# graph.  Without `from __future__ import annotations` an unquoted function
+# annotation runs at def time, so its names count as eager here even though
+# manifest_lib counts annotations as deferred.
+
+
+def _annotation_names(text: str) -> set[str]:
+    out: set[str] = set()
+    for node in ast.walk(ast.parse(textwrap.dedent(text))):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            a = node.args
+            every = (*a.posonlyargs, *a.args, *a.kwonlyargs, a.vararg, a.kwarg)
+            notes = [x.annotation for x in every if x is not None and x.annotation is not None]
+            notes += [node.returns] if node.returns is not None else []
+            for note in notes:
+                out.update(
+                    n.id
+                    for n in ast.walk(note)
+                    if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
+                )
+    return out
+
+
+def _import_plan(module: str) -> tuple[dict[str, tuple[set[str], set[str]]], dict[str, set[str]]]:
+    manifest, p = resolved(module)
+    graph = ml.build_graph(p)
+    refs = list(graph.refs)
+    edges = dict(graph.edges)
+    leading = []
+    for item in p.items:
+        if item.kind not in ("import", "docstring") and not item.is_doc:
+            break
+        leading.append(item)
+    defined = [i for i in p.items if i not in leading]
+    last_owner = {n: i.target for i in defined for n in i.names}
+    source = ml.read_source(manifest)
+    if "from __future__ import annotations" not in source:
+        shell = manifest.class_name if manifest.mode == "class" else None
+        units = [i for i in defined if i.key != shell] + list(p.members)
+        for item in units:
+            if item.kind not in ("def", "class"):
+                continue
+            for name in sorted(_annotation_names(_source_of(module, item))):
+                owner = last_owner.get(name)
+                if owner is None or owner == item.target:
+                    continue
+                refs.append(ml.Ref(item.key or f"@{item.start}", item.target, name, owner, True))
+                edges[(item.target, owner)] = "eager"
+    used = ({i.target for i in defined} | {m.target for m in p.members}) - {ml.STAY}
+    targets = [t for t in manifest.targets if t in used] + sorted(used - set(manifest.targets))
+    plan: dict[str, tuple[set[str], set[str]]] = {}
+    for t in targets:
+        need: dict[str, tuple[str, bool]] = {}
+        for r in refs:
+            if r.source_target != t or last_owner.get(r.name) != r.target:
+                continue
+            was = need.get(r.name)
+            need[r.name] = (r.target, r.eager or (was is not None and was[1]))
+        top = {d for d, eager in need.values() if eager and d != ml.STAY}
+        bottom = {d for d, eager in need.values() if not eager and d != ml.STAY}
+        plan[t] = (top, bottom)
+    eager_deps = {
+        t: {b for (a, b), k in edges.items() if k == "eager" and a == t and b in plan} for t in plan
+    }
+    return plan, eager_deps
+
+
+def _safe_order(module: str) -> tuple[list[str] | None, list[str]]:
+    plan, eager_deps = _import_plan(module)
+    targets = list(plan)
+    failures: list[str] = []
+    dead: set[frozenset[str]] = set()
+
+    def load(m: str, state: dict[str, str], done: list[str]) -> str | None:
+        top, bottom = plan[m]
+        for phase, mods in (("top", top), ("defs", bottom)):
+            state[m] = phase
+            for d in sorted(mods, key=str.lower):
+                if state[d] == "unloaded":
+                    err = load(d, state, done)
+                    if err:
+                        return err
+                if state[d] == "top":
+                    return f"{m} imports names from {d} while {d} is still at its own imports"
+        state[m] = "loaded"
+        done.append(m)
+        return None
+
+    def search(order: list[str], state: dict[str, str]) -> list[str] | None:
+        loaded = frozenset(t for t, v in state.items() if v == "loaded")
+        if len(loaded) == len(targets):
+            return order
+        if loaded in dead:
+            return None
+        for cand in targets:
+            if state[cand] != "unloaded" or any(state[d] != "loaded" for d in eager_deps[cand]):
+                continue
+            nxt, done = dict(state), []
+            err = load(cand, nxt, done)
+            if err:
+                failures.append(f"importing {cand} first: {err}")
+                continue
+            found = search([*order, cand, *(d for d in done if d != cand)], nxt)
+            if found:
+                return found
+        dead.add(loaded)
+        return None
+
+    return search([], dict.fromkeys(targets, "unloaded")), failures
+
+
+@pytest.mark.parametrize("module", MODULES)
+def test_manifest_has_safe_import_order(module):
+    order, failures = _safe_order(module)
+    assert order is not None, "\n".join(failures[-6:])

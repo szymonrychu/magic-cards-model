@@ -5,6 +5,13 @@
 # optional, alternative and keyword costs a cast may choose.
 # _BLIGHT_PHRASE (imported by magic-cards-model-api) lands wherever the constant
 # rule puts it; the package __init__ re-exports it under its old path.
+# adventure_face (CR 715.1, which half of the card is the Adventure) sits in
+# permissions with its sibling face reader modal_dfc_spell_back_faces: both
+# answer which faces may be cast, and castable_faces/keyword_cast_options read
+# it.  It may not sit in casting: casting.py has no future import, so the
+# unquoted OptionalAdditionalCost annotation makes permissions -> options
+# eager, casting imports permissions eagerly, and a permissions -> casting
+# import would reach casting while casting is still at its own imports.
 module = "magic_cards_model.machines.casting"
 source = "src/magic_cards_model/machines/casting.py"
 package = "src/magic_cards_model/machines/casting"
@@ -29,6 +36,7 @@ StaticZoneCastPermission = "permissions"
 LinkedExileStaticCast = "permissions"
 PlayAction = "permissions"
 PlayPermission = "permissions"
+adventure_face = "permissions"  # see the header: not casting
 
 [[rules]]  # why a cast is refused right now
 pattern = '_?why_[a-z0-9_]*'
@@ -52,7 +60,6 @@ _count_listed_subtypes = "permissions"
 _normalized_spell_quality = "permissions"
 _turn_number = "options"
 _within_bound = "permissions"
-adventure_face = "casting"
 annotate_exile = "casting"
 class_gated_lines = "permissions"
 exile_adventured = "casting"
