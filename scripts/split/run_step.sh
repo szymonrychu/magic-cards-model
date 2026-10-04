@@ -106,10 +106,11 @@ else
 fi
 
 run $RUFF format $TARGETS
-# The generated facade re-exports long names on one line that ruff format cannot wrap:
-# fix everything else, then let ruff itself add the E501 noqa markers (idempotent).
-run $RUFF check --fix --extend-ignore E501 $TARGETS
-run $RUFF check --add-noqa --select E501 $TARGETS
+# Two things ruff cannot fix: the generated facade re-exports long names on one line
+# it cannot wrap (E501), and the F2 rewrite drops the noqa of the bottom-of-module
+# imports (E402). Fix everything else, then let ruff add those markers (idempotent).
+run $RUFF check --fix --extend-ignore E501,E402 $TARGETS
+run $RUFF check --add-noqa --select E501,E402 $TARGETS
 
 if [ "$DRY" = 1 ]; then
   echo "+ git add -A"
