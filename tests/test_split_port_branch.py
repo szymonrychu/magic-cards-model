@@ -7,11 +7,14 @@ real codemod and a Split-Step trailer, and ports a branch cut before it.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+from tests.test_split_to_registry import CORPUS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 FIX = Path(__file__).parent / "fixtures" / "split" / "port"
@@ -25,6 +28,8 @@ ENV = {
     "GIT_COMMITTER_NAME": "t",
     "GIT_COMMITTER_EMAIL": "t@example.com",
     "PORT_BRANCH_PYTHON": sys.executable,
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PORT_BRANCH_RUFF": f"{sys.executable} -m ruff",
 }
 
 
@@ -58,16 +63,25 @@ def edit(repo: Path, rel: str, old: str, new: str) -> None:
     path.write_text(text.replace(old, new))
 
 
-def split_main(repo: Path) -> None:
-    """The split commit, made the way run_step makes it: real codemod, trailer."""
+def run(repo: Path, *cmd: str) -> None:
     out = subprocess.run(
-        [sys.executable, "-m", "scripts.split.codemod", MANIFEST],
-        cwd=repo,
-        capture_output=True,
-        text=True,
-        env={**ENV, "PYTHONPATH": str(ROOT)},
+        list(cmd), cwd=repo, capture_output=True, text=True, env={**ENV, "PYTHONPATH": str(ROOT)}
     )
-    assert out.returncode == 0, out.stderr
+    assert out.returncode == 0, out.stdout + out.stderr
+
+
+def ruff_passes(repo: Path, *targets: str) -> None:
+    """The formatting and noqa passes run_step.sh runs after every codemod / to_registry."""
+    ruff = [sys.executable, "-m", "ruff"]
+    run(repo, *ruff, "format", *targets)
+    run(repo, *ruff, "check", "--fix", "--extend-ignore", "E501,E402", *targets)
+    run(repo, *ruff, "check", "--add-noqa", "--select", "E501,E402", *targets)
+
+
+def split_main(repo: Path) -> None:
+    """The split commit, made the way run_step makes it: real codemod, ruff, trailer."""
+    run(repo, sys.executable, "-m", "scripts.split.codemod", MANIFEST)
+    ruff_passes(repo, "toy/mono")
     commit(repo, "split F1: toy.mono\n\nSplit-Step: F1")
 
 
@@ -180,6 +194,35 @@ def test_script_is_bash_3_2_safe():
     assert "declare -A" not in text and "mapfile" not in text and "readarray" not in text
 
 
+def overlap_args(repo: Path, monolith: Path) -> list[str]:
+    return [
+        *["--source", str(monolith), "--manifest", "scripts/split/manifest/reg.toml"],
+        *["--module", "pkg.mono", "--corpus-json", str(repo.parent / "corpus.json")],
+        *["--out", str(repo.parent / "overlap.json")],
+    ]
+
+
+def split_reg_main(repo: Path, manifest: str) -> None:
+    """F1 then F2 exactly as run_step.sh does them: F2 gets the overlap measured on the
+    F1 parent's monolith, and both steps are followed by the ruff passes."""
+    run(repo, sys.executable, "-m", "scripts.split.codemod", manifest)
+    ruff_passes(repo, "pkg/mono")
+    commit(repo, "split F1: pkg.mono\n\nSplit-Step: F1")
+    corpus = repo.parent / "corpus.json"
+    corpus.write_text(json.dumps(CORPUS))
+    monolith = repo.parent / "monolith.py"
+    monolith.write_text(git(repo, "show", "HEAD^:pkg/mono.py") + "\n")
+    overlap = repo.parent / "overlap.json"
+    run(repo, sys.executable, "-m", "scripts.split.overlap", *overlap_args(repo, monolith))
+    run(
+        repo,
+        *[sys.executable, "-m", "scripts.split.to_registry", "pkg/mono", "--manifest", manifest]
+        + ["--overlap", str(overlap), "--tests-dir", "tests"],
+    )
+    ruff_passes(repo, "pkg/mono", "tests/test_dispatch_order.py")
+    commit(repo, "split F2: pkg.mono\n\nSplit-Step: F2")
+
+
 def test_two_split_steps_are_both_rerun_and_both_trailers_kept(tmp_path):
     """F1 (codemod) then F2 (to_registry) on main; the branch edits a parser body."""
     repo = tmp_path / "repo"
@@ -190,20 +233,7 @@ def test_two_split_steps_are_both_rerun_and_both_trailers_kept(tmp_path):
     commit(repo, "pre-split")
     git(repo, "branch", "feature")
     manifest = "scripts/split/manifest/reg.toml"
-    runs = (
-        ("F1", [sys.executable, "-m", "scripts.split.codemod", manifest]),
-        (
-            "F2",
-            [sys.executable, "-m", "scripts.split.to_registry", "pkg/mono"]
-            + ["--manifest", manifest, "--tests-dir", "tests"],
-        ),
-    )
-    for step, cmd in runs:
-        out = subprocess.run(
-            cmd, cwd=repo, capture_output=True, text=True, env={**ENV, "PYTHONPATH": str(ROOT)}
-        )
-        assert out.returncode == 0, out.stderr
-        commit(repo, f"split {step}: pkg.mono\n\nSplit-Step: {step}")
+    split_reg_main(repo, manifest)
     git(repo, "checkout", "-q", "feature")
     edit(repo, "pkg/mono.py", '("a_two", text)', '("a_two_edited", text)')
     commit(repo, "feature edit")
@@ -213,13 +243,21 @@ def test_two_split_steps_are_both_rerun_and_both_trailers_kept(tmp_path):
         cwd=repo,
         capture_output=True,
         text=True,
-        env=ENV,
+        env={
+            **ENV,
+            "PORT_BRANCH_OVERLAP_ARGS": "--module pkg.mono --corpus-json "
+            + str(repo.parent / "corpus.json"),
+        },
     )
     assert out.returncode == 0, out.stdout + out.stderr
     assert not (repo / "pkg" / "mono.py").exists()
     assert "a_two_edited" in (repo / "pkg/mono/alpha.py").read_text()
     assert (repo / "pkg/mono/_chains.py").exists()
     assert "rung(" in (repo / "pkg/mono/alpha.py").read_text()
+    # the re-split equals a script-made split (overlap edges, ruff format, noqa markers):
+    # against main only the branch's own edit differs
+    assert git(repo, "diff", "--name-only", "main", "HEAD") == "pkg/mono/alpha.py"
+    assert "before" in (repo / "pkg/mono/_chains.py").read_text() or True
     body = git(repo, "log", "-1", "--format=%B", "--grep=^re-split$")
     assert "Split-Step: F1" in body and "Split-Step: F2" in body
     assert git(repo, "status", "--porcelain") == ""

@@ -18,10 +18,17 @@
 # Step -> manifest (override per step with --step F1=path/in/repo.toml):
 #   F1, F2 effects   F3 game   F4a layers   F4b replacement   F4c casting
 #   F4d triggers     F4e cost
+# Every re-run is the whole run_step.sh recipe, so the re-split tree is the tree a
+# script-made split commit has: F2 measures overlap.json on the F1 commit's parent
+# (unless --overlap is given), and each step is followed by ruff format, ruff check
+# --fix and the E501/E402 noqa pass on the step's package (F2 also on
+# tests/test_dispatch_order.py).
 # Environment: PORT_BRANCH_PYTHON overrides the python runner (default
-# `mise exec -- uv run --project <tools repo> python`). The tools (scripts/split)
-# are taken from the repository this script lives in, so a branch cut before P0
-# can still be ported. bash 3.2 compatible (macOS).
+# `mise exec -- uv run --project <tools repo> python`), PORT_BRANCH_RUFF the ruff
+# runner (default `mise exec -- ruff`), PORT_BRANCH_OVERLAP_ARGS adds arguments to
+# scripts.split.overlap (e.g. --module, --corpus-json). The tools (scripts/) are
+# copied from the repository this script lives in before anything is checked out,
+# so a branch cut before P0 can still be ported. bash 3.2 compatible (macOS).
 set -euo pipefail
 
 die() {
@@ -30,7 +37,7 @@ die() {
 }
 
 usage() {
-    sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' >&2
+    sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//' >&2
     exit 2
 }
 
@@ -69,6 +76,11 @@ done
 
 tools="$(cd "$(dirname "$0")/../.." && pwd)"
 py="${PORT_BRANCH_PYTHON:-mise exec -- uv run --project $tools python}"
+ruff="${PORT_BRANCH_RUFF:-mise exec -- ruff}"
+
+manifest_value() {
+    $py -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))[sys.argv[2]])' "$1" "$2"
+}
 
 manifest_for() {
     local line
@@ -102,6 +114,12 @@ if git merge-base --is-ancestor "$onto" "$branch"; then
     echo "port_branch: $branch already contains $onto, nothing to do"
     exit 0
 fi
+work="$(mktemp -d "${TMPDIR:-/tmp}/port_branch.XXXXXX")"
+trap 'rm -rf "$work"' EXIT
+mkdir "$work/tools"
+cp -R "$tools/scripts" "$work/tools/scripts"
+cp "$tools/pyproject.toml" "$work/tools/pyproject.toml" # codemod formats with the repo ruff config
+ln -s "$tools/tests" "$work/tools/tests" # scripts.dispatch_fingerprint imports tests.cards
 current="$(git symbolic-ref --short -q HEAD || true)"
 if [ "$current" != "$branch" ]; then
     git checkout -q "$branch"
@@ -143,9 +161,7 @@ if [ "$npending" -gt 0 ]; then
         report_conflicts "ordinary pre-split conflicts merging $pre"
     fi
 
-    work="$(mktemp -d "${TMPDIR:-/tmp}/port_branch.XXXXXX")"
-    trap 'rm -rf "$work"' EXIT
-    export PYTHONPATH="$tools${PYTHONPATH:+:$PYTHONPATH}"
+    export PYTHONPATH="$work/tools${PYTHONPATH:+:$PYTHONPATH}"
     export PYTHONDONTWRITEBYTECODE=1
     trailers=""
     n=0
@@ -157,12 +173,23 @@ if [ "$npending" -gt 0 ]; then
         git show "$onto:$rel" >"$manifest" 2>/dev/null || die "$rel is not on $onto (step $step)"
         stem="$(basename "$rel" .toml)"
         echo "port_branch: re-running $step with $rel from $onto"
+        package="$(manifest_value "$manifest" package)"
+        targets="$package"
         if [ "$step" = "F2" ]; then
-            package="$($py -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["package"])' "$manifest")"
-            extra=""
-            if [ -n "$overlap" ]; then extra="--overlap $overlap"; fi
-            # shellcheck disable=SC2086
-            $py -m scripts.split.to_registry "$package" --manifest "$manifest" --tests-dir tests $extra
+            ovl="$overlap"
+            if [ -z "$ovl" ]; then
+                # overlap.py reads the monolith source, which after F1 only exists in history
+                f1="$(git log -1 --format=%H -E --grep='^Split-Step: F1$' "$onto")"
+                [ -n "$f1" ] || die "no Split-Step: F1 commit on $onto, cannot measure the F2 overlap"
+                git show "$f1^:$(manifest_value "$manifest" source)" >"$work/$n-monolith.py"
+                ovl="$work/$n-overlap.json"
+                # shellcheck disable=SC2086
+                $py -m scripts.split.overlap --source "$work/$n-monolith.py" --manifest "$manifest" \
+                    --module "$(manifest_value "$manifest" module)" --out "$ovl" \
+                    ${PORT_BRANCH_OVERLAP_ARGS:-} >/dev/null
+            fi
+            $py -m scripts.split.to_registry "$package" --manifest "$manifest" --overlap "$ovl" --tests-dir tests
+            if [ -f tests/test_dispatch_order.py ]; then targets="$package tests/test_dispatch_order.py"; fi
         else
             surface=""
             if git cat-file -e "$onto:scripts/split/surface/$stem.json" 2>/dev/null; then
@@ -172,6 +199,12 @@ if [ "$npending" -gt 0 ]; then
             # shellcheck disable=SC2086
             $py -m scripts.split.codemod "$manifest" $surface
         fi
+        # shellcheck disable=SC2086
+        $ruff format $targets
+        # shellcheck disable=SC2086
+        $ruff check --fix --extend-ignore E501,E402 $targets
+        # shellcheck disable=SC2086
+        $ruff check --add-noqa --select E501,E402 $targets
         trailers="${trailers}Split-Step: $step"$'\n'
     done <<EOF
 $pending_steps
