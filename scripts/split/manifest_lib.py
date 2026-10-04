@@ -102,6 +102,7 @@ import argparse
 import ast
 import json
 import re
+import subprocess
 import sys
 import tomllib
 from collections import Counter
@@ -227,7 +228,12 @@ def load_manifest(path: str | Path) -> Manifest:
 
 
 def read_source(manifest: Manifest) -> str:
-    """Read the manifest's `source`: cwd first, then the manifest dir and its parents."""
+    """Read the manifest's `source`: cwd first, then the manifest dir and its parents.
+
+    Once a split step has turned the source into a package the file is gone; then it is
+    the monolith as the commit that deleted it last had it (git history of the repo
+    holding the manifest), so the manifest stays checkable against what it split.
+    """
     src = Path(manifest.source)
     candidates = [src] if src.is_absolute() else [Path.cwd() / src]
     if manifest.path is not None and not src.is_absolute():
@@ -236,7 +242,27 @@ def read_source(manifest: Manifest) -> str:
     for cand in candidates:
         if cand.is_file():
             return cand.read_text()
+    if not src.is_absolute():
+        text = _deleted_source(manifest, src)
+        if text is not None:
+            return text
     raise ManifestError(f"source {manifest.source!r} not found")
+
+
+def _deleted_source(manifest: Manifest, src: Path) -> str | None:
+    here = manifest.path.resolve().parent if manifest.path is not None else Path.cwd()
+
+    def git(*args: str) -> str | None:
+        res = subprocess.run(["git", *args], cwd=here, capture_output=True, text=True)
+        return res.stdout if res.returncode == 0 else None
+
+    root = git("rev-parse", "--show-toplevel")
+    if not root:
+        return None
+    sha = git("-C", root.strip(), "log", "-1", "--format=%H", "--diff-filter=D", "--", str(src))
+    if not sha or not sha.strip():
+        return None
+    return git("-C", root.strip(), "show", f"{sha.strip()}^:{src.as_posix()}")
 
 
 # ------------------------------------------------------------- reference analysis

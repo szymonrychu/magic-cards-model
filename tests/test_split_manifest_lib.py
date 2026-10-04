@@ -6,6 +6,7 @@ nothing here touches the real engine modules.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -653,3 +654,38 @@ def test_class_mode_bake_never_votes_for_the_class_shell():
             mode="class", targets=m.targets, records=m.records, placed=placed, **{"class": "G"}
         )
     )
+
+
+def test_read_source_after_the_split_reads_the_monolith_the_split_commit_removed(tmp_path):
+    """After a split step the manifest's source is gone from the tree; the manifest is
+    still checked against the monolith it split (the dry run's F1 broke the effects
+    manifest tests), read from the commit that deleted it."""
+    fix = Path(__file__).parent / "fixtures" / "split" / "port" / "reg"
+    repo = tmp_path / "repo"
+    shutil.copytree(fix / "pkg", repo / "pkg")
+    (repo / "m").mkdir()
+    shutil.copy(fix / "reg.toml", repo / "m" / "reg.toml")
+    env = {
+        **os.environ,
+        **{
+            f"GIT_{w}_{k}": v
+            for w in ("AUTHOR", "COMMITTER")
+            for k, v in (("NAME", "t"), ("EMAIL", "t@e"))
+        },
+    }
+
+    def git(*args):
+        subprocess.run(["git", *args], cwd=repo, env=env, check=True, capture_output=True)
+
+    git("init", "-q")
+    git("config", "commit.gpgsign", "false")
+    git("add", "-A")
+    git("commit", "-q", "-m", "pre-split")
+    old = (repo / "pkg" / "mono.py").read_text()
+    git("rm", "-q", "pkg/mono.py")
+    (repo / "pkg" / "mono").mkdir()
+    (repo / "pkg" / "mono" / "__init__.py").write_text("")
+    git("add", "-A")
+    git("commit", "-q", "-m", "split F1: pkg.mono")
+    manifest = ml.load_manifest(repo / "m" / "reg.toml")
+    assert ml.read_source(manifest) == old
