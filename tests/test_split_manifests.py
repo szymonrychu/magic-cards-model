@@ -8,8 +8,6 @@ explicitly (`[names]`, `stay`) still exists in the source.
 
 from __future__ import annotations
 
-import ast
-import textwrap
 from functools import cache
 from pathlib import Path
 
@@ -193,26 +191,8 @@ def _source_of(module: str, item: ml.Item) -> str:
 # names at the top (eager uses) or at the bottom (deferred uses); a bottom
 # import that reaches a module still running its own top imports finds its
 # names missing.  Mirrors the split codemod's order search on the resolved
-# graph.  Without `from __future__ import annotations` an unquoted function
-# annotation runs at def time, so its names count as eager here even though
-# manifest_lib counts annotations as deferred.
-
-
-def _annotation_names(text: str) -> set[str]:
-    out: set[str] = set()
-    for node in ast.walk(ast.parse(textwrap.dedent(text))):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            a = node.args
-            every = (*a.posonlyargs, *a.args, *a.kwonlyargs, a.vararg, a.kwarg)
-            notes = [x.annotation for x in every if x is not None and x.annotation is not None]
-            notes += [node.returns] if node.returns is not None else []
-            for note in notes:
-                out.update(
-                    n.id
-                    for n in ast.walk(note)
-                    if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)
-                )
-    return out
+# graph (whose eager edges include the unquoted function annotations of a
+# module without `from __future__ import annotations`).
 
 
 def _import_plan(module: str) -> tuple[dict[str, tuple[set[str], set[str]]], dict[str, set[str]]]:
@@ -227,19 +207,6 @@ def _import_plan(module: str) -> tuple[dict[str, tuple[set[str], set[str]]], dic
         leading.append(item)
     defined = [i for i in p.items if i not in leading]
     last_owner = {n: i.target for i in defined for n in i.names}
-    source = ml.read_source(manifest)
-    if "from __future__ import annotations" not in source:
-        shell = manifest.class_name if manifest.mode == "class" else None
-        units = [i for i in defined if i.key != shell] + list(p.members)
-        for item in units:
-            if item.kind not in ("def", "class"):
-                continue
-            for name in sorted(_annotation_names(_source_of(module, item))):
-                owner = last_owner.get(name)
-                if owner is None or owner == item.target:
-                    continue
-                refs.append(ml.Ref(item.key or f"@{item.start}", item.target, name, owner, True))
-                edges[(item.target, owner)] = "eager"
     used = ({i.target for i in defined} | {m.target for m in p.members}) - {ml.STAY}
     targets = [t for t in manifest.targets if t in used] + sorted(used - set(manifest.targets))
     plan: dict[str, tuple[set[str], set[str]]] = {}

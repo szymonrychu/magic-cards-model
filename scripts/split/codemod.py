@@ -12,14 +12,15 @@ and the contiguous leading comment block included) and written, in original rela
 order, to its target module.  Each target gets a copy of the old import block
 (relative imports one level deeper, pruned with ruff F401, sorted with ruff I),
 plus `from .<target> import ...` for every name it uses from another target: EAGER
-references (decorators, defaults, class bodies, module-level expressions) at the top,
-DEFERRED ones (function bodies and annotations) in one block at the bottom marked
-`# noqa: E402`.  Lazy and TYPE_CHECKING relative imports go one level deeper; no
-other byte of a statement changes.  `__init__.py` is a generated facade: explicit
-`from .<target> import a, b` for every old top-level name (privates included),
-`__all__` listing exactly the defined names, old imported names the surface
-snapshot lists re-exported as `from <origin> import X as X`, and the family modules
-imported in a topological order of the eager graph.
+references (decorators, defaults, class bodies, module-level expressions, and the
+function annotations of a module without `from __future__ import annotations`) at the
+top, DEFERRED ones (function bodies, quoted or future-deferred annotations) in one
+block at the bottom marked `# noqa: E402`.  Lazy and TYPE_CHECKING relative imports
+go one level deeper; no other byte of a statement changes.  `__init__.py` is a
+generated facade: explicit `from .<target> import a, b` for every old top-level name
+(privates included), `__all__` listing exactly the defined names, old imported names
+the surface snapshot lists re-exported as `from <origin> import X as X`, and the
+family modules imported in a topological order of the eager graph.
 
 Class mode (`Game`).  `__init__.py` holds `class Game(<mixins in manifest order>,
 <old bases>)` with the fields, validators, pydantic-decorated members and `stay`
@@ -259,35 +260,6 @@ def _head(text: str) -> str:
     return code[0].strip() if code else ""
 
 
-def _annotation_names(node: ast.AST) -> set[str]:
-    """Names in unquoted function annotations that evaluate when `node` runs at import time.
-
-    Without `from __future__ import annotations` a def's annotations run at def time
-    (a method's, at class creation), so a name used there is an EAGER reference even
-    though manifest_lib counts function annotations as deferred.
-    """
-    out: set[str] = set()
-
-    def visit(n: ast.AST) -> None:
-        if isinstance(n, _FUNC):
-            args = n.args
-            every = (*args.posonlyargs, *args.args, *args.kwonlyargs, args.vararg, args.kwarg)
-            notes = [a.annotation for a in every if a is not None and a.annotation is not None]
-            notes += [n.returns] if n.returns is not None else []
-            for note in notes:
-                out.update(
-                    x.id
-                    for x in ast.walk(note)
-                    if isinstance(x, ast.Name) and isinstance(x.ctx, ast.Load)
-                )
-        elif not isinstance(n, ast.Lambda):
-            for child in ast.iter_child_nodes(n):
-                visit(child)
-
-    visit(node)
-    return out
-
-
 def mixin_name(target: str) -> str:
     return "".join(p.capitalize() for p in target.strip("_").split("_")) + "Mixin"
 
@@ -394,33 +366,10 @@ class Plan:
         for i in sorted(self.defined):
             for name in self.defined[i]:
                 self.last_owner[name] = self.items[i].target
-        self._add_annotation_refs()
         self.edited: set[str] = set()
         self.lines = self._edited_lines()
         self.geo = _geometry(self.lines, self.nodes, 0, len(self.lines))
         self.mgeo = self._member_geo()
-
-    def _add_annotation_refs(self) -> None:
-        """Count unquoted function annotations as eager when the module has no future import."""
-        future = any(
-            isinstance(self.nodes[k], ast.ImportFrom)
-            and self.nodes[k].module == "__future__"
-            and any(a.name == "annotations" for a in self.nodes[k].names)
-            for k in self.block
-        )
-        if future:
-            return
-        units = [(self.items[i], self.nodes[i]) for i in self.defined if not self._is_shell(i)]
-        if self.cls is not None:
-            units += list(zip(self.members, self.cls.body, strict=True))
-        for item, node in units:
-            for name in sorted(_annotation_names(node)):
-                owner = self.last_owner.get(name)
-                if owner is None or owner == item.target:
-                    continue
-                key = item.key or f"@{item.start}"
-                self.graph.refs.append(ml.Ref(key, item.target, name, owner, True))
-                self.graph.edges[(item.target, owner)] = "eager"
 
     # ------------------------------------------------------------ structure
 

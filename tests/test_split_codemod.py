@@ -404,3 +404,16 @@ def test_eager_annotation_reference_closes_a_cycle(tmp_path):
     manifest.write_text(manifest.read_text() + '\n[[rules]]\npattern = "B_.*"\ntarget = "b"\n')
     with pytest.raises(codemod.CycleError, match="a_sides|Shape"):
         codemod.build(manifest)
+
+
+@pytest.mark.parametrize("name", ["ann", "cyc", "dfr", "game", "mod", "ord", "unsat"])
+def test_codemod_graph_agrees_with_manifest_lib(name):
+    """One eager/deferred classification: the codemod's import graph is
+    manifest_lib's, unquoted function annotations of a module without the
+    future import included."""
+    manifest = codemod.ml.load_manifest(FIX / f"{name}.toml")
+    text = codemod.source_path(manifest).read_text()
+    plan = codemod.Plan(manifest, text, None)
+    lib = codemod.ml.build_graph(codemod.ml.resolve(text, manifest))
+    assert plan.graph.edges == lib.edges
+    assert sorted(plan.graph.refs, key=repr) == sorted(lib.refs, key=repr)

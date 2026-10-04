@@ -314,6 +314,69 @@ def test_reference_classification():
     assert "late_lazy" not in got
 
 
+_ANN_BASE = "class Shape:\n    pass\n\n"
+
+
+def _ann_refs(text: str, user: str = "a") -> set[tuple[str, bool]]:
+    """(name, eager) references from target `a` to `Shape` in target `b`."""
+    m = ml.parse_manifest(
+        manifest_dict(names={"Shape": "b"}, rules=[{"pattern": ".*", "target": user}])
+    )
+    g = ml.build_graph(ml.resolve(text, m))
+    return {(r.name, r.eager) for r in g.refs if r.source_target == user}
+
+
+def test_unquoted_function_annotations_without_future_import_are_eager():
+    """Without `from __future__ import annotations` a def's annotations run at def time."""
+    assert _ann_refs(_ANN_BASE + "def f(x: Shape) -> None:\n    return x\n") == {("Shape", True)}
+    assert _ann_refs(_ANN_BASE + "def f(x) -> Shape:\n    return x\n") == {("Shape", True)}
+    kw = "def f(*a: Shape, k: list[Shape] = (), **kw: Shape):\n    return a\n"
+    assert _ann_refs(_ANN_BASE + kw) == {("Shape", True)}
+
+
+def test_quoted_function_annotations_without_future_import_are_deferred():
+    text = _ANN_BASE + 'def f(x: "Shape") -> "list[Shape]":\n    return x\n'
+    assert _ann_refs(text) == {("Shape", False)}
+
+
+def test_function_annotations_with_future_import_are_deferred():
+    text = (
+        "from __future__ import annotations\n\n"
+        + _ANN_BASE
+        + "def f(x: Shape) -> Shape:\n    return x\n"
+    )
+    assert _ann_refs(text) == {("Shape", False)}
+
+
+def test_method_annotations_without_future_import_are_eager():
+    """A method's annotations run when the class body runs, at import time."""
+    text = _ANN_BASE + "class K:\n    def m(self, x: Shape) -> None:\n        return x\n"
+    assert _ann_refs(text) == {("Shape", True)}
+
+
+def test_nested_def_annotations_run_only_when_the_outer_function_runs():
+    text = _ANN_BASE + "def f():\n    def g(x: Shape) -> Shape:\n        return x\n    return g\n"
+    assert _ann_refs(text) == {("Shape", False)}
+
+
+def test_class_mode_member_annotations_follow_the_future_import():
+    body = "class G:\n    def combat_a(self, s: Shape) -> Shape:\n        return s\n"
+    for future, eager in (("", True), ("from __future__ import annotations\n\n", False)):
+        m = ml.parse_manifest(
+            manifest_dict(
+                mode="class",
+                targets=["combat", "recs"],
+                records="recs",
+                rules=[{"pattern": "combat_.*", "target": "combat"}],
+                **{"class": "G"},
+            )
+        )
+        g = ml.build_graph(ml.resolve(future + _ANN_BASE + body, m))
+        assert {(r.name, r.eager) for r in g.refs if r.source_target == "combat"} == {
+            ("Shape", eager)
+        }
+
+
 def test_edges_eager_beats_deferred():
     g = ml.build_graph(ml.resolve(source("mod_graph.py"), graph_manifest()))
     assert g.edges == {("user", "base"): "eager", ("late", "base"): "deferred"}

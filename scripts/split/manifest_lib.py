@@ -289,9 +289,11 @@ def _is_literal(node: ast.AST) -> bool:
 class _Refs:
     """Collects (name, eager) references and attribute names of one statement."""
 
-    def __init__(self) -> None:
+    def __init__(self, future: bool = False) -> None:
         self.refs: list[tuple[str, bool]] = []
         self.attrs: set[str] = set()
+        #: the module has `from __future__ import annotations`: no annotation runs
+        self.future = future
 
     def visit(self, n, eager, outer, cls) -> None:
         if isinstance(n, ast.Name):
@@ -334,31 +336,37 @@ class _Refs:
         a = n.args
         for d in (*a.defaults, *(d for d in a.kw_defaults if d)):
             self.visit(d, eager, outer, cls)
+        # without the future import a def's annotations run with the def (eager
+        # when the def itself runs at import time); quoted parts never run
+        runs = eager and not self.future
         every_arg = (*a.posonlyargs, *a.args, *a.kwonlyargs, a.vararg, a.kwarg)
         for arg in every_arg:
             if arg is not None and arg.annotation is not None:
-                self.annotation(arg.annotation, False, outer, cls)
+                self.annotation(arg.annotation, runs, outer, cls, quoted_eager=False)
         if n.returns is not None:
-            self.annotation(n.returns, False, outer, cls)
+            self.annotation(n.returns, runs, outer, cls, quoted_eager=False)
         inner = outer | _bound(n.body) | _params(a)
         for stmt in n.body:
             self.visit(stmt, False, inner, frozenset())
 
-    def annotation(self, n, eager, outer, cls, depth: int = 0) -> None:
+    def annotation(self, n, eager, outer, cls, depth: int = 0, quoted_eager=None) -> None:
+        """`quoted_eager`: eagerness of the parts inside a string annotation
+        (None: same as the unquoted parts)."""
         if isinstance(n, ast.Constant):
             if isinstance(n.value, str) and depth < 4:
                 try:
                     parsed = ast.parse(n.value.strip(), mode="eval").body
                 except SyntaxError:
                     return
-                self.annotation(parsed, eager, outer, cls, depth + 1)
+                inner = eager if quoted_eager is None else quoted_eager
+                self.annotation(parsed, inner, outer, cls, depth + 1, inner)
         elif isinstance(n, (ast.Name, ast.Attribute)):
             self.visit(n, eager, outer, cls)
         elif isinstance(n, ast.Subscript) and _is_literal(n.value):
             self.visit(n.value, eager, outer, cls)
         else:
             for child in ast.iter_child_nodes(n):
-                self.annotation(child, eager, outer, cls, depth)
+                self.annotation(child, eager, outer, cls, depth, quoted_eager)
 
 
 # ------------------------------------------------------------------ statements
@@ -449,9 +457,9 @@ def _start(node: ast.stmt) -> int:
     return min([node.lineno, *(d.lineno for d in decos)])
 
 
-def _make_item(node: ast.stmt, member: bool, shell: bool = False) -> Item:
+def _make_item(node: ast.stmt, member: bool, shell: bool = False, future: bool = False) -> Item:
     kind, names = _classify(node)
-    refs = _Refs()
+    refs = _Refs(future)
     if shell:
         assert isinstance(node, ast.ClassDef)
         for part in (*node.decorator_list, *node.bases, *(k.value for k in node.keywords)):
@@ -516,6 +524,17 @@ class Placement:
         return sum(1 for u in self.units() if u.kind in KINDS and u.reason in FALLBACK_REASONS)
 
 
+def has_future_annotations(tree: ast.Module) -> bool:
+    """`from __future__ import annotations` at the top of the module."""
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module == "__future__":
+            if any(a.name == "annotations" for a in node.names):
+                return True
+        elif not (_is_docstring(node) or isinstance(node, ast.ImportFrom)):
+            return False
+    return False
+
+
 def _parse(text: str, manifest: Manifest) -> Placement:
     try:
         tree = ast.parse(text)
@@ -525,12 +544,13 @@ def _parse(text: str, manifest: Manifest) -> Placement:
     items: list[Item] = []
     members: list[Item] = []
     found = False
+    future = has_future_annotations(tree)
     for node in tree.body:
         is_shell = cls_name is not None and isinstance(node, ast.ClassDef) and node.name == cls_name
-        items.append(_make_item(node, member=False, shell=is_shell))
+        items.append(_make_item(node, member=False, shell=is_shell, future=future))
         if is_shell:
             found = True
-            members = [_make_item(child, member=True) for child in node.body]
+            members = [_make_item(child, member=True, future=future) for child in node.body]
             methods = {m.key for m in members if m.kind == "def"}
             for member in members:
                 if member.alias_of not in methods:

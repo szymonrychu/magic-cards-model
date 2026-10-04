@@ -1,4 +1,10 @@
-"""Fixture: eager vs deferred reference classification."""
+"""Fixture: eager vs deferred reference classification.
+
+The future import makes function annotations (`late_ann`) deferred; without it
+they run at def time and are eager.
+"""
+
+from __future__ import annotations
 
 from math import floor
 
@@ -46,14 +52,14 @@ def user_default(x=base_default()):  # noqa: B008
 
 MODULE_EXPR = base_body()
 
-TYPED: "BaseAnn" = None
+TYPED: "BaseAnn" = None  # noqa: UP037 - the string annotation is the case under test
 
 
 def late_body():
     return base_body()
 
 
-def late_ann(x: BaseAnn) -> "BaseThing":
+def late_ann(x: BaseAnn) -> "BaseThing":  # noqa: UP037
     return floor(x)
 
 
