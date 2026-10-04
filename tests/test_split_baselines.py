@@ -213,3 +213,27 @@ def test_parse_pytest_summary():
 def test_parse_collect_count():
     assert B.parse_collect_count("a::b\n\n4321 tests collected in 2.0s\n") == 4321
     assert B.parse_collect_count("1 test collected in 0.1s") == 1
+
+
+def test_tests_the_split_adds_do_not_count_as_a_test_count_change():
+    """F2 adds tests/test_dispatch_order.py by design; the collected count the gate holds
+    identical is the count without the split's own tests (dry run: 27410 -> 27411)."""
+    after = _base()
+    after["test_count"] = 31
+    after["split_test_count"] = 1
+    for step in ["F2", "F3", "F4e"]:
+        assert _violations(_base(), after, step) == []
+    after["test_count"] = 32
+    out = _violations(_base(), after, "F3")
+    assert len(out) == 1 and "test count" in out[0]
+
+
+def test_parse_split_test_count():
+    out = (
+        "tests/test_dispatch_order.py::test_no_unordered_double_match\n"
+        "tests/test_x.py::test_y\n"
+        "tests/test_dispatch_order.py::test_z[a]\n\n"
+        "3 tests collected in 1.0s\n"
+    )
+    assert B.parse_split_test_count(out) == 2
+    assert B.parse_split_test_count("tests/test_x.py::t\n\n1 test collected in 0.1s") == 0

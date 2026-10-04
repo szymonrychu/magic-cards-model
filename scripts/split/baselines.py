@@ -7,7 +7,8 @@
 `measure` records the engine sha, import time of `import magic_cards_model`
 (median of 5 fresh interpreters, `-X importtime`; measured on
 `magic_cards_model.models.game` because the package root is empty), `mise run test` wall time
-and counts (and `mise run test:full` with --full), the collected test count,
+and counts (and `mise run test:full` with --full), the collected test count
+(and how many of them are the split's own tests, which the gate does not count),
 the sha256 of `scripts/sweep_pool.py --effects` stdout, a sha256 over
 tests/golden, and the dispatch fingerprint hash (whole, results-only, and
 per-ladder chain name sets).
@@ -110,6 +111,15 @@ def parse_pytest_summary(output: str) -> dict[str, int]:
     return counts
 
 
+#: tests the split itself adds (F2's dispatch order test); not a test count change
+SPLIT_TESTS = ("tests/test_dispatch_order.py",)
+
+
+def parse_split_test_count(output: str) -> int:
+    """How many collected node ids (`pytest --collect-only -q`) the split's own tests are."""
+    return sum(1 for line in output.splitlines() if line.startswith(SPLIT_TESTS))
+
+
 def parse_collect_count(output: str) -> int:
     found = re.findall(r"(\d+) tests? collected", output)
     if not found:
@@ -167,6 +177,7 @@ def measure(full: bool, skip_test: bool) -> dict:
             out["suite_full"] = measure_suite("test:full")
     collect = _run(_py("pytest", "-o", "addopts=", "--collect-only", "-q"))
     out["test_count"] = parse_collect_count(collect.stdout)
+    out["split_test_count"] = parse_split_test_count(collect.stdout)
     out["sweep_sha256"] = hash_text(
         _run(_py("python", "scripts/sweep_pool.py", "--effects")).stdout
     )
@@ -209,7 +220,12 @@ def compare(before: dict, after: dict, step: str) -> list[str]:
 
     identical("sweep_sha256", "sweep hash")
     identical("goldens_sha256", "goldens hash")
-    identical("test_count", "test count")
+    pair = both("test_count", "test count")
+    if pair:
+        b = pair[0] - (before.get("split_test_count") or 0)
+        a = pair[1] - (after.get("split_test_count") or 0)
+        if a != b:
+            out.append(f"test count changed: {b} -> {a} (without the split's own tests)")
 
     if step == "F2":
         identical("fingerprint.results_sha256", "fingerprint results hash")
