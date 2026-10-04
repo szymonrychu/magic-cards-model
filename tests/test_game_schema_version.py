@@ -1932,3 +1932,29 @@ def test_a_snapshot_written_before_the_e5_shapes_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_E5_SHAPES}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before round 293-fra: `GameEvent` gained
+#: `loyalty_removed` (how many loyalty counters a loyalty ability's cost
+#: removed, CR 606.4), read by "if you removed two or more loyalty counters to
+#: activate it" on the trigger and again on resolution (CR 603.4).
+_SCHEMA_VERSION_BEFORE_293_FRA_SHAPES = 109
+
+
+def test_a_snapshot_written_before_the_293_fra_shapes_is_refused() -> None:
+    """A version-109 dump's pending loyalty-activation events carry no
+    `loyalty_removed`: decoded as current, Way of the Mind Sculptor's trigger
+    would recheck its intervening if against `None` and silently not draw.
+    Refused instead."""
+    from magic_cards_model.machines.triggers import GameEvent
+
+    assert "loyalty_removed" in GameEvent.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_293_FRA_SHAPES
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_293_FRA_SHAPES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_293_FRA_SHAPES}",
+    ):
+        Game.model_validate(dumped)

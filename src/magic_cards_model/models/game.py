@@ -4505,7 +4505,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 109
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 110
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4712,6 +4712,8 @@ class Game(EngineModel):
     #: combat's `Attack` gained `blocked_by` (CR 509.1h); the layer selector
     #: union gained `SelfIfAttachedCount`, `SelfIfControlsCounted` gained
     #: `of_its_controller` and `ControlledQuality` gained `color`.
+    #: 110 (round 293-fra): `GameEvent` gained `loyalty_removed` (CR 606.4),
+    #: read by "if you removed two or more loyalty counters to activate it".
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
