@@ -946,7 +946,7 @@ def source_path(manifest: ml.Manifest) -> Path:
 
 def default_surface(manifest: ml.Manifest) -> Path | None:
     for short, dotted in surf.TARGETS.items():
-        if dotted == manifest.module and manifest.mode == "module":
+        if dotted == manifest.module:
             path = surf.SURFACE_DIR / f"{short}.json"
             return path if path.is_file() else None
     return None

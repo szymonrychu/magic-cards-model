@@ -576,3 +576,18 @@ def test_long_reexport_line_carries_its_own_e501_marker_and_nothing_else_does(tm
     shadow = codemod.shadow_tree(codemod.build(manifest, surface=surface), tmp_path / "shadow")
     probe = f"from fxtop.pk.lng import lng_one, {LONG_NAME}; print(lng_one(), {LONG_NAME}())"
     assert run_py(shadow, probe) == run_py(manifest.parent / "root", probe)
+
+
+def test_default_surface_covers_the_class_mode_game_manifest():
+    """The game facade (class mode) must re-export the old module's imported names too:
+    without its snapshot `models.game` loses every name game.py only imported (the dry
+    run's F3 surface gate lost 292)."""
+    from scripts.split import manifest_lib, surface
+
+    for short in surface.TARGETS:
+        if short == "game_class":
+            continue
+        manifest = manifest_lib.load_manifest(
+            ROOT / "scripts" / "split" / "manifest" / f"{short}.toml"
+        )
+        assert codemod.default_surface(manifest) == surface.SURFACE_DIR / f"{short}.json", short
