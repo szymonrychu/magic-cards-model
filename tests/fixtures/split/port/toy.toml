@@ -1,0 +1,15 @@
+module = "toy.mono"
+source = "toy/mono.py"
+package = "toy/mono"
+mode = "module"
+targets = ["alpha", "beta"]
+
+[[rules]]
+pattern = "alpha_.*"
+target = "alpha"
+kinds = ["def"]
+
+[[rules]]
+pattern = "beta_.*"
+target = "beta"
+kinds = ["def"]
