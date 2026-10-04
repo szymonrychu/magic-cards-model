@@ -9434,10 +9434,16 @@ _BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE = re.compile(
 #: extended with an optional trailing quoted ability, tried first since it is
 #: the more specific shape. Both a bare keyword list and a quoted grant can
 #: ride the same "and has" the pool already prints separately for each.
+#:
+#: The pump is optional: Leyline Immersion's "Enchanted creature has ward {2}
+#: and "{T}: Add five mana in any combination of colors. ..."" is the same
+#: keyword-and-quoted grant with no "gets" in front of it, and a keyword may
+#: carry its own cost (CR 702.21a's "ward {2}").
 _ATTACHED_CREATURE_PUMP_AND_QUOTED_RE = re.compile(
-    r"^(?P<attachment>equipped|enchanted) creature gets (?P<power>[+-]\d+)/"
-    r"(?P<toughness>[+-]\d+) and has "
-    r"(?:(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) and )?"
+    r"^(?P<attachment>equipped|enchanted) creature "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and )?has "
+    r"(?:(?P<keywords>[a-z]+(?: [a-z]+)?(?: \{[^}]+\})*"
+    r"(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?(?: \{[^}]+\})*)*) and )?"
     r'"(?P<granted>.+)"\.?$',
     re.IGNORECASE | re.DOTALL,
 )
@@ -15131,8 +15137,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
                 return None
             keywords = validated
         return _attached_creature_static_builder(
-            int(match.group("power")),
-            int(match.group("toughness")),
+            int(match.group("power") or 0),
+            int(match.group("toughness") or 0),
             keywords,
             subject=match.group("attachment").lower(),
             granted=match.group("granted").strip() or None,

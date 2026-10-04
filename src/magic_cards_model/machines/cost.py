@@ -1244,6 +1244,74 @@ def counted_mana_options(
     return [[option[0]] * amount for option in options if option], amount
 
 
+class MixedProduction(list[Color]):
+    """One activation of "Add N mana in any combination of <colours>" as an
+    auto-tap candidate: N mana, each of its own colour among `palette`
+    (CR 106.1a's five for "colors", the printed ones for "{U} and/or {R}").
+
+    The solver's other alternatives are whole productions - "two mana of any
+    one color" is five of them, `[[W, W], [U, U], ...]` - but a mixture's
+    productions are every multiset of N over the palette, which is 126 at
+    five mana and unbounded for a count the board decides. So it is carried
+    as one alternative the flow network can express directly: a provider of
+    capacity N with an edge of capacity N to every palette colour, which is
+    exactly "N mana, each its own colour" (`_bucket_map`), and the split is
+    read back off the flow (`_chosen_alternative`). The list itself holds N
+    mana of the palette's first colour, so a caller that only reads it as a
+    production (`_flexibility`, the life-loss replay) still sees a legal one.
+    """
+
+    palette: tuple[Color, ...]
+
+    def __init__(self, palette: Sequence[Color], count: int) -> None:
+        super().__init__([palette[0]] * count)
+        self.palette = tuple(palette)
+
+    def __eq__(self, other: object) -> bool:
+        # Two mixtures are the same alternative only over the same palette;
+        # the list content alone (N of the first colour) cannot tell "{U}
+        # and/or {R}" from "{U} and/or {B}".
+        if isinstance(other, MixedProduction):
+            return self.palette == other.palette and len(self) == len(other)
+        if isinstance(other, list):
+            return False
+        return NotImplemented
+
+    def splits(self) -> list[list[Color]]:
+        """Every production this mixture offers, spelled out - for a caller
+        that must see each one (the brute-force oracle, a replacement or
+        triggered mana ability that depends on what was produced)."""
+        return [list(split) for split in combinations_with_replacement(self.palette, len(self))]
+
+    def split_from(self, used: dict[Color, int]) -> list[Color]:
+        """The production a flow solution's per-colour use names: what it
+        spent of each colour, the rest of the N padded with the first
+        palette colour (unspent mana floats, CR 106.4a)."""
+        colors = [color for color in self.palette for _ in range(used.get(color, 0))]
+        return colors + [self.palette[0]] * (len(self) - len(colors))
+
+
+def _mixed_options(options: list[list[Color]]) -> list[list[Color]]:
+    """A mixed ability's `options` (`[[c] * n for c in palette]`, already
+    narrowed and counted) as the one `MixedProduction` they stand for. One
+    mana is already a plain choice of colour, and nothing to mix."""
+    if not options or len(options[0]) <= 1:
+        return options
+    palette = list(dict.fromkeys(option[0] for option in options if option))
+    return [MixedProduction(palette, len(options[0]))]
+
+
+def _spelled_out(options: list[list[Color]]) -> list[list[Color]]:
+    """`options` with every `MixedProduction` expanded to its splits."""
+    spelled: list[list[Color]] = []
+    for option in options:
+        if isinstance(option, MixedProduction):
+            spelled.extend(option.splits())
+        else:
+            spelled.append(option)
+    return spelled
+
+
 #: One thing `auto_tap` may tap: the permanent, what its chosen ability would
 #: add right now, and the CR 106.6 restriction that mana would carry.
 _Candidate = tuple[CardState, list[list[Color]], ManaRestriction | None]
@@ -1506,6 +1574,9 @@ def _unreplaced_production(
             options, any_color, _among_colors(activation.effect, context, source)
         )
         options, _amount = counted_mana_options(game, context.payer, source, ability, options)
+        if ability.any_color_mixed:
+            # Every split of a mixture is a production it offers.
+            options = _spelled_out(_mixed_options(options))
         productions.extend(options)
     wanted = list(wanted)
     for cut in range(len(wanted), 0, -1):
@@ -1597,6 +1668,15 @@ def _scan_mana_candidates(
             )
             if not options:
                 continue
+            if ability.any_color_mixed:
+                # "N mana in any combination of <colours>": one mixed
+                # alternative, not N of a single colour (CR 106.1a).
+                options = _mixed_options(options)
+                any_color = True
+            if production_effects or trigger_sources:
+                # What a replacement or a triggered mana ability does depends
+                # on the production itself, so each split is asked separately.
+                options = _spelled_out(options)
             if production_effects:
                 options = _replaced_options(payment, source, options, production_effects)
             if trigger_sources:
@@ -1955,7 +2035,10 @@ def _solve_auto_tap_brute_force(
         return []
 
     sources = list(sources)
-    candidates = _auto_tap_candidates(context, sources)
+    candidates = [
+        (source, _spelled_out(options), restriction)
+        for source, options, restriction in _auto_tap_candidates(context, sources)
+    ]
     max_size = min(len(candidates), max(1, owed.converted))
 
     for size in range(1, max_size + 1):
@@ -2067,6 +2150,13 @@ def _is_exotic(alternatives: list[_Alternative]) -> bool:
     one option of that choice is more than one mana - Shang-Chi's is the only
     card in this pool shaped that way.
     """
+    if any(isinstance(option, MixedProduction) for option, _restriction in alternatives):
+        # A mixture is expressible as edges (`_bucket_map`), but it is still
+        # branched over: tapping it makes all N mana at once, so a plan that
+        # commits it is offered its whole capacity first (committed sources
+        # are inserted ahead of the rest) and never taps a land beside it for
+        # mana it would have floated anyway.
+        return True
     return len(alternatives) > 1 and any(len(option) > 1 for option, _restriction in alternatives)
 
 
@@ -2105,6 +2195,15 @@ def _bucket_map(
     of them being spent at once.
     """
     snow = is_snow_source(source, game)
+    if len(alternatives) == 1 and isinstance(alternatives[0][0], MixedProduction):
+        # N mana, each its own colour: capacity N, any colour of the palette
+        # for every one of them.
+        mixture, restriction = alternatives[0]
+        slot = _slot_for(restriction, registry)
+        count = len(mixture)
+        return {
+            (color, snow, slot, NO_SPEND_EFFECT, NOT_RETAINED): count for color in mixture.palette
+        }, count
     if len(alternatives) <= 1:
         option, restriction = alternatives[0] if alternatives else ([], None)
         slot = _slot_for(restriction, registry)
@@ -2155,6 +2254,11 @@ def _chosen_alternative(
         if not alternatives:
             return [], None
         option, restriction = alternatives[0]
+        if isinstance(option, MixedProduction):
+            spent: dict[Color, int] = {}
+            for bucket, amount in used.items():
+                spent[bucket[0]] = spent.get(bucket[0], 0) + amount
+            return option.split_from(spent), restriction
         return list(option), restriction
     for option, restriction in alternatives:
         slot = _slot_for(restriction, registry)
@@ -2201,10 +2305,12 @@ def _exotic_choice_combos(
         for option, restriction in alternatives:
             colors = set(option)
             if (
-                len(colors) == 1
+                not isinstance(option, MixedProduction)
+                and len(colors) == 1
                 and not colors & wanted
                 and any(
-                    len(kept) == len(option)
+                    not isinstance(kept, MixedProduction)
+                    and len(kept) == len(option)
                     and kept_restriction == restriction
                     and len(set(kept)) == 1
                     and not set(kept) & wanted

@@ -152,10 +152,25 @@ _ANY_COLOR = re.compile(
 #: CR 106.1a's five colors are the universe for both; colorless is a type and
 #: not a color (CR 106.1b), so neither reaches it. `count`/`where_x` read the
 #: same way `_ANY_COLOR`'s do.
+#:
+#: The universe may instead be a printed palette - "X mana in any combination
+#: of {U} and/or {R}" (Vivi Ornitier, Xenagos, the Reveler, the storage lands'
+#: "{G} and/or {W}") - the same per-mana choice drawn from the named colours
+#: only (`palette`). Without this the palette fell through to the symbol
+#: choice below and read as one mana of one of the two colours.
 _ANY_COLOR_COMBINATION = re.compile(
-    rf"{count_pattern('count', x=True)} mana in any combination of colors{where_x_pattern()}",
+    rf"{count_pattern('count', x=True)} mana in any combination of "
+    r"(?:colors|(?P<palette>\{[WUBRG]\}(?:, \{[WUBRG]\})*,? and/or \{[WUBRG]\}))"
+    rf"{where_x_pattern()}",
     re.IGNORECASE,
 )
+#: The X a mana ability's own cost announces (CR 107.3a): "{X}, {T},
+#: Sacrifice this artifact: Add X mana ..." (Wizard's Rockets), "Remove X
+#: storage counters from this land: Add X mana ..." (Crucible of the Spirit
+#: Dragon, the storage lands). The effect prints no "where X is" - the cost
+#: is the definition - so the count is the announced value, read back as
+#: `x_value` when the ability resolves.
+ANNOUNCED_X = "X"
 #: Nykthos, Shrine to Nyx: "Choose a color. Add an amount of mana of that
 #: color equal to your devotion to that color." Still a mana ability under
 #: every one of CR 605.1a's criteria - no target, it could add mana, it is
@@ -193,6 +208,9 @@ _SYMBOL_FOR_EACH_RE = re.compile(
 )
 _CHOOSE_A_COLOR_PREAMBLE = re.compile(r"^Choose a color\.\s*", re.IGNORECASE)
 _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
+#: An X printed in an activation cost - "{X}" or "Remove X storage counters"
+#: - which CR 107.3a has the controller announce (`ANNOUNCED_X`).
+_COST_X = re.compile(r"\{X\}|\bX\b")
 
 #: CR 106.7: "Some abilities produce mana based on the type of mana another
 #: permanent or permanents 'could produce.' The type of mana a permanent could
@@ -335,6 +353,10 @@ def resolve_mana_count_expression(
     had not been able to read the definition at all.
     """
     stripped = expression.strip().rstrip(".")
+    if stripped == ANNOUNCED_X:
+        # CR 107.3a: the X this activation's own cost announced; a caller with
+        # no activation in hand (an auto-tap plan) announced none.
+        return max(x_value or 0, 0)
     characteristic = _SELF_CHARACTERISTIC_RE.fullmatch(stripped)
     if characteristic is not None:
         wants_power = characteristic.group("characteristic").lower() == "power"
@@ -369,7 +391,9 @@ def resolve_mana_count_expression(
     return max(devotion(game, controller), 0)
 
 
-def _read_mana_count(match: "re.Match[str]") -> tuple[int, str | None] | None:
+def _read_mana_count(
+    match: "re.Match[str]", *, cost_announces_x: bool = False
+) -> tuple[int, str | None] | None:
     """The `(any_color_count, any_color_count_expression)` a mana-count regex
     captured - `_ANY_COLOR`'s or `_ANY_COLOR_COMBINATION`'s own `count`/
     `where_x` groups - or `None` when the count cannot be read at all: an
@@ -384,10 +408,17 @@ def _read_mana_count(match: "re.Match[str]") -> tuple[int, str | None] | None:
     `Game.activate_ability` calling `resolve_mana_count_expression` once a
     board exists to read it, mirroring `amount_from_devotion`'s own
     placeholder `any_color_count` of 1.
+
+    `cost_announces_x` is CR 107.3a's other definition of X: the ability's
+    own activation cost prints it ("{X}", "Remove X storage counters"), so
+    the controller announces it as the ability is activated and a bare X in
+    the effect is that value (`ANNOUNCED_X`, read back from `x_value`).
     """
     word = match.group("count")
     if word.lower() == "x":
         where_x = match.groupdict().get("where_x")
+        if where_x is None and cost_announces_x:
+            return 1, ANNOUNCED_X
         if where_x is None or not _mana_count_expression_readable(where_x):
             return None
         return 1, where_x.strip()
@@ -743,7 +774,7 @@ class ManaAbility(EngineModel):
     @property
     def amount(self) -> int:
         """How much mana one activation adds, ignoring any conditional clause."""
-        if self.any_color:
+        if self.any_color or self.any_color_mixed:
             return self.any_color_count
         # An ability whose whole universe of options has been narrowed away -
         # a CR 106.7 survey that came back empty, a "the chosen color" with no
@@ -867,8 +898,10 @@ class ManaAbility(EngineModel):
         wanted = sorted(produces)
         if any(sorted(option) == wanted for option in options):
             return True
-        if not (any_color and self.any_color_mixed):
+        if not self.any_color_mixed:
             return False
+        # The palette: all five for "any combination of colors", the printed
+        # ones for "any combination of {U} and/or {R}".
         offered = {color for option in options for color in option}
         # `amount` is the board's count where the ability's own is a
         # placeholder ("X mana in any combination of colors, where X is ...",
@@ -930,9 +963,20 @@ class ManaAbility(EngineModel):
         # the one that was written with a list in mind.
         single = chosen_colors[0] if chosen_colors is not None and len(chosen_colors) == 1 else None
 
-        if any_color:
+        if any_color or self.any_color_mixed:
             if chosen_colors is None:
                 raise ValueError("this ability adds any colour; pass the colour chosen")
+            # A printed palette ("any combination of {U} and/or {R}") offers
+            # only its own colours; "any combination of colors" offers all
+            # five, which `options` already lists.
+            palette = {color for option in options for color in option}
+            outside = [chosen for chosen in chosen_colors if chosen not in palette]
+            if not any_color and outside:
+                offered = "".join(f"{{{color.value}}}" for color in sorted(palette))
+                raise ValueError(
+                    f"this ability adds mana in any combination of {offered} only; "
+                    f"{''.join(f'{{{color.value}}}' for color in outside)} is not among them"
+                )
             # `count` is CR 700.5's devotion for `amount_from_devotion`, or a
             # `resolve_mana_count_expression` answer for
             # `any_color_count_expression` - neither is anything on this
@@ -1068,7 +1112,7 @@ def granted_mana_abilities(texts: Sequence[str]) -> list[ManaAbility]:
     return _mana_abilities_from(parse_granted_ability_lines(texts), face=None)
 
 
-def _parse_effect(effect: str) -> ManaAbility | None:
+def _parse_effect(effect: str, *, cost_announces_x: bool = False) -> ManaAbility | None:
     if _DEVOTION_AMOUNT.fullmatch(effect.strip().rstrip(".")):
         return ManaAbility(
             options=[[color] for color in _COLORS],
@@ -1132,13 +1176,22 @@ def _parse_effect(effect: str) -> ManaAbility | None:
 
     combination = _ANY_COLOR_COMBINATION.search(effect)
     if combination:
-        read = _read_mana_count(combination)
+        read = _read_mana_count(combination, cost_announces_x=cost_announces_x)
         if read is None:
             return None
         count, expression = read
+        palette_text = combination.group("palette")
+        # A printed palette is the universe instead of CR 106.1a's five; the
+        # ability then adds mana of a colour *among those*, not of any colour,
+        # so `any_color` stays False and `options` alone names the palette.
+        palette = (
+            tuple(Color(symbol) for symbol in _SYMBOL.findall(palette_text))
+            if palette_text
+            else _COLORS
+        )
         return ManaAbility(
-            options=[[color] * count for color in _COLORS],
-            any_color=True,
+            options=[[color] * count for color in palette],
+            any_color=palette_text is None,
             any_color_count=count,
             any_color_mixed=True,
             any_color_count_expression=expression,
@@ -4363,7 +4416,10 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
 
     mana = None
     if add:
-        mana = _parse_effect(add.group("effect"))
+        mana = _parse_effect(
+            add.group("effect"),
+            cost_announces_x=any(_COST_X.search(piece.text) for piece in costs),
+        )
         if mana is not None:
             # Built as a copy rather than assigned field by field: the parse is
             # read-only work, and an engine model's field assignment announces a

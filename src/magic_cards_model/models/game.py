@@ -4504,7 +4504,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 111
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 112
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4716,6 +4716,10 @@ class Game(EngineModel):
     #: 111 (fix-station): `BaseAbility` gained `station_threshold` (CR 721.2a)
     #: and `ManaAbility` gained `for_each_expression`, both reachable from
     #: `Game` through a pending `AbilityOnStack.ability`.
+    #: 112 (fix-mana-any-combination): "Add N mana in any combination of
+    #: {A} and/or {B}" parses as a mixed palette mana ability (it read as one
+    #: mana of one colour), an X announced by the cost counts, and the new
+    #: `AddManaInAnyCombinationForController` delayed effect kind.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -25774,7 +25778,20 @@ class Game(EngineModel):
             return 0
         if not self.mana_color_options(permanent, index, controller):
             return 0
-        return ability.mana.any_color_count if ability.mana.any_color_mixed else 1
+        if not ability.mana.any_color_mixed:
+            return 1
+        # A count the board decides ("X mana in any combination of {U} and/or
+        # {R}, where X is Vivi Ornitier's power") is that count now, not the
+        # parser's placeholder of one - the same `mana_ability_most` reading a
+        # payment counts on. An X the ability's own cost announces (CR 107.3a:
+        # "Remove X storage counters") is reported at its most - every counter
+        # there - and a caller names one colour per X it actually announces;
+        # an X nothing on the board bounds ("{X}, {T}, Sacrifice ...") reports
+        # the placeholder, one colour per X announced all the same.
+        from ..machines.cost import mana_ability_most
+
+        most = mana_ability_most(self, permanent, index, controller)
+        return most if most else ability.mana.any_color_count
 
     def begin_turning_face_up(
         self,

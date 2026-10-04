@@ -78,7 +78,7 @@ from ..models.card_state import (
     FaceDownCharacteristics,
     TargetRef,
 )
-from ..models.mana import ManaCost, ManaRetentionScope
+from ..models.mana import ManaCost, ManaRestriction, ManaRetentionScope
 from ..models.player import Player
 from ..models.token import (
     PREDEFINED,
@@ -161,6 +161,7 @@ from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
     AddManaAmountForController,
+    AddManaInAnyCombinationForController,
     AddManaWhenLandTapped,
     CombatDamageToPlayerDraw,
     CopyNextSpellYouCast,
@@ -1036,19 +1037,26 @@ _COLOR_LETTERS: tuple[str, ...] = ("W", "U", "B", "R", "G")
 
 
 def _choose_a_color(
-    game: "Game", player: Player, source_name: str, prompt: str, *, source_id: str | None
+    game: "Game",
+    player: Player,
+    source_name: str,
+    prompt: str,
+    *,
+    source_id: str | None,
+    colors: "Sequence[Color] | None" = None,
 ) -> Color:
     """CR 608.2d's "of your choice", asked with `DecisionKind.CHOOSE_A_
     QUALITY` narrowed to CR 105's five colours - the same kind and the same
     narrowing `_parse_destroy_each_then_add_mana_per_destroyed` already uses
-    for Culling Ritual's own per-unit colour choice.
+    for Culling Ritual's own per-unit colour choice. `colors` narrows it
+    further to a printed palette ("any combination of {R} and/or {G}").
     """
     decision = Decision(
         kind=DecisionKind.CHOOSE_A_QUALITY,
         player=player.username,
         prompt=prompt,
         source=source_name,
-        options=_COLOR_LETTERS,
+        options=_COLOR_LETTERS if colors is None else tuple(color.value for color in colors),
         source_id=source_id,
     )
     value = game.ask(decision)
@@ -21850,9 +21858,10 @@ def _merge_add_any_combination_mana_with_restriction_clauses(
     match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(clauses[index].strip())
     if match is None:
         return None
-    count = parse_count(match.group("n"))
-    if count is None or count <= 0:
+    read = _read_any_combination_mana(match, clauses[index])
+    if read is None:
         return None
+    palette, count_of = read
     second = clauses[index + 1].strip()
     if not second.endswith("."):
         second = second + "."
@@ -21861,20 +21870,11 @@ def _merge_add_any_combination_mana_with_restriction_clauses(
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        player = game.controller_of(stack_object)
-        pool = player.mana_pool
-        source = (
-            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        )
-        for _ in range(count):
-            color = _choose_a_color(
-                game,
-                player,
-                source,
-                "choose a color for mana",
-                source_id=source_id_of(stack_object),
+        count = count_of(game, stack_object)
+        if count:
+            _add_mana_in_any_combination(
+                game, stack_object, count, palette, restriction=restriction
             )
-            pool.add(color, restriction=restriction)
 
     return 2, effect
 
@@ -31671,6 +31671,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     add_one_mana_of_any_color = _parse_add_one_mana_of_any_color_trigger(effect_text)
     if add_one_mana_of_any_color is not None:
         return add_one_mana_of_any_color
+    add_mana_in_any_combination = _parse_add_mana_in_any_combination_trigger(effect_text)
+    if add_mana_in_any_combination is not None:
+        return add_mana_in_any_combination
     add_that_much_colored_mana = _parse_add_that_much_colored_mana_trigger(effect_text)
     if add_that_much_colored_mana is not None:
         return add_that_much_colored_mana
@@ -40349,6 +40352,84 @@ def _parse_counter_then_wizard_mana_from_countered_pair(
                     only_when_active=controller.username,
                 )
             )
+
+    return effect
+
+
+#: Plasm Capture: "Counter target spell. At the beginning of your next first
+#: main phase, add X mana in any combination of colors, where X is that
+#: spell's mana value." The countered spell's mana value is read the way
+#: Access Denied's is (CR 400.7's "that spell", captured before the counter
+#: moves it); the mana is CR 603.7's delayed trigger, at the beginning of the
+#: controller's next first main phase (CR 505.1a: the precombat one) - or of
+#: any next main phase when "first" is not printed - adding that many mana in
+#: `_ADD_ANY_COMBINATION_MANA_RE`'s per-unit choice.
+_AT_NEXT_MAIN_PHASE_ADD_RE = re.compile(
+    r"^at the beginning of your next (?P<first>first )?main phase, (?P<add>add .+)$",
+    re.IGNORECASE,
+)
+_THAT_SPELLS_MANA_VALUE_RE = re.compile(r"^that spell'?s mana value$", re.IGNORECASE)
+
+
+def _parse_counter_then_delayed_any_combination_mana_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Plasm Capture's whole text as one CR 608.2c instruction pair - see the
+    banner above. A target that already left the stack (CR 608.2b) is
+    neither countered nor read, and no trigger is created."""
+    if not for_spell:
+        return None
+    if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
+        return None
+    timing = _AT_NEXT_MAIN_PHASE_ADD_RE.fullmatch(second.strip().rstrip("."))
+    if timing is None:
+        return None
+    match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(timing.group("add").strip())
+    if match is None or match.group("n") is None or match.group("n").lower() != "x":
+        return None
+    where_x = match.group("where_x")
+    if where_x is None or not _THAT_SPELLS_MANA_VALUE_RE.fullmatch(where_x.strip()):
+        return None
+    palette_text = match.group("palette")
+    palette = (
+        [Color(letter) for letter in _COLOR_LETTERS]
+        if palette_text.lower() == "colors"
+        else [Color(symbol.upper()) for symbol in _MANA_SYMBOL_RE.findall(palette_text)]
+    )
+    precombat_only = timing.group("first") is not None
+    trigger_text = second.strip()
+    if not trigger_text.endswith("."):
+        trigger_text += "."
+    trigger_text = trigger_text[0].upper() + trigger_text[1:]
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        countered: CardState | None = None
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            countered = target
+            game.counter(target)
+        if countered is None:
+            return
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=trigger_text,
+                effect=AddManaInAnyCombinationForController(
+                    amount=int(countered.card.cmc), palette=palette
+                ),
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=Step.PRECOMBAT_MAIN if precombat_only else None,
+                any_main_phase=not precombat_only,
+                controller=controller.username,
+                source_id=spell.id,
+                source_name=spell.card.name,
+                only_when_active=controller.username,
+            )
+        )
 
     return effect
 
@@ -53410,12 +53491,108 @@ def _parse_if_condition_add_mana_equal_to_clause(
 #: chosen parts) rather than `_ADD_MANA_RE`'s literal run of printed symbols.
 #: `DecisionKind.CHOOSE_A_QUALITY` is the same kind `_parse_destroy_each_
 #: then_add_mana_per_destroyed` already asks through for Culling Ritual's own
-#: per-unit colour choice, unnarrowed here (all five colours, not two) since
-#: nothing about "any combination of colors" picks a subset the way Culling
-#: Ritual's own printed "{B} or {G}" does.
+#: per-unit colour choice.
+#:
+#: The whole phrase family reads here, on a resolving spell or ability (a
+#: loyalty ability is never a mana ability, CR 605.1a, so Xenagos, the
+#: Reveler's "+1" resolves through this too):
+#:
+#: - the universe: CR 106.1a's five ("colors") or a printed palette ("{R}
+#:   and/or {G}"; "{U}, {B}, and/or {R}"), each unit chosen among it;
+#: - the count: a printed number (Manamorphose's "two"), CR 107.3's X with a
+#:   "where X is <count>" the board answers as it resolves (Xenagos's "the
+#:   number of creatures you control", CR 608.2h), or "that much" - CR 607.1's
+#:   anaphora onto the triggering event (Grand Warlord Radha's attackers).
 _ADD_ANY_COMBINATION_MANA_RE = re.compile(
-    rf"^add (?P<n>{COUNT}) mana in any combination of colors\.?$", re.IGNORECASE
+    rf"^add (?:(?P<that_much>that much)|{count_pattern('n', x=True)}) mana in any combination of "
+    r"(?P<palette>colors|\{[wubrg]\}(?:, \{[wubrg]\})*,? and/or \{[wubrg]\})"
+    rf"{where_x_pattern()}\.?$",
+    re.IGNORECASE,
 )
+
+#: How many mana an any-combination instruction adds, read as it resolves:
+#: `None` when there is nothing to read (a "that much" with no event count,
+#: which has already filed its own notice).
+_AnyCombinationCount = Callable[["Game", "StackObject"], int | None]
+
+
+def _read_any_combination_mana(
+    match: "re.Match[str]", text: str
+) -> tuple[tuple[Color, ...], _AnyCombinationCount] | None:
+    """`_ADD_ANY_COMBINATION_MANA_RE`'s palette and count reader, or `None`
+    when the count cannot be read at all (an unknown word, an X with no
+    readable definition) - the instruction then fails closed whole."""
+    palette_text = match.group("palette")
+    palette = (
+        tuple(Color(letter) for letter in _COLOR_LETTERS)
+        if palette_text.lower() == "colors"
+        else tuple(Color(symbol.upper()) for symbol in _MANA_SYMBOL_RE.findall(palette_text))
+    )
+    if match.group("that_much") is not None:
+
+        def that_much(game: "Game", stack_object: "StackObject") -> int | None:
+            if not isinstance(stack_object, AbilityOnStack):
+                return None
+            return _that_many_or_notice(
+                game,
+                text,
+                source_id=stack_object.source_id,
+                source_name=stack_object.source_name,
+                stack_object=stack_object,
+            )
+
+        return palette, that_much
+    word = match.group("n")
+    if word.lower() == "x":
+        where_x = match.group("where_x")
+        if where_x is None:
+            return None
+        reader = count_expression(where_x.strip())
+        if reader is None:
+            return None
+
+        def counted(game: "Game", stack_object: "StackObject") -> int | None:
+            return max(reader(game, game.controller_of(stack_object).username), 0)
+
+        return palette, counted
+    if match.group("where_x") is not None:
+        return None
+    fixed = parse_count(word)
+    if fixed is None or fixed <= 0:
+        return None
+    return palette, lambda _game, _stack_object: fixed
+
+
+def _add_mana_in_any_combination(
+    game: "Game",
+    stack_object: "StackObject",
+    count: int,
+    palette: Sequence[Color],
+    *,
+    restriction: "ManaRestriction | None" = None,
+    retain_until: "ManaRetentionScope | None" = None,
+) -> None:
+    """Add `count` mana to the controller's pool, each unit's colour chosen
+    on its own among `palette` (CR 106.1a, CR 608.2d); a palette of one is
+    no choice at all."""
+    player = game.controller_of(stack_object)
+    source = (
+        stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
+    )
+    for _ in range(max(count, 0)):
+        color = (
+            palette[0]
+            if len(palette) == 1
+            else _choose_a_color(
+                game,
+                player,
+                source,
+                "choose a color for mana",
+                source_id=source_id_of(stack_object),
+                colors=None if len(palette) == len(_COLOR_LETTERS) else palette,
+            )
+        )
+        player.mana_pool.add(color, restriction=restriction, retain_until=retain_until)
 
 
 def _parse_add_any_combination_mana_clause(
@@ -53425,23 +53602,60 @@ def _parse_add_any_combination_mana_clause(
     match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    count = parse_count(match.group("n"))
-    if count <= 0:
+    read = _read_any_combination_mana(match, clause)
+    if read is None:
         return None
+    palette, count_of = read
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        player = game.controller_of(stack_object)
-        pool = player.mana_pool
-        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        for _ in range(count):
-            color = _choose_a_color(
-                game,
-                player,
-                source,
-                "choose a color for mana",
-                source_id=source_id_of(stack_object),
-            )
-            pool.add(color)
+        count = count_of(game, stack_object)
+        if count:
+            _add_mana_in_any_combination(game, stack_object, count, palette)
+
+    return effect
+
+
+#: "`<add any combination>`. Until end of turn, you don't lose this mana as
+#: steps and phases end." / "... Spend this mana only to `<restriction>`." -
+#: the instruction with its own trailing sentences, read whole: CR 500.5b's
+#: retention (`_KEEP_MANA_UNTIL_END_OF_TURN_RE`, Grand Warlord Radha) and
+#: CR 106.6's restriction tag every unit it adds.
+def _parse_add_mana_in_any_combination_trigger(text: str) -> AbilityEffect | None:
+    """`_ADD_ANY_COMBINATION_MANA_RE` plus its trailing sentences, as one
+    triggered ability's whole effect - see the banner above."""
+    sentences = [part for part in re.split(r"(?<=\.)\s+", text.strip()) if part]
+    if not sentences:
+        return None
+    match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(sentences[0])
+    if match is None:
+        return None
+    read = _read_any_combination_mana(match, sentences[0])
+    if read is None:
+        return None
+    palette, count_of = read
+    retain_until: ManaRetentionScope | None = None
+    restriction_text: str | None = None
+    for sentence in sentences[1:]:
+        if _KEEP_MANA_UNTIL_END_OF_TURN_RE.fullmatch(sentence):
+            retain_until = ManaRetentionScope.END_OF_TURN
+            continue
+        restriction = spend_restriction(sentence)
+        if restriction is None or not restriction.understood:
+            return None
+        restriction_text = sentence
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        count = count_of(game, ability)
+        if not count:
+            return
+        restriction = (
+            spend_restriction(restriction_text, ability.source(game))
+            if restriction_text is not None
+            else None
+        )
+        _add_mana_in_any_combination(
+            game, ability, count, palette, restriction=restriction, retain_until=retain_until
+        )
 
     return effect
 
@@ -64435,6 +64649,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_counter_then_wizard_mana_from_countered_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_counter_then_delayed_any_combination_mana_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:
