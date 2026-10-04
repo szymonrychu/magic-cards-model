@@ -1,0 +1,78 @@
+# Split manifest for machines/casting.py (P0-T07), drafted against engine main
+# 92c43981.
+# casting: the Casting machine, kept whole, and the casting-time refusals;
+# permissions: where else a card may be cast or played from; options: the
+# optional, alternative and keyword costs a cast may choose.
+# _BLIGHT_PHRASE (imported by magic-cards-model-api) lands wherever the constant
+# rule puts it; the package __init__ re-exports it under its old path.
+# adventure_face (CR 715.1, which half of the card is the Adventure) sits in
+# permissions with its sibling face reader modal_dfc_spell_back_faces: both
+# answer which faces may be cast, and castable_faces/keyword_cast_options read
+# it.  It may not sit in casting: casting.py has no future import, so the
+# unquoted OptionalAdditionalCost annotation makes permissions -> options
+# eager, casting imports permissions eagerly, and a permissions -> casting
+# import would reach casting while casting is still at its own imports.
+module = "magic_cards_model.machines.casting"
+source = "src/magic_cards_model/machines/casting.py"
+package = "src/magic_cards_model/machines/casting"
+mode = "module"
+targets = ["casting", "permissions", "options"]
+
+[names]
+Casting = "casting"
+CastingStep = "casting"
+CASTING_ORDER = "casting"
+MarkedExile = "casting"
+CastTiming = "options"
+KeywordCastOption = "options"
+OptionalAdditionalCost = "options"
+ConditionalAlternativeCostOffer = "options"
+AlternativeCostSource = "options"
+AlternativeCostOption = "options"
+SpliceCandidate = "options"
+UsingKeywordPermission = "permissions"
+GrantedCastOption = "permissions"
+StaticZoneCastPermission = "permissions"
+LinkedExileStaticCast = "permissions"
+PlayAction = "permissions"
+PlayPermission = "permissions"
+adventure_face = "permissions"  # see the header: not casting
+
+[[rules]]  # why a cast is refused right now
+pattern = '_?why_[a-z0-9_]*'
+target = "casting"
+kinds = ["def"]
+
+[[rules]]  # permissions to cast or play from somewhere else
+pattern = '_?(?:[a-z0-9]+_)*(?:permission|permissions|play|zone|exiled|linked|granted|grant|graveyard|once|top|hexproof|flash|split_second|using|castable)(?:_[a-z0-9_]*)?'
+target = "permissions"
+kinds = ["def"]
+
+[[rules]]  # optional, alternative and keyword cast costs
+pattern = '_?(?:[a-z0-9]+_)*(?:option|options|cost|costs|kicker|casualty|conspire|splice|spliced|alternative|alternatives|keyword|marker|warp|halves)(?:_[a-z0-9_]*)?'
+target = "options"
+kinds = ["def"]
+
+[placed]
+_as_mana = "casting"
+_controls_that_object = "permissions"
+_count_listed_subtypes = "permissions"
+_normalized_spell_quality = "permissions"
+_turn_number = "options"
+_within_bound = "permissions"
+annotate_exile = "casting"
+class_gated_lines = "permissions"
+exile_adventured = "casting"
+exile_warped = "casting"
+exiles_spells_cast_this_way = "permissions"
+face_being_cast = "casting"
+finish_suspend = "casting"
+has_quality = "permissions"
+modal_dfc_spell_back_faces = "permissions"
+reads_optional_exile_reduction_line = "options"
+reads_optional_sacrifice_reduction_line = "options"
+remove_suspend_time_counter = "casting"
+spell_has_type_word = "casting"
+static_free_cast_grants = "casting"
+static_free_cast_refusal = "casting"
+types_being_cast = "casting"

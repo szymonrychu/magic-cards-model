@@ -1,0 +1,65 @@
+# Split manifest for machines/triggers.py (P0-T07), drafted against engine main
+# 92c43981.
+# events: GameEvent, AbilityOnStack and the event/notice records (the
+# TYPE_CHECKING block their string annotations need travels with them; their
+# model_rebuild() call lives in machines/keywords.py, not here); conditions:
+# trigger-condition matching and intervening-if;
+# collect: which abilities trigger, are granted or are activated.
+module = "magic_cards_model.machines.triggers"
+source = "src/magic_cards_model/machines/triggers.py"
+package = "src/magic_cards_model/machines/triggers"
+mode = "module"
+targets = ["events", "conditions", "collect"]
+
+[names]
+GameEvent = "events"
+AbilityOnStack = "events"
+
+[[rules]]  # every class: events, ability-on-stack, notices, small records
+pattern = '.*'
+target = "events"
+kinds = ["class"]
+
+[[rules]]  # event constructors
+pattern = '[a-z0-9_]*_event|is_ability'
+target = "events"
+kinds = ["def"]
+
+[[rules]]  # gathering abilities: triggered, granted, activated, additional, state
+pattern = '_?(?:[a-z0-9]+_)*(?:abilities|triggers|expand|lines|line|batched|apnap|occurrences|times|grant)(?:_[a-z0-9_]*)?'
+target = "collect"
+kinds = ["def"]
+
+[[rules]]  # trigger conditions and intervening-if clauses
+pattern = '_?(?:[a-z0-9]+_)*(?:holds|matches|match|matching|condition|qualifier|required|intervening|readable|answer|excluded|subtype|subtypes|types|color|zone|ordinal|whose|returned|reference|referential|power|toughness)(?:_[a-z0-9_]*)?'
+target = "conditions"
+kinds = ["def"]
+
+[placed]
+_bending_events_named = "conditions"
+_card_type_for_word = "conditions"
+_cast_record_for_clause = "conditions"
+_cast_spell_alternatives = "conditions"
+_cause_words = "conditions"
+_counter_kind_word = "conditions"
+_day_night_events_named = "conditions"
+_defender_controller_of = "collect"
+_earlier_batch_member_matched = "conditions"
+_event_for = "collect"
+_fail_closed = "conditions"
+_had_as_it_left = "collect"
+_has_equipment_attached = "conditions"
+_is_first_own_draw_step_draw = "conditions"
+_is_legendary_source = "conditions"
+_mana_value_comparison = "conditions"
+_player_counter_kind = "conditions"
+_plural_type_word_pattern = "conditions"
+_strip_leading_article = "conditions"
+_targets_only_single_creature_other_than_re = "conditions"
+_typed_turn_fact_key = "conditions"
+_unread_trigger_events = "collect"
+controller_of_source = "conditions"
+resolution_key = "events"
+triggered_mana_count = "events"
+triggered_mana_recipient = "events"
+zones_ability_functions_in = "collect"

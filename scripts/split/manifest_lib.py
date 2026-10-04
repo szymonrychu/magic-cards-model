@@ -45,18 +45,26 @@ exactly one target and a reason.  First hit wins:
 3. ``[[rules]]``      (reason ``rule``)
 4. ``[placed]``       (reason ``placed``)
 5. class mode only: a module-level class goes to ``records``  (``records``)
-6. constant rule: an unmatched module-level assignment goes to the target of its
+6. class mode only: a class-body alias of a method (``_old = new``) goes with
+   that method, whatever else would place it  (``alias``)
+7. constant rule: an unmatched module-level assignment goes to the target of its
    only referencing def/class (``const-single``); referenced from two or more
    targets -> ``_common`` (``const-shared``); unreferenced -> neighbour
    (``const-unreferenced``).  A constant used only by another constant follows
-   that constant's users.
-7. nearest preceding placed neighbour (``neighbour``); statements before any
-   placed one go to the first target.
+   that constant's users.  In class mode the class members count as users of
+   module-level constants.
+8. nearest preceding placed neighbour.  Imports (an ``if TYPE_CHECKING:`` block
+   of imports included) get reason ``import`` and bare string statements
+   (module and attribute docstrings) ``docstring``: neither is a placement, they
+   are copied or travel with the member above.  Anything else gets
+   ``neighbour``; statements before any placed one go to the first target.
 
 Resolution never fails on a name it has not seen, so new code on main resolves.
 
 ``bake`` assigns, for defs still unplaced after names and rules, the majority
 target among their callers; tie -> majority among callees; tie -> neighbour.
+In class mode members that stay in the class shell (``__init__``) never vote:
+bake places methods into mixins only.
 It writes ``[placed]`` sorted and is idempotent.  Existing ``[placed]`` values
 are kept, entries for names no longer in the source are pruned.  In class mode
 a call is a ``self.<method>`` attribute reference.  ``[placed]`` shares one
@@ -113,8 +121,9 @@ PYDANTIC_DECORATORS = frozenset(
     }
 )
 EXPLICIT_REASONS = frozenset(
-    {"name", "rule", "placed", "stay", "decorated", "field", "records", "class-shell"}
+    {"name", "rule", "placed", "stay", "decorated", "field", "records", "class-shell", "alias"}
 )
+COPIED_REASONS = frozenset({"import", "docstring"})
 FALLBACK_REASONS = frozenset({"neighbour", "const-single", "const-shared", "const-unreferenced"})
 
 _FUNC = (ast.FunctionDef, ast.AsyncFunctionDef)
@@ -366,6 +375,8 @@ class Item:
     uses: frozenset[str] = field(repr=False, default=frozenset())
     pydantic: bool = False
     is_field: bool = False
+    is_doc: bool = False
+    alias_of: str | None = None
     target: str = ""
     reason: str = ""
 
@@ -400,9 +411,37 @@ def _classify(node: ast.stmt) -> tuple[str, tuple[str, ...]]:
             return "const", names
     if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
         return "const", (node.target.id,)
-    if isinstance(node, (ast.Import, ast.ImportFrom)):
+    if isinstance(node, (ast.Import, ast.ImportFrom)) or _is_type_checking_block(node):
         return "import", ()
     return "other", tuple(sorted(_bound([node])))
+
+
+def _is_type_checking_block(node: ast.stmt) -> bool:
+    return (
+        isinstance(node, ast.If)
+        and _terminal_name(node.test) == "TYPE_CHECKING"
+        and not node.orelse
+        and all(isinstance(s, (ast.Import, ast.ImportFrom)) for s in node.body)
+    )
+
+
+def _is_docstring(node: ast.stmt) -> bool:
+    return (
+        isinstance(node, ast.Expr)
+        and isinstance(node.value, ast.Constant)
+        and isinstance(node.value.value, str)
+    )
+
+
+def _alias_of(node: ast.stmt) -> str | None:
+    if (
+        isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and isinstance(node.value, ast.Name)
+    ):
+        return node.value.id
+    return None
 
 
 def _start(node: ast.stmt) -> int:
@@ -433,6 +472,8 @@ def _make_item(node: ast.stmt, member: bool, shell: bool = False) -> Item:
         uses=frozenset(uses),
         pydantic=any(_terminal_name(d) in PYDANTIC_DECORATORS for d in decos),
         is_field=isinstance(node, ast.AnnAssign),
+        is_doc=_is_docstring(node),
+        alias_of=_alias_of(node) if member else None,
     )
 
 
@@ -490,6 +531,10 @@ def _parse(text: str, manifest: Manifest) -> Placement:
         if is_shell:
             found = True
             members = [_make_item(child, member=True) for child in node.body]
+            methods = {m.key for m in members if m.kind == "def"}
+            for member in members:
+                if member.alias_of not in methods:
+                    member.alias_of = None
     if cls_name is not None and not found:
         raise ManifestError(f"class {cls_name!r} not found in source")
     return Placement(manifest, items, members)
@@ -504,6 +549,8 @@ def _explicit(item: Item, m: Manifest, member: bool) -> None:
     if item.kind not in KINDS:
         return
     if member:
+        if item.alias_of:
+            return None
         if any(n in m.stay for n in item.names):
             return _set(item, STAY, "stay")
         if item.kind == "def" and item.pydantic:
@@ -543,7 +590,9 @@ def _neighbour(units: list[Item], i: int, first: str) -> str:
     return first
 
 
-def _const_users(units, using, i, seen=None) -> set[int]:
+def _const_users(units, using, i, outside_from: int, seen=None) -> set[int]:
+    """Indices of the defs/classes using units[i]; units from `outside_from` on
+    are already resolved and count as users whatever their kind."""
     seen = seen if seen is not None else {i}
     users: set[int] = set()
     for name in units[i].names:
@@ -551,31 +600,42 @@ def _const_users(units, using, i, seen=None) -> set[int]:
             if j in seen:
                 continue
             seen.add(j)
-            if units[j].kind in ("def", "class"):
+            if units[j].kind in ("def", "class") or j >= outside_from:
                 users.add(j)
             elif units[j].kind == "const":
-                users |= _const_users(units, using, j, seen)
+                users |= _const_users(units, using, j, outside_from, seen)
     return users
 
 
-def _finish(units: list[Item], m: Manifest) -> None:
+def _finish(units: list[Item], m: Manifest, outside: list[Item] | None = None) -> None:
+    """Fallback placement.  `outside` are already-resolved units (class members)
+    that count as users of these units' constants."""
     first = m.targets[0]
-    using = _using(units)
+    pool = [*units, *(outside or [])]
+    using = _using(pool)
     for i, u in enumerate(units):
         if not u.target and u.kind in ("def", "class"):
             _set(u, _neighbour(units, i, first), "neighbour")
+    methods = {u.key: u.target for u in units if u.kind == "def"}
+    for u in units:
+        if u.alias_of in methods:
+            _set(u, methods[u.alias_of], "alias")
     for i, u in enumerate(units):
         if u.target:
             continue
         if u.kind == "const":
-            users = _const_users(units, using, i)
-            targets = {units[j].target for j in users}
+            users = _const_users(pool, using, i, len(units))
+            targets = {pool[j].target for j in users}
             if len(targets) == 1:
                 _set(u, targets.pop(), "const-single")
             elif targets:
                 _set(u, COMMON, "const-shared")
             else:
                 _set(u, _neighbour(units, i, first), "const-unreferenced")
+        elif u.kind == "import":
+            _set(u, _neighbour(units, i, first), "import")
+        elif u.is_doc:
+            _set(u, _neighbour(units, i, first), "docstring")
         else:
             _set(u, _neighbour(units, i, first), "neighbour")
 
@@ -592,8 +652,8 @@ def _prepare(text: str, manifest: Manifest) -> Placement:
 def resolve(source_text: str, manifest: Manifest) -> Placement:
     """Give every top-level statement (and class member) one target and a reason."""
     p = _prepare(source_text, manifest)
-    _finish(p.items, manifest)
     _finish(p.members, manifest)
+    _finish(p.items, manifest, outside=p.members)
     return p
 
 
@@ -622,7 +682,8 @@ def bake(source_text: str, manifest: Manifest) -> dict[str, str]:
         if u.kind in KINDS:
             for n in u.names:
                 by_name[n] = i
-    known = {i: u.target for i, u in enumerate(units) if u.target}
+    # members staying in the class shell are not a mixin and cast no vote
+    known = {i: u.target for i, u in enumerate(units) if u.target and u.target != STAY}
     pending = [i for i, u in enumerate(units) if not u.target and u.kind == "def"]
 
     def callers(i: int) -> list[int]:

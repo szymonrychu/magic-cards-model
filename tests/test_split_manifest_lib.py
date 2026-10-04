@@ -456,3 +456,102 @@ def test_script_runs_as_documented_command():
     )
     assert proc.returncode == 1
     assert "eager cycles" in proc.stdout
+
+
+# ------------------------------------------- non-definition statements, class mode
+
+
+def test_imports_and_docstrings_get_their_own_reasons_not_neighbour():
+    text = (
+        '"""Module docstring."""\n\n'
+        "from typing import TYPE_CHECKING\n"
+        "import re\n\n"
+        "if TYPE_CHECKING:\n    from pkg.other import Thing\n\n"
+        "def f():\n    return re\n"
+    )
+    m = ml.parse_manifest(manifest_dict(names={"f": "b"}))
+    reasons = [(i.kind, i.reason) for i in ml.resolve(text, m).items]
+    assert reasons == [
+        ("other", "docstring"),
+        ("import", "import"),
+        ("import", "import"),
+        ("import", "import"),
+        ("def", "name"),
+    ]
+
+
+def test_type_checking_block_defines_nothing_for_the_graph():
+    text = "if TYPE_CHECKING:\n    from x import Thing\n\ndef f(t: Thing):\n    return t\n"
+    m = ml.parse_manifest(manifest_dict(names={"f": "b"}))
+    assert ml.build_graph(ml.resolve(text, m)).edges == {}
+
+
+CLASS_TEXT = (
+    "import re\n\n"
+    "_ONLY_COMBAT = re.compile('x')\n"
+    "_BOTH = 1\n"
+    "_VIA_FIELD = 2\n\n"
+    "class G:\n"
+    "    life: int = _VIA_FIELD\n"
+    '    """Attribute docstring of life."""\n\n'
+    "    def combat_a(self):\n        return _ONLY_COMBAT, _BOTH\n\n"
+    "    def draw_a(self):\n        return _BOTH\n\n"
+    "    _combat_alias = combat_a\n\n"
+    "    def stay_a(self):\n        return self.helper() + self.other()\n\n"
+    "    def stay_b(self):\n        return self.helper()\n\n"
+    "    def draw_b(self):\n        return self.helper() + self.other()\n\n"
+    "    def helper(self):\n        return 1\n\n"
+    "    def other(self):\n        return self.combat_a()\n"
+)
+
+
+def class_manifest(**over):
+    return ml.parse_manifest(
+        manifest_dict(
+            mode="class",
+            targets=["combat", "library", "recs"],
+            records="recs",
+            stay=["stay_a", "stay_b"],
+            rules=[
+                {"pattern": "combat_.*", "target": "combat"},
+                {"pattern": "draw_.*", "target": "library"},
+            ],
+            **{"class": "G"},
+            **over,
+        )
+    )
+
+
+def test_class_mode_module_constants_follow_the_members_that_use_them():
+    p = ml.resolve(CLASS_TEXT, class_manifest())
+    top = by_key(p)
+    assert (top["_ONLY_COMBAT"].target, top["_ONLY_COMBAT"].reason) == ("combat", "const-single")
+    assert (top["_BOTH"].target, top["_BOTH"].reason) == ("_common", "const-shared")
+    assert (top["_VIA_FIELD"].target, top["_VIA_FIELD"].reason) == ("__init__", "const-single")
+
+
+def test_class_mode_attribute_docstring_travels_with_its_member():
+    p = ml.resolve(CLASS_TEXT, class_manifest())
+    (doc,) = [m for m in p.members if m.kind == "other"]
+    assert (doc.target, doc.reason) == ("__init__", "docstring")
+
+
+def test_class_body_alias_follows_the_method_it_names():
+    p = ml.resolve(CLASS_TEXT, class_manifest(placed={"_combat_alias": "library"}))
+    mem = {i.key: i for i in p.members}
+    assert (mem["_combat_alias"].target, mem["_combat_alias"].reason) == ("combat", "alias")
+
+
+def test_class_mode_bake_never_votes_for_the_class_shell():
+    m = class_manifest()
+    placed = ml.bake(CLASS_TEXT, m)
+    assert ml.STAY not in placed.values()
+    # helper: callers stay_a, stay_b (stay, not votes) and draw_b -> library
+    assert placed["helper"] == "library"
+    # other: callers stay_a (no vote), draw_b -> library
+    assert placed["other"] == "library"
+    ml.parse_manifest(
+        manifest_dict(
+            mode="class", targets=m.targets, records=m.records, placed=placed, **{"class": "G"}
+        )
+    )

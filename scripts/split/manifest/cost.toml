@@ -1,0 +1,42 @@
+# Split manifest for machines/cost.py (P0-T07), drafted against engine main
+# 92c43981.
+# components: the cost model - components, totals, modifiers, offers;
+# payment: CostPayment and mana payment - sources, spend restrictions, the
+# auto-tap solver; text: reading cost phrases and cost-modifying sentences off
+# oracle text.
+module = "magic_cards_model.machines.cost"
+source = "src/magic_cards_model/machines/cost.py"
+package = "src/magic_cards_model/machines/cost"
+mode = "module"
+targets = ["components", "payment", "text"]
+
+[names]
+CostPayment = "payment"
+_SpendContext = "payment"
+_ActivatedMana = "payment"
+
+[[rules]]  # every other class is part of the cost model
+pattern = '.*'
+target = "components"
+kinds = ["class"]
+
+[[rules]]  # oracle-text readers: phrases, sentences, lines, requirements
+pattern = '_?(?:[a-z0-9]+_)*(?:phrase|phrases|sentence|line|text|requirement|split|looks|readable|word|re|modifier_effect|discount_effect|offers|grant|cap|cumulative)(?:_[a-z0-9_]*)?'
+target = "text"
+kinds = ["def"]
+
+[[rules]]  # mana payment: sources, spend restrictions, the auto-tap solver
+pattern = '_?(?:could_pay|plan|solve|spend|scan|auto_tap|withheld|prefer|best_flow|bucket|slot|group_by|is_exotic|exotic|mana|filter_candidate|copy_pool|among|narrow|flexibility|can_tap|tappable|life_paid|free_tap|triggered_mana|with_triggered_mana|activations|activation|activated_mana|replace|replaced|unreplaced|why_payer|is_snow|is_creature|is_treasure|entry|unpayable|chosen|restriction|pay_repeated)(?:_[a-z0-9_]*)?'
+target = "payment"
+kinds = ["def"]
+
+[[rules]]  # cost component constructors and total-cost arithmetic
+pattern = '[a-z0-9_]*_cost|cost_less|increase|reduce|apply_modifications|announce_[a-z0-9_]*|cost_announces_x|fill_from_among|any_counters_to_remove|_removable_counters|removes_[a-z0-9_]*|why_not_unblocked|_cost_count'
+target = "components"
+kinds = ["def"]
+
+[placed]
+_one_spend_clause = "payment"
+_per_object_reduction = "text"
+per_object_exile_cost_reduction = "text"
+per_object_sacrifice_cost_reduction = "text"
