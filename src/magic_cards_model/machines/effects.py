@@ -135,6 +135,7 @@ from .casting import (
     PlayAction,
     annotate_exile,
     hexproof_qualities_in,
+    once_per_turn_key,
     remove_suspend_time_counter,
 )
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
@@ -54605,6 +54606,10 @@ def _grant_cast_exiled_card_permission_from_sibling_static(
             until_end_of_turn=False,
             any_type_mana=bool(match.group("any_type_mana")),
             condition=match.group("condition").strip(),
+            # CR 113.6 / CR 607.2a: the static ability functions only while its
+            # own source is on the battlefield, and the card is linked to the
+            # ability that exiled it - keyed by that one object, never its name.
+            while_controlling=once_per_turn_key(found),
         )
 
 

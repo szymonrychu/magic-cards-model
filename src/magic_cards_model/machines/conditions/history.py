@@ -1912,7 +1912,7 @@ READERS: tuple[ConditionReader, ...] = (
         re.compile(
             rf"{_WHO}(?:'ve| have| has)? (?:(?P<neg>didn't cast|haven't cast|hasn't cast)|cast) "
             rf"(?P<quant>an?|one or more|another) "
-            rf"(?P<quality>[a-z][a-z /,-]*? or [a-z][a-z /,-]*?|[a-z-]+) "
+            rf"(?:(?P<quality>[a-z][a-z /,-]*? or [a-z][a-z /,-]*?|[a-z-]+) )?"
             r"spells? this turn"
         ),
         _cast_a_spell,
