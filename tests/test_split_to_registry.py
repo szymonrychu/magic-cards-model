@@ -456,14 +456,21 @@ def test_generated_package_is_ruff_clean(tmp_path):
     assert done.returncode == 0, done.stdout + done.stderr
 
 
-def test_refuses_when_a_rung_the_fingerprint_filter_cannot_see_would_join_the_chain(tmp_path):
-    """dispatch_fingerprint._chain_calls only lists 'parse*'/'_resolve*' names, so a pure
-    rung named otherwise is hidden today but would appear once it runs through CHAIN.run."""
+def test_converts_a_pure_rung_the_name_filter_alone_would_not_list(tmp_path):
+    """A pure rung named without 'parse'/'_resolve' is a chain member of the
+    fingerprint either way (it sees pure rungs by shape), so converting it is
+    not a name-set change and must not refuse."""
     dest = copy_pkg(tmp_path)
     for path in dest.glob("*.py"):
         path.write_text(path.read_text().replace("parse_a_four", "a_four"))
-    before = {p.name: p.read_text() for p in dest.glob("*.py")}
-    with pytest.raises(tr.RegistryError, match="name set.*a_four"):
-        tr.convert(dest, MANIFEST, tests_dir=tmp_path / "tests")
-    assert {p.name: p.read_text() for p in dest.glob("*.py")} == before
-    assert not (dest / "_chains.py").exists()
+    tr.convert(dest, MANIFEST, tests_dir=tmp_path / "tests")
+    assert (dest / "_chains.py").exists()
+    registered = [
+        lines[i - 1]
+        for p in dest.glob("*.py")
+        for lines in [p.read_text().split("\n")]
+        for i, line in enumerate(lines)
+        if line.startswith("def a_four(")
+    ]
+    assert registered
+    assert all(".rung(" in line for line in registered)

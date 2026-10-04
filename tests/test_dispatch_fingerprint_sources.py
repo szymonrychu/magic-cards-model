@@ -94,3 +94,34 @@ def test_name_bound_only_by_facade_is_not_picked_up(pkg):
     )
     assert fp["ladder_ghost"]["chain"] == ["parse_alpha"]
     assert set(fp["ladder_ghost"]["results"]["plain"].values()) <= {"parse_alpha", "<none>"}
+
+
+def test_pure_rung_without_parse_in_its_name_is_in_the_chain(tmp_path):
+    """The chain is every pure rung of a ladder, whatever it is called: a rung
+    named `grab_x` that wins a corpus input must show up as that winner."""
+    path = tmp_path / "_fp_hidden_mono.py"
+    path.write_text(
+        "def parse_a(text):\n"
+        "    return 'a' if text == 'a' else None\n\n"
+        "def grab_x(text):\n"
+        "    return 'x' if text == 'x' else None\n\n"
+        "def ladder_hidden(text):\n"
+        "    v1 = parse_a(text)\n"
+        "    if v1 is not None:\n"
+        "        return v1\n"
+        "    v2 = grab_x(text)\n"
+        "    if v2 is not None:\n"
+        "        return v2\n"
+        "    return None\n"
+    )
+    module = _load("_fp_hidden_mono", path)
+    try:
+        fp = compute_fingerprint(
+            module=module,
+            chains=(("ladder_hidden", "texts", (None,)),),
+            corpus={"texts": ["a", "x", "q"]},
+        )
+    finally:
+        sys.modules.pop("_fp_hidden_mono", None)
+    assert fp["ladder_hidden"]["chain"] == ["parse_a", "grab_x"]
+    assert fp["ladder_hidden"]["results"]["plain"] == {"a": "parse_a", "x": "grab_x", "q": "<none>"}

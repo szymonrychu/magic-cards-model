@@ -534,7 +534,6 @@ class Report:
     duplicates: list[tuple[str, str, str]] = field(default_factory=list)
     edges: list[tuple[str, str, str, str]] = field(default_factory=list)
     name_sets_equal: bool = True
-    hidden: dict[str, list[str]] = field(default_factory=dict)
     segments: dict[str, int] = field(default_factory=dict)
     written: list[Path] = field(default_factory=list)
 
@@ -673,7 +672,8 @@ def convert(
     # ladders: new text, and the name-set check before anything is written
     ladder_edits: list[Edit] = []
     for entry, rep in reports.items():
-        pre = {n for n in _call_names(rep.node, namespace)[0] if _fingerprint_sees(n)}
+        pure = {r.name for seg in rep.segments for r in seg.all_rungs}
+        pre = {n for n in _call_names(rep.node, namespace)[0] if _fingerprint_sees(n) or n in pure}
         text, post = _render_ladder(dispatch_lines, rep, namespace)
         report_out.segments[entry] = len(rep.segments)
         if pre != post:
@@ -682,9 +682,6 @@ def convert(
                 f"{entry}: ladder rung name set would differ (dropped {gone}, added {new}); "
                 "nothing written"
             )
-        hidden = fingerprint_hidden(rep)
-        if hidden:
-            report_out.hidden[entry] = hidden
         start = min([rep.node.lineno, *(d.lineno for d in rep.node.decorator_list)])
         ladder_edits.append(Edit(start, rep.node.end_lineno or rep.node.lineno, text.split("\n")))
         for seg in rep.segments:
@@ -792,9 +789,6 @@ def analyze(path: Path, defs_dir: Path | None) -> str:
             f"{entry:<28}{rep.rung_count:>7}{len(rep.segments):>10}{rep.other_count:>7}   "
             f"{kinds}{note}"
         )
-        hidden = fingerprint_hidden(rep)
-        if hidden:
-            out.append(f"{'':<28}fingerprint name filter cannot see: {', '.join(hidden)}")
     return "\n".join(out)
 
 
@@ -826,11 +820,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"duplicate call kept first, dropped later one: {entry} {seg} {name}")
     for entry, seg, a, b in report.edges:
         print(f"edge {entry} {seg}: {a} before {b}")
-    for entry, names in report.hidden.items():
-        print(
-            f"warning: {entry}: dispatch_fingerprint's name filter will show {names} "
-            "once these are registered"
-        )
     print(f"wrote {len(report.written)} files")
     return 0
 
