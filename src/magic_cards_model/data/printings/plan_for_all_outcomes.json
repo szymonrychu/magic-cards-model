@@ -3,6 +3,9 @@
   "id": "c4effc17-0d0e-423a-b5f2-597ea6c71f67",
   "oracle_id": "7fd2cac5-cd29-4a47-9e89-9c6be39a0b67",
   "multiverse_ids": [],
+  "resource_id": "468B3F7FA275573142C23D3EF924013E7BD37BAAEB92C04543B0ED59891EA27A",
+  "mtgo_id": 155776,
+  "tcgplayer_id": 719539,
   "cardmarket_id": 909887,
   "name": "Plan for All Outcomes",
   "lang": "en",
@@ -12,19 +15,19 @@
   "layout": "normal",
   "highres_image": true,
   "image_status": "highres_scan",
-  "image_updated_at": "2026-09-16T16:39:46Z",
+  "image_updated_at": "2026-09-30T05:35:42Z",
   "image_uris": {
-    "small": "https://cards.scryfall.io/small/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1789576786",
-    "normal": "https://cards.scryfall.io/normal/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1789576786",
-    "large": "https://cards.scryfall.io/large/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1789576786",
-    "png": "https://cards.scryfall.io/png/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.png?1789576786",
-    "art_crop": "https://cards.scryfall.io/art_crop/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1789576786",
-    "border_crop": "https://cards.scryfall.io/border_crop/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1789576786",
-    "thumb": "https://cards.scryfall.io/thumb/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1789576786",
-    "grid": "https://cards.scryfall.io/grid/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1789576786",
-    "display": "https://cards.scryfall.io/display/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1789576786",
-    "art": "https://cards.scryfall.io/art/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1789576786",
-    "crop": "https://cards.scryfall.io/crop/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1789576786"
+    "small": "https://cards.scryfall.io/small/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1790746542",
+    "normal": "https://cards.scryfall.io/normal/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1790746542",
+    "large": "https://cards.scryfall.io/large/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1790746542",
+    "png": "https://cards.scryfall.io/png/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.png?1790746542",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1790746542",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1790746542",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1790746542",
+    "grid": "https://cards.scryfall.io/grid/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1790746542",
+    "display": "https://cards.scryfall.io/display/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1790746542",
+    "art": "https://cards.scryfall.io/art/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1790746542",
+    "crop": "https://cards.scryfall.io/crop/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.webp?1790746542"
   },
   "mana_cost": "{3}{U}",
   "cmc": 4.0,
@@ -37,7 +40,8 @@
     "U"
   ],
   "keywords": [
-    "Surveil"
+    "Surveil",
+    "Empower Jace"
   ],
   "all_parts": [
     {
@@ -58,32 +62,34 @@
     }
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
     "tlr": "not_legal"
   },
   "games": [
-    "paper"
+    "paper",
+    "mtgo",
+    "arena"
   ],
   "reserved": false,
   "game_changer": false,
@@ -124,14 +130,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 32163,
+  "edhrec_rank": 19619,
   "prices": {
-    "usd": null,
-    "usd_foil": null,
+    "usd": "0.44",
+    "usd_foil": "1.59",
     "usd_etched": null,
-    "eur": null,
-    "eur_foil": null,
-    "tix": null
+    "eur": "0.08",
+    "eur_foil": "0.25",
+    "tix": "0.01"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPlan%2Bfor%2BAll%2BOutcomes",
@@ -139,8 +145,8 @@
     "edhrec": "https://edhrec.com/route/?cc=Plan+for+All+Outcomes"
   },
   "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DPlan%2Bfor%2BAll%2BOutcomes%26view%3Dgrid",
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F719539%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909887&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Plan+for+All+Outcomes&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155776?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

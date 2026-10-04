@@ -3,6 +3,8 @@
   "id": "ad03ba90-2442-4a71-94df-2088b5b63662",
   "oracle_id": "e8ecec61-cc47-4051-a599-0e7470764488",
   "multiverse_ids": [],
+  "resource_id": "3A42750A5A74081ED3F11A7F43ACAFAAC8A420D364AF38A61302E4E4E308073D",
+  "mtgo_id": 155896,
   "tcgplayer_id": 716675,
   "cardmarket_id": 908802,
   "name": "Violent Echoes",
@@ -38,28 +40,47 @@
     "R"
   ],
   "keywords": [
-    "Surveil"
+    "Surveil",
+    "Empower Jace"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8d1e424f-6407-4f8c-bed2-eaf148237c81",
+      "component": "token",
+      "name": "Jace",
+      "type_line": "Token Planeswalker \u2014 Jace",
+      "uri": "https://api.scryfall.com/cards/8d1e424f-6407-4f8c-bed2-eaf148237c81"
+    },
+    {
+      "object": "related_card",
+      "id": "ad03ba90-2442-4a71-94df-2088b5b63662",
+      "component": "combo_piece",
+      "name": "Violent Echoes",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/ad03ba90-2442-4a71-94df-2088b5b63662"
+    }
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
@@ -107,14 +128,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 32113,
+  "edhrec_rank": 28389,
   "prices": {
-    "usd": null,
-    "usd_foil": null,
+    "usd": "0.30",
+    "usd_foil": "0.45",
     "usd_etched": null,
-    "eur": null,
-    "eur_foil": null,
-    "tix": null
+    "eur": "0.13",
+    "eur_foil": "0.23",
+    "tix": "0.02"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DViolent%2BEchoes",
@@ -124,6 +145,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716675%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908802&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Violent+Echoes&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155896?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }
