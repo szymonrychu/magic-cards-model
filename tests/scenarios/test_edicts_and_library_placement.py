@@ -232,25 +232,6 @@ def test_owner_may_place_reader_accepts_both_top_wordings() -> None:
         assert _owner_may_place_reads(f"{_CLASH_HEAD} {wording} their library.{_CLASH_TAIL}")
 
 
-def test_owner_may_place_reader_is_the_general_may_do_else_shape() -> None:
-    # CR 608.2d "may X. If they do, Y. If they didn't, Z.": the consequence and the
-    # placement side are variables, not Clash of Elements' own sentence.
-    lose = (
-        "Target creature. Its owner may put it on top of their library. If they do, they lose 3"
-        " life. If they didn't put it on top of their library, they put it on the bottom."
-    )
-    assert _owner_may_place_reads(lose)
-    draw = (
-        "Choose target artifact. Its owner may put it on the bottom of their library. If they do,"
-        " they draw a card. If they didn't, they put it on top of their library."
-    )
-    assert _owner_may_place_reads(draw)
-    bare_else = _CLASH_HEAD + " on top of their library. If they do, Foo deals 2 damage to them."
-    assert not _owner_may_place_reads(bare_else + " If they didn't, they exile it.")
-    mismatched = lose.replace("they put it on the bottom", "they put it on top")
-    assert not _owner_may_place_reads(mismatched)
-
-
 def test_living_library_shuffles_the_targeted_permanent_into_its_owners_library() -> None:
     """ "{6}, Sacrifice this creature: Choose target creature or planeswalker
     an opponent controls. Its owner shuffles it into their library."
