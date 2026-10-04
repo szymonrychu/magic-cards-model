@@ -319,11 +319,18 @@ def _wrap(head: str, parts: list[str], tail: str, indent: str = "") -> str:
     return f"{indent}{head}(\n{inner}{indent}){tail}"
 
 
-def _import_stmt(module: str, names: list[str]) -> str:
+def _import_stmt(module: str, names: list[str], comment: str = "") -> str:
+    """`comment` (e.g. `# noqa: E402`) stays on the statement's first line."""
+    tail = f"  {comment}" if comment else ""
     one = f"from {module} import {', '.join(names)}"
-    if len(one) <= LINE_LENGTH:
-        return one
-    return f"from {module} import (\n" + "".join(f"    {n},\n" for n in names) + ")"
+    if len(one) + len(tail) <= LINE_LENGTH:
+        return one + tail
+    return f"from {module} import ({tail}\n" + "".join(f"    {n},\n" for n in names) + ")"
+
+
+def _first_line_comment(line: str) -> str:
+    """The trailing comment of an import's first line (names never contain `#`)."""
+    return line[line.index("#") :].strip() if "#" in line else ""
 
 
 def _sort_names(names: set[str]) -> list[str]:
@@ -455,13 +462,33 @@ def _apply(source: str, edits: list[Edit]) -> str:
     return "\n".join(lines)
 
 
+TYPE_CHECKING_TESTS = ("TYPE_CHECKING", "typing.TYPE_CHECKING")
+
+
+def _head_imports(tree: ast.Module) -> list[ast.Import | ast.ImportFrom]:
+    """The top-of-module import block: the deferred `# noqa: E402` imports a module
+    keeps at its bottom are not part of it."""
+    body = tree.body
+    if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
+        body = body[1:]
+    head: list[ast.Import | ast.ImportFrom] = []
+    for node in body:
+        if isinstance(node, ast.If) and ast.unparse(node.test) in TYPE_CHECKING_TESTS:
+            continue
+        if not isinstance(node, (ast.Import, ast.ImportFrom)):
+            break
+        head.append(node)
+    return head
+
+
 def _bind_chain_import(source: str, names: set[str]) -> str:
     """Add `from ._chains import <names>` to `source` in isort position."""
     if not names:
         return source
     tree = ast.parse(source)
     stmt = _import_stmt("._chains", _sort_names(names)).split("\n")
-    relative = [n for n in tree.body if isinstance(n, ast.ImportFrom) and n.level == 1 and n.module]
+    head = _head_imports(tree)
+    relative = [n for n in head if isinstance(n, ast.ImportFrom) and n.level == 1 and n.module]
     if relative:
         later = [n for n in relative if n.module > "_chains"]
         if later:
@@ -471,7 +498,7 @@ def _bind_chain_import(source: str, names: set[str]) -> str:
             source,
             [Edit((last.end_lineno or last.lineno) + 1, (last.end_lineno or last.lineno), stmt)],
         )
-    imports = [n for n in tree.body if isinstance(n, (ast.Import, ast.ImportFrom))]
+    imports = head
     if imports:
         last = imports[-1]
         at = (last.end_lineno or last.lineno) + 1
@@ -524,7 +551,9 @@ def _prune_imports(source: str, candidates: set[str]) -> str:
             continue
         rendered = [f"{a.name} as {a.asname}" if a.asname else a.name for a in keep]
         module = "." * node.level + (node.module or "")
-        edits.append(Edit(node.lineno, end, _import_stmt(module, rendered).split("\n")))
+        comment = _first_line_comment(source.split("\n")[node.lineno - 1])
+        stmt = _import_stmt(module, rendered, comment)
+        edits.append(Edit(node.lineno, end, stmt.split("\n")))
     return _apply(source, edits) if edits else source
 
 

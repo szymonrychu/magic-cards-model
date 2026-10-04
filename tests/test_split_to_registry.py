@@ -12,6 +12,7 @@ import ast
 import importlib
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -489,3 +490,86 @@ def test_fingerprint_filter_copy_agrees_with_the_fingerprint_script():
 
     names = ["parse_x", "_parse_y", "_resolve_z", "resolve_q", "a_four", "_c02_t6_ability_effect"]
     assert [tr._fingerprint_sees(n) for n in names] == [chain_member_name(n) for n in names]
+
+
+def _with_bottom_imports(tmp_path: Path) -> Path:
+    """The fixture package with dispatch.py's family imports moved to the bottom of the
+    module the way codemod writes deferred imports: `# noqa: E402` on the first line."""
+    dest = copy_pkg(tmp_path)
+    path = dest / "dispatch.py"
+    text = path.read_text()
+    tree = ast.parse(text)
+    lines = text.split("\n")
+    moved: list[str] = []
+    for node in reversed([n for n in tree.body if isinstance(n, ast.ImportFrom) and n.level]):
+        block = lines[node.lineno - 1 : node.end_lineno]
+        block[0] = block[0].replace(" import (", " import (  # noqa: E402", 1)
+        moved = block + moved
+        del lines[node.lineno - 1 : node.end_lineno]
+    head = "\n".join(lines).rstrip("\n")
+    while "\n\n\n\n" in head:
+        head = head.replace("\n\n\n\n", "\n\n\n")
+    path.write_text(head + "\n\n\n" + "\n".join(moved) + "\n")
+    ast.parse(path.read_text())
+    cfg = Path(__file__).parent.parent / "pyproject.toml"
+    clean = subprocess.run(
+        [sys.executable, "-m", "ruff", "check", "--no-cache", "--config", str(cfg), str(path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert clean.returncode == 0, clean.stdout  # the input is what codemod writes: clean
+    return dest
+
+
+def test_pruned_bottom_imports_keep_their_e402_marker(tmp_path):
+    dest = _with_bottom_imports(tmp_path)
+    tests_dir = tmp_path / "tests"
+    tr.convert(dest, MANIFEST, overlap_path=make_overlap_json(tmp_path), tests_dir=tests_dir)
+    tree = ast.parse((dest / "dispatch.py").read_text())
+    lines = (dest / "dispatch.py").read_text().split("\n")
+    family = [
+        n for n in tree.body if isinstance(n, ast.ImportFrom) and n.module in ("alpha", "beta")
+    ]
+    assert len(family) == 2  # both pruned (see the imports test above), neither dropped
+    for node in family:
+        assert lines[node.lineno - 1].endswith("# noqa: E402"), lines[node.lineno - 1]
+
+
+def test_package_with_bottom_imports_is_ruff_clean_after_conversion(tmp_path):
+    dest = _with_bottom_imports(tmp_path)
+    tr.convert(dest, MANIFEST, overlap_path=make_overlap_json(tmp_path), tests_dir=tmp_path / "t")
+    cfg = Path(__file__).parent.parent / "pyproject.toml"
+    for cmd in (["check", "--no-cache"], ["format", "--check"]):
+        done = subprocess.run(
+            [sys.executable, "-m", "ruff", cmd[0], "--config", str(cfg), *cmd[1:], str(dest)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert done.returncode == 0, done.stdout + done.stderr
+
+
+def test_chain_import_joins_the_top_block_not_the_deferred_bottom_one():
+    src = '"""Doc."""\n\nfrom __future__ import annotations\n\n\ndef f():\n    return g()\n\n\n'
+    src += "from .zeta import g  # noqa: E402\n"
+    out = tr._bind_chain_import(src, {"SPELL_TEXT"})
+    assert out.index("from ._chains import SPELL_TEXT") < out.index("def f()")
+    assert out.endswith("from .zeta import g  # noqa: E402\n")
+
+
+def test_chain_import_head_block_reaches_past_a_type_checking_block():
+    src = (
+        "from __future__ import annotations\n\nfrom typing import TYPE_CHECKING\n\n"
+        "if TYPE_CHECKING:\n    from .game import Game\nfrom ._common import Effect\n\n\n"
+        "def f(g: Game) -> Effect:\n    return g\n"
+    )
+    out = tr._bind_chain_import(src, {"SPELL_TEXT"})
+    assert "from ._chains import SPELL_TEXT\nfrom ._common import Effect\n" in out
+
+
+def test_prune_keeps_a_trailing_comment_on_a_single_line_import():
+    src = "x = 1\nfrom .a import keep, gone  # noqa: E402\n\nprint(keep)\n"
+    assert tr._prune_imports(src, {"gone"}) == (
+        "x = 1\nfrom .a import keep  # noqa: E402\n\nprint(keep)\n"
+    )
