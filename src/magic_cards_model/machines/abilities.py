@@ -1092,14 +1092,17 @@ def _parse_effect(effect: str) -> ManaAbility | None:
         )
 
     symbol_for_each = _SYMBOL_FOR_EACH_RE.fullmatch(effect.strip().rstrip("."))
-    if symbol_for_each:
-        expression = symbol_for_each.group("expression").strip()
-        if not _mana_count_expression_readable(expression):
-            return None
+    if symbol_for_each and _mana_count_expression_readable(
+        symbol_for_each.group("expression").strip()
+    ):
         return ManaAbility(
             options=[[Color(symbol_for_each.group("symbol").upper())]],
-            for_each_expression=expression,
+            for_each_expression=symbol_for_each.group("expression").strip(),
         )
+    # A "for each" count `effects.count_expression` cannot read yet (Cabal
+    # Stronghold's "basic Swamp you control", Leafkin Avenger's "creature you
+    # control with power 4 or greater") keeps the reading it had before this
+    # shape existed: the symbol alone, below.
 
     # A choice reads `{G}, {R}, or {W}`; a multiple reads `{C}{C}`.
     parts = [part for part in _CHOICE_SEPARATOR.split(effect) if _SYMBOL.search(part)]
