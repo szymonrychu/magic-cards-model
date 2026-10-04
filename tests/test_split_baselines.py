@@ -341,3 +341,15 @@ def test_timed_run_records_child_cpu_time():
     )
     assert proc.returncode == 0
     assert 0.05 < cpu <= wall + 0.5
+
+
+def test_import_cpu_time_is_the_least_disturbed_run():
+    """r4 measured F1's import CPU time +14.6% (r2: +3%) with the machine at load 8-17:
+    a median of 5 still moves with the load, the minimum is the run nothing disturbed."""
+    summary = B.import_summary(
+        cums=[400, 500, 410], cpus=[0.45, 0.40, 0.52], selfs={"machines.effects": [3, 1, 2]}
+    )
+    assert summary["cpu_us"] == 400000
+    assert summary["cumulative_us"] == 410
+    assert summary["self_us"] == {"machines.effects": 2}
+    assert summary["runs"] == 3

@@ -5,7 +5,7 @@
     uv run python scripts/split/baselines.py compare before.json after.json --step F2
 
 `measure` records the engine sha, import time of `import magic_cards_model`
-(median of 5 fresh interpreters, `-X importtime`; measured on
+(7 fresh interpreters, `-X importtime`: median wall, minimum CPU; measured on
 `magic_cards_model.models.game` because the package root is empty), `mise run test` wall time
 and counts with their CPU time (and `mise run test:full` with --full), the collected test count
 (and how many of them are the split's own tests, which the gate does not count),
@@ -38,7 +38,7 @@ PACKAGE = "magic_cards_model"
 # pulls in machines.effects, layers and the rest.
 TARGET = f"{PACKAGE}.models.game"
 SELF_MODULES = ("machines.effects", "models.game", "machines.layers")
-IMPORT_RUNS = 5
+IMPORT_RUNS = 7
 IMPORT_LIMIT = 1.15
 SUITE_LIMIT = 0.05
 STEPS = ("F1", "F2", "F3", "F4", "F4a", "F4b", "F4c", "F4d", "F4e")
@@ -180,10 +180,16 @@ def measure_import_time() -> dict:
         for name in SELF_MODULES:
             if name in per:
                 selfs[name].append(per[name])
+    return import_summary(cums, cpus, selfs)
+
+
+def import_summary(cums: list[int], cpus: list[float], selfs: dict[str, list[int]]) -> dict:
+    """Medians of the wall-clock `-X importtime` figures; the gated CPU time is the
+    minimum, the run that other load on the machine disturbed least."""
     return {
-        "runs": IMPORT_RUNS,
+        "runs": len(cums),
         "cumulative_us": int(statistics.median(cums)),
-        "cpu_us": int(statistics.median(cpus) * 1e6),
+        "cpu_us": int(min(cpus) * 1e6),
         "self_us": {n: int(statistics.median(v)) for n, v in selfs.items() if v},
     }
 
