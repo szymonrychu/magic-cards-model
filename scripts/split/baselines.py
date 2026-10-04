@@ -268,8 +268,8 @@ def compare(before: dict, after: dict, step: str) -> list[str]:
 
     for key, label in (("suite", "suite"), ("suite_full", "suite_full")):
         pair = both(f"{key}.wall_s", f"{label} wall time")
-        if pair and abs(pair[1] - pair[0]) > pair[0] * SUITE_LIMIT:
-            out.append(f"{label} wall time {pair[0]}s -> {pair[1]}s is outside 5%")
+        if pair and pair[1] - pair[0] > pair[0] * SUITE_LIMIT:
+            out.append(f"{label} wall time {pair[0]}s -> {pair[1]}s is more than 5% slower")
         failed = _get(after, f"{key}.failed")
         if failed:
             out.append(f"{label} has {failed} failed in after")

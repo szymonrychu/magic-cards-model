@@ -261,3 +261,12 @@ def test_from_f3_on_the_reordered_fingerprint_passes_as_the_committed_f2_baselin
     stale["fingerprint"]["matches_committed"] = False
     out = _violations(_base(), stale, "F3")
     assert len(out) == 1 and "committed" in out[0]
+
+
+def test_a_faster_suite_is_not_a_violation():
+    """The suite gate guards against a slowdown; run-to-run noise made a 5.5% faster
+    `mise run test` fail the dry run's F1 cheap gate."""
+    after = _base()
+    after["suite"]["wall_s"] = 80.0
+    after["suite_full"]["wall_s"] = 800.0
+    assert _violations(_base(), after, "F1") == []
