@@ -184,7 +184,12 @@ _CHOSEN_COLOR_FOR_EACH_RE = re.compile(
 #: "{G} for each creature you control" - a single mana symbol multiplied by a
 #: board count (see `ManaAbility.for_each_expression`).
 _SYMBOL_FOR_EACH_RE = re.compile(
-    r"^\{(?P<symbol>[WUBRGC])\} for each (?P<expression>.+)$", re.IGNORECASE
+    r"^\{(?P<symbol>[WUBRGC])\} for each (?P<expression>.+)$"
+    # The same multiplication spelled "an amount of {G} equal to <count>"
+    # (Viridian Joiner's "this creature's power", Karametra's Acolyte's "your
+    # devotion to green").
+    r"|^an amount of \{(?P<amount_symbol>[WUBRGC])\} equal to (?P<amount_expression>.+)$",
+    re.IGNORECASE,
 )
 _CHOOSE_A_COLOR_PREAMBLE = re.compile(r"^Choose a color\.\s*", re.IGNORECASE)
 _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
@@ -256,6 +261,24 @@ _SELF_CHARACTERISTIC_RE = re.compile(
 _SELF_COUNTERS_ON_RE = re.compile(
     r"^(?:the number of )?(?P<kind>[a-z]+) counters? on this \w+$", re.IGNORECASE
 )
+#: "storage counter removed this way" (Mage-Ring Network's "Add {C} for each
+#: storage counter removed this way") - the counters its own activation cost
+#: removed. "Remove any number of `<kind>` counters" announces that number as
+#: the ability is activated (CR 107.3a), so the count is the announced X.
+_COUNTERS_REMOVED_THIS_WAY_RE = re.compile(
+    r"^(?:the number of )?(?:\+1/\+1|-1/-1|[a-z]+) counters? removed this way$", re.IGNORECASE
+)
+#: "the sacrificed artifact's mana value" (Slobad, Iron Goblin's "Add an
+#: amount of {R} equal to the sacrificed artifact's mana value") - the
+#: permanent its own activation cost sacrificed (CR 602.2b pays it first),
+#: read as it last existed on the battlefield (CR 608.2h).
+_SACRIFICED_STAT_RE = re.compile(
+    r"^the sacrificed [a-z]+['’]s (?P<stat>mana value|power|toughness)$", re.IGNORECASE
+)
+#: Any other "... this way" count names objects an instruction moved
+#: (`effects.counted_this_way`, read off the resolving stack object); a mana
+#: ability never uses the stack (CR 605.3b), so none of them is readable here.
+_THIS_WAY_RE = re.compile(r"\bthis way$", re.IGNORECASE)
 
 
 def _mana_count_expression_readable(expression: str) -> bool:
@@ -267,20 +290,34 @@ def _mana_count_expression_readable(expression: str) -> bool:
     player taps it.
     """
     stripped = expression.strip().rstrip(".")
-    if _SELF_CHARACTERISTIC_RE.fullmatch(stripped) or _SELF_COUNTERS_ON_RE.fullmatch(stripped):
+    if (
+        _SELF_CHARACTERISTIC_RE.fullmatch(stripped)
+        or _SELF_COUNTERS_ON_RE.fullmatch(stripped)
+        or _COUNTERS_REMOVED_THIS_WAY_RE.fullmatch(stripped)
+        or _SACRIFICED_STAT_RE.fullmatch(stripped)
+    ):
         return True
+    if _THIS_WAY_RE.search(stripped):
+        return False
     # Lazy: `machines/effects.py` imports this module for `parse_mana_abilities`
     # and friends, so importing it back at module scope would cycle. The
-    # counted-board shapes `count_expression` reads ("the number of Shrines
-    # you control", Sanctum of Fruitful Harvest) are pure text -> callable, no
-    # board needed to ask whether one exists.
-    from .effects import count_expression
+    # counted-board shapes - `count_expression`'s "the number of Shrines you
+    # control" (Sanctum of Fruitful Harvest) and every "for each" count
+    # `_for_each_multiplier` reads ("basic Swamp you control", "black creature card
+    # in your graveyard") - are pure text -> callable, no board needed to ask
+    # whether one exists.
+    from .effects import _devotion_count, _for_each_multiplier
 
-    return count_expression(stripped) is not None
+    return _for_each_multiplier(stripped) is not None or _devotion_count(stripped) is not None
 
 
 def resolve_mana_count_expression(
-    game: "Game", controller: str, source: CardState, expression: str
+    game: "Game",
+    controller: str,
+    source: CardState,
+    expression: str,
+    x_value: int | None = None,
+    sacrificed_ids: "Sequence[UUID]" = (),
 ) -> int:
     """The board-derived count a mana ability's "where X is ..." definition
     asks for, read at the moment the ability resolves (CR 605.3b: immediately,
@@ -306,13 +343,30 @@ def resolve_mana_count_expression(
     counters = _SELF_COUNTERS_ON_RE.fullmatch(stripped)
     if counters is not None:
         return max(source.counter_count(counters.group("kind").lower()), 0)
-    from .effects import count_expression
+    if _COUNTERS_REMOVED_THIS_WAY_RE.fullmatch(stripped):
+        # The X announced for "Remove any number of ... counters" (CR 107.3a);
+        # a caller with no activation in hand (an auto-tap plan) removed none.
+        return max(x_value or 0, 0)
+    sacrificed = _SACRIFICED_STAT_RE.fullmatch(stripped)
+    if sacrificed is not None:
+        # Nothing sacrificed (an auto-tap plan, which pays no sacrifice) is
+        # nothing to read: no mana.
+        if not sacrificed_ids:
+            return 0
+        stat = sacrificed.group("stat").lower()
+        if stat == "mana value":
+            return max(int(game.last_known_mana_value(sacrificed_ids[0])), 0)
+        value = game._last_known_stat(sacrificed_ids[0], stat)
+        return max(value or 0, 0)
+    from .effects import _devotion_count, _for_each_multiplier
 
-    reader = count_expression(stripped)
-    assert reader is not None, (
-        f"{expression!r} was accepted as readable but count_expression refused it"
-    )
-    return max(reader(game, controller), 0)
+    reader = _for_each_multiplier(stripped)
+    if reader is not None:
+        return max(reader(game, controller, str(source.id)), 0)
+    # CR 700.5: "your devotion to green" (Karametra's Acolyte).
+    devotion = _devotion_count(stripped)
+    assert devotion is not None, f"{expression!r} was accepted as readable but nothing reads it"
+    return max(devotion(game, controller), 0)
 
 
 def _read_mana_count(match: "re.Match[str]") -> tuple[int, str | None] | None:
@@ -778,7 +832,12 @@ class ManaAbility(EngineModel):
         return options, any_color
 
     def offers(
-        self, produces: "Sequence[Color]", options: list[list[Color]], any_color: bool
+        self,
+        produces: "Sequence[Color]",
+        options: list[list[Color]],
+        any_color: bool,
+        *,
+        amount: int | None = None,
     ) -> bool:
         """Whether this ability could add exactly `produces` right now, given
         the `options`/`any_color` `effective` already worked out for the board.
@@ -811,7 +870,11 @@ class ManaAbility(EngineModel):
         if not (any_color and self.any_color_mixed):
             return False
         offered = {color for option in options for color in option}
-        return len(wanted) == self.any_color_count and all(color in offered for color in wanted)
+        # `amount` is the board's count where the ability's own is a
+        # placeholder ("X mana in any combination of colors, where X is ...",
+        # `cost.counted_mana_options`).
+        count = self.any_color_count if amount is None else amount
+        return len(wanted) == count and all(color in offered for color in wanted)
 
     def resolve(
         self,
@@ -1095,17 +1158,18 @@ def _parse_effect(effect: str) -> ManaAbility | None:
         )
 
     symbol_for_each = _SYMBOL_FOR_EACH_RE.fullmatch(effect.strip().rstrip("."))
-    if symbol_for_each and _mana_count_expression_readable(
-        symbol_for_each.group("expression").strip()
-    ):
-        return ManaAbility(
-            options=[[Color(symbol_for_each.group("symbol").upper())]],
-            for_each_expression=symbol_for_each.group("expression").strip(),
-        )
-    # A "for each" count `effects.count_expression` cannot read yet (Cabal
-    # Stronghold's "basic Swamp you control", Leafkin Avenger's "creature you
-    # control with power 4 or greater") keeps the reading it had before this
-    # shape existed: the symbol alone, below.
+    if symbol_for_each:
+        symbol = symbol_for_each.group("symbol") or symbol_for_each.group("amount_symbol")
+        expression = (
+            symbol_for_each.group("expression") or symbol_for_each.group("amount_expression")
+        ).strip()
+        if _mana_count_expression_readable(expression):
+            return ManaAbility(options=[[Color(symbol.upper())]], for_each_expression=expression)
+    # A "for each" count nothing reads must not fall through to the symbol
+    # alone below - that is one mana where the card says several. Fail the
+    # ability closed instead, like an unreadable "where X is".
+    if symbol_for_each:
+        return None
 
     # A choice reads `{G}, {R}, or {W}`; a multiple reads `{C}{C}`.
     parts = [part for part in _CHOICE_SEPARATOR.split(effect) if _SYMBOL.search(part)]

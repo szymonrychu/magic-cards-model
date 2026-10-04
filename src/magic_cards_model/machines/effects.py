@@ -11111,7 +11111,9 @@ _PUT_COUNTER_THEN_FOR_EACH_COUNTER_RE = re.compile(
 )
 
 
-def _parse_put_counter_then_for_each_counter_punisher_clause(text: str) -> AbilityEffect | None:
+def _parse_put_counter_then_for_each_counter_punisher_clause(
+    text: str,
+) -> AbilityEffect | None:
     """`_PUT_COUNTER_THEN_FOR_EACH_COUNTER_RE`'s shape, or `None`.
 
     Ability-only in practice (the "it" is CR 109.2's self-reference to the
@@ -12107,7 +12109,100 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     generic = count_expression(stripped)
     if generic is not None:
         return lambda game, controller, _source_id: generic(game, controller)
-    return None
+    return _for_each_described_count(stripped)
+
+
+#: "`<description>` you control", the control clause anywhere in it -
+#: Overgrown Battlement's "creature you control with defender", Leafkin
+#: Avenger's "creature with power 4 or greater you control", Cabal
+#: Stronghold's "basic Swamp you control". The rest is read with the
+#: target grammar (`targeting.permanent_description`), so a "for each" count
+#: and a target restriction can never disagree about what a word means.
+_DESCRIBED_CONTROL_CLAUSE_RE = re.compile(
+    r"\s+(?P<whose>you control|your opponents control|on the battlefield)(?=\s|$)",
+    re.IGNORECASE,
+)
+#: CR 201.2's name, trailing a description - Powerstone Shard's "artifact you
+#: control named Powerstone Shard".
+_DESCRIBED_NAMED_RE = re.compile(r"^(?P<rest>.+?)\s+named\s+(?P<name>[A-Z][\w',-]*(?: [\w',-]+)*)$")
+#: "`<quality>` card(s) in your graveyard" whose quality is more than one
+#: word - Crypt of Agadeem's "black creature card in your graveyard"; read
+#: with the search grammar's `_quality_matcher` (a colour word qualifying a
+#: type word).
+_DESCRIBED_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
+    r"^(?P<quality>.+?) cards? in your graveyard$", re.IGNORECASE
+)
+
+
+def _for_each_described_count(phrase: str) -> Callable[["Game", str, str | None], int] | None:
+    """The "for each `<description>`" counts the narrower readers above do
+    not reach, as a `(game, controller, source_id) -> int` reader, or `None`
+    when any word of the description is left unread.
+
+    - **On the battlefield**: one control clause ("you control" / "your
+      opponents control", or "on the battlefield" for everyone's) wherever
+      it sits, an optional trailing "named
+      `<name>`" (CR 201.2a: same name), and a permanent description the target
+      grammar reads in full - supertypes (CR 205.4a's "basic"), colours,
+      keywords (CR 702.3a's defender), and power/toughness/mana value
+      comparisons. Read off the computed board (CR 613.5).
+    - **In your graveyard**: a card description `_quality_matcher` reads in
+      full - a colour word qualifying a type word.
+
+    CR 608.2h: whoever calls this counts once, as the effect applies.
+    """
+    # "the number of creatures you control with defender" (Axebane Guardian's
+    # "where X is") is the identical count spelled as a number.
+    text = re.sub(r"^(?:the )?number of ", "", " ".join(phrase.split()), flags=re.IGNORECASE)
+    graveyard = _DESCRIBED_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(text)
+    if graveyard is not None:
+        quality = graveyard.group("quality")
+        if not _card_description_is_readable(quality):
+            return None
+        matches_card = _quality_matcher(quality)
+
+        def count_described_cards(game: "Game", controller: str, _source_id: str | None) -> int:
+            return sum(1 for card in game.player(controller).graveyard if matches_card(card))
+
+        return count_described_cards
+    clauses = list(_DESCRIBED_CONTROL_CLAUSE_RE.finditer(text))
+    if len(clauses) != 1:
+        return None
+    clause = clauses[0]
+    whose = clause.group("whose").lower()
+    opponents = whose == "your opponents control"
+    # Priest of Titania's "Elf on the battlefield": no control clause at all,
+    # so every player's permanents count.
+    anyone = whose == "on the battlefield"
+    description = f"{text[: clause.start()]}{text[clause.end() :]}".strip()
+    name: str | None = None
+    if named := _DESCRIBED_NAMED_RE.fullmatch(description):
+        description, name = named.group("rest"), named.group("name")
+    if description.lower() in ("permanent", "permanents"):
+        requirement = None
+    else:
+        requirement = permanent_description(description)
+        if requirement is None:
+            return None
+
+    def count_described(game: "Game", controller: str, _source_id: str | None) -> int:
+        board = game.computed_board()
+        total = 0
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            owner = chars.controller
+            if opponents and (owner is None or owner == controller):
+                continue
+            if not opponents and not anyone and owner != controller:
+                continue
+            if name is not None and chars.name != name:
+                continue
+            if requirement is not None and requirement.rejects(permanent, controller, game):
+                continue
+            total += 1
+        return total
+
+    return count_described
 
 
 def _amount_reader(n_text: str, where_text: str | None) -> Callable[["Game", str], int] | None:

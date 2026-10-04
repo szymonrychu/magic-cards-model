@@ -439,11 +439,14 @@ def test_a_mana_ability_s_own_damage_is_taken_before_phyrexian_life_is_paid():
     immediate side effect) has already lowered its controller's life by the
     time a Phyrexian `{B/P}` asks for 2 life (CR 119.4: a player can pay life
     only if their life total is at least that much). At 2 life, Shrine of the
-    Forsaken Gods + Ancient Tomb + Doc Samson cannot pay `{2}{B}{C}{B/P}`:
-    four mana, and the 2 life the fifth symbol needs is gone once the Tomb is
+    Forsaken Gods + Ancient Tomb + Swamp cannot pay `{2}{B}{C}{B/P}`: four
+    mana, and the 2 life the fifth symbol needs is gone once the Tomb is
     tapped. Both solvers must say so, rather than hand `pay()` a plan it then
-    refuses - the random property test above found exactly this board."""
-    board = ["Shrine of the Forsaken Gods", "Doc Samson, Super Psychiatrist", "Ancient Tomb"]
+    refuses. The random property test above found this board with Doc Samson
+    as the black source, read then as one mana; its "X mana of any one color,
+    where X is Doc Samson's power" is three mana at its printed 3 power
+    (CR 605.3b), which pays the whole cost, so a one-mana Swamp stands in."""
+    board = ["Shrine of the Forsaken Gods", "Swamp", "Ancient Tomb"]
     brute_force, flow, _sources = _solve_both(board, ManaCost.parse("{2}{B}{C}{B/P}"), 2, None)
     assert brute_force is None
     assert flow is None

@@ -115,7 +115,12 @@ from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..snapshot import EngineModel
 from .abilities import ActivatedAbility
-from .cost import _SpendContext, _withheld_mana_sources, life_paid_mana_activations
+from .cost import (
+    _SpendContext,
+    _withheld_mana_sources,
+    counted_mana_options,
+    life_paid_mana_activations,
+)
 from .decisions import Decision, DecisionKind, DecisionScript, ScriptedAnswer
 from .legal_actions import legal_actions
 from .replacement import unread_self_enters_tapped_lines
@@ -668,13 +673,22 @@ def _named(entries: Sequence[ManaPlanEntry], life_paid: _LifePaid) -> str:
     )
 
 
-def _own_colors(ability: ActivatedAbility, adds: str) -> Color | list[Color]:
+def _own_colors(
+    ability: ActivatedAbility, adds: str, board: "Game", source: CardState, player: str
+) -> Color | list[Color]:
     """The colours a plan entry's ability makes itself, without what a
     triggered mana ability adds after it (`cost._with_triggered_mana` lists
-    the ability's own mana first)."""
+    the ability's own mana first). A count the board decides ("for each",
+    "where X is", devotion) is counted on `board`, the way the plan was."""
     mana = ability.mana
     assert mana is not None  # a life-paid mana ability
-    count = len(mana.options[0]) if mana.options else mana.any_color_count
+    counted, _amount = counted_mana_options(board, player, source, mana, mana.options)
+    first = Color(adds[0]) if adds else None
+    lengths = [len(option) for option in counted if first is None or option[:1] == [first]]
+    if lengths:
+        count = lengths[0]
+    else:
+        count = len(mana.options[0]) if mana.options else mana.any_color_count
     colors = [Color(symbol) for symbol in adds][:count]
     return colors[0] if len(colors) == 1 else colors
 
@@ -695,7 +709,10 @@ def _play_life_payments(
             payment = copy.begin_activating(source, entry.ability_index, player)
             payment.pay()
             copy.activate_ability(
-                source, entry.ability_index, player, color=_own_colors(ability, entry.adds)
+                source,
+                entry.ability_index,
+                player,
+                color=_own_colors(ability, entry.adds, copy, source, player),
             )
     except ValueError as refusal:
         return _Played([], refusal=str(refusal))

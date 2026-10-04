@@ -26522,7 +26522,17 @@ class Game(EngineModel):
                     ability.mana.any_color_count_expression or ability.mana.for_each_expression
                 )
                 expression_count = (
-                    resolve_mana_count_expression(self, controller, permanent, count_expression)
+                    resolve_mana_count_expression(
+                        self,
+                        controller,
+                        permanent,
+                        count_expression,
+                        # Mage-Ring Network's counters "removed this way"
+                        # (CR 107.3a's announced X) and Slobad's "the
+                        # sacrificed artifact" - what this activation paid.
+                        x_value,
+                        _cost_moved(paid, ComponentKind.SACRIFICE) if paid is not None else (),
+                    )
                     if count_expression is not None
                     else None
                 )

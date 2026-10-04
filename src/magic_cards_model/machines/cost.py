@@ -91,9 +91,11 @@ from .abilities import (
     ManaAbility,
     granted_mana_abilities,
     intrinsic_land_ability,
+    one_named_color,
     parse_abilities,
     parse_mana_abilities,
     parse_triggered_mana,
+    resolve_mana_count_expression,
 )
 from .combat import Keyword, has_keyword
 from .triggers import (
@@ -1119,6 +1121,129 @@ def _mana_narrowings(
     return {"could_produce_colors": could_produce_colors, "chosen_color": chosen_color}
 
 
+def mana_ability_count(
+    game: Any,
+    permanent: CardState,
+    mana: ManaAbility,
+    color: "Color | Sequence[Color] | str | None" = None,
+    controller: str | None = None,
+    *,
+    x_value: int | None = None,
+    sacrificed_ids: Sequence[UUID] = (),
+) -> int | None:
+    """How many mana `mana` adds if it resolves now, where the board decides
+    it, else `None` (a printed amount, which `ManaAbility.resolve` already
+    knows).
+
+    CR 700.5's devotion to the colour `color` names (Nykthos), or the "where
+    X is ..." / "for each ..." / "equal to ..." count (`resolve_mana_count_
+    expression`) - with `x_value` the X announced for a "Remove any number of
+    counters" cost (CR 107.3a) and `sacrificed_ids` what the activation cost
+    sacrificed. This is the one reading `Game.activate_ability` resolves with,
+    and the one a caller naming a source's mana before it is tapped should ask
+    (CR 605.3b).
+    """
+    controller = controller or game.controller_of(permanent).username
+    if mana.amount_from_devotion:
+        from .effects import devotion_to
+
+        devotion_color = one_named_color(color)
+        if devotion_color is None:
+            return None
+        return devotion_to(game, controller, devotion_color)
+    expression = mana.any_color_count_expression or mana.for_each_expression
+    if expression is None:
+        return None
+    return resolve_mana_count_expression(
+        game, controller, permanent, expression, x_value, sacrificed_ids
+    )
+
+
+def mana_ability_most(
+    game: Any, permanent: CardState, index: int = 0, controller: str | None = None
+) -> int | None:
+    """The most `mana_ability_count` could be for this ability if it were
+    activated now, over the choices its own cost leaves open - every counter
+    a "Remove any number of `<kind>` counters" cost could remove (CR 107.3a's
+    announced X, bounded by the counters there), each permanent its sacrifice
+    cost could take (CR 118.3). `None` where the board decides no count (a
+    printed amount, or devotion with no colour named). For a caller
+    describing a source before paying with it; the activation itself counts
+    what was actually paid.
+    """
+    mana = game.activated_abilities(permanent)[index].mana
+    if mana is None:
+        return None
+    controller = controller or game.controller_of(permanent).username
+    cost = game.activation_cost(permanent, index, controller)
+    x_value: int | None = None
+    sacrifices: list[CardState] = []
+    for component in cost.components:
+        if component.kind is ComponentKind.REMOVE_COUNTERS and component.variable_count:
+            x_value = permanent.counter_count(component.counter_kind)
+        elif component.kind is ComponentKind.SACRIFICE:
+            sacrifices = list(game._cost_candidates(component, controller) or [])
+    if not sacrifices:
+        return mana_ability_count(game, permanent, mana, None, controller, x_value=x_value)
+    counts = [
+        mana_ability_count(
+            game, permanent, mana, None, controller, x_value=x_value, sacrificed_ids=(state.id,)
+        )
+        for state in sacrifices
+    ]
+    known = [count for count in counts if count is not None]
+    return max(known) if known else None
+
+
+def counted_mana_options(
+    game: Any,
+    payer: str | None,
+    source: CardState,
+    ability: ManaAbility,
+    options: list[list[Color]],
+) -> tuple[list[list[Color]], int | None]:
+    """`options` scaled to the amount `ability` would really add if it
+    resolved now (CR 605.3b), and that amount - `None` for a printed one.
+
+    `ManaAbility.effective` answers *what* an ability makes; a count the board
+    decides - "Add {C} for each charge counter on this artifact"
+    (`for_each_expression`), "X mana of any one color, where X is ..."
+    (`any_color_count_expression`), CR 700.5's devotion
+    (`amount_from_devotion`) - is left at its one-mana placeholder there, and
+    a payment plan built on the placeholder over- or under-taps. This is the
+    same count `Game.activate_ability` passes to `ManaAbility.resolve`, read
+    through the same `resolve_mana_count_expression` / `devotion_to`, so what
+    a plan counts on is what the tap adds. A count of zero leaves no option at
+    all: CR 605.2 keeps it a mana ability, but it is no mana source now.
+    """
+    expression = ability.for_each_expression or ability.any_color_count_expression
+    if game is None or (expression is None and not ability.amount_from_devotion):
+        return options, None
+    controller = source.controller or payer
+    if controller is None:
+        return options, None
+    if ability.amount_from_devotion:
+        from .effects import devotion_to
+
+        counted = []
+        for option in options:
+            if not option:
+                continue
+            amount = devotion_to(game, controller, option[0])
+            if amount > 0:
+                counted.append([option[0]] * amount)
+        return counted, None
+    assert expression is not None
+    # `x_value` stays unset: a plan pays no "Remove any number of counters"
+    # cost, and only bare-`{T}` abilities are planned at all.
+    amount = resolve_mana_count_expression(game, controller, source, expression)
+    if amount <= 0:
+        return [], 0
+    if ability.for_each_expression is not None:
+        return [list(option) * amount for option in options], amount
+    return [[option[0]] * amount for option in options if option], amount
+
+
 #: One thing `auto_tap` may tap: the permanent, what its chosen ability would
 #: add right now, and the CR 106.6 restriction that mana would carry.
 _Candidate = tuple[CardState, list[list[Color]], ManaRestriction | None]
@@ -1380,6 +1505,7 @@ def _unreplaced_production(
         options, _any = _narrow_to_defined_colors(
             options, any_color, _among_colors(activation.effect, context, source)
         )
+        options, _amount = counted_mana_options(game, context.payer, source, ability, options)
         productions.extend(options)
     wanted = list(wanted)
     for cut in range(len(wanted), 0, -1):
@@ -1465,6 +1591,9 @@ def _scan_mana_candidates(
             )
             options, any_color = _narrow_to_defined_colors(
                 options, any_color, _among_colors(activation.effect, payment, source)
+            )
+            options, _amount = counted_mana_options(
+                payment.game, payment.payer, source, ability, options
             )
             if not options:
                 continue
@@ -6480,7 +6609,9 @@ def restriction_for_production(
         spend_restriction(activation.effect)
         for _index, activation in tappable_mana_activations(source, game)
         if activation.mana is not None
-        for option in activation.mana.effective()[0]
+        for option in counted_mana_options(
+            game, None, source, activation.mana, activation.mana.effective()[0]
+        )[0]
         if sorted(option) == wanted
     ]
     if not matches or any(restriction is None for restriction in matches):
@@ -6577,7 +6708,16 @@ def _activated_mana_ability(
     for ability in abilities:
         behind = _activation_behind(activations, ability)
         effect = behind[1].effect if behind is not None else ""
-        if behind is not None and [piece.kind for piece in behind[1].costs] == [CostKind.TAP]:
+        if behind is not None and [piece.kind for piece in behind[1].costs] != [CostKind.TAP]:
+            # A tap is all this path pays (CR 602.2b): an ability whose cost
+            # is more than `{T}` - Cabal Stronghold's `{3}, {T}` - is the
+            # player's to activate with its whole cost (CR 605.3a), never
+            # one a bare tap may stand in for.
+            refusals.append(
+                f'its "{behind[1].cost}" ability costs more than {{T}}; activate it to pay that'
+            )
+            continue
+        if behind is not None:
             # CR 602.5, asked of the ability actually being activated: a
             # prohibited activation is refused however the source was
             # chosen. Only a bare-`{T}` ability is asked, because that is
@@ -6604,7 +6744,8 @@ def _activated_mana_ability(
         options, any_color = _narrow_to_defined_colors(
             offered, any_color, _among_colors(effect, context, source)
         )
-        if ability.offers(list(produces), options, any_color):
+        options, amount = counted_mana_options(game, context.payer, source, ability, options)
+        if ability.offers(list(produces), options, any_color, amount=amount):
             match = _ActivatedMana(behind[0] if behind is not None else None, ability)
             if activated is None:
                 activated = match
