@@ -5,7 +5,8 @@
     uv run python scripts/split/baselines.py compare before.json after.json --step F2
 
 `measure` records the engine sha, import time of `import magic_cards_model`
-(median of 5 fresh interpreters, `-X importtime`), `mise run test` wall time
+(median of 5 fresh interpreters, `-X importtime`; measured on
+`magic_cards_model.models.game` because the package root is empty), `mise run test` wall time
 and counts (and `mise run test:full` with --full), the collected test count,
 the sha256 of `scripts/sweep_pool.py --effects` stdout, a sha256 over
 tests/golden, and the dispatch fingerprint hash (whole, results-only, and
@@ -30,6 +31,10 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 PACKAGE = "magic_cards_model"
+# The package root's __init__ is empty, so `import magic_cards_model` alone costs
+# microseconds; the real import cost is the engine's heavy entry module, which
+# pulls in machines.effects, layers and the rest.
+TARGET = f"{PACKAGE}.models.game"
 SELF_MODULES = ("machines.effects", "models.game", "machines.layers")
 IMPORT_RUNS = 5
 IMPORT_LIMIT = 1.15
@@ -73,7 +78,11 @@ def fingerprint_summary(text: str) -> dict:
 
 
 def parse_importtime(stderr: str) -> tuple[int, dict[str, int]]:
-    """Return (cumulative us of the package, {short module name: self us})."""
+    """Return (cumulative us of the TARGET import, {short module name: self us}).
+
+    The target's own line comes last in the output (the top-level import); an
+    earlier, indented line carries the real self time (the top-level one is ~0).
+    """
     cumulative = 0
     selfs: dict[str, int] = {}
     for line in stderr.splitlines():
@@ -81,12 +90,12 @@ def parse_importtime(stderr: str) -> tuple[int, dict[str, int]]:
         if not m:
             continue
         self_us, cum_us, name = int(m.group(1)), int(m.group(2)), m.group(4)
-        if name == PACKAGE:
+        if name == TARGET:
             cumulative = cum_us
-        elif name.startswith(PACKAGE + "."):
+        if name.startswith(PACKAGE + "."):
             short = name[len(PACKAGE) + 1 :]
             if short in SELF_MODULES:
-                selfs[short] = self_us
+                selfs.setdefault(short, self_us)
     return cumulative, selfs
 
 
@@ -126,10 +135,10 @@ def measure_import_time() -> dict:
     cums: list[int] = []
     selfs: dict[str, list[int]] = {m: [] for m in SELF_MODULES}
     for _ in range(IMPORT_RUNS):
-        proc = _run(_py("python", "-X", "importtime", "-c", f"import {PACKAGE}"))
+        proc = _run(_py("python", "-X", "importtime", "-c", f"import {TARGET}"))
         cum, per = parse_importtime(proc.stderr)
         if not cum:
-            raise RuntimeError("could not find the package line in -X importtime output")
+            raise RuntimeError("could not find the target module line in -X importtime output")
         cums.append(cum)
         for name in SELF_MODULES:
             if name in per:
