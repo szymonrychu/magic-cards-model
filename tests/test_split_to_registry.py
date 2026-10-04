@@ -454,3 +454,16 @@ def test_generated_package_is_ruff_clean(tmp_path):
         check=False,
     )
     assert done.returncode == 0, done.stdout + done.stderr
+
+
+def test_refuses_when_a_rung_the_fingerprint_filter_cannot_see_would_join_the_chain(tmp_path):
+    """dispatch_fingerprint._chain_calls only lists 'parse*'/'_resolve*' names, so a pure
+    rung named otherwise is hidden today but would appear once it runs through CHAIN.run."""
+    dest = copy_pkg(tmp_path)
+    for path in dest.glob("*.py"):
+        path.write_text(path.read_text().replace("parse_a_four", "a_four"))
+    before = {p.name: p.read_text() for p in dest.glob("*.py")}
+    with pytest.raises(tr.RegistryError, match="name set.*a_four"):
+        tr.convert(dest, MANIFEST, tests_dir=tmp_path / "tests")
+    assert {p.name: p.read_text() for p in dest.glob("*.py")} == before
+    assert not (dest / "_chains.py").exists()

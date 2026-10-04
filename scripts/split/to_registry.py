@@ -275,10 +275,15 @@ def find_segments(
     }
 
 
+def _fingerprint_sees(name: str) -> bool:
+    """The name filter of `dispatch_fingerprint._chain_calls` for hand-written calls."""
+    return "parse" in name or name.startswith("_resolve")
+
+
 def fingerprint_hidden(report: LadderReport) -> list[str]:
     """Rung names `dispatch_fingerprint._chain_calls` cannot see (no 'parse', no '_resolve')."""
     names = {r.name for s in report.segments for r in s.rungs}
-    return sorted(n for n in names if not ("parse" in n or n.startswith("_resolve")))
+    return sorted(n for n in names if not _fingerprint_sees(n))
 
 
 def top_level_defs(source: str) -> set[str]:
@@ -404,8 +409,9 @@ def _module_namespace(tree: ast.Module) -> set[str]:
 def _render_ladder(
     lines: list[str], report: LadderReport, namespace: set[str]
 ) -> tuple[str, set[str]]:
-    """The ladder's new source text, and the set of function names the new
-    ladder calls (hand-written calls plus every rung its `run` calls expand to)."""
+    """The ladder's new source text, and the chain names the fingerprint would
+    list for it afterwards: hand-written calls through its name filter, plus
+    every rung its `run` calls expand to (the fingerprint lists those unfiltered)."""
     fn = report.node
     start = min([fn.lineno, *(d.lineno for d in fn.decorator_list)])
     end = fn.end_lineno or fn.lineno
@@ -421,6 +427,7 @@ def _render_ladder(
     new.extend(lines[cursor - 1 : end])
     text = "\n".join(new)
     names, runs = _call_names(ast.parse(text), namespace)
+    names = {n for n in names if _fingerprint_sees(n)}
     expansion = {
         (report.ladder.chain_var, seg.name): [r.name for r in seg.rungs] for seg in report.segments
     }
@@ -666,7 +673,7 @@ def convert(
     # ladders: new text, and the name-set check before anything is written
     ladder_edits: list[Edit] = []
     for entry, rep in reports.items():
-        pre, _ = _call_names(rep.node, namespace)
+        pre = {n for n in _call_names(rep.node, namespace)[0] if _fingerprint_sees(n)}
         text, post = _render_ladder(dispatch_lines, rep, namespace)
         report_out.segments[entry] = len(rep.segments)
         if pre != post:
