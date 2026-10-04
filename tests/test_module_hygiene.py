@@ -306,8 +306,10 @@ def _all_names(init_tree: ast.Module) -> set[str]:
 def test_facade_names_resolve_to_one_definition():
     """Every name a package's `__init__.py` re-exports through `__all__`
     must be defined in exactly one place reachable from that package: a
-    sibling module, or (`magic_cards_model/__init__.py`'s own `__version__`)
-    the `__init__.py` file itself."""
+    sibling module, a module of a sibling package (`machines/effects/` once
+    the split makes `effects.py` one; a name defined twice inside it counts
+    twice), or (`magic_cards_model/__init__.py`'s own `__version__`) the
+    `__init__.py` file itself."""
     violations = []
     for package in _packages():
         init_path = package / "__init__.py"
@@ -318,6 +320,10 @@ def test_facade_names_resolve_to_one_definition():
         for path in sorted(package.glob("*.py")):
             for name in _top_level_bindings(_parse(path)):
                 owners.setdefault(name, []).append(path.name)
+        for sub_init in sorted(package.glob("*/__init__.py")):
+            for path in sorted(sub_init.parent.rglob("*.py")):
+                for name in _top_level_bindings(_parse(path)):
+                    owners.setdefault(name, []).append(_rel(path))
         for name in sorted(exported):
             files = owners.get(name, [])
             if len(files) != 1:
