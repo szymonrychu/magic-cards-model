@@ -68,7 +68,7 @@ def test_below_twenty_five_total_loyalty_refuses_the_activation():
     jace_rs = scenario.find(JACE, Zone.BATTLEFIELD, "alice")
     token = _make_jace_token(scenario)
     assert token.counter_count(Counter.LOYALTY) == 2
-    scenario.game.add_counters(token, Counter.LOYALTY, 22)  # 24 total, one short
+    scenario.game.add_counters(token, Counter.LOYALTY, 17)  # 2 + 17 + the sculptor's 5 = 24
 
     reason = scenario.why_cannot_activate(jace_rs, index=2, username="alice")
 
@@ -84,7 +84,7 @@ def test_twenty_five_or_more_total_loyalty_makes_the_activation_legal():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     jace_rs = scenario.find(JACE, Zone.BATTLEFIELD, "alice")
     token = _make_jace_token(scenario)
-    scenario.game.add_counters(token, Counter.LOYALTY, 23)  # 25 total, right at the boundary
+    scenario.game.add_counters(token, Counter.LOYALTY, 18)  # 2 + 18 + the sculptor's 5 = 25
 
     reason = scenario.why_cannot_activate(jace_rs, index=2, username="alice")
     assert reason is None

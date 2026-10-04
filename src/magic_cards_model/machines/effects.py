@@ -15688,6 +15688,12 @@ def _parse_put_counters_on_group_clause(
             if len(group_words) == 1 and group_words[0].lower() == "creature":
                 if not chars.is_creature:
                     continue
+            elif len(group_words) == 1 and group_words[0].lower() == "planeswalker":
+                # CR 205.2a: a card type, not a subtype - Way of the Mentor's
+                # and Way of the Necromancer's "put a loyalty counter on each
+                # planeswalker you control".
+                if Type.PLANESWALKER not in chars.types:
+                    continue
             elif not any(word in chars.subtypes for word in group_words):
                 continue
             game.add_counters(permanent, kind, amount)

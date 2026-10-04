@@ -87,3 +87,38 @@ def test_the_extra_land_play_does_not_survive_into_the_next_turn():
         scenario.advance()
 
     assert scenario.game.land_allowance("alice") == 1, "CR 305.2's grant was only for that turn"
+
+
+def test_two_activations_in_one_turn_grant_two_additional_land_plays():
+    """CR 305.2: each activation's trigger adds one more land play, so the
+    allowance is cumulative, and each gains 1 life. The second activation is a
+    different planeswalker's (CR 606.3 allows one per permanent per turn)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            life=20,
+            hand=["Way of the Paradox", "Forest", "Forest", "Forest"],
+            battlefield=["Ajani Unrelenting"],
+            library=["Island"] * 5,
+        )
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Way of the Paradox")
+    scenario.pass_until_resolved()
+    jace = scenario.find("Jace", Zone.BATTLEFIELD, "alice")
+    ajani = scenario.find("Ajani Unrelenting", Zone.BATTLEFIELD, "alice")
+
+    scenario.activate(jace, index=1)  # [-3]
+    while scenario.game.stack:
+        scenario.resolve_top()
+    scenario.activate(ajani, index=0)  # +1
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert scenario.player("alice").life == 22
+    assert scenario.game.land_allowance("alice") == 3
+    lands = [scenario.play_land("Forest") for _ in range(3)]
+    assert all(land.zone is Zone.BATTLEFIELD for land in lands)
