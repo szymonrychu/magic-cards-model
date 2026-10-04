@@ -84,13 +84,10 @@ def report(module: str) -> ml.CheckReport:
 def test_manifest_checks_clean(module):
     rep = report(module)
     assert rep.ok, rep.render()
-    _, p = resolved(module)
-    units = p.units()
-    # manifest_lib also labels imports and bare expressions (docstrings,
-    # attribute docstrings) `neighbour`; those are copied or travel with
-    # their member, not placed, so the ceiling is on definitions.
-    guessed = [u.key for u in units if u.reason == "neighbour" and u.kind in ml.KINDS]
-    assert len(guessed) < NEIGHBOUR_CEILING * len(units), guessed
+    # the literal `neighbour` count of check's reason histogram, against every
+    # statement it resolved (imports and docstrings carry their own reasons)
+    statements = sum(rep.reasons.values())
+    assert rep.reasons["neighbour"] < NEIGHBOUR_CEILING * statements, rep.render()
 
 
 @pytest.mark.parametrize("module", MODULES)

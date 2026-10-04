@@ -206,13 +206,7 @@ stay = [
 ]
 
 [names]
-# a class-body alias must sit in the same class body as the method it names
 announcement_profile = "_casting"
-_announcement_profile = "_casting"
-# bake would vote these to __init__ (their callers mostly stay), which [placed]
-# cannot hold; the seat lookups go with the other who-is-in-the-game members
-player = "_turn_sba"
-players_in_game = "_turn_sba"
 # module-level helper; bake places members only, and its readers are targeting
 _that_player_of = "_stack_priority"
 [[rules]]  # _turn_sba (any position, before first-word rules): state-based actions and the mulligan procedure wherever they appear
@@ -294,3 +288,5 @@ active_player = "_turn_sba"
 is_controlling_player = "_continuous"
 is_in_game = "_turn_sba"
 legal_actions = "_stack_priority"
+player = "_turn_sba"
+players_in_game = "_turn_sba"
