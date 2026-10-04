@@ -276,7 +276,9 @@ def find_segments(
 
 
 def _fingerprint_sees(name: str) -> bool:
-    """The name filter of `dispatch_fingerprint._chain_calls` for hand-written calls."""
+    """`dispatch_fingerprint.chain_member_name`, copied so this script never imports
+    the engine; the fingerprint applies it to hand-written calls and to `X.run`
+    expansions alike (a test asserts the two agree)."""
     return "parse" in name or name.startswith("_resolve")
 
 
@@ -410,8 +412,8 @@ def _render_ladder(
     lines: list[str], report: LadderReport, namespace: set[str]
 ) -> tuple[str, set[str]]:
     """The ladder's new source text, and the chain names the fingerprint would
-    list for it afterwards: hand-written calls through its name filter, plus
-    every rung its `run` calls expand to (the fingerprint lists those unfiltered)."""
+    list for it afterwards: hand-written calls and the rungs its `run` calls
+    expand to, both through the fingerprint's name filter."""
     fn = report.node
     start = min([fn.lineno, *(d.lineno for d in fn.decorator_list)])
     end = fn.end_lineno or fn.lineno
@@ -432,7 +434,7 @@ def _render_ladder(
         (report.ladder.chain_var, seg.name): [r.name for r in seg.rungs] for seg in report.segments
     }
     for key in runs:
-        names.update(expansion.get(key, ()))
+        names.update(n for n in expansion.get(key, ()) if _fingerprint_sees(n))
     return text, names
 
 
@@ -672,8 +674,7 @@ def convert(
     # ladders: new text, and the name-set check before anything is written
     ladder_edits: list[Edit] = []
     for entry, rep in reports.items():
-        pure = {r.name for seg in rep.segments for r in seg.all_rungs}
-        pre = {n for n in _call_names(rep.node, namespace)[0] if _fingerprint_sees(n) or n in pure}
+        pre = {n for n in _call_names(rep.node, namespace)[0] if _fingerprint_sees(n)}
         text, post = _render_ladder(dispatch_lines, rep, namespace)
         report_out.segments[entry] = len(rep.segments)
         if pre != post:
@@ -789,6 +790,9 @@ def analyze(path: Path, defs_dir: Path | None) -> str:
             f"{entry:<28}{rep.rung_count:>7}{len(rep.segments):>10}{rep.other_count:>7}   "
             f"{kinds}{note}"
         )
+        hidden = fingerprint_hidden(rep)
+        if hidden:
+            out.append(f"{'':<28}fingerprint name filter cannot see: {', '.join(hidden)}")
     return "\n".join(out)
 
 

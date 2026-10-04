@@ -457,9 +457,9 @@ def test_generated_package_is_ruff_clean(tmp_path):
 
 
 def test_converts_a_pure_rung_the_name_filter_alone_would_not_list(tmp_path):
-    """A pure rung named without 'parse'/'_resolve' is a chain member of the
-    fingerprint either way (it sees pure rungs by shape), so converting it is
-    not a name-set change and must not refuse."""
+    """A pure rung named without 'parse'/'_resolve' is outside the fingerprint
+    chain before and after: `X.run` expands through the same name filter, so
+    converting it is not a name-set change and must not refuse."""
     dest = copy_pkg(tmp_path)
     for path in dest.glob("*.py"):
         path.write_text(path.read_text().replace("parse_a_four", "a_four"))
@@ -474,3 +474,18 @@ def test_converts_a_pure_rung_the_name_filter_alone_would_not_list(tmp_path):
     ]
     assert registered
     assert all(line.startswith("@") for line in registered), registered
+
+
+def test_analyze_names_the_rungs_the_fingerprint_name_filter_cannot_see(tmp_path):
+    dest = copy_pkg(tmp_path)
+    for path in dest.glob("*.py"):
+        path.write_text(path.read_text().replace("parse_a_four", "a_four"))
+    out = tr.analyze(dest, None)
+    assert "fingerprint name filter cannot see: a_four" in out
+
+
+def test_fingerprint_filter_copy_agrees_with_the_fingerprint_script():
+    from scripts.dispatch_fingerprint import chain_member_name
+
+    names = ["parse_x", "_parse_y", "_resolve_z", "resolve_q", "a_four", "_c02_t6_ability_effect"]
+    assert [tr._fingerprint_sees(n) for n in names] == [chain_member_name(n) for n in names]

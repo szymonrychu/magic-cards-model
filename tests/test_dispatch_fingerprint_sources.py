@@ -96,32 +96,71 @@ def test_name_bound_only_by_facade_is_not_picked_up(pkg):
     assert set(fp["ladder_ghost"]["results"]["plain"].values()) <= {"parse_alpha", "<none>"}
 
 
-def test_pure_rung_without_parse_in_its_name_is_in_the_chain(tmp_path):
-    """The chain is every pure rung of a ladder, whatever it is called: a rung
-    named `grab_x` that wins a corpus input must show up as that winner."""
-    path = tmp_path / "_fp_hidden_mono.py"
-    path.write_text(
-        "def parse_a(text):\n"
-        "    return 'a' if text == 'a' else None\n\n"
-        "def grab_x(text):\n"
-        "    return 'x' if text == 'x' else None\n\n"
-        "def ladder_hidden(text):\n"
-        "    v1 = parse_a(text)\n"
-        "    if v1 is not None:\n"
-        "        return v1\n"
-        "    v2 = grab_x(text)\n"
-        "    if v2 is not None:\n"
-        "        return v2\n"
-        "    return None\n"
-    )
-    module = _load("_fp_hidden_mono", path)
+_HIDDEN_RUNGS = (
+    "def parse_a(text):\n"
+    "    return 'a' if text == 'a' else None\n\n"
+    "def grab_x(text):\n"
+    "    return 'x' if text == 'x' else None\n\n"
+)
+
+_HIDDEN_MONO = _HIDDEN_RUNGS + (
+    "def ladder_hidden(text):\n"
+    "    v1 = parse_a(text)\n"
+    "    if v1 is not None:\n"
+    "        return v1\n"
+    "    v2 = grab_x(text)\n"
+    "    if v2 is not None:\n"
+    "        return v2\n"
+    "    return None\n"
+)
+
+_HIDDEN_REGISTERED = _HIDDEN_RUNGS + (
+    "class Chain:\n"
+    "    def __init__(self, segments):\n"
+    "        self._segments = segments\n\n"
+    "    def segment_rungs(self, segment):\n"
+    "        return tuple(self._segments[segment])\n\n"
+    "    def run(self, segment, value):\n"
+    "        for rung in self._segments[segment]:\n"
+    "            r = rung(value)\n"
+    "            if r is not None:\n"
+    "                return r\n"
+    "        return None\n\n"
+    "SEGS = Chain({'s0': (parse_a, grab_x)})\n\n"
+    "def ladder_hidden(text):\n"
+    "    if (r := SEGS.run('s0', text)) is not None:\n"
+    "        return r\n"
+    "    return None\n"
+)
+
+
+def _hidden_fingerprint(tmp_path, name: str, source: str) -> dict:
+    path = tmp_path / f"{name}.py"
+    path.write_text(source)
+    module = _load(name, path)
     try:
-        fp = compute_fingerprint(
+        return compute_fingerprint(
             module=module,
             chains=(("ladder_hidden", "texts", (None,)),),
             corpus={"texts": ["a", "x", "q"]},
         )
     finally:
-        sys.modules.pop("_fp_hidden_mono", None)
-    assert fp["ladder_hidden"]["chain"] == ["parse_a", "grab_x"]
-    assert fp["ladder_hidden"]["results"]["plain"] == {"a": "parse_a", "x": "grab_x", "q": "<none>"}
+        sys.modules.pop(name, None)
+
+
+def test_rung_without_parse_in_its_name_stays_outside_the_chain(tmp_path):
+    """The chain is the ladder's calls through the name filter ('parse' or
+    '_resolve'); a pure rung named otherwise is not a chain member, exactly as
+    the committed baseline was recorded (P0 keeps it byte-identical)."""
+    fp = _hidden_fingerprint(tmp_path, "_fp_hidden_mono", _HIDDEN_MONO)
+    assert fp["ladder_hidden"]["chain"] == ["parse_a"]
+    assert fp["ladder_hidden"]["results"]["plain"] == {"a": "parse_a", "x": "<none>", "q": "<none>"}
+
+
+def test_registered_segment_fingerprints_like_the_hand_written_ladder(tmp_path):
+    """`X.run(seg, ...)` expands through the same name filter as hand-written
+    calls, so registering a ladder's pure rungs (F2) changes neither its chain
+    nor its results, whatever the rungs are called."""
+    mono = _hidden_fingerprint(tmp_path, "_fp_hidden_mono2", _HIDDEN_MONO)
+    registered = _hidden_fingerprint(tmp_path, "_fp_hidden_reg", _HIDDEN_REGISTERED)
+    assert registered == mono
