@@ -62,6 +62,7 @@ import io
 import json
 import re
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -92,24 +93,70 @@ CHAINS: tuple[tuple[str, str, tuple[bool | None, ...]], ...] = (
 )
 
 
-def _chain_calls(tree: ast.Module, name: str) -> list[str]:
-    """Every distinct parser `name`'s own body calls, in source order - the
-    same source-order walk `overlap.py`/`an2.py` used for the split
-    research, kept identical so this fingerprint matches what was already
-    measured there."""
+_TREES: dict[str, ast.Module] = {}
+
+
+def _source_tree(path: str) -> ast.Module:
+    """The parsed AST of one source file, cached per file."""
+    if path not in _TREES:
+        _TREES[path] = ast.parse(Path(path).read_text())
+    return _TREES[path]
+
+
+def _ladder_def(module, entry: str) -> tuple[ast.FunctionDef, dict]:
+    """The ladder's top-level def, found by name in the AST of the file that
+    defines it (not the module's own file, which is a facade once split), and
+    the globals the function resolves its names in."""
+    fn = getattr(module, entry)
+    tree = _source_tree(inspect.getsourcefile(fn))
     defs = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
-    node = defs[name]
-    calls = [c for c in ast.walk(node) if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)]
+    return defs[entry], fn.__globals__
+
+
+def _chain_calls(module, entry: str) -> list[tuple[str, Callable]]:
+    """Every distinct parser the ladder `entry`'s own body calls, in source
+    order, as `(name, callable)`. A name counts only when it resolves in the
+    ladder function's own globals, and the callable is what those globals bind.
+    `NAME.run("<segment>", ...)` where NAME binds an object with
+    `segment_rungs(segment)` expands, at that call's position, into the
+    segment's rungs in run order."""
+    node, namespace = _ladder_def(module, entry)
+    calls = [c for c in ast.walk(node) if isinstance(c, ast.Call)]
     calls.sort(key=lambda c: (c.lineno, c.col_offset))
-    out: list[str] = []
+    out: list[tuple[str, Callable]] = []
+    seen: set[str] = set()
+
+    def add(name: str, fn: Callable) -> None:
+        if name not in seen:
+            seen.add(name)
+            out.append((name, fn))
+
     for c in calls:
-        f = c.func.id
-        if ("parse" in f or f.startswith("_resolve")) and hasattr(E, f) and f not in out:
-            out.append(f)
+        if isinstance(c.func, ast.Name):
+            f = c.func.id
+            if ("parse" in f or f.startswith("_resolve")) and f in namespace:
+                add(f, namespace[f])
+        elif _is_chain_run(c, namespace):
+            chain = namespace[c.func.value.id]
+            for rung in chain.segment_rungs(c.args[0].value):
+                add(rung.__name__, rung)
     return out
 
 
-def _build_corpus() -> dict[str, list[str]]:
+def _is_chain_run(call: ast.Call, namespace: dict) -> bool:
+    func = call.func
+    return (
+        isinstance(func, ast.Attribute)
+        and func.attr == "run"
+        and isinstance(func.value, ast.Name)
+        and callable(getattr(namespace.get(func.value.id), "segment_rungs", None))
+        and bool(call.args)
+        and isinstance(call.args[0], ast.Constant)
+        and isinstance(call.args[0].value, str)
+    )
+
+
+def _build_corpus(module=E) -> dict[str, list[str]]:
     """Real oracle text, spell text, and their split clauses, off every
     printing in the pool (`tests.cards.pool()`,
     `src/magic_cards_model/data/printings`) - the same extraction
@@ -135,7 +182,7 @@ def _build_corpus() -> dict[str, list[str]]:
     clauses: set[str] = set()
     for text in texts | spells:
         with contextlib.suppress(Exception):
-            clauses.update(E.split_effect_clauses(text))
+            clauses.update(module.split_effect_clauses(text))
     return {
         "texts": sorted(texts),
         "spells": sorted(spells),
@@ -152,12 +199,11 @@ def _call(fn, value: str, for_spell: bool | None):
         return fn(value, **kwargs)
 
 
-def _winner(chain_names: list[str], value: str, for_spell: bool | None) -> str:
-    """The first parser in `chain_names` to return non-`None` for `value`,
-    or `"<none>"` - any exception (wrong arity, a lookup the value does not
+def _winner(chain: list[tuple[str, Callable]], value: str, for_spell: bool | None) -> str:
+    """The first parser in `chain` to return non-`None` for `value`, or
+    `"<none>"` - any exception (wrong arity, a lookup the value does not
     satisfy) counts the same as a `None` return, matching `overlap.py`."""
-    for name in chain_names:
-        fn = getattr(E, name)
+    for name, fn in chain:
         try:
             result = _call(fn, value, for_spell)
         except Exception:  # noqa: BLE001 - "did not match" the same as None
@@ -173,18 +219,23 @@ def _variant_key(for_spell: bool | None) -> str:
     return "for_spell" if for_spell else "not_for_spell"
 
 
-def compute_fingerprint() -> dict:
-    tree = ast.parse(Path(E.__file__).read_text())
-    corpus = _build_corpus()
+def compute_fingerprint(
+    *,
+    module=E,
+    chains: tuple[tuple[str, str, tuple[bool | None, ...]], ...] = CHAINS,
+    corpus: dict[str, list[str]] | None = None,
+) -> dict:
+    if corpus is None:
+        corpus = _build_corpus(module)
     fingerprint: dict[str, dict] = {}
-    for entry, corpus_key, for_spell_variants in CHAINS:
-        chain_names = _chain_calls(tree, entry)
+    for entry, corpus_key, for_spell_variants in chains:
+        chain = _chain_calls(module, entry)
         results: dict[str, dict[str, str]] = {}
         for for_spell in for_spell_variants:
             results[_variant_key(for_spell)] = {
-                value: _winner(chain_names, value, for_spell) for value in corpus[corpus_key]
+                value: _winner(chain, value, for_spell) for value in corpus[corpus_key]
             }
-        fingerprint[entry] = {"chain": chain_names, "results": results}
+        fingerprint[entry] = {"chain": [name for name, _ in chain], "results": results}
     return fingerprint
 
 
