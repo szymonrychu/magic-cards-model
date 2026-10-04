@@ -1,0 +1,1389 @@
+{
+  "flipping": 3,
+  "ladders": {
+    "_ability_effect_or_notice": {
+      "chain": "ABILITY_TEXT",
+      "segments": {
+        "s1": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_put_counter_then_for_each_counter_punisher_clause",
+            "modal._parse_optional_behold_then_if_you_do_clause",
+            "removal._parse_exile_until_n_quality_cast_one_free_clause",
+            "removal._parse_exile_hand_draw_then_play_until_next_turn_ability_clause",
+            "removal._parse_exile_top_card_then_play_permission_clause",
+            "search._parse_search_library_graveyard_outside_the_game_clause"
+          ]
+        },
+        "s10": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "library._parse_reveal_n_cards_then_choose_discard_whole_text",
+            "modal._parse_choose_opponent_and_creature_reveal_exile_choice_whole_text"
+          ]
+        },
+        "s11": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_target_attacks_if_able_clause",
+            "continuous._parse_target_blocks_self_if_able_clause"
+          ]
+        },
+        "s12": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_exile_card_then_token_copy_clause"
+          ]
+        },
+        "s13": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_put_card_exiled_with_self_clause",
+            "counters._parse_remove_all_counters_then_that_many_clause",
+            "continuous._parse_grant_flashback_clause"
+          ]
+        },
+        "s14": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_until_your_next_turn_attack_pump_clause",
+            "damage._parse_divided_damage_then_retaliate_clause",
+            "continuous._parse_attacks_alone_this_turn_counters_and_keywords_clause",
+            "continuous._parse_until_your_next_turn_group_attack_pump_clause",
+            "continuous._parse_batched_attack_group_pump_clause",
+            "modal._parse_ante_self_if_you_do_clause",
+            "removal._parse_exile_targets_until_leaves_then_counters",
+            "continuous._parse_mass_gain_control_untap_ability",
+            "control_copy._parse_copy_of_card_exiled_with_self_clause",
+            "removal._parse_may_exile_that_card_return_others_clause",
+            "returns._parse_return_as_creature_clause",
+            "continuous._parse_untap_and_gain_control_ability"
+          ]
+        },
+        "s15": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_create_token_copies_except_clause",
+            "control_copy._parse_for_each_creature_target_player_copy_clause",
+            "control_copy._parse_for_each_creature_you_control_copy_clause"
+          ]
+        },
+        "s16": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "modal._resolve_modal_triggered_ability_clause",
+            "draw_discard._parse_put_land_from_hand_repeat_clause",
+            "draw_discard._parse_draw_then_put_land_cave_bonus_clause",
+            "draw_discard._parse_discard_then_draw_token_per_nonland_clause",
+            "returns._parse_return_self_then_create_tokens_clause",
+            "library._parse_reveal_until_land_damage_clause",
+            "search._parse_outside_the_game_fetch",
+            "continuous._parse_undergrowth_pump_and_fight_clause",
+            "modal._parse_each_opponent_choose_one_of_each_type_then_sacrifice"
+          ]
+        },
+        "s17": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_each_sacrifices_then_if_you_did_clause",
+            "modal._parse_choose_target_owner_shuffles_it_clause"
+          ]
+        },
+        "s18": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "library._parse_target_player_name_reveal_branch_clause",
+            "library._parse_each_player_name_reveal_branch_clause"
+          ]
+        },
+        "s19": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "damage._parse_damage_that_player_clause",
+            "damage._parse_damage_that_much_clause",
+            "draw_discard._parse_may_discard_or_sacrifice_if_you_do_clause",
+            "removal._parse_conditional_sacrifice_clause",
+            "counters._parse_conditional_remove_counter_from_self_clause"
+          ]
+        },
+        "s2": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "text._parse_leading_then_if_otherwise_clause"
+          ]
+        },
+        "s20": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [
+            {
+              "a": "continuous._parse_attack_this_turn_create_tapped_attacking_tokens",
+              "b": "tokens._parse_created_trigger_ability_text",
+              "count": 1,
+              "example": "Whenever you attack this turn, create two 1/1 red Warrior creature tokens that are tapped and attacking. Sacrifice them at the beginning of the next end step.",
+              "flips": false
+            },
+            {
+              "a": "damage._parse_until_end_of_turn_self_combat_damage_draw_clause",
+              "b": "tokens._parse_created_trigger_ability_text",
+              "count": 1,
+              "example": "Until end of turn, whenever Lyra deals combat damage to a player, draw two cards.",
+              "flips": true
+            }
+          ],
+          "rungs": [
+            "continuous._parse_may_tap_untapped_if_you_do_clause",
+            "continuous._parse_tap_another_untapped_subtype_when_you_do_clause",
+            "modal._parse_reflexive_sacrifice_or_discard_clause",
+            "modal._parse_reflexive_sacrifice_clause",
+            "modal._parse_reflexive_may_discard_clause",
+            "modal._parse_reflexive_pay_energy_clause",
+            "modal._parse_may_pay_energy_if_you_do_clause",
+            "continuous._parse_get_energy_then_pay_create_x_token_clause",
+            "modal._parse_reflexive_pay_mana_clause",
+            "modal._parse_reflexive_pay_mana_and_life_clause",
+            "modal._parse_reflexive_pay_life_clause",
+            "modal._parse_reflexive_may_tap_self_clause",
+            "modal._parse_reflexive_pay_up_to_n_times_choose_modes_clause",
+            "mana._parse_may_pay_mana_if_you_do_clause",
+            "life._parse_may_pay_life_if_you_do_clause",
+            "removal._parse_may_exile_hand_if_you_do_clause",
+            "modal._parse_reflexive_mandatory_token_clause",
+            "modal._parse_reflexive_mandatory_mill_clause",
+            "modal._parse_reflexive_self_counter_if_clause",
+            "tokens._parse_create_token_then_may_attach_clause",
+            "tokens._parse_create_token_then_attach_clause",
+            "continuous._parse_may_attach_to_entering_creature_clause",
+            "returns._parse_return_target_card_then_instead_battlefield_if_cost_paid_clause",
+            "modal._parse_choose_target_exile_until_leaves_then_instead_permanent_clause",
+            "tokens._parse_named_equipment_token_clause",
+            "continuous._parse_attach_self_then_when_you_do_clause",
+            "continuous._attach_self_to_target_effect",
+            "tokens._parse_amass_then_attach_clause",
+            "continuous._parse_attach_target_equipment_up_to_one_creature_clause",
+            "continuous._parse_attach_any_number_equipment_clause",
+            "counters._parse_put_self_counter_for_each_opponent_creature_then_attach_clause",
+            "modal._parse_choose_creature_type_treasure_per_match_clause",
+            "continuous._parse_equipped_attacking_creatures_gain_keywords_clause",
+            "continuous._parse_attack_this_turn_create_tapped_attacking_tokens",
+            "damage._parse_until_end_of_turn_self_combat_damage_draw_clause",
+            "control_copy._parse_cast_noncreature_spell_this_turn_copy_token_clause",
+            "tokens._parse_created_trigger_ability_text",
+            "tokens._parse_created_replacement_ability_text",
+            "counters._parse_event_subject_counters_and_keywords_clause",
+            "tokens._parse_create_tapped_attacking_tokens_then_sacrifice"
+          ]
+        },
+        "s21": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_tapped_attacking_tokens_whole_text"
+          ]
+        },
+        "s22": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [
+            {
+              "a": "mana._parse_mana_adding_trigger",
+              "b": "mana._parse_add_one_mana_of_any_color_trigger",
+              "count": 12,
+              "example": "Add one mana of any color.",
+              "flips": false
+            }
+          ],
+          "rungs": [
+            "tokens._parse_may_cost_then_attacking_token_clause",
+            "returns._parse_put_creature_from_hand_attacking_then_return",
+            "amounts._parse_put_creature_mv_x_from_hand_attacking",
+            "control_copy._parse_exchange_life_totals_then_draw",
+            "control_copy._parse_copy_exiled_card_and_cast",
+            "control_copy._parse_copy_cost_exiled_cards_and_cast",
+            "removal._parse_exile_one_of_each_type_copy_cast_clause",
+            "removal._parse_exile_target_card_copy_it_cast_clause",
+            "mana._parse_mana_adding_trigger",
+            "damage._parse_firebending_add_mana",
+            "mana._parse_add_one_mana_of_any_color_trigger",
+            "mana._parse_add_that_much_colored_mana_trigger",
+            "removal._parse_sacrifice_unless_discard_trigger",
+            "draw_discard._parse_draw_then_discard_unless_ability",
+            "continuous._parse_tap_any_number_of_untapped_creatures_when_you_do_clause",
+            "counters._parse_counter_on_subject_and_shared_type_clause",
+            "continuous._parse_self_keyword_choice_until_eot_trigger",
+            "continuous._parse_each_other_attacking_creature_pump_trigger",
+            "continuous._parse_other_attacking_creatures_grant_trigger",
+            "counters._parse_put_counters_on_target_where_x_is_clause",
+            "continuous._parse_may_then_if_you_do_layer_clause",
+            "continuous._parse_get_an_emblem_then_clause",
+            "continuous._parse_tap_untap_two_targets_clause",
+            "continuous._parse_get_an_emblem_clause"
+          ]
+        },
+        "s23": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_counters_more_if_subtype_clause",
+            "amounts._parse_nth_resolution_clause",
+            "library._parse_mill_that_many_then_take_from_among_them",
+            "returns._parse_return_self_as_type_clause",
+            "removal._parse_counter_targeting_object_unless_clause",
+            "continuous._parse_targeted_then_self_gains_clause"
+          ]
+        },
+        "s24": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "returns._parse_return_self_to_battlefield_transformed_clause"
+          ]
+        },
+        "s25": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_transform_clause",
+            "removal._parse_may_exile_self_then_return_clause",
+            "removal._parse_exile_self_then_return_clause",
+            "removal._parse_sacrifice_unless_pay_energy",
+            "removal._parse_destroy_each_then_remove_all_counters"
+          ]
+        },
+        "s26": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_put_counters_on_group_clause",
+            "counters._parse_counters_on_named_group_clause",
+            "counters._parse_put_counter_on_self_then_if_count_clause",
+            "counters._parse_put_counters_on_self_clause",
+            "counters._parse_put_up_to_n_counters_on_self_capped_clause",
+            "counters._parse_put_counters_equal_to_clause",
+            "counters._parse_adapt_clause",
+            "counters._parse_endure_clause",
+            "counters._parse_monstrosity_clause"
+          ]
+        },
+        "s27": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "control_copy._parse_copy_that_spell_clause"
+          ]
+        },
+        "s28": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_create_x_tokens_where_x_is_clause",
+            "counters._parse_double_counters_on_group_clause",
+            "library._parse_defending_player_reveals_top_conditional_land_clause",
+            "continuous._parse_untap_self_clause",
+            "damage._parse_deals_damage_lose_life_then_transform_if_low_clause",
+            "continuous._parse_untap_trigger_subject_clause",
+            "continuous._parse_untap_trigger_subject_and_scry_clause",
+            "continuous._parse_attached_subject_gains_keywords_until_clause",
+            "returns._parse_return_a_land_you_control_clause",
+            "continuous._parse_gains_ability_clause",
+            "counters._parse_remove_time_counter_from_self_clause",
+            "counters._parse_remove_all_counters_from_target_clause",
+            "counters._parse_remove_up_to_n_counters_from_target_clause",
+            "counters._parse_remove_n_counters_from_self_clause",
+            "continuous._parse_self_cant_block_clause"
+          ]
+        },
+        "s29": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_put_its_counters_on_target_clause",
+            "continuous._parse_for_each_opponent_tap_then_stun_clause",
+            "continuous._parse_for_each_opponent_tap_clause",
+            "continuous._parse_goad_for_each_opponent_then_counters_clause",
+            "counters._parse_for_each_opponent_counters_clause",
+            "removal._parse_for_each_opponent_destroy_clause",
+            "removal._parse_for_each_opponent_exile_clause",
+            "returns._parse_for_each_opponent_return_to_hand_clause"
+          ]
+        },
+        "s3": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_put_n_counters_on_self_then_draw_half_n_clause",
+            "modal._parse_choose_card_name_for_source_clause",
+            "dispatch._source_relative_whole_text_ability_effect"
+          ]
+        },
+        "s30": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_whole_text_token_clause"
+          ]
+        },
+        "s31": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_attacking_token_clause"
+          ]
+        },
+        "s32": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_exile_target_card_reflexive_creature_counter",
+            "tokens._parse_create_token_mill_repeat_clause",
+            "library._parse_mill_then_may_return_creature_clause",
+            "modal._parse_reflexive_discard_count_clause",
+            "library._parse_explores_then_conditional_mass_destroy",
+            "removal._parse_each_player_sacrifices_then_mass_reanimate",
+            "returns._parse_return_target_from_graveyard_gains_then_bounce",
+            "library._parse_mill_then_play_that_card",
+            "library._parse_mill_then_return_to_hand_clause",
+            "tokens._parse_conditional_token_count_on_sacrificed",
+            "continuous._parse_double_power_target_clause",
+            "library._parse_select_from_top_clause",
+            "library._parse_look_top_x_put_permanents_clause"
+          ]
+        },
+        "s33": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "life._parse_that_player_loses_life_searches_puts_in_hand_clause"
+          ]
+        },
+        "s34": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [
+            {
+              "a": "library._parse_mill_then_may_take_from_milled_ability",
+              "b": "library._parse_mill_then_put_all_from_milled_ability",
+              "count": 1,
+              "example": "mill four cards, then put all Elf cards from among them into your hand.",
+              "flips": false
+            }
+          ],
+          "rungs": [
+            "library._parse_mill_then_may_put_on_top_clause",
+            "library._parse_mill_then_may_take_from_milled_ability",
+            "library._parse_mill_then_put_all_from_milled_ability",
+            "library._parse_reveal_top_n_put_random_kind_clause",
+            "search._parse_search_put_battlefield_tapped_then_behold_untap_clause"
+          ]
+        },
+        "s35": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "library._parse_look_top_card_conditional_clause",
+            "damage._parse_damage_to_that_spells_controller_clause",
+            "draw_discard._parse_discard_hand_draw_x_clause",
+            "continuous._parse_pump_per_discard_then_delayed_draw_clause",
+            "continuous._parse_each_opponent_skips_next_untap_clause",
+            "library._parse_hideaway_clause",
+            "library._parse_hideaway_counter_then_conditional_free_cast_clause",
+            "draw_discard._parse_target_opponent_draw_then_copy_that_spell_clause",
+            "tokens._parse_create_token_then_copy_spell_retargeted_clause",
+            "control_copy._parse_copy_that_spell_retargeted_clause",
+            "control_copy._parse_copy_next_spell_you_cast_clause",
+            "control_copy._parse_copy_next_instant_or_sorcery_you_cast_clause",
+            "life._parse_its_controller_may_pay_life_then_draw_clause",
+            "dispatch._parse_next_spell_cannot_be_countered_clause",
+            "life._parse_pay_any_life_then_draw_that_many_clause",
+            "life._parse_each_opponent_loses_life_equal_to",
+            "continuous._parse_pump_for_each_color_spent_on_that_spell_clause"
+          ]
+        },
+        "s36": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [
+            {
+              "a": "continuous._mass_pump_ability_effect",
+              "b": "amounts._parse_where_x_is_continuous_effect",
+              "count": 2,
+              "example": "Creatures you control get +X/+X until end of turn, where X is the greatest power among creatures you control.",
+              "flips": true
+            },
+            {
+              "a": "continuous._parse_self_keyword_grant_until_eot_clause",
+              "b": "continuous._parse_event_subject_pump_clause",
+              "count": 1,
+              "example": "it gains double strike until end of turn.",
+              "flips": false
+            }
+          ],
+          "rungs": [
+            "continuous._mass_pump_ability_effect",
+            "amounts._parse_where_x_is_continuous_effect",
+            "continuous._parse_tap_target_then_no_untap_clause",
+            "continuous._parse_tap_enchanted_then_unprepared_clause",
+            "control_copy._parse_copy_cast_spell_clause",
+            "counters._parse_move_counter_clause",
+            "continuous._parse_pump_and_becomes_chosen_color_clause",
+            "continuous._parse_self_keyword_grant_until_eot_clause",
+            "continuous._parse_protection_from_chosen_color_clause",
+            "continuous._parse_becomes_chosen_color_clause",
+            "removal._parse_put_exiled_target_onto_battlefield_clause",
+            "library._parse_hideaway_play_clause",
+            "tokens._parse_create_token_copy_of_cost_exiled_card_clause",
+            "removal._parse_exiled_card_owner_creates_x_token_clause",
+            "continuous._parse_event_subject_pump_clause",
+            "amounts._parse_event_subject_variable_pump_clause",
+            "continuous._parse_target_plus_x_minus_x_clause",
+            "library._parse_reveal_until_x_kind_put_any_onto_battlefield_clause",
+            "library._parse_reveal_until_x_nonland_exile_per_color_clause",
+            "removal._parse_exile_several_up_to_one_targets_then_return_clause",
+            "removal._parse_exile_target_then_return_tapped_and_attacking_clause",
+            "removal._parse_exile_then_pay_or_else_return_clause",
+            "draw_discard._parse_draw_then_delayed_discard_at_random_clause"
+          ]
+        },
+        "s37": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "returns._parse_mass_return_entered_this_turn_clause",
+            "modal._parse_reflexive_may_exile_dead_self_clause",
+            "returns._parse_return_target_and_same_name_from_graveyard_clause"
+          ]
+        },
+        "s38": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_linked_exile_return_pair_clause"
+          ]
+        },
+        "s39": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_if_condition_exile_self_and_each_clause",
+            "life._parse_you_and_event_player_gain_that_much_life_clause"
+          ]
+        },
+        "s4": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_double_power_and_toughness_clause",
+            "continuous._parse_self_base_pt_set_with_keywords_clause"
+          ]
+        },
+        "s40": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "dispatch.parse_mixed_effect"
+          ]
+        },
+        "s41": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_put_then_grant_then_delayed_whole_text"
+          ]
+        },
+        "s42": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "modal._parse_condition_instead_clause_for_ability",
+            "damage._parse_damage_target_also_damages_controller_clause"
+          ]
+        },
+        "s43": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._compose_layer_effect_with_remainder_for_ability",
+            "removal._parse_then_exile_self_and_return_clause",
+            "modal._parse_then_if_moved_this_way_clause"
+          ]
+        },
+        "s5": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "dispatch._r0a_t5_ability_effect",
+            "dispatch._c02_t6_ability_effect",
+            "library._parse_manifest_from_hand_then_draw_clause",
+            "library._parse_reveal_hand_choose_two_bounded_cards_then_discard_clause",
+            "amounts._parse_half_x_life_and_draw_half_x_cards_clause"
+          ]
+        },
+        "s6": {
+          "local": "effect_text",
+          "mode": "false",
+          "pairs": [],
+          "rungs": [
+            "draw_discard._parse_put_permanent_card_from_hand_clause"
+          ]
+        },
+        "s7": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_create_named_permanent_token_clause",
+            "modal._parse_any_player_may_punisher_clause"
+          ]
+        },
+        "s8": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_base_pt_become_clause",
+            "damage._parse_prevent_damage_dealt_by_target_clause",
+            "control_copy._parse_exchange_control_clause"
+          ]
+        },
+        "s9": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "draw_discard._parse_draw_equal_to_sacrificed_creature_power_then_discard_clause",
+            "life._parse_each_opponent_loses_life_equal_to_sacrificed_creature_clause",
+            "life._parse_gain_life_equal_to_sacrificed_creature_clause",
+            "continuous._parse_may_transform_self_if_you_do_clause",
+            "continuous._parse_self_layer_and_verb_clause",
+            "dispatch._parse_cast_from_graveyard_now_clause",
+            "counters._parse_counter_exile_may_cast_free_clause",
+            "removal._parse_face_down_exile_play_clause",
+            "removal._parse_cast_from_hand_then_exile_clause",
+            "removal._parse_linked_exile_clause",
+            "removal._parse_exile_cards_from_your_hand_clause",
+            "library._parse_look_top_keep_one_on_top_clause",
+            "library._parse_cast_trigger_look_top_x_take_one_clause",
+            "library._parse_cast_trigger_reveal_top_x_put_one_permanent_clause",
+            "library._parse_cast_trigger_reveal_until_x_kind_to_graveyard_clause",
+            "removal._parse_target_opponent_exile_top_then_put_lands_clause",
+            "damage._parse_damage_target_player_and_their_creatures_clause",
+            "dispatch._parse_cast_target_card_from_graveyard_clause",
+            "continuous._parse_it_gains_quoted_ability_clause",
+            "continuous._parse_target_attacking_alone_pump_gain_life_clause",
+            "amounts._parse_it_dynamic_x_pump_clause",
+            "continuous._parse_self_gains_quoted_ability_until_eot_clause",
+            "modal._parse_choose_target_then_return_to_your_hand_pair"
+          ]
+        }
+      }
+    },
+    "_parse_mixed_clause": {
+      "chain": "MIXED_CLAUSE",
+      "segments": {
+        "s1": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "dispatch._parse_targeted_clause",
+            "continuous._parse_this_turn_spell_grant_clause"
+          ]
+        },
+        "s10": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_token_clause",
+            "tokens._parse_create_that_many_color_pip_tokens_clause",
+            "damage._parse_damage_equal_to_that_spells_mv_clause"
+          ]
+        },
+        "s11": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_mass_pump_group_clause",
+            "continuous._parse_target_player_creatures_pump_clause",
+            "continuous._parse_mass_lose_all_abilities_clause",
+            "continuous._parse_spells_cant_be_countered_clause",
+            "dispatch._parse_turn_rules_ban_clause",
+            "continuous._parse_you_and_group_gain_clause"
+          ]
+        },
+        "s12": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "dispatch._parse_you_and_target_player_each_clause",
+            "tokens._parse_target_player_creates_clause"
+          ]
+        },
+        "s13": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_named_token_clause",
+            "amounts._parse_variable_count_token_clause",
+            "damage._parse_self_fights_target_clause",
+            "damage._parse_enchanted_creature_fights_target_clause",
+            "damage._parse_target_fights_target_clause",
+            "damage._parse_bite_damage_clause",
+            "counters._parse_counter_each_other_creature_clause"
+          ]
+        },
+        "s14": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_counter_each_attacked_this_turn_clause"
+          ]
+        },
+        "s15": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_counter_each_creature_with_counter_clause"
+          ]
+        },
+        "s16": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_remove_all_counters_from_target_clause",
+            "counters._parse_remove_up_to_n_counters_from_target_clause"
+          ]
+        },
+        "s17": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_untap_all_group_clause",
+            "continuous._parse_untap_each_subtype_clause",
+            "continuous._parse_goad_clause",
+            "continuous._parse_suspect_clause",
+            "library._parse_venture_clause",
+            "counters._parse_renown_clause"
+          ]
+        },
+        "s18": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_additional_combat_and_main_phase_clause",
+            "continuous._parse_untap_all_attacking_clause",
+            "continuous._parse_self_pump_for_each_clause"
+          ]
+        },
+        "s19": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "damage._parse_self_damage_equal_to_count_clause"
+          ]
+        },
+        "s2": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_exile_top_of_other_libraries_clause"
+          ]
+        },
+        "s20": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_additional_combat_phase_only_clause"
+          ]
+        },
+        "s21": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_for_each_opponent_tap_then_stun_clause",
+            "continuous._parse_for_each_opponent_tap_clause",
+            "counters._parse_for_each_opponent_counters_clause",
+            "removal._parse_for_each_opponent_destroy_clause",
+            "removal._parse_for_each_opponent_exile_clause",
+            "returns._parse_for_each_opponent_return_to_hand_clause",
+            "counters._parse_counter_each_creature_target_player_clause",
+            "tokens._parse_create_role_token_clause",
+            "tokens._parse_city_blessing_token_copy_clause",
+            "control_copy._parse_self_copy_token_clause",
+            "tokens._parse_create_token_copy_of_target_clause"
+          ]
+        },
+        "s22": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_create_token_copy_of_quality_you_control_clause"
+          ]
+        },
+        "s23": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_create_token_copies_except_clause"
+          ]
+        },
+        "s24": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_counter_on_additional_cost_card_clause"
+          ]
+        },
+        "s25": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "life._parse_gain_life_equal_to_additional_cost_card_clause",
+            "draw_discard._parse_each_player_may_discard_hand_and_draw_clause"
+          ]
+        },
+        "s26": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "returns._parse_return_cards_from_your_graveyard_clause",
+            "returns._parse_return_a_card_at_random_from_graveyard_clause",
+            "continuous._parse_transform_all_subtype_clause",
+            "search._parse_search_hand_or_graveyard_clause",
+            "draw_discard._parse_draw_cards_equal_to_target_hand_clause",
+            "search._parse_search_clause",
+            "search._parse_search_and_exile_then_shuffle_clause",
+            "search._parse_search_split_destination_clause",
+            "search._parse_search_reveal_shuffle_top_clause",
+            "search._parse_search_distinct_names_clause",
+            "draw_discard._parse_put_land_from_hand_clause",
+            "search._parse_search_mv_lte_count_clause",
+            "search._parse_search_mv_equal_to_sacrificed_clause",
+            "removal._parse_imprint_clause",
+            "returns._parse_return_imprinted_clause",
+            "returns._parse_self_return_clause",
+            "removal._parse_exile_dead_self_clause",
+            "returns._parse_return_dead_self_to_hand_clause",
+            "library._parse_dead_object_to_library_clause",
+            "library._parse_owner_shuffles_graveyard_into_library_clause",
+            "tokens._parse_create_tokens_equal_to_event_subject_stat_clause",
+            "removal._parse_sacrifice_self_clause",
+            "modal._parse_delayed_single_clause",
+            "damage._parse_airbend_clause",
+            "damage._parse_earthbend_clause",
+            "tokens._parse_amass_clause",
+            "dispatch._parse_ring_tempts_you_clause",
+            "removal._parse_blocking_creature_sacrificed_clause",
+            "dispatch._parse_empower_jace_clause",
+            "tokens._parse_investigate_clause",
+            "library._parse_discover_clause",
+            "library._parse_learn_clause",
+            "library._parse_manifest_top_card_clause",
+            "library._parse_manifest_dread_clause",
+            "amounts._parse_if_graveyard_count_clause",
+            "modal._parse_if_additional_cost_paid_clause",
+            "continuous._parse_if_keyword_cost_paid_clause",
+            "removal._parse_exile_that_players_library_clause",
+            "continuous._parse_it_gains_rebound_clause",
+            "continuous._parse_grant_enters_with_colors_spent_counters_clause",
+            "life._parse_they_gain_or_lose_life_clause",
+            "continuous._parse_that_permanent_no_untap_clause",
+            "counters._parse_distribute_counters_among_targets_clause"
+          ]
+        },
+        "s27": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_distribute_counters_among_you_control_clause"
+          ]
+        },
+        "s28": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "control_copy._parse_copy_that_spell_clause",
+            "removal._parse_counter_that_spell_clause",
+            "removal._parse_defending_player_exiles_top_n_clause"
+          ]
+        },
+        "s29": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "library._parse_look_at_top_card_clause"
+          ]
+        },
+        "s3": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_each_player_exiles_until_clause",
+            "removal._parse_play_a_card_exiled_with_clause",
+            "continuous._parse_event_player_gets_that_many_poison_clause"
+          ]
+        },
+        "s30": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "draw_discard._parse_target_player_discards_clause",
+            "draw_discard._parse_each_opponent_discards_clause",
+            "draw_discard._parse_target_player_may_put_card_from_hand_clause",
+            "draw_discard._parse_target_player_draws_clause",
+            "continuous._parse_target_player_becomes_monarch_clause",
+            "draw_discard._parse_n_target_players_each_draw_clause",
+            "library._parse_target_player_shuffles_clause",
+            "removal._parse_target_player_sacrifices_clause"
+          ]
+        },
+        "s31": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "search._parse_target_player_may_search_named_card_clause",
+            "mana._parse_add_mana_clause",
+            "mana._parse_add_any_combination_mana_clause",
+            "mana._parse_if_condition_add_mana_equal_to_clause",
+            "returns._parse_return_self_from_graveyard_to_battlefield_clause",
+            "returns._parse_return_self_from_graveyard_to_battlefield_attached_clause",
+            "returns._parse_return_self_to_battlefield_transformed_clause",
+            "returns._parse_return_event_subject_to_battlefield_clause",
+            "library._parse_self_owner_shuffles_self_into_library_clause",
+            "modal._parse_if_condition_you_win_the_game_clause",
+            "continuous._parse_if_condition_players_cant_cast_clause",
+            "returns._parse_mass_return_from_graveyard_to_battlefield_clause",
+            "returns._parse_mass_return_from_graveyard_to_hand_clause",
+            "returns._parse_mass_return_to_hand_clause"
+          ]
+        },
+        "s32": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_sacrifice_n_of_a_group_clause",
+            "removal._parse_that_player_sacrifices_of_their_choice_clause"
+          ]
+        },
+        "s33": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_each_sacrifices_of_their_choice_clause"
+          ]
+        },
+        "s34": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_target_opponent_sacrifice_greatest_mv_clause",
+            "tokens._parse_attacking_token_clause",
+            "library._parse_recruit_clause",
+            "library._parse_that_player_mills_that_many_clause",
+            "control_copy._parse_copy_this_spell_clause",
+            "modal._parse_choose_new_targets_clause",
+            "control_copy._parse_change_target_clause",
+            "library._parse_put_cards_from_hand_into_library_clause",
+            "draw_discard._parse_put_permanent_card_from_hand_clause",
+            "draw_discard._parse_draw_cards_equal_to_count_clause",
+            "returns._parse_return_self_to_owners_hand_clause",
+            "continuous._parse_transform_self_at_next_step_clause"
+          ]
+        },
+        "s35": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [
+            {
+              "a": "damage._parse_damage_each_group_clause",
+              "b": "damage._parse_damage_each_filtered_clause",
+              "count": 17,
+              "example": "Anger of the Gods deals 3 damage to each creature",
+              "flips": false
+            }
+          ],
+          "rungs": [
+            "removal._parse_destroy_each_clause",
+            "counters._parse_remove_all_counters_from_each_clause",
+            "removal._parse_exile_each_clause",
+            "library._parse_put_each_on_bottom_clause",
+            "continuous._parse_untap_all_you_control_clause",
+            "removal._parse_sacrifice_all_you_control_clause",
+            "continuous._parse_tap_all_group_clause",
+            "continuous._parse_tap_attached_clause",
+            "removal._parse_destroy_or_exile_attached_clause",
+            "continuous._parse_target_gains_ability_until_cast_from_exile_clause",
+            "removal._parse_self_cast_while_exiled_clause",
+            "damage._parse_damage_each_group_clause",
+            "damage._parse_damage_each_filtered_clause",
+            "draw_discard._parse_draw_if_you_control_color_permanent_clause"
+          ]
+        },
+        "s36": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "modal._parse_condition_clause"
+          ]
+        },
+        "s37": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_minus_counters_mixed_clause"
+          ]
+        },
+        "s4": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_each_player_this_creature_attacked_loses_clause",
+            "draw_discard._parse_draw_the_difference_clause"
+          ]
+        },
+        "s5": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "library._parse_shuffle_target_cards_into_library_clause",
+            "library._parse_shuffle_target_permanent_into_library_clause"
+          ]
+        },
+        "s6": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "damage._parse_prevent_all_damage_to_you_until_next_turn_clause"
+          ]
+        },
+        "s7": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "damage._parse_prevent_all_damage_to_self_this_turn_clause",
+            "removal._parse_exile_self_clause",
+            "library._parse_explores_clause"
+          ]
+        },
+        "s8": {
+          "local": "clause",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_loyalty_instant_speed_clause"
+          ]
+        },
+        "s9": {
+          "local": "clause",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "counters._parse_proliferate_clause"
+          ]
+        }
+      }
+    },
+    "_parse_mixed_clauses": {
+      "chain": "MIXED_CLAUSES",
+      "segments": {
+        "s1": {
+          "local": "text",
+          "mode": "forward",
+          "pairs": [],
+          "rungs": [
+            "dispatch._parse_shared_subject_clauses"
+          ]
+        }
+      }
+    },
+    "_spell_effect_or_notice": {
+      "chain": "SPELL_TEXT",
+      "segments": {
+        "s1": {
+          "local": "whole",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "dispatch._r0a_t5_spell_effect"
+          ]
+        },
+        "s10": {
+          "local": "whole",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "damage._parse_damage_target_player_and_their_creatures_clause",
+            "dispatch._parse_cast_target_card_from_graveyard_clause",
+            "continuous._parse_target_attacks_if_able_clause",
+            "continuous._parse_target_blocks_self_if_able_clause",
+            "tokens._parse_created_trigger_spell_text",
+            "tokens._parse_created_replacement_spell_text",
+            "tokens._parse_created_replacement_then_rest_spell_text",
+            "draw_discard._parse_draw_x_from_target_graveyard_from_library_clause",
+            "control_copy._parse_copy_next_instant_or_sorcery_you_cast_spell_clause"
+          ]
+        },
+        "s11": {
+          "local": "whole",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "modal._parse_choose_target_owner_may_top_else_bottom_clause",
+            "modal._parse_choose_target_owner_shuffles_it_clause",
+            "modal._parse_choose_creature_type_destroy_except_clause",
+            "removal._parse_each_sacrifices_then_if_you_did_clause",
+            "removal._parse_exile_if_mv_return_then_re_exile_clause"
+          ]
+        },
+        "s12": {
+          "local": "whole",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_switch_power_toughness_then_draw_clause",
+            "damage._parse_delirium_damage_instead_clause",
+            "modal._parse_choose_targets_then_return_to_hand_pair",
+            "modal._parse_choose_target_then_create_token_copies_pair"
+          ]
+        },
+        "s13": {
+          "local": "whole",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_create_token_copies_except_clause",
+            "control_copy._parse_for_each_creature_target_player_copy_clause",
+            "control_copy._parse_for_each_creature_you_control_copy_clause"
+          ]
+        },
+        "s14": {
+          "local": "whole",
+          "mode": "plain",
+          "pairs": [
+            {
+              "a": "modal._parse_citys_blessing_instead_clause",
+              "b": "modal._parse_condition_instead_clause",
+              "count": 1,
+              "example": "Draw two cards. If you have the city's blessing, draw three cards instead.",
+              "flips": false
+            },
+            {
+              "a": "modal._parse_condition_instead_clause",
+              "b": "modal._parse_gift_promised_return_instead_clause",
+              "count": 1,
+              "example": "Return target creature an opponent controls to its owner's hand. If the gift was promised, instead return target nonland permanent an opponent controls to its owner's hand.",
+              "flips": true
+            }
+          ],
+          "rungs": [
+            "tokens._parse_create_tokens_graveyard_cast_counters_clause",
+            "tokens._parse_create_tokens_then_counter_other_subtype_clause",
+            "continuous._parse_mass_gain_control_untap_clause",
+            "returns._parse_return_as_creature_clause",
+            "continuous._parse_untap_and_gain_control_clause",
+            "removal._parse_revolt_destroy_or_exile_clause",
+            "amounts._parse_converge_exile_by_colors_spent",
+            "life._parse_gain_life_if_color_spent_clause",
+            "amounts._parse_x_life_mass_debuff",
+            "amounts._parse_x_life_return_types_mv_x_clause",
+            "removal._parse_exile_target_and_top_owner_may_play_clause",
+            "amounts._parse_converge_discard_by_colors_spent",
+            "amounts._parse_converge_damage_then_exile_excess_clause",
+            "amounts._parse_converge_fractal_tokens_and_life_clause",
+            "amounts._parse_converge_draw_damage_life_clause",
+            "amounts._parse_converge_draw_and_lose_life_clause",
+            "tokens._parse_fractal_token_by_cards_drawn_this_turn_clause",
+            "draw_discard._parse_power_of_two_draw_clause",
+            "tokens._parse_tokens_then_counter_if_not_cast_from_hand_clause",
+            "modal._parse_citys_blessing_instead_clause",
+            "modal._parse_kicked_choose_return_delayed_clause",
+            "counters._parse_counter_exile_may_cast_free_clause",
+            "removal._parse_face_down_exile_play_clause",
+            "library._parse_look_top_split_conditional_instead_clause",
+            "modal._parse_condition_instead_clause",
+            "modal._parse_gift_promised_return_instead_clause"
+          ]
+        },
+        "s15": {
+          "local": "effect_text",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "draw_discard._parse_may_discard_or_sacrifice_if_you_do_clause",
+            "removal._parse_conditional_sacrifice_clause",
+            "removal._parse_mandatory_sacrifice_then_return_to_hand_clause"
+          ]
+        },
+        "s16": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_may_exile_self_and_named_copies_if_you_do_clause",
+            "continuous._parse_target_get_energy_pay_damage",
+            "amounts._parse_x_energy_pay_destroy_by_mana_value",
+            "amounts._parse_x_damage_divided_and_doubled_clause"
+          ]
+        },
+        "s17": {
+          "local": "effect_text",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "search._parse_behold_chosen_type_search_clause",
+            "removal._parse_shared_type_sacrifice_clause",
+            "modal._parse_choose_type_return_from_graveyard_clause",
+            "modal._parse_choose_type_draw_per_permanent_clause",
+            "dispatch._parse_wanderwine_farewell_clause"
+          ]
+        },
+        "s18": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "damage._parse_damage_target_kicked_instead_clause",
+            "damage._parse_damage_target_also_damages_controller_clause",
+            "modal._parse_choose_target_return_chosen_card_clause",
+            "library._parse_reveal_top_n_may_battlefield_creature_teamwork_clause",
+            "damage._parse_damage_then_empower_if_excess_clause",
+            "continuous._parse_target_player_cant_cast_kicked_attack_clause",
+            "removal._parse_destroy_two_targets_clause",
+            "continuous._parse_tap_untap_two_targets_clause"
+          ]
+        },
+        "s19": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "library._parse_bottom_hand_then_draw_plus_one_clause",
+            "library._parse_look_top_n_may_battlefield_creature_bonus_clause",
+            "library._parse_select_from_top_spell_clause"
+          ]
+        },
+        "s2": {
+          "local": "whole",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "modal._parse_if_condition_you_win_the_game_clause"
+          ]
+        },
+        "s20": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_destroy_each_then_add_mana_per_destroyed"
+          ]
+        },
+        "s21": {
+          "local": "whole",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_destroy_each_clause",
+            "continuous._mass_pump_spell_effect",
+            "continuous._parse_grant_flashback_clause",
+            "continuous._parse_until_end_of_turn_tap_land_additional_mana_clause",
+            "continuous._parse_each_graveyard_instant_sorcery_gains_flashback_clause",
+            "search._parse_outside_the_game_play_clause",
+            "library._parse_reveal_from_outside_the_game_into_hand_clause",
+            "search._parse_put_from_outside_the_game_into_hand_spell",
+            "removal._parse_exile_hand_draw_then_play_until_next_turn_clause",
+            "returns._parse_return_target_then_conditional_draw"
+          ]
+        },
+        "s22": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [
+            {
+              "a": "library._parse_mill_then_may_take_from_milled",
+              "b": "library._parse_mill_then_put_all_from_milled",
+              "count": 1,
+              "example": "Mill six cards, then put all instant and sorcery cards from among them into your hand.",
+              "flips": false
+            }
+          ],
+          "rungs": [
+            "library._parse_mill_then_may_take_from_milled",
+            "library._parse_mill_then_put_all_from_milled",
+            "library._parse_mill_then_return_to_hand_clause",
+            "draw_discard._parse_draw_then_discard_unless",
+            "library._parse_look_top_lands_take_to_hand",
+            "library._parse_look_top_n_put_total_mv_onto_battlefield",
+            "returns._parse_return_up_to_n_total_mv_from_graveyard_to_battlefield"
+          ]
+        },
+        "s23": {
+          "local": "cost_reduction_stripped",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "dispatch.parse_mixed_effect_for_spell"
+          ]
+        },
+        "s24": {
+          "local": "effect_text",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "continuous._compose_layer_effect_with_remainder"
+          ]
+        },
+        "s25": {
+          "local": "effect_text",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "continuous._parse_put_then_grant_then_delayed_whole_text"
+          ]
+        },
+        "s3": {
+          "local": "whole",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "dispatch._c02_t6_spell_effect"
+          ]
+        },
+        "s4": {
+          "local": "whole",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "draw_discard._parse_put_permanent_card_from_hand_clause"
+          ]
+        },
+        "s5": {
+          "local": "whole",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "returns._parse_return_target_and_same_name_from_graveyard_clause"
+          ]
+        },
+        "s6": {
+          "local": "whole",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_exile_all_creatures_then_hand_refill_clause",
+            "dispatch._source_relative_whole_text_spell_effect",
+            "damage._parse_dealt_damage_this_way_die_to_exile"
+          ]
+        },
+        "s7": {
+          "local": "whole",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_destroy_target_then_rider_if_type_destroyed_clause"
+          ]
+        },
+        "s8": {
+          "local": "whole",
+          "mode": "plain",
+          "pairs": [],
+          "rungs": [
+            "tokens._parse_create_tokens_then_instead_tapped_attacking_if_cost_paid_clause",
+            "damage._parse_prevent_damage_dealt_by_target_clause",
+            "dispatch._parse_put_cards_that_died_this_turn_clause",
+            "control_copy._parse_exchange_control_clause"
+          ]
+        },
+        "s9": {
+          "local": "whole",
+          "mode": "true",
+          "pairs": [],
+          "rungs": [
+            "removal._parse_exile_card_then_token_copy_clause"
+          ]
+        }
+      }
+    }
+  },
+  "total_ambiguous": 10,
+  "unordered": 0
+}
