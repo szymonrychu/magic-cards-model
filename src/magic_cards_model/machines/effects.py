@@ -24171,6 +24171,13 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     animate_chosen = choose_and_animate_mode(text)
     if animate_chosen is not None:
         return animate_chosen
+    # A mass pump ("Creatures you control get +1/+2 until end of turn.",
+    # Fatehold Charm's third mode, Charge the Sanctum's second) fixes its
+    # group at resolution (CR 611.2c) through `_run_mass_pump`; the scoped
+    # layer composer below resolves no group, so it would build no effect.
+    mass_pump_mode = _mass_pump_spell_effect(text)
+    if mass_pump_mode is not None:
+        return mass_pump_mode
     layer_mode = _compose_layer_effect_with_remainder_for_mode(text)
     if layer_mode is not None:
         return layer_mode

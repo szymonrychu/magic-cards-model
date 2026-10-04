@@ -1,0 +1,152 @@
+{
+  "object": "card",
+  "id": "f5324741-353a-4a70-adb2-b631b00806dd",
+  "oracle_id": "aa9547b3-e4e4-4557-9dd1-3aa9a7cb9937",
+  "multiverse_ids": [],
+  "resource_id": "08BDD16777B1347CABB84E62212E9B61A5A244019073AACAC8D29AAD8D108F6F",
+  "mtgo_id": 155772,
+  "tcgplayer_id": 717558,
+  "cardmarket_id": 909886,
+  "name": "Mindseeker Oculus",
+  "lang": "en",
+  "released_at": "2026-10-02",
+  "uri": "https://api.scryfall.com/cards/f5324741-353a-4a70-adb2-b631b00806dd",
+  "scryfall_uri": "https://scryfall.com/card/fra/33/mindseeker-oculus?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-09-16T11:05:07Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.jpg?1789556707",
+    "normal": "https://cards.scryfall.io/normal/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.jpg?1789556707",
+    "large": "https://cards.scryfall.io/large/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.jpg?1789556707",
+    "png": "https://cards.scryfall.io/png/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.png?1789556707",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.jpg?1789556707",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.jpg?1789556707",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.webp?1789556707",
+    "grid": "https://cards.scryfall.io/grid/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.webp?1789556707",
+    "display": "https://cards.scryfall.io/display/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.webp?1789556707",
+    "art": "https://cards.scryfall.io/art/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.webp?1789556707",
+    "crop": "https://cards.scryfall.io/crop/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.webp?1789556707"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Homunculus",
+  "oracle_text": "When this creature enters, empower Jace 4. (Put four loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[\u22121]: Surveil 1\" and \"[\u22123]: Draw a card.\")",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Surveil",
+    "Empower Jace"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8d1e424f-6407-4f8c-bed2-eaf148237c81",
+      "component": "token",
+      "name": "Jace",
+      "type_line": "Token Planeswalker \u2014 Jace",
+      "uri": "https://api.scryfall.com/cards/8d1e424f-6407-4f8c-bed2-eaf148237c81"
+    },
+    {
+      "object": "related_card",
+      "id": "f5324741-353a-4a70-adb2-b631b00806dd",
+      "component": "combo_piece",
+      "name": "Mindseeker Oculus",
+      "type_line": "Creature \u2014 Homunculus",
+      "uri": "https://api.scryfall.com/cards/f5324741-353a-4a70-adb2-b631b00806dd"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set": "fra",
+  "set_name": "Reality Fracture",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6595985e-39cf-4ca3-b43d-dd3e64749fdc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afra&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fra?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f5324741-353a-4a70-adb2-b631b00806dd/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaa9547b3-e4e4-4557-9dd1-3aa9a7cb9937&unique=prints",
+  "collector_number": "33",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"No need to sneak around. Beleren knows we're here.\"\n\u2014Garruk, to Vraska",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ioannis Fiore",
+  "artist_ids": [
+    "0af22200-d1b0-41dc-bb3f-386e661c3ad5"
+  ],
+  "illustration_id": "efa3950a-95dc-4505-b12e-b942852f4cf2",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 26362,
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.45",
+    "usd_etched": null,
+    "eur": "0.11",
+    "eur_foil": "0.18",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMindseeker%2BOculus",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMindseeker%2BOculus",
+    "edhrec": "https://edhrec.com/route/?cc=Mindseeker+Oculus"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F717558%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=909886&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/155772?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

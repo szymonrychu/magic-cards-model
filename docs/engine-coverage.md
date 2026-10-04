@@ -7194,3 +7194,11 @@ Extraordinary Journey's second ability (draw when a nontoken creature enters fro
 | Mechanic | CR | Where | Proof |
 |---|---|---|---|
 | A sacrifice cost naming two objects of different qualities ("Sacrifice a Swamp and a Forest") - two sacrifices, each paid by a nominated object with its own quality; two Swamps refuse | CR 118.3, 602.2 | `Game.activation_cost` (`_SACRIFICE_A_AND_A`) | `scenarios/test_sacrifice_two_named_permanents_cost.py` (Jarad, Golgari Lich Lord, the only in-format printing) |
+
+## 293-fra T1: Empower Jace keyword name and the modal mass-pump mode
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| Scryfall's own keyword spelling "Empower Jace" (lowercased "empower jace") is a registered keyword action, beside the bare "empower" | CR 701.71a | `machines/keywords.executes` - before this, `support.executed_keywords` found no machine for every fra printing tagged "Empower Jace" and the sweeper classed all ten T1 cards silent although `machines/effects.empower_jace` already executed the action | `test_card_support.py`, `scenarios/test_empower_jace.py::test_scryfalls_own_keyword_spelling_is_reported_as_executed` |
+| A modal spell's mass-pump mode ("Creatures you control get +2/+0 until end of turn.") read from the chosen mode's own text | CR 700.2a, 611.2 | `machines/effects.parse_mode_effect` -> `_compose_layer_effect_with_remainder_for_mode`; only the chosen mode runs, so Fatehold Charm's other modes never empower | `scenarios/test_empower_jace.py::test_fatehold_charm_other_modes_do_not_empower` (listed card), `::test_charge_the_sanctums_mass_pump_mode_pumps_only_your_creatures` (second printing, Charge the Sanctum) |
+| T1 cards proven on their real printings: Academic Ascent, Arcane Amphisbaena, Campus Crier, Countersculpt, Fatehold Charm, Hexhaven Battalion, Keeper of the Quiet Hour, Mindseeker Oculus, No Admittance, Overwrite the Multiverse | CR 701.71a, 306.5c, 704.5i, 113.6b, 701.4, 608.2b, 702.29e | existing `empower_jace`/`_parse_empower_jace_clause`; fixtures refreshed with `scripts/add_card.py` | `scenarios/test_empower_jace.py` |

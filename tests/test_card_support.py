@@ -187,6 +187,17 @@ def test_a_keyword_no_machine_executes_is_a_silent_keyword_clause():
     assert support.status == "silent"
 
 
+def test_a_printing_tagged_empower_jace_reports_the_keyword_handled():
+    """Scryfall spells the CR 701.71a keyword "Empower Jace"; `machines/effects.
+    empower_jace` performs it, so no keyword clause may be silent."""
+    printing = card("Arcane Amphisbaena")
+    assert "Empower Jace" in printing.keywords
+    assert "Empower Jace" not in ignored_keywords(printing)
+    support = card_support(printing)
+    assert support.status == "handled"
+    assert not [c for c in support.clauses if c.kind == "keyword" and c.status == "silent"]
+
+
 def test_a_card_built_straight_from_a_printing_is_classified_without_the_pool():
     """`card_support` never looks a card up by name: a `Card` validated
     straight from the Scryfall json, not fetched through `tests.cards.pool`,

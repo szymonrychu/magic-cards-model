@@ -336,13 +336,12 @@ def executes(keyword: str) -> bool:
         "investigate",
         # CR 701.71a, Reality Fracture's own keyword action, the same shape
         # once more: `machines/effects.empower_jace` performs it, reached
-        # through `_parse_empower_jace_clause`. Scryfall does not tag any
-        # fra printing's `keywords` with "Empower" (its own reminder-text
-        # scan picks up "Surveil"/"Behold" from the token's own quoted
-        # abilities instead), so nothing in the pool actually needs this
-        # entry to stop a false "no execution path" - listed anyway so a
-        # future printing that *is* tagged reads the sweeper correctly.
+        # through `_parse_empower_jace_clause`. Scryfall tags every fra
+        # printing's `keywords` with "Empower Jace" (CR 701.71a), lowercased
+        # "empower jace"; the bare "empower" is kept for the keyword's own
+        # name.
         "empower",
+        "empower jace",
         # CR 701.48a, the same shape once more: `machines/effects.learn`
         # performs both halves, discard-to-draw and the Lesson reveal from
         # outside the game, reached through `_parse_learn_clause`.
