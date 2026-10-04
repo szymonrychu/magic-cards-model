@@ -120,6 +120,12 @@ def parse_split_test_count(output: str) -> int:
     return sum(1 for line in output.splitlines() if line.startswith(SPLIT_TESTS))
 
 
+def parse_failed_tests(output: str) -> list[str]:
+    """Node ids of the FAILED/ERROR lines of pytest's short test summary."""
+    found = re.findall(r"^(?:FAILED|ERROR) (\S+)", output, flags=re.MULTILINE)
+    return list(dict.fromkeys(found))
+
+
 def parse_collect_count(output: str) -> int:
     found = re.findall(r"(\d+) tests? collected", output)
     if not found:
@@ -164,8 +170,15 @@ def measure_suite(task: str) -> dict:
     start = time.monotonic()
     proc = _run(["mise", "run", task], check=False)
     wall = time.monotonic() - start
-    counts = parse_pytest_summary(proc.stdout + proc.stderr)
-    return {"wall_s": round(wall, 2), "returncode": proc.returncode, **counts}
+    output = proc.stdout + proc.stderr
+    counts = parse_pytest_summary(output)
+    failed = parse_failed_tests(output)
+    return {
+        "wall_s": round(wall, 2),
+        "returncode": proc.returncode,
+        **counts,
+        "failed_tests": failed,
+    }
 
 
 def measure(full: bool, skip_test: bool) -> dict:
@@ -272,7 +285,11 @@ def compare(before: dict, after: dict, step: str) -> list[str]:
             out.append(f"{label} wall time {pair[0]}s -> {pair[1]}s is more than 5% slower")
         failed = _get(after, f"{key}.failed")
         if failed:
-            out.append(f"{label} has {failed} failed in after")
+            names = _get(after, f"{key}.failed_tests") or []
+            out.append(
+                f"{label} has {failed} failed in after"
+                + (f": {', '.join(names[:10])}" if names else "")
+            )
     return out
 
 

@@ -270,3 +270,15 @@ def test_a_faster_suite_is_not_a_violation():
     after["suite"]["wall_s"] = 80.0
     after["suite_full"]["wall_s"] = 800.0
     assert _violations(_base(), after, "F1") == []
+
+
+def test_parse_failed_tests_names_each_failure():
+    """A gate that reports "1 failed" names the test (the dry run's port gate lost it)."""
+    out = (
+        "....F..\n=== short test summary info ===\n"
+        "FAILED tests/test_a.py::test_one - AssertionError: x\n"
+        "ERROR tests/test_b.py::test_two\n"
+        "1 failed, 6 passed, 1 error in 3.0s\n"
+    )
+    assert B.parse_failed_tests(out) == ["tests/test_a.py::test_one", "tests/test_b.py::test_two"]
+    assert B.parse_failed_tests("3 passed in 1s") == []
