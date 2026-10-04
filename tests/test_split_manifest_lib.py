@@ -84,6 +84,41 @@ def test_common_target_is_always_allowed():
     assert m.names == {"x": "_common"}
 
 
+def _class_dict(**over):
+    return manifest_dict(**{"mode": "class", "class": "G", "records": "a", **over})
+
+
+def test_class_mode_accepts_init_as_a_target_for_module_statements():
+    """A module-level statement before the class may stay in the package __init__."""
+    m = ml.parse_manifest(
+        _class_dict(
+            names={"helper": "__init__"},
+            rules=[{"pattern": "CONST_.*", "target": "__init__"}],
+            placed={"other": "__init__"},
+        )
+    )
+    text = (
+        "CONST_A = 1\n\ndef helper():\n    return CONST_A\n\n"
+        "class G:\n    def m(self):\n        return helper()\n"
+    )
+    top = by_key(ml.resolve(text, m))
+    assert (top["helper"].target, top["helper"].reason) == ("__init__", "name")
+    assert (top["CONST_A"].target, top["CONST_A"].reason) == ("__init__", "rule")
+
+
+@pytest.mark.parametrize("table", ["names", "placed"])
+def test_module_mode_still_rejects_init_as_a_target(table):
+    with pytest.raises(ml.ManifestError):
+        ml.parse_manifest(manifest_dict(**{table: {"x": "__init__"}}))
+    with pytest.raises(ml.ManifestError):
+        ml.parse_manifest(manifest_dict(rules=[{"pattern": "x", "target": "__init__"}]))
+
+
+def test_class_mode_records_cannot_be_init():
+    with pytest.raises(ml.ManifestError):
+        ml.parse_manifest(_class_dict(records="__init__"))
+
+
 # ---------------------------------------------------------------------- precedence
 
 

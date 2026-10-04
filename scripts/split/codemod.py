@@ -27,7 +27,13 @@ Class mode (`Game`).  `__init__.py` holds `class Game(<mixins in manifest order>
 members; every other method moves, byte for byte, into `class <Name>Mixin:` in its
 target module, whose unannotated `self` becomes `self: "Game"` (with
 `if TYPE_CHECKING: from . import Game`).  Module-level classes go to the manifest's
-`records` target.
+`records` target.  A module statement before the class that the manifest keeps in
+`__init__` is written there before the facade imports when everything it needs at
+import time is already defined; a family module using it imports it from the package
+(`from . import name`, at its bottom when the use is deferred).  Any other name kept
+in `__init__` (the class, a statement after it or one needing a family module at
+import time) exists only after the family modules load: a family module using it at
+runtime is refused.
 
 The codemod refuses to write anything (exit 1) when the eager graph between the new
 modules has a cycle: the fix is a manifest change.  An always-on verify step re-parses
@@ -309,6 +315,11 @@ def _clean_module(text: str) -> str:
     return _format(_sort_imports(text))
 
 
+def _rel(target: str) -> str:
+    """The relative module a target's names are imported from (`__init__` is the package)."""
+    return "." if target == INIT else f".{target}"
+
+
 def _import_line(module: str, names: list[str], noqa: bool) -> str:
     names = sorted(names)
     one = f"from {module} import {', '.join(names)}"
@@ -366,6 +377,8 @@ class Plan:
         for i in sorted(self.defined):
             for name in self.defined[i]:
                 self.last_owner[name] = self.items[i].target
+        self.early, self.late_why = self._early_init()
+        self.early_names = {n for i in self.early for n in self.defined[i]}
         self.edited: set[str] = set()
         self.lines = self._edited_lines()
         self.geo = _geometry(self.lines, self.nodes, 0, len(self.lines))
@@ -447,9 +460,54 @@ class Plan:
         order = [t for t in self.m.targets if t in used]
         return order + sorted(used - set(order))
 
+    def _early_init(self) -> tuple[list[int], dict[str, str]]:
+        """Class mode: the module statements kept in `__init__` before the class that can
+        run before any family module is imported (every name they need when the module
+        is imported is an old import, a builtin or an earlier such statement).  They are
+        written before the facade imports, so a family module can import them, even at
+        its bottom.  Returns their indices and, for every other name kept in `__init__`,
+        why it exists only after the family modules are imported."""
+        if self.cls is None:
+            return [], {}
+        shell = self.nodes.index(self.cls)
+        early: list[int] = []
+        ready: set[str] = set()
+        why: dict[str, str] = {}
+        for i in sorted(self.defined):
+            item = self.items[i]
+            if item.target != INIT:
+                continue
+            names = sorted(self.defined[i])
+            if i >= shell:
+                reason = "is the class" if i == shell else "is defined after the class"
+                why.update(dict.fromkeys(names, reason))
+                continue
+            blocker = next(
+                (
+                    (n, self.last_owner[n])
+                    for n, eager in item.refs
+                    if eager and n in self.last_owner and n not in ready
+                ),
+                None,
+            )
+            if blocker is None:
+                early.append(i)
+                ready.update(names)
+            else:
+                n, owner = blocker
+                where = f"from .{owner}" if owner != INIT else "kept in __init__ too"
+                reason = f"needs {n} ({where}) when the module is imported"
+                why.update(dict.fromkeys(names, reason))
+        return early, why
+
     def check_cycles(self) -> None:
         edges = dict(self.graph.edges)
         if self.class_mode:
+            for (a, b), kind in list(edges.items()):
+                if b == INIT and kind == "eager":
+                    into = [r for r in self.graph.refs if (r.source_target, r.target) == (a, b)]
+                    if all(not r.eager or r.name in self.early_names for r in into):
+                        edges[(a, b)] = "deferred"
             for t in self._targets():
                 edges[(INIT, t)] = "eager"
         cycles = ml.ImportGraph(self.graph.refs, edges).cycles()
@@ -482,15 +540,21 @@ class Plan:
         units = [(self.items[i], self.nodes[i]) for i in self.defined]
         if self.cls is not None:
             units += list(zip(self.members, self.cls.body, strict=True))
+        late = {n for n, o in self.last_owner.items() if o == INIT} - self.early_names
         for item, node in units:
             if item.target == INIT:
                 continue
-            clash = _runtime_loads(node) & {n for n, o in self.last_owner.items() if o == INIT}
+            clash = sorted(_runtime_loads(node) & late)
             if clash:
+                why = "; ".join(
+                    f"{n} {self.late_why.get(n, 'exists only after the family modules')}"
+                    for n in clash
+                )
                 raise CodemodError(
-                    f"{item.target}: {item.key or item.names} uses {', '.join(sorted(clash))} when "
-                    f"it runs, but that name stays in __init__.py (a cycle at import time); "
-                    f"move it to another target in the manifest"
+                    f"{item.target}: {item.key or item.names} uses {', '.join(clash)} when "
+                    f"it runs, but that name stays in __init__.py and exists only after the "
+                    f"family modules are imported ({why}); move it to another target in "
+                    f"the manifest"
                 )
 
     def _import_plan(self) -> dict[str, tuple[list[str], list[str]]]:
@@ -617,7 +681,7 @@ class Plan:
         chunks = [
             (i, _chunk_text(self.lines, self.geo, i))
             for i in sorted(self.defined)
-            if self.items[i].target == target and not self._is_shell(i)
+            if self.items[i].target == target and not self._is_shell(i) and i not in self.early
         ]
         if self.class_mode and target == INIT:
             shell = self.nodes.index(self.cls)
@@ -635,7 +699,7 @@ class Plan:
         deferred: dict[str, list[str]] = {}
         typing_only: list[str] = []
         for name, (dst, is_eager) in sorted(need.items()):
-            if dst == INIT:
+            if dst == INIT and name not in self.early_names:
                 typing_only.append(name)
             else:
                 (eager if is_eager else deferred).setdefault(dst, []).append(name)
@@ -645,13 +709,13 @@ class Plan:
             bound = surf.top_level_imports(ast.parse(self._block_text() or "pass"))
             if "TYPE_CHECKING" not in bound:
                 head.append("from typing import TYPE_CHECKING")
-        head += [_import_line(f".{dst}", names, False) for dst, names in sorted(eager.items())]
+        head += [_import_line(_rel(dst), names, False) for dst, names in sorted(eager.items())]
         if mixin:
             names = ", ".join(sorted({self.m.class_name or "", *typing_only}))
             head.append(f"if TYPE_CHECKING:\n    from . import {names}")
         chunks = self._top_chunks(target)
         body = _join(chunks, self.geo, "\n\n\n")
-        tail = [_import_line(f".{dst}", names, True) for dst, names in sorted(deferred.items())]
+        tail = [_import_line(_rel(dst), names, True) for dst, names in sorted(deferred.items())]
         parts = ["\n".join(h for h in head if h), body, "\n".join(tail)]
         return _clean_module("\n\n\n".join(p for p in parts if p) + "\n")
 
@@ -675,8 +739,13 @@ class Plan:
         parts: list[str] = []
         if self.doc is not None:
             parts.append(_chunk_text(self.lines, self.geo, self.doc))
+        if self.early:
+            parts.append("# ruff: noqa: E402 - the facade imports follow the definitions below")
         if self.class_mode and self._block_text():
             parts.append(self._block_text())
+        if self.early:
+            early = [(i, _chunk_text(self.lines, self.geo, i)) for i in self.early]
+            parts.append(_join(early, self.geo, "\n\n\n"))
         facade = "\n".join(self._facade_lines(order))
         parts.append(f"# isort: off\n{MARKER}\n{facade}\n# isort: on")
         chunks = self._top_chunks(INIT)
@@ -785,7 +854,8 @@ class Plan:
         init_expected: list[str] = []
         per_target: dict[str, list[str]] = {}
         top_texts = _statement_texts(self.orig, self.nodes)
-        for i in sorted(self.defined) + ([self.doc] if self.doc is not None else []):
+        order = [*self.early, *(i for i in sorted(self.defined) if i not in self.early)]
+        for i in order + ([self.doc] if self.doc is not None else []):
             if self._is_shell(i):
                 continue
             target = self.items[i].target

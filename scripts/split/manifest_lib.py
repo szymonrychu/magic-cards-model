@@ -17,7 +17,10 @@ Top-level keys:
              effects it IS the FAMILIES order F2 uses for intra-segment order.
              ``_common`` is always a legal target even when not listed.
 
-``[names]``  explicit ``name = "target"`` entries.
+``[names]``  explicit ``name = "target"`` entries.  In class mode ``__init__`` is a
+             legal target too (in ``[names]``, ``[[rules]]`` and ``[placed]``): a
+             module-level statement kept in the package ``__init__``; the codemod
+             defines it there before importing any family module.
 
 ``[[rules]]``  ordered; each ``{pattern, target, kinds}``.  ``pattern`` is a
              regex that must ``fullmatch`` a name; ``kinds`` (optional, any of
@@ -191,6 +194,10 @@ def parse_manifest(data: dict, path: Path | None = None) -> Manifest:
     if not m.targets:
         raise ManifestError("targets must not be empty")
     legal = {*m.targets, COMMON}
+    if m.mode == "class":
+        # a module-level statement may stay in the package __init__ (the class shell's
+        # module); `records` must still name a real target
+        legal.add(STAY)
     for label, table in (("names", m.names), ("placed", m.placed)):
         for name, target in table.items():
             if target not in legal:
@@ -208,7 +215,7 @@ def parse_manifest(data: dict, path: Path | None = None) -> Manifest:
     if m.mode == "class":
         if not m.class_name:
             raise ManifestError("class mode needs `class`")
-        if m.records not in legal or m.records is None:
+        if m.records not in legal or m.records in (None, STAY):
             raise ManifestError("class mode needs `records` naming one of the targets")
     return m
 

@@ -417,3 +417,98 @@ def test_codemod_graph_agrees_with_manifest_lib(name):
     lib = codemod.ml.build_graph(codemod.ml.resolve(text, manifest))
     assert plan.graph.edges == lib.edges
     assert sorted(plan.graph.refs, key=repr) == sorted(lib.refs, key=repr)
+
+
+def _game_with_init_helper(tmp_path: Path, extra_game: str = "") -> Path:
+    """The game fixture with `module_helper` (a def before `class Game`) kept in
+    the package __init__, a records class and a mixin both calling it at runtime."""
+    work = tmp_path / "w"
+    shutil.copytree(FIX, work, ignore=shutil.ignore_patterns("__pycache__"))
+    game = work / "root" / "fxtop" / "game.py"
+    text = game.read_text().replace(
+        "class Record(BaseModel):\n    value: int = 0\n",
+        "class Record(BaseModel):\n    value: int = 0\n\n"
+        "    def helped(self) -> int:\n        return module_helper() + self.value\n",
+    )
+    game.write_text(text + extra_game)
+    manifest = work / "game.toml"
+    manifest.write_text(
+        manifest.read_text().replace(
+            "[[rules]]", '[names]\nmodule_helper = "__init__"\n\n[[rules]]', 1
+        )
+    )
+    return manifest
+
+
+PROBE_INIT_HELPER = """
+import fxtop.game as gm
+print(gm.Game().combat_a(), gm.Record(value=4).helped(), gm.module_helper())
+"""
+
+
+def test_class_mode_init_statement_used_at_runtime_by_a_mixin_and_records(tmp_path):
+    manifest = _game_with_init_helper(tmp_path)
+    result = codemod.build(manifest)
+    init = result.files["__init__.py"]
+    # defined in __init__ before the facade imports any family module
+    assert init.index("def module_helper()") < init.index("from .combat import")
+    assert init.index("def module_helper()") < init.index("from .records import")
+    assert "def module_helper" not in result.files["records.py"]
+    for name in ("combat.py", "records.py"):
+        tail = result.files[name].rstrip().split("\n")[-1]
+        assert tail == "from . import module_helper  # noqa: E402", name
+    shadow = codemod.shadow_tree(result, tmp_path / "shadow")
+    old_root = manifest.parent / "root"
+    assert run_py(shadow, PROBE_INIT_HELPER) == run_py(old_root, PROBE_INIT_HELPER)
+    assert run_py(shadow, PROBE_GAME) == run_py(old_root, PROBE_GAME)
+
+
+def test_class_mode_init_statement_needing_a_family_module_at_import(tmp_path):
+    """`HELPER_RECORD = Record()` needs the records module when __init__ runs, so it is
+    written after the facade imports: fine on its own, refused once a mixin uses it."""
+    manifest = _game_with_init_helper(tmp_path)
+    game = manifest.parent / "root" / "fxtop" / "game.py"
+    game.write_text(
+        game.read_text().replace(
+            "def module_helper() -> int:",
+            "HELPER_RECORD = Record()\n\n\ndef module_helper() -> int:",
+        )
+    )
+    manifest.write_text(
+        manifest.read_text().replace("[names]\n", '[names]\nHELPER_RECORD = "__init__"\n')
+    )
+    result = codemod.build(manifest)
+    init = result.files["__init__.py"]
+    assert (
+        init.index("def module_helper()")
+        < init.index("from .records import")
+        < init.index("HELPER_RECORD = Record()")
+    )
+    shadow = codemod.shadow_tree(result, tmp_path / "shadow")
+    probe = PROBE_INIT_HELPER + "print(gm.HELPER_RECORD.value)\n"
+    assert run_py(shadow, probe) == run_py(manifest.parent / "root", probe)
+
+    game.write_text(
+        game.read_text().replace(
+            "return self.combat_b() + module_helper()",
+            "return self.combat_b() + HELPER_RECORD.value",
+        )
+    )
+    with pytest.raises(codemod.CodemodError, match="HELPER_RECORD needs Record"):
+        codemod.build(manifest)
+
+
+def test_init_with_early_statements_passes_ruff_check_and_format(tmp_path):
+    manifest = _game_with_init_helper(tmp_path)
+    out = tmp_path / "out"
+    assert codemod.main([str(manifest), "--out", str(out)]) == 0
+    cfg = ["--config", str(ROOT / "pyproject.toml")]
+    for cmd in (["check", "--no-cache"], ["format", "--check"]):
+        res = subprocess.run(
+            [sys.executable, "-m", "ruff", cmd[0], *cfg, *cmd[1:], str(out)],
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+        assert res.returncode == 0, res.stdout + res.stderr
+        assert "warning" not in res.stderr.lower(), res.stderr
