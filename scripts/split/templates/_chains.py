@@ -22,7 +22,10 @@ Run order inside a segment:
 
 Only `None` means "did not match"; an exception raised by a rung propagates.
 Order is computed lazily, cached per segment, and invalidated by any later
-registration into that segment.
+registration into that segment. `run` calls a cached runner per (segment,
+for_spell): one function, built on first use, that calls the rungs in that order
+exactly as the inline ladder did, so the hot path has no per-rung loop or mode
+dispatch.
 """
 
 from __future__ import annotations
@@ -67,6 +70,7 @@ class Chain:
         # segment -> [(fn, ref, "before"|"after")]
         self._edges: dict[str, list[tuple[Rung, Any, str]]] = {s: [] for s in self.segments}
         self._order_cache: dict[str, tuple[tuple[Rung, Any], ...]] = {}
+        self._runners: dict[tuple[str, Any], Callable[[Any], Any]] = {}
 
     def _check_segment(self, segment: str) -> None:
         if segment not in self._rungs:
@@ -99,6 +103,8 @@ class Chain:
             for ref in after:
                 self._edges[segment].append((fn, ref, "after"))
             self._order_cache.pop(segment, None)
+            for key in [k for k in self._runners if k[0] == segment]:
+                del self._runners[key]
             return fn
 
         return register
@@ -175,15 +181,28 @@ class Chain:
         self._check_segment(segment)
         return tuple(fn for fn, _ in self._ordered(segment))
 
-    def run(self, segment: str, value: Any, *, for_spell: Any = None) -> Any:
+    def _runner(self, segment: str, for_spell: Any) -> Callable[[Any], Any]:
+        """One function calling the segment's rungs in order, written out exactly as the
+        inline ladder did (cached per (segment, for_spell); built on first use)."""
         self._check_segment(segment)
-        for fn, mode in self._ordered(segment):
+        names: dict[str, Any] = {}
+        body = []
+        for i, (fn, mode) in enumerate(self._ordered(segment)):
+            names[f"f{i}"] = fn
             if mode is NO_KWARG:
-                result = fn(value)
-            elif mode is FORWARD:
-                result = fn(value, for_spell=for_spell)
+                call = f"f{i}(value)"
             else:
-                result = fn(value, for_spell=mode)
-            if result is not None:
-                return result
-        return None
+                names[f"k{i}"] = for_spell if mode is FORWARD else mode
+                call = f"f{i}(value, for_spell=k{i})"
+            body.append(f"    r = {call}\n    if r is not None:\n        return r\n")
+        source = "def run(value):\n" + "".join(body) + "    return None\n"
+        exec(compile(source, f"<chain {self.name} {segment}>", "exec"), names)  # noqa: S102
+        runner = names["run"]
+        self._runners[(segment, for_spell)] = runner
+        return runner
+
+    def run(self, segment: str, value: Any, *, for_spell: Any = None) -> Any:
+        runner = self._runners.get((segment, for_spell))
+        if runner is None:
+            runner = self._runner(segment, for_spell)
+        return runner(value)

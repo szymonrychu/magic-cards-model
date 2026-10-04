@@ -195,3 +195,29 @@ def test_exceptions_propagate():
     with pytest.raises(ValueError, match="alpha exploded"):
         c.run("s1", "boom")
     assert c.run("s1", "b1") == "b_first"
+
+
+def test_run_calls_a_cached_straight_line_runner_per_segment_and_for_spell():
+    """run() is the F2 hot path: the dry run's effects sweep was ~6% slower than the
+    inline ladders with a per-rung loop and mode dispatch. The first run of a (segment,
+    for_spell) builds one function that calls the rungs in order exactly as the inline
+    ladder did (`r = f(value[, for_spell=...])`; `if r is not None: return r`), cached;
+    a later registration into the segment drops its runners."""
+    c = make()
+    c.rung("s1")(alpha.a_first)
+    c.rung("s1", for_spell=FORWARD)(beta.b_spell)
+    c.rung("s1", for_spell=False)(alpha.a_spell)
+    assert c.run("s1", "spell", for_spell=True) == ("a_spell", False)
+    runner = c._runners[("s1", True)]
+    assert runner("a1") == "a_first" and runner("spell") == ("a_spell", False)
+    assert runner("nothing") is None
+    assert c.run("s1", "spell", for_spell=True) == ("a_spell", False)
+    assert c._runners[("s1", True)] is runner
+    c2 = make()
+    c2.rung("s1", for_spell=FORWARD)(beta.b_spell)
+    assert c2.run("s1", "spell", for_spell=False) == ("b_spell", False)
+    assert c2.run("s1", "spell", for_spell=True) == ("b_spell", True)
+    assert c2.run("s1", "spell") == ("b_spell", None)
+    c.rung("s1")(beta.b_first)
+    assert not any(k[0] == "s1" for k in c._runners)
+    assert c.run("s1", "a1") == "a_first"
