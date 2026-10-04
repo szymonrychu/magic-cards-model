@@ -237,3 +237,27 @@ def test_parse_split_test_count():
     )
     assert B.parse_split_test_count(out) == 2
     assert B.parse_split_test_count("tests/test_x.py::t\n\n1 test collected in 0.1s") == 0
+
+
+def test_from_f3_on_the_reordered_fingerprint_passes_as_the_committed_f2_baseline():
+    """F2 reorders the chains and commits the regenerated fingerprint baseline; F3/F4 are
+    held to it (the measured fingerprint equals the committed one) plus the pre-split
+    results and chain sets, not to the pre-split chain order (dry run: F3 failed)."""
+    after = _base()
+    after["fingerprint"]["sha256"] = "reordered"
+    after["fingerprint"]["matches_committed"] = True
+    for step in ["F2", "F3", "F4", "F4a", "F4e"]:
+        assert _violations(_base(), after, step) == [], step
+    assert len(_violations(_base(), after, "F1")) == 1
+    changed = copy.deepcopy(after)
+    changed["fingerprint"]["results_sha256"] = "other"
+    out = _violations(_base(), changed, "F3")
+    assert len(out) == 1 and "results" in out[0]
+    moved = copy.deepcopy(after)
+    moved["fingerprint"]["chains"]["_ability_effect_or_notice"] = ["p", "z"]
+    out = _violations(_base(), moved, "F4c")
+    assert len(out) == 1 and "chain set changed" in out[0]
+    stale = copy.deepcopy(after)
+    stale["fingerprint"]["matches_committed"] = False
+    out = _violations(_base(), stale, "F3")
+    assert len(out) == 1 and "committed" in out[0]

@@ -416,3 +416,16 @@ def test_mise_has_one_thin_task_per_split_script():
         assert name in tasks, name
         assert tasks[name]["description"]
         assert tasks[name]["run"].endswith(script)
+
+
+def test_run_step_f2_regenerates_the_committed_dispatch_fingerprint_baseline():
+    """F2 reorders the chains (FAMILIES, then source order), so the F2 commit carries the
+    regenerated tests/dispatch_fingerprint_baseline.json (design: regenerated once) that
+    `mise run test`'s fingerprint test reads from then on; no other step touches it."""
+    out = sh(RUN_STEP, "--dry-print", "F2").stdout
+    line = next(ln for ln in out.splitlines() if "dispatch_fingerprint.py" in ln)
+    assert "tests/dispatch_fingerprint_baseline.json" in line
+    fp = out.index("dispatch_fingerprint.py")
+    assert out.index("ruff check --fix") < fp < out.index("git commit")
+    for step in ("F1", "F3", "F4e"):
+        assert "dispatch_fingerprint" not in sh(RUN_STEP, "--dry-print", step).stdout

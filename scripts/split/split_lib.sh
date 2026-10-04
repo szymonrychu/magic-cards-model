@@ -13,7 +13,8 @@
 #                   --overlap $SPLIT_F2_OVERLAP --tests-dir tests
 # then `ruff format` and `ruff check --fix` on the step's package (F2: also
 # tests/test_dispatch_order.py). The generators write lint-clean code, so a ruff
-# finding left over fails the step.
+# finding left over fails the step. F2 last regenerates $SPLIT_FP_BASELINE from
+# dispatch_fingerprint.py (F2 reorders the chains; results stay identical).
 #
 # Caller settings: SPLIT_LIB_PY (python runner), SPLIT_LIB_RUFF (ruff runner),
 # SPLIT_LIB_TOOLS (directory holding codemod.py etc.), SPLIT_LIB_WORK (scratch
@@ -24,6 +25,8 @@
 
 # Where F2 records the overlap json it used, relative to the repository root.
 SPLIT_F2_OVERLAP="scripts/split/state/f2-overlap.json"
+# The committed dispatch fingerprint baseline F2 regenerates (when the repo has one).
+SPLIT_FP_BASELINE="tests/dispatch_fingerprint_baseline.json"
 
 split_manifest_value() {
     sed -n "s/^$2 *= *\"\(.*\)\"/\1/p" "$1" | head -1
@@ -89,4 +92,13 @@ split_step() {
     split_run $SPLIT_LIB_RUFF format $targets
     # shellcheck disable=SC2086
     split_run $SPLIT_LIB_RUFF check --fix $targets
+    if [ "$step" = F2 ] && { [ "${SPLIT_LIB_DRY:-0}" = 1 ] || [ -f "$SPLIT_FP_BASELINE" ]; }; then
+        # F2 reorders the chains: the committed fingerprint baseline is regenerated once
+        if [ "${SPLIT_LIB_DRY:-0}" = 1 ]; then
+            echo "+ $SPLIT_LIB_PY $SPLIT_LIB_TOOLS/../dispatch_fingerprint.py > $SPLIT_FP_BASELINE"
+        else
+            split_py "$SPLIT_LIB_TOOLS/../dispatch_fingerprint.py" >"$SPLIT_LIB_WORK/fp.json"
+            mv "$SPLIT_LIB_WORK/fp.json" "$SPLIT_FP_BASELINE"
+        fi
+    fi
 }

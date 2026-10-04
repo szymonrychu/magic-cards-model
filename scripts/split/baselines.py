@@ -182,9 +182,12 @@ def measure(full: bool, skip_test: bool) -> dict:
         _run(_py("python", "scripts/sweep_pool.py", "--effects")).stdout
     )
     out["goldens_sha256"] = hash_tree(REPO / "tests" / "golden")
-    out["fingerprint"] = fingerprint_summary(
-        _run(_py("python", "scripts/dispatch_fingerprint.py")).stdout
-    )
+    fingerprint = _run(_py("python", "scripts/dispatch_fingerprint.py")).stdout
+    out["fingerprint"] = fingerprint_summary(fingerprint)
+    committed = REPO / "tests" / "dispatch_fingerprint_baseline.json"
+    out["fingerprint"]["matches_committed"] = committed.is_file() and json.loads(
+        fingerprint
+    ) == json.loads(committed.read_text())
     return out
 
 
@@ -198,6 +201,20 @@ def _get(data: dict, path: str):
             return None
         cur = cur[part]
     return cur
+
+
+def _chain_sets(before: dict, after: dict, out: list[str]) -> None:
+    b, a = _get(before, "fingerprint.chains"), _get(after, "fingerprint.chains")
+    if b is None or a is None:
+        out.append(f"fingerprint chains: {NOT_MEASURED} in {'before' if b is None else 'after'}")
+        return
+    for ladder in sorted(set(b) | set(a)):
+        bs, as_ = set(b.get(ladder, [])), set(a.get(ladder, []))
+        if bs != as_:
+            out.append(
+                f"fingerprint chain set changed for {ladder}: "
+                f"missing {sorted(bs - as_)}, added {sorted(as_ - bs)}"
+            )
 
 
 def compare(before: dict, after: dict, step: str) -> list[str]:
@@ -229,18 +246,19 @@ def compare(before: dict, after: dict, step: str) -> list[str]:
 
     if step == "F2":
         identical("fingerprint.results_sha256", "fingerprint results hash")
-        pair = both("fingerprint.chains", "fingerprint chains")
-        if pair:
-            b, a = pair
-            for ladder in sorted(set(b) | set(a)):
-                bs, as_ = set(b.get(ladder, [])), set(a.get(ladder, []))
-                if bs != as_:
-                    out.append(
-                        f"fingerprint chain set changed for {ladder}: "
-                        f"missing {sorted(bs - as_)}, added {sorted(as_ - bs)}"
-                    )
-    else:
+        _chain_sets(before, after, out)
+    elif step == "F1" or _get(before, "fingerprint.sha256") == _get(after, "fingerprint.sha256"):
         identical("fingerprint.sha256", "fingerprint hash")
+    else:
+        # after F2 the chain order is F2's: held to the baseline F2 committed, plus the
+        # pre-split results and chain sets
+        if not _get(after, "fingerprint.matches_committed"):
+            out.append(
+                "fingerprint hash changed and is not the committed "
+                "tests/dispatch_fingerprint_baseline.json"
+            )
+        identical("fingerprint.results_sha256", "fingerprint results hash")
+        _chain_sets(before, after, out)
 
     pair = both("import_time.cumulative_us", "import time")
     if pair and pair[1] > pair[0] * IMPORT_LIMIT:
