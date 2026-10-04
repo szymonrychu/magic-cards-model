@@ -193,13 +193,26 @@ class PriorityMachine(EngineModel):
             raise KeyError(f"no player named {player}")
         if player in self.departed:
             raise ValueError(f"{player} has left the game")
-        if player not in (self.seat, self.decider_for(self.seat)):
-            raise ValueError(f"{player} does not have priority, {self.seat} does")
+        refusal = self.why_cannot_act(player)
+        if refusal is not None:
+            raise ValueError(refusal)
 
         acting_for = self.seat if player != self.seat else player
         self.holder_index = self.players.index(acting_for)
         self.passes = 0
         return self.seat
+
+    def why_cannot_act(self, player: str) -> str | None:
+        """Why `player` may not take an action that needs priority right now,
+        or None if they may: they hold it, or decide for whoever does (CR 723.5).
+
+        The same gate `retain` applies after the fact, asked up front so a
+        cast can be refused at its proposal (CR 117.1a, CR 601.3) rather than
+        after the spell is already on the stack.
+        """
+        if player in (self.seat, self.decider_for(self.seat)):
+            return None
+        return f"{player} does not have priority, {self.seat} does"
 
     def pass_priority(self, player: str, stack_is_empty: bool) -> PriorityOutcome:
         """Pass priority. Raises if `player` is not the one holding it.

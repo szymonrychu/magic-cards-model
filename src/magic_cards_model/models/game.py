@@ -22293,6 +22293,14 @@ class Game(EngineModel):
                 casting.paying_life_for_additional_cost = frozenset(
                     index for index, _ in life_halves
                 )
+            # CR 117.1a's "any time they have priority", asked once the card's
+            # own refusals (timing, permission, prohibitions, the announcement)
+            # have had their say and before any cost is determined or paid -
+            # see `why_not_holding_priority`. The `except` below rewinds the
+            # proposal like any other illegal one (CR 601.2e).
+            refusal = self.why_not_holding_priority(caster, "CR 117.1a")
+            if refusal is not None:
+                raise ValueError(refusal)
             payment = casting.determine_cost(x_value=x_value)
             if division is not None:
                 casting.announce_division(division)
@@ -26019,6 +26027,9 @@ class Game(EngineModel):
         if refusal is not None:
             raise ValueError(refusal)
         controller = controller or self.controller_of(permanent).username
+        refusal = self._why_cannot_activate_without_priority(permanent, index, controller, targets)
+        if refusal is not None:
+            raise ValueError(refusal)
         total = self.activation_cost(
             permanent,
             index,
@@ -26195,6 +26206,53 @@ class Game(EngineModel):
         if symbol.amount is None:
             return x_value if _is_minus_symbol(symbol.printed) else 0
         return symbol.removes
+
+    def _why_cannot_activate_without_priority(
+        self,
+        permanent: CardState,
+        index: int,
+        controller: str,
+        targets: Sequence[Any] | None,
+    ) -> str | None:
+        """CR 117.1b: "A player may activate an activated ability any time they
+        have priority" - asked as CR 602.2 begins, before any cost is chosen or
+        paid, the activation twin of `machines/casting.
+        why_cannot_cast_without_priority`. Asked only once the ability was on
+        the stack (`Priority.retain`), every question the activation put first
+        - a cost choice, a CR 603.3b ordering of what its cost triggered - stood
+        in front of a refusal that was always coming.
+
+        A mana ability is exempt (CR 605.3a: it may also be activated while
+        paying a cost or when a rule or effect asks for a mana payment), read
+        by the same four CR 605.1a criteria `activate_ability` applies.
+        """
+        if self.priority is None:
+            return None
+        ability = self.activated_abilities(permanent)[index]
+        if (
+            ability.mana is not None
+            and ability.loyalty is None
+            and not targets
+            and not moves_a_library_card(ability)
+        ):
+            return None
+        return self.why_not_holding_priority(controller, "CR 117.1b")
+
+    def why_not_holding_priority(self, username: str, rule: str) -> str | None:
+        """Why `username` may not take an action that needs priority right
+        now, citing `rule`, or None: they hold it, or decide for whoever does
+        (CR 723.5). `Priority.retain`'s own gate, asked before the action
+        begins - CR 117.1a for a cast, CR 117.1b for an activation - so
+        nothing the action asks or triggers is put to anyone ahead of a
+        refusal that was always coming. A caller that drives `Casting` itself
+        rather than through `cast` (the api's `engine_api.cast_card`) asks it
+        the same way, before building one: `put_on_stack` stacks the cast's
+        own triggers (CR 603.3b asks their controller to order them) before
+        `retain_priority` ever gets to refuse."""
+        if self.priority is None:
+            return None
+        not_holding = self.priority.why_cannot_act(username)
+        return None if not_holding is None else f"{not_holding} ({rule})"
 
     def activate_ability(
         self,

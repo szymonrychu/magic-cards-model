@@ -7,6 +7,7 @@ and what a round of passes causes.
 import pytest
 
 from magic_cards_model.machines import PriorityOutcome, Step
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 
 from .harness import Scenario
@@ -145,3 +146,93 @@ def test_the_non_active_player_gets_priority_only_in_a_window():
     scenario.pass_priority("alice")
     assert scenario.priority_holder == "bob"
     assert scenario.stack_names() == ["Grizzly Bears"]
+
+
+def prowess_board() -> Scenario:
+    """Alice is active; bob holds two prowess creatures and a Bolt (game
+    891056b6's deadlock: two "whenever you cast a noncreature spell" triggers,
+    both bob's, from a spell bob cast in alice's declare blockers step)."""
+    return (
+        Scenario()
+        .player("alice", library=["Plains"] * 8, battlefield=["Plains"])
+        .player(
+            "bob",
+            library=["Mountain"] * 8,
+            hand=["Lightning Bolt"],
+            battlefield=["Monastery Swiftspear", "Slickshot Show-Off", "Mountain"],
+        )
+    )
+
+
+def test_game_cast_refuses_a_player_without_priority_before_announcing_anything():
+    """CR 601.3: "A player can begin to cast a spell only if a rule or effect
+    allows that player to cast it" - and CR 117.1a allows it only to the
+    player holding priority, so `Game.cast` refuses at the proposal: the Bolt
+    never leaves bob's hand (CR 601.2a's move never happens), the Mountain is
+    not tapped, and nothing triggers. Refused only once the spell was on the
+    stack (`retain_priority`), bob's two prowess triggers (CR 702.108a) were
+    first put to him as a CR 603.3b ordering question - game 891056b6's
+    deadlock: the api paused the cast on `order_triggers`, every answer
+    replayed it into "bob does not have priority, alice does", and neither
+    seat could move the game."""
+    scenario = prowess_board().build()
+    scenario.start_at(Step.DECLARE_BLOCKERS)
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+
+    with pytest.raises(ValueError, match="bob does not have priority, alice does"):
+        scenario.game.cast(bolt, "bob", targets=["alice"], mana_sources=[mountain])
+
+    assert bolt.zone is Zone.HAND
+    assert not mountain.tapped
+    assert scenario.stack_names() == []
+    assert scenario.pending_triggers == []
+
+
+def test_the_prowess_ordering_goes_to_its_controller_once_they_hold_priority():
+    """The legal half of the same board: once alice passes, bob holds
+    priority, casts, and is asked to order his own two prowess triggers
+    (CR 603.3b), which go on the stack above the Bolt before he gets priority
+    back (CR 117.3c)."""
+    scenario = prowess_board().build()
+    scenario.start_at(Step.DECLARE_BLOCKERS)
+    scenario.pass_priority("alice")
+    assert scenario.priority_holder == "bob"
+    scenario.will_order_triggers("Slickshot Show-Off", "Monastery Swiftspear", username="bob")
+
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+
+    orders = [q for q in scenario.questions_asked() if q.kind is DecisionKind.ORDER_TRIGGERS]
+    assert [q.player for q in orders] == ["bob"]
+    assert scenario.stack_names() == [
+        "Lightning Bolt",
+        "Slickshot Show-Off's triggered ability",
+        "Monastery Swiftspear's triggered ability",
+    ]
+    assert scenario.priority_holder == "bob"
+
+
+def test_a_player_without_priority_cannot_begin_activating_an_ability():
+    """CR 117.1b: "A player may activate an activated ability any time they
+    have priority." CR 602.2's announcement is refused before any of its
+    costs is chosen or paid - Mishra's Bauble's own "{T}, Sacrifice" is not
+    spent - for the same reason a spell is refused at its proposal: nothing
+    the activation asks or triggers may be put to anyone ahead of a refusal
+    that was always coming."""
+    scenario = (
+        Scenario()
+        .player("alice", library=["Plains"] * 8, battlefield=["Plains"])
+        .player("bob", library=["Mountain"] * 8, battlefield=["Mishra's Bauble"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_BLOCKERS)
+    assert scenario.priority_holder == "alice"
+    bauble = scenario.find("Mishra's Bauble", Zone.BATTLEFIELD, "bob")
+
+    with pytest.raises(ValueError, match="bob does not have priority, alice does"):
+        scenario.activate(bauble, username="bob", targets=["alice"])
+
+    assert bauble.zone is Zone.BATTLEFIELD
+    assert not bauble.tapped
+    assert scenario.stack_names() == []
