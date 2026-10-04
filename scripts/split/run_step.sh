@@ -22,7 +22,7 @@ TOOLS="$(cd "$(dirname "$0")" && pwd)"
 PY="${SPLIT_PY:-mise exec -- uv run python}"
 RUFF="${SPLIT_RUFF:-mise exec -- ruff}"
 MANIFESTS="${SPLIT_MANIFEST_DIR:-$TOOLS/manifest}"
-SURFACE="${SPLIT_SURFACE:-$TOOLS/surface}"
+SURFACE="${SPLIT_SURFACE:-}" # default: the codemod picks scripts/split/surface/<module>.json
 
 usage() {
   echo "usage: run_step.sh [--dry-print] <F1|F2|F3|F4a|F4b|F4c|F4d|F4e>" >&2
@@ -98,7 +98,11 @@ if [ "$STEP" = F2 ]; then
   run $PY "$TOOLS/to_registry.py" "$PACKAGE" --manifest "$MANIFEST" --overlap "$TMP/overlap.json"
   TARGETS="$PACKAGE tests/test_dispatch_order.py"
 else
-  run $PY "$TOOLS/codemod.py" "$MANIFEST" --surface "$SURFACE"
+  if [ -n "$SURFACE" ]; then
+    run $PY "$TOOLS/codemod.py" "$MANIFEST" --surface "$SURFACE"
+  else
+    run $PY "$TOOLS/codemod.py" "$MANIFEST"
+  fi
 fi
 
 run $RUFF format $TARGETS
