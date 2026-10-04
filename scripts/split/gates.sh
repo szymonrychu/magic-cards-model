@@ -2,6 +2,7 @@
 # Cheap and full gates for one landing of the engine module split.
 #
 #   scripts/split/gates.sh [--dry-print] cheap|full --baseline <json> --step <step> [--base <sha>]
+#                          [--keep <json>]
 #
 # cheap: mise run lint; baselines.py measure (runs mise run test, the collected test
 #        count, the sweep hash, the golden hash, the dispatch fingerprint and the import
@@ -12,6 +13,7 @@
 #        the pre-split sha (the baseline's engine_sha unless --base), collected test
 #        count identical (part of compare).
 #
+# --keep <json> also saves the gate's own measurement there (the freeze record).
 # One PASS/FAIL line per check with its wall time; exits 1 on any FAIL, 2 on bad
 # arguments. --dry-print prints the commands instead of running them.
 # Overrides: SPLIT_PY (default "mise exec -- uv run python"). bash 3.2 compatible.
@@ -22,17 +24,18 @@ PY="${SPLIT_PY:-mise exec -- uv run python}"
 STEPS="F1 F2 F3 F4a F4b F4c F4d F4e"
 
 usage() {
-  echo "usage: gates.sh [--dry-print] cheap|full --baseline <json> --step <$(echo $STEPS | tr ' ' '|')> [--base <sha>]" >&2
+  echo "usage: gates.sh [--dry-print] cheap|full --baseline <json> --step <$(echo $STEPS | tr ' ' '|')> [--base <sha>] [--keep <json>]" >&2
   exit 2
 }
 
-DRY=0 MODE="" BASELINE="" STEP="" BASE=""
+DRY=0 MODE="" BASELINE="" STEP="" BASE="" KEEP=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-print) DRY=1 ;;
     --baseline) [ $# -ge 2 ] || usage; BASELINE="$2"; shift ;;
     --step) [ $# -ge 2 ] || usage; STEP="$2"; shift ;;
     --base) [ $# -ge 2 ] || usage; BASE="$2"; shift ;;
+    --keep) [ $# -ge 2 ] || usage; KEEP="$2"; shift ;;
     -*) usage ;;
     *) [ -z "$MODE" ] || usage; MODE="$1" ;;
   esac
@@ -118,6 +121,10 @@ fi
 if [ ! -f "$AFTER" ]; then
   echo "FAIL baselines compare (0s): measure wrote no result"
   exit 1
+fi
+
+if [ -n "$KEEP" ]; then
+  mkdir -p "$(dirname "$KEEP")" && cp "$AFTER" "$KEEP"
 fi
 
 # suite results straight from the measure run: no second run of the suite

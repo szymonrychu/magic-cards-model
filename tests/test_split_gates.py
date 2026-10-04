@@ -429,3 +429,13 @@ def test_run_step_f2_regenerates_the_committed_dispatch_fingerprint_baseline():
     assert out.index("ruff check --fix") < fp < out.index("git commit")
     for step in ("F1", "F3", "F4e"):
         assert "dispatch_fingerprint" not in sh(RUN_STEP, "--dry-print", step).stdout
+
+
+def test_gates_keep_saves_the_after_measurement(stubbed, tmp_path):
+    """--keep <json> keeps the gate's own measurement (import time, suite wall times) for
+    the freeze record; the dry run report reads its deltas from it."""
+    keep = tmp_path / "kept" / "after.json"
+    res = stubbed("cheap", "--keep", str(keep))
+    assert res.returncode == 0, res.stdout
+    assert keep.is_file()
+    assert '"suite"' in keep.read_text()
