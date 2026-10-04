@@ -1,0 +1,16 @@
+module = "pkg.game"
+source = "class_game.py"
+package = "out/game"
+mode = "class"
+class = "Game"
+targets = ["combat", "library", "records"]
+records = "records"
+stay = ["model_config", "named_stay"]
+
+[[rules]]
+pattern = "combat_.*"
+target = "combat"
+
+[[rules]]
+pattern = "draw_.*"
+target = "library"

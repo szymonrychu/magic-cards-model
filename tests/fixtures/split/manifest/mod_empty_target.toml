@@ -1,0 +1,27 @@
+module = "pkg.mod_basic"
+source = "mod_basic.py"
+package = "out/basic"
+mode = "module"
+targets = ["gamma", "alpha", "beta", "delta"]
+
+[names]
+alpha_special = "gamma"
+
+[[rules]]
+pattern = "alpha_.*"
+target = "alpha"
+kinds = ["def"]
+
+[[rules]]
+pattern = "beta_.*"
+target = "beta"
+kinds = ["def"]
+
+[[rules]]
+pattern = "Beta.*"
+target = "beta"
+kinds = ["class"]
+
+[placed]
+alpha_other = "beta"
+helper_two = "gamma"

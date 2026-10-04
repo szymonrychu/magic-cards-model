@@ -1,0 +1,458 @@
+"""P0-T03: manifest format and resolver library (scripts/split/manifest_lib.py).
+
+Tooling tests on small fixture modules under tests/fixtures/split/manifest/;
+nothing here touches the real engine modules.
+"""
+
+from __future__ import annotations
+
+import shutil
+import subprocess
+import sys
+from collections import Counter
+from pathlib import Path
+
+import pytest
+from scripts.split import manifest_lib as ml
+
+FIX = Path(__file__).parent / "fixtures" / "split" / "manifest"
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def source(name: str) -> str:
+    return (FIX / name).read_text()
+
+
+def manifest_dict(**over):
+    base = {"module": "m", "source": "m.py", "package": "p", "mode": "module"}
+    base["targets"] = ["a", "b"]
+    base.update(over)
+    return base
+
+
+def by_key(placement: ml.Placement) -> dict[str, ml.Item]:
+    return {i.key: i for i in placement.items if i.key}
+
+
+# --------------------------------------------------------------- manifest format
+
+
+def test_load_manifest_reads_every_field():
+    m = ml.load_manifest(FIX / "mod_basic.toml")
+    assert (m.module, m.source, m.package, m.mode) == (
+        "pkg.mod_basic",
+        "mod_basic.py",
+        "out/basic",
+        "module",
+    )
+    assert m.targets == ["gamma", "alpha", "beta"]
+    assert m.names == {"alpha_special": "gamma"}
+    assert [r.target for r in m.rules] == ["alpha", "beta", "beta"]
+    assert m.rules[0].kinds == ("def",)
+    assert m.placed == {"alpha_other": "beta", "helper_two": "gamma"}
+
+
+def test_load_class_manifest():
+    m = ml.load_manifest(FIX / "class_game.toml")
+    assert m.mode == "class"
+    assert (m.class_name, m.records) == ("Game", "records")
+    assert m.stay == ["model_config", "named_stay"]
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"mode": "nonsense"},
+        {"targets": []},
+        {"names": {"x": "nowhere"}},
+        {"rules": [{"pattern": "(", "target": "a"}]},
+        {"rules": [{"pattern": "x", "target": "zzz"}]},
+        {"rules": [{"pattern": "x", "target": "a", "kinds": ["bogus"]}]},
+        {"placed": {"x": "zzz"}},
+        {"mode": "class", "class": "G"},
+        {"mode": "class", "records": "a"},
+        {"mode": "class", "class": "G", "records": "zzz"},
+    ],
+)
+def test_invalid_manifest_rejected(bad):
+    with pytest.raises(ml.ManifestError):
+        ml.parse_manifest(manifest_dict(**bad))
+
+
+def test_common_target_is_always_allowed():
+    m = ml.parse_manifest(manifest_dict(names={"x": "_common"}))
+    assert m.names == {"x": "_common"}
+
+
+# ---------------------------------------------------------------------- precedence
+
+
+def test_every_statement_gets_exactly_one_target_and_reason():
+    m = ml.load_manifest(FIX / "mod_basic.toml")
+    p = ml.resolve(source("mod_basic.py"), m)
+    assert p.items
+    for item in p.items:
+        assert item.target in {*m.targets, "_common"}
+        assert item.reason
+    assert [i.start for i in p.items] == sorted(i.start for i in p.items)
+
+
+def test_precedence_steps():
+    m = ml.load_manifest(FIX / "mod_basic.toml")
+    items = by_key(ml.resolve(source("mod_basic.py"), m))
+    # explicit name beats the rule that also matches
+    assert (items["alpha_special"].target, items["alpha_special"].reason) == ("gamma", "name")
+    # rule beats placed
+    assert (items["alpha_other"].target, items["alpha_other"].reason) == ("alpha", "rule")
+    assert items["alpha_parse"].reason == "rule"
+    assert (items["BetaRecord"].target, items["BetaRecord"].reason) == ("beta", "rule")
+    # placed table
+    assert (items["helper_two"].target, items["helper_two"].reason) == ("gamma", "placed")
+    # nearest preceding placed neighbour
+    assert (items["helper_one"].target, items["helper_one"].reason) == ("alpha", "neighbour")
+    assert (items["trailing"].target, items["trailing"].reason) == ("gamma", "neighbour")
+
+
+def test_statements_before_any_placed_go_to_first_target():
+    m = ml.load_manifest(FIX / "mod_basic.toml")
+    items = by_key(ml.resolve(source("mod_basic.py"), m))
+    assert (items["early"].target, items["early"].reason) == ("gamma", "neighbour")
+
+
+def test_constant_rule():
+    m = ml.load_manifest(FIX / "mod_basic.toml")
+    items = by_key(ml.resolve(source("mod_basic.py"), m))
+    # one user (alpha_parse) -> its target
+    assert (items["PATTERN"].target, items["PATTERN"].reason) == ("alpha", "const-single")
+    # two users in different targets -> _common
+    assert (items["SHARED_LIMIT"].target, items["SHARED_LIMIT"].reason) == (
+        "_common",
+        "const-shared",
+    )
+    # unreferenced -> neighbour (helper_two is gamma)
+    assert (items["NOTE"].target, items["NOTE"].reason) == ("gamma", "const-unreferenced")
+
+
+def test_const_used_by_same_target_twice_is_single():
+    text = "K = 1\n\ndef a_x():\n    return K\n\ndef a_y():\n    return K\n"
+    m = ml.parse_manifest(manifest_dict(rules=[{"pattern": "a_.*", "target": "b"}]))
+    items = by_key(ml.resolve(text, m))
+    assert (items["K"].target, items["K"].reason) == ("b", "const-single")
+
+
+def test_const_used_only_via_another_const_follows_the_def():
+    text = "K = 1\nL = K + 1\n\ndef b_x():\n    return L\n"
+    m = ml.parse_manifest(manifest_dict(rules=[{"pattern": "b_.*", "target": "b"}]))
+    items = by_key(ml.resolve(text, m))
+    assert (items["L"].target, items["K"].target) == ("b", "b")
+
+
+def test_rule_first_match_wins_and_kinds_filter():
+    text = "def foo():\n    pass\n\nclass foo2:\n    pass\n\nfoo3 = 1\n"
+    rules = [
+        {"pattern": "foo.*", "target": "a", "kinds": ["class"]},
+        {"pattern": "foo.*", "target": "b", "kinds": ["def", "const"]},
+        {"pattern": "foo.*", "target": "a"},
+    ]
+    items = by_key(ml.resolve(text, ml.parse_manifest(manifest_dict(rules=rules))))
+    assert items["foo"].target == "b"
+    assert items["foo2"].target == "a"
+    assert items["foo3"].target == "b"
+
+
+def test_rule_uses_fullmatch():
+    text = "def prefix_foo():\n    pass\n"
+    m = ml.parse_manifest(manifest_dict(rules=[{"pattern": "foo", "target": "b"}]))
+    assert by_key(ml.resolve(text, m))["prefix_foo"].reason == "neighbour"
+
+
+def test_unseen_names_never_fail():
+    m = ml.load_manifest(FIX / "mod_basic.toml")
+    text = source("mod_basic.py") + "\n\ndef brand_new_thing():\n    return 1\n\nNEW = [1]\n"
+    p = ml.resolve(text, m)
+    items = by_key(p)
+    assert items["brand_new_thing"].target == items["NOTE"].target
+    assert items["brand_new_thing"].reason == "neighbour"
+    assert "NEW" in items
+
+
+def test_stale_manifest_names_are_ignored():
+    m = ml.parse_manifest(manifest_dict(names={"gone": "a"}, placed={"gone2": "b"}))
+    assert ml.resolve("def here():\n    pass\n", m).items[0].target == "a"
+
+
+def test_item_line_ranges_include_decorators():
+    text = "import x\n\n@deco\n@deco2\ndef f():\n    return 1\n"
+    p = ml.resolve(text, ml.parse_manifest(manifest_dict()))
+    f = by_key(p)["f"]
+    assert (f.start, f.end) == (3, 6)
+    assert p.lines_by_target()["a"] == 1 + 4
+
+
+def test_target_of_maps_every_defined_name():
+    text = "A, B = 1, 2\n\ndef f():\n    return A\n"
+    m = ml.parse_manifest(manifest_dict(names={"f": "b"}))
+    p = ml.resolve(text, m)
+    assert p.target_of("f") == "b"
+    assert p.target_of("A") == p.target_of("B") == "b"  # one statement, one target
+    assert p.target_of("missing") is None
+
+
+# ------------------------------------------------------------------------- bake
+
+
+def bake_manifest(**over):
+    return ml.parse_manifest(
+        manifest_dict(
+            targets=["a", "b", "c"],
+            rules=[
+                {"pattern": "a_.*", "target": "a"},
+                {"pattern": "b_.*", "target": "b"},
+                {"pattern": "c_.*", "target": "c"},
+            ],
+            **over,
+        )
+    )
+
+
+def test_bake_caller_majority_tie_callee_tie_neighbour():
+    placed = ml.bake(source("mod_bake.py"), bake_manifest())
+    assert placed["h_major"] == "a"  # callers a, a, b
+    assert placed["h_tie"] == "c"  # callers a, b tie; callees c, c
+    assert placed["h_tie2"] == "c"  # callers tie, callees tie -> neighbour c_three
+    assert placed["h_chain"] == "a"  # caller h_major baked in the same run
+    assert placed["h_orphan"] == "a"  # no callers, no callees -> neighbour h_chain
+    assert list(placed) == sorted(placed)
+    assert not any(k.startswith(("a_", "b_", "c_")) for k in placed)
+
+
+def test_bake_is_idempotent():
+    text = source("mod_bake.py")
+    m1 = bake_manifest()
+    placed = ml.bake(text, m1)
+    m2 = bake_manifest(placed=placed)
+    assert ml.bake(text, m2) == placed
+
+
+def test_bake_keeps_existing_placed_and_prunes_stale():
+    text = source("mod_bake.py")
+    m = bake_manifest(placed={"h_major": "b", "no_longer_exists": "c"})
+    placed = ml.bake(text, m)
+    assert placed["h_major"] == "b"  # human-reviewed value is kept
+    assert placed["h_chain"] == "b"  # and propagates to its callee
+    assert "no_longer_exists" not in placed
+
+
+def test_bake_does_not_override_names_or_rules():
+    text = "def a_x():\n    return 1\n"
+    m = bake_manifest(names={"a_x": "c"})
+    assert ml.bake(text, m) == {}
+
+
+def test_bake_file_rewrites_placed_section_and_is_noop_second_time(tmp_path):
+    for n in ("mod_bake.py", "mod_bake.toml"):
+        shutil.copy(FIX / n, tmp_path / n)
+    toml = tmp_path / "mod_bake.toml"
+    assert ml.bake_file(toml) is True
+    first = toml.read_text()
+    assert "[placed]" in first and 'h_major = "a"' in first
+    assert ml.load_manifest(toml).placed["h_tie"] == "c"
+    assert ml.bake_file(toml) is False
+    assert toml.read_text() == first
+
+
+def test_bake_file_replaces_existing_placed_table_in_place(tmp_path):
+    for n in ("mod_bake.py", "mod_bake.toml"):
+        shutil.copy(FIX / n, tmp_path / n)
+    toml = tmp_path / "mod_bake.toml"
+    toml.write_text(toml.read_text() + '\n[placed]\nstale = "a"\n\n[names]\nh_orphan = "b"\n')
+    # [placed] may precede other tables; only its own lines are replaced
+    ml.bake_file(toml)
+    m = ml.load_manifest(toml)
+    assert "stale" not in m.placed
+    assert m.names == {"h_orphan": "b"}
+    assert m.placed["h_major"] == "a"
+
+
+# ------------------------------------------------------------------ import graph
+
+
+def graph_manifest():
+    names = {}
+    for n in [
+        "base_dec",
+        "BaseThing",
+        "base_default",
+        "base_body",
+        "BaseAnn",
+        "base_lazy",
+        "base_str",
+    ]:
+        names[n] = "base"
+    for n in ["user_decorated", "UserChild", "user_default", "MODULE_EXPR", "TYPED"]:
+        names[n] = "user"
+    for n in ["late_body", "late_ann", "late_lazy", "late_lambda"]:
+        names[n] = "late"
+    return ml.parse_manifest(manifest_dict(targets=["base", "user", "late"], names=names))
+
+
+def test_reference_classification():
+    p = ml.resolve(source("mod_graph.py"), graph_manifest())
+    g = ml.build_graph(p)
+    got: dict[str, set[tuple[str, bool]]] = {}
+    for ref in g.refs:
+        got.setdefault(ref.source_key, set()).add((ref.name, ref.eager))
+    assert got["user_decorated"] == {("base_dec", True)}
+    assert got["UserChild"] == {("BaseThing", True), ("base_default", True)}
+    assert got["user_default"] == {("base_default", True)}
+    assert got["MODULE_EXPR"] == {("base_body", True)}
+    assert got["TYPED"] == {("BaseAnn", True)}  # string annotation parsed, conservative
+    assert got["late_body"] == {("base_body", False)}
+    assert got["late_ann"] == {("BaseAnn", False), ("BaseThing", False)}
+    assert got["late_lambda"] == {("base_str", False)}
+    # a name bound by a lazy in-function import is not a reference
+    assert "late_lazy" not in got
+
+
+def test_edges_eager_beats_deferred():
+    g = ml.build_graph(ml.resolve(source("mod_graph.py"), graph_manifest()))
+    assert g.edges == {("user", "base"): "eager", ("late", "base"): "deferred"}
+    assert g.eager_edges() == {("user", "base")}
+    assert g.cycles() == []
+
+
+def test_deferred_edges_never_form_a_cycle():
+    text = "def a_f():\n    return b_f()\n\ndef b_f():\n    return a_f()\n"
+    m = ml.parse_manifest(manifest_dict(names={"a_f": "a", "b_f": "b"}))
+    g = ml.build_graph(ml.resolve(text, m))
+    assert set(g.edges.values()) == {"deferred"}
+    assert g.cycles() == []
+
+
+def test_function_locals_shadow_top_level_names():
+    text = "def helper():\n    pass\n\ndef f(helper):\n    x = 1\n    return helper(x)\n"
+    m = ml.parse_manifest(manifest_dict(names={"helper": "b", "f": "a"}))
+    assert ml.build_graph(ml.resolve(text, m)).edges == {}
+
+
+def test_eager_cycle_reported():
+    m = ml.load_manifest(FIX / "mod_cycle.toml")
+    g = ml.build_graph(ml.resolve(source("mod_cycle.py"), m))
+    assert g.edges == {("a", "b"): "eager", ("b", "a"): "eager"}
+    assert g.cycles() == [["a", "b"]]
+
+
+def test_three_target_cycle_is_one_component():
+    text = "class A1(C1):\n    pass\n\nclass B1(A1):\n    pass\n\nclass C1(B1):\n    pass\n"
+    m = ml.parse_manifest(
+        manifest_dict(targets=["a", "b", "c"], names={"A1": "a", "B1": "b", "C1": "c"})
+    )
+    assert ml.build_graph(ml.resolve(text, m)).cycles() == [["a", "b", "c"]]
+
+
+# --------------------------------------------------------------------- class mode
+
+
+def test_class_mode_stay_records_and_rules():
+    m = ml.load_manifest(FIX / "class_game.toml")
+    p = ml.resolve(source("class_game.py"), m)
+    top = by_key(p)
+    assert (top["Game"].target, top["Game"].reason) == ("__init__", "class-shell")
+    assert (top["Record"].target, top["Record"].reason) == ("records", "records")
+    mem = {i.key: i for i in p.members}
+    assert (mem["model_config"].target, mem["model_config"].reason) == ("__init__", "stay")
+    assert (mem["named_stay"].target, mem["named_stay"].reason) == ("__init__", "stay")
+    assert (mem["life"].target, mem["life"].reason) == ("__init__", "field")
+    assert (mem["check_life"].target, mem["check_life"].reason) == ("__init__", "decorated")
+    assert (mem["combat_a"].target, mem["combat_a"].reason) == ("combat", "rule")
+    assert (mem["draw_one"].target, mem["draw_one"].reason) == ("library", "rule")
+    assert mem["shared_helper"].reason == "neighbour"
+    assert Counter(i.target for i in p.members)["__init__"] == 4
+
+
+def test_class_mode_bake_uses_self_attribute_calls():
+    m = ml.load_manifest(FIX / "class_game.toml")
+    placed = ml.bake(source("class_game.py"), m)
+    assert placed == {"only_draw": "library", "shared_helper": "library"}
+
+
+def test_class_mode_missing_class_is_an_error():
+    m = ml.parse_manifest(manifest_dict(mode="class", **{"class": "Nope"}, records="a"))
+    with pytest.raises(ml.ManifestError):
+        ml.resolve("class Other:\n    pass\n", m)
+
+
+def test_class_mode_graph_edges_come_from_member_targets():
+    text = (
+        "def util():\n    return 1\n\n"
+        "class G:\n"
+        "    def combat_a(self, x=util()):\n        return util()\n"
+    )
+    m = ml.parse_manifest(
+        manifest_dict(
+            mode="class",
+            targets=["combat", "recs", "_common"],
+            records="recs",
+            names={"util": "_common"},
+            rules=[{"pattern": "combat_.*", "target": "combat"}],
+            **{"class": "G"},
+        )
+    )
+    g = ml.build_graph(ml.resolve(text, m))
+    assert g.edges == {("combat", "_common"): "eager"}
+
+
+# ---------------------------------------------------------------------------- CLI
+
+
+def test_check_report_counts(capsys):
+    assert ml.main(["check", str(FIX / "mod_basic.toml")]) == 0
+    out = capsys.readouterr().out
+    assert "gamma" in out and "alpha" in out and "beta" in out and "_common" in out
+    assert "unplaced: " in out
+    assert "reasons:" in out and "name=1" in out and "rule=4" in out
+    assert "eager cycles: none" in out
+
+
+def test_check_report_object():
+    rep = ml.check(FIX / "mod_basic.toml")
+    assert rep.statements["alpha"] == 4
+    assert rep.statements["beta"] == 2
+    assert rep.lines["beta"] > 0
+    assert rep.reasons["placed"] == 1
+    # early, helper_one, trailing (neighbour) + PATTERN, SHARED_LIMIT, NOTE (constant rule)
+    assert rep.unplaced == 6
+    assert rep.cycles == [] and rep.empty_targets == []
+
+
+def test_check_exits_1_on_eager_cycle(capsys):
+    assert ml.main(["check", str(FIX / "mod_cycle.toml")]) == 1
+    out = capsys.readouterr().out
+    assert "eager cycles:" in out and "a, b" in out and "a -> b via B1" in out
+
+
+def test_check_exits_1_on_empty_target(capsys):
+    assert ml.main(["check", str(FIX / "mod_empty_target.toml")]) == 1
+    assert "delta" in capsys.readouterr().out
+
+
+def test_bake_cli_writes_toml(tmp_path, capsys):
+    for n in ("mod_bake.py", "mod_bake.toml"):
+        shutil.copy(FIX / n, tmp_path / n)
+    toml = tmp_path / "mod_bake.toml"
+    assert ml.main(["bake", str(toml)]) == 0
+    first = toml.read_text()
+    assert ml.main(["bake", str(toml)]) == 0
+    assert toml.read_text() == first
+    assert ml.load_manifest(toml).placed["h_major"] == "a"
+
+
+def test_script_runs_as_documented_command():
+    proc = subprocess.run(
+        [sys.executable, "scripts/split/manifest_lib.py", "check", str(FIX / "mod_cycle.toml")],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 1
+    assert "eager cycles" in proc.stdout

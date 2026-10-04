@@ -1,0 +1,10 @@
+module = "pkg.mod_cycle"
+source = "mod_cycle.py"
+package = "out/cycle"
+mode = "module"
+targets = ["a", "b"]
+
+[names]
+A1 = "a"
+A2 = "a"
+B1 = "b"

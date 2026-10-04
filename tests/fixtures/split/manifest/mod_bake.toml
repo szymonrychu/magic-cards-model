@@ -1,0 +1,17 @@
+module = "pkg.mod_bake"
+source = "mod_bake.py"
+package = "out/bake"
+mode = "module"
+targets = ["a", "b", "c"]
+
+[[rules]]
+pattern = "a_.*"
+target = "a"
+
+[[rules]]
+pattern = "b_.*"
+target = "b"
+
+[[rules]]
+pattern = "c_.*"
+target = "c"
