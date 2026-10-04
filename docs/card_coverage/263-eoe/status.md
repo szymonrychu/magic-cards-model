@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 46 | 18.3% |
-| Works (untested) | 131 | 52.0% |
-| Partial (unaudited) | 11 | 4.4% |
+| Works (untested) | 132 | 52.4% |
+| Partial (unaudited) | 10 | 4.0% |
 | Not working | 64 | 25.4% |
 
 ## Cards needing work
@@ -94,7 +94,6 @@
 | Cosmogoyf | unaudited | Cosmogoyf's power is equal to the number of cards you own in exile and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dawnsire, Sunstar Dreadnought | unaudited | 10+ \| Whenever you attack, Dawnsire deals 100 damage to up to one target creature or planeswalker. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Entropic Battlecruiser | unaudited | 1+ \| Whenever an opponent discards a card, they lose 3 life. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Gigastorm Titan | unaudited | This spell costs {3} less to cast if you've cast another spell this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hardlight Containment | unaudited | Enchanted permanent has ward {1}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Loading Zone | unaudited | If one or more counters would be put on a creature, Spacecraft, or Planet you control, twice that many of each of those kinds of counters are put on it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Luxknight Breacher | unaudited | This creature enters with a +1/+1 counter on it for each other creature and/or artifact you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -136,6 +135,7 @@
 | Galactic Wayfarer | handled | When this creature enters, create a Lander token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Genemorph Imago | handled | Landfall — Whenever a land you control enters, target creature has base power and toughness 3/3 until end of turn. If you control six or more lands, that creatu | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Germinating Wurm | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Gigastorm Titan | handled | This spell costs {3} less to cast if you've cast another spell this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Glacier Godmaw | handled | When this creature enters, create a Lander token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gravkill | handled | Exile target creature or Spacecraft. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gravpack Monoist | handled | When this creature dies, create a tapped 2/2 colorless Robot artifact creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -359,7 +359,6 @@
 | {M}: return target creature card from your graveyard to the battlefield. it's a skeleton in addition to its other types and has no abilities. activate only as a | 1 | Xu-Ifit, Osteoharmonist | eoe |
 | {M}: until end of turn, target creature gains "..." that creature's controller may have ~ deal N damage to it. activate only as a sorcery. | 1 | Requiem Monolith | eoe |
 | {M}{M}: ~ gets +N/+N until end of turn. | 1 | Debris Field Crusher | eoe |
-| ~ costs {M} less to cast if you've cast another spell ~. | 1 | Gigastorm Titan | eoe |
 | ~ deals N damage to target attacking or blocking creature, where N is N plus the number of creatures and/or spacecraft you control. | 1 | Focus Fire | eoe |
 | ~ deals N damage to target creature. if excess damage was dealt ~, create a lander token. (it's an artifact with "...") | 1 | Orbital Plunge | eoe |
 | ~ enters with a +N/+N counter on it for each other creature and/or artifact you control. | 1 | Luxknight Breacher | eoe |

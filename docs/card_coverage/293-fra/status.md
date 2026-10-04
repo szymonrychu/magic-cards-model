@@ -17,53 +17,18 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 183 | 68.3% |
+| Tested | 218 | 81.3% |
 | Works (untested) | 47 | 17.5% |
-| Partial (unaudited) | 2 | 0.7% |
-| Not working | 36 | 13.4% |
+| Partial (unaudited) | 3 | 1.1% |
+| Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Academic Ascent | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Arcane Amphisbaena | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Avatar of Burgeoning Echoes | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Campus Crier | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Clash of Elements | silent | Choose target nonland permanent. Its owner may put it on top of their library. If they do, Clash of Elements deals 2 damage to them. If they didn't put the card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Countersculpt | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Fatehold Charm | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Hexhaven Battalion | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Inspired Tethermage | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Jace's Machinations | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Jace, Reality Sculptor | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Keeper of the Quiet Hour | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Mindseeker Oculus | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| No Admittance | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Overwrite the Multiverse | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Plan for All Outcomes | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Protege's Awakening | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Repurposed Enforcer | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Rewrite Regrets | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Sanctum Lurker | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Solve for Disappointment | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Tam's Resistance | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Theorist's Proxy | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Theorist's Sanctum | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Violent Echoes | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Vraska's Final Mercy | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Cryomancer | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Deathbringer | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Healer | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Mentor | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Mind Sculptor | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Necromancer | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Paradox | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Pyromancer | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Warlord | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Way of the Wildspeaker | silent | Empower Jace | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Null Summoner | unaudited | Threshold — As long as there are seven or more cards in your graveyard, you may cast the exiled card, and mana of any type can be spent to cast that spell. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Proft, Sinister Mastermind | unaudited | Threshold — You can't cast this spell unless there are seven or more cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Sanctum Lurker | unaudited | Planeswalkers you control aren't put into their owners' graveyards for having 0 loyalty. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Afterthought Sentry | handled | {2}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archive Arbiter | handled | When this creature enters, choose one — • Destroy target noncreature, nonland permanent. • You gain 4 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Arni, Humble Scribe | handled | Whenever another nontoken creature you control enters, untap Arni. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -115,27 +80,33 @@
 ## Fully supported
 
 <details>
-<summary>183 cards</summary>
+<summary>218 cards</summary>
 
+- Academic Ascent
 - Aerid Konstrari
 - Ajani Resolute
 - Ajani Unrelenting
 - Ajani's Anguish
 - Apex Witchstalker
+- Arcane Amphisbaena
 - Arni, Renowned Champion
 - Artifist Acumen
+- Avatar of Burgeoning Echoes
 - Awaken the Inferno
 - Bloodline Recollector // Ancestral Craving
 - Blossom-Blessed Angel // Seed Suture
 - Break Under Pressure
 - Budding Insurgent
+- Campus Crier
 - Carnivorous Cultivator // Enroot
 - Cast Away Doubt
 - Chandra, Chill of Compliance
 - Charge the Sanctum
+- Clash of Elements
 - Codie, Ravenous Codex
 - Command the Stage
 - Compel Brutality
+- Countersculpt
 - Craterclaw Colossus
 - Cruel Calculations
 - Curse-Marred Demon
@@ -160,6 +131,7 @@
 - Eye of Jace
 - Face Yourself
 - Fatehold Annex
+- Fatehold Charm
 - Fatehold Chronologist // Peer Review
 - Fateshaper Aspirant
 - Fblthp, Impossibly Lost
@@ -188,6 +160,7 @@
 - Hapatra, the Desert Fang
 - Hapatra, the Desert Frost
 - Heartwood Crafter // Soul Tether
+- Hexhaven Battalion
 - Hexhaven Dueling Arena
 - Hexhaven Invigorator
 - Hungering Puppetbeast
@@ -197,10 +170,14 @@
 - Infinite Coursework
 - Ingris Stingerquill
 - Innovative Commons
+- Inspired Tethermage
+- Jace's Machinations
+- Jace, Reality Sculptor
 - Jiang Yanggu, Alone
 - Jiang Yanggu, Never Alone
 - Karn, Argent Defender
 - Karn, Gilded Guardian
+- Keeper of the Quiet Hour
 - Kindred Judgment
 - Kiora of Fire and Ashes
 - Kiora of Salt and Sand
@@ -224,22 +201,29 @@
 - Medic's Kitesail
 - Meticulous Commons
 - Mind Meanderer
+- Mindseeker Oculus
 - Multiply by Zero
+- No Admittance
 - Omnipresence
+- Overwrite the Multiverse
 - Paradox Shaper // Omit Variables
 - Perfected Theory
 - Pia, Determined Rebuilder
+- Plan for All Outcomes
 - Pompous Battlemage // Improvised Act
 - Primal Witchstalker
 - Proctor of Potential
 - Proft, Consulting Detective
 - Prophesied End
+- Protege's Awakening
 - Prudent Fateseer // Peer Review
 - Puppet Crafting
 - Pyre Rhymer // Molten Tide
 - Rank Rat
 - Recursive Recruitment
 - Refute Destiny
+- Repurposed Enforcer
+- Rewrite Regrets
 - Rise of the Deathbringer
 - Roiling Canopy
 - Room of Refuge
@@ -251,6 +235,7 @@
 - Semester Foreseer // Peer Review
 - Silence the Echo
 - Skilled Battlecarver
+- Solve for Disappointment
 - Sphinx of False Conclusions
 - Sphinx's Approach
 - Stingcaster Mage
@@ -260,6 +245,7 @@
 - Stinging Vitriol
 - Surgical Precision
 - Surveillance Phantasm
+- Tam's Resistance
 - Tam, the Possibility
 - Tenured Tethermage
 - Terminal Criticism
@@ -270,6 +256,8 @@
 - Teyo, Lightshield Expert
 - Thalia, the Survivor
 - The Theorist, Jace Beleren
+- Theorist's Proxy
+- Theorist's Sanctum
 - Theorix Annex
 - Theorix Metamage // Omit Variables
 - Tinybones, Pocket Nuisance
@@ -288,10 +276,22 @@
 - Vigorbloom Charm
 - Vigorbloom Vanguard // Seed Suture
 - Vindictive Triumph
+- Violent Echoes
 - Void Extrapolator // Omit Variables
+- Vraska's Final Mercy
 - Vraska, Soul of Stone
 - Vraska, the Cutting Glare
 - Warrior's Blades
+- Way of the Cryomancer
+- Way of the Deathbringer
+- Way of the Healer
+- Way of the Mentor
+- Way of the Mind Sculptor
+- Way of the Necromancer
+- Way of the Paradox
+- Way of the Pyromancer
+- Way of the Warlord
+- Way of the Wildspeaker
 - Whiplash Wordsmith // Vicious Verse
 - Winter, Tormented Loner
 - Woodwork Prodigy // Soul Tether
@@ -307,9 +307,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| empower jace | 35 | Academic Ascent, Arcane Amphisbaena, Avatar of Burgeoning Echoes, Campus Crier, Countersculpt | fra |
 | Threshold | 2 | Null Summoner, Proft, Sinister Mastermind | fra |
-| choose target nonland permanent. its owner may put it on top of their library. if they do, ~ deals N damage to them. if they didn't put the card on top of their | 1 | Clash of Elements | fra |
+| planeswalkers you control aren"..." graveyards for having N loyalty. | 1 | Sanctum Lurker | fra |
 
 ## Notes
 

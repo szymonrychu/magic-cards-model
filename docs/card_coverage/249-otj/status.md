@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 29 | 11.2% |
-| Works (untested) | 128 | 49.4% |
+| Works (untested) | 129 | 49.8% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 95 | 36.7% |
+| Not working | 94 | 36.3% |
 
 ## Cards needing work
 
@@ -75,7 +75,6 @@
 | Raucous Entertainer | silent | {1}, {T}: Put a +1/+1 counter on each creature you control that entered this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Resilient Roadrunner | silent | {3}: This creature can't be blocked this turn except by creatures with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Shackle Slinger | silent | Whenever you cast your second spell each turn, choose target creature an opponent controls. If it's tapped, put a stun counter on it. Otherwise, tap it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Slick Sequence | silent | Slick Sequence deals 2 damage to any target. If you've cast another spell this turn, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spring Splasher | silent | Whenever this creature attacks, target creature defending player controls gets -3/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stubborn Burrowfiend | silent | Whenever this creature becomes saddled for the first time each turn, mill two cards, then this creature gets +X/+X until end of turn, where X is the number of c | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Taii Wakeen, Perfect Shot | silent | Whenever a source you control deals noncombat damage to a creature equal to that creature's toughness, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -229,6 +228,7 @@
 | Selvala, Eager Trailblazer | handled | Whenever you cast a creature spell, create a 1/1 red Mercenary creature token with "{T}: Target creature you control gets +1/+0 until end of turn. Activate only | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Seraphic Steed | handled | Whenever this creature attacks while saddled, create a 3/3 white Angel creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Silver Deputy | handled | When this creature enters, you may search your library for a basic land card or a Desert card, reveal it, then shuffle and put it on top. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Slick Sequence | handled | Slick Sequence deals 2 damage to any target. If you've cast another spell this turn, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Slickshot Lockpicker | handled | When this creature enters, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to its mana cost. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Soured Springs | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spinewoods Armadillo | handled | {1}{G}, Discard this card: Search your library for a basic land card or a Desert card, reveal it, put it into your hand, then shuffle. You gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -387,7 +387,6 @@
 | {M}, {M}: put a +N/+N counter on each creature you control that entered ~. | 1 | Raucous Entertainer | otj |
 | {M}: ~ can't be blocked ~ except by creatures with haste. | 1 | Resilient Roadrunner | otj |
 | {M}{M}, sacrifice another creature: put a +N/+N counter on ~. if an outlaw was sacrificed ~, create a treasure token. | 1 | Boneyard Desecrator | otj |
-| ~ deals N damage to any target. if you've cast another spell ~, draw a card. | 1 | Slick Sequence | otj |
 | ~ deals N damage to target attacking or blocking creature. ~ deals N damage to that creature instead if you controlled a mount as you cast ~. | 1 | Steer Clear | otj |
 | ~ deals N damage to target creature, where N is N plus the number of other spells you've cast ~. | 1 | Thunder Salvo | otj |
 | ~ deals N damage to target creature. create a number of tapped treasure tokens equal to the amount of excess damage dealt to that creature ~. | 1 | Hell to Pay | otj |
