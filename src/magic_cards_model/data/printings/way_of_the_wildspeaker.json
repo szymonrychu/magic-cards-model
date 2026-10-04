@@ -3,6 +3,9 @@
   "id": "a252cb01-537b-4afe-9abc-81a98c4a1439",
   "oracle_id": "501580b9-692c-4804-be34-012a25ba8adf",
   "multiverse_ids": [],
+  "resource_id": "681D8270A219D073EA0860E47B9A8EC9EB59645740D6271C1C29565C39FD9FC3",
+  "mtgo_id": 155682,
+  "tcgplayer_id": 718617,
   "cardmarket_id": 908845,
   "name": "Way of the Wildspeaker",
   "lang": "en",
@@ -37,28 +40,55 @@
     "G"
   ],
   "keywords": [
-    "Surveil"
+    "Surveil",
+    "Empower Jace"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "a252cb01-537b-4afe-9abc-81a98c4a1439",
+      "component": "combo_piece",
+      "name": "Way of the Wildspeaker",
+      "type_line": "Legendary Enchantment",
+      "uri": "https://api.scryfall.com/cards/a252cb01-537b-4afe-9abc-81a98c4a1439"
+    },
+    {
+      "object": "related_card",
+      "id": "859bda9a-fa90-4ad3-b0c1-6fc62e27c12f",
+      "component": "token",
+      "name": "Beast",
+      "type_line": "Token Creature \u2014 Beast",
+      "uri": "https://api.scryfall.com/cards/859bda9a-fa90-4ad3-b0c1-6fc62e27c12f"
+    },
+    {
+      "object": "related_card",
+      "id": "8d1e424f-6407-4f8c-bed2-eaf148237c81",
+      "component": "token",
+      "name": "Jace",
+      "type_line": "Token Planeswalker \u2014 Jace",
+      "uri": "https://api.scryfall.com/cards/8d1e424f-6407-4f8c-bed2-eaf148237c81"
+    }
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
@@ -109,19 +139,19 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 31254,
+  "edhrec_rank": 24387,
   "preview": {
     "source": "Joshua Raphael",
     "source_uri": "https://www.instagram.com/p/DdJEGNMEbnu/?img_index=1",
     "previewed_at": "2026-09-11"
   },
   "prices": {
-    "usd": null,
-    "usd_foil": null,
+    "usd": "0.26",
+    "usd_foil": "0.46",
     "usd_etched": null,
-    "eur": null,
-    "eur_foil": null,
-    "tix": null
+    "eur": "0.20",
+    "eur_foil": "0.19",
+    "tix": "0.01"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BWildspeaker",
@@ -129,8 +159,8 @@
     "edhrec": "https://edhrec.com/route/?cc=Way+of+the+Wildspeaker"
   },
   "purchase_uris": {
-    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BWildspeaker%26view%3Dgrid",
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F718617%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908845&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Way+of+the+Wildspeaker&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155682?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }
