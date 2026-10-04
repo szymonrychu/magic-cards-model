@@ -48,7 +48,8 @@ def _owners(old_path: str) -> dict[str, tuple]:
     """name -> every module of the old path whose own source defines it."""
     module = importlib.import_module(old_path)
     if hasattr(module, "__path__"):
-        candidates = [
+        # the package's own __init__ defines names too (Game stays in models/game/__init__)
+        candidates = [module] + [
             importlib.import_module(info.name)
             for info in pkgutil.walk_packages(module.__path__, old_path + ".")
         ]
