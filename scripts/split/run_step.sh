@@ -67,7 +67,7 @@ if [ "$DRY" = 0 ]; then
     echo "refusing: dirty tree (commit or stash first)" >&2
     exit 1
   fi
-  if [ -n "$PREV" ] && ! git log --format=%B | grep -qx "Split-Step: $PREV"; then
+  if [ -n "$PREV" ] && [ -z "$(git log -1 --format=%H --grep="^Split-Step: $PREV\$")" ]; then
     echo "refusing: precondition missing, no commit with trailer 'Split-Step: $PREV' in history" >&2
     exit 1
   fi
