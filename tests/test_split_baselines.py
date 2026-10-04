@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import json
 import pathlib
+import sys
 
 import pytest
 from scripts.split import baselines as B
@@ -282,3 +283,61 @@ def test_parse_failed_tests_names_each_failure():
     )
     assert B.parse_failed_tests(out) == ["tests/test_a.py::test_one", "tests/test_b.py::test_two"]
     assert B.parse_failed_tests("3 passed in 1s") == []
+
+
+def _with_cpu() -> dict:
+    data = _base()
+    data["import_time"]["cpu_us"] = 2000
+    data["suite"]["cpu_s"] = 500.0
+    data["suite_full"]["cpu_s"] = 5000.0
+    return data
+
+
+def test_timing_gates_use_cpu_time_when_both_sides_have_it():
+    """The dry run's r2 failed F3's import and suite gates because other sessions' suites
+    pushed the machine load to 36 on 12 cores: wall time doubled, CPU time did not. With
+    CPU time on both sides the gates hold CPU time to the limits, not wall time."""
+    after = _with_cpu()
+    after["import_time"]["cumulative_us"] = 3000
+    after["suite"]["wall_s"] = 250.0
+    after["suite_full"]["wall_s"] = 2500.0
+    assert _violations(_with_cpu(), after, "F3") == []
+
+
+def test_cpu_import_time_limit_is_15_percent():
+    after = _with_cpu()
+    after["import_time"]["cpu_us"] = 2300
+    assert _violations(_with_cpu(), after, "F3") == []
+    after["import_time"]["cpu_us"] = 2301
+    out = _violations(_with_cpu(), after, "F3")
+    assert len(out) == 1 and "import" in out[0] and "cpu" in out[0]
+
+
+def test_cpu_suite_limit_is_5_percent_and_one_sided():
+    after = _with_cpu()
+    after["suite"]["cpu_s"] = 525.0
+    after["suite_full"]["cpu_s"] = 4000.0
+    assert _violations(_with_cpu(), after, "F3") == []
+    after["suite"]["cpu_s"] = 525.5
+    out = _violations(_with_cpu(), after, "F3")
+    assert len(out) == 1 and "suite" in out[0] and "cpu" in out[0]
+    after = _with_cpu()
+    after["suite_full"]["cpu_s"] = 5300.0
+    out = _violations(_with_cpu(), after, "F3")
+    assert len(out) == 1 and "suite_full" in out[0] and "cpu" in out[0]
+
+
+def test_wall_time_still_gates_when_one_side_has_no_cpu_time():
+    after = _with_cpu()
+    after["suite"]["wall_s"] = 106.0
+    assert len(_violations(_base(), after, "F1")) == 1
+    after["import_time"]["cumulative_us"] = 1200
+    assert len(_violations(_base(), after, "F1")) == 2
+
+
+def test_timed_run_records_child_cpu_time():
+    proc, wall, cpu = B.timed_run(
+        [sys.executable, "-c", "sum(i * i for i in range(3_000_000))"], check=True
+    )
+    assert proc.returncode == 0
+    assert 0.05 < cpu <= wall + 0.5

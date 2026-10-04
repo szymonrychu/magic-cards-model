@@ -171,8 +171,8 @@ claim "sweep hash" '^VIOLATION: sweep hash'
 claim "import time" '^VIOLATION: import time'
 claim "collected test count" '^VIOLATION: test count'
 claim "goldens hash" '^VIOLATION: goldens hash'
-claim "suite wall time" '^VIOLATION: suite (wall|has)'
-[ "$MODE" = full ] && claim "suite_full wall time" '^VIOLATION: suite_full'
+claim "suite time" '^VIOLATION: suite (wall|cpu|has)'
+[ "$MODE" = full ] && claim "suite_full time" '^VIOLATION: suite_full'
 if [ -s "$LOGDIR/violations.txt" ]; then
   report "baselines compare (other)" 1 "$cmp_secs"
   sed 's/^/    /' "$LOGDIR/violations.txt"

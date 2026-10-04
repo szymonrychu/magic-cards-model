@@ -439,3 +439,11 @@ def test_gates_keep_saves_the_after_measurement(stubbed, tmp_path):
     assert res.returncode == 0, res.stdout
     assert keep.is_file()
     assert '"suite"' in keep.read_text()
+
+
+def test_gates_attribute_a_cpu_time_suite_violation_to_the_suite_time_check(stubbed):
+    res = stubbed("cheap", STUB_VIOLATIONS="suite cpu time 500.0s -> 600.0s is more than 5% slower")
+    lines = res.stdout.splitlines()
+    assert res.returncode == 1
+    assert any(ln.startswith("FAIL suite time") for ln in lines), res.stdout
+    assert not any("compare (other)" in ln for ln in lines), res.stdout

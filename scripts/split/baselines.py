@@ -7,7 +7,7 @@
 `measure` records the engine sha, import time of `import magic_cards_model`
 (median of 5 fresh interpreters, `-X importtime`; measured on
 `magic_cards_model.models.game` because the package root is empty), `mise run test` wall time
-and counts (and `mise run test:full` with --full), the collected test count
+and counts with their CPU time (and `mise run test:full` with --full), the collected test count
 (and how many of them are the split's own tests, which the gate does not count),
 the sha256 of `scripts/sweep_pool.py --effects` stdout, a sha256 over
 tests/golden, and the dispatch fingerprint hash (whole, results-only, and
@@ -24,6 +24,7 @@ import argparse
 import hashlib
 import json
 import re
+import resource
 import statistics
 import subprocess
 import sys
@@ -136,11 +137,28 @@ def parse_collect_count(output: str) -> int:
 # ----- measuring -----
 
 
-def _run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
+def _children_cpu() -> float:
+    usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+    return usage.ru_utime + usage.ru_stime
+
+
+def timed_run(
+    cmd: list[str], check: bool = True
+) -> tuple[subprocess.CompletedProcess, float, float]:
+    """Run cmd; return (proc, wall seconds, CPU seconds of it and its reaped descendants).
+
+    CPU time is what the timing gates compare: on a shared machine other sessions'
+    suites stretch wall time without touching it."""
+    cpu0, start = _children_cpu(), time.monotonic()
     proc = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
+    wall, cpu = time.monotonic() - start, _children_cpu() - cpu0
     if check and proc.returncode != 0:
         raise RuntimeError(f"{' '.join(cmd)} failed ({proc.returncode}):\n{proc.stderr[-2000:]}")
-    return proc
+    return proc, wall, cpu
+
+
+def _run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
+    return timed_run(cmd, check)[0]
 
 
 def _py(*args: str) -> list[str]:
@@ -149,9 +167,12 @@ def _py(*args: str) -> list[str]:
 
 def measure_import_time() -> dict:
     cums: list[int] = []
+    cpus: list[float] = []
     selfs: dict[str, list[int]] = {m: [] for m in SELF_MODULES}
     for _ in range(IMPORT_RUNS):
-        proc = _run(_py("python", "-X", "importtime", "-c", f"import {TARGET}"))
+        # this interpreter is the repo venv's (run via `uv run`): no mise/uv startup in the CPU time
+        proc, _, cpu = timed_run([sys.executable, "-X", "importtime", "-c", f"import {TARGET}"])
+        cpus.append(cpu)
         cum, per = parse_importtime(proc.stderr)
         if not cum:
             raise RuntimeError("could not find the target module line in -X importtime output")
@@ -162,19 +183,19 @@ def measure_import_time() -> dict:
     return {
         "runs": IMPORT_RUNS,
         "cumulative_us": int(statistics.median(cums)),
+        "cpu_us": int(statistics.median(cpus) * 1e6),
         "self_us": {n: int(statistics.median(v)) for n, v in selfs.items() if v},
     }
 
 
 def measure_suite(task: str) -> dict:
-    start = time.monotonic()
-    proc = _run(["mise", "run", task], check=False)
-    wall = time.monotonic() - start
+    proc, wall, cpu = timed_run(["mise", "run", task], check=False)
     output = proc.stdout + proc.stderr
     counts = parse_pytest_summary(output)
     failed = parse_failed_tests(output)
     return {
         "wall_s": round(wall, 2),
+        "cpu_s": round(cpu, 2),
         "returncode": proc.returncode,
         **counts,
         "failed_tests": failed,
@@ -273,21 +294,33 @@ def compare(before: dict, after: dict, step: str) -> list[str]:
         identical("fingerprint.results_sha256", "fingerprint results hash")
         _chain_sets(before, after, out)
 
-    pair = both("import_time.cumulative_us", "import time")
-    if pair and pair[1] > pair[0] * IMPORT_LIMIT:
-        out.append(
-            f"import time {pair[0]} -> {pair[1]} us exceeds +15%: needs -X importtime review"
-        )
+    # Timing gates hold CPU time to the limits when both sides measured it (wall time
+    # on a shared machine measures the other sessions too); older measurements fall
+    # back to wall time.
+    def timing(path: str, cpu_key: str, wall_key: str) -> tuple[str, tuple] | None:
+        if (
+            _get(before, f"{path}.{cpu_key}") is not None
+            and _get(after, f"{path}.{cpu_key}") is not None
+        ):
+            return "cpu", both(f"{path}.{cpu_key}")
+        pair = both(f"{path}.{wall_key}", f"{path} wall time")
+        return ("wall", pair) if pair else None
 
-    for key, label in (("suite", "suite"), ("suite_full", "suite_full")):
-        pair = both(f"{key}.wall_s", f"{label} wall time")
-        if pair and pair[1] - pair[0] > pair[0] * SUITE_LIMIT:
-            out.append(f"{label} wall time {pair[0]}s -> {pair[1]}s is more than 5% slower")
+    found = timing("import_time", "cpu_us", "cumulative_us")
+    if found and found[1][1] > found[1][0] * IMPORT_LIMIT:
+        kind, (b, a) = found
+        out.append(f"import time ({kind}) {b} -> {a} us exceeds +15%: needs -X importtime review")
+
+    for key in ("suite", "suite_full"):
+        found = timing(key, "cpu_s", "wall_s")
+        if found and found[1][1] - found[1][0] > found[1][0] * SUITE_LIMIT:
+            kind, (b, a) = found
+            out.append(f"{key} {kind} time {b}s -> {a}s is more than 5% slower")
         failed = _get(after, f"{key}.failed")
         if failed:
             names = _get(after, f"{key}.failed_tests") or []
             out.append(
-                f"{label} has {failed} failed in after"
+                f"{key} has {failed} failed in after"
                 + (f": {', '.join(names[:10])}" if names else "")
             )
     return out
