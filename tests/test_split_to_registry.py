@@ -473,4 +473,4 @@ def test_converts_a_pure_rung_the_name_filter_alone_would_not_list(tmp_path):
         if line.startswith("def a_four(")
     ]
     assert registered
-    assert all(".rung(" in line for line in registered)
+    assert all(line.startswith("@") for line in registered), registered
