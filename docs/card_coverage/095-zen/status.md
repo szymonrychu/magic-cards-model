@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 13.6% |
-| Works (untested) | 117 | 53.2% |
+| Tested | 31 | 14.1% |
+| Works (untested) | 116 | 52.7% |
 | Partial (unaudited) | 7 | 3.2% |
 | Not working | 66 | 30.0% |
 
@@ -110,7 +110,6 @@
 | Cliff Threader | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Cobra Trap | handled | If a noncreature permanent under your control was destroyed this turn by a spell or ability an opponent controlled, you may pay {G} rather than pay this spell's | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crypt Ripper | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Crypt of Agadeem | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Devout Lightcaster | handled | When this creature enters, exile target black permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disfigure | handled | Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Emeria Angel | handled | Landfall — Whenever a land you control enters, you may create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -220,7 +219,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Archive Trap
 - Arid Mesa
@@ -230,6 +229,7 @@
 - Bloodghast
 - Burst Lightning
 - Caller of Gales
+- Crypt of Agadeem
 - Day of Judgment
 - Emeria, the Sky Ruin
 - Expedition Map

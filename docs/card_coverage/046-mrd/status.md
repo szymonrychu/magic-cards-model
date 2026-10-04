@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 8.2% |
-| Works (untested) | 155 | 57.6% |
+| Tested | 23 | 8.6% |
+| Works (untested) | 154 | 57.2% |
 | Partial (unaudited) | 9 | 3.3% |
 | Not working | 83 | 30.9% |
 
@@ -263,7 +263,6 @@
 | Vault of Whispers | handled |  |  | Y/-/- | not_tested |
 | Vedalken Archmage | handled | Whenever you cast an artifact spell, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vermiculos | handled | Whenever an artifact enters, this creature gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Viridian Joiner | handled |  |  | Y/-/- | not_tested |
 | Viridian Longbow | handled | Equipped creature has "{T}: This creature deals 1 damage to any target." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viridian Shaman | handled | When this creature enters, destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vorrac Battlehorns | handled | Equipped creature has trample and can't be blocked by more than one creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -277,7 +276,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
@@ -300,6 +299,7 @@
 - Solemn Simulacrum
 - Sylvan Scrying
 - Tooth and Nail
+- Viridian Joiner
 - Welding Jar
 
 </details>

@@ -140,7 +140,7 @@
 | Voldaren Estate | silent | {5}, {T}: Create a Blood token. This ability costs {1} less to activate for each Vampire you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wash Away | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Wedding Announcement // Wedding Festivity | silent | At the beginning of your end step, put an invitation counter on this enchantment. If you attacked with two or more creatures this turn, draw a card. Otherwise,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Winged Portent | silent | Cleave {4}{G}{U} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Draw a card for each creature you control [with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Winged Portent | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Witness the Future | silent | Target player shuffles up to four target cards from their graveyard into their library. You look at the top four cards of your library, then put one of those ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wretched Throng | silent | When this creature dies, you may search your library for a card named Wretched Throng, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ancestral Anger | notice | Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -294,7 +294,7 @@
 |---|---|---|---|
 | disturb | 10 | Binding Geist // Spectral Binding, Brine Comber // Brinebound Gift, Distracting Geist // Clever Distraction, Dorothea, Vengeful Victim // Dorothea's Retribution, Drogskol Infantry // Drogskol Armaments | vow |
 | training | 7 | Apprentice Sharpshooter, Cloaked Cadet, Gryff Rider, Gryffwing Cavalry, Hopeful Initiate | vow |
-| cleave | 5 | Alchemist's Retrieval, Fierce Retribution, Lunar Rejection, Parasitic Grasp, Wash Away | vow |
+| cleave | 6 | Alchemist's Retrieval, Fierce Retribution, Lunar Rejection, Parasitic Grasp, Wash Away | vow |
 | when ~ enters, exile a card from a graveyard. | 2 | Cemetery Gatekeeper, Cemetery Protector | vow |
 | whenever ~ enters or attacks, exile a card from a graveyard. | 2 | Cemetery Illuminator, Cemetery Prowler | vow |
 | Choose one or both | 1 | Markov Retribution | vow |
@@ -319,7 +319,6 @@
 | choose a number between N and N. each player sacrifices that many creatures of their choice. | 1 | By Invitation Only | vow |
 | cleave {M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) target player reveals their hand. you choose a nonland card  | 1 | Dread Fugue | vow |
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) destroy all creatures [with mana value N or less]. | 1 | Path of Peril | vow |
-| cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) draw a card for each creature you control [with flying]. | 1 | Winged Portent | vow |
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) draw three cards. [your maximum hand size is reduced by t | 1 | Inspired Idea | vow |
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) ~ deals N damage to target creature or planeswalker and y | 1 | Lantern Flare | vow |
 | cleave {M}{M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) search your library for a [basic land] card, [reveal i | 1 | Dig Up | vow |

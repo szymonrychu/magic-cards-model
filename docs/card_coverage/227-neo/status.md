@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 11.2% |
-| Works (untested) | 119 | 44.6% |
+| Works (untested) | 120 | 44.9% |
 | Partial (unaudited) | 11 | 4.1% |
-| Not working | 107 | 40.1% |
+| Not working | 106 | 39.7% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Acquisition Octopus | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Akki War Paint | silent | As long as enchanted permanent is a creature, it gets +2/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Armguard Familiar | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Asari Captain | silent | Whenever a Samurai or Warrior you control attacks alone, it gets +1/+0 until end of turn for each Samurai or Warrior you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakened Awareness | silent | When this Aura enters, put X +1/+1 counters on enchanted permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azusa's Many Journeys // Likeness of the Seeker | silent | Whenever this creature becomes blocked, untap up to three lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Banishing Slash | silent | Destroy up to one target artifact, enchantment, or tapped creature. Then if you control an artifact and an enchantment, create a 2/2 white Samurai creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -147,6 +146,7 @@
 | Akki Ember-Keeper | handled | Whenever a nontoken modified creature you control dies, create a 1/1 colorless Spirit creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akki Ronin | handled | Whenever a Samurai or Warrior you control attacks alone, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ambitious Assault | handled | Creatures you control get +2/+0 until end of turn. If you control a modified creature, draw a card. (Equipment, Auras you control, and counters are modification | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Asari Captain | handled | Whenever a Samurai or Warrior you control attacks alone, it gets +1/+0 until end of turn for each Samurai or Warrior you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Assassin's Ink | handled | This spell costs {1} less to cast if you control an artifact and {1} less to cast if you control an enchantment. Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Atsushi, the Blazing Sky | handled | When Atsushi dies, choose one — • Exile the top two cards of your library. Until the end of your next turn, you may play those cards. • Create three Treasure to | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Automated Artificer | handled |  |  | Y/Y/- | not_tested |
@@ -372,7 +372,6 @@
 | when ~ enters, tap enchanted permanent. if it's an equipment, unattach it. | 1 | Tamiyo's Compleation | neo |
 | when ~ enters, you may return an enchantment you control to its owner's hand. if you do, you gain N life. | 1 | Geothermal Kami | neo |
 | whenever a nontoken artifact you control enters, you may pay {M}{M}. if you do, create a token that's a copy of that artifact. | 1 | Replication Specialist | neo |
-| whenever a samurai or warrior you control attacks alone, it gets +N/+N until end of turn for each samurai or warrior you control. | 1 | Asari Captain | neo |
 | whenever a samurai or warrior you control attacks alone, the next spell you cast ~ costs {M} less to cast. | 1 | Peerless Samurai | neo |
 | whenever a samurai or warrior you control attacks alone, untap it. if it's the first combat phase of the turn, there is an additional combat phase after ~. | 1 | Raiyuu, Storm's Edge | neo |
 | whenever a samurai or warrior you control attacks alone, you may pay {M}. when you do, attach ~ to it. | 1 | Ancestral Katana | neo |

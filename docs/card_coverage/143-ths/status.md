@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 9.0% |
-| Works (untested) | 132 | 62.6% |
+| Tested | 20 | 9.5% |
+| Works (untested) | 131 | 62.1% |
 | Partial (unaudited) | 8 | 3.8% |
 | Not working | 52 | 24.6% |
 
@@ -138,7 +138,6 @@
 | Horizon Scholar | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ill-Tempered Cyclops | handled | {5}{R}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Insatiable Harpy | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
-| Karametra's Acolyte | handled |  |  | Y/Y/- | not_tested |
 | Keepsake Gorgon | handled | {5}{B}{B}: Monstrosity 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Labyrinth Champion | handled | Heroic — Whenever you cast a spell that targets this creature, this creature deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lash of the Whip | handled | Target creature gets -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -222,7 +221,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
@@ -233,6 +232,7 @@
 - Fleecemane Lion
 - Gray Merchant of Asphodel
 - Hopeful Eidolon
+- Karametra's Acolyte
 - Lagonna-Band Elder
 - Nessian Asp
 - Nykthos, Shrine to Nyx

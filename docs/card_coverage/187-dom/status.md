@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 8.3% |
-| Works (untested) | 130 | 56.5% |
+| Tested | 22 | 9.6% |
+| Works (untested) | 127 | 55.2% |
 | Partial (unaudited) | 20 | 8.7% |
 | Not working | 61 | 26.5% |
 
@@ -125,7 +125,6 @@
 | Broken Bond | handled | Destroy target artifact or enchantment. You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cabal Evangel | handled |  |  | Y/Y/- | not_tested |
 | Cabal Paladin | handled | Whenever you cast a historic spell, this creature deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Cabal Stronghold | handled |  |  | Y/Y/- | not_tested |
 | Caligo Skin-Witch | handled | When this creature enters, if it was kicked, each opponent discards two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Call the Cavalry | handled | Create two 2/2 white Knight creature tokens with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cast Down | handled | Destroy target nonlegendary creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -177,7 +176,6 @@
 | Llanowar Scout | handled | {T}: You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lyra Dawnbringer | handled | Other Angels you control get +1/+1 and have lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mammoth Spider | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
-| Marwyn, the Nurturer | handled | Whenever another Elf you control enters, put a +1/+1 counter on Marwyn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memorial to Folly | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memorial to Genius | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memorial to Glory | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -191,7 +189,6 @@
 | Pardic Wanderer | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Pegasus Courser | handled | Whenever this creature attacks, another target attacking creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pierce the Sky | handled | Pierce the Sky deals 7 damage to target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Powerstone Shard | handled |  |  | Y/Y/- | not_tested |
 | Primordial Wurm | handled |  |  | Y/Y/- | not_tested |
 | Pyromantic Pilgrim | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
 | Relic Runner | handled | This creature can't be blocked if you've cast a historic spell this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -241,12 +238,13 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>22 cards</summary>
 
 - Adamant Will
 - Adventurous Impulse
 - Arvad the Cursed
 - Bloodstone Goblin
+- Cabal Stronghold
 - Damping Sphere
 - Gaea's Protector
 - Hallar, the Firefletcher
@@ -255,8 +253,10 @@
 - Josu Vess, Lich Knight
 - Knight of Grace
 - Knight of Malice
+- Marwyn, the Nurturer
 - Mox Amber
 - Naban, Dean of Iteration
+- Powerstone Shard
 - Rona, Disciple of Gix
 - Sentinel of the Pearl Trident
 - Teferi, Timebender

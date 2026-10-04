@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 11.2% |
-| Works (untested) | 124 | 57.7% |
+| Works (untested) | 126 | 58.6% |
 | Partial (unaudited) | 8 | 3.7% |
-| Not working | 59 | 27.4% |
+| Not working | 57 | 26.5% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Auriok Replica | silent | {W}, Sacrifice this creature: Prevent all damage a source of your choice would deal to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Sunchaser | silent | Metalcraft — As long as you control three or more artifacts, this creature gets +2/+2 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bellowing Tanglewurm | silent | Other green creatures you control have intimidate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blunt the Assault | silent | You gain 1 life for each creature on the battlefield. Prevent all combat damage that would be dealt this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carapace Forger | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carnifex Demon | silent | {B}, Remove a -1/-1 counter from this creature: Put a -1/-1 counter on each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carrion Call | silent | Create two 1/1 green Phyrexian Insect creature tokens with infect. (They deal damage to creatures in the form of -1/-1 counters and to players in the form of po | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -49,7 +48,6 @@
 | Genesis Wave | silent | Reveal the top X cards of your library. You may put any number of permanent cards with mana value X or less from among them onto the battlefield. Then put all c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Geth, Lord of the Vault | silent | {X}{B}: Put target artifact or creature card with mana value X from an opponent's graveyard onto the battlefield tapped under your control. Then that player mil | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghalma's Warden | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Glimmerpost | silent | When this land enters, you gain 1 life for each Locus on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glint Hawk | silent | When this creature enters, sacrifice it unless you return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glint Hawk Idol | silent | Whenever another artifact you control enters, you may have this artifact become a 2/2 Bird artifact creature with flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grafted Exoskeleton | silent | Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -108,6 +106,7 @@
 | Bleak Coven Vampires | handled | Metalcraft — When this creature enters, if you control three or more artifacts, target player loses 4 life and you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blight Mamba | handled | {1}{G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blistergrub | handled | When this creature dies, each opponent loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blunt the Assault | handled | You gain 1 life for each creature on the battlefield. Prevent all combat damage that would be dealt this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bonds of Quicksilver | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Contagious Nim | handled | Infect | machines/combat.py | Y/-/- | not_tested |
 | Copperline Gorge | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -130,6 +129,7 @@
 | Fume Spitter | handled | Sacrifice this creature: Put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Furnace Celebration | handled | Whenever you sacrifice another permanent, you may pay {2}. If you do, this enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glimmerpoint Stag | handled | When this creature enters, exile another target permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Glimmerpost | handled | When this land enters, you gain 1 life for each Locus on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Gaveleer | handled | This creature gets +2/+0 for each Equipment attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Golden Urn | handled | At the beginning of your upkeep, you may put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Golem Artisan | handled | {2}: Target artifact creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -282,7 +282,6 @@
 | the controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. that player puts that card | 1 | Shape Anew | som |
 | when ~ enters, destroy all tapped creatures. | 1 | Sunblast Angel | som |
 | when ~ enters, sacrifice it unless you return an artifact you control to its owner's hand. | 1 | Glint Hawk | som |
-| when ~ enters, you gain N life for each locus on the battlefield. | 1 | Glimmerpost | som |
 | whenever a creature you control dies, you may pay {M}. if you do, you gain N life. | 1 | Vigil for the Lost | som |
 | whenever a player casts an instant or sorcery spell that targets only a single golem, that player copies that spell for each other golem that spell could target | 1 | Precursor Golem | som |
 | whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | 1 | Viridian Revel | som |
@@ -296,7 +295,6 @@
 | whenever ~ becomes unattached from a permanent, sacrifice that permanent. | 1 | Grafted Exoskeleton | som |
 | whenever ~ blocks or becomes blocked by a creature, destroy that creature. you gain life equal to that creature's toughness. | 1 | Engulfing Slagwurm | som |
 | whenever ~ deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. each of those la | 1 | Liege of the Tangle | som |
-| you gain N life for each creature on the battlefield. prevent all combat damage that would be dealt ~. | 1 | Blunt the Assault | som |
 | you may choose not to untap ~ during your untap step. | 1 | Rust Tick | som |
 | you may have ~ enter as a copy of any creature on the battlefield, except it's N/N. | 1 | Quicksilver Gargantuan | som |
 | your life total can't change. | 1 | Platinum Emperion | som |

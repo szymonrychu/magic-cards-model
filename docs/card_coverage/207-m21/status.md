@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 10.4% |
+| Tested | 20 | 11.0% |
 | Works (untested) | 97 | 53.3% |
 | Partial (unaudited) | 10 | 5.5% |
-| Not working | 56 | 30.8% |
+| Not working | 55 | 30.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Alpine Houndmaster | silent | When this creature enters, you may search your library for a card named Alpine Watchdog and/or a card named Igneous Cur, reveal them, put them into your hand, t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aven Gagglemaster | silent | When this creature enters, you gain 2 life for each creature you control with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Basri Ket | silent | −2: Whenever one or more nontoken creatures attack this turn, create that many 1/1 white Soldier creature tokens that are tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Canopy Stalker | silent | When this creature dies, you gain 1 life for each creature that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra's Firemaw | silent | When this creature enters, you may search your library and/or graveyard for a card named Chandra, Flame's Catalyst, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,6 +96,7 @@
 | Angelic Ascension | handled | Exile target creature or planeswalker. Its controller creates a 4/4 white Angel creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Animal Sanctuary | handled | {2}, {T}: Put a +1/+1 counter on target Bird, Cat, Dog, Goat, Ox, or Snake. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Anointed Chorister | handled | {4}{W}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Aven Gagglemaster | handled | When this creature enters, you gain 2 life for each creature you control with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bad Deal | handled | You draw two cards and each opponent discards two cards. Each player loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Basri's Acolyte | handled | When this creature enters, put a +1/+1 counter on each of up to two other target creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Basri's Aegis | handled | Put a +1/+1 counter on each of up to two target creatures. You may search your library and/or graveyard for a card named Basri, Devoted Paladin, reveal it, and  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -132,7 +132,6 @@
 | Jolrael, Mwonvuli Recluse | handled | Whenever you draw your second card each turn, create a 2/2 green Cat creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keen Glidemaster | handled | {2}{U}: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keral Keep Disciples | handled | Whenever you activate a loyalty ability of a Chandra planeswalker, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Leafkin Avenger | handled | {7}{R}: This creature deals damage equal to its power to target player or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Library Larcenist | handled | Whenever this creature attacks, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Light of Promise | handled | Enchanted creature has "Whenever you gain life, put that many +1/+1 counters on this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liliana's Devotee | handled | Zombies you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -193,7 +192,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -203,6 +202,7 @@
 - Chrome Replicator
 - Elder Gargaroth
 - Griffin Aerie
+- Leafkin Avenger
 - Liliana, Waker of the Dead
 - Mazemind Tome
 - Peer into the Abyss
@@ -254,7 +254,6 @@
 | when ~ enters, draw N cards, where N is the number of creatures that died under your control ~. | 1 | Liliana's Standard Bearer | m21 |
 | when ~ enters, each opponent sacrifices a creature. | 1 | Goremand | m21 |
 | when ~ enters, exile all creature cards with mana value N or less from your graveyard until ~ leaves the battlefield. | 1 | Idol of Endurance | m21 |
-| when ~ enters, you gain N life for each creature you control with flying. | 1 | Aven Gagglemaster | m21 |
 | when ~ enters, you may sacrifice a creature or discard a creature card. if you do, draw a card. | 1 | Crypt Lurker | m21 |
 | when ~ enters, you may search your library and/or graveyard for a card named chandra, flame's catalyst, reveal it, and put it into your hand. if you search your | 1 | Chandra's Firemaw | m21 |
 | when ~ enters, you may search your library and/or graveyard for a card named garruk, savage herald, reveal it, and put it into your hand. if you search your lib | 1 | Garruk's Warsteed | m21 |
