@@ -250,8 +250,11 @@ _SELF_CHARACTERISTIC_RE = re.compile(
 #: "the number of soul counters on this artifact" (Seance Board) - CR 122.1's
 #: counters on the ability's own source, any kind a card invents included
 #: (`models/card_state.CounterKind`'s own "or any string a card invents").
+#: "the number of soul counters on this artifact" (Seance Board's "where X
+#: is"), and the "for each" form "charge counter on this artifact"
+#: (Everflowing Chalice's "Add {C} for each charge counter on this artifact").
 _SELF_COUNTERS_ON_RE = re.compile(
-    r"^the number of (?P<kind>[a-z]+) counters on this \w+$", re.IGNORECASE
+    r"^(?:the number of )?(?P<kind>[a-z]+) counters? on this \w+$", re.IGNORECASE
 )
 
 
