@@ -1,0 +1,17 @@
+module = "fxtop.pk.ord"
+source = "root/fxtop/pk/ord.py"
+package = "root/fxtop/pk/ord"
+mode = "module"
+targets = ["m", "n", "d"]
+
+[[rules]]
+pattern = "m_.*"
+target = "m"
+
+[[rules]]
+pattern = "n_.*"
+target = "n"
+
+[[rules]]
+pattern = "d_.*|D_.*"
+target = "d"

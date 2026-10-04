@@ -1,0 +1,17 @@
+module = "fxtop.pk.unsat"
+source = "root/fxtop/pk/unsat.py"
+package = "root/fxtop/pk/unsat"
+mode = "module"
+targets = ["c", "d", "n"]
+
+[[rules]]
+pattern = "c_.*|C_.*"
+target = "c"
+
+[[rules]]
+pattern = "d_.*|D_.*"
+target = "d"
+
+[[rules]]
+pattern = "n_.*"
+target = "n"
