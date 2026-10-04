@@ -17,16 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 18.3% |
-| Works (untested) | 132 | 52.4% |
-| Partial (unaudited) | 10 | 4.0% |
-| Not working | 64 | 25.4% |
+| Tested | 47 | 18.7% |
+| Works (untested) | 136 | 54.0% |
+| Partial (unaudited) | 7 | 2.8% |
+| Not working | 62 | 24.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Adagia, Windswept Bastion | silent | 12+ \| {3}{W}, {T}: Create a token that's a copy of target artifact or enchantment you control, except it's legendary. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Adagia, Windswept Bastion | silent | {3}{W}, {T}: Create a token that's a copy of target artifact or enchantment you control, except it's legendary. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | All-Fates Scroll | silent | {7}, {T}, Sacrifice this artifact: Draw X cards, where X is the number of differently named lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Alpharael, Stonechosen | silent | Void — Whenever Alpharael attacks, if a nonland permanent left the battlefield this turn or a spell was warped this turn, defending player loses half their life | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Anticausal Vestige | silent | When this creature leaves the battlefield, draw a card, then you may put a permanent card with mana value less than or equal to the number of lands you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -43,15 +43,13 @@
 | Debris Field Crusher | silent | {1}{R}: This Spacecraft gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dyadrine, Synthesis Amalgam | silent | Whenever you attack, you may remove a +1/+1 counter from each of two creatures you control. If you do, draw a card and create a 2/2 colorless Robot artifact cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Focus Fire | silent | Focus Fire deals X damage to target attacking or blocking creature, where X is 2 plus the number of creatures and/or Spacecraft you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Galvanizing Sawship | silent | Station (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery. It's an artifact creature at 3+ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gravblade Heavy | silent | As long as you control an artifact, this creature gets +1/+0 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hymn of the Faller | silent | Surveil 1, then you draw a card and lose 1 life. (To surveil 1, look at the top card of your library. You may put it into your graveyard.) Void — If a nonland p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infinite Guideline Station | silent | When Infinite Guideline Station enters, create a tapped 2/2 colorless Robot artifact creature token for each multicolored permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kav Landseeker | silent | When this creature enters, create a Lander token. At the beginning of the end step on your next turn, sacrifice that token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Kavaron, Memorial World | silent | 12+ \| {1}{R}, {T}, Sacrifice a land: Create a 2/2 colorless Robot artifact creature token, then creatures you control get +1/+0 and gain haste until end of tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Kavaron, Memorial World | silent | {1}{R}, {T}, Sacrifice a land: Create a 2/2 colorless Robot artifact creature token, then creatures you control get +1/+0 and gain haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lightstall Inquisitor | silent | When this creature enters, each opponent exiles a card from their hand and may play that card for as long as it remains exiled. Each spell cast this way costs { | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lithobraking | silent | Create a Lander token. Then you may sacrifice an artifact. When you do, Lithobraking deals 2 damage to each creature. (A Lander token is an artifact with "{2},  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Lumen-Class Frigate | silent | 2+ \| Other creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mechan Shieldmate | silent | As long as an artifact entered the battlefield under your control this turn, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Memorial Team Leader | silent | During your turn, other creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Monoist Circuit-Feeder | silent | When this creature enters, until end of turn, target creature you control gets +X/+0 and target creature an opponent controls gets -0/-X, where X is the number  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -68,11 +66,11 @@
 | Space-Time Anomaly | silent | Target player mills cards equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Specimen Freighter | silent | Whenever this Spacecraft attacks, defending player mills four cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Survey Mechan | silent | {10}, Sacrifice this creature: It deals 3 damage to any target. Target player draws three cards and gains 3 life. This ability costs {X} less to activate, where | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Synthesizer Labship | silent | 2+ \| At the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness 2/2 and ga | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Synthesizer Labship | silent | At the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness 2/2 and gains fl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terminal Velocity | silent | You may put an artifact or creature card from your hand onto the battlefield. That permanent gains haste, "When this permanent leaves the battlefield, it deals  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terrapact Intimidator | silent | When this creature enters, target opponent may have you create two Lander tokens. If they don't, put two +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thaumaton Torpedo | silent | {6}, {T}, Sacrifice this artifact: Destroy target nonland permanent. This ability costs {3} less to activate if you attacked with a Spacecraft this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Eternity Elevator | silent | 20+ \| {T}: Add X mana of any one color, where X is the number of charge counters on The Eternity Elevator. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| The Eternity Elevator | silent | {T}: Add X mana of any one color, where X is the number of charge counters on The Eternity Elevator. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Weftwalking | silent | When this enchantment enters, if you cast it, shuffle your hand and graveyard into your library, then draw seven cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Zero Point Ballad | silent | Destroy all creatures with toughness X or less. You lose X life. If X is 6 or more, return a creature card put into a graveyard this way to the battlefield unde | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Blade of the Swarm | notice | When this creature enters, choose one — • Put two +1/+1 counters on this creature. • Put target exiled card with warp on the bottom of its owner's library. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -86,19 +84,16 @@
 | Full Bore | notice | Target creature you control gets +3/+2 until end of turn. If that creature was cast for its warp cost, it also gains trample and haste until end of turn. | unparsed remainder: If that creature was cast for its warp cost, it also gains trample and haste until end of turn. | Y/Y/Y | not_working |
 | Larval Scoutlander | notice | When this Spacecraft enters, you may sacrifice a land or Lander. If you do, search your library for up to two basic land cards, put them onto the battlefield ta | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Memorial Vault | notice | {T}, Sacrifice another artifact: Exile the top X cards of your library, where X is one plus the mana value of the sacrificed artifact. You may play those cards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Susur Secundi, Void Altar | notice | 12+ \| {1}{B}, {T}, Pay 2 life, Sacrifice a creature: Draw cards equal to the sacrificed creature's power. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Susur Secundi, Void Altar | notice | {1}{B}, {T}, Pay 2 life, Sacrifice a creature: Draw cards equal to the sacrificed creature's power. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Systems Override | notice | Gain control of target artifact or creature until end of turn. Untap that permanent. It gains haste until end of turn. If it's a Spacecraft, put ten charge coun | unparsed remainder: Untap that permanent. It gains haste until end of turn. If it's a Spacecraft, put ten charge counters on it. If you do, remove ten charge counters from it at the beginning of the next end step. | Y/Y/Y | not_working |
 | Tezzeret, Cruel Captain | notice | 0: Untap target artifact or creature. If it's an artifact creature, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Xu-Ifit, Osteoharmonist | notice | {T}: Return target creature card from your graveyard to the battlefield. It's a Skeleton in addition to its other types and has no abilities. Activate only as a | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Bioengineered Future | unaudited | Each creature you control enters with an additional +1/+1 counter on it for each land that entered the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Cosmogoyf | unaudited | Cosmogoyf's power is equal to the number of cards you own in exile and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Dawnsire, Sunstar Dreadnought | unaudited | 10+ \| Whenever you attack, Dawnsire deals 100 damage to up to one target creature or planeswalker. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Entropic Battlecruiser | unaudited | 1+ \| Whenever an opponent discards a card, they lose 3 life. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hardlight Containment | unaudited | Enchanted permanent has ward {1}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Loading Zone | unaudited | If one or more counters would be put on a creature, Spacecraft, or Planet you control, twice that many of each of those kinds of counters are put on it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Luxknight Breacher | unaudited | This creature enters with a +1/+1 counter on it for each other creature and/or artifact you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Tapestry Warden | unaudited | Each creature you control with toughness greater than its power stations permanents using its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| The Seriema | unaudited | Other tapped legendary creatures you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Uthros Psionicist | unaudited | The second spell you cast each turn costs {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | All-Fates Stalker | handled | When this creature enters, exile up to one target non-Assassin creature until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Alpharael, Dreaming Acolyte | handled | When Alpharael enters, draw two cards. Then discard two cards unless you discard an artifact card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -114,6 +109,7 @@
 | Cosmogrand Zenith | handled | Whenever you cast your second spell each turn, choose one — • Create two 1/1 white Human Soldier creature tokens. • Put a +1/+1 counter on each creature you con | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dark Endurance | handled | This spell costs {1} less to cast if it targets a blocking creature. Target creature gets +2/+0 and gains indestructible until end of turn. (Damage and effects  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dauntless Scrapbot | handled | When this creature enters, exile each opponent's graveyard. Create a Lander token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Dawnsire, Sunstar Dreadnought | handled | Whenever you attack, Dawnsire deals 100 damage to up to one target creature or planeswalker. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Decode Transmissions | handled | You draw two cards and lose 2 life. Void — If a nonland permanent left the battlefield this turn or a spell was warped this turn, instead you draw two cards and | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Devastating Onslaught | handled | Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the ne | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diplomatic Relations | handled | Target creature you control gets +1/+0 and gains vigilance until end of turn. It deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -124,6 +120,7 @@
 | Edge Rover | handled | When this creature dies, each player creates a Lander token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Embrace Oblivion | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. Destroy target creature or Spacecraft. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Emergency Eject | handled | Destroy target nonland permanent. Its controller creates a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this token: Search your library for a basic | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Entropic Battlecruiser | handled | Whenever an opponent discards a card, they lose 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eumidian Terrabotanist | handled | Landfall — Whenever a land you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eusocial Engineering | handled | Landfall — Whenever a land you control enters, create a 2/2 colorless Robot artifact creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Exalted Sunborn | handled | If one or more tokens would be created under your control, twice that many of those tokens are created instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -133,6 +130,7 @@
 | Frontline War-Rager | handled | At the beginning of your end step, if you control two or more tapped creatures, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fungal Colossus | handled | This spell costs {X} less to cast, where X is the number of differently named lands you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Galactic Wayfarer | handled | When this creature enters, create a Lander token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Galvanizing Sawship | handled | Station | machines/keywords.py | Y/Y/Y | not_tested |
 | Genemorph Imago | handled | Landfall — Whenever a land you control enters, target creature has base power and toughness 3/3 until end of turn. If you control six or more lands, that creatu | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Germinating Wurm | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gigastorm Titan | handled | This spell costs {3} less to cast if you've cast another spell this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -157,6 +155,7 @@
 | Lashwhip Predator | handled | This spell costs {2} less to cast if your opponents control three or more creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lightless Evangel | handled | Whenever you sacrifice another creature or artifact, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lost in Space | handled | Target artifact or creature's owner puts it on their choice of the top or bottom of their library. Surveil 1. (Look at the top card of your library. You may put | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Lumen-Class Frigate | handled | Other creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mechan Assembler | handled | Whenever another artifact you control enters, create a 2/2 colorless Robot artifact creature token. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mechan Navigator | handled | Whenever this creature becomes tapped, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mechanozoa | handled | When this creature enters, tap target artifact or creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -236,7 +235,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>47 cards</summary>
 
 - Archenemy's Charm
 - Biotech Specialist
@@ -279,6 +278,7 @@
 - Terrasymbiosis
 - Territorial Bruntar
 - The Endstone
+- The Seriema
 - Umbral Collar Zealot
 - Uthros, Titanic Godcore
 - Voidforged Titan
@@ -292,20 +292,13 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Void | 1 | Alpharael, Stonechosen | eoe |
-| N+ \| at the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness N/N and ga | 1 | Synthesizer Labship | eoe |
-| N+ \| other creatures you control get +N/+N. | 1 | Lumen-Class Frigate | eoe |
-| N+ \| whenever an opponent discards a card, they lose N life. | 1 | Entropic Battlecruiser | eoe |
-| N+ \| whenever you attack, dawnsire deals N damage to up to one target creature or planeswalker. | 1 | Dawnsire, Sunstar Dreadnought | eoe |
-| N+ \| {M}: add N mana of any one color, where N is the number of charge counters on ~. | 1 | The Eternity Elevator | eoe |
-| N+ \| {M}{M}, {M}, pay N life, sacrifice a creature: draw cards equal to the sacrificed creature's power. activate only as a sorcery. | 1 | Susur Secundi, Void Altar | eoe |
-| N+ \| {M}{M}, {M}, sacrifice a land: create a N/N colorless robot artifact creature token, then creatures you control get +N/+N and gain haste until end of turn | 1 | Kavaron, Memorial World | eoe |
-| N+ \| {M}{M}, {M}: create a token that"..."s legendary. activate only as a sorcery. | 1 | Adagia, Windswept Bastion | eoe |
 | N: untap target artifact or creature. if it's an artifact creature, put a +N/+N counter on it. | 1 | Tezzeret, Cruel Captain | eoe |
 | artifacts you control are foods in addition to their other types and have "..." | 1 | Ragost, Deft Gastronaut | eoe |
 | as an additional cost to cast ~, choose a creature you control or a warped creature card you own in exile. ~ deals damage equal to the power of the chosen creat | 1 | Close Encounter | eoe |
 | as long as an artifact entered the battlefield under your control ~, ~ can attack as though it didn't have defender. | 1 | Mechan Shieldmate | eoe |
 | as long as you control an artifact, ~ gets +N/+N and has deathtouch. | 1 | Gravblade Heavy | eoe |
 | as long as you control an artifact, ~ gets +N/+N. | 1 | Cloudsculpt Technician | eoe |
+| at the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness N/N and gains fl | 1 | Synthesizer Labship | eoe |
 | at the beginning of your end step, if you control two or more tapped creatures, put a +N/+N counter on each creature you control other than ~. | 1 | Dawnstrike Vanguard | eoe |
 | choose odd or even. destroy each creature with mana value of the chosen quality. then gain control of all creatures until end of turn. untap them. they gain has | 1 | Mutinous Massacre | eoe |
 | counter target spell unless its controller pays {M}. if they do, you create a lander token. (it's an artifact with "...") | 1 | Divert Disaster | eoe |
@@ -319,9 +312,7 @@
 | exile all creatures and spacecraft. | 1 | Beyond the Quiet | eoe |
 | gain control of target artifact or creature until end of turn. untap that permanent. it gains haste until end of turn. if it's a spacecraft, put ten charge coun | 1 | Systems Override | eoe |
 | if one or more counters would be put on a creature, spacecraft, or planet you control, twice that many of each of those kinds of counters are put on it instead. | 1 | Loading Zone | eoe |
-| other tapped legendary creatures you control have indestructible. | 1 | The Seriema | eoe |
 | return target nonland permanent to its owner's hand. if it was attacking, create a N/N colorless drone artifact creature token with flying and "..." | 1 | Desculpting Blast | eoe |
-| station (tap another creature you control: put charge counters equal to its power on ~. station only as a sorcery. it's an artifact creature at N+.) N+ \| flyin | 1 | Galvanizing Sawship | eoe |
 | surveil N, then you draw a card and lose N life. (to surveil N, look at the top card of your library. you may put it into your graveyard.) void — if a nonland p | 1 | Hymn of the Faller | eoe |
 | target creature deals damage to itself equal to its power. if that creature has flying, it deals twice that much damage to itself instead. | 1 | Cut Propulsion | eoe |
 | target creature gets -N/-N until end of turn. then if that creature's power is N or less, destroy it. | 1 | Depressurize | eoe |
@@ -356,8 +347,12 @@
 | {M}, sacrifice ~: it deals N damage to any target. target player draws three cards and gains N life. ~ costs {M} less to activate, where N is the number of diff | 1 | Survey Mechan | eoe |
 | {M}, {M}, sacrifice ~: destroy target nonland permanent. ~ costs {M} less to activate if you attacked with a spacecraft ~. | 1 | Thaumaton Torpedo | eoe |
 | {M}, {M}, sacrifice ~: draw N cards, where N is the number of differently named lands you control. | 1 | All-Fates Scroll | eoe |
+| {M}: add N mana of any one color, where N is the number of charge counters on ~. | 1 | The Eternity Elevator | eoe |
 | {M}: return target creature card from your graveyard to the battlefield. it's a skeleton in addition to its other types and has no abilities. activate only as a | 1 | Xu-Ifit, Osteoharmonist | eoe |
 | {M}: until end of turn, target creature gains "..." that creature's controller may have ~ deal N damage to it. activate only as a sorcery. | 1 | Requiem Monolith | eoe |
+| {M}{M}, {M}, pay N life, sacrifice a creature: draw cards equal to the sacrificed creature's power. activate only as a sorcery. | 1 | Susur Secundi, Void Altar | eoe |
+| {M}{M}, {M}, sacrifice a land: create a N/N colorless robot artifact creature token, then creatures you control get +N/+N and gain haste until end of turn. | 1 | Kavaron, Memorial World | eoe |
+| {M}{M}, {M}: create a token that"..."s legendary. activate only as a sorcery. | 1 | Adagia, Windswept Bastion | eoe |
 | {M}{M}: ~ gets +N/+N until end of turn. | 1 | Debris Field Crusher | eoe |
 | ~ deals N damage to target attacking or blocking creature, where N is N plus the number of creatures and/or spacecraft you control. | 1 | Focus Fire | eoe |
 | ~ deals N damage to target creature. if excess damage was dealt ~, create a lander token. (it's an artifact with "...") | 1 | Orbital Plunge | eoe |
