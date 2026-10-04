@@ -121,6 +121,7 @@ def _chain_calls(module, entry: str) -> list[tuple[str, Callable]]:
     `segment_rungs(segment)` expands, at that call's position, into the
     segment's rungs in run order."""
     node, namespace = _ladder_def(module, entry)
+    pure = _pure_rung_names(node, namespace)
     calls = [c for c in ast.walk(node) if isinstance(c, ast.Call)]
     calls.sort(key=lambda c: (c.lineno, c.col_offset))
     out: list[tuple[str, Callable]] = []
@@ -134,13 +135,24 @@ def _chain_calls(module, entry: str) -> list[tuple[str, Callable]]:
     for c in calls:
         if isinstance(c.func, ast.Name):
             f = c.func.id
-            if ("parse" in f or f.startswith("_resolve")) and f in namespace:
+            if ("parse" in f or f.startswith("_resolve") or f in pure) and f in namespace:
                 add(f, namespace[f])
         elif _is_chain_run(c, namespace):
             chain = namespace[c.func.value.id]
             for rung in chain.segment_rungs(c.args[0].value):
                 add(rung.__name__, rung)
     return out
+
+
+def _pure_rung_names(node: ast.FunctionDef, namespace: dict) -> set[str]:
+    """Names of the ladder's pure rungs (`v = f(x)` then `if v is not None:
+    return v`, the shape `scripts/split/to_registry.py` converts), so a rung
+    is a chain member whatever it is called."""
+    from scripts.split.to_registry import Ladder, _analyze_ladder
+
+    defined = {k for k, v in namespace.items() if inspect.isfunction(v)}
+    report = _analyze_ladder(node, Ladder(node.name, "", ""), defined)
+    return {r.name for seg in report.segments for r in seg.all_rungs}
 
 
 def _is_chain_run(call: ast.Call, namespace: dict) -> bool:

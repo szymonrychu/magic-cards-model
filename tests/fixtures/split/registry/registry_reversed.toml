@@ -1,0 +1,23 @@
+module = "pkg"
+source = "mono.py"
+package = "out/registry"
+mode = "module"
+targets = ["beta", "alpha", "dispatch"]
+
+[[rules]]
+pattern = "parse_a_.*"
+target = "alpha"
+kinds = ["def"]
+
+[[rules]]
+pattern = "parse_b_.*"
+target = "beta"
+kinds = ["def"]
+
+[[rules]]
+pattern = "_ability_effect_or_notice|_spell_effect_or_notice|_parse_mixed_clauses|_parse_mixed_clause"
+target = "dispatch"
+kinds = ["def"]
+
+[names]
+_tag = "alpha"
