@@ -137,3 +137,46 @@ run = "uv run python scripts/card_coverage.py --baseline-only --workers 6"
 [tasks."metagame:fetch"]
 description = "Fetch the 30-day competitive metagame snapshot from spellslinger into docs/card_coverage/metagame.json"
 run = "uv run python scripts/fetch_metagame.py"
+
+# ----------------------------------------------------------------- split --
+# The engine module split (docs/engine-module-split-design.md): a manifest-driven
+# codemod lands each step as one script-made commit, and one gate command per
+# tier proves it. Every task is a thin wrapper over a script in scripts/split/;
+# extra arguments go after `--`. The dry run and the freeze run the same code.
+#   split:step F1|F2|F3|F4a..F4e   codemod/registry step + ruff + one commit
+#   split:gate cheap|full --baseline <json> --step <step>   the gates
+[tasks."split:surface"]
+description = "Freeze (--write) or check the old-path surface snapshots every split facade must keep: mise run split:surface -- [--write]"
+run = "uv run python scripts/split/surface.py"
+
+[tasks."split:manifest-check"]
+description = "Check one split manifest (placement, eager cycles, empty targets): mise run split:manifest-check -- scripts/split/manifest/<module>.toml"
+run = "uv run python scripts/split/manifest_lib.py check"
+
+[tasks."split:codemod"]
+description = "Split one module into a package from its manifest (--check: dry import, --out <dir>): mise run split:codemod -- scripts/split/manifest/<module>.toml"
+run = "uv run python scripts/split/codemod.py"
+
+[tasks."split:to-registry"]
+description = "F2: convert the pure dispatch rungs of the effects package into registry chains: mise run split:to-registry -- <package_dir> --manifest <effects.toml> [--overlap <json>]"
+run = "uv run python scripts/split/to_registry.py"
+
+[tasks."split:overlap"]
+description = "Count ambiguous rung pairs inside the dispatch segments over the fingerprint corpus: mise run split:overlap -- --out overlap.json"
+run = "uv run python scripts/split/overlap.py"
+
+[tasks."split:baselines"]
+description = "Measure (measure --out <json> [--full]) or compare (compare <before> <after> --step <step>) the split baselines: mise run split:baselines -- measure --out before.json"
+run = "uv run python scripts/split/baselines.py"
+
+[tasks."split:step"]
+description = "Run one split landing as one commit (codemod, ruff on the new package, 'Split-Step' trailer): mise run split:step -- [--dry-print] <F1|F2|F3|F4a|F4b|F4c|F4d|F4e>"
+run = "bash scripts/split/run_step.sh"
+
+[tasks."split:gate"]
+description = "Cheap or full gate for one split step, one PASS/FAIL line per check: mise run split:gate -- cheap|full --baseline <json> --step <step>"
+run = "bash scripts/split/gates.sh"
+
+[tasks."split:port-branch"]
+description = "Port an open branch across the split (merge pre-split main, re-run the codemod, merge post-split main): mise run split:port-branch -- <branch>"
+run = "bash scripts/split/port_branch.sh"
