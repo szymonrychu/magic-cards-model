@@ -1,0 +1,126 @@
+# Split manifest for machines/layers.py (P0-T07), drafted against engine main
+# 92c43981. model: every persisted class and the four discriminated unions
+# (Count, Selector, Modification, Condition) whole with their member classes
+# and constructors; parse: the oracle-text readers (builders, sentence
+# parsers); apply: layer application (ContinuousEffects, LayerContext,
+# compute_board); registry: LAYER_EFFECTS and the lookups that read it.
+module = "magic_cards_model.machines.layers"
+source = "src/magic_cards_model/machines/layers.py"
+package = "src/magic_cards_model/machines/layers"
+mode = "module"
+targets = ["model", "parse", "apply", "registry"]
+
+[names]
+# layer application: the layer system and its context
+ContinuousEffects = "apply"
+LayerContext = "apply"
+ComputedBoard = "apply"
+Journal = "apply"
+NotOnBoard = "apply"
+compute_board = "apply"
+# the discriminated-union aliases stay with their member classes
+Count = "model"
+Selector = "model"
+Modification = "model"
+Condition = "model"
+# shared by model and the readers: the layer order tables, the board alias and
+# a sentence the model's own defaults read, all evaluated at class creation
+_SUBLAYERS_BY_LAYER = "model"
+_SUBLAYERED = "model"
+Board = "model"
+DOESNT_UNTAP_TEXT = "model"
+# a model class body calls it at class creation
+_split_and_validate_keywords = "model"
+# a builder's signature names LayerContext, so it lives beside it
+EffectBuilder = "apply"
+# the card-name-keyed registry and the lookups that read it
+LAYER_EFFECTS = "registry"
+effects_for = "registry"
+static_effects = "registry"
+
+[[rules]]  # every other class: the persisted model and its discriminated unions
+pattern = '.*'
+target = "model"
+kinds = ["class"]
+
+[[rules]]  # lowercase module-level instances are prebuilt union members
+pattern = '[a-z][a-z0-9_]*'
+target = "model"
+kinds = ["const"]
+
+[[rules]]  # constructors of the union members (selectors, modifications, counts)
+pattern = '(?:_?only|only_this_incarnation|same_name_as|qualified_creatures|self_if_[a-z_]+|(?:all_|other_)?(?:creatures|permanents|lands|transformed_permanents|other_creatures|other_transformed_permanents)_controlled_by[a-z_]*|other_non_aura_enchantments|grant_ability(?:_instance)?|add_(?:type|subtype)|set_[a-z_]+|replace_text|define_[a-z_]+|modify_[a-z_]+|count_[a-z_]+)'
+target = "model"
+kinds = ["def"]
+
+[[rules]]  # oracle-text readers: builders, sentence parsers, shape tests
+pattern = '_?(?:[a-z0-9]+_)*(?:builder|parse|parsed|sentence|sentences|line|lines|text|texts|words|clause|clauses|split|strip|normalize|looks|fold|retention|dispatch|gate|selector|subject)(?:_[a-z0-9_]*)?'
+target = "parse"
+kinds = ["def"]
+
+[placed]
+_add_types_and_subtype = "parse"
+_allosaurus_rider = "registry"
+_animation_type_modifications = "parse"
+_another_creature_entered_this_turn_holds = "parse"
+_apply_group = "apply"
+_apply_one = "apply"
+_as_number = "parse"
+_attached_rider_parts = "parse"
+_boneyard_wurm = "registry"
+_cant_have_counters_effects = "parse"
+_card_type_word = "parse"
+_changed_fields = "apply"
+_changeling_effects = "apply"
+_colors_among_count_factory = "parse"
+_conditional_self_type_change = "parse"
+_controlled_count_factory = "parse"
+_controlled_quality = "parse"
+_count_cards_of_type = "parse"
+_counter_effects = "apply"
+_creature_group = "parse"
+_depends_on = "apply"
+_dress_down = "registry"
+_emblems_in = "apply"
+_every_card_state_in = "apply"
+_granted_ability_effects = "registry"
+_granted_pt_count = "parse"
+_granted_self_keywords = "parse"
+_hone_counter_effects = "apply"
+_humility = "registry"
+_impending_not_a_creature = "registry"
+_nighthawk_scavenger = "registry"
+_omnath_locus_of_mana = "registry"
+_opalescence = "registry"
+_opponents_of = "parse"
+_plural_card_type_list = "parse"
+_project = "apply"
+_pt_counter_delta = "apply"
+_quality_matches_characteristics = "model"
+_remains_on_the_battlefield = "registry"
+_self_pump_while_untapped_condition = "parse"
+_self_type_grant = "parse"
+_singular_subtype_word = "parse"
+_still_exists = "apply"
+_sublayers_of = "apply"
+_subtype_word = "parse"
+_suspected_abilities = "registry"
+_tarmogoyf = "registry"
+_tishanas_tidebinder = "registry"
+_twisted_image = "registry"
+_with_ability_list = "parse"
+_writes_differently = "apply"
+additional_land_plays = "parse"
+all_activated_abilities_grant = "parse"
+chosen_basic_land_type_of = "parse"
+chosen_color_of = "parse"
+chosen_creature_type_of = "parse"
+copiable_characteristics = "apply"
+len_of = "parse"
+off_battlefield_characteristics = "model"
+off_battlefield_characteristics_of = "model"
+printed_characteristics = "parse"
+quoted_ability_grants = "parse"
+spend_effect_effects = "model"
+spend_effect_grant = "parse"
+static_control_change_in_play = "apply"

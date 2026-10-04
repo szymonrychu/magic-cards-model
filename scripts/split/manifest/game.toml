@@ -1,0 +1,296 @@
+# Split manifest for models/game.py (P0-T07), drafted against engine main
+# 92c43981. Format: scripts/split/manifest_lib.py, class mode.
+#
+# Game's methods move to method-only mixins; `class Game(<mixins>, EngineModel)`
+# stays in the package __init__ with:
+# - stay: every field in source order (CURRENT_SCHEMA_VERSION is the ClassVar
+#   field among them), the pydantic-decorated `_check_schema_version`, the
+#   pydantic hook `model_post_init`, and `settle_pregame`, which calls the
+#   module-level `ask_mulligan` that tests/scenarios/test_mulligans.py:618
+#   monkeypatches on the game module. Fields and pydantic-decorated members
+#   also stay automatically, so a new field cannot leak into a mixin.
+# - records: every other module-level class (CastRecord, PreventionShield ...).
+#
+# Methods: [names] first, then the "first mechanic word" rules below (a method
+# goes to the mixin owning the first mechanic word in its name; a few
+# distinctive words - state_based, mulligan, on_stack, activation - are matched
+# anywhere first), then [placed] (bake: caller majority, then callee majority).
+#
+# Lines vs the design's estimates (more than 50% off): the design's mixin sizes
+# sum to 16.1k and leave the ~4.6k bake share out; every method lands in a mixin
+# here (21.7k), so the larger mixins absorb it:
+# - _stack_priority 3.3k vs 2.0k: targeting legality and the hexproof/shroud/
+#   protection refusals (~1.1k) belong with the stack and resolution.
+# - _turn_sba 2.1k vs 1.2k: the opening-hand/mulligan procedure and
+#   game end join the turn structure and state-based actions.
+# - _continuous 1.6k vs 1.0k: emblems, the Ring, counters on objects, control.
+# - _conditions 1.7k vs 0.9k: the per-turn ledgers and last-known information
+#   the conditions read.
+# - _triggers_decisions 2.3k vs 0.9k: every player question (ask, may,
+#   may_pay_*, choose_*) and event emission, not only triggers.
+module = "magic_cards_model.models.game"
+source = "src/magic_cards_model/models/game.py"
+package = "src/magic_cards_model/models/game"
+mode = "class"
+class = "Game"
+targets = [
+  "_zones", "_activation", "_stack_priority", "_costs_mana", "_casting", "_turn_sba",
+  "_continuous", "_conditions", "_damage_life", "_combat", "_triggers_decisions", "records",
+]
+records = "records"
+stay = [
+  # every field, in source order (CURRENT_SCHEMA_VERSION is the ClassVar among them)
+  "players",
+  "turn",
+  "shared_zones",
+  "priority",
+  "combat",
+  "lands_played",
+  "extra_land_plays",
+  "casting_rule_effects",
+  "loyalty_instant_speed_permissions",
+  "play_permissions",
+  "winner",
+  "drawn",
+  "conceded",
+  "losers",
+  "fizzled",
+  "pending_triggers",
+  "trigger_targets",
+  "creatures_cant_attack_until_turns_taken",
+  "phased_out",
+  "players_skipping_next_untap",
+  "targeting_notices",
+  "intervening_if_notices",
+  "cast_condition_notices",
+  "mode_notices",
+  "cost_modifier_notices",
+  "anaphoric_clause_notices",
+  "layer_remainder_notices",
+  "player_subject_split_notices",
+  "search_description_notices",
+  "imprint_notices",
+  "cast_from_hand_exile_notices",
+  "conditional_clause_notices",
+  "reflexive_clause_notices",
+  "unwired_choice_notices",
+  "unreadable_copy_exception_notices",
+  "unreadable_counter_amount_notices",
+  "suspend_redirect_notices",
+  "delayed_clause_notices",
+  "evasion_notices",
+  "keyword_line_notices",
+  "undefined_power_notices",
+  "unmodeled_trigger_effect_notices",
+  "control_replacement_notices",
+  "opening_hand_notices",
+  "opening_hand_actions_taken",
+  "pregame_seed",
+  "mulligan_declarations",
+  "opening_hand_seat",
+  "opening_hand_reveals",
+  "reveals",
+  "known_carries",
+  "announced_reveal_counts",
+  "_announced_targets",
+  "_opened_payments",
+  "_activation_source_stamps",
+  "_departure_epoch",
+  "_left_battlefield_characteristics",
+  "_paying_cost",
+  "_returning_together",
+  "_damage_recorders",
+  "_tapped_batch",
+  "_graveyard_batch",
+  "_returned_to_hand_batch",
+  "_entry_batch",
+  "_entering_together",
+  "_entry_origins",
+  "library_orders_kept",
+  "spells_cast_this_turn",
+  "cards_drawn_in_own_draw_step",
+  "cards_drawn_this_turn",
+  "permanents_sacrificed_this_turn",
+  "ability_resolutions_this_turn",
+  "creatures_died_this_turn",
+  "nontoken_creatures_died_under_control_this_turn",
+  "open_payment_pools",
+  "permanents_left_battlefield_this_turn",
+  "spells_cast_last_turn",
+  "day_night",
+  "previous_turn_active_player",
+  "cards_discarded_this_turn",
+  "life_gained_this_turn",
+  "life_gained_amount_this_turn",
+  "became_tapped_count_this_turn",
+  "attacked_this_turn",
+  "attacked_players_this_turn",
+  "turn_facts",
+  "turn_facts_last_turn",
+  "turn_counts",
+  "turn_counts_last_turn",
+  "combat_damage_dealt_this_turn_by",
+  "combat_damage_to_players_this_turn",
+  "counters_put_this_turn",
+  "next_spell_free_cast_grants",
+  "next_spell_keyword_grants",
+  "spell_cost_reduction_grants",
+  "tapped_since_last_batch",
+  "graveyard_arrivals_announced",
+  "damage_dealt_this_turn",
+  "turn_history",
+  "turn_history_last_turn",
+  "exile_residents_seen",
+  "dealt_combat_damage_since_their_turn",
+  "_pending_damage_excess",
+  "graveyard_arrivals_this_turn",
+  "activations",
+  "exhausted",
+  "harnessed",
+  "power_up_restricted_turns",
+  "loyalty_activations",
+  "forecast_activations",
+  "once_per_turn_triggers",
+  "once_per_turn_cast_permissions_used",
+  "resolving",
+  "_linked_count",
+  "_linked_counts_by_player",
+  "_counting_player",
+  "turn_ended_exiled_ids",
+  "state_trigger_latches",
+  "blocks_triggered",
+  "attacks_unblocked_triggered",
+  "continuous_effects",
+  "delayed_triggers",
+  "melded_pairs",
+  "cast_records",
+  "decisions",
+  "shuffle_seed",
+  "shuffles_performed",
+  "coin_flips_performed",
+  "monarch",
+  "schema_version",
+  "CURRENT_SCHEMA_VERSION",
+  "game_uid",
+  "objects_created",
+  "created_replacements",
+  "next_time_draw_replacements",
+  "die_to_exile_this_turn",
+  "prevention_shields",
+  "_mana_hints_planned",
+  "_mana_color_hints",
+  "_dealing_combat_damage",
+  "_combat_damage_this_step",
+  "automatic_turn_based_actions",
+  "cleanup_owed",
+  "ALTERNATIVE_COST_X_BOUND",
+  "REPEATED_ADDITIONAL_COST_BOUND",
+  "TRIGGERED_MANA_ABILITY_LOOP_BOUND",
+  "_LOOK_AT_TOP_CARD_ANY_TIME_RE",
+  "_PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE",
+  "_ABILITY_WORD_PREFIX_RE",
+  "_TRAILING_REMINDER_TEXT_RE",
+  "_SPELLS_YOU_CAST_HAVE_IMPROVISE_RE",
+  "_TYPE_MV_THRESHOLD_COST_LESS_SELF_POWER_RE",
+  "_CAST_SPELLS_AS_THOUGH_FLASH_RE",
+  "_POWER_UP_EXTRA_ACTIVATION_TEXT",
+  "_POWER_UP_GROUP_DISCOUNT_RE",
+  "_ABILITY_COSTS_LESS_IF_TARGETS_POWER_RE",
+  "UNTAP_HAS_NO_PRIORITY",
+  "CLEANUP_HAS_NO_PRIORITY",
+  # pydantic-decorated members and pydantic hooks
+  "_check_schema_version",
+  "model_post_init",
+  # calls the module-level ask_mulligan, which test_mulligans.py monkeypatches on game_module
+  "settle_pregame",
+]
+
+[names]
+# a class-body alias must sit in the same class body as the method it names
+announcement_profile = "_casting"
+_announcement_profile = "_casting"
+# bake would vote these to __init__ (their callers mostly stay), which [placed]
+# cannot hold; the seat lookups go with the other who-is-in-the-game members
+player = "_turn_sba"
+players_in_game = "_turn_sba"
+# module-level helper; bake places members only, and its readers are targeting
+_that_player_of = "_stack_priority"
+[[rules]]  # _turn_sba (any position, before first-word rules): state-based actions and the mulligan procedure wherever they appear
+pattern = '(?:[A-Za-z0-9_]*_)?(?:state_based|mulligan)(?:_[A-Za-z0-9_]*)?'
+target = "_turn_sba"
+kinds = ["def"]
+
+[[rules]]  # _stack_priority (any position, before first-word rules): objects on the stack
+pattern = '(?:[A-Za-z0-9_]*_)?(?:on_stack)(?:_[A-Za-z0-9_]*)?'
+target = "_stack_priority"
+kinds = ["def"]
+
+[[rules]]  # _activation (any position, before first-word rules): anything about activating
+pattern = '(?:[A-Za-z0-9_]*_)?(?:activation|activations|activating|activated)(?:_[A-Za-z0-9_]*)?'
+target = "_activation"
+kinds = ["def"]
+
+[[rules]]  # _activation: activated abilities, loyalty, special actions
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities)(?:_[A-Za-z0-9_]*)?'
+target = "_activation"
+kinds = ["def"]
+
+[[rules]]  # _turn_sba: turn structure, opening hand, state-based actions, game end
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn)(?:_[A-Za-z0-9_]*)?'
+target = "_turn_sba"
+kinds = ["def"]
+
+[[rules]]  # _combat: declare attackers/blockers, combat damage
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender)(?:_[A-Za-z0-9_]*)?'
+target = "_combat"
+kinds = ["def"]
+
+[[rules]]  # _stack_priority: the stack, priority, resolution, copies, targeting
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal)(?:_[A-Za-z0-9_]*)?'
+target = "_stack_priority"
+kinds = ["def"]
+
+[[rules]]  # _casting: casting spells, playing lands
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory)(?:_[A-Za-z0-9_]*)?'
+target = "_casting"
+kinds = ["def"]
+
+[[rules]]  # _costs_mana: costs and mana
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors)(?:_[A-Za-z0-9_]*)?'
+target = "_costs_mana"
+kinds = ["def"]
+
+[[rules]]  # _damage_life: damage, prevention, life
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields)(?:_[A-Za-z0-9_]*)?'
+target = "_damage_life"
+kinds = ["def"]
+
+[[rules]]  # _triggers_decisions: triggered abilities, player questions
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount)(?:_[A-Za-z0-9_]*)?'
+target = "_triggers_decisions"
+kinds = ["def"]
+
+[[rules]]  # _continuous: characteristics, statics, control, counters on objects
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types)(?:_[A-Za-z0-9_]*)?'
+target = "_continuous"
+kinds = ["def"]
+
+[[rules]]  # _conditions: conditions and the per-turn ledgers they read
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last)(?:_[A-Za-z0-9_]*)?'
+target = "_conditions"
+kinds = ["def"]
+
+[[rules]]  # _zones: zone changes, the library, objects and ids
+pattern = '_*(?:(?!(?:activate|activated|activating|activation|activations|activator|harness|harnessed|power_up|turn_face_up|turning_face_up|unlock|unlocking|door|monstrous|loyalty|ability|abilities|step|steps|end_in_draw|player_left|zero_loyalty|draw_step|untap_step|turn|turns|advance|pregame|mulligan|mulligans|opening|over|concede|winner|wins|lose_the_game|loses_the_game|losing|losers|legend|saga|sagas|roles|battles|state_based|state|day|night|phase|skip|extra_turn|attack|attacks|attacked|attacking|attacker|attackers|block|blocks|blocking|blocked|blockers|combat|strike|goad|defending|defender|priority|stack|put_on_stack|put_triggers_on_stack|put_pending_triggers_on_stack|put_spell_copy|split_second|fizzles|resolve|resolving|resolution|copy|copies|retarget|retargeted|new_targets|change_targets|quiescent|counter$|intervening|effect|target|targets|targeted|targetable|targeting|hexproof|shroud|protection|refusal|cast|casts|castable|spell|spells|announce|announced|announcement|alternative|play|plays|land|lands|allowance|permission|flash|companion|mode|modes|modal|bargain|casualty|conspire|behold|dash|rebound|optional|mandatory|cost|costs|pay|paying|mana|energy|affinity|colorless|produce|improvise|reduction|spend|spends|decrease|discount|colors|damage|life|prevention|prevent|deathtouch|lifelink|poison|monarch|shield|shields|trigger|triggers|triggered|delayed|reflexive|ask|may|choose|choice|decide|emit|event|events|batch|batched|amount|characteristic|characteristics|toughness|power_of|board|static|keyword|keywords|grant|grants|granted|computed|layer|control|controls|controlled|controller|emblem|emblems|ring|bearer|counters|proliferate|stamp|putter|types|condition|holds|quality|qualities|named|names|symbol|fact|count|counts|counting|record|recorded|revolt|descend|descended|prowl|spectacle|threshold|known|knowledge|seen|shown|carry|live|last|zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_|$))[A-Za-z0-9]+_)*(?:zone|battlefield|graveyard|library|exile|exiles|exiled|hand|draw|draws|discard|shuffle|scry|surveil|look|looks|reveal|revealed|search|put|enter|entering|entered|return|returns|returned|returning|move|sacrifice|destroy|destroyed|destruction|regenerate|meld|ante|imprint|imprinted|find|owner|token|tap|tapped|attach|attached|attachment|detach|left|leave|top|bottom|coin|cards|dredge|miracle|hideaway|ceased|id|allocate|allocator|seat|labels|prepared|unprepared|every)(?:_[A-Za-z0-9_]*)?'
+target = "_zones"
+kinds = ["def"]
+
+
+[placed]
+_drop_ended_while_source_rules = "_turn_sba"
+_source_card_of = "_stack_priority"
+_without_etb_suppressed = "_triggers_decisions"
+active_player = "_turn_sba"
+is_controlling_player = "_continuous"
+is_in_game = "_turn_sba"
+legal_actions = "_stack_priority"

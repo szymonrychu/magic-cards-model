@@ -1,0 +1,282 @@
+# Split manifest for machines/effects.py (P0-T07), drafted against engine main
+# 92c43981. Format: scripts/split/manifest_lib.py.
+#
+# targets IS the FAMILIES order F2 uses for intra-segment order; it is the
+# design's order unchanged.
+#
+# How a def is placed (first hit wins, see manifest_lib "Resolution precedence"):
+# 1. [names]: the four ladders -> dispatch; EFFECTS, TRIGGER_EFFECTS,
+#    ACTIVATED_EFFECTS and the three *_effect_for -> registries; hub helpers ->
+#    _common (below).
+# 2. classes -> _common (the 19 classes: notices and private records).
+# 3. `_merge_*` pair parsers -> merges; stream-named sub-ladders
+#    (`_r0a_t5_ability_effect` ...) and the generic clause readers (inline regex
+#    ladders parse_clause_effect/_parse_targeted_clause and the parse_*_effect
+#    entry points) -> dispatch.
+# 4. One "first mechanic word" rule per family: a def goes to the family owning
+#    the FIRST mechanic word in its name (`_parse_each_opponent_loses_life_...`
+#    -> life, `_parse_exile_then_return_...` -> removal). Each pattern skips
+#    leading words that are not in any family's word list, then requires its
+#    own word; the skip list is the union of every family's words, so the rules
+#    are mutually exclusive by position and a new parser lands in its family
+#    without a manifest edit.
+# 5. Weak words matched anywhere, only when no mechanic word is present:
+#    modal (may, optional, unless, if, condition(al), instead, delayed, pile(s)),
+#    draw_discard (hand), continuous (double(s)).
+# 6. [placed] (bake): the rest by caller majority, then callee majority.
+# Constants: manifest_lib's constant rule (only user's family; shared -> _common).
+#
+# Hubs: a def that no family word claims (bake or weak-word placed) and that is
+# referenced from 4+ other targets goes to _common; the list below was computed
+# to a fixed point at 92c43981. Family-named helpers used everywhere
+# (count_expression, _strip_non_effect_preamble ...) stay in their family as
+# the design lists them.
+#
+# Lines vs the design's first-pass estimates (more than 50% off):
+# - text 2.7k vs 6.6k: the first pass counted referent/antecedent parsers as
+#   text; here a parser goes to the family of its first mechanic word
+#   (`_parse_exile_until_antecedent` -> removal), text keeps the splitters,
+#   normalisers and referent readers.
+# - amounts 2.7k vs 1.5k: the for-each multipliers, devotion/converge and
+#   "equal to" readers lead with a count word.
+# - removal 6.7k vs ~4k: exile-then-play permissions, sacrifice-of-choice and
+#   counterspell readers lead with exile/sacrifice/counter.
+# - continuous 7.4k vs 4.6k: tap/untap, attach, goad, transform, grant and
+#   emblem readers have no family of their own in the design.
+# - modal 4.2k vs 0.9k: the conditional/instead/delayed/reflexive branch
+#   readers (weak words) join may/choose/mode.
+# - dispatch 6.6k vs ~1.5k: ~1.5k is the post-F2 size; F1 moves the four
+#   ladders verbatim (4.2k) plus the inline regex ladders and entry points.
+module = "magic_cards_model.machines.effects"
+source = "src/magic_cards_model/machines/effects.py"
+package = "src/magic_cards_model/machines/effects"
+mode = "module"
+targets = [
+  "_common", "text", "amounts", "removal", "returns", "library", "continuous", "counters",
+  "tokens", "damage", "draw_discard", "search", "life", "control_copy", "modal", "mana",
+  "merges", "registries", "dispatch",
+]
+
+[names]
+_ability_effect_or_notice = "dispatch"
+_spell_effect_or_notice = "dispatch"
+_parse_mixed_clauses = "dispatch"
+_parse_mixed_clause = "dispatch"
+EFFECTS = "registries"
+TRIGGER_EFFECTS = "registries"
+ACTIVATED_EFFECTS = "registries"
+effect_for = "registries"
+trigger_effect_for = "registries"
+activated_effect_for = "registries"
+# hubs: referenced from 4+ other targets, claimed by no family word
+_card_description_is_readable = "_common"
+_effect_condition_is_readable = "_common"
+_nonland_or_typed_card_matcher = "_common"
+_opponents = "_common"
+_parse_card_group_qualifier = "_common"
+_parse_delayed_timing_clause = "_common"
+_parse_mass_type_qualifier = "_common"
+_permanent_id_and_name = "_common"
+_players_in_apnap_order = "_common"
+_prepare_effect_clauses = "_common"
+_quality_matcher = "_common"
+_targets_understood = "_common"
+computed_permanents = "_common"
+pay_consequence_effect = "_common"
+[[rules]]  # every class (the notices and the private records) is shared
+pattern = '.*'
+target = "_common"
+kinds = ["class"]
+
+[[rules]]  # the multi-clause pair parsers
+pattern = '_merge_.*'
+target = "merges"
+kinds = ["def"]
+
+[[rules]]  # stream-named sub-ladders (_r0a_t5_ability_effect ...)
+pattern = '_[a-z]\d+[a-z]?_t\d+_(?:ability|spell)_effect'
+target = "dispatch"
+kinds = ["def"]
+
+[[rules]]  # the generic clause readers: inline regex ladders and their entry points
+pattern = '_?parse_(?:targeted|player|mixed|clause)_(?:effect|clauses?)(?:_for_spell)?'
+target = "dispatch"
+kinds = ["def"]
+
+[[rules]]  # text: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?)(?:_[A-Za-z0-9_]*)?'
+target = "text"
+kinds = ["def"]
+
+[[rules]]  # amounts: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max)(?:_[A-Za-z0-9_]*)?'
+target = "amounts"
+kinds = ["def"]
+
+[[rules]]  # removal: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target)(?:_[A-Za-z0-9_]*)?'
+target = "removal"
+kinds = ["def"]
+
+[[rules]]  # returns: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition)(?:_[A-Za-z0-9_]*)?'
+target = "returns"
+kinds = ["def"]
+
+[[rules]]  # library: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit)(?:_[A-Za-z0-9_]*)?'
+target = "library"
+kinds = ["def"]
+
+[[rules]]  # continuous: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?)(?:_[A-Za-z0-9_]*)?'
+target = "continuous"
+kinds = ["def"]
+
+[[rules]]  # counters: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty)(?:_[A-Za-z0-9_]*)?'
+target = "counters"
+kinds = ["def"]
+
+[[rules]]  # tokens: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate)(?:_[A-Za-z0-9_]*)?'
+target = "tokens"
+kinds = ["def"]
+
+[[rules]]  # damage: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend)(?:_[A-Za-z0-9_]*)?'
+target = "damage"
+kinds = ["def"]
+
+[[rules]]  # draw_discard: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:draws?|discards?|loot|wheel)(?:_[A-Za-z0-9_]*)?'
+target = "draw_discard"
+kinds = ["def"]
+
+[[rules]]  # search: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:search|searches|outside|tutor)(?:_[A-Za-z0-9_]*)?'
+target = "search"
+kinds = ["def"]
+
+[[rules]]  # life: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain)(?:_[A-Za-z0-9_]*)?'
+target = "life"
+kinds = ["def"]
+
+[[rules]]  # control_copy: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:copy|copies|exchange|control|controlled|change)(?:_[A-Za-z0-9_]*)?'
+target = "control_copy"
+kinds = ["def"]
+
+[[rules]]  # modal: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:modal|modes?|choose|chooses|choice|gift|vote|reflexive)(?:_[A-Za-z0-9_]*)?'
+target = "modal"
+kinds = ["def"]
+
+[[rules]]  # mana: first mechanic word
+pattern = '_*(?:(?!(?:strip|strips|split|splits|splittable|unsplittable|normali[sz]e[sd]?|referents?|referential|antecedents?|anaphoric|articles?|comma|singular|plural|sentences?|leading|period|words?|amounts?|count|counts|counted|x|equal|many|devotion|converge|greatest|half|multiplied|multiplier|total|variable|nth|number|numeral|bounded|max|exiles?|exiled|exiling|destroys?|destroyed|sacrifices?|sacrificed|regenerates?|regenerate|dies|imprint|counter_targets?|counter_that|counter_targeting|counter_unless|counters_target|returns?|returned|reanimates?|blink|flickers?|battlefield|bring|brings|rejoin|reposition|looks?|reveals?|revealed|mills?|milled|surveils?|scry|scrys|explores?|discover|manifests?|hideaway|shuffles?|library|top|bottom|learn|venture|cascade|impulse|recruit|pumps?|(?:gains?|loses?)(?!(?:_or_lose)?(?:_that_much)?_life)|becomes?|become|gets?|get|layers?|layer|continuous|cant|untaps?|taps?|tapped|attach|attaches|attached|goad|goads|grants?|transforms?|flip|switch|base|plus|protection|keywords?|stun|phase|phases|monarch|suspect|blocks?|attacks?|(?!counter_(?:target|that|unless))counters?|proliferate|adapt|monstrosity|renown|endure|bolster|support|loyalty|tokens?|creates?|created|amass|investigate|populate|offspring|fractal|incubate|damage|assigns?|deals?|dealt|prevent|prevents|fights?|lethal|bite|bites|firebending|earthbend|airbend|draws?|discards?|loot|wheel|search|searches|outside|tutor|(?:gains?|loses?)(?:_or_lose)?(?:_that_much)?_life|life|drain|copy|copies|exchange|control|controlled|change|modal|modes?|choose|chooses|choice|gift|vote|reflexive|mana|add|adds)(?:_|$))[A-Za-z0-9]+_)*(?:mana|add|adds)(?:_[A-Za-z0-9_]*)?'
+target = "mana"
+kinds = ["def"]
+
+[[rules]]  # continuous: weak word anywhere
+pattern = '(?:[A-Za-z0-9_]*_)?(?:doubles?)(?:_[A-Za-z0-9_]*)?'
+target = "continuous"
+kinds = ["def"]
+
+[[rules]]  # draw_discard: weak word anywhere
+pattern = '(?:[A-Za-z0-9_]*_)?(?:hand)(?:_[A-Za-z0-9_]*)?'
+target = "draw_discard"
+kinds = ["def"]
+
+[[rules]]  # modal: weak word anywhere
+pattern = '(?:[A-Za-z0-9_]*_)?(?:may|optional|unless|if|conditional|condition|instead|delayed|piles?)(?:_[A-Za-z0-9_]*)?'
+target = "modal"
+kinds = ["def"]
+
+[placed]
+_ability_only_rider = "modal"
+_and_has_a_basic_land_type = "search"
+_and_having = "search"
+_aura_host_for_entry = "library"
+_card_type_from_quality = "search"
+_cast_trigger_record = "continuous"
+_dead_self_found = "library"
+_dead_self_object_id = "library"
+_dispatch_by_printed_text = "registries"
+_entered_since = "continuous"
+_event_subject_characteristic_expr = "amounts"
+_for_each_opponent_target_phrase = "continuous"
+_group_shared_subject_parts = "text"
+_has_a_basic_land_type = "search"
+_having_matcher = "search"
+_historic = "_common"
+_is_lesson = "library"
+_is_notice_only = "tokens"
+_is_readable_head = "continuous"
+_knowledge_pool_free_cast_effect = "removal"
+_mass_creature_group_targets = "continuous"
+_mass_stat_comparison = "removal"
+_moved_quality_understood = "modal"
+_named_object = "continuous"
+_named_type_matcher = "text"
+_names_its_source = "counters"
+_offer_free_casts_from_among = "merges"
+_or_description_requirements = "removal"
+_parse_bare_shared_subject_verb_clause = "text"
+_parse_card_group_alternatives = "library"
+_parse_cast_from_graveyard_now_clause = "dispatch"
+_parse_cast_target_card_from_graveyard_clause = "dispatch"
+_parse_each_player_step = "merges"
+_parse_empower_jace_clause = "dispatch"
+_parse_mass_mv_comparison = "removal"
+_parse_mass_mv_rhs = "removal"
+_parse_next_spell_cannot_be_countered_clause = "dispatch"
+_parse_object_anaphor_clause_pair = "text"
+_parse_object_anaphor_clause_series = "text"
+_parse_punisher_action = "modal"
+_parse_put_cards_that_died_this_turn_clause = "dispatch"
+_parse_ring_tempts_you_clause = "dispatch"
+_parse_shared_subject_clauses = "dispatch"
+_parse_stone_brain_clause = "modal"
+_parse_surgical_extraction_clause = "modal"
+_parse_that_player_clause = "dispatch"
+_parse_turn_rules_ban_clause = "dispatch"
+_parse_wanderwine_farewell_clause = "dispatch"
+_parse_you_and_target_player_each_clause = "dispatch"
+_permission_duration = "_common"
+_play_permission_action = "merges"
+_player_instruction = "continuous"
+_possibility_storm_effect = "removal"
+_put_description = "merges"
+_quality_description = "search"
+_read_creature_rider = "returns"
+_record_bending = "damage"
+_relative_quality_matcher = "merges"
+_self_names_pattern = "text"
+_shared_subject_group_effect = "text"
+_single_names = "search"
+_source_characteristic = "draw_discard"
+_source_characteristic_expr = "amounts"
+_source_characteristic_magnitude = "continuous"
+_source_escaped = "library"
+_source_relative_whole_text_ability_effect = "dispatch"
+_source_relative_whole_text_spell_effect = "dispatch"
+_source_still_here = "counters"
+_subtypes_in = "dispatch"
+_turn_linked_face_up_then_put_permanents = "removal"
+_unreadable_cast_permission_clause = "dispatch"
+_unreadable_cost_reference_clause = "dispatch"
+_unreadable_end_the_turn_clause = "modal"
+_unreadable_event_player_target_clause = "dispatch"
+_with_unparsed_remainder = "continuous"
+activation_resolution_text = "registries"
+card_types_among_spells_cast_reader = "damage"
+delver_upkeep = "registries"
+empower_jace = "damage"
+emrakul_cast_trigger = "registries"
+end_the_turn_effect = "dispatch"
+has_land_type = "text"
+remove_ability_targets_from_combat = "dispatch"
+sequence = "continuous"
+spell_resolution_text = "registries"
+tishanas_tidebinder = "registries"
