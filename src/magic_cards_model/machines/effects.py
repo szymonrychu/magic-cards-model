@@ -43478,22 +43478,31 @@ def _parse_may_exile_hand_if_you_do_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
-#: "Choose target `<X>`. Its owner may put it on the top of their library. If
-#: they do, `<source>` deals N damage to them. If they didn't put the card on
-#: top of their library, they put it on the bottom." - Clash of Elements'
-#: whole text, read as one dedicated shape (CR 608.2d's "may"; the branch is
-#: an else, not a second independent instruction, since CR 401.2's own top-
-#: or-bottom is exhaustive for one card). No off-set second printing was
-#: found for this exact combined wording - recorded rather than asserted, in
-#: `docs/engine-coverage.md` - so this reads the general CR 608.2d branching
-#: shape ("may X. If they do, Y. If they didn't, Z.") rather than a literal
-#: match on Clash of Elements' own sentence.
+#: CR 608.2d's "may X. If they do, Y. If they didn't, Z." over a target's
+#: **owner** (CR 108.3, not the caster): "[Choose ]target `<X>`. Its owner may
+#: put it on (the) top|bottom of their library. If they do, `<consequence>`.
+#: If they didn't[ put it on (the) top|bottom of their library], they put it
+#: on the other end." The consequence is one of "`<source>` deals N damage to
+#: them", "they lose|gain N life", "they draw N cards"; the else is CR 401's
+#: exhaustive other end of one library, so it must name the opposite side.
+#: Clash of Elements (current oracle "on top of", pre-release "on the top
+#: of") is the proof printing; no other Modern/Pioneer/Standard printing
+#: carries the combined shape (recorded in `docs/engine-coverage.md`).
+_OWNER_MAY_PLACE_COUNT = r"(?P<n>\d+|an?|one|two|three|four|five)"
+_OWNER_MAY_PLACE_CONSEQUENCE = (
+    rf"(?:.+?\bdeals (?P<dmg>\d+) damage to them"
+    rf"|they (?P<life>lose|gain) (?P<life_n>\d+) life"
+    rf"|they draw {_OWNER_MAY_PLACE_COUNT} cards?)"
+)
 _CHOOSE_TARGET_OWNER_MAY_TOP_ELSE_BOTTOM_RE = re.compile(
-    r"^choose target (?P<desc>.+?)\.\s*its owner may put it on the top of their library\.\s*"
-    r"if they do,\s*.*?\bdeals (?P<n>\d+) damage to them\.\s*"
-    r"if they didn'?t put the card on top of their library, they put it on the bottom\.?$",
+    r"^(?:choose )?target (?P<desc>.+?)\.\s*its owner may put it on (?:the )?(?P<side>top|bottom)"
+    r" of their library\.\s*"
+    rf"if they do,\s*{_OWNER_MAY_PLACE_CONSEQUENCE}\.\s*"
+    r"if they didn'?t(?: put (?:it|the card) on (?:the )?(?:top|bottom) of their library)?,"
+    r" they put it on (?:the )?(?P<else_side>top|bottom)(?: of their library)?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+_OWNER_MAY_PLACE_NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
 
 
 def _parse_choose_target_owner_may_top_else_bottom_clause(
@@ -43505,9 +43514,19 @@ def _parse_choose_target_owner_may_top_else_bottom_clause(
     match = _CHOOSE_TARGET_OWNER_MAY_TOP_ELSE_BOTTOM_RE.fullmatch(text.strip())
     if match is None:
         return None
+    side = match.group("side").lower()
+    if match.group("else_side").lower() == side:
+        return None
     if not _targets_understood(f"target {match.group('desc').strip()}"):
         return None
-    amount = int(match.group("n"))
+    placed_top = side == "top"
+    if match.group("dmg") is not None:
+        consequence = ("damage", int(match.group("dmg")))
+    elif match.group("life") is not None:
+        consequence = (match.group("life").lower(), int(match.group("life_n")))
+    else:
+        count = match.group("n").lower()
+        consequence = ("draw", _OWNER_MAY_PLACE_NUMBERS.get(count) or int(count))
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         targets = [
@@ -43523,16 +43542,19 @@ def _parse_choose_target_owner_may_top_else_bottom_clause(
         decision = Decision(
             kind=DecisionKind.MAY,
             player=owner.username,
-            prompt=f"put {card.name} on top of their library",
+            prompt=f"put {card.name} on {side} of their library",
             source=source_name,
             affirmative_is_legal=True,
             source_id=source_id_of(stack_object),
         )
-        put_on_top = game.ask(decision)
+        did = game.ask(decision)
         if card.zone not in (Zone.BATTLEFIELD, Zone.HAND, Zone.GRAVEYARD, Zone.EXILE):
             return  # CR 608.2b: no longer a legal object to move.
-        game.put_cards_into_library([card], to_bottom=not put_on_top)
-        if put_on_top:
+        game.put_cards_into_library([card], to_bottom=(did != placed_top))
+        if not did:
+            return
+        kind, amount = consequence
+        if kind == "damage":
             game.deal_damage(
                 owner,
                 amount,
@@ -43540,6 +43562,12 @@ def _parse_choose_target_owner_may_top_else_bottom_clause(
                 if isinstance(stack_object, CardState)
                 else stack_object.source_or_last_known(game),
             )
+        elif kind == "lose":
+            game.lose_life(owner, amount)
+        elif kind == "gain":
+            game.gain_life(owner, amount)
+        else:
+            game.draw_cards(owner, amount)
 
     return effect
 
