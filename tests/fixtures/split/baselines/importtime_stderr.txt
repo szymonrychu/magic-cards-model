@@ -1,0 +1,7 @@
+import time: self [us] | cumulative | imported package
+import time:       100 |        100 |   _io
+import time:       200 |        900 |     magic_cards_model.models.game
+import time:       300 |       5000 |     magic_cards_model.machines.effects
+import time:       400 |       5400 |   magic_cards_model.machines
+import time:        50 |        950 |     magic_cards_model.machines.layers
+import time:        10 |      10000 | magic_cards_model
