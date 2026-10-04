@@ -512,3 +512,67 @@ def test_init_with_early_statements_passes_ruff_check_and_format(tmp_path):
         )
         assert res.returncode == 0, res.stdout + res.stderr
         assert "warning" not in res.stderr.lower(), res.stderr
+
+
+LONG_NAME = "helper_whose_name_is_long_enough_that_its_explicit_reexport_cannot_fit"
+
+
+def _long_reexport(tmp_path: Path) -> tuple[Path, Path]:
+    """A module whose surface re-exports an imported name too long for `X as X` to fit
+    on one line, even wrapped in parentheses."""
+    work = tmp_path / "w"
+    shutil.copytree(FIX, work, ignore=shutil.ignore_patterns("__pycache__"))
+    pk = work / "root" / "fxtop" / "pk"
+    (pk / "longnames.py").write_text(f"def {LONG_NAME}() -> int:\n    return 1\n")
+    (pk / "lng.py").write_text(
+        '"""Fixture: a long re-exported import."""\n\n'
+        f"from .longnames import (\n    {LONG_NAME},\n)\n\n\n"
+        f"def lng_one() -> int:\n    return {LONG_NAME}()\n\n\n"
+        "def lng_two() -> int:\n    return 2\n"
+    )
+    manifest = work / "lng.toml"
+    manifest.write_text(
+        'module = "fxtop.pk.lng"\nsource = "root/fxtop/pk/lng.py"\n'
+        'package = "root/fxtop/pk/lng"\nmode = "module"\ntargets = ["one", "two"]\n\n'
+        '[[rules]]\npattern = "lng_one"\ntarget = "one"\n\n'
+        '[[rules]]\npattern = "lng_two"\ntarget = "two"\n'
+    )
+    surface = work / "surface_lng.json"
+    surface.write_text(
+        '{"defined": ["lng_one", "lng_two"], "imported": ["' + LONG_NAME + '"], '
+        '"module": "fxtop.pk.lng"}\n'
+    )
+    return manifest, surface
+
+
+def test_unwrappable_long_reexport_passes_ruff_with_the_repo_config(tmp_path):
+    manifest, surface = _long_reexport(tmp_path)
+    out = tmp_path / "out"
+    assert codemod.main([str(manifest), "--surface", str(surface), "--out", str(out)]) == 0
+    init = (out / "__init__.py").read_text()
+    assert f"{LONG_NAME} as {LONG_NAME}" in init
+    cfg = ["--config", str(ROOT / "pyproject.toml")]
+    for cmd in (["check", "--no-cache"], ["format", "--check"]):
+        res = subprocess.run(
+            [sys.executable, "-m", "ruff", cmd[0], *cfg, *cmd[1:], str(out)],
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+        assert res.returncode == 0, res.stdout + res.stderr
+
+
+def test_long_reexport_line_carries_its_own_e501_marker_and_nothing_else_does(tmp_path):
+    manifest, surface = _long_reexport(tmp_path)
+    files = codemod.build(manifest, surface=surface).files
+    long_lines = [ln for text in files.values() for ln in text.split("\n") if len(ln) > 100]
+    assert long_lines
+    assert all(ln.endswith("# noqa: E501") for ln in long_lines), long_lines
+    short_marked = [
+        ln for text in files.values() for ln in text.split("\n")
+        if "E501" in ln and len(ln) <= 100
+    ]  # fmt: skip
+    assert short_marked == []
+    shadow = codemod.shadow_tree(codemod.build(manifest, surface=surface), tmp_path / "shadow")
+    probe = f"from fxtop.pk.lng import lng_one, {LONG_NAME}; print(lng_one(), {LONG_NAME}())"
+    assert run_py(shadow, probe) == run_py(manifest.parent / "root", probe)

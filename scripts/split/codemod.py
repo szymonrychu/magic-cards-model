@@ -71,6 +71,7 @@ except ImportError:  # run as a script: scripts/split is sys.path[0]
 REPO_ROOT = Path(__file__).resolve().parents[2]
 INIT = ml.STAY
 MARKER = "# __CODEMOD_REEXPORTS__"
+LINE_LENGTH = 100  # pyproject.toml [tool.ruff] line-length
 _FUNC = (ast.FunctionDef, ast.AsyncFunctionDef)
 
 
@@ -320,12 +321,27 @@ def _rel(target: str) -> str:
     return "." if target == INIT else f".{target}"
 
 
+def _mark_long_import_lines(text: str) -> str:
+    """`# noqa: E501` on the import lines ruff format cannot bring under the limit: a
+    parenthesized `name as name,` re-export longer than a line on its own."""
+    lines = text.split("\n")
+    for node in ast.walk(ast.parse(text)):
+        if not isinstance(node, (ast.Import, ast.ImportFrom)):
+            continue
+        for i in range(node.lineno - 1, node.end_lineno or node.lineno):
+            line = lines[i]
+            if len(line) <= LINE_LENGTH or "E501" in line:
+                continue
+            lines[i] = f"{line}, E501" if "# noqa: " in line else f"{line}  # noqa: E501"
+    return "\n".join(lines)
+
+
 def _import_line(module: str, names: list[str], noqa: bool) -> str:
     names = sorted(names)
     one = f"from {module} import {', '.join(names)}"
     if not noqa:
         return one
-    if len(one) + len("  # noqa: E402") <= 100:
+    if len(one) + len("  # noqa: E402") <= LINE_LENGTH:
         return one + "  # noqa: E402"
     body = "".join(f"    {n},\n" for n in names)
     return f"from {module} import (  # noqa: E402\n{body})"
@@ -786,7 +802,7 @@ class Plan:
         files = {"__init__.py": self._render_init(order)}
         for t in self._targets():
             files[f"{t}.py"] = self._render_module(t)
-        return files
+        return {name: _mark_long_import_lines(text) for name, text in files.items()}
 
     # ---------------------------------------------------------------- verify
 
