@@ -3541,8 +3541,7 @@ class Game(EngineModel):
     keyword_line_notices: list[KeywordLineNotice] = Field(default_factory=list)
     """One entry per computed ability line (CR 613.5) that is part CR 702
     keyword and part something `machines/combat.py`'s reading vocabulary cannot
-    name - Extinguisher Battleship's "5+ | Flying, trample", where CR 721.2a's
-    station symbol makes the whole line conditional, and Nevinyrral, Urborg
+    name - Nevinyrral, Urborg
     Tyrant's "Hexproof from artifacts, creatures, and enchantments", which
     CR 702.11f makes shorthand for several separate abilities. The line is
     dropped whole rather than half-read, because half-reading it would grant an
@@ -4505,7 +4504,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 110
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 111
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4714,6 +4713,9 @@ class Game(EngineModel):
     #: `of_its_controller` and `ControlledQuality` gained `color`.
     #: 110 (round 293-fra): `GameEvent` gained `loyalty_removed` (CR 606.4),
     #: read by "if you removed two or more loyalty counters to activate it".
+    #: 111 (fix-station): `BaseAbility` gained `station_threshold` (CR 721.2a)
+    #: and `ManaAbility` gained `for_each_expression`, both reachable from
+    #: `Game` through a pending `AbilityOnStack.ability`.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -22026,8 +22028,10 @@ class Game(EngineModel):
             has_convoke,
             has_delve,
             has_improvise,
+            has_station,
             improvise_offer,
             is_vehicle_permanent,
+            station_offer,
         )
 
         battlefield = self.battlefield
@@ -22063,6 +22067,15 @@ class Game(EngineModel):
             out["crew"] = ObjectCostOffer(
                 rule="CR 702.122a",
                 number=crew_number(card.card),
+                candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
+            )
+        # CR 702.184a: a station permanent's own ability, offered while it is
+        # on the battlefield - the candidates are the creatures its cost could
+        # tap, the same `why_not` `station_activation`'s tap cost applies.
+        if card.zone is Zone.BATTLEFIELD and has_station(card.card):
+            offer = station_offer(card)
+            out["station"] = ObjectCostOffer(
+                rule="CR 702.184a",
                 candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
             )
         return out
@@ -23069,6 +23082,7 @@ class Game(EngineModel):
                 if ability.face == up_face_name
                 and ability.kind is AbilityKind.STATIC
                 and (ability.class_level is None or ability.class_level <= permanent.class_level)
+                and permanent.station_threshold_met(ability.station_threshold)
             }
             for line in (permanent.class_ability_text or "").split("\n"):
                 text = line.strip()
@@ -26504,11 +26518,12 @@ class Game(EngineModel):
                 # already refused to build this ability at all if its own
                 # "where X is ..." text were not one `resolve_mana_count_
                 # expression` can answer, so this is never `None` here.
+                count_expression = (
+                    ability.mana.any_color_count_expression or ability.mana.for_each_expression
+                )
                 expression_count = (
-                    resolve_mana_count_expression(
-                        self, controller, permanent, ability.mana.any_color_count_expression
-                    )
-                    if ability.mana.any_color_count_expression is not None
+                    resolve_mana_count_expression(self, controller, permanent, count_expression)
+                    if count_expression is not None
                     else None
                 )
                 # The two board-derived narrowings `ManaAbility.effective` asks

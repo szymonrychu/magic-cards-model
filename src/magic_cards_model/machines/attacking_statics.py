@@ -155,14 +155,19 @@ def parse_attacking_group_keyword_grant(sentence: str) -> EffectBuilder | None:
 #: itself is usually the thing being kept safe from the group's own effect
 #: (Adept Watershaper wants indestructible on its *teammates*, not on
 #: itself, which never taps to earn it).
+#: The Seriema's "Other tapped legendary creatures you control have
+#: indestructible." narrows the same group by the legendary supertype
+#: (CR 205.4a).
 _TAPPED_CREATURES_KEYWORD_GRANT_RE = re.compile(
-    r"^other tapped creatures you control (?:have|has) "
+    r"^other tapped (?P<legendary>legendary )?creatures you control (?:have|has) "
     r"(?P<keywords>[a-z][a-z ,{}0-9]*?)\.?$",
     re.IGNORECASE,
 )
 
 
-def _tapped_group_keyword_grant_builder(keywords: list[str], *, line: str) -> EffectBuilder:
+def _tapped_group_keyword_grant_builder(
+    keywords: list[str], *, line: str, legendary: bool = False
+) -> EffectBuilder:
     """One `ContinuousEffect` per granted keyword, selecting the controller's
     own currently-tapped creatures (the source excluded) fresh at every
     computation - see this module's own docstring for why the selector, not
@@ -179,10 +184,12 @@ def _tapped_group_keyword_grant_builder(keywords: list[str], *, line: str) -> Ef
             tapped_ids=tuple(sorted(context.tapped_ids, key=str)),
             excludes_self=True,
             source_id=source.id,
+            legendary=legendary,
         )
+        group = "legendary creatures" if legendary else "creatures"
         return [
             ContinuousEffect(
-                description=f"{source.name}: other tapped creatures you control have {keyword}",
+                description=f"{source.name}: other tapped {group} you control have {keyword}",
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
@@ -205,4 +212,6 @@ def parse_tapped_group_keyword_grant(sentence: str) -> EffectBuilder | None:
     keywords = _split_and_validate_keywords(match.group("keywords"))
     if keywords is None:
         return None
-    return _tapped_group_keyword_grant_builder(keywords, line=sentence)
+    return _tapped_group_keyword_grant_builder(
+        keywords, line=sentence, legendary=match.group("legendary") is not None
+    )

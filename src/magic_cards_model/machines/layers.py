@@ -1752,11 +1752,16 @@ class TappedCreaturesControlledBy(SelectorBase):
     tapped_ids: tuple[UUID, ...] = ()
     excludes_self: bool = False
     source_id: UUID | None = None
+    legendary: bool = False
+    """The Seriema's "Other tapped legendary creatures you control" - only a
+    creature with the legendary supertype (CR 205.4a)."""
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         if not (chars.is_creature and chars.controller == self.username):
             return False
         if chars.card_id not in self.tapped_ids:
+            return False
+        if self.legendary and Supertype.LEGENDARY not in chars.supertypes:
             return False
         return not (self.excludes_self and chars.card_id == self.source_id)
 
@@ -17007,6 +17012,7 @@ def effects_for(
         [
             *_impending_not_a_creature(source, timestamp),
             *_suspected_abilities(source, timestamp),
+            *_station_symbol_effects(source, timestamp),
         ]
         if static_only
         else []
@@ -17078,6 +17084,78 @@ def _impending_not_a_creature(source: CardState, timestamp: int) -> list[Continu
             modification=RemoveType(card_type=Type.CREATURE),
         )
     ]
+
+
+def _station_symbol_effects(source: CardState, timestamp: int) -> list[ContinuousEffect]:
+    """CR 721.2's station symbols, as the static abilities they are.
+
+    CR 721.2a: "'{N+}[abilities]' means 'As long as this permanent has N or
+    more charge counters on it, it has [abilities].'" - a layer 6 addition
+    (CR 613.1f) of every ability printed in the striation, symbol taken off.
+    CR 721.2b: "'{N+}[abilities][P/T]' means '... it has [abilities] and is a
+    creature with base power and toughness [P/T] in addition to its other
+    types.'" - a layer 4 type addition (CR 613.1d) and a layer 7b base P/T
+    (CR 613.4b) for the striation holding the printed box
+    (`abilities.station_creature_threshold`).
+
+    Rebuilt with every static effect each time the board is computed
+    (CR 613.5), so the moment the charge counters reach N the striation is on
+    and the moment they fall below it it is off; stamped with the permanent's
+    own timestamp (CR 613.7a). Read off the printing (the up face), like
+    `_impending_not_a_creature`.
+    """
+    from .abilities import station_creature_threshold, station_striations
+
+    if source.zone is not Zone.BATTLEFIELD:
+        return []
+    text = source.oracle_text or ""
+    striations = station_striations(text.splitlines())
+    if not any(threshold is not None for _, threshold in striations):
+        return []
+    charge = source.counter_count(Counter.CHARGE)
+    effects: list[ContinuousEffect] = []
+    creature_at = station_creature_threshold(source.card, text)
+    if creature_at is not None and charge >= creature_at:
+        power = _as_number(source.card.power)
+        toughness = _as_number(source.card.toughness)
+        effects.append(
+            ContinuousEffect(
+                description=f"{source.name}: a creature at {creature_at}+ (CR 721.2b)",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                selector=_only(source.id),
+                modification=AddType(card_type=Type.CREATURE),
+            )
+        )
+        if power is not None and toughness is not None:
+            effects.append(
+                ContinuousEffect(
+                    description=(
+                        f"{source.name}: base {power}/{toughness} at {creature_at}+ (CR 721.2b)"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    selector=_only(source.id),
+                    modification=SetPowerToughness(power=power, toughness=toughness),
+                )
+            )
+    for line, threshold in striations:
+        if threshold is None or charge < threshold or not line:
+            continue
+        effects.append(
+            ContinuousEffect(
+                description=f"{source.name}: {line!r} at {threshold}+ (CR 721.2a)",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                selector=_only(source.id),
+                modification=grant_ability(line),
+            )
+        )
+    return effects
 
 
 #: CR 701.60c: "A suspected permanent has menace and 'This creature can't

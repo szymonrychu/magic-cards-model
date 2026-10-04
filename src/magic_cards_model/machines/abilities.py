@@ -181,6 +181,11 @@ _CHOSEN_COLOR_FOR_EACH_RE = re.compile(
 #: ability having only one sentence, and this one is simply where the colour
 #: `Game.activate_ability` already takes for any `any_color` ability is
 #: chosen - so it is stripped before `_ADD` reads the rest.
+#: "{G} for each creature you control" - a single mana symbol multiplied by a
+#: board count (see `ManaAbility.for_each_expression`).
+_SYMBOL_FOR_EACH_RE = re.compile(
+    r"^\{(?P<symbol>[WUBRGC])\} for each (?P<expression>.+)$", re.IGNORECASE
+)
 _CHOOSE_A_COLOR_PREAMBLE = re.compile(r"^Choose a color\.\s*", re.IGNORECASE)
 _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 
@@ -633,6 +638,13 @@ class ManaAbility(EngineModel):
     #: same argument devotion already takes it through. `None` for every
     #: ability whose count is a printed number or CR 700.5's devotion.
     any_color_count_expression: str | None = None
+    #: "Add {G} for each creature you control." (Evendo, Waking Haven's 12+
+    #: ability; Uthros, Titanic Godcore's "{U} for each artifact you
+    #: control") - one printed symbol, added once per thing the count
+    #: expression counts. The count is read off the board when the ability
+    #: resolves (CR 605.3b), through `resolve_mana_count_expression` exactly as
+    #: `any_color_count_expression` is, and passed to `resolve` as `count`.
+    for_each_expression: str | None = None
     #: The raw trailing sentence, when the ability's text has one beyond
     #: "Add ..." and its own recognised conditional/spend-restriction
     #: clauses, but this parser could not classify it as a known rider shape.
@@ -910,6 +922,9 @@ class ManaAbility(EngineModel):
             only = options[0]
             if single is not None and single not in only:
                 raise ValueError(f"this ability adds {[c.value for c in only]}, not {single.value}")
+            if self.for_each_expression is not None and count is not None:
+                # Zero is a real count and adds nothing (CR 605.2).
+                return list(only) * max(count, 0)
             return list(only)
 
         if single is None:
@@ -966,6 +981,9 @@ def _mana_abilities_from(abilities: "Sequence[Ability]", face: str | None) -> li
         and ability.mana is not None
         and any(piece.kind is CostKind.TAP for piece in ability.costs)
         and (face is None or ability.face == face)
+        # CR 721.2a: a station striation's mana ability is granted at N charge
+        # counters and reaches a payer through `added_ability_lines`.
+        and ability.station_threshold is None
     ]
 
 
@@ -1071,6 +1089,16 @@ def _parse_effect(effect: str) -> ManaAbility | None:
             any_color=True,
             any_color_count=count,
             any_color_count_expression=expression,
+        )
+
+    symbol_for_each = _SYMBOL_FOR_EACH_RE.fullmatch(effect.strip().rstrip("."))
+    if symbol_for_each:
+        expression = symbol_for_each.group("expression").strip()
+        if not _mana_count_expression_readable(expression):
+            return None
+        return ManaAbility(
+            options=[[Color(symbol_for_each.group("symbol").upper())]],
+            for_each_expression=expression,
         )
 
     # A choice reads `{G}, {R}, or {W}`; a multiple reads `{C}{C}`.
@@ -1652,6 +1680,13 @@ class BaseAbility(EngineModel):
     #: ability just as often as a triggered one - Artist's Talent's own level
     #: 2 and 3 are both static.
     class_level: int | None = None
+    #: CR 721.2's station symbol: the striation this ability was printed in
+    #: ("{N+}[abilities]") is a static ability that grants it only "as long as
+    #: this permanent has N or more charge counters on it" (CR 721.2a). `None`
+    #: for an ability printed outside every striation, which CR 721.4 treats
+    #: normally. The line itself (`raw`/`text`) is the ability with the
+    #: "N+ | " symbol taken off, which is what the permanent has at N.
+    station_threshold: int | None = None
 
 
 class ActivationCostReduction(EngineModel):
@@ -2064,6 +2099,63 @@ _CLASS_LEVEL_BAR_EFFECT_RE = re.compile(r"^Level (?P<n>\d+)$")
 _ability_cache: dict[UUID, list[Ability]] = {}
 
 
+#: CR 721.2: "The station symbol includes a single number followed by a plus
+#: sign, indicated here as '{N+}.'" Scryfall's oracle text prints it as
+#: "N+ | " ahead of the first ability in the striation ("5+ | Flying,
+#: trample", Extinguisher Battleship).
+STATION_SYMBOL_RE = re.compile(r"^(?P<n>\d+)\+ \| (?P<rest>.+)$")
+
+#: The reminder text a Spacecraft's station keyword carries naming the
+#: striation its power/toughness box is printed in: "It's an artifact creature
+#: at 5+." (CR 721.2b).
+_STATION_CREATURE_AT_RE = re.compile(r"creature at (?P<n>\d+)\+", re.IGNORECASE)
+
+
+def station_striations(lines: Sequence[str]) -> list[tuple[str, int | None]]:
+    """Each line of one face, with the station symbol it is printed under.
+
+    CR 721.2: "Any abilities printed within the same text box striation as a
+    station symbol are part of its static ability." A striation begins at the
+    line carrying the symbol and runs to the next symbol or the end of the
+    text box - Scryfall prints a second ability of the same striation on its
+    own line with no symbol (The Seriema's "7+ | Flying" then "Other tapped
+    legendary creatures you control have indestructible."). Lines ahead of
+    the first symbol are `None` (CR 721.4: treated normally). The symbol is
+    taken off the line it is printed on.
+    """
+    out: list[tuple[str, int | None]] = []
+    current: int | None = None
+    for line in lines:
+        match = STATION_SYMBOL_RE.match(line.strip())
+        if match is not None:
+            current = int(match.group("n"))
+            out.append((match.group("rest").strip(), current))
+        else:
+            out.append((line.strip(), current))
+    return out
+
+
+def station_creature_threshold(card: Card, oracle_text: str | None = None) -> int | None:
+    """The N of the striation whose power/toughness box makes a station card
+    a creature (CR 721.2b), or None for one with no box (a Planet).
+
+    The station keyword's own reminder text names it ("It's an artifact
+    creature at 8+."); a printing with a P/T but no such reminder has its box
+    in its last striation, the only place a station card prints one.
+    """
+    text = oracle_text if oracle_text is not None else (card.oracle_text or "")
+    thresholds = [n for _, n in station_striations(text.splitlines()) if n is not None]
+    if not thresholds or card.power is None or card.toughness is None:
+        return None
+    for line in text.splitlines():
+        if not line.lower().startswith("station"):
+            continue
+        match = _STATION_CREATURE_AT_RE.search(line)
+        if match is not None:
+            return int(match.group("n"))
+    return max(thresholds)
+
+
 def parse_abilities(card: Card) -> list[Ability]:
     """Every ability printed on a card, front face and backs, in printed order.
 
@@ -2087,8 +2179,19 @@ def parse_abilities(card: Card) -> list[Ability]:
     abilities: list[Ability] = []
     for face_name, text in _faces(card):
         face_abilities: list[Ability] = []
-        for line in _merge_modal_bullet_lines(text.split("\n")):
-            face_abilities.extend(_parse_line(line, card.keywords, face_name))
+        for line, threshold in station_striations(_merge_modal_bullet_lines(text.split("\n"))):
+            if threshold is None:
+                face_abilities.extend(_parse_line(line, card.keywords, face_name))
+                continue
+            # CR 721.2a: the striation's abilities, read as the abilities the
+            # permanent has at N. Scryfall's `keywords` leaves a keyword that
+            # is only ever granted by a striation off the printing's list
+            # (Extinguisher Battleship's names only "Station"), so CR 702's
+            # own keyword names are the vocabulary here.
+            known = [*card.keywords, *(name.capitalize() for name in KEYWORD_ABILITY_NAMES)]
+            for ability in _parse_line(line, known, face_name):
+                ability.station_threshold = threshold
+                face_abilities.append(ability)
 
         is_class_face = any(
             isinstance(ability, ActivatedAbility)
@@ -3033,6 +3136,11 @@ def _merge_disjunctive_sacrifice_cost(parts: list[str]) -> list[str]:
 
 
 def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
+    if STATION_SYMBOL_RE.match(raw.strip()):
+        # CR 721.2a: a line still carrying its station symbol is the symbol's
+        # static ability, not the abilities it grants - read only through
+        # `station_striations`, never as if its abilities were unconditional.
+        return []
     text, reminder = _strip_reminder(raw)
     if not text:
         # The line was nothing but reminder text - a Saga's lore-counter note,
@@ -3188,13 +3296,12 @@ def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Abilit
         return []
     matched, unread = split
     if unread:
-        # One token nobody knows discards the whole line, and deliberately so.
-        # Extinguisher Battleship's "5+ | Flying, trample" is CR 721.2a's
-        # station symbol - "As long as this permanent has N or more charge
-        # counters on it, it has [abilities]" - so keeping the `trample` this
-        # reader can match would grant unconditionally what the card grants
-        # only at five counters. `unread_keyword_tokens` below is how a caller
-        # sees that the line went unread instead of it being silent.
+        # One token nobody knows discards the whole line, and deliberately so:
+        # keeping the keywords this reader can match would grant abilities the
+        # line does not grant as written. (A CR 721.2a station symbol line
+        # never gets here - `_parse_line` hands it to `station_striations`.)
+        # `unread_keyword_tokens` below is how a caller sees that the line
+        # went unread instead of it being silent.
         return []
     return [KeywordAbility(**common, **match) for match in matched]
 
@@ -3234,6 +3341,10 @@ def unread_keyword_tokens(line: str, known: list[str]) -> tuple[str, ...]:
     fewer abilities than the text in front of it says - see
     `machines/combat.py::KeywordLineNotice`.
     """
+    if STATION_SYMBOL_RE.match(line.strip()):
+        # CR 721.2a: a station symbol's line is read by the station statics
+        # (`machines/layers._station_symbol_effects`), not as a keyword line.
+        return ()
     text, reminder = _strip_reminder(line)
     if not text:
         return ()
