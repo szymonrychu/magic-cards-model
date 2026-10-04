@@ -3,6 +3,8 @@
   "id": "b8466593-40fe-4557-89b2-760c1c92087b",
   "oracle_id": "45473bdb-b96f-4213-a46d-b2dbdf6b5e56",
   "multiverse_ids": [],
+  "resource_id": "0D73AADDE63325723F8E5F7AC469B629DE348787B852D49047BA384E9B39FECC",
+  "mtgo_id": 155582,
   "tcgplayer_id": 716652,
   "cardmarket_id": 908436,
   "name": "Proft, Consulting Detective",
@@ -41,29 +43,29 @@
   ],
   "keywords": [],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -110,19 +112,19 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 30924,
+  "edhrec_rank": 26035,
   "preview": {
     "source": "MagicMujerES",
     "source_uri": "https://www.instagram.com/p/DdGpq40IdSj/",
     "previewed_at": "2026-09-10"
   },
   "prices": {
-    "usd": "1.99",
-    "usd_foil": null,
+    "usd": "0.27",
+    "usd_foil": "0.49",
     "usd_etched": null,
-    "eur": "0.79",
-    "eur_foil": null,
-    "tix": null
+    "eur": "0.04",
+    "eur_foil": "0.24",
+    "tix": "0.01"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DProft%252C%2BConsulting%2BDetective",
@@ -132,6 +134,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716652%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908436&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Proft%2C+Consulting+Detective&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155582?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

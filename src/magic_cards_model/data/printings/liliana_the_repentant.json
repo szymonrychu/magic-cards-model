@@ -3,6 +3,8 @@
   "id": "1eb25a6c-d6b4-465d-990e-f1ab86b26b69",
   "oracle_id": "5eb4403f-f199-4f75-a7c6-e76783f9b07d",
   "multiverse_ids": [],
+  "resource_id": "6BB858A10E7C7E0089639AE2D33D663FFE358B0C94535464381E28631ADBA6AC",
+  "mtgo_id": 155608,
   "tcgplayer_id": 706985,
   "cardmarket_id": 905781,
   "name": "Liliana the Repentant",
@@ -44,29 +46,29 @@
     "Mill"
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -115,14 +117,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 22440,
+  "edhrec_rank": 17413,
   "prices": {
-    "usd": "14.77",
-    "usd_foil": "29.99",
+    "usd": "1.04",
+    "usd_foil": "3.84",
     "usd_etched": null,
-    "eur": "3.14",
-    "eur_foil": "4.99",
-    "tix": null
+    "eur": "0.43",
+    "eur_foil": "0.94",
+    "tix": "0.16"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLiliana%2Bthe%2BRepentant",
@@ -132,6 +134,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F706985%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=905781&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Liliana+the+Repentant&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155608?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

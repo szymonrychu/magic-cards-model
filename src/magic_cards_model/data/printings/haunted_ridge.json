@@ -3,6 +3,8 @@
   "id": "a4e4966b-8963-4fac-a8bf-e778e063c7dd",
   "oracle_id": "e2a37967-4212-4553-9f77-bcb613405807",
   "multiverse_ids": [],
+  "resource_id": "CCB085188D2D03BD70EB859AEE211B9887FEF0F400DC8527E5FEA4D08ED51C09",
+  "mtgo_id": 156066,
   "tcgplayer_id": 715940,
   "cardmarket_id": 907322,
   "name": "Haunted Ridge",
@@ -42,8 +44,8 @@
     "R"
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
+    "standard": "legal",
+    "future": "legal",
     "historic": "legal",
     "timeless": "legal",
     "gladiator": "legal",
@@ -55,10 +57,10 @@
     "penny": "legal",
     "commander": "legal",
     "oathbreaker": "legal",
-    "standardbrawl": "not_legal",
+    "standardbrawl": "legal",
     "brawl": "legal",
     "competitivebrawl": "legal",
-    "alchemy": "not_legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
     "duel": "legal",
     "oldschool": "not_legal",
@@ -109,15 +111,15 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 279,
-  "penny_rank": 689,
+  "edhrec_rank": 278,
+  "penny_rank": 726,
   "prices": {
-    "usd": null,
-    "usd_foil": null,
+    "usd": "1.56",
+    "usd_foil": "2.04",
     "usd_etched": null,
-    "eur": "4.23",
-    "eur_foil": null,
-    "tix": null
+    "eur": "2.01",
+    "eur_foil": "2.07",
+    "tix": "0.01"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHaunted%2BRidge",
@@ -127,6 +129,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715940%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907322&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Haunted+Ridge&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/156066?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

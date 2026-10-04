@@ -10528,7 +10528,7 @@ class Game(EngineModel):
             # rather than applied to every triggered event, so a cast
             # spell's own X never bleeds into an unrelated attack/dies
             # trigger's bare "X" (CR 107.3f territory, not this rule).
-            effect_text = self._etb_x_effect_text(ability)
+            effect_text = self._etb_x_effect_text(ability, uncast_x=0)
             # CR 701.37c: "If a permanent's ability instructs a player to
             # 'monstrosity X,' other abilities of that permanent may also
             # refer to X. The value of X in those abilities is equal to the
@@ -11156,8 +11156,8 @@ class Game(EngineModel):
         overwrite the real, ability-defined X with zero.
 
         `uncast_x` is the X written in when no spell became the permanent (it
-        was put onto the battlefield): `None` leaves the text alone, the
-        resolution side's long-standing behaviour.
+        was put onto the battlefield): 0 (CR 107.3b - nothing chose an X for
+        it), or `None` to leave the text alone.
         """
         if not isinstance(ability.ability, TriggeredAbility):
             return None

@@ -3,6 +3,8 @@
   "id": "240f58ab-944c-4f4c-9df9-5f40b132bf3e",
   "oracle_id": "c3dfa1e2-6785-49a0-a194-fb842a8eb63c",
   "multiverse_ids": [],
+  "resource_id": "9ED7D2D4A201140CDDC0E47152E6EB0324202475CF593186016539926E39349D",
+  "mtgo_id": 155570,
   "tcgplayer_id": 692993,
   "cardmarket_id": 905778,
   "name": "Chandra, Chill of Compliance",
@@ -44,30 +46,48 @@
   "produced_mana": [
     "U"
   ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "549cd466-d726-4ac9-a9e8-c1cd3ecda998",
+      "component": "combo_piece",
+      "name": "Chandra, Chill of Compliance",
+      "type_line": "Legendary Planeswalker \u2014 Chandra",
+      "uri": "https://api.scryfall.com/cards/549cd466-d726-4ac9-a9e8-c1cd3ecda998"
+    },
+    {
+      "object": "related_card",
+      "id": "ce0ece65-ba13-4243-b343-b4da443fceff",
+      "component": "combo_piece",
+      "name": "Chandra, Chill of Compliance Emblem",
+      "type_line": "Emblem",
+      "uri": "https://api.scryfall.com/cards/ce0ece65-ba13-4243-b343-b4da443fceff"
+    }
+  ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -112,14 +132,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 19308,
+  "edhrec_rank": 13667,
   "prices": {
-    "usd": "24.77",
-    "usd_foil": null,
+    "usd": "7.63",
+    "usd_foil": "9.32",
     "usd_etched": null,
-    "eur": "23.18",
-    "eur_foil": null,
-    "tix": null
+    "eur": "3.87",
+    "eur_foil": "8.26",
+    "tix": "3.51"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChandra%252C%2BChill%2Bof%2BCompliance",
@@ -129,6 +149,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F692993%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=905778&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Chandra%2C+Chill+of+Compliance&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155570?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

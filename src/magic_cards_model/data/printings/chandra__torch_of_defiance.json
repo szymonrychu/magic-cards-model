@@ -3,6 +3,8 @@
   "id": "40cb22c8-cb03-45c9-bb0e-b8cabdcc43cd",
   "oracle_id": "12cc800c-c7be-4811-8207-fd01a99cc892",
   "multiverse_ids": [],
+  "resource_id": "B7AEC87F0A44C4F520448285CB2260C3115A6011FA39EC54251DCEBC72333ABB",
+  "mtgo_id": 155634,
   "tcgplayer_id": 692996,
   "cardmarket_id": 905786,
   "name": "Chandra, Torch of Defiance",
@@ -61,8 +63,8 @@
     }
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
+    "standard": "legal",
+    "future": "legal",
     "historic": "legal",
     "timeless": "legal",
     "gladiator": "legal",
@@ -74,10 +76,10 @@
     "penny": "not_legal",
     "commander": "legal",
     "oathbreaker": "legal",
-    "standardbrawl": "not_legal",
+    "standardbrawl": "legal",
     "brawl": "legal",
     "competitivebrawl": "legal",
-    "alchemy": "not_legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
     "duel": "legal",
     "oldschool": "not_legal",
@@ -127,14 +129,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 1554,
+  "edhrec_rank": 1523,
   "prices": {
-    "usd": "15.64",
-    "usd_foil": null,
+    "usd": "1.72",
+    "usd_foil": "3.45",
     "usd_etched": null,
-    "eur": "1.93",
-    "eur_foil": null,
-    "tix": null
+    "eur": "1.43",
+    "eur_foil": "2.58",
+    "tix": "0.17"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChandra%252C%2BTorch%2Bof%2BDefiance",
@@ -144,6 +146,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F692996%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=905786&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Chandra%2C+Torch+of+Defiance&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155634?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

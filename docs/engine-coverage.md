@@ -7215,3 +7215,14 @@ Extraordinary Journey's second ability (draw when a nontoken creature enters fro
 | "You can't cast this spell unless `<condition>`." and "Cast this spell only if `<condition>`." - one CR 601.2e prohibition read by `Game.condition_holds`; "you've cast another `<spell>` this turn" (quality optional) newly read | CR 601.2e, 601.3, 601.2i | `casting._CANNOT_CAST_UNLESS_RE`, `conditions/history.py` cast-a-spell reader | Proft, Sinister Mastermind; Hewed Stone Retainers (Talara's Battalion, "another green spell", is the same reader and not separately staged) | `test_self_cast_restriction.py` (Proft below/at 7, Hewed with and without a prior spell) |
 
 Fingerprint drift accepted: "if you've cast another spell this turn, ..." and "if you didn't cast a spell this turn, ..." now read (were `<none>`).
+
+## 293-fra T7: pre-release fixture refresh
+
+190 `set:fra` printings were fetched before release with every legality `not_legal` (so `in_target_formats` dropped them and no sweep ever ran them); Gallia, the Merrymaker and Stingcaster Mage also carried outdated oracle text. All were re-fetched from Scryfall (the 38 cards owned by T1-T6 and Proft, Sinister Mastermind excluded), which put 189 cards into the Modern/Pioneer/Standard pool and exposed what the sweep had never measured.
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| An enters-the-battlefield trigger that refers to X, on a permanent put onto the battlefield rather than cast, resolves with X = 0 (it used to crash resolving an unresolved amount) | CR 107.3b, 107.3m | `Game._etb_x_effect_text(..., uncast_x=0)` on the resolution side | `scenarios/test_uncast_etb_x.py` (Ajani's Anguish, Mutagen Man, Living Ooze) |
+| Current oracle wording of Gallia, the Merrymaker ("with a +1/+1 counter on it") and Stingcaster Mage (flashback reminder text) | CR 702.10a, 702.34a | fixtures | `scenarios/test_fra_fixture_refresh_wording.py` |
+
+Sweep drivers added (no engine change): "whenever you / an opponent activates a loyalty ability" (a probe planeswalker's loyalty ability, on the opponent's own turn for the opponent) and the "if you've activated a loyalty ability this turn" history (Ajani Unrelenting, Gideon the Oathless, Kiora of Salt and Sand); "you may remove a counter from this creature" stages the counter (Guiding Hydra is a 0/0 that otherwise dies, CR 704.5f); "a creature an opponent controls with <quality> blocks" puts the probe on the opponent's side as the blocker (Tetsuko Umezawa, Pursuer); "cast a prepared spell" prepares a prepare creature and casts its exile copy (Codie, Ravenous Codex); "an opponent has been dealt noncombat damage this turn" history (Grim Repriser).

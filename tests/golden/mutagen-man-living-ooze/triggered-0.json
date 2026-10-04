@@ -47,11 +47,10 @@
   "kind": "enters_the_battlefield",
   "number": 0,
   "recipe": {
-    "attempt": "cast",
-    "index": 1,
+    "attempt": "put",
+    "index": 0,
     "params": {
-      "kicked": false,
-      "paying_with": null
+      "tapped": false
     },
     "variant": "quiet"
   }
