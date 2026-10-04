@@ -9,13 +9,14 @@
 #       package
 #   F3  codemod game
 #
-# Then `ruff format` + `ruff check --fix` on the new package only, then exactly
-# one commit titled "split <step>: <module>" with the trailer "Split-Step: <step>".
+# Then `ruff format` + `ruff check --fix` on the new package only (the step is
+# split_lib.sh's split_step, which port_branch.sh runs too), then exactly one
+# commit titled "split <step>: <module>" with the trailer "Split-Step: <step>".
 # Refuses on a dirty tree, and when the previous step's trailer is not in the
 # history. --dry-print prints the commands instead of running them (no git checks).
 #
 # Test/override hooks (defaults are the real tools): SPLIT_PY, SPLIT_RUFF,
-# SPLIT_MANIFEST_DIR, SPLIT_SURFACE. bash 3.2 compatible.
+# SPLIT_MANIFEST_DIR, SPLIT_SURFACE, SPLIT_OVERLAP_ARGS. bash 3.2 compatible.
 set -eo pipefail
 
 TOOLS="$(cd "$(dirname "$0")" && pwd)"
@@ -52,15 +53,6 @@ case "$STEP" in
 esac
 
 MANIFEST="$MANIFESTS/$MODULE.toml"
-manifest_value() { sed -n "s/^$1 *= *\"\(.*\)\"/\1/p" "$MANIFEST" | head -1; }
-
-run() {
-  if [ "$DRY" = 1 ]; then
-    echo "+ $*"
-  else
-    "$@"
-  fi
-}
 
 if [ "$DRY" = 0 ]; then
   if [ -n "$(git status --porcelain)" ]; then
@@ -74,43 +66,20 @@ if [ "$DRY" = 0 ]; then
 fi
 
 [ "$DRY" = 1 ] || [ -f "$MANIFEST" ] || { echo "no manifest $MANIFEST" >&2; exit 1; }
-if [ -f "$MANIFEST" ]; then
-  SOURCE="$(manifest_value source)"
-  PACKAGE="$(manifest_value package)"
-else
-  SOURCE="<source of manifest/$MODULE.toml>"
-  PACKAGE="<package of manifest/$MODULE.toml>"
-fi
 
-TARGETS="$PACKAGE"
-if [ "$STEP" = F2 ]; then
-  TMP="$(mktemp -d)"
-  trap 'rm -rf "$TMP"' EXIT
-  # overlap.py reads the monolith source; after F1 it only exists in history.
-  F1_COMMIT="<commit with trailer Split-Step: F1>"
-  [ "$DRY" = 1 ] || F1_COMMIT="$(git log -1 --format=%H --grep='^Split-Step: F1$')"
-  if [ "$DRY" = 1 ]; then
-    echo "+ git show $F1_COMMIT^:$SOURCE > $TMP/monolith.py"
-  else
-    git show "$F1_COMMIT^:$SOURCE" > "$TMP/monolith.py"
-  fi
-  run $PY "$TOOLS/overlap.py" --source "$TMP/monolith.py" --manifest "$MANIFEST" --out "$TMP/overlap.json"
-  run $PY "$TOOLS/to_registry.py" "$PACKAGE" --manifest "$MANIFEST" --overlap "$TMP/overlap.json"
-  TARGETS="$PACKAGE tests/test_dispatch_order.py"
-else
-  if [ -n "$SURFACE" ]; then
-    run $PY "$TOOLS/codemod.py" "$MANIFEST" --surface "$SURFACE"
-  else
-    run $PY "$TOOLS/codemod.py" "$MANIFEST"
-  fi
+# The step itself is split_lib.sh's split_step, shared with port_branch.sh.
+. "$TOOLS/split_lib.sh"
+SPLIT_LIB_PY="$PY"
+SPLIT_LIB_RUFF="$RUFF"
+SPLIT_LIB_TOOLS="$TOOLS"
+SPLIT_LIB_DRY="$DRY"
+SPLIT_LIB_WORK="$(mktemp -d)"
+trap 'rm -rf "$SPLIT_LIB_WORK"' EXIT
+F1_COMMIT="<commit with trailer Split-Step: F1>"
+if [ "$DRY" = 0 ] && [ "$STEP" = F2 ]; then
+  F1_COMMIT="$(git log -1 --format=%H --grep='^Split-Step: F1$')"
 fi
-
-run $RUFF format $TARGETS
-# Two things ruff cannot fix: the generated facade re-exports long names on one line
-# it cannot wrap (E501), and the F2 rewrite drops the noqa of the bottom-of-module
-# imports (E402). Fix everything else, then let ruff add those markers (idempotent).
-run $RUFF check --fix --extend-ignore E501,E402 $TARGETS
-run $RUFF check --add-noqa --select E501,E402 $TARGETS
+split_step "$STEP" "$MANIFEST" "$F1_COMMIT" "$SURFACE"
 
 if [ "$DRY" = 1 ]; then
   echo "+ git add -A"

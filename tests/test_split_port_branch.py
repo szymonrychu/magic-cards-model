@@ -71,11 +71,11 @@ def run(repo: Path, *cmd: str) -> None:
 
 
 def ruff_passes(repo: Path, *targets: str) -> None:
-    """The formatting and noqa passes run_step.sh runs after every codemod / to_registry."""
+    """The ruff passes run_step.sh (split_lib.sh's split_step) runs after every codemod /
+    to_registry: the generators write lint-clean code, so there is no noqa pass."""
     ruff = [sys.executable, "-m", "ruff"]
     run(repo, *ruff, "format", *targets)
-    run(repo, *ruff, "check", "--fix", "--extend-ignore", "E501,E402", *targets)
-    run(repo, *ruff, "check", "--add-noqa", "--select", "E501,E402", *targets)
+    run(repo, *ruff, "check", "--fix", *targets)
 
 
 def split_main(repo: Path) -> None:
@@ -261,3 +261,89 @@ def test_two_split_steps_are_both_rerun_and_both_trailers_kept(tmp_path):
     body = git(repo, "log", "-1", "--format=%B", "--grep=^re-split$")
     assert "Split-Step: F1" in body and "Split-Step: F2" in body
     assert git(repo, "status", "--porcelain") == ""
+
+
+RUN_STEP = ROOT / "scripts" / "split" / "run_step.sh"
+SPLIT_SCRIPTS = ROOT / "scripts" / "split"
+
+
+def test_port_and_run_step_share_one_step_implementation():
+    """The step recipe lives once, in split_lib.sh; neither driver re-implements it."""
+    lib = (SPLIT_SCRIPTS / "split_lib.sh").read_text()
+    for name in ("codemod.py", "overlap.py", "to_registry.py", "ruff format", "ruff check"):
+        assert name.split()[0] in lib, name
+    for driver in (SCRIPT, RUN_STEP):
+        text = driver.read_text()
+        assert "split_lib.sh" in text, driver.name
+        code = "\n".join(
+            ln.split(" #", 1)[0] for ln in text.split("\n") if not ln.lstrip().startswith("#")
+        )
+        for marker in ("codemod.py", "to_registry.py", "overlap.py", "scripts.split.", "ruff "):
+            assert marker not in code, (driver.name, marker)
+    for sh in SPLIT_SCRIPTS.glob("*.sh"):
+        assert "--add-noqa" not in sh.read_text(), sh.name
+
+
+def test_unchanged_branch_port_is_byte_identical_to_the_run_step_split(tmp_path):
+    """main split by the real run_step.sh (F1 then F2); a branch with no changes of its
+    own ported across it re-splits to exactly main's tree."""
+    repo = tmp_path / "repo"
+    (repo / "scripts" / "split" / "manifest").mkdir(parents=True)
+    shutil.copytree(FIX / "reg" / "pkg", repo / "pkg")
+    manifest = "scripts/split/manifest/reg.toml"
+    shutil.copy(FIX / "reg" / "reg.toml", repo / manifest)
+    (repo / ".gitignore").write_text("__pycache__/\n")
+    git(repo, "init", "-q", "-b", "main")
+    git(repo, "config", "commit.gpgsign", "false")
+    commit(repo, "pre-split")
+    git(repo, "branch", "feature")
+    git(repo, "checkout", "-q", "feature")
+    git(repo, "commit", "-q", "--allow-empty", "-m", "feature, no changes")
+    git(repo, "checkout", "-q", "main")
+
+    corpus = tmp_path / "corpus.json"
+    corpus.write_text(json.dumps(CORPUS))
+    mdir = tmp_path / "manifests"
+    mdir.mkdir()
+    shutil.copy(FIX / "reg" / "reg.toml", mdir / "effects.toml")
+    step_env = {
+        **ENV,
+        "SPLIT_MANIFEST_DIR": str(mdir),
+        "SPLIT_PY": sys.executable,
+        "SPLIT_RUFF": f"{sys.executable} -m ruff",
+        "SPLIT_OVERLAP_ARGS": f"--corpus-json {corpus}",
+    }
+    for step in ("F1", "F2"):
+        res = subprocess.run(
+            ["bash", str(RUN_STEP), step], cwd=repo, capture_output=True, text=True, env=step_env
+        )
+        assert res.returncode == 0, res.stdout + res.stderr
+    assert (repo / "pkg/mono/_chains.py").exists()
+    assert "rung(" in (repo / "pkg/mono/alpha.py").read_text()
+
+    out = subprocess.run(
+        ["bash", str(SCRIPT), "feature", "--step", f"F1={manifest}", "--step", f"F2={manifest}"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        env={**ENV, "SPLIT_OVERLAP_ARGS": f"--corpus-json {corpus}"},
+    )
+    assert out.returncode == 0, out.stdout + out.stderr
+    resplit = git(repo, "log", "-1", "--format=%H", "--grep=^re-split$", "feature")
+    assert git(repo, "rev-parse", f"{resplit}^{{tree}}") == git(repo, "rev-parse", "main^{tree}")
+    assert git(repo, "rev-parse", "feature^{tree}") == git(repo, "rev-parse", "main^{tree}")
+    assert git(repo, "status", "--porcelain") == ""
+
+
+def test_mise_task_runs_port_branch_help():
+    """split:port-branch (mise.toml, P0-T10) reaches port_branch.sh (P0-T09)."""
+    res = subprocess.run(
+        ["mise", "run", "split:port-branch", "--", "--help"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        env={k: v for k, v in os.environ.items() if not k.startswith("MISE_TASK")},
+    )
+    assert res.returncode == 0, res.stdout + res.stderr
+    assert "port_branch.sh <branch>" in res.stdout + res.stderr
+    assert "split_lib.sh" in res.stdout + res.stderr

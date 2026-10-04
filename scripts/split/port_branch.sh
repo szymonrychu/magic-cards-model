@@ -18,17 +18,17 @@
 # Step -> manifest (override per step with --step F1=path/in/repo.toml):
 #   F1, F2 effects   F3 game   F4a layers   F4b replacement   F4c casting
 #   F4d triggers     F4e cost
-# Every re-run is the whole run_step.sh recipe, so the re-split tree is the tree a
-# script-made split commit has: F2 measures overlap.json on the F1 commit's parent
-# (unless --overlap is given), and each step is followed by ruff format, ruff check
-# --fix and the E501/E402 noqa pass on the step's package (F2 also on
+# Every re-run is split_lib.sh's split_step, the very function run_step.sh runs, so
+# the re-split tree is the tree the script-made split commits have: F2 measures
+# overlap.json on the F1 commit's parent (unless --overlap is given), and each step
+# ends with ruff format and ruff check --fix on its package (F2 also on
 # tests/test_dispatch_order.py).
 # Environment: PORT_BRANCH_PYTHON overrides the python runner (default
 # `mise exec -- uv run --project <tools repo> python`), PORT_BRANCH_RUFF the ruff
-# runner (default `mise exec -- ruff`), PORT_BRANCH_OVERLAP_ARGS adds arguments to
-# scripts.split.overlap (e.g. --module, --corpus-json). The tools (scripts/) are
-# copied from the repository this script lives in before anything is checked out,
-# so a branch cut before P0 can still be ported. bash 3.2 compatible (macOS).
+# runner (default `mise exec -- ruff`), SPLIT_OVERLAP_ARGS (or PORT_BRANCH_OVERLAP_ARGS)
+# adds overlap.py arguments (e.g. --corpus-json). The tools (scripts/) are copied
+# from the repository this script lives in before anything is checked out, so a
+# branch cut before P0 can still be ported. bash 3.2 compatible (macOS).
 set -euo pipefail
 
 die() {
@@ -37,8 +37,8 @@ die() {
 }
 
 usage() {
-    sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//' >&2
-    exit 2
+    sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//' >&2
+    exit "${1:-2}"
 }
 
 branch=""
@@ -63,7 +63,7 @@ while [ $# -gt 0 ]; do
             overlap="$2"
             shift 2
             ;;
-        -h | --help) usage ;;
+        -h | --help) usage 0 ;;
         -*) die "unknown option $1" ;;
         *)
             [ -z "$branch" ] || usage
@@ -75,12 +75,6 @@ done
 [ -n "$branch" ] || usage
 
 tools="$(cd "$(dirname "$0")/../.." && pwd)"
-py="${PORT_BRANCH_PYTHON:-mise exec -- uv run --project $tools python}"
-ruff="${PORT_BRANCH_RUFF:-mise exec -- ruff}"
-
-manifest_value() {
-    $py -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))[sys.argv[2]])' "$1" "$2"
-}
 
 manifest_for() {
     local line
@@ -163,6 +157,13 @@ if [ "$npending" -gt 0 ]; then
 
     export PYTHONPATH="$work/tools${PYTHONPATH:+:$PYTHONPATH}"
     export PYTHONDONTWRITEBYTECODE=1
+    # The step itself: split_lib.sh's split_step, the one run_step.sh runs, from the
+    # copied tools so the branch's own scripts/ never matter.
+    . "$work/tools/scripts/split/split_lib.sh"
+    SPLIT_LIB_PY="${PORT_BRANCH_PYTHON:-mise exec -- uv run --project $tools python}"
+    SPLIT_LIB_RUFF="${PORT_BRANCH_RUFF:-mise exec -- ruff}"
+    SPLIT_LIB_TOOLS="$work/tools/scripts/split"
+    SPLIT_OVERLAP_ARGS="${SPLIT_OVERLAP_ARGS:-${PORT_BRANCH_OVERLAP_ARGS:-}}"
     trailers=""
     n=0
     while IFS= read -r step; do
@@ -173,38 +174,19 @@ if [ "$npending" -gt 0 ]; then
         git show "$onto:$rel" >"$manifest" 2>/dev/null || die "$rel is not on $onto (step $step)"
         stem="$(basename "$rel" .toml)"
         echo "port_branch: re-running $step with $rel from $onto"
-        package="$(manifest_value "$manifest" package)"
-        targets="$package"
-        if [ "$step" = "F2" ]; then
-            ovl="$overlap"
-            if [ -z "$ovl" ]; then
-                # overlap.py reads the monolith source, which after F1 only exists in history
-                f1="$(git log -1 --format=%H -E --grep='^Split-Step: F1$' "$onto")"
-                [ -n "$f1" ] || die "no Split-Step: F1 commit on $onto, cannot measure the F2 overlap"
-                git show "$f1^:$(manifest_value "$manifest" source)" >"$work/$n-monolith.py"
-                ovl="$work/$n-overlap.json"
-                # shellcheck disable=SC2086
-                $py -m scripts.split.overlap --source "$work/$n-monolith.py" --manifest "$manifest" \
-                    --module "$(manifest_value "$manifest" module)" --out "$ovl" \
-                    ${PORT_BRANCH_OVERLAP_ARGS:-} >/dev/null
-            fi
-            $py -m scripts.split.to_registry "$package" --manifest "$manifest" --overlap "$ovl" --tests-dir tests
-            if [ -f tests/test_dispatch_order.py ]; then targets="$package tests/test_dispatch_order.py"; fi
-        else
-            surface=""
-            if git cat-file -e "$onto:scripts/split/surface/$stem.json" 2>/dev/null; then
-                git show "$onto:scripts/split/surface/$stem.json" >"$work/$n-surface.json"
-                surface="--surface $work/$n-surface.json"
-            fi
-            # shellcheck disable=SC2086
-            $py -m scripts.split.codemod "$manifest" $surface
+        surface=""
+        if git cat-file -e "$onto:scripts/split/surface/$stem.json" 2>/dev/null; then
+            git show "$onto:scripts/split/surface/$stem.json" >"$work/$n-surface.json"
+            surface="$work/$n-surface.json"
         fi
-        # shellcheck disable=SC2086
-        $ruff format $targets
-        # shellcheck disable=SC2086
-        $ruff check --fix --extend-ignore E501,E402 $targets
-        # shellcheck disable=SC2086
-        $ruff check --add-noqa --select E501,E402 $targets
+        f1=""
+        if [ "$step" = "F2" ] && [ -z "$overlap" ]; then
+            f1="$(git log -1 --format=%H -E --grep='^Split-Step: F1$' "$onto")"
+            [ -n "$f1" ] || die "no Split-Step: F1 commit on $onto, cannot measure the F2 overlap"
+        fi
+        SPLIT_LIB_WORK="$work/$n"
+        mkdir "$SPLIT_LIB_WORK"
+        split_step "$step" "$manifest" "$f1" "$surface" "$overlap" </dev/null
         trailers="${trailers}Split-Step: $step"$'\n'
     done <<EOF
 $pending_steps
