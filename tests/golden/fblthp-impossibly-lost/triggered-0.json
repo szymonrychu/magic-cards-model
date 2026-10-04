@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cards_drawn_this_turn", "combat", "permanents_left_battlefield_this_turn", "reveals", "shuffles_performed"],
+    "fields_changed": ["cards_drawn_this_turn", "combat", "permanents_left_battlefield_this_turn", "reveals", "shuffles_performed", "turn_history"],
     "notices": {},
     "objects": {
       "Fblthp, Impossibly Lost@alice#1": {

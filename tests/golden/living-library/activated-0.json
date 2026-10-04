@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["permanents_left_battlefield_this_turn", "reveals", "shuffles_performed"],
+    "fields_changed": ["permanents_left_battlefield_this_turn", "reveals", "shuffles_performed", "turn_history"],
     "notices": {},
     "objects": {
       "Kaito, Bane of Nightmares@bob#1": {

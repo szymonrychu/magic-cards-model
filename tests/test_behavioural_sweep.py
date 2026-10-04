@@ -2216,6 +2216,32 @@ def _counter_threshold(scenario: PlayedScenario, source: CardState, condition: s
         scenario.game.add_counters(source, match.group("kind"), count)
 
 
+def _loyalty_among_threshold(scenario: PlayedScenario, source: CardState, condition: str) -> None:
+    """ "there are N or more loyalty counters among `<subtype>`s you control"
+    (Jace, Reality Sculptor, CR 602.5b): the source is one of them (CR
+    205.3h), so the missing loyalty is put on it."""
+    match = re.search(
+        r"(?P<count>[\w-]+) or more loyalty counters among (?P<subtype>[a-z]+?)s? you control",
+        (condition or "").lower(),
+    )
+    if match is None:
+        return
+    count = parse_count(match.group("count"), article=False)
+    game = scenario.game
+    if not count or match.group("subtype") not in {
+        subtype.lower() for subtype in game.characteristics_of(source).subtypes
+    }:
+        return
+    have = sum(
+        permanent.counter_count("loyalty")
+        for permanent in game.permanents_controlled_by(source.controller)
+        if match.group("subtype")
+        in {subtype.lower() for subtype in game.characteristics_of(permanent).subtypes}
+    )
+    if have < count:
+        game.add_counters(source, "loyalty", count - have)
+
+
 def _staged(scenario: PlayedScenario, name: str, username: str = ALICE) -> CardState:
     return _last(scenario, name, Zone.BATTLEFIELD, username)
 
@@ -3557,6 +3583,10 @@ def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
         return
     kind = match.group(1) or "+1/+1"
     partner = "Grizzly Bears"
+    if re.search(r"\bplaneswalker\b", match.group(2), re.IGNORECASE):
+        # "on a planeswalker" (Inspired Tethermage, loyalty counters, CR
+        # 306.5b): the probe planeswalker is the permanent they go on.
+        partner = _LOYALTY_PROBE
     for word in re.findall(r"\b[A-Z][a-z]+\b", match.group(2)):
         subtype = singular_subtype(word)
         if subtype is None:
@@ -3933,6 +3963,24 @@ def _loyalty_activating(case: Case, ability: TriggeredAbility) -> Iterator[Attem
     opponent = "opponent" in ability.condition.lower()
     player = BOB if opponent else ALICE
 
+    # "if you removed N or more loyalty counters to activate it" (CR 606.4,
+    # CR 603.4): the probe's first minus ability removing at least N, with
+    # the loyalty to pay it (Archangel Elspeth's -2).
+    removed = re.search(
+        r"removed (\w+) or more loyalty counters", (ability.intervening_if or "").lower()
+    )
+    needed = parse_count(removed.group(1), article=False) if removed else 0
+    probe_index = 0
+    if needed:
+        probe = card_state(_LOYALTY_PROBE)
+        for index, candidate in enumerate(
+            a for a in parse_abilities(probe.card) if isinstance(a, ActivatedAbility)
+        ):
+            minus = re.match(r"[−-](\d+)", candidate.cost.strip())
+            if minus is not None and int(minus.group(1)) >= needed:
+                probe_index = index
+                break
+
     def activate() -> tuple[PlayedScenario, Any]:
         extra: dict[str, Any] = (
             {"bob_battlefield": (_LOYALTY_PROBE,), "active": BOB}
@@ -3941,8 +3989,10 @@ def _loyalty_activating(case: Case, ability: TriggeredAbility) -> Iterator[Attem
         )
         scenario, source_id = _home(case, ability, **extra)
         walker = _first(scenario, _LOYALTY_PROBE, player)
+        if needed:
+            scenario.game.add_counters(walker, "loyalty", needed)
         try:
-            scenario.activate(walker, index=0, username=player, auto=True)
+            scenario.activate(walker, index=probe_index, username=player, auto=True)
         except (ValueError, AssertionError) as error:
             raise _Unavailable(str(error)) from error
         return scenario, source_id
@@ -4962,6 +5012,7 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
         _board_threshold(scenario, source, condition)
         _player_state_threshold(scenario, condition)
         _object_state_threshold(scenario, source, condition)
+        _loyalty_among_threshold(scenario, source, condition)
     cost = ability.cost.lower()
     if "{e}" in cost:
         game.add_player_counters(ALICE, "energy", 10)

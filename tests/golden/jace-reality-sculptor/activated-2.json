@@ -1,0 +1,142 @@
+{
+  "ability": "0: Exile all but the bottom card of each opponent's library. Activate only if there are twenty-five or more loyalty counters among Jaces you control.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Jace, Reality Sculptor@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Jace, Reality Sculptor"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Jace, Reality Sculptor",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": [],
+    "notices": {},
+    "objects": {
+      "Forest@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@bob#7": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@bob#8": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@bob#7": {
+        "zone": ["library", "exile"]
+      },
+      "Island@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Island@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Island@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Island@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Island@bob#7": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@bob#7": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@bob#3": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@bob#4": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@bob#5": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@bob#6": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@bob#7": {
+        "zone": ["library", "exile"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 2,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}
