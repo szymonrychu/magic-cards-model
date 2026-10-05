@@ -6948,6 +6948,38 @@ def mana_ability_index(
     return activated.index if activated is not None else None
 
 
+def _activation_moves_library_card(ability: Any) -> bool:
+    """CR 605.1a's library criterion, asked of `models/game.py`'s own reader."""
+    from ..models.game import moves_a_library_card
+
+    return moves_a_library_card(ability)
+
+
+def _activation_bookkeeping_restore(
+    game: Any, key: str, activations_before: int | None, exhausted_before: set[str]
+) -> None:
+    """Put `Game.activations[key]` and `Game.exhausted` back as they were
+    before an activation that is being reversed (CR 733.1)."""
+    if activations_before is None:
+        game.activations.pop(key, None)
+    else:
+        game.activations[key] = activations_before
+    game.exhausted.intersection_update(exhausted_before)
+
+
+def _mana_pool_overwrite(target: ManaPool, contents: ManaPool) -> None:
+    """Give `target` exactly `contents`' mana, tags included, without
+    aliasing either pool to the other."""
+    copied = _copy_pool(contents)
+    target.floating = copied.floating
+    target.snow = copied.snow
+    target.treasure = copied.treasure
+    target.creature = copied.creature
+    target.restricted = copied.restricted
+    target.spend_effects = copied.spend_effects
+    target.retained = copied.retained
+
+
 def _copy_pool(pool: ManaPool) -> ManaPool:
     """A detached copy of a pool, restrictions included (CR 106.6).
 
@@ -7169,6 +7201,17 @@ class CostPayment(EngineModel):
     A `PrivateAttr`, so it does not survive a dump/decode round trip -
     `_restore_payer_pool` refuses loudly rather than silently restoring
     nothing when that matters (see its own docstring)."""
+
+    _nested: list[tuple["CostPayment", UUID, str, int | None, frozenset[str]]] = PrivateAttr(
+        default_factory=list
+    )
+    """The mana abilities `activate_mana_ability` activated during this
+    payment, oldest first, for CR 733.1's reversal (`_undo_nested_activations`):
+    each activation's own paid payment, its source's id, its
+    `Game.activations` key and that key's count and `Game.exhausted` as they
+    stood before. Like `_tapped_sources` it holds live objects and does not
+    survive a dump/decode round trip; a payment is never persisted
+    mid-activation."""
 
     _tapped_sources: dict[UUID, CardState] = PrivateAttr(default_factory=dict)
     """The live objects behind `tapped_for_mana`'s ids, for the one case that
@@ -7550,6 +7593,129 @@ class CostPayment(EngineModel):
                 ability.id for ability in self.game.pending_triggers if id(ability) not in waiting
             )
         return self.pool
+
+    def activate_mana_ability(
+        self,
+        source: CardState,
+        index: int,
+        *,
+        color: Color | Sequence[Color] | None = None,
+        x_value: int = 0,
+    ) -> ManaPool:
+        """Activate `source`'s mana ability number `index` in the middle of
+        this payment, whatever its cost, and put its mana into the pool.
+
+        CR 605.3a: a player may activate a mana ability "whenever they are
+        casting a spell or activating an ability that requires a mana
+        payment"; CR 605.3 has it follow CR 602.2's activation rules, so its
+        own cost is paid in full - Vivi Ornitier's `{0}`, Rakdos Signet's
+        `{1}, {T}`, Lotus Petal's `{T}, Sacrifice this artifact`. `tap_for_mana`
+        is the bare-`{T}` case of this (CR 106.12) and stays the path for it.
+
+        The activation runs through the game's own `begin_activating` /
+        `activate_ability`, so every refusal is the engine's own: an ability
+        that is not a mana ability (CR 605.1a), one prohibited right now ("only
+        once each turn", CR 602.5b), a colour the ability does not offer, a
+        cost that cannot be paid. A mana cost on the ability is paid out of
+        the mana already in this payment's pool (CR 601.2g: that pool *is* the
+        player's mana pool while the payment is open) - name the sources that
+        pay for it first. A refusal leaves the payment exactly as it was.
+
+        `color` is the choice the ability offers (`Game.activate_ability`'s own
+        argument), `x_value` an X its cost announces (CR 107.3a).
+
+        CR 733.1: rewinding or cancelling this payment undoes the activation
+        too - its cost is unpaid, its bookkeeping ("once each turn") taken
+        back, and its mana dies with the payment's pool.
+        """
+        self._require_open()
+        game = self.game
+        if game is None or self.payer is None:
+            raise ValueError("a mana ability can only be activated in a payment inside a game")
+        abilities = game.activated_abilities(source)
+        if not 0 <= index < len(abilities):
+            raise ValueError(
+                f"{source.name} has no ability {index}: it has {len(abilities)} activated "
+                f"{'ability' if len(abilities) == 1 else 'abilities'}"
+            )
+        ability = abilities[index]
+        if (
+            ability.mana is None
+            or ability.loyalty is not None
+            or _activation_moves_library_card(ability)
+        ):
+            raise ValueError(
+                f"{source.name}'s ability {index} ({ability.text}) is not a mana ability "
+                "(CR 605.1a), so it cannot be activated while paying a cost (CR 605.3a)"
+            )
+        player = game.player(self.payer)
+        own_pool = _copy_pool(player.mana_pool)
+        key = game._activation_key(source, index)  # noqa: SLF001
+        activations_before = game.activations.get(key)
+        exhausted_before = set(game.exhausted)
+        waiting = {id(pending) for pending in game.pending_triggers}
+        # The working pool becomes the player's pool for the activation, so
+        # its cost spends the mana this payment already has and its mana
+        # lands beside it; the player's own pool is put back afterwards.
+        _mana_pool_overwrite(player.mana_pool, self.pool)
+        inner: CostPayment | None = None
+        game._holding_mana_triggers = True  # noqa: SLF001
+        try:
+            inner = game.begin_activating(source, index, self.payer, x_value=x_value)
+            if inner.shortfall:
+                raise ValueError(
+                    f"{source.name}'s mana ability costs {inner.cost}, and the mana already "
+                    f"in the pool cannot pay it - activate the sources that pay for it first "
+                    "(CR 605.3a, CR 601.2g)"
+                )
+            inner.pay()
+            game.activate_ability(source, index, self.payer, color=color, x_value=x_value)
+        except ValueError:
+            if inner is not None:
+                inner.rewind()
+            _activation_bookkeeping_restore(game, key, activations_before, exhausted_before)
+            _mana_pool_overwrite(player.mana_pool, own_pool)
+            self._register_pool()
+            raise
+        finally:
+            game._holding_mana_triggers = False  # noqa: SLF001
+        self._transition(CostStep.TAPPING)
+        _mana_pool_overwrite(self.pool, player.mana_pool)
+        _mana_pool_overwrite(player.mana_pool, own_pool)
+        self._register_pool()
+        assert inner is not None
+        self._nested.append(
+            (inner, source.id, key, activations_before, frozenset(exhausted_before))
+        )
+        self.triggers_caused.extend(
+            pending.id for pending in game.pending_triggers if id(pending) not in waiting
+        )
+        return self.pool
+
+    @property
+    def mana_abilities_activated(self) -> list[UUID]:
+        """The sources whose mana abilities `activate_mana_ability` activated
+        during this payment, oldest first - the any-cost twin of
+        `tapped_for_mana`, for a caller reporting what paid."""
+        return [source_id for _payment, source_id, *_rest in self._nested]
+
+    def _undo_nested_activations(self) -> None:
+        """CR 733.1: reverse every `activate_mana_ability` this payment made,
+        newest first - each activation's own payment is rewound (its cost
+        given back) and its bookkeeping restored. The player's pool is left
+        as it was; the caller restores it from its own snapshot."""
+        if not self._nested or self.game is None or self.payer is None:
+            self._nested = []
+            return
+        player = self.game.player(self.payer)
+        own_pool = _copy_pool(player.mana_pool)
+        for inner, _source_id, key, activations_before, exhausted_before in reversed(self._nested):
+            inner.rewind()
+            _activation_bookkeeping_restore(
+                self.game, key, activations_before, set(exhausted_before)
+            )
+        _mana_pool_overwrite(player.mana_pool, own_pool)
+        self._nested = []
 
     def auto_tap(self, sources: Iterable[CardState]) -> list[CardState]:
         """Solve which of `sources` to tap, and which colour each makes, to
@@ -7980,6 +8146,7 @@ class CostPayment(EngineModel):
         pool.retained = [entry.model_copy(deep=True) for entry in self._preexisting.retained]
 
     def _undo_everything(self) -> None:
+        self._undo_nested_activations()
         for component in reversed(self.components):
             component.unpay(self.game)
         for source_id in self.tapped_for_mana:

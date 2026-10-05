@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "d5c47cac-679f-4b48-977f-2fa149a6c3c3",
+  "oracle_id": "420ff0f4-6056-4b40-9a28-fd4c23d6b81c",
+  "multiverse_ids": [
+    130494
+  ],
+  "mtgo_id": 27168,
+  "mtgo_foil_id": 27169,
+  "tcgplayer_id": 15382,
+  "cardmarket_id": 16470,
+  "name": "Upwelling",
+  "lang": "en",
+  "released_at": "2007-07-13",
+  "uri": "https://api.scryfall.com/cards/d5c47cac-679f-4b48-977f-2fa149a6c3c3",
+  "scryfall_uri": "https://scryfall.com/card/10e/306/upwelling?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:43:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.jpg?1783942989",
+    "normal": "https://cards.scryfall.io/normal/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.jpg?1783942989",
+    "large": "https://cards.scryfall.io/large/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.jpg?1783942989",
+    "png": "https://cards.scryfall.io/png/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.png?1783942989",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.jpg?1783942989",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.jpg?1783942989",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.webp?1783942989",
+    "grid": "https://cards.scryfall.io/grid/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.webp?1783942989",
+    "display": "https://cards.scryfall.io/display/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.webp?1783942989",
+    "art": "https://cards.scryfall.io/art/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.webp?1783942989",
+    "crop": "https://cards.scryfall.io/crop/front/d/5/d5c47cac-679f-4b48-977f-2fa149a6c3c3.webp?1783942989"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Players don't lose unspent mana as steps and phases end.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a66a6124-0d81-488d-b080-91f5ba7fbad0",
+  "set": "10e",
+  "set_name": "Tenth Edition",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a66a6124-0d81-488d-b080-91f5ba7fbad0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A10e&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/10e?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d5c47cac-679f-4b48-977f-2fa149a6c3c3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A420ff0f4-6056-4b40-9a28-fd4c23d6b81c&unique=prints",
+  "collector_number": "306",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Freyalise promised a dawn that would never end, a day of limitless life. As many dread her promise as revere it.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chippy",
+  "artist_ids": [
+    "a36f01a0-e51a-48b2-a556-b9b3bc73f969"
+  ],
+  "illustration_id": "81b895b4-99e8-46b0-95a1-d0e2e8d43db8",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14227,
+  "penny_rank": 12891,
+  "prices": {
+    "usd": "2.39",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.51",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=130494&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUpwelling",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUpwelling",
+    "edhrec": "https://edhrec.com/route/?cc=Upwelling"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F15382%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=16470&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/27168?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

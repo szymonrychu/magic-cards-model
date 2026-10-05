@@ -1,0 +1,86 @@
+{
+  "ability": "−6: Exile the top seven cards of your library. You may put any number of creature and/or land cards from among them onto the battlefield.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Xenagos, the Reveler@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Xenagos, the Reveler"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Xenagos, the Reveler",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 5,
+        "cards": ["Forest@alice#6", "Grizzly Bears@alice#3", "Island@alice#5", "Swamp@alice#5", "Forest@alice#7"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "put any number of them onto the battlefield",
+        "source": "Xenagos, the Reveler"
+      }
+    ],
+    "fields_changed": [],
+    "notices": {},
+    "objects": {
+      "Forest@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#5": {
+        "zone": ["library", "exile"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 2,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}

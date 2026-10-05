@@ -9988,7 +9988,7 @@ _CHOSEN_NAME_GROUP_LOSES_RE = re.compile(
 #: life total (`LayerContext.life_of`) on every computation. The pump is
 #: sublayer 7c (CR 613.4c), the grants layer 6 (CR 613.1f).
 _LIFE_GATED_SELF_STATIC_LEADING_RE = re.compile(
-    rf"^as long as you have (?P<count>{COUNT}) or more life, "
+    rf"^as long as you have (?P<count>{COUNT}) or more (?P<what>life|unspent mana), "
     r"(?:this (?:creature|permanent|token)|it) "
     r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)|(?P<grant_only>has .+?))\.?$",
     re.IGNORECASE,
@@ -9997,7 +9997,7 @@ _LIFE_GATED_SELF_STATIC_TRAILING_RE = re.compile(
     r"^this (?:creature|permanent|token) "
     r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>(?: and has [^.]+?)?)"
     r"|(?P<grant_only>has .+?))"
-    rf" as long as you have (?P<count>{COUNT}) or more life\.?$",
+    rf" as long as you have (?P<count>{COUNT}) or more (?P<what>life|unspent mana)\.?$",
     re.IGNORECASE,
 )
 
@@ -15376,6 +15376,27 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
                 toughness = int(match.group("toughness"))
             if granted is None:
                 return None
+
+            if match.group("what").lower() == "unspent mana":
+                # CR 106.4: the mana in its controller's pool - every type,
+                # read off the same `LayerContext.unspent_mana_by_controller`
+                # Omnath, Locus of Mana's count reads (Ozai, the Phoenix
+                # King's "has flying and indestructible as long as you have
+                # six or more unspent mana").
+                def enough_mana(
+                    source: CardState, context: LayerContext, threshold: int = threshold
+                ) -> bool:
+                    unspent = context.unspent_mana_by_controller.get(source.controller or "", {})
+                    return sum(unspent.values()) >= threshold
+
+                return _context_gated_self_pump_builder(
+                    enough_mana,
+                    power,
+                    toughness,
+                    granted,
+                    line=sentence,
+                    description=f"while its controller has {threshold} or more unspent mana",
+                )
 
             def enough_life(
                 source: CardState, context: LayerContext, threshold: int = threshold
