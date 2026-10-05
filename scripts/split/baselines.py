@@ -54,9 +54,17 @@ def hash_text(text: str) -> str:
 
 
 def hash_tree(root: Path) -> str:
-    """sha256 over sorted relative paths and file bytes (independent of walk order)."""
+    """sha256 over sorted relative paths and file bytes (independent of walk order).
+
+    Bytecode caches are skipped: a .pyc header carries its source's mtime, which a fresh
+    checkout changes.
+    """
     digest = hashlib.sha256()
-    files = sorted(p for p in root.rglob("*") if p.is_file())
+    files = sorted(
+        p
+        for p in root.rglob("*")
+        if p.is_file() and p.suffix != ".pyc" and "__pycache__" not in p.relative_to(root).parts
+    )
     for path in files:
         rel = path.relative_to(root).as_posix().encode()
         data = path.read_bytes()
