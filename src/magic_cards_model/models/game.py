@@ -2025,6 +2025,21 @@ def _named_mana_abilities(answer: object) -> tuple[NamedManaAbility, ...]:
     return tuple(entry for entry in answer if isinstance(entry, NamedManaAbility))
 
 
+def _activate_named_mana_abilities(
+    game: "Game", payment: CostPayment, named: Sequence[NamedManaAbility]
+) -> None:
+    """Activate each mana ability a `PAY_MANA` answer named, in order, into
+    `payment` (CR 605.3a, `CostPayment.activate_mana_ability`)."""
+    for entry in named:
+        source = game.find_by_id(entry.card_id)
+        if not isinstance(source, CardState) or source.zone is not Zone.BATTLEFIELD:
+            raise ValueError(
+                f"{entry.card_id} is not a permanent on the battlefield whose mana "
+                "ability can be activated (CR 605.3a)"
+            )
+        payment.activate_mana_ability(source, entry.ability_index, color=list(entry.colors) or None)
+
+
 def is_player_rules_static_line(text: str) -> bool:
     """Whether a permanent's static line is one of the rules-of-the-game
     effects `Game` reads straight off the battlefield: "Players can't gain
@@ -9101,7 +9116,7 @@ class Game(EngineModel):
         chosen = (
             sources if answer is True else [state for state in sources if state.id in set(answer)]
         )
-        self._activate_named_mana_abilities(payment, _named_mana_abilities(answer))
+        _activate_named_mana_abilities(self, payment, _named_mana_abilities(answer))
         payment.auto_tap(chosen)
 
     def _offer_additional_cost(
@@ -13968,22 +13983,6 @@ class Game(EngineModel):
             )
         return True
 
-    def _activate_named_mana_abilities(
-        self, payment: CostPayment, named: Sequence[NamedManaAbility]
-    ) -> None:
-        """Activate each mana ability a `PAY_MANA` answer named, in order,
-        into `payment` (CR 605.3a, `CostPayment.activate_mana_ability`)."""
-        for entry in named:
-            source = self.find_by_id(entry.card_id)
-            if not isinstance(source, CardState) or source.zone is not Zone.BATTLEFIELD:
-                raise ValueError(
-                    f"{entry.card_id} is not a permanent on the battlefield whose mana "
-                    "ability can be activated (CR 605.3a)"
-                )
-            payment.activate_mana_ability(
-                source, entry.ability_index, color=list(entry.colors) or None
-            )
-
     def _mana_sources_while_resolving(self, player: Player) -> list[CardState]:
         """The untapped permanents whose mana abilities `player` could activate
         right now to pay a cost (CR 605.3a), each once, in battlefield order.
@@ -14027,7 +14026,7 @@ class Game(EngineModel):
             TotalCost.of(cost), game=self, payer=player.username, spend=spend
         )
         try:
-            self._activate_named_mana_abilities(payment, named)
+            _activate_named_mana_abilities(self, payment, named)
         except ValueError as refused:
             payment.cancel()
             raise ValueError(f"{prompt}: {refused}") from refused
