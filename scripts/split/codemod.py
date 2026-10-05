@@ -26,7 +26,8 @@ Class mode (`Game`).  `__init__.py` holds `class Game(<mixins in manifest order>
 <old bases>, metaclass=_FlatMixins)`, the metaclass (defined just above it) folding
 the mixins into one generated base at runtime so the MRO stays short, with the
 fields, validators, pydantic-decorated members and `stay` members; every other
-method moves, byte for byte, into `class <Name>Mixin:` in its target module, whose unannotated `self` becomes `self: "Game"` (with
+method moves, byte for byte, into `class <Name>Mixin:` in its target module,
+whose unannotated `self` becomes `self: "Game"` (with
 `if TYPE_CHECKING: from . import Game`).  Module-level classes go to the manifest's
 `records` target.  A module statement before the class that the manifest keeps in
 `__init__` is written there before the facade imports when everything it needs at
