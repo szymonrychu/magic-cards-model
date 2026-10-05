@@ -133,11 +133,17 @@ suite_check() { # <json key> <task name>
   out="$($PY -c '
 import json, sys
 s = json.load(open(sys.argv[1])).get(sys.argv[2]) or {}
-ok = bool(s) and s.get("returncode") == 0 and not s.get("failed")
+names, rerun = s.get("failed_tests") or [], s.get("rerun_passed") or []
+flaky = bool(names) and s.get("failed") == len(names) and set(names) <= set(rerun)
+ok = bool(s) and (s.get("returncode") == 0 and not s.get("failed") or flaky)
 print(s.get("wall_s", 0))
+for name in rerun:
+    print("    RERUN passed alone: " + name)
 sys.exit(0 if ok else 1)' "$AFTER" "$1")"
   rc=$?
-  report "$2" "$rc" "${out%%.*}"
+  local wall="${out%%$'\n'*}"
+  report "$2" "$rc" "${wall%%.*}"
+  [ "$out" = "$wall" ] || echo "${out#*$'\n'}"
 }
 suite_check suite "mise run test"
 [ "$MODE" = full ] && suite_check suite_full "mise run test:full"

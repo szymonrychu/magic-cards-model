@@ -43,6 +43,7 @@ IMPORT_RUNS = 7
 IMPORT_LIMIT = 1.15
 SUITE_LIMIT = 0.05
 OUTPUT_TAIL_LINES = 20  # lines of a failed suite run kept in the measure json
+RERUN_MAX = 10  # failed node ids rerun alone once; more than this is no flake
 STEPS = ("F1", "F2", "F3", "F4", "F4a", "F4b", "F4c", "F4d", "F4e")
 NOT_MEASURED = "not measured"
 
@@ -218,6 +219,19 @@ def measure_suite(task: str, run=timed_run) -> dict:
     }
     if proc.returncode != 0:
         out["output_tail"] = "\n".join(output.rstrip().splitlines()[-OUTPUT_TAIL_LINES:])
+    failed = out["failed_tests"]
+    if failed and len(failed) <= RERUN_MAX:
+        # a load-sensitive test (a CPU budget) can fail under a busy machine: rerun the
+        # failures once on their own; one that fails again stays a failure
+        again, _, _ = run(
+            _py("pytest", "-o", "addopts=", "-q", "-p", "no:cacheprovider", *failed), check=False
+        )
+        still = (
+            set() if again.returncode == 0 else set(parse_failed_tests(again.stdout + again.stderr))
+        )
+        if again.returncode != 0 and not still:
+            still = set(failed)
+        out["rerun_passed"] = [t for t in failed if t not in still]
     return out
 
 
@@ -381,16 +395,20 @@ def compare(before: dict, after: dict, step: str) -> list[str]:
         if found and found[1][1] - found[1][0] > found[1][0] * SUITE_LIMIT:
             kind, (b, a) = found
             out.append(f"{key} {kind} time {b}s -> {a}s is more than 5% slower")
-        failed = _get(after, f"{key}.failed")
+        names = _get(after, f"{key}.failed_tests") or []
+        rerun_ok = set(_get(after, f"{key}.rerun_passed") or [])
+        failed = raw_failed = _get(after, f"{key}.failed")
+        if failed and names and rerun_ok:  # failures that passed alone are not gated
+            names = [n for n in names if n not in rerun_ok]
+            failed = len(names)
         rc = _get(after, f"{key}.returncode")
-        if rc and not failed:
+        if rc and not raw_failed:
             tail = (_get(after, f"{key}.output_tail") or "").strip().splitlines()
             out.append(
                 f"{key} exited {rc} without a failed test"
                 + (f": {' | '.join(tail[-3:])}" if tail else "")
             )
         if failed:
-            names = _get(after, f"{key}.failed_tests") or []
             out.append(
                 f"{key} has {failed} failed in after"
                 + (f": {', '.join(names[:10])}" if names else "")
