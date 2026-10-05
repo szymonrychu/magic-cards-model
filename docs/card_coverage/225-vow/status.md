@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.5% |
+| Tested | 25 | 9.9% |
 | Works (untested) | 81 | 32.0% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 138 | 54.5% |
+| Not working | 137 | 54.2% |
 
 ## Cards needing work
 
@@ -120,7 +120,6 @@
 | Sigardian Paladin | silent | As long as you've put one or more +1/+1 counters on a creature this turn, this creature has trample and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skulking Killer | silent | When this creature enters, target creature an opponent controls gets -2/-2 until end of turn if that opponent controls no other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skull Skaab | silent | Whenever a creature you control exploits a nontoken creature, create a 2/2 black Zombie creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Sorin the Mirthless | silent | +1: Look at the top card of your library. You may reveal that card and put it into your hand. If you do, you lose life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulcipher Board // Cipherbound Spirit | silent | {1}{U}, {T}: Look at the top two cards of your library. Put one of them into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sporeback Wolf | silent | During your turn, this creature gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steelclad Spirit | silent | Whenever an enchantment you control enters, this creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -259,7 +258,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
@@ -282,6 +281,7 @@
 - Screaming Swarm
 - Serpentine Ambush
 - Shattered Sanctum
+- Sorin the Mirthless
 - Stormcarved Coast
 - Sundown Pass
 - Voltaic Visionary // Volt-Charged Berserker
@@ -299,7 +299,6 @@
 | whenever ~ enters or attacks, exile a card from a graveyard. | 2 | Cemetery Illuminator, Cemetery Prowler | vow |
 | Choose one or both | 1 | Markov Retribution | vow |
 | +N: exile the top card of your library. if it's red, you may cast it ~. | 1 | Chandra, Dressed to Kill | vow |
-| +N: look at the top card of your library. you may reveal that card and put it into your hand. if you do, you lose life equal to its mana value. | 1 | Sorin the Mirthless | vow |
 | as long as enchanted permanent is a creature, it gets +N/+N. | 1 | Nature's Embrace | vow |
 | as long as you control another wolf or werewolf, ~ gets +N/+N and has trample. | 1 | Hungry Ridgewolf | vow |
 | as long as you've put one or more +N/+N counters on a creature ~, ~ has trample and lifelink. | 1 | Sigardian Paladin | vow |

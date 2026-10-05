@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 9.5% |
+| Tested | 21 | 10.0% |
 | Works (untested) | 131 | 62.1% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 52 | 24.6% |
+| Not working | 51 | 24.2% |
 
 ## Cards needing work
 
@@ -68,7 +68,6 @@
 | Triton Tactics | silent | Up to two target creatures each get +0/+3 until end of turn. Untap those creatures. At this turn's next end of combat, tap each creature that was blocked by one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Underworld Cerberus | silent | When this creature dies, exile it and each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Viper's Kiss | silent | Enchanted creature gets -1/-1, and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Xenagos, the Reveler | silent | −6: Exile the top seven cards of your library. You may put any number of creature and/or land cards from among them onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boon of Erebos | notice | Target creature gets +2/+0 until end of turn. Regenerate it. You lose 2 life. | unparsed remainder: Regenerate it. You lose 2 life. | Y/Y/- | not_working |
 | Daxos of Meletis | notice | Whenever Daxos deals combat damage to a player, exile the top card of that player's library. You gain life equal to that card's mana value. Until end of turn, y | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos's Emissary | notice | Discard a creature card: This creature gets +2/+2 until end of turn. If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | unparsed remainder: If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | Y/Y/- | not_working |
@@ -221,7 +220,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
@@ -243,6 +242,7 @@
 - Swan Song
 - Warriors' Lesson
 - Whip of Erebos
+- Xenagos, the Reveler
 
 </details>
 
@@ -305,7 +305,6 @@
 | ~ can block only creatures with flying. | 1 | Vaporkin | ths |
 | ~ deals N damage to target creature. it can't be regenerated ~. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rage of Purphoros | ths |
 | ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Spellheart Chimera | ths |
-| −N: exile the top seven cards of your library. you may put any number of creature and/or land cards from among them onto the battlefield. | 1 | Xenagos, the Reveler | ths |
 | −N: put a creature card with mana value N exiled with ashiok onto the battlefield under your control. that creature is a nightmare in addition to its other type | 1 | Ashiok, Nightmare Weaver | ths |
 
 ## Notes

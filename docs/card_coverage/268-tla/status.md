@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 57 | 20.6% |
+| Tested | 58 | 20.9% |
 | Works (untested) | 124 | 44.8% |
-| Partial (unaudited) | 13 | 4.7% |
+| Partial (unaudited) | 12 | 4.3% |
 | Not working | 83 | 30.0% |
 
 ## Cards needing work
@@ -115,7 +115,6 @@
 | Fated Firepower | unaudited | If a source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus an amount of damage equal to the nu | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Great Divide Guide | unaudited | Each land and Ally you control has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Honest Work | unaudited | Enchanted creature loses all abilities and is a Citizen with base power and toughness 1/1 and "{T}: Add {C}" named Humble Merchant. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Ozai, the Phoenix King | unaudited | If you would lose unspent mana, that mana becomes red instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Serpent of the Pass | unaudited | If there are three or more Lesson cards in your graveyard, you may cast this spell as though it had flash. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Swampsnare Trap | unaudited | This spell costs {1} less to cast if it targets a creature with flying. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | The Lion-Turtle | unaudited | The Lion-Turtle can't attack or block unless there are three or more Lesson cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -250,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>57 cards</summary>
+<summary>58 cards</summary>
 
 - Aang, Swift Savior // Aang and La, Ocean's Fury
 - Aang, at the Crossroads // Aang, Destined Savior
@@ -292,6 +291,7 @@
 - Obsessive Pursuit
 - Origin of Metalbending
 - Ostrich-Horse
+- Ozai, the Phoenix King
 - Phoenix Fleet Airship
 - Price of Freedom
 - Realm of Koh
@@ -347,7 +347,6 @@
 | exile target creature. if it was dealt damage ~, create a clue token. (it's an artifact with "...") | 1 | Sold Out | tla |
 | if a source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus an amount of damage equal to the nu | 1 | Fated Firepower | tla |
 | if there are three or more lesson cards in your graveyard, you may cast ~ as though it had flash. | 1 | Serpent of the Pass | tla |
-| if you would lose unspent mana, that mana becomes red instead. | 1 | Ozai, the Phoenix King | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) return target creature card from your graveyard to your hand. if ~ was kicked, instead put that card o | 1 | Zuko's Conviction | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) search your library for a basic land card. if ~ was kicked, instead search your library for a basic la | 1 | Aang's Journey | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) target creature can"..."s an artifact with "...") | 1 | Jet's Brainwashing | tla |

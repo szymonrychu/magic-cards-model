@@ -8,10 +8,10 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3294 | 14.5% |
-| Works (untested) | 11381 | 50.0% |
-| Partial (unaudited) | 1098 | 4.8% |
-| Not working | 6997 | 30.7% |
+| Tested | 3302 | 14.5% |
+| Works (untested) | 11382 | 50.0% |
+| Partial (unaudited) | 1092 | 4.8% |
+| Not working | 6994 | 30.7% |
 
 ## Campaign order
 
@@ -24,8 +24,8 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 273 | [sos](273-sos/status.md) - Secrets of Strixhaven | 2026-04-24 | 255 | 120 | 135 | done |
 | 271 | [tmt](271-tmt/status.md) - Teenage Mutant Ninja Turtles | 2026-03-06 | 187 | 90 | 97 | done |
 | 270 | [ecl](270-ecl/status.md) - Lorwyn Eclipsed | 2026-01-23 | 252 | 144 | 107 | done |
-| 268 | [tla](268-tla/status.md) - Avatar: The Last Airbender | 2025-11-21 | 277 | 57 | 124 | todo |
-| 265 | [spm](265-spm/status.md) - Marvel's Spider-Man | 2025-09-26 | 187 | 30 | 99 | todo |
+| 268 | [tla](268-tla/status.md) - Avatar: The Last Airbender | 2025-11-21 | 277 | 58 | 124 | todo |
+| 265 | [spm](265-spm/status.md) - Marvel's Spider-Man | 2025-09-26 | 187 | 30 | 100 | todo |
 | 263 | [eoe](263-eoe/status.md) - Edge of Eternities | 2025-08-01 | 252 | 47 | 136 | todo |
 | 261 | [fin](261-fin/status.md) - Final Fantasy | 2025-06-13 | 304 | 35 | 128 | todo |
 | 259 | [tdm](259-tdm/status.md) - Tarkir: Dragonstorm | 2025-04-11 | 252 | 50 | 129 | todo |
@@ -34,7 +34,7 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 253 | [dsk](253-dsk/status.md) - Duskmourn: House of Horror | 2024-09-27 | 265 | 41 | 108 | todo |
 | 252 | [blb](252-blb/status.md) - Bloomburrow | 2024-08-02 | 258 | 39 | 118 | todo |
 | 251 | [acr](251-acr/status.md) - Assassin's Creed | 2024-07-05 | 106 | 12 | 35 | todo |
-| 250 | [mh3](250-mh3/status.md) - Modern Horizons 3 | 2024-06-14 | 262 | 71 | 90 | todo |
+| 250 | [mh3](250-mh3/status.md) - Modern Horizons 3 | 2024-06-14 | 262 | 71 | 91 | todo |
 | 249 | [otj](249-otj/status.md) - Outlaws of Thunder Junction | 2024-04-19 | 259 | 29 | 129 | todo |
 | 248 | [big](248-big/status.md) - The Big Score | 2024-04-19 | 27 | 4 | 7 | todo |
 | 246 | [mkm](246-mkm/status.md) - Murders at Karlov Manor | 2024-02-09 | 268 | 46 | 110 | todo |
@@ -43,7 +43,7 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 240 | [ltr](240-ltr/status.md) - The Lord of the Rings: Tales of Middle-earth | 2023-06-23 | 281 | 30 | 132 | todo |
 | 239 | [mat](239-mat/status.md) - March of the Machine: The Aftermath | 2023-05-12 | 49 | 9 | 12 | todo |
 | 282 | [mul](282-mul/status.md) - Multiverse Legends | 2023-04-21 | 1 | 0 | 0 | todo |
-| 238 | [mom](238-mom/status.md) - March of the Machine | 2023-04-21 | 272 | 58 | 98 | todo |
+| 238 | [mom](238-mom/status.md) - March of the Machine | 2023-04-21 | 272 | 59 | 98 | todo |
 | 237 | [one](237-one/status.md) - Phyrexia: All Will Be One | 2023-02-03 | 252 | 33 | 105 | todo |
 | 296 | [dmr](296-dmr/status.md) - Dominaria Remastered | 2023-01-13 | 1 | 0 | 0 | todo |
 | 236 | [j22](236-j22/status.md) - Jumpstart 2022 | 2022-12-02 | 6 | 1 | 4 | todo |
@@ -54,7 +54,7 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 280 | [2x2](280-2x2/status.md) - Double Masters 2022 | 2022-07-08 | 3 | 0 | 2 | todo |
 | 231 | [snc](231-snc/status.md) - Streets of New Capenna | 2022-04-29 | 253 | 27 | 135 | todo |
 | 227 | [neo](227-neo/status.md) - Kamigawa: Neon Dynasty | 2022-02-18 | 267 | 30 | 120 | todo |
-| 225 | [vow](225-vow/status.md) - Innistrad: Crimson Vow | 2021-11-19 | 253 | 24 | 81 | todo |
+| 225 | [vow](225-vow/status.md) - Innistrad: Crimson Vow | 2021-11-19 | 253 | 25 | 81 | todo |
 | 222 | [mid](222-mid/status.md) - Innistrad: Midnight Hunt | 2021-09-24 | 249 | 30 | 125 | todo |
 | 221 | [afr](221-afr/status.md) - Adventures in the Forgotten Realms | 2021-07-23 | 257 | 21 | 119 | todo |
 | 219 | [mh2](219-mh2/status.md) - Modern Horizons 2 | 2021-06-18 | 258 | 39 | 120 | todo |
@@ -67,7 +67,7 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 207 | [m21](207-m21/status.md) - Core Set 2021 | 2020-07-03 | 182 | 20 | 97 | todo |
 | 206 | [iko](206-iko/status.md) - Ikoria: Lair of Behemoths | 2020-04-24 | 228 | 18 | 99 | todo |
 | 204 | [thb](204-thb/status.md) - Theros Beyond Death | 2020-01-24 | 246 | 19 | 135 | todo |
-| 279 | [sld](279-sld/status.md) - Secret Lair Drop | 2019-12-08 | 6 | 1 | 3 | todo |
+| 279 | [sld](279-sld/status.md) - Secret Lair Drop | 2019-12-08 | 6 | 2 | 3 | todo |
 | 284 | [plst](284-plst/status.md) - The List | 2019-11-07 | 4 | 0 | 0 | todo |
 | 202 | [eld](202-eld/status.md) - Throne of Eldraine | 2019-10-04 | 269 | 37 | 135 | todo |
 | 200 | [m20](200-m20/status.md) - Core Set 2020 | 2019-07-12 | 176 | 30 | 92 | todo |
@@ -104,9 +104,9 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 155 | [ktk](155-ktk/status.md) - Khans of Tarkir | 2014-09-26 | 225 | 18 | 161 | todo |
 | 154 | [ddn](154-ddn/status.md) - Duel Decks: Speed vs. Cunning | 2014-09-05 | 6 | 0 | 5 | todo |
 | 153 | [m15](153-m15/status.md) - Magic 2015 | 2014-07-18 | 143 | 11 | 74 | todo |
-| 149 | [jou](149-jou/status.md) - Journey into Nyx | 2014-05-02 | 161 | 9 | 94 | todo |
+| 149 | [jou](149-jou/status.md) - Journey into Nyx | 2014-05-02 | 161 | 10 | 94 | todo |
 | 147 | [bng](147-bng/status.md) - Born of the Gods | 2014-02-07 | 160 | 14 | 89 | todo |
-| 143 | [ths](143-ths/status.md) - Theros | 2013-09-27 | 211 | 20 | 131 | todo |
+| 143 | [ths](143-ths/status.md) - Theros | 2013-09-27 | 211 | 21 | 131 | todo |
 | 141 | [ddl](141-ddl/status.md) - Duel Decks: Heroes vs. Monsters | 2013-09-06 | 6 | 2 | 3 | todo |
 | 140 | [m14](140-m14/status.md) - Magic 2014 | 2013-07-19 | 113 | 5 | 64 | todo |
 | 137 | [dgm](137-dgm/status.md) - Dragon's Maze | 2013-05-03 | 143 | 15 | 71 | todo |
@@ -145,7 +145,7 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 278 | [tsb](278-tsb/status.md) - Time Spiral Timeshifted | 2006-10-06 | 1 | 0 | 0 | todo |
 | 70 | [tsp](070-tsp/status.md) - Time Spiral | 2006-10-06 | 268 | 28 | 103 | todo |
 | 68 | [csp](068-csp/status.md) - Coldsnap | 2006-07-21 | 143 | 11 | 62 | todo |
-| 66 | [dis](066-dis/status.md) - Dissension | 2006-05-05 | 169 | 19 | 58 | todo |
+| 66 | [dis](066-dis/status.md) - Dissension | 2006-05-05 | 169 | 20 | 57 | todo |
 | 64 | [gpt](064-gpt/status.md) - Guildpact | 2006-02-03 | 149 | 10 | 81 | todo |
 | 61 | [rav](061-rav/status.md) - Ravnica: City of Guilds | 2005-10-07 | 247 | 22 | 119 | todo |
 | 59 | [psal](059-psal/status.md) - Salvat 2005 | 2005-08-22 | 79 | 3 | 49 | todo |
@@ -156,7 +156,7 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 | 49 | [dst](049-dst/status.md) - Darksteel | 2004-02-06 | 162 | 7 | 79 | todo |
 | 46 | [mrd](046-mrd/status.md) - Mirrodin | 2003-10-02 | 269 | 23 | 154 | todo |
 | 277 | [8ed](277-8ed/status.md) - Eighth Edition | 2003-07-28 | 1 | 0 | 1 | todo |
-| 44 | [scg](044-scg/status.md) - Scourge | 2003-05-26 | 24 | 8 | 10 | todo |
+| 44 | [scg](044-scg/status.md) - Scourge | 2003-05-26 | 24 | 9 | 10 | todo |
 | 42 | [lgn](042-lgn/status.md) - Legions | 2003-02-03 | 17 | 1 | 9 | todo |
 | 39 | [ons](039-ons/status.md) - Onslaught | 2002-10-07 | 58 | 17 | 32 | todo |
 | 38 | [jud](038-jud/status.md) - Judgment | 2002-05-27 | 20 | 1 | 8 | todo |
@@ -197,56 +197,56 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose one | 63 | Crux of Fate, Charge of the Mites, Early Winter, Timecrafting, Fury Charm | 5dn, acr, aer, afr, ala, blb, csp, dft, dmu, dsk, dst, dtk, eld, fin, frf, fut, gtc, hou, khm, kld, ktk, m19, m20, m21, mh1, mid, mkm, mom, mrd, neo, one, plc, rtr, snc, sok, spm, stx, thb |
-| Delirium | 33 | Inquisitor's Ox, Deathcap Cultivator, Moldgraf Scavenger, Kessig Dire Swine, Hound of the Farbogs | ddq, dsk, emn, mh2, soi |
-| exalted | 30 | Aven Squire, Rhox Bodyguard, Noble Hierarch, Frontline Sage, Giltspire Avenger | ala, arb, con, m13, mh1, mh2 |
+| Choose one | 63 | Blinding Beam, Journey of Discovery, Grab the Reins, Incite War, Wail of the Nim | 5dn, acr, aer, afr, ala, blb, csp, dft, dmu, dsk, dst, dtk, eld, fin, frf, fut, gtc, hou, khm, kld, ktk, m19, m20, m21, mh1, mid, mkm, mom, mrd, neo, one, plc, rtr, snc, sok, spm, stx, thb |
+| Delirium | 33 | Thraben Foulbloods, Grim Flayer, Geist of the Lonely Vigil, Strange Augmentation, Desperate Sentry | ddq, dsk, emn, mh2, soi |
+| exalted | 30 | Qasali Pridemage, Sigiled Behemoth, Ardent Plea, Ethercaste Knight, Ignoble Hierarch | ala, arb, con, m13, mh1, mh2 |
 | bushido | 27 | Sokenzan Spellblade, Ronin Cavekeeper, Kuro's Taken, Kitsune Dawnblade, Araba Mothrider | bok, chk, mh2, sok |
-| Landfall | 24 | Ob Nixilis, the Fallen, Adventuring Gear, Turntimber Basilisk, Roil Elemental, Shoal Serpent | bfz, fin, ltr, mh3, ogw, tla, wwk, zen, znr |
+| Landfall | 24 | Embodiment of Fury, Embodiment of Insight, Tifa Lockhart, Rabaroo Troop, Calcite Snapper | bfz, fin, ltr, mh3, ogw, tla, wwk, zen, znr |
 | soulshift | 24 | Elder Pine of Jukai, Nightsoil Kami, Deathknell Kami, Torii Watchward, Promised Kannushi | bok, chk, sok |
-| enchanted land has "..." | 22 | Caustic Tar, Squirrel Nest, New Horizons, Tin Street Market, Debtor's Pulpit | aer, afr, akh, avr, dis, dtk, grn, gtc, iko, mor, neo, ody, rtr, soi, spm, xln |
+| enchanted land has "..." | 22 | Tin Street Market, Debtor's Pulpit, Skygames, Urban Utopia, Footfall Crater | aer, afr, akh, avr, dis, dtk, grn, gtc, iko, mor, neo, ody, rtr, soi, spm, xln |
 | disturb | 20 | Lunarch Veteran // Luminous Phantom, Devoted Grafkeeper // Departed Soulkeeper, Overwhelmed Archivist // Archive Haunt, Covert Cutpurse // Covetous Geist, Mourning Patrol // Morning Apparition | mid, vow |
-| modular | 20 | Arcbound Wanderer, Scrapyard Recombiner, Arcbound Hybrid, Arcbound Slith, Arcbound Bruiser | 5dn, dst, mh1, mh2, mh3 |
-| Domain | 19 | Drag Down, Might of Alara, Aven Trailblazer, Manaforce Mace, Wandering Goblins | con, dmu, pls |
-| echo | 19 | Stingscourger, Hammerheim Deadeye, Uktabi Drake, Deepcavern Imp, Henchfiend of Ukor | fut, mh1, mh2, plc, tsp, uds, ulg |
+| modular | 20 | Arcbound Whelp, Arcbound Javelineer, Zabaz, the Glimmerwasp, Arcbound Mouser, Power Depot | 5dn, dst, mh1, mh2, mh3 |
+| Domain | 19 | Zar Ojanen, Scion of Efrava, Llanowar Greenwidow, Territorial Maro, Nael, Avizoa Aeronaut, Shadow Prophecy | con, dmu, pls |
+| echo | 19 | Bone Shredder, Karmic Guide, Avalanche Riders, Firemaw Kavu, Mogg War Marshal | fut, mh1, mh2, plc, tsp, uds, ulg |
 | backup | 18 | Saiba Cryptomancer, Chomping Kavu, Consuming Aetherborn, Gloomfang Mauler, Cragsmasher Yeti | mom |
-| ~ can block only creatures with flying. | 17 | Gloomwidow, Welkin Tern, Dreamcaller Siren, Vaporkin, Skywinder Drake | avr, dst, eld, emn, gpt, kld, m12, m21, mh3, mmq, shm, ths, tsp, vis, vow, xln, zen |
-| overload | 16 | Mind Rake, Scale Up, Stirring Address, Fangs of Kalonia, Mizzium Skin | ddj, dgm, mh1, mh2, mh3, rtr |
-| aftermath | 15 | Heaven // Earth, Start // Finish, Spring // Mind, Mouth // Feed, Cut // Ribbons | akh, hou, mh2 |
-| all slivers have "..." | 15 | Poultice Sliver, Darkheart Sliver, Cautery Sliver, Necrotic Sliver, Frenetic Sliver | plc, tsp |
-| undying | 15 | Hound of Griselbrand, Butcher Ghoul, Howlgeist, Evernight Shade, Vengeful Vampire | avr, dka |
+| ~ can block only creatures with flying. | 17 | Tattered Haunter, Cloud Sprite, Stormcloud Djinn, Gloomwidow, Brazen Borrower // Petty Theft | avr, dst, eld, emn, gpt, kld, m12, m21, mh3, mmq, shm, ths, tsp, vis, vow, xln, zen |
+| overload | 16 | Weapon Surge, Break the Ice, Mizzium Skin, Blustersquall, Vandalblast | ddj, dgm, mh1, mh2, mh3, rtr |
+| aftermath | 15 | Claim // Fame, Farm // Market, Appeal // Authority, Consign // Oblivion, Grind // Dust | akh, hou, mh2 |
+| all slivers have "..." | 15 | Basal Sliver, Harmonic Sliver, Gemhide Sliver, Telekinetic Sliver, Mindlash Sliver | plc, tsp |
+| undying | 15 | Vengeful Vampire, Relentless Skaabs, Geralf's Messenger, Sightless Ghoul, Young Wolf | avr, dka |
 | Eerie | 14 | Optimistic Scavenger, Fear of Infinity, Scrabbling Skullcrab, Dashing Bloodsucker, Erratic Apparition | dsk |
-| Metalcraft | 14 | Spire Serpent, Razorfield Rhino, Ardent Recruit, Vedalken Infiltrator, Indomitable Archangel | mbs, mh2, nph, som |
-| awaken | 14 | Ondu Rising, Scatter to the Winds, Mire's Malice, Earthen Arms, Clutch of Currents | bfz, ddp |
+| Metalcraft | 14 | Spire Serpent, Razorfield Rhino, Ardent Recruit, Vedalken Infiltrator, Puresteel Paladin | mbs, mh2, nph, som |
+| awaken | 14 | Sheer Drop, Ondu Rising, Scatter to the Winds, Mire's Malice, Earthen Arms | bfz, ddp |
 | fabricate | 14 | Visionary Augmenter, Angel of Invention, Maulfist Squad, Ambitious Aetherborn, Peema Outrider | kld, mh3 |
-| prototype | 14 | Frogmyr Enforcer, Goring Warplow, Combat Thresher, Woodcaller Automaton, Blitz Automaton | bro, mh3 |
+| prototype | 14 | Goring Warplow, Combat Thresher, Woodcaller Automaton, Blitz Automaton, Cradle Clearcutter | bro, mh3 |
 | embalm | 13 | Heart-Piercer Manticore, Angel of Sanctions, Anointer Priest, Vizier of Many Faces, Tah-Crop Skirmisher | akh |
 | level up | 13 | Zulaport Enforcer, Coralhelm Commander, Brimstone Mage, Hada Spy Patrol, Joraga Treespeaker | roe |
-| living weapon | 13 | Colossal Dreadmask, Mandibular Kite, Drossclaw, Cranial Ram, Skinwing | mbs, mh2, mh3, nph |
+| living weapon | 13 | Skinwing, Strandwalker, Flayer Husk, Mortarpod, Bonehoard | mbs, mh2, mh3, nph |
 | Kinship | 12 | Pyroclast Consul, Winnower Patrol, Sensation Gorger, Waterspout Weavers, Leaf-Crowned Elder | mor |
-| Raid | 12 | Swaggering Corsair, Admiral's Order, Protean Raider, Rigging Runner, Storm Fleet Aerialist | fdn, ktk, rix, tla, xln |
-| scavenge | 12 | Terrus Wurm, Deadbridge Goliath, Slitherhead, Korozda Monitor, Sewer Shambler | ddj, dgm, mh2, rtr |
-| unleash | 12 | Grim Roustabout, Chaos Imps, Carnival Hellsteed, Spawn of Rix Maadi, Splatter Thug | dgm, rtr |
-| Converge | 11 | Unified Front, Bring to Light, Roilmage's Trick, Brilliant Spectrum, Infuse with the Elements | bfz, mh2 |
-| Hellbent | 11 | Gathan Raiders, Cutthroat il-Dal, Gibbering Descent, Headless Specter, Bladeback Sliver | dis, fut, mh1, mh2 |
-| Inspired | 11 | Servant of Tymaret, Pheres-Band Raiders, Satyr Nyx-Smith, Aerie Worshippers, Forlorn Pseudamma | bng, jou |
+| Raid | 12 | Swaggering Corsair, Admiral's Order, Protean Raider, War-Name Aspirant, Bellowing Saddlebrute | fdn, ktk, rix, tla, xln |
+| scavenge | 12 | Thrashing Mossdog, Bannerhide Krushok, Terrus Wurm, Deadbridge Goliath, Slitherhead | ddj, dgm, mh2, rtr |
+| unleash | 12 | Rakdos Drake, Exava, Rakdos Blood Witch, Grim Roustabout, Chaos Imps, Carnival Hellsteed | dgm, rtr |
+| Converge | 11 | Glinting Creeper, Sweep the Skies, Kaleidoscorch, Radiant Epicure, Unified Front | bfz, mh2 |
+| Hellbent | 11 | Necromancer's Familiar, Taste for Mayhem, Rakdos Pit Dragon, Gobhobbler Rats, Slithering Shade | dis, fut, mh1, mh2 |
+| Inspired | 11 | King Macar, the Gold-Cursed, Disciple of Deceit, Daring Thief, Servant of Tymaret, Pheres-Band Raiders | bng, jou |
 | Max speed | 11 | Burnout Bashtronaut, Gastal Raider, Swiftwing Assailant, Racers' Scoreboard, Walking Sarcophagus | dft |
 | evolve | 11 | Adaptive Snapjaw, Shambleshark, Crocanura, Simic Fluxmage, Clinging Anemones | dgm, gtc, mh1, mh2 |
-| graft | 11 | Llanowar Reborn, Cytoplast Manipulator, Sporeback Troll, Vigean Hydropon, Vigean Graftmage | dis, fut |
+| graft | 11 | Cytoplast Manipulator, Sporeback Troll, Vigean Hydropon, Vigean Graftmage, Cytospawn Shambler | dis, fut |
 | mentor | 11 | Hammer Dropper, Sunhome Stalwart, Truefire Captain, Blade Instructor, Light of the Legion | grn |
 | reconfigure | 11 | Bronzeplate Boar, Leech Gauntlet, Acquisition Octopus, The Reality Chip, Webspinner Cuff | neo |
-| retrace | 11 | Flame Jab, Monstrify, Oona's Grace, Savage Conception, Cenn's Enlistment | eve, mh1 |
+| retrace | 11 | Throes of Chaos, Flame Jab, Monstrify, Oona's Grace, Savage Conception | eve, mh1 |
 | afterlife | 10 | Ministrant of Obligation, Seraph of the Scales, Orzhov Racketeers, Knight of Sorrows, Knight of the Last Breath | rna |
 | blitz | 10 | Workshop Warchief, Riveteers Decoy, Riveteers Requisitioner, Night Clubber, Tenacious Underdog | snc |
-| buyback | 10 | Sprout Swarm, Mystic Speculation, Haze of Rage, Elvish Fury, Whispers of the Muse | fut, mh1, tmp, tsp |
-| champion | 10 | Supreme Exemplar, Lightning Crafter, Thoughtweft Trio, Changeling Berserker, Nova Chaser | lrw, mor |
+| buyback | 10 | Elvish Fury, Whispers of the Muse, Spell Burst, Reiterate, Demonic Collusion | fut, mh1, tmp, tsp |
+| champion | 10 | Thoughtweft Trio, Changeling Berserker, Nova Chaser, Wanderwine Prophets, Changeling Titan | lrw, mor |
 | cipher | 10 | Paranoid Delusions, Stolen Identity, Last Thoughts, Voidwalk, Midnight Recovery | dgm, gtc |
-| reinforce | 10 | Brighthearth Banneret, Burrenton Bombardier, Swell of Courage, Hunting Triad, Mosquito Guard | mh2, mh3, mor |
-| Choose two | 9 | Primal Command, Kaya's Guile, Mishra's Command, Kayla's Command, Gix's Command | bro, dtk, lrw, mh1, stx |
-| Chroma | 9 | Phosphorescent Feast, Heartlash Cinder, Outrage Shaman, Springjack Shepherd, Light from Within | eve, fut |
+| reinforce | 10 | Break Ties, Wren's Run Hydra, Fowl Strike, Brighthearth Banneret, Burrenton Bombardier | mh2, mh3, mor |
+| Choose two | 9 | Mishra's Command, Kayla's Command, Gix's Command, Urza's Command, Primal Command | bro, dtk, lrw, mh1, stx |
+| Chroma | 9 | Heartlash Cinder, Outrage Shaman, Springjack Shepherd, Light from Within, Umbra Stalker | eve, fut |
 | Radiance | 9 | Incite Hysteria, Wojek Siren, Surge of Zeal, Cleansing Beam, Rally the Righteous | psal, rav |
 | when ~ enters, incubate N. | 9 | Phyrexian Awakening, Marauding Dreadship, Corruption of Towashi, Blighted Burgeoning, Converter Beast | mom |
 | Strive | 8 | Hour of Need, Polymorphous Rush, Silence the Believers, Blinding Flare, Colossal Heroics | jou |
-| enchanted creature can"..."t be activated. | 8 | One Thousand Lashes, Arrest, Trapped in the Tower, Desert's Hold, Demotion | bro, csp, eld, grn, gtc, hou, mmq, rna |
+| enchanted creature can"..."t be activated. | 8 | Desert's Hold, Arrest, One Thousand Lashes, Demotion, Trapped in the Tower | bro, csp, eld, grn, gtc, hou, mmq, rna |
 
 ## Notes
 

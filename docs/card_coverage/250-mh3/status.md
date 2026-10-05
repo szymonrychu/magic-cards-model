@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 71 | 27.1% |
-| Works (untested) | 90 | 34.4% |
-| Partial (unaudited) | 19 | 7.3% |
+| Works (untested) | 91 | 34.7% |
+| Partial (unaudited) | 18 | 6.9% |
 | Not working | 82 | 31.3% |
 
 ## Cards needing work
@@ -109,7 +109,6 @@
 | Propagator Drone | notice | Creature tokens you control have evolve. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pyretic Rebirth | notice | Return target artifact or creature card from your graveyard to your hand. Pyretic Rebirth deals damage equal to that card's mana value to up to one target creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aether Revolt | unaudited | Revolt — As long as a permanent left the battlefield under your control this turn, if a source you control would deal noncombat damage to an opponent or a perma | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Ashling, Flame Dancer | unaudited | You don't lose unspent red mana as steps and phases end. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Corrupted Shapeshifter | unaudited | As this creature enters, it becomes your choice of a 3/3 creature with flying, a 2/5 creature with vigilance, or a 0/12 creature with defender. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cursed Wombat | unaudited | Permanents you control have "Whenever one or more +1/+1 counters are put on this permanent, put an additional +1/+1 counter on it. This ability triggers only on | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dog Umbra | unaudited | As long as another player controls enchanted creature, it can't attack or block. Otherwise, this Aura has umbra armor. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -130,6 +129,7 @@
 | Accursed Marauder | handled | When this creature enters, each player sacrifices a nontoken creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amphibian Downpour | handled | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Argent Dais | handled | This artifact enters with two oil counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ashling, Flame Dancer | handled | You don't lose unspent red mana as steps and phases end. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bespoke Battlewagon | handled | {T}: You get {E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bountiful Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Forest, Island, or Mountain card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brainsurge | handled | Draw four cards, then put two cards from your hand on top of your library in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -379,7 +379,6 @@
 | whenever ~ attacks, put a +N/+N counter on target modified creature you control. | 1 | Expanding Ooze | mh3 |
 | whenever ~ attacks, you may draw cards equal to its power. if you do, discard that many cards. | 1 | Horrid Shadowspinner | mh3 |
 | whenever ~ deals combat damage to a player, put a +N/+N counter on it. when you do, you may remove a counter from another target permanent or opponent. | 1 | Etched Slith | mh3 |
-| you don't lose unspent red mana as steps and phases end. | 1 | Ashling, Flame Dancer | mh3 |
 | you get {M}{M}{M} (three energy counters), then you may pay any amount of {M}. each player may exile their hand and draw a number of cards equal to the amount o | 1 | Wheel of Potential | mh3 |
 | you may cast creature spells with mana value N or less by paying {M} rather than paying their mana costs. if you cast a spell ~, you may cast it as though it ha | 1 | Primal Prayers | mh3 |
 | you may exert ~ as it attacks. when you do, target creature gets +N/+N until end of turn, where N is the number of counters on permanents you control. | 1 | Hydra Trainer | mh3 |

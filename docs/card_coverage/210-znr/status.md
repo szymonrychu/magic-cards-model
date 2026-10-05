@@ -19,8 +19,8 @@
 |---|---|---|
 | Tested | 32 | 12.5% |
 | Works (untested) | 117 | 45.9% |
-| Partial (unaudited) | 22 | 8.6% |
-| Not working | 84 | 32.9% |
+| Partial (unaudited) | 21 | 8.2% |
+| Not working | 85 | 33.3% |
 
 ## Cards needing work
 
@@ -104,6 +104,7 @@
 | Expedition Champion | notice | This creature gets +2/+0 as long as you control another Warrior. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Felidar Retreat | notice | Landfall — Whenever a land you control enters, choose one — • Create a 2/2 white Cat Beast creature token. • Put a +1/+1 counter on each creature you control. T | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Inscription of Insight | notice | Kicker {2}{U}{U} Choose one. If this spell was kicked, choose any number instead. • Return up to two target creatures to their owners' hands. • Scry 2, then dra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Leyline Tyrant | notice | When this creature dies, you may pay any amount of {R}. When you do, it deals that much damage to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oblivion's Hunger | notice | Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it. (Damage and effects that say "destro | unparsed remainder: Draw a card if that creature has a +1/+1 counter on it. | Y/Y/- | not_working |
 | Pyroclastic Hellion | notice | When this creature enters, you may return a land you control to its owner's hand. When you do, this creature deals 2 damage to each opponent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sejiri Shelter // Sejiri Glacier | notice | Target creature you control gains protection from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -117,7 +118,6 @@
 | Gnarlid Colony | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Journey to Oblivion | unaudited | This spell costs {1} less to cast for each creature in your party. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kargan Intimidator | unaudited | Cowards can't block Warriors. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Leyline Tyrant | unaudited | You don't lose unspent red mana as steps and phases end. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lithoform Blight | unaudited | Enchanted land loses all land types and abilities and has "{T}: Add {C}" and "{T}, Pay 1 life: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Moss-Pit Skeleton | unaudited | If this creature was kicked, it enters with three +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Myriad Construct | unaudited | If this creature was kicked, it enters with a +1/+1 counter on it for each nonbasic land your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -345,6 +345,7 @@
 | when jace enters, if jace was kicked, create a token that"..."s not legendary and its starting loyalty is N. | 1 | Jace, Mirror Mage | znr |
 | when phylath enters, create a N/N green plant creature token for each basic land you control. | 1 | Phylath, World Sculptor | znr |
 | when yasharn enters, search your library for a basic forest card and a basic plains card, reveal those cards, put them into your hand, then shuffle. | 1 | Yasharn, Implacable Earth | znr |
+| when ~ dies, you may pay any amount of {M}. when you do, it deals that much damage to any target. | 1 | Leyline Tyrant | znr |
 | when ~ enters, add {M} for each creature in your party. | 1 | Ardent Electromancer | znr |
 | when ~ enters, copy the next instant or sorcery spell with mana value N or less you cast ~ when you cast it. if ~ was kicked, copy that spell twice instead. you | 1 | Sea Gate Stormcaller | znr |
 | when ~ enters, create a N/N white kor warrior creature token for each creature in your party. | 1 | Squad Commander | znr |
@@ -374,7 +375,6 @@
 | whenever ~ attacks, put a +N/+N counter on each attacking creature with a +N/+N counter on it. | 1 | Oran-Rief Ooze | znr |
 | whenever ~ attacks, target creature an opponent controls with power less than or equal to the number of warriors you control can't block ~. | 1 | Goma Fada Vanguard | znr |
 | whenever ~ deals combat damage to a player, that player creates a N/N colorless goblin construct artifact creature token with "..." and "..." | 1 | Relic Robber | znr |
-| you don't lose unspent red mana as steps and phases end. | 1 | Leyline Tyrant | znr |
 | {M}, {M}: copy target permanent spell you control. | 1 | Lithoform Engine | znr |
 | {M}: put two +N/+N counters on ~. then you may have it become a N/N elemental creature until end of turn. it's still a land. | 1 | Crawling Barrens | znr |
 | {M}: the next instant or sorcery spell you cast ~ costs {M} less to cast, where N is the number of wizards you control as ~ resolves. | 1 | Kaza, Roil Chaser | znr |
