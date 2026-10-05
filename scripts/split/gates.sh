@@ -156,6 +156,18 @@ if [ "$MODE" = cheap ]; then
   mv "$LOGDIR/v2.txt" "$LOGDIR/violations.txt"
 fi
 
+# a suite timing violation is re-measured A/B (pre-split commit, then this tree) before it
+# counts: a baseline taken hours earlier under different machine load is no yardstick
+for key in suite suite_full; do
+  if grep -Eq "^VIOLATION: $key (wall|cpu) time" "$LOGDIR/violations.txt"; then
+    if $PY "$TOOLS/baselines.py" recheck "$BASELINE" "$AFTER" --key "$key" > "$LOGDIR/recheck-$key.txt" 2>&1; then
+      grep -Ev "^VIOLATION: $key (wall|cpu) time" "$LOGDIR/violations.txt" > "$LOGDIR/rest.txt"
+      mv "$LOGDIR/rest.txt" "$LOGDIR/violations.txt"
+    fi
+    sed 's/^/    /' "$LOGDIR/recheck-$key.txt"
+  fi
+done
+
 claim() { # <name> <pattern>: report the gate, consume its violations
   if grep -Eq "$2" "$LOGDIR/violations.txt"; then
     report "$1" 1 "$cmp_secs"

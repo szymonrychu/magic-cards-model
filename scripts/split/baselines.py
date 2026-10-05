@@ -28,6 +28,7 @@ import resource
 import statistics
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -143,14 +144,14 @@ def _children_cpu() -> float:
 
 
 def timed_run(
-    cmd: list[str], check: bool = True
+    cmd: list[str], check: bool = True, cwd: Path = REPO
 ) -> tuple[subprocess.CompletedProcess, float, float]:
     """Run cmd; return (proc, wall seconds, CPU seconds of it and its reaped descendants).
 
     CPU time is what the timing gates compare: on a shared machine other sessions'
     suites stretch wall time without touching it."""
     cpu0, start = _children_cpu(), time.monotonic()
-    proc = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True)
+    proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
     wall, cpu = time.monotonic() - start, _children_cpu() - cpu0
     if check and proc.returncode != 0:
         raise RuntimeError(f"{' '.join(cmd)} failed ({proc.returncode}):\n{proc.stderr[-2000:]}")
@@ -229,6 +230,52 @@ def measure(full: bool, skip_test: bool) -> dict:
         fingerprint
     ) == json.loads(committed.read_text())
     return out
+
+
+def _suite_cpu(cwd: Path, task: str) -> float:
+    return timed_run(["mise", "run", task], check=False, cwd=cwd)[2]
+
+
+def _prepare(worktree: Path) -> None:
+    _run(["mise", "trust", "-q", str(worktree)])
+    timed_run(["mise", "run", "install"], cwd=worktree)
+
+
+def recheck(
+    before_sha: str,
+    task: str,
+    rounds: int = 1,
+    measure=_suite_cpu,
+    prepare=_prepare,
+    repo: Path = REPO,
+) -> tuple[bool, str]:
+    """A/B re-measure behind a suite timing violation: the baseline's commit in a throwaway
+    worktree, then this tree, back to back, `rounds` times; the minimum CPU time of each
+    side is held to the 5% limit. CPU time on a machine with performance and efficiency
+    cores still moves with the load, so a baseline taken hours earlier is no yardstick."""
+    with tempfile.TemporaryDirectory(prefix="split-recheck-") as tmp:
+        worktree = Path(tmp) / "before"
+        subprocess.run(
+            ["git", "worktree", "add", "-q", "--detach", str(worktree), before_sha],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+        )
+        try:
+            prepare(worktree)
+            b_cpu, a_cpu = [], []
+            for _ in range(rounds):
+                b_cpu.append(measure(worktree, task))
+                a_cpu.append(measure(repo, task))
+        finally:
+            subprocess.run(
+                ["git", "worktree", "remove", "--force", str(worktree)],
+                cwd=repo,
+                capture_output=True,
+            )
+    b, a = min(b_cpu), min(a_cpu)
+    ok = a - b <= b * SUITE_LIMIT
+    return ok, f"{task} A/B cpu before {b}s, after {a}s ({(a / b - 1) * 100:+.1f}%, limit +5%)"
 
 
 # ----- comparing -----
@@ -348,6 +395,10 @@ def main(argv: list[str]) -> int:
     c.add_argument("before")
     c.add_argument("after")
     c.add_argument("--step", required=True, choices=STEPS)
+    r = sub.add_parser("recheck", help="A/B re-measure a suite timing violation")
+    r.add_argument("before")
+    r.add_argument("after")
+    r.add_argument("--key", required=True, choices=("suite", "suite_full"))
     args = parser.parse_args(argv)
 
     if args.cmd == "measure":
@@ -357,6 +408,11 @@ def main(argv: list[str]) -> int:
         return 0
     before = json.loads(Path(args.before).read_text())
     after = json.loads(Path(args.after).read_text())
+    if args.cmd == "recheck":
+        task, rounds = ("test", 2) if args.key == "suite" else ("test:full", 1)
+        ok, msg = recheck(before["engine_sha"], task, rounds)
+        print(f"RECHECK {'ok' if ok else 'slower'}: {msg}")
+        return 0 if ok else 1
     violations = compare(before, after, args.step)
     for v in violations:
         print(f"VIOLATION: {v}")

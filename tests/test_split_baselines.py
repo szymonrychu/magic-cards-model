@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import json
 import pathlib
+import subprocess
 import sys
 
 import pytest
@@ -353,3 +354,52 @@ def test_import_cpu_time_is_the_least_disturbed_run():
     assert summary["cumulative_us"] == 410
     assert summary["self_us"] == {"machines.effects": 2}
     assert summary["runs"] == 3
+
+
+def test_recheck_measures_the_pre_split_commit_and_this_tree_back_to_back(tmp_path):
+    """The A/B recheck behind a timing violation: the before side runs in a throwaway
+    worktree of the baseline's engine sha, alternating with this tree; the slowest-free
+    (minimum) CPU of each side is compared against the 5% limit, and the worktree is gone after."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    def run(*a):
+        return subprocess.run(["git", *a], cwd=repo, check=True, capture_output=True)
+
+    run("init", "-q")
+    run(
+        "-c",
+        "user.name=t",
+        "-c",
+        "user.email=t@t",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        "pre",
+    )
+    pre = run("rev-parse", "HEAD").stdout.decode().strip()
+    (repo / "marker").write_text("after")
+    calls = []
+
+    def measure(cwd, task):
+        side = "after" if (pathlib.Path(cwd) / "marker").exists() else "before"
+        calls.append((side, task))
+        return {"before": [100.0, 98.0], "after": [103.0, 102.0]}[side][
+            len([c for c in calls if c[0] == side]) - 1
+        ]
+
+    ok, msg = B.recheck(pre, "test", rounds=2, measure=measure, prepare=lambda wt: None, repo=repo)
+    assert calls == [("before", "test"), ("after", "test")] * 2
+    assert ok and "98.0" in msg and "102.0" in msg
+    assert run("worktree", "list").stdout.decode().count("\n") == 1
+
+    calls.clear()
+
+    def slow(cwd, task):
+        return measure(cwd, task) * (1.2 if (pathlib.Path(cwd) / "marker").exists() else 1)
+
+    ok, _ = B.recheck(pre, "test", rounds=2, measure=slow, prepare=lambda wt: None, repo=repo)
+    assert not ok

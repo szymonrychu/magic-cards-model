@@ -287,6 +287,9 @@ if args[0] == "measure":
     if "--full" in args:
         data["suite_full"] = {"wall_s": 2.0, "returncode": 0}
     open(out, "w").write(json.dumps(data))
+elif args[0] == "recheck":
+    print("RECHECK " + " ".join(args[1:]))
+    sys.exit(int(os.environ.get("STUB_RECHECK_RC", "1")))
 else:
     for line in os.environ.get("STUB_VIOLATIONS", "").split(";"):
         if line:
@@ -447,3 +450,32 @@ def test_gates_attribute_a_cpu_time_suite_violation_to_the_suite_time_check(stub
     assert res.returncode == 1
     assert any(ln.startswith("FAIL suite time") for ln in lines), res.stdout
     assert not any("compare (other)" in ln for ln in lines), res.stdout
+
+
+def test_gates_a_suite_time_violation_that_an_ab_recheck_clears_passes(stubbed):
+    """r6: F1 (a pure move) read +24% suite CPU at load 14 against a quiet baseline. A timing
+    violation is re-measured A/B (pre-split commit, then this tree, back to back) before it
+    fails the gate."""
+    res = stubbed(
+        "cheap",
+        STUB_VIOLATIONS="suite cpu time 1137.7s -> 1414.4s is more than 5% slower",
+        STUB_RECHECK_RC="0",
+    )
+    assert res.returncode == 0, res.stdout
+    assert any(ln.startswith("PASS suite time") for ln in res.stdout.splitlines()), res.stdout
+    assert "RECHECK" in res.stdout and "--key suite" in res.stdout
+
+
+def test_gates_a_suite_time_violation_the_recheck_confirms_fails(stubbed):
+    res = stubbed(
+        "full", STUB_VIOLATIONS="suite_full cpu time 8000s -> 9000s is more than 5% slower"
+    )
+    assert res.returncode == 1
+    assert any(ln.startswith("FAIL suite_full time") for ln in res.stdout.splitlines()), res.stdout
+    assert "--key suite_full" in res.stdout
+
+
+def test_gates_failed_tests_are_never_rechecked(stubbed):
+    res = stubbed("cheap", STUB_VIOLATIONS="suite has 2 failed in after", STUB_RECHECK_RC="0")
+    assert res.returncode == 1
+    assert "RECHECK" not in res.stdout
