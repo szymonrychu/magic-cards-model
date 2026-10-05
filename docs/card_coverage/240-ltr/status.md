@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 10.3% |
-| Works (untested) | 133 | 47.3% |
+| Tested | 30 | 10.7% |
+| Works (untested) | 132 | 47.0% |
 | Partial (unaudited) | 20 | 7.1% |
 | Not working | 99 | 35.2% |
 
@@ -274,7 +274,6 @@
 | Warbeast of Gorgoroth | handled | Whenever this creature or another creature you control with power 4 or greater dies, amass Orcs 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Westfold Rider | handled | Sacrifice this creature: Destroy target artifact or enchantment. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Willow-Wind | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Wizard's Rockets | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wose Pathfinder | handled | {6}{G}, {T}: Another target creature gets +3/+3 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | You Cannot Pass! | handled | Destroy target creature that blocked or was blocked by a legendary creature this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Éomer, Marshal of Rohan | handled | Whenever one or more other attacking legendary creatures you control die, untap all creatures you control. After this phase, there is an additional combat phase | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -282,7 +281,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Arwen, Mortal Queen
 - Bill the Pony
@@ -312,6 +311,7 @@
 - The Battle of Bywater
 - Took Reaper
 - Warg Rider
+- Wizard's Rockets
 - Éomer of the Riddermark
 
 </details>

@@ -68,7 +68,7 @@
 | Triton Tactics | silent | Up to two target creatures each get +0/+3 until end of turn. Untap those creatures. At this turn's next end of combat, tap each creature that was blocked by one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Underworld Cerberus | silent | When this creature dies, exile it and each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Viper's Kiss | silent | Enchanted creature gets -1/-1, and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Xenagos, the Reveler | silent | +1: Add X mana in any combination of {R} and/or {G}, where X is the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Xenagos, the Reveler | silent | −6: Exile the top seven cards of your library. You may put any number of creature and/or land cards from among them onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boon of Erebos | notice | Target creature gets +2/+0 until end of turn. Regenerate it. You lose 2 life. | unparsed remainder: Regenerate it. You lose 2 life. | Y/Y/- | not_working |
 | Daxos of Meletis | notice | Whenever Daxos deals combat damage to a player, exile the top card of that player's library. You gain life equal to that card's mana value. Until end of turn, y | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos's Emissary | notice | Discard a creature card: This creature gets +2/+2 until end of turn. If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | unparsed remainder: If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | Y/Y/- | not_working |
@@ -251,7 +251,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Heroic | 4 | Anthousa, Setessan Hero, Artisan of Forms, Favored Hoplite, Tormented Hero | ths |
-| +N: add N mana in any combination of {M} and/or {M}, where N is the number of creatures you control. | 1 | Xenagos, the Reveler | ths |
 | as an additional cost to cast ~, sacrifice a creature. choose target creature card in your graveyard. return that card and the sacrificed card to the battlefiel | 1 | Rescue from the Underworld | ths |
 | as long as ~ is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | 1 | Hundred-Handed One | ths |
 | as long as ~ is monstrous, it has trample and can attack as though it didn't have defender. | 1 | Colossus of Akros | ths |
@@ -306,6 +305,7 @@
 | ~ can block only creatures with flying. | 1 | Vaporkin | ths |
 | ~ deals N damage to target creature. it can't be regenerated ~. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rage of Purphoros | ths |
 | ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Spellheart Chimera | ths |
+| −N: exile the top seven cards of your library. you may put any number of creature and/or land cards from among them onto the battlefield. | 1 | Xenagos, the Reveler | ths |
 | −N: put a creature card with mana value N exiled with ashiok onto the battlefield under your control. that creature is a nightmare in addition to its other type | 1 | Ashiok, Nightmare Weaver | ths |
 
 ## Notes

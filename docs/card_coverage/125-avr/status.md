@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 6.5% |
-| Works (untested) | 105 | 48.4% |
+| Works (untested) | 106 | 48.8% |
 | Partial (unaudited) | 16 | 7.4% |
-| Not working | 82 | 37.8% |
+| Not working | 81 | 37.3% |
 
 ## Cards needing work
 
@@ -69,7 +69,6 @@
 | Killing Wave | silent | For each creature, its controller sacrifices it unless they pay X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lair Delve | silent | Reveal the top two cards of your library. Put all creature and land cards revealed this way into your hand and the rest on the bottom of your library in any ord | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lightning Mauler | silent | As long as this creature is paired with another creature, both creatures have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lightning Prowess | silent | Enchanted creature has haste and "{T}: This creature deals 1 damage to any target." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Malignus | silent | Malignus's power and toughness are each equal to half the highest life total among your opponents, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moonlight Geist | silent | {3}{W}: Prevent all combat damage that would be dealt to and dealt by this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nearheath Pilgrim | silent | As long as this creature is paired with another creature, both creatures have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -173,6 +172,7 @@
 | Kessig Malcontents | handled | When this creature enters, it deals damage to target player or planeswalker equal to the number of Humans you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kruin Striker | handled | Whenever another creature you control enters, this creature gets +1/+0 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Latch Seeker | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lightning Prowess | handled | Enchanted creature has haste and "{T}: This creature deals 1 damage to any target." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lunar Mystic | handled | Whenever you cast an instant spell, you may pay {1}. If you do, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Maalfeld Twins | handled | When this creature dies, create two 2/2 black Zombie creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mad Prophet | handled | {T}, Discard a card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -289,7 +289,6 @@
 | during your turn, ~ gets +N/+N. | 1 | Wildwood Geist | avr |
 | enchanted creature gets +N/-N and attacks each combat if able. | 1 | Guise of Fire | avr |
 | enchanted creature gets -N/-N and is a black zombie in addition to its other colors and types. | 1 | Ghoulflesh | avr |
-| enchanted creature has haste and "..." | 1 | Lightning Prowess | avr |
 | enchanted creature loses flying. | 1 | Grounded | avr |
 | enchanted land has "..." | 1 | Abundant Growth | avr |
 | equipped creature gets +N/+N and attacks each combat if able. | 1 | Tormentor's Trident | avr |

@@ -41,7 +41,7 @@
 | Careful Cultivation | silent | As long as enchanted permanent is a creature, it gets +1/+3 and has reach and "{T}: Add {G}{G}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chainflail Centipede | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Clawing Torment | silent | As long as enchanted permanent is a creature, it gets -1/-1 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cloudsteel Kirin | silent | Equipped creature has flying and "You can't lose the game and your opponents can't win the game." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Cloudsteel Kirin | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Covert Technician | silent | Whenever this creature deals combat damage to a player, you may put an artifact card with mana value less than or equal to that damage from your hand onto the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Discover the Impossible | silent | Look at the top five cards of your library. Exile one of them face down and put the rest on the bottom of your library in a random order. You may cast the exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragonspark Reactor | silent | {4}, Sacrifice this artifact: It deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -306,7 +306,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| reconfigure | 10 | Acquisition Octopus, Armguard Familiar, Bronzeplate Boar, Chainflail Centipede, Leech Gauntlet | neo |
+| reconfigure | 11 | Acquisition Octopus, Armguard Familiar, Bronzeplate Boar, Chainflail Centipede, Cloudsteel Kirin | neo |
 | as long as enchanted permanent is a creature, it gets +N/+N. | 3 | Akki War Paint, Historian's Wisdom, Twisted Embrace | neo |
 | Choose one | 2 | Debt to the Kami, Storyweave | neo |
 | Channel | 1 | Mirrorshell Crab | neo |
@@ -339,7 +339,6 @@
 | enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Intercessor's Arrest | neo |
 | equipped creature gets +N/+N for each +N/+N counter on ~. | 1 | Lion Sash | neo |
 | equipped creature has base power and toughness N/N, has menace, and is a black demon in addition to its other colors and types. | 1 | Blade of the Oni | neo |
-| equipped creature has flying and "..." | 1 | Cloudsteel Kirin | neo |
 | gain control of target artifact or creature. untap it. | 1 | Invoke the Winds | neo |
 | if a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | 1 | Isshin, Two Heavens as One | neo |
 | look at the top five cards of your library. exile one of them face down and put the rest on the bottom of your library in a random order. you may cast the exile | 1 | Discover the Impossible | neo |

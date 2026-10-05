@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 29 | 14.6% |
-| Works (untested) | 109 | 54.8% |
+| Works (untested) | 110 | 55.3% |
 | Partial (unaudited) | 9 | 4.5% |
-| Not working | 52 | 26.1% |
+| Not working | 51 | 25.6% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Nahiri's Wrath | silent | As an additional cost to cast this spell, discard X cards. Nahiri's Wrath deals damage equal to the total mana value of the discarded cards to each of up to X t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Noosegraf Mob | silent | Whenever a player casts a spell, remove a +1/+1 counter from this creature. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Permeating Mass | silent | Whenever this creature deals combat damage to a creature, that creature becomes a copy of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Prophetic Ravings | silent | Enchanted creature has haste and "{T}, Discard a card: Draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Prying Questions | silent | Target opponent loses 3 life and puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Repel the Abominable | silent | Prevent all damage that would be dealt this turn by non-Human sources. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shreds of Sanity | silent | Return up to one target instant card and up to one target sorcery card from your graveyard to your hand, then discard a card. Exile Shreds of Sanity. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -163,6 +162,7 @@
 | Olivia's Dragoon | handled | Discard a card: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Otherworldly Outburst | handled | Target creature gets +1/+0 until end of turn. When that creature dies this turn, create a 3/2 colorless Eldrazi Horror creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Primal Druid | handled | When this creature dies, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Prophetic Ravings | handled | Enchanted creature has haste and "{T}, Discard a card: Draw a card." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruthless Disposal | handled | As an additional cost to cast this spell, discard a card and sacrifice a creature. Two target creatures each get -13/-13 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanctifier of Souls | handled | Whenever another creature you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scour the Laboratory | handled | Delirium — This spell costs {2} less to cast if there are four or more card types among cards in your graveyard. Draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,7 +246,6 @@
 | creatures with power less than ~ power can't block it. | 1 | Shrill Howler // Howling Chorus | emn |
 | draw a card, then draw cards equal to the number of cards named ~ in your graveyard. | 1 | Take Inventory | emn |
 | enchanted creature gets -N/-N, where N is the number of cards in your graveyard. | 1 | Spontaneous Mutation | emn |
-| enchanted creature has haste and "..." | 1 | Prophetic Ravings | emn |
 | enchanted permanent is a colorless land with "..." and loses all other card types and abilities. | 1 | Imprisoned in the Moon | emn |
 | equipped creature gets +N/+N and must be blocked by an eldrazi if able. | 1 | Slayer's Cleaver | emn |
 | escalate {M} (pay ~ for each mode chosen beyond the first.) choose one or more — • target player discards all the cards in their hand, then draws that many card | 1 | Collective Defiance | emn |

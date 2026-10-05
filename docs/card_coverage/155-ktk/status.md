@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 8.0% |
-| Works (untested) | 160 | 71.1% |
+| Works (untested) | 161 | 71.6% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 38 | 16.9% |
+| Not working | 37 | 16.4% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Cranial Archive | silent | {2}, Exile this artifact: Target player shuffles their graveyard into their library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crater's Claws | silent | Crater's Claws deals X damage to any target. Ferocious — Crater's Claws deals X plus 2 damage instead if you control a creature with power 4 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deflecting Palm | silent | The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dragon Throne of Tarkir | silent | Equipped creature has defender and "{2}, {T}: Other creatures you control gain trample and get +X/+X until end of turn, where X is this creature's power." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragon's Eye Savants | silent | When this creature is turned face up, look at target opponent's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Duneblast | silent | Choose up to one creature. Destroy the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | End Hostilities | silent | Destroy all creatures and all permanents attached to creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -108,6 +107,7 @@
 | Disdainful Stroke | handled | Counter target spell with mana value 4 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dismal Backwater | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Disowned Ancestor | handled | Outlast | machines/keywords.py | Y/Y/- | not_tested |
+| Dragon Throne of Tarkir | handled | Equipped creature has defender and "{2}, {T}: Other creatures you control gain trample and get +X/+X until end of turn, where X is this creature's power." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragon-Style Twins | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
 | Dragonscale Boon | handled | Put two +1/+1 counters on target creature and untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dutiful Return | handled | Return up to two target creature cards from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -278,7 +278,6 @@
 | destroy target blocking creature. creatures that were blocked by that creature ~ gain trample until end of turn. | 1 | Ride Down | ktk |
 | destroy target creature. if that creature had a +N/+N counter on it, create a N/N green snake creature token. | 1 | Rite of the Serpent | ktk |
 | each creature you control can block an additional creature each combat. | 1 | Brave the Sands | ktk |
-| equipped creature has defender and "..." | 1 | Dragon Throne of Tarkir | ktk |
 | face-down creatures you control get +N/+N. | 1 | Secret Plans | ktk |
 | if a nontoken creature an opponent owns would die or a creature card not on the battlefield would be put into an opponent's graveyard, exile that card instead. | 1 | Anafenza, the Foremost | ktk |
 | if a player would begin an extra turn, that player skips that turn instead. | 1 | Ugin's Nexus | ktk |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 21 | 8.2% |
-| Works (untested) | 118 | 45.9% |
+| Works (untested) | 119 | 46.3% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 101 | 39.3% |
+| Not working | 100 | 38.9% |
 
 ## Cards needing work
 
@@ -55,7 +55,6 @@
 | Fifty Feet of Rope | silent | Tie Up — {3}, {T}: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fighter Class | silent | Whenever a creature you control attacks, up to one target creature blocks it this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flameskull | silent | Rejuvenation — When this creature dies, exile it. If you do, exile the top card of your library. Until the end of your next turn, you may play one of those card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fly | silent | Enchanted creature has flying and "Whenever this creature deals combat damage to a player, venture into the dungeon." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Froghemoth | silent | Whenever this creature deals combat damage to a player, exile up to that many target cards from their graveyard. Put a +1/+1 counter on this creature for each c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gelatinous Cube | silent | Dissolve — {X}{B}: Put target creature card with mana value X exiled with this creature into its owner's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gloom Stalker | silent | As long as you've completed a dungeon, this creature has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -175,6 +174,7 @@
 | Eyes of the Beholder | handled | Target creature gets -11/-11 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fates' Reversal | handled | Return up to one target creature card from your graveyard to your hand. Venture into the dungeon. (Enter the first room or advance to the next room.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flumph | handled | Whenever this creature is dealt damage, you and target opponent each draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Fly | handled | Enchanted creature has flying and "Whenever this creature deals combat damage to a player, venture into the dungeon." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forsworn Paladin | handled | {1}{B}, {T}, Pay 1 life: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Javelineer | handled | Whenever this creature becomes blocked, it deals 1 damage to target creature blocking it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Greataxe | handled | Equipped creature gets +4/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -341,7 +341,6 @@
 | each creature you control gets +N/+N for each equipment attached to it. | 1 | Bruenor Battlehammer | afr |
 | each opponent can't venture into the dungeon more than once each turn. | 1 | Keen-Eared Sentry | afr |
 | each skeleton you control has trample, attacks each combat if able, and gets +N/+N, where N is the number of other skeletons you control. | 1 | Skeletal Swarming | afr |
-| enchanted creature has ~ing and "..." | 1 | Fly | afr |
 | enchanted land has "..." | 1 | Find the Path | afr |
 | enchanted permanent is a treasure artifact with "..." and it loses all other abilities. | 1 | Minimus Containment | afr |
 | equip {M}. activate only once each turn. | 1 | Leather Armor | afr |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 7.7% |
-| Works (untested) | 73 | 51.0% |
+| Works (untested) | 74 | 51.7% |
 | Partial (unaudited) | 6 | 4.2% |
-| Not working | 53 | 37.1% |
+| Not working | 52 | 36.4% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Chasm Skulker | silent | When this creature dies, create X 1/1 blue Squid creature tokens with islandwalk, where X is the number of +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chronostutter | silent | Put target creature into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coral Barrier | silent | When this creature enters, create a 1/1 blue Squid creature token with islandwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Eternal Thirst | silent | Enchanted creature has lifelink and "Whenever a creature an opponent controls dies, put a +1/+1 counter on this creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Festergloom | silent | Nonblack creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk, Apex Predator | silent | −3: Destroy target creature. You gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glacial Crasher | silent | This creature can't attack unless there is a Mountain on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -102,6 +101,7 @@
 | Diffusion Sliver | handled | Whenever a Sliver creature you control becomes the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays { | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Endless Obedience | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Put target  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ephemeral Shields | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Eternal Thirst | handled | Enchanted creature has lifelink and "Whenever a creature an opponent controls dies, put a +1/+1 counter on this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Feral Incarnation | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Create thre | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flesh to Dust | handled | Destroy target creature. It can't be regenerated. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frost Lynx | handled | When this creature enters, tap target creature an opponent controls. That creature doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -190,7 +190,6 @@
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature"..."s graveyard, hand, and library for  | 1 | Stain the Mind | m15 |
 | destroy all creatures you don"..."t control. | 1 | In Garruk's Wake | m15 |
 | enchanted creature gets +N/+N and has protection from each color. ~ doesn't remove auras. | 1 | Spectra Ward | m15 |
-| enchanted creature has lifelink and "..." | 1 | Eternal Thirst | m15 |
 | for each attacking creature, its owner puts it on their choice of the top or bottom of their library. | 1 | Aetherspouts | m15 |
 | if a source would deal damage to equipped creature, prevent N of that damage, where N is the number of creatures you control. | 1 | Shield of the Avatar | m15 |
 | nonblack creatures get -N/-N until end of turn. | 1 | Festergloom | m15 |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 12.0% |
-| Works (untested) | 124 | 49.8% |
+| Works (untested) | 125 | 50.2% |
 | Partial (unaudited) | 15 | 6.0% |
-| Not working | 80 | 32.1% |
+| Not working | 79 | 31.7% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Bereaved Survivor // Dauntless Avenger | silent | Whenever this creature attacks, return target creature card with mana value 2 or less from your graveyard to the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blessed Defiance | silent | Target creature you control gets +2/+0 and gains lifelink until end of turn. When that creature dies this turn, create a 1/1 white Spirit creature token with fl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Briarbridge Tracker | silent | As long as you control a token, this creature gets +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cathar's Call | silent | Enchanted creature has vigilance and "At the beginning of your end step, create a 1/1 white Human creature token." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Celestus Sanctifier | silent | Whenever day becomes night or night becomes day, look at the top two cards of your library. Put one of them into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chaplain of Alms // Chapel Shieldgeist | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Corpse Cobble | silent | As an additional cost to cast this spell, sacrifice any number of creatures. Create an X/X blue and black Zombie creature token with menace, where X is the tota | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -137,6 +136,7 @@
 | Burn the Accursed | handled | Burn the Accursed deals 5 damage to target creature and 2 damage to that creature's controller. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Candlegrove Witch | handled | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cathar Commando | handled | {1}, Sacrifice this creature: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Cathar's Call | handled | Enchanted creature has vigilance and "At the beginning of your end step, create a 1/1 white Human creature token." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cathartic Pyre | handled | Choose one — • Cathartic Pyre deals 3 damage to target creature or planeswalker. • Discard up to two cards, then draw that many cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Champion of the Perished | handled | Whenever another Zombie you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clarion Cathars | handled | When this creature enters, create a 1/1 white Human creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -313,7 +313,6 @@
 | creature tokens you control lose all abilities and have base power and toughness N/N. | 1 | Poppet Stitcher // Poppet Factory | mid |
 | destroy target artifact, enchantment, or land. if a land was destroyed ~, its controller may search their library for up to two basic land cards, put them onto  | 1 | Dire-Strain Rampage | mid |
 | destroy target creature or planeswalker. its controller investigates. (they create a clue token. it's an artifact with "...") | 1 | Fateful Absence | mid |
-| enchanted creature has vigilance and "..." | 1 | Cathar's Call | mid |
 | exile target nonlegendary creature, then return it to the battlefield under its owner's control. if it entered under your control, put a +N/+N counter on it. ot | 1 | Hallowed Respite | mid |
 | human creatures you control have "..." | 1 | Katilda, Dawnhart Prime | mid |
 | if a spell would deal damage to you or another permanent you control, prevent that damage. | 1 | Rem Karolus, Stalwart Slayer | mid |
