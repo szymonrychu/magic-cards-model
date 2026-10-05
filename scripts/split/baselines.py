@@ -42,6 +42,7 @@ SELF_MODULES = ("machines.effects", "models.game", "machines.layers")
 IMPORT_RUNS = 7
 IMPORT_LIMIT = 1.15
 SUITE_LIMIT = 0.05
+OUTPUT_TAIL_LINES = 20  # lines of a failed suite run kept in the measure json
 STEPS = ("F1", "F2", "F3", "F4", "F4a", "F4b", "F4c", "F4d", "F4e")
 NOT_MEASURED = "not measured"
 
@@ -203,18 +204,21 @@ def import_summary(cums: list[int], cpus: list[float], selfs: dict[str, list[int
     }
 
 
-def measure_suite(task: str) -> dict:
-    proc, wall, cpu = timed_run(["mise", "run", task], check=False)
+def measure_suite(task: str, run=timed_run) -> dict:
+    """Counts, times and return code of `mise run <task>`; a failed run also keeps the
+    last OUTPUT_TAIL_LINES lines, so a suite that errored before running a test says why."""
+    proc, wall, cpu = run(["mise", "run", task], check=False)
     output = proc.stdout + proc.stderr
-    counts = parse_pytest_summary(output)
-    failed = parse_failed_tests(output)
-    return {
+    out = {
         "wall_s": round(wall, 2),
         "cpu_s": round(cpu, 2),
         "returncode": proc.returncode,
-        **counts,
-        "failed_tests": failed,
+        **parse_pytest_summary(output),
+        "failed_tests": parse_failed_tests(output),
     }
+    if proc.returncode != 0:
+        out["output_tail"] = "\n".join(output.rstrip().splitlines()[-OUTPUT_TAIL_LINES:])
+    return out
 
 
 def measure(full: bool, skip_test: bool) -> dict:
@@ -378,6 +382,13 @@ def compare(before: dict, after: dict, step: str) -> list[str]:
             kind, (b, a) = found
             out.append(f"{key} {kind} time {b}s -> {a}s is more than 5% slower")
         failed = _get(after, f"{key}.failed")
+        rc = _get(after, f"{key}.returncode")
+        if rc and not failed:
+            tail = (_get(after, f"{key}.output_tail") or "").strip().splitlines()
+            out.append(
+                f"{key} exited {rc} without a failed test"
+                + (f": {' | '.join(tail[-3:])}" if tail else "")
+            )
         if failed:
             names = _get(after, f"{key}.failed_tests") or []
             out.append(
