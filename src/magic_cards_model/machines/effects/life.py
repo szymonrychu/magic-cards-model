@@ -1,4 +1,5 @@
 import re
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from magic_cards_model.phrases import with_indefinite_article
@@ -938,6 +939,33 @@ def _parse_gain_life_equal_to_event_subject_toughness_clause(text: str) -> Abili
         game.gain_life(game.player(ability.controller), toughness)
 
     return effect
+
+
+#: "You gain life equal to the damage dealt this way." - the second clause of a
+#: damage spell (Brightflame, Corrupt, Rite of Consumption, Enter the
+#: God-Eternals), CR 608.2c's later text pointing back at the earlier clause.
+#: "Damage dealt" is what `Game.deal_damage` reports landed (CR 120.3, after
+#: prevention): the caller sums it over every recipient the clause damaged and
+#: hands the total to the effect this returns. Not a `MIXED_CLAUSE` rung: on its
+#: own the sentence has no damage to refer back to, so reading it standing alone
+#: would gain nothing and look handled. `machines/damage_backrefs.py` reads the
+#: whole sequence and owns the total; this is the one reader of the sentence.
+_GAIN_LIFE_EQUAL_TO_DAMAGE_DEALT_RE = re.compile(
+    r"^you gain life equal to the damage dealt this way\.?$", re.IGNORECASE
+)
+
+
+def gain_life_equal_to_damage_dealt(sentence: str) -> "Callable[[Game, str, int], None] | None":
+    """`(game, controller username, damage dealt) -> None` for the sentence
+    above, or None for any other sentence. Gains nothing for zero damage."""
+    if _GAIN_LIFE_EQUAL_TO_DAMAGE_DEALT_RE.fullmatch(sentence.strip()) is None:
+        return None
+
+    def gain(game: "Game", controller: str, dealt: int) -> None:
+        if dealt > 0:
+            game.gain_life(controller, dealt)
+
+    return gain
 
 
 from ._common import (  # noqa: E402

@@ -62,12 +62,14 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import SPELL_TEXT
 from ._common import (
     _MANA_COST_LIST,
     _OWNER_PUTS_IT_INTO_LIBRARY_TAIL,
     _SACRIFICED_MANA_VALUE_TERM,
     AbilityEffect,
     ClauseEffect,
+    Effect,
     TargetedClause,
     _PutDescription,
 )
@@ -3233,6 +3235,17 @@ def _merge_damage_target_then_reveal_choose_discard_clauses(
         rest_effect(game, stack_object)
 
     return 1 + rest_consumed, effect
+
+
+@SPELL_TEXT.rung("s18")
+def _parse_damage_then_followup_spell(effect_text: str) -> Effect | None:
+    """A damage spell and the clauses that refer back to it - radiance groups,
+    "you gain life equal to the damage dealt this way", "deals M damage
+    instead", "that creature's controller", "that player discards" - read as
+    one CR 608.2c sequence by `machines/damage_backrefs.py`."""
+    from ..damage_backrefs import damage_then_followup_spell_effect
+
+    return damage_then_followup_spell_effect(effect_text)
 
 
 def _merge_each_player_may_discard_hand_and_draw_clauses(
