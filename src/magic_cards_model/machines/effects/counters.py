@@ -3614,6 +3614,39 @@ def _parse_loyalty_instant_speed_clause(clause: str, *, for_spell: bool) -> Targ
     return effect
 
 
+#: "Support N." - CR 701.41a's keyword action: "Put a +1/+1 counter on each of
+#: up to N [other] target creatures." The reminder text is stripped before a
+#: clause is read; the targets are announced by `targeting._expand_support_
+#: keyword`, so every legal target still on the battlefield gets its counter.
+_SUPPORT_RE = re.compile(r"^support (?P<n>[1-9]\d*)\.?$", re.IGNORECASE)
+
+
+def put_support_counters(game: "Game", targets: "list[object]", limit: int) -> None:
+    """CR 701.41a: a +1/+1 counter on each of the first `limit` creatures in
+    `targets` that is still a creature on the battlefield (CR 608.2b)."""
+    for target in targets[:limit]:
+        if (
+            isinstance(target, CardState)
+            and target.zone is Zone.BATTLEFIELD
+            and game.characteristics_of(target).is_creature
+        ):
+            game.add_counters(target, "+1/+1", 1)
+
+
+@MIXED_CLAUSE.rung("s9")
+def _parse_support_clause(clause: str) -> TargetedClause | None:
+    """`_SUPPORT_RE`'s shape - see the banner above."""
+    match = _SUPPORT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    limit = int(match.group("n"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        put_support_counters(game, list(game.resolve_targets(stack_object)), limit)
+
+    return effect
+
+
 #: "Proliferate[ `<n>` times][, where X is `<expr>`]." - CR 701.34's keyword
 #: action, bare (Tribute to Horobi's own kicker mode) or repeated (Tam, the
 #: Possibility's own "Proliferate X times, where X is the number of

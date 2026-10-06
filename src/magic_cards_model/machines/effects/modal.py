@@ -842,7 +842,8 @@ def _parse_choose_target_then_dies_this_turn_clause(effect_text: str) -> Effect 
 # chosen creature that is gone by resolution takes nothing (CR 608.2b).
 
 _CHOOSE_THEN_GROUP_BITE_RE = re.compile(
-    r"^choose (?P<phrase>(?:up to one )?target creature "
+    r"^(?:support (?P<support>[1-9]\d*)\. )?"
+    r"choose (?P<phrase>(?:up to one )?target creature "
     r"(?:you don'?t control|an opponent controls))\. "
     r"each creature you control (?P<filter>that'?s an? \w+(?: or an? \w+)*|with an? "
     r"\+1/\+1 counter on it) deals damage equal to its power to that creature$",
@@ -879,14 +880,28 @@ def _parse_choose_target_then_group_bite_clause(effect_text: str) -> Effect | No
     qualifies = _group_bite_predicate(match.group("filter"))
     if qualifies is None:
         return None
+    support = int(match.group("support")) if match.group("support") else 0
 
     def effect(game: "Game", spell: CardState) -> None:
         controller = game.controller_of(spell)
-        victims = [
+        chosen = [
             target
             for target in game.resolve_targets(spell)
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
         ]
+        if support:
+            # CR 701.41a first (CR 608.2c): the support targets come first in
+            # the announcement; the last one is the bite's victim when it is
+            # an opposing creature (the slot "up to one target creature an
+            # opponent controls" can only be filled by one).
+            victims = (
+                chosen[-1:]
+                if chosen and (game.controller_of(chosen[-1]).username != controller.username)
+                else []
+            )
+            put_support_counters(game, chosen[: len(chosen) - len(victims)], support)
+        else:
+            victims = chosen
         if not victims:
             return
         victim = victims[0]
@@ -5957,7 +5972,11 @@ from .continuous import (  # noqa: E402
     layer_context_for,
 )
 from .control_copy import _parse_if_control_colored_permanent_damage_clause  # noqa: E402
-from .counters import _counter_kind, _parse_counters_and_becomes_type_clause  # noqa: E402
+from .counters import (  # noqa: E402
+    _counter_kind,
+    _parse_counters_and_becomes_type_clause,
+    put_support_counters,
+)
 from .damage import _fight, _parse_self_fights_target_clause, _resolve_bite_damage  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,

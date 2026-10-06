@@ -620,3 +620,117 @@ def test_moonlight_hunt_chosen_creature_gone_deals_nothing():
     scenario.resolve_top()
 
     assert _all_notices(scenario) == []
+
+
+# --------------------------------------------------------------------------
+# Fatal Fissure: second printing of the turn-scoped death watch. Its
+# "earthbend 4" consequence must not turn the spell's own target into a land.
+# --------------------------------------------------------------------------
+
+
+def test_fatal_fissure_targets_a_creature_and_earthbends_when_it_dies_this_turn():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Fatal Fissure", "Lightning Bolt"],
+            battlefield=["Swamp", "Swamp", "Mountain", "Forest"],
+            library=["Forest"],
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    sources = scenario.untapped_sources("Swamp", "Swamp")
+    scenario.cast_and_resolve("Fatal Fissure", *sources, targets=[bears])
+    assert bears.zone is Zone.BATTLEFIELD, "the choose-sentence itself does nothing"
+
+    mountain = scenario.untapped_sources("Mountain")[0]
+    scenario.cast_and_resolve("Lightning Bolt", mountain, targets=[bears])
+    assert bears.zone is Zone.GRAVEYARD
+    scenario.resolve_top()  # the delayed "when that creature dies" ability
+    earthbent = [
+        land
+        for land in scenario.game.battlefield
+        if land.counters["+1/+1"] == 4 and land.card.name in {"Swamp", "Mountain", "Forest"}
+    ]
+    assert len(earthbent) == 1, "exactly one land earthbent 4 (CR 701.66a)"
+    assert _all_notices(scenario) == []
+
+
+def test_fatal_fissure_a_survivor_earthbends_nothing():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Fatal Fissure"],
+            battlefield=["Swamp", "Swamp", "Forest"],
+            library=["Forest"],
+        )
+        .player("bob", battlefield=["Wall of Omens"], library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wall = scenario.creature("Wall of Omens", "bob")
+    sources = scenario.untapped_sources("Swamp", "Swamp")
+    scenario.cast_and_resolve("Fatal Fissure", *sources, targets=[wall])
+    assert wall.zone is Zone.BATTLEFIELD
+    assert _all_notices(scenario) == []
+
+
+# --------------------------------------------------------------------------
+# Nissa's Judgment: Support N (CR 701.41a) then the group bite, second printing
+# of the group-bite reader.
+# --------------------------------------------------------------------------
+
+
+def _judgment(alice_bf, bob_bf):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Nissa's Judgment"],
+            battlefield=["Forest"] * 5 + list(alice_bf),
+            library=["Forest"],
+        )
+        .player("bob", battlefield=bob_bf, library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_nissas_judgment_support_counters_land_before_the_bite_counts_them():
+    scenario = _judgment(["Grizzly Bears", "Watchwolf"], ["Elder Gargaroth"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    wolf = scenario.creature("Watchwolf", "alice")
+    gargaroth = scenario.creature("Elder Gargaroth", "bob")
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest", "Forest")
+    scenario.cast_and_resolve("Nissa's Judgment", *sources, targets=[bears, wolf, gargaroth])
+
+    assert bears.counters["+1/+1"] == 1 and wolf.counters["+1/+1"] == 1
+    assert gargaroth.zone is Zone.GRAVEYARD, "3 + 4 from the two freshly supported creatures"
+    assert _all_notices(scenario) == []
+
+
+def test_nissas_judgment_support_up_to_n_allows_fewer_targets():
+    scenario = _judgment(["Grizzly Bears"], ["Elder Gargaroth"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    gargaroth = scenario.creature("Elder Gargaroth", "bob")
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest", "Forest")
+    scenario.cast_and_resolve("Nissa's Judgment", *sources, targets=[bears, gargaroth])
+
+    assert bears.counters["+1/+1"] == 1
+    assert gargaroth.damage == 3
+    assert _all_notices(scenario) == []
+
+
+def test_nissas_judgment_a_creature_without_a_counter_does_not_bite():
+    scenario = _judgment(["Grizzly Bears", "Watchwolf"], ["Elder Gargaroth"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    gargaroth = scenario.creature("Elder Gargaroth", "bob")
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest", "Forest")
+    scenario.cast_and_resolve("Nissa's Judgment", *sources, targets=[bears, gargaroth])
+
+    assert gargaroth.damage == 3, "the Watchwolf got no counter and deals nothing"
