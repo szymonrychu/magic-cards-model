@@ -6191,8 +6191,6 @@ def _parse_pump_then_fight_clause_pair(
 #: general object-anaphor rider, exactly `_parse_pump_then_fight_clause_
 #: pair`'s own reasoning just above: the rider's own target would otherwise
 #: be conflated with the antecedent's.
-#: A leading "Then " (CR 608.2c's ordering word) in front of a rider.
-_LEADING_THEN_WORD_RE = re.compile(r"^then\s+", re.IGNORECASE)
 _CONDITIONAL_PUMP_TARGET_YOU_CONTROL_RE = re.compile(
     r"^target creature you control gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
     r"until end of turn if (?P<condition>.+)$",
