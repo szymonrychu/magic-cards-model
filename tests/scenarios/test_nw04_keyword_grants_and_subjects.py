@@ -310,11 +310,6 @@ def test_executioners_swing_kills_a_creature_that_dealt_damage() -> None:
     assert notices(scenario) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="machines/targeting.py does not yet enforce the active 'that dealt damage this "
-    "turn' restriction (only the passive 'that was dealt damage'); NW-04 T1 owns targeting.py",
-)
 def test_executioners_swing_cannot_target_a_creature_that_dealt_no_damage() -> None:
     """CR 601.2c."""
     scenario = _board(
@@ -326,6 +321,22 @@ def test_executioners_swing_cannot_target_a_creature_that_dealt_no_damage() -> N
 
     with pytest.raises(ValueError):
         scenario.cast("Executioner's Swing", targets=[runeclaw])
+
+
+def test_executioners_swing_cannot_target_a_creature_only_dealt_damage() -> None:
+    """CR 120.1 / CR 601.2c: "that dealt damage" asks for the damage's source;
+    a creature that was only dealt damage this turn is not a legal target."""
+    scenario = _board(
+        hand=["Shock", "Executioner's Swing"],
+        lands=["Mountain", "Plains", "Swamp"],
+        bob=["Hill Giant"],
+    )
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.cast_and_resolve("Shock", auto=True, targets=[giant])
+    assert giant.damage == 2
+
+    with pytest.raises(ValueError):
+        scenario.cast("Executioner's Swing", targets=[giant])
 
 
 def test_spire_mangler_pumps_a_flier_you_control() -> None:

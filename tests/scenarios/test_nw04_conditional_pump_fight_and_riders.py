@@ -113,12 +113,6 @@ def test_a_power_two_creature_is_pumped_then_fights() -> None:
     assert notices(scenario) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="machines/targeting.py reads the pump's trailing 'if its power is 2' as a target "
-    "restriction (only a counter instruction's trailing stat condition is cut there); "
-    "NW-04 T1 owns targeting.py",
-)
 def test_a_creature_of_other_power_is_not_pumped_but_still_fights() -> None:
     """CR 608.2c / CR 701.14a: the condition gates only the pump."""
     scenario = _board(hand=["Savage Swipe"], alice=["Llanowar Elves"], lands=["Forest"])
@@ -134,12 +128,6 @@ def test_a_creature_of_other_power_is_not_pumped_but_still_fights() -> None:
     assert notices(scenario) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="machines/targeting.py reads the pump's trailing 'if its power is 2' as a target "
-    "restriction (only a counter instruction's trailing stat condition is cut there); "
-    "NW-04 T1 owns targeting.py",
-)
 def test_a_power_three_creature_is_not_pumped() -> None:
     scenario = _board(
         hand=["Savage Swipe"], alice=["Plague Nurse"], lands=["Forest"], bob=["Memnite"]
