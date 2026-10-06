@@ -1626,8 +1626,14 @@ _TARGET_GAINS_KEYWORDS_RE = re.compile(
 #: (CR 608.2c), read by `modal._parse_condition_clause`: `_DAMAGE_TARGET_RE`'s
 #: unquoted prefix would otherwise swallow the condition and run the damage
 #: unconditionally ("If target player has exactly 10 life, <self> deals 10
-#: damage to that player" dealt it at any life total).
-_LEADING_IF_CONDITION_RE = re.compile(r"if [^,]+, ", re.IGNORECASE)
+#: damage to that player" dealt it at any life total). Two families are not
+#: this guard's: "If you do, ..." (a reflexive follow-up, CR 603.12, whose
+#: condition the damage reader's own prefix handling already covers) and
+#: "If the gift was promised, instead ..." (CR 702.174k's replacement branch,
+#: read by the damage reader's gift handling).
+_LEADING_IF_CONDITION_RE = re.compile(
+    r"if (?!you do,|the gift was promised, instead )[^,]+, ", re.IGNORECASE
+)
 
 
 @MIXED_CLAUSE.rung("s1", for_spell=FORWARD)
@@ -2477,6 +2483,46 @@ def _parse_cast_target_card_from_graveyard_clause(text: str) -> TargetedClause |
                     rule="CR 601.3",
                     exile_instead_of_graveyard=exile_instead,
                 )
+
+    return effect
+
+
+#: Wildfire Howl: "<source> deals 2 damage to each creature. If the gift was
+#: promised, instead <source> deals 1 damage to any target and 2 damage to
+#: each creature." CR 702.174k's promised branch replaces the base sentence
+#: (CR 614.1a), so the creatures take their damage once either way and only
+#: the promised branch adds the targeted share. The target is chosen only
+#: when the gift was promised (CR 702.174m, `TargetRequirement.
+#: if_gift_promised`), so with no gift there is nothing to resolve.
+_EACH_CREATURE_GIFT_INSTEAD_ALSO_TARGET_RE = re.compile(
+    rf"^(?P<subject>[^.]+?) deals? (?P<each_n>{COUNT}) damage to each creature\.\s*"
+    rf"if the gift was promised, instead (?P=subject) deals? (?P<n>{COUNT}) damage to "
+    rf"(?P<phrase>any target|.*?target.+?) and (?P=each_n) damage to each creature\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_each_creature_gift_instead_also_target_clause(text: str) -> Effect | None:
+    """`_EACH_CREATURE_GIFT_INSTEAD_ALSO_TARGET_RE`'s shape, or `None`."""
+    match = _EACH_CREATURE_GIFT_INSTEAD_ALSO_TARGET_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+        return None
+    each_amount = parse_count(match.group("each_n"))
+    target_amount = parse_count(match.group("n"))
+    if each_amount is None or target_amount is None:
+        return None
+    sweep = damage_each_creature_spell(each_amount)
+
+    def effect(game: "Game", spell: CardState) -> None:
+        if game.cast_record(spell).gift_promised:
+            for target in game.resolve_targets(spell):
+                game.deal_damage(target, target_amount, source=spell)
+        sweep(game, spell)
 
     return effect
 

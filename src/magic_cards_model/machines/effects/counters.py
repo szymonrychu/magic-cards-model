@@ -3074,9 +3074,13 @@ def _parse_counter_exile_then_cast_free_clauses(
 #: do, put a +1/+1 counter on each other creature you control." - CR 118.12's
 #: shape once more, with the optional cost a counter removed from the source
 #: itself (CR 122.1) rather than `_MAY_SACRIFICE_IF_YOU_DO_RE`'s sacrifice.
+#: Clockwork Hydra's mandatory "remove a +1/+1 counter from it. If you do, it
+#: deals 1 damage to any target." is the same shape without "you may": the
+#: consequence runs only if the counter was actually removed.
 _MAY_REMOVE_COUNTER_FROM_SELF_IF_YOU_DO_RE = re.compile(
-    r"^you may remove (?P<n>a|an|one|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from this "
-    r"(?:creature|permanent|artifact)\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    r"^(?P<may>you may )?remove (?P<n>a|an|one|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from "
+    r"(?:this (?:creature|permanent|artifact)|it)"
+    r"\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -3106,22 +3110,23 @@ def _parse_conditional_remove_counter_from_self_clause(
     clause = parse_mixed_effect(consequence_text)
     if clause is None:
         return None
+    optional = match.group("may") is not None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
-        present = source.counter_count(kind)
-        decision = Decision(
-            kind=DecisionKind.MAY,
-            player=ability.controller,
-            prompt=f"remove a {kind} counter from {source.name}",
-            source=source.name,
-            affirmative_is_legal=present >= amount,
-            source_id=source_id_of(ability),
-        )
-        if not game.ask(decision):
-            return
+        if optional:
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=ability.controller,
+                prompt=f"remove a {kind} counter from {source.name}",
+                source=source.name,
+                affirmative_is_legal=source.counter_count(kind) >= amount,
+                source_id=source_id_of(ability),
+            )
+            if not game.ask(decision):
+                return
         if source.counter_count(kind) < amount:
             return  # CR 608.2d: nothing left to pay with by the time this runs.
         source.remove_counters(kind, amount)
