@@ -2374,6 +2374,12 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
 
         return cant_be_blocked
 
+    # "That permanent loses indestructible until end of turn." (Rebel Salvo,
+    # Soul Sear): CR 613.1f's removal, read by its family module.
+    loses_keyword = _parse_loses_keyword_referent_rider(rider)
+    if loses_keyword is not None:
+        return loses_keyword
+
     if cant_block_match := _RIDER_CANT_BLOCK_RE.fullmatch(rider):
         span = cant_block_match.group("span").lower()
         block_duration = _block_restriction_duration(span)
@@ -3572,6 +3578,7 @@ from .continuous import (  # noqa: E402
     _layer_antecedent_clause,
     _parse_attach_referent_to_chosen_clause,
     _parse_if_type_may_attach_equipment_referent_clause,
+    _parse_loses_keyword_referent_rider,
     layer_context_for,
 )
 from .counters import _counter_kind  # noqa: E402

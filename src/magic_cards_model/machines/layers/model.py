@@ -1768,6 +1768,33 @@ class LoseAllAbilities(ModificationBase):
         )
 
 
+class LoseKeyword(ModificationBase):
+    """Layer 6 removal of one keyword (CR 613.1f) - "loses indestructible".
+
+    Every ability line that is a keyword list naming it loses that keyword
+    (a line naming only it is gone); the rest of the list, and every line
+    that is not a keyword list, stay. A grant applied later in timestamp
+    order (CR 613.7) gives the keyword back."""
+
+    kind: Literal["lose_keyword"] = "lose_keyword"
+    keyword: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        wanted = self.keyword.lower()
+        kept: list[str] = []
+        for line in chars.abilities:
+            bare = re.sub(r"\s*\([^)]*\)", "", line).strip().rstrip(".")
+            parts = [part.strip() for part in bare.split(",")]
+            if line in RULE_EFFECT_TEXTS or wanted not in {part.lower() for part in parts}:
+                kept.append(line)
+                continue
+            rest = [part for part in parts if part.lower() != wanted]
+            if rest:
+                joined = ", ".join(rest)
+                kept.append(joined[:1].upper() + joined[1:])
+        return chars.with_(abilities=tuple(kept))
+
+
 class GrantAbility(ModificationBase):
     """Layer 6 addition (CR 613.1f), deduplicated."""
 
@@ -2261,6 +2288,7 @@ class GrantActivatedAbilitiesOf(ModificationBase):
 
 Modification = Annotated[
     LoseAllAbilities
+    | LoseKeyword
     | GrantAbility
     | GrantActivatedAbilitiesOf
     | GrantAbilityInstance
@@ -3019,6 +3047,11 @@ def creatures_controlled_by_with_counter(
 
 #: Layer 6 removal (CR 613.1f).
 lose_all_abilities: Modification = LoseAllAbilities()
+
+
+def lose_keyword(keyword: str) -> Modification:
+    """Layer 6 removal of one keyword (CR 613.1f)."""
+    return LoseKeyword(keyword=keyword)
 
 
 def grant_ability(text: str) -> Modification:

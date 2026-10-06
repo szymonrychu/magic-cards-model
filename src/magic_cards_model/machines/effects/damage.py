@@ -34,6 +34,7 @@ from ..abilities import (
 from ..casting import (
     annotate_exile,
 )
+from ..casting_restrictions import create_targeted_cant_cast_restriction
 from ..combat import has_keyword
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
@@ -2245,6 +2246,21 @@ def _parse_damage_group_phrase(phrase: str) -> GroupPredicate | None:
     than widening the damage to creatures the card never named.
     """
     text = phrase.strip()
+    union_parts = re.split(r"\s+and\s+each\s+", text, flags=re.IGNORECASE)
+    if len(union_parts) > 1:
+        # "each creature and each non-Bolas planeswalker" (Hour of
+        # Devastation), "each non-Giant creature and each planeswalker"
+        # (Battle of Frost and Fire): every permanent in any of the groups.
+        members = [_parse_damage_group_phrase(part) for part in union_parts]
+        if any(member is None for member in members):
+            return None
+
+        def union_predicate(game: "Game", permanent: CardState, controller: str) -> bool:
+            return any(
+                member is not None and member(game, permanent, controller) for member in members
+            )
+
+        return union_predicate
     except_match = _DAMAGE_GROUP_EXCEPT_RE.fullmatch(text)
     if except_match is not None:
         base = _parse_damage_group_phrase(except_match.group("base"))
@@ -4136,6 +4152,314 @@ def _parse_etb_damage_any_target_and_self_clause(
     return effect
 
 
+# --------------------------------------------------------------------------
+# NW-01 T5: a named player's group, and riders on what was dealt damage
+# --------------------------------------------------------------------------
+
+#: CR 105.1's colour words, as a group qualifier ahead of the group: "each
+#: white and/or blue creature that player controls" (Ember Gale).
+_COLOR_WORDS: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+_COLORED_GROUP_RE = re.compile(
+    r"^(?P<colors>(?:white|blue|black|red|green)"
+    r"(?:(?:,\s*|\s+)(?:and/or\s+|or\s+|and\s+)?(?:white|blue|black|red|green))*)\s+(?P<group>.+)$",
+    re.IGNORECASE,
+)
+
+
+def _parse_colored_group_phrase(phrase: str) -> GroupPredicate | None:
+    """`_parse_damage_group_phrase`, with an optional leading colour list -
+    "white and/or blue creature": a member of the group that is at least one
+    of those colours (CR 105.2, computed per CR 613.5)."""
+    match = _COLORED_GROUP_RE.fullmatch(phrase.strip())
+    if match is None:
+        return _parse_damage_group_phrase(phrase)
+    colors = {
+        _COLOR_WORDS[word.lower()]
+        for word in re.findall(r"white|blue|black|red|green", match.group("colors"), re.I)
+    }
+    member = _parse_damage_group_phrase(match.group("group"))
+    if member is None:
+        return None
+
+    def colored(game: "Game", permanent: CardState, controller: str) -> bool:
+        if not member(game, permanent, controller):
+            return False
+        return bool(colors & set(game.characteristics_of(permanent).colors))
+
+    return colored
+
+
+#: "`<source>` deals N damage to each `<group>` {target player|target
+#: opponent|that player} controls." - Aggravate's "each creature target
+#: player controls", Ember Gale's "each white and/or blue creature that
+#: player controls". No permanent is targeted (CR 115.10a): the player is,
+#: and the group is that player's permanents as this resolves (CR 608.2h).
+_DAMAGE_EACH_GROUP_NAMED_PLAYER_CONTROLS_RE = re.compile(
+    rf"^.*\bdeals? (?P<n>{AMOUNT}) damage to each (?P<group>.+?) "
+    r"(?:(?P<target>target (?:player|opponent)) controls|that player controls)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s1", for_spell=FORWARD, before=["dispatch._parse_targeted_clause"])
+def _parse_damage_each_group_named_player_controls_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_DAMAGE_EACH_GROUP_NAMED_PLAYER_CONTROLS_RE`'s shape. Read ahead of
+    the generic targeted clause, which would otherwise deal the damage to the
+    player the sentence only uses to name a group. The recipients are
+    snapshotted before any damage is dealt (CR 608.2f's simultaneity); a
+    player target no longer legal names nobody and nothing is dealt (CR
+    608.2b)."""
+    match = _DAMAGE_EACH_GROUP_NAMED_PLAYER_CONTROLS_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    target_phrase = match.group("target")
+    if target_phrase is None and not for_spell:
+        # An ability's "that player" is whoever its trigger event names (Siege
+        # Dragon's defending player), not a target this reader can read.
+        return None
+    if target_phrase is not None and not _targets_understood(
+        target_phrase, battlefield_only=False, allow_player_targets=True
+    ):
+        return None
+    amount_of = _resolve_multiplied_amount(match.group("n"), None, None)
+    if amount_of is None:
+        return None
+    member = _parse_colored_group_phrase(match.group("group"))
+    if member is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = _named_player_of(game, stack_object)
+        if player is None:
+            return
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)
+        )
+        controller = game.controller_of(stack_object).username
+        amount = max(amount_of(game, controller), 0)
+        if amount <= 0:
+            return
+        recipients = [
+            permanent
+            for permanent in list(game.battlefield)
+            if game.controller_of(permanent).username == player
+            and member(game, permanent, controller)
+        ]
+        for permanent in recipients:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.deal_damage(permanent, amount, source=source)
+
+    return effect
+
+
+#: What a "dealt damage this way" rider sentence does to the objects and
+#: players its own damage reached (CR 120.3: damage prevented is never
+#: dealt, so a creature the damage did not reach is not one of them):
+#:
+#:   Aggravate         "Each creature dealt damage this way attacks this turn
+#:                     if able." (CR 508.1d)
+#:   Aurelia's Fury    "Tap each creature dealt damage this way. Players
+#:                     dealt damage this way can't cast noncreature spells
+#:                     this turn." (CR 701.26a, CR 601.3)
+#:   Huatli, Warrior   "Creatures dealt damage this way can't block this
+#:   Poet's -X         turn." (CR 509.1b)
+_THIS_WAY_CREATURES = r"(?:each creature|creatures|a creature)"
+_THIS_WAY_PLAYERS = r"(?:each player|players|a player)"
+_THIS_WAY_ATTACKS_RE = re.compile(
+    rf"^{_THIS_WAY_CREATURES} dealt damage this way attacks? this turn if able$", re.IGNORECASE
+)
+_THIS_WAY_CANT_BLOCK_RE = re.compile(
+    rf"^{_THIS_WAY_CREATURES} dealt damage this way can(?:'|’)?t block this turn$",
+    re.IGNORECASE,
+)
+_THIS_WAY_TAP_RE = re.compile(r"^tap each creature dealt damage this way$", re.IGNORECASE)
+_THIS_WAY_CANT_CAST_RE = re.compile(
+    rf"^{_THIS_WAY_PLAYERS} dealt damage this way can(?:'|’)?t cast "
+    r"(?P<noncreature>noncreature )?spells this turn$",
+    re.IGNORECASE,
+)
+
+#: (game, stack object, creatures dealt damage, players dealt damage)
+_ThisWayRider = Callable[["Game", "StackObject", list[CardState], list[str]], None]
+
+
+def _source_name_of(stack_object: "StackObject") -> str:
+    return (
+        stack_object.card.name if isinstance(stack_object, CardState) else stack_object.source_name
+    )
+
+
+def _grant_line_until_end_of_turn(
+    game: "Game", stack_object: "StackObject", creatures: list[CardState], line: str
+) -> None:
+    store = continuous_effects(game)
+    for creature in creatures:
+        if creature.zone is not Zone.BATTLEFIELD:
+            continue
+        if not game.characteristics_of(creature).is_creature:
+            continue
+        store.add(
+            ContinuousEffect(
+                description=f"{_source_name_of(stack_object)}: {creature.name}: {line}",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(creature, creature.zone_change_stamp),
+                modification=grant_ability(line),
+            )
+        )
+
+
+def _this_way_rider(sentence: str) -> _ThisWayRider | None:
+    """One "dealt damage this way" rider sentence, or `None`."""
+    text = " ".join(sentence.split()).rstrip(".")
+    if _THIS_WAY_ATTACKS_RE.fullmatch(text):
+
+        def attacks(
+            game: "Game",
+            stack_object: "StackObject",
+            creatures: list[CardState],
+            players: list[str],
+        ) -> None:
+            _grant_line_until_end_of_turn(
+                game, stack_object, creatures, "This creature attacks each combat if able."
+            )
+
+        return attacks
+    if _THIS_WAY_CANT_BLOCK_RE.fullmatch(text):
+
+        def cant_block(
+            game: "Game",
+            stack_object: "StackObject",
+            creatures: list[CardState],
+            players: list[str],
+        ) -> None:
+            _grant_line_until_end_of_turn(
+                game, stack_object, creatures, "This creature can't block."
+            )
+
+        return cant_block
+    if _THIS_WAY_TAP_RE.fullmatch(text):
+
+        def tap(
+            game: "Game",
+            stack_object: "StackObject",
+            creatures: list[CardState],
+            players: list[str],
+        ) -> None:
+            for creature in creatures:
+                if creature.zone is Zone.BATTLEFIELD:
+                    game.tap_permanent(creature)
+
+        return tap
+    if cant_cast := _THIS_WAY_CANT_CAST_RE.fullmatch(text):
+        noncreature_only = cant_cast.group("noncreature") is not None
+
+        def cant_cast_spells(
+            game: "Game",
+            stack_object: "StackObject",
+            creatures: list[CardState],
+            players: list[str],
+        ) -> None:
+            controller = game.controller_of(stack_object).username
+            for player in players:
+                game.casting_rule_effects.append(
+                    create_targeted_cant_cast_restriction(
+                        controller,
+                        player,
+                        _source_name_of(stack_object),
+                        noncreature_only=noncreature_only,
+                    )
+                )
+
+        return cant_cast_spells
+    return None
+
+
+def _split_this_way_riders(text: str) -> tuple[str, list[_ThisWayRider]] | None:
+    """`text` as its leading instructions and the trailing "dealt damage this
+    way" rider sentences, or `None` when it ends in none."""
+    sentences = _plain_resolution_sentences(" ".join(_strip_non_effect_preamble(text).split()))
+    riders: list[_ThisWayRider] = []
+    while len(sentences) > 1:
+        rider = _this_way_rider(sentences[-1])
+        if rider is None:
+            break
+        riders.insert(0, rider)
+        sentences = sentences[:-1]
+    if not riders:
+        return None
+    return " ".join(sentences), riders
+
+
+def _dealt_damage_this_way_effect(
+    rest: Callable[["Game", Any], None], riders: list[_ThisWayRider]
+) -> Callable[["Game", Any], None]:
+    def dealt_damage_this_way(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)
+        )
+        start = len(game.damage_dealt_this_turn)
+        rest(game, stack_object)
+        creatures: list[CardState] = []
+        players: list[str] = []
+        for record in game.damage_dealt_this_turn[start:]:
+            if source is None or record.source_id != source.id or record.amount <= 0:
+                continue
+            if record.recipient_id is not None:
+                found = game.find_by_id(record.recipient_id)
+                if isinstance(found, CardState) and found not in creatures:
+                    creatures.append(found)
+            elif record.recipient_player is not None and record.recipient_player not in players:
+                players.append(record.recipient_player)
+        for rider in riders:
+            rider(game, stack_object, creatures, players)
+
+    return dealt_damage_this_way
+
+
+@SPELL_TEXT.rung("s6")
+def _parse_dealt_damage_this_way_riders_spell(text: str) -> Effect | None:
+    """A damage-dealing spell followed by "dealt damage this way" riders
+    (`_this_way_rider`). The leading text is read by the ordinary spell
+    dispatcher and run first (CR 608.2c); the riders act on exactly what its
+    damage reached, read off `Game.damage_dealt_this_turn` by source (CR
+    120.1). A leading text the dispatcher cannot read leaves this unread too
+    (fail closed)."""
+    split = _split_this_way_riders(text)
+    if split is None:
+        return None
+    rest = _spell_effect_or_notice(split[0])
+    if rest is None or _is_notice_only(rest):
+        return None
+    return _dealt_damage_this_way_effect(rest, split[1])
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_dealt_damage_this_way_riders_ability(text: str) -> AbilityEffect | None:
+    """`_parse_dealt_damage_this_way_riders_spell` on a resolving ability -
+    Huatli, Warrior Poet's -X."""
+    split = _split_this_way_riders(text)
+    if split is None:
+        return None
+    rest = _ability_effect_or_notice(split[0])
+    if rest is None or _is_notice_only(rest):
+        return None
+    return _dealt_damage_this_way_effect(rest, split[1])
+
+
 from ._common import (  # noqa: E402
     _DAMAGE_EACH_FILTERED_RE,
     _DAMAGE_EACH_GROUP_RE,
@@ -4161,14 +4485,21 @@ from .amounts import (  # noqa: E402
 from .continuous import (  # noqa: E402
     _is_layer_effect_text,
     _layer_antecedent_clause,
+    _named_player_of,
     continuous_effects,
     layer_context_for,
 )
 from .control_copy import _controlled_by_whose  # noqa: E402
 from .dispatch import (  # noqa: E402
+    _ability_effect_or_notice,
     _parse_mixed_clause,
     _parse_turn_rules_ban_clause,
     _spell_effect_or_notice,
 )
-from .text import _referent_reader, _singular_card_type, _strip_non_effect_preamble  # noqa: E402
+from .text import (  # noqa: E402
+    _plain_resolution_sentences,
+    _referent_reader,
+    _singular_card_type,
+    _strip_non_effect_preamble,
+)
 from .tokens import _is_notice_only  # noqa: E402

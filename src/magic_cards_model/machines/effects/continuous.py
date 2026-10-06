@@ -41,6 +41,7 @@ from ..casting import (
     once_per_turn_key,
 )
 from ..casting_restrictions import create_targeted_cant_cast_restriction
+from ..combat import KEYWORDS_OUTSIDE_COMBAT, Keyword
 from ..converge import colors_of_mana_spent
 from ..cost import (
     cost_announces_x,
@@ -84,6 +85,7 @@ from ..layers import (
     is_genuine_resolution_layer_sentence,
     is_resolution_layer_effect_text,
     lose_all_abilities,
+    lose_keyword,
     modify_power_toughness,
     only_this_incarnation,
     other_creatures_controlled_by,
@@ -2075,10 +2077,13 @@ def untap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
 #: `_targets_understood(count_agnostic=True)` below, same as before; the
 #: phrase only has to admit an optional leading count and the plural pronoun
 #: pair `_targets_understood` already knows how to size (one target, several,
-#: or "up to" any of them).
+#: or "up to" any of them). "That `<noun>` doesn't untap ..." (Chandra's
+#: Revolution's "Tap target land. That land doesn't untap during its
+#: controller's next untap step.", Stensia Innkeeper's trigger) is the same
+#: anaphora with a noun in place of the pronoun (CR 502.3).
 _TAP_TARGET_THEN_NO_UNTAP_RE = re.compile(
     rf"^tap (?P<phrase>(?:up to )?(?:{COUNT} )?target .+?)\.\s*"
-    r"(?:it doesn'?t|(?:those \w+|they) don'?t) untap during "
+    r"(?:(?:it|that [a-z]+) doesn'?t|(?:those \w+|they) don'?t) untap during "
     r"(?:its|their) controller'?s next untap step\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -2100,16 +2105,54 @@ def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
     match = _TAP_TARGET_THEN_NO_UNTAP_RE.fullmatch(whole)
     if match is None:
         return None
-    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+    phrase = match.group("phrase")
+    if not _targets_understood(phrase, count_agnostic=True):
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        for target in game.resolve_targets(ability):
-            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
-                game.tap_permanent(target)
-                target.exerted = True
+        for target in _own_phrase_targets(game, ability, phrase):
+            game.tap_permanent(target)
+            target.exerted = True
 
     return effect
+
+
+def _own_phrase_targets(game: "Game", stack_object: "StackObject", phrase: str) -> list[CardState]:
+    """The targets still legal on the battlefield (CR 608.2b) that `phrase` -
+    this one clause's own "target ..." words - was announced for, when the
+    resolving object targets for other clauses too (Chandra's Revolution:
+    "deals 4 damage to target creature. Tap target land. ...", CR 601.2c).
+
+    A spell's targets carry the requirement each filled at announcement
+    (`TargetRef.slot`); the requirement whose phrase is this clause's own is
+    this clause's slot. Without a slot to read (an ability, or one phrase
+    printed twice), every legal target the phrase itself accepts is this
+    clause's - which is every target when the clause is the only one.
+    """
+    own = profile_for_text(phrase)
+    controller = game.controller_of(stack_object).username
+    wanted = own.requirements[0] if own.understood and own.requirements else None
+    slot: int | None = None
+    if isinstance(stack_object, CardState) and wanted is not None:
+        full = game._resolution_profile(stack_object)
+        hits = [
+            index
+            for index, requirement in enumerate(full.requirements)
+            if requirement.phrase.lower() == wanted.phrase.lower()
+        ]
+        if len(full.requirements) > 1 and len(hits) == 1:
+            slot = hits[0]
+    found: list[CardState] = []
+    for ref in stack_object.targets:
+        if slot is not None and ref.slot is not None and ref.slot != slot:
+            continue
+        thing = game.legal_target(stack_object, ref)
+        if not isinstance(thing, CardState) or thing.zone is not Zone.BATTLEFIELD:
+            continue
+        if wanted is not None and wanted.rejects(thing, controller, game) is not None:
+            continue
+        found.append(thing)
+    return found
 
 
 #: CR 722.3b, Infinite Coursework's own Aura shape: "When this Aura enters,
@@ -9479,29 +9522,35 @@ def _parse_double_target_power_and_toughness_clause(
             if isinstance(stack_object, AbilityOnStack)
             else stack_object.name
         )
-        store = continuous_effects(game)
         for target in game.resolve_card_targets(stack_object):
-            if target.zone is not Zone.BATTLEFIELD:
-                continue
-            chars = game.characteristics_of(target)
-            if not chars.is_creature or chars.power is None or chars.toughness is None:
-                continue
-            store.add(
-                ContinuousEffect(
-                    description=(
-                        f"{source_name}: {target.name} gets "
-                        f"{chars.power:+d}/{chars.toughness:+d} (doubled)"
-                    ),
-                    layer=Layer.POWER_TOUGHNESS,
-                    sublayer=Sublayer.MODIFY,
-                    timestamp=store.tick(),
-                    duration=Duration.UNTIL_END_OF_TURN,
-                    selector=only_this_incarnation(target, target.zone_change_stamp),
-                    modification=modify_power_toughness(chars.power, chars.toughness),
-                )
-            )
+            if target.zone is Zone.BATTLEFIELD:
+                _double_power_and_toughness(game, target, source_name)
 
     return effect
+
+
+def _double_power_and_toughness(game: "Game", target: CardState, source_name: str) -> None:
+    """CR 701.10b: `target` gets +X/+Y until end of turn, X and Y its power
+    and toughness as this resolves (computed, CR 613.5) - a sublayer 7c
+    modification (CR 613.4c), never recomputed. Nothing for a permanent that
+    is not a creature or has no number to double."""
+    chars = game.characteristics_of(target)
+    if not chars.is_creature or chars.power is None or chars.toughness is None:
+        return
+    store = continuous_effects(game)
+    store.add(
+        ContinuousEffect(
+            description=(
+                f"{source_name}: {target.name} gets {chars.power:+d}/{chars.toughness:+d} (doubled)"
+            ),
+            layer=Layer.POWER_TOUGHNESS,
+            sublayer=Sublayer.MODIFY,
+            timestamp=store.tick(),
+            duration=Duration.UNTIL_END_OF_TURN,
+            selector=only_this_incarnation(target, target.zone_change_stamp),
+            modification=modify_power_toughness(chars.power, chars.toughness),
+        )
+    )
 
 
 # --------------------------------------------------------------------------
@@ -9884,6 +9933,374 @@ def _parse_cast_spell_targets_gain(text: str) -> AbilityEffect | None:
     return effect
 
 
+# --------------------------------------------------------------------------
+# NW-01 T5: group restrictions, lost keywords and per-count pumps after damage
+# --------------------------------------------------------------------------
+
+
+def _named_player_of(game: "Game", stack_object: "StackObject") -> str | None:
+    """The player a resolving object's own words name through its target:
+    the targeted player, or - for "target player or planeswalker" - the
+    targeted planeswalker's controller (CR 115.1; Concussive Bolt's "that
+    player or ... that planeswalker's controller", Ember Gale's "that
+    player"). `None` when nothing names one (CR 608.2b: an illegal target
+    names nobody)."""
+    for target in game.resolve_targets(stack_object):
+        if isinstance(target, Player):
+            return target.username
+        if (
+            isinstance(target, CardState)
+            and target.zone is Zone.BATTLEFIELD
+            and Type.PLANESWALKER in game.characteristics_of(target).types
+        ):
+            return game.controller_of(target).username
+    return None
+
+
+#: "Creatures [`<whose>`] can't block this turn." - CR 509.1b's restriction
+#: on a whole group for the rest of the turn: every creature (Barrage of
+#: Boulders' Ferocious line), "your opponents control" (Cosmotronic Wave,
+#: Hazardous Blast), "target player/opponent controls" (Ember Gale), or "that
+#: player controls" / "controlled by that player or by that planeswalker's
+#: controller" (Concussive Bolt), the player its own target names.
+_GROUP_CANT_BLOCK_THIS_TURN_RE = re.compile(
+    r"^creatures(?: (?:(?P<opponents>your opponents control)"
+    r"|(?P<target>target (?:player|opponent)) controls"
+    r"|(?P<named>that player controls"
+    r"|controlled by that player(?: or by that planeswalker(?:'|’)s controller)?)))?"
+    r" can(?:'|’)?t block this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_group_cant_block_this_turn_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_GROUP_CANT_BLOCK_THIS_TURN_RE`'s shape: the "This creature can't
+    block." line `machines/combat.py`'s CR 509.1b reader already checks,
+    granted to the group until end of turn (CR 611.2a).
+
+    The restriction changes no characteristic and no controller, so CR
+    611.2c does not fix the set as it begins: the selector stays live, and a
+    creature that comes under the named player's control later in the turn
+    cannot block either. A targeted player that is no longer legal names
+    nobody (CR 608.2b), so nothing is restricted."""
+    match = _GROUP_CANT_BLOCK_THIS_TURN_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    target_phrase = match.group("target")
+    if target_phrase is not None and not _targets_understood(
+        target_phrase, battlefield_only=False, allow_player_targets=True
+    ):
+        return None
+    if match.group("named") is not None and not for_spell:
+        # An ability's "that player" is whoever its trigger event names (a
+        # defending player, an opponent who cast a spell), not a target.
+        return None
+    opponents = match.group("opponents") is not None
+    named = target_phrase is not None or match.group("named") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        if named:
+            player = _named_player_of(game, stack_object)
+            if player is None:
+                return
+            selector = creatures_controlled_by(player)
+            whose = f"{player} controls"
+        elif opponents:
+            selector = creatures_controlled_by_opponents_of(controller)
+            whose = f"{controller}'s opponents control"
+        else:
+            selector = every_creature
+            whose = "anyone controls"
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source_name}: creatures {whose} can't block this turn",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=selector,
+                modification=grant_ability("This creature can't block."),
+            )
+        )
+
+    return effect
+
+
+#: The keywords a "loses `<keyword>`" removal may name: CR 702's keyword
+#: abilities this engine reads off the computed board, so removing one is a
+#: change something actually checks (CR 702.12b's indestructible chief among
+#: them).
+def _losable_keyword(word: str) -> str | None:
+    lowered = word.strip().lower()
+    known = {str(keyword).lower() for keyword in Keyword} | set(KEYWORDS_OUTSIDE_COMBAT)
+    return lowered if lowered in known else None
+
+
+def _lose_keyword_until_end_of_turn(
+    game: "Game", permanent: CardState, keyword: str, source_name: str
+) -> None:
+    """CR 613.1f's layer 6 removal of one keyword from exactly this object
+    (`only_this_incarnation`, CR 400.7) until end of turn (CR 611.2a). A
+    later grant (a later timestamp, CR 613.7) gives it back."""
+    store = continuous_effects(game)
+    store.add(
+        ContinuousEffect(
+            description=f"{source_name}: {permanent.name} loses {keyword}",
+            layer=Layer.ABILITY,
+            timestamp=store.tick(),
+            duration=Duration.UNTIL_END_OF_TURN,
+            selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+            modification=lose_keyword(keyword),
+        )
+    )
+
+
+#: "All `<group>` lose `<keyword>` until end of turn." - Hour of
+#: Devastation's opening sentence. CR 613.1f's removal, which does change a
+#: characteristic: CR 611.2c fixes the set as the effect begins, so a
+#: creature that arrives later keeps its indestructible.
+_GROUP_LOSES_KEYWORD_RE = re.compile(
+    r"^all (?P<group>[a-z ]+?) lose (?P<keyword>[a-z]+(?: [a-z]+)?) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_group_loses_keyword_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_GROUP_LOSES_KEYWORD_RE`'s shape, the group read by
+    `_parse_mass_type_qualifier` off the computed board (CR 613.5)."""
+    match = _GROUP_LOSES_KEYWORD_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    keyword = _losable_keyword(match.group("keyword"))
+    if keyword is None:
+        return None
+    in_group = _parse_mass_type_qualifier(match.group("group"))
+    if in_group is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        board = game.computed_board()
+        for permanent in [p for p in game.battlefield if in_group(board.of(p))]:
+            _lose_keyword_until_end_of_turn(game, permanent, keyword, source_name)
+
+    return effect
+
+
+#: "`<antecedent>`. `<it/that noun>` loses `<keyword>` until end of turn." -
+#: Rebel Salvo's and Soul Sear's rider after their damage, read by
+#: `text._parse_referent_object_clause` with this reader's own wording.
+_RIDER_LOSES_KEYWORD_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} loses (?P<keyword>[a-z]+(?: [a-z]+)?) until end of turn$",
+    re.IGNORECASE,
+)
+
+
+def _parse_loses_keyword_referent_rider(
+    rider: str,
+) -> Callable[["Game", list[CardState], "StackObject"], None] | None:
+    """`_RIDER_LOSES_KEYWORD_RE`'s rider: each referent still on the
+    battlefield loses the keyword until end of turn (CR 613.1f, CR 611.2a)."""
+    match = _RIDER_LOSES_KEYWORD_RE.fullmatch(" ".join(rider.split()).rstrip("."))
+    if match is None:
+        return None
+    keyword = _losable_keyword(match.group("keyword"))
+    if keyword is None:
+        return None
+
+    def loses_keyword(
+        game: "Game", referents: list[CardState], stack_object: "StackObject"
+    ) -> None:
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        for referent in referents:
+            if referent.zone is Zone.BATTLEFIELD:
+                _lose_keyword_until_end_of_turn(game, referent, keyword, source_name)
+
+    return loses_keyword
+
+
+#: "[Until end of turn, ]`<target>` gains `<keywords>` and gets +N/+M for each
+#: `<count>`[ until end of turn]." and its "gets +N/+M for each `<count>` and
+#: gains `<keywords>`" word order - Fists of Flame's "Until end of turn,
+#: target creature gains trample and gets +1/+0 for each card you've drawn
+#: this turn.", Get a Leg Up's and Chorus of Might's "Until end of turn,
+#: target creature gets +1/+1 for each creature you control and gains
+#: reach/trample." One CR 608.2c instruction the "and" clause split would cut
+#: in two; the count is taken once as the spell resolves (CR 608.2h), after
+#: every earlier instruction of the spell (Fists of Flame's own draw).
+_TARGET_GAINS_AND_PUMP_FOR_EACH_RE = re.compile(
+    r"^(?:until end of turn, )?(?P<subject>(?:up to one )?target [^,.]+?) "
+    r"(?:gains (?P<kw_first>[a-z ,]+?) and gets (?P<p_first>[+-]\d+)/(?P<t_first>[+-]\d+)"
+    r" for each (?P<each_first>[^.]+?)"
+    r"|gets (?P<p_last>[+-]\d+)/(?P<t_last>[+-]\d+) for each (?P<each_last>[^.]+?)"
+    r" and gains (?P<kw_last>[a-z ,]+?))"
+    r"(?: until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_target_gains_and_pump_for_each_spell(text: str) -> Effect | None:
+    """`_TARGET_GAINS_AND_PUMP_FOR_EACH_RE` as a spell's last sentence, the
+    sentences before it read by the ordinary spell dispatcher and run first
+    (CR 608.2c). The pump and the keywords are one layer effect built from
+    the literal "+N/+M and gains ..." sentence with the count multiplied in
+    (CR 611.2, CR 613.4c, CR 613.1f), applied to the target if still legal
+    (CR 608.2b)."""
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    sentences = _plain_resolution_sentences(whole)
+    if not sentences:
+        return None
+    match = _TARGET_GAINS_AND_PUMP_FOR_EACH_RE.fullmatch(sentences[-1].strip())
+    if match is None:
+        return None
+    subject = match.group("subject")
+    if not _targets_understood(subject, count_agnostic=False):
+        return None
+    keywords = (match.group("kw_first") or match.group("kw_last")).strip()
+    power = int(match.group("p_first") or match.group("p_last"))
+    toughness = int(match.group("t_first") or match.group("t_last"))
+    multiplier = _for_each_multiplier(match.group("each_first") or match.group("each_last"))
+    if multiplier is None:
+        return None
+
+    def literal(count: int) -> str:
+        return (
+            f"Until end of turn, {subject} gets {power * count:+d}/{toughness * count:+d} "
+            f"and gains {keywords}."
+        )
+
+    if parsed_layer_effects(literal(1)) is None:
+        return None
+    rest: Effect | None = None
+    if len(sentences) > 1:
+        rest = _spell_effect_or_notice(" ".join(sentences[:-1]))
+        if rest is None or _is_notice_only(rest):
+            return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        if rest is not None:
+            rest(game, spell)
+            game.announce_batched_events()
+        controller = game.controller_of(spell)
+        count = multiplier(game, controller.username, str(spell.id))
+        builder = parsed_layer_effects(literal(count))
+        if builder is None:
+            continuous_effects(game).layer_notices.append(
+                LayerNotice(source_id=spell.id, source_name=spell.card.name, text=literal(count))
+            )
+            return
+        targets = game.resolve_card_targets(spell)
+        if not targets:
+            return
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        context = layer_context_for(game, controller)
+        for built in builder(spell, timestamp, targets, context):
+            if built.holds(game):
+                store.add(built)
+
+    return effect
+
+
+#: "Double the power and toughness of target creature you control until end
+#: of turn. Then it fights up to one target creature an opponent controls."
+#: (Dragonclaw Strike) - CR 701.10a's doubling, then CR 701.14a's fight, one
+#: CR 608.2c instruction whose "and toughness" the clause split would cut.
+#: Read whole, ahead of the split, together with the pump and counter
+#: antecedents `_parse_pump_then_fight_clause_pair` already reads (Chelonian
+#: Tackle's "Target creature you control gets +0/+10 until end of turn. Then
+#: it fights up to one target creature an opponent controls.").
+_DOUBLE_TARGET_YOU_CONTROL_RE = re.compile(
+    r"^double (?:the power and toughness of target creature you control"
+    r"|target creature you control(?:'|’)s power and toughness) until end of turn$",
+    re.IGNORECASE,
+)
+
+
+def _target_you_control_then_fights(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """The two sentences of a "creature you control is made bigger, then it
+    fights" instruction. The pump and counter antecedents are handed to
+    `_parse_pump_then_fight_clause_pair` unchanged; the doubling one is read
+    here: the creature you control gets +X/+Y equal to its power and
+    toughness as this resolves (CR 701.10b, sublayer 7c, CR 613.4c), then
+    fights the opponent's creature if one was chosen (CR 115.6's "up to
+    one") and both are still creatures on the battlefield (CR 701.14b)."""
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    sentences = _plain_resolution_sentences(whole)
+    if len(sentences) != 2:
+        return None
+    first = sentences[0].strip().rstrip(".").strip()
+    second = re.sub(r"^then\s+", "", sentences[1].strip(), flags=re.IGNORECASE)
+    second = second.rstrip(".").strip()
+    fight = _RIDER_FIGHTS_TARGET_RE.fullmatch(second)
+    if fight is None:
+        return None
+    if _DOUBLE_TARGET_YOU_CONTROL_RE.fullmatch(first) is None:
+        return _parse_pump_then_fight_clause_pair(first, second, for_spell=for_spell)
+    if not _targets_understood(fight.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        mine = [t for t in targets if game.controller_of(t).username == controller]
+        theirs = [t for t in targets if game.controller_of(t).username != controller]
+        if not mine:
+            return
+        fighter = mine[0]
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        _double_power_and_toughness(game, fighter, source_name)
+        if not theirs:
+            return  # CR 115.6: "up to one" chose none, so nothing fights.
+        opponent = theirs[0]
+        if not game.characteristics_of(fighter).is_creature:
+            return  # CR 701.14b
+        if not game.characteristics_of(opponent).is_creature:
+            return  # CR 701.14b
+        _fight(game, fighter, opponent)
+
+    return effect
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_target_you_control_then_fights_spell(text: str) -> TargetedClause | None:
+    """`_target_you_control_then_fights` on a resolving spell."""
+    return _target_you_control_then_fights(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s11")
+def _parse_target_you_control_then_fights_ability(text: str) -> TargetedClause | None:
+    """`_target_you_control_then_fights` on a resolving ability."""
+    return _target_you_control_then_fights(text, for_spell=False)
+
+
 from ._common import (  # noqa: E402
     _ANAPHOR_GAINS_KEYWORDS_RE,
     _COST_INCREASE_PER_TARGET_LINE_RE,
@@ -9954,6 +10371,7 @@ from .text import (  # noqa: E402
 from .tokens import (  # noqa: E402
     _create_continuous_effect_for_mode_text,
     _create_continuous_effect_of_ability_for_mode_text,
+    _is_notice_only,
     _parse_generic_token_descriptor,
     create_continuous_effect,
     create_continuous_effect_of_ability,
