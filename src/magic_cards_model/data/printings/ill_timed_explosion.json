@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff",
+  "oracle_id": "6e3b3a3f-e32f-4c72-a9fb-dd1e877876b6",
+  "multiverse_ids": [
+    646763
+  ],
+  "mtgo_id": 121888,
+  "arena_id": 89120,
+  "tcgplayer_id": 535985,
+  "cardmarket_id": 753603,
+  "name": "Ill-Timed Explosion",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff",
+  "scryfall_uri": "https://scryfall.com/card/mkm/207/ill-timed-explosion?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:20:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.jpg?1783912847",
+    "normal": "https://cards.scryfall.io/normal/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.jpg?1783912847",
+    "large": "https://cards.scryfall.io/large/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.jpg?1783912847",
+    "png": "https://cards.scryfall.io/png/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.png?1783912847",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.jpg?1783912847",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.jpg?1783912847",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.webp?1783912847",
+    "grid": "https://cards.scryfall.io/grid/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.webp?1783912847",
+    "display": "https://cards.scryfall.io/display/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.webp?1783912847",
+    "art": "https://cards.scryfall.io/art/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.webp?1783912847",
+    "crop": "https://cards.scryfall.io/crop/front/0/b/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff.webp?1783912847"
+  },
+  "mana_cost": "{2}{U}{R}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Draw two cards. Then you may discard two cards. When you do, Ill-Timed Explosion deals X damage to each creature, where X is the greatest mana value among cards discarded this way.",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set": "mkm",
+  "set_name": "Murders at Karlov Manor",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0b5cdb01-eaa4-4a0a-b42a-332bcf4d6fff/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6e3b3a3f-e32f-4c72-a9fb-dd1e877876b6&unique=prints",
+  "collector_number": "207",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Only too late did the Agency custodians realize the device had not been inactive\u2014it was just waiting for the right trigger.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Aaron J. Riley",
+  "artist_ids": [
+    "f21b412c-aef5-4d15-88be-4f40615acde3"
+  ],
+  "illustration_id": "b193d955-2e9e-4f78-adf9-efbeea25ae27",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8184,
+  "penny_rank": 316,
+  "preview": {
+    "source": "ashimu06",
+    "source_uri": "https://www.youtube.com/watch?v=xeaRZM4wa3A",
+    "previewed_at": "2024-01-24"
+  },
+  "prices": {
+    "usd": "0.35",
+    "usd_foil": "0.38",
+    "usd_etched": null,
+    "eur": "0.37",
+    "eur_foil": "0.47",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=646763&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIll-Timed%2BExplosion",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIll-Timed%2BExplosion",
+    "edhrec": "https://edhrec.com/route/?cc=Ill-Timed+Explosion"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535985%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=753603&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/121888?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

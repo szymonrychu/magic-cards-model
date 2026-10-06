@@ -49,6 +49,8 @@ from ..delayed import (
     ReflexiveMandatoryTokenDamageConsequence,
     ReflexivePayEnergyConsequence,
     ReflexivePayManaConsequence,
+    ReflexiveWhenYouDoConsequence,
+    ThatCreatureDiesConsequence,
     draw_a_card_for_controller,
     return_subject_to_hand,
     sacrificed_by_its_controller,
@@ -562,6 +564,571 @@ def _parse_choose_target_return_chosen_card_clause(effect_text: str) -> Effect |
     if not _targets_understood(match.group("phrase"), battlefield_only=False):
         return None
     return return_ability_targets_to_battlefield
+
+
+# --------------------------------------------------------------------------
+# "Choose target creature you control and target creature <you don't control |
+# an opponent controls>. [<rider>.] <fight | bite>."
+# --------------------------------------------------------------------------
+#
+# CR 701.14a (fight), CR 608.2b (a target that is illegal on resolution is not
+# affected, so the survivor still gets the rider but nothing fights), CR 608.2c
+# (printed order: the pump or counter lands before the damage), CR 207.2c
+# (Coven and Delirium are ability words, stripped by the preamble reader).
+# One reader for the whole template: the opening "Choose ..." sentence names
+# both targets, an optional middle sentence is a conditional pump or counter
+# rider on the creature you control, the last sentence is the fight or a bite.
+
+_CHOOSE_PAIR_RE = re.compile(
+    r"^choose target creature you control and target creature "
+    r"(?:you don'?t control|an opponent controls)$",
+    re.IGNORECASE,
+)
+_PAIR_FIGHT_RE = re.compile(
+    r"^then (?:those|the chosen) creatures fight each other$", re.IGNORECASE
+)
+_PAIR_POWER_BITE_RE = re.compile(
+    r"^the creature you control deals damage equal to its power to the creature "
+    r"(?:you don'?t control|an opponent controls)$",
+    re.IGNORECASE,
+)
+_PAIR_TOUGHNESS_BITE_RE = re.compile(
+    r"^each of those creatures deals damage equal to its toughness to the other$",
+    re.IGNORECASE,
+)
+_PAIR_PUMP = (
+    r"the creature you control gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and gains (?P<keywords>[a-z ,]+?))? until end of turn"
+)
+_PAIR_COUNTER = (
+    r"put (?P<n>\w+) \+1/\+1 counters? on "
+    r"(?:the (?:chosen )?creature you control|it)"
+)
+_PAIR_LEADING_IF_RIDER_RE = re.compile(
+    rf"^if (?P<condition>.+?), (?:{_PAIR_PUMP}|{_PAIR_COUNTER})$", re.IGNORECASE
+)
+_PAIR_TRAILING_IF_RIDER_RE = re.compile(
+    rf"^(?:{_PAIR_PUMP}|{_PAIR_COUNTER}) if (?P<condition>.+)$", re.IGNORECASE
+)
+#: The two rider conditions that talk about the creature you control, which
+#: `Game.condition_holds` cannot know (an anaphor onto the first sentence's
+#: own target, `_effect_condition_is_readable`): read here off that creature.
+_PAIR_IT_IS_RE = re.compile(r"^it(?:'s| is) an? (?P<word>.+)$", re.IGNORECASE)
+_PAIR_ENTERED_RE = re.compile(
+    r"^the creature you control entered (?:the battlefield )?this turn$", re.IGNORECASE
+)
+
+
+def _pair_condition_is_readable(condition: str) -> bool:
+    return (
+        _PAIR_IT_IS_RE.fullmatch(condition) is not None
+        or _PAIR_ENTERED_RE.fullmatch(condition) is not None
+        or _effect_condition_is_readable(condition)
+    )
+
+
+def _pair_condition_holds(
+    game: "Game", spell: CardState, mine: CardState, condition: str
+) -> bool | None:
+    """A rider's printed condition, evaluated as the spell resolves (CR 608.2c).
+    `None` when the shared reader cannot answer it."""
+    is_a = _PAIR_IT_IS_RE.fullmatch(condition)
+    if is_a is not None:
+        word = is_a.group("word").strip().lower()
+        characteristics = game.characteristics_of(mine)
+        return word in {s.lower() for s in characteristics.subtypes} or word in {
+            t.value.lower() for t in characteristics.types
+        }
+    if _PAIR_ENTERED_RE.fullmatch(condition) is not None:
+        return game._entered_this_turn(mine)
+    return game.condition_holds(game.controller_of(spell).username, condition, spell)
+
+
+@SPELL_TEXT.rung("s12")
+def _parse_choose_pair_fight_or_bite_clause(effect_text: str) -> Effect | None:
+    """`_CHOOSE_PAIR_RE`'s opening sentence, an optional conditional pump or
+    +1/+1-counter rider on the creature you control, then a fight or a bite -
+    see the banner above."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    sentences = [part.strip().rstrip(".").strip() for part in re.split(r"(?<=\.)\s+", whole)]
+    sentences = [part for part in sentences if part]
+    if len(sentences) not in (2, 3) or _CHOOSE_PAIR_RE.fullmatch(sentences[0]) is None:
+        return None
+    finish = sentences[-1]
+    if _PAIR_FIGHT_RE.fullmatch(finish):
+        finish_kind = "fight"
+    elif _PAIR_POWER_BITE_RE.fullmatch(finish):
+        finish_kind = "power"
+    elif _PAIR_TOUGHNESS_BITE_RE.fullmatch(finish):
+        finish_kind = "toughness"
+    else:
+        return None
+    if not _targets_understood("target creature you control", count_agnostic=True):
+        return None
+    rider = None
+    if len(sentences) == 3:
+        rider = _PAIR_LEADING_IF_RIDER_RE.fullmatch(sentences[1]) or (
+            _PAIR_TRAILING_IF_RIDER_RE.fullmatch(sentences[1])
+        )
+        if rider is None or not _pair_condition_is_readable(rider.group("condition").strip()):
+            return None
+    builder = None
+    counter_amount = 0
+    if rider is not None:
+        if rider.group("power") is not None:
+            keywords = rider.group("keywords")
+            builder = parsed_layer_effects(
+                f"Target creature gets {rider.group('power')}/{rider.group('toughness')}"
+                f"{f' and gains {keywords}' if keywords else ''} until end of turn."
+            )
+            if builder is None:
+                return None
+        else:
+            parsed_amount = parse_count(rider.group("n"))
+            if parsed_amount is None:
+                return None
+            counter_amount = parsed_amount
+    condition = rider.group("condition").strip() if rider is not None else None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        targets = [
+            target
+            for target in game.resolve_targets(spell)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        mine = [t for t in targets if game.controller_of(t).username == controller.username]
+        theirs = [t for t in targets if game.controller_of(t).username != controller.username]
+        if mine and condition is not None:
+            held = _pair_condition_holds(game, spell, mine[0], condition)
+            if held is None:
+                notice = ConditionalClauseNotice(
+                    source_id=spell.id, source_name=spell.card.name, text=effect_text
+                )
+                if notice not in game.conditional_clause_notices:
+                    game.conditional_clause_notices.append(notice)
+            elif held and builder is not None:
+                effects = game.continuous_effects
+                for built in builder(
+                    spell, effects.tick(), mine[:1], layer_context_for(game, controller)
+                ):
+                    effects.add(built, game)
+            elif held:
+                game.add_counters(mine[0], _counter_kind("+1/+1"), counter_amount)
+        if not mine or not theirs:
+            return  # CR 608.2b: an illegal target neither deals nor is dealt damage.
+        fighter, opponent = mine[0], theirs[0]
+        if finish_kind == "power":
+            _resolve_bite_damage(game, spell, "power")
+        elif finish_kind == "fight":
+            if game.characteristics_of(fighter).is_creature and (
+                game.characteristics_of(opponent).is_creature
+            ):
+                _fight(game, fighter, opponent)  # CR 701.14b
+        else:
+            fighter_toughness = max(game.characteristics_of(fighter).toughness or 0, 0)
+            opponent_toughness = max(game.characteristics_of(opponent).toughness or 0, 0)
+            game.deal_damage(opponent, fighter_toughness, source=fighter)
+            game.deal_damage(fighter, opponent_toughness, source=opponent)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Choose target creature <...>. When that creature dies this turn, <consequence>.
+# [Target creature you control fights that creature.]"
+# --------------------------------------------------------------------------
+#
+# CR 603.7a/603.7c/603.7b: the second sentence creates a delayed triggered
+# ability about the one creature the first sentence chose, for the rest of the
+# turn; CR 701.14a is the optional last sentence's fight, which happens after
+# the watch exists (printed order, CR 608.2c), so a fight that kills the
+# creature does trigger it. The creature's own death is read by
+# `ThatCreatureDiesConsequence`/`dies_consequence_effect`, never re-derived here.
+
+_CHOOSE_THEN_DIES_THIS_TURN_RE = re.compile(
+    r"^choose (?P<phrase>(?:up to one )?target creature"
+    r"(?: (?:you don'?t control|an opponent controls))?)\. "
+    r"when that creature dies this turn, (?P<consequence>[^.]+)"
+    r"(?:\. (?P<rest>target creature you control fights that creature))?$",
+    re.IGNORECASE,
+)
+
+
+def _dies_this_turn_consequence_text(consequence: str) -> str | None:
+    """The consequence in the form `dies_consequence_effect` reads: as printed,
+    or - "you earthbend 4" - with the controller's own "you" dropped from a bare
+    imperative, since the delayed ability's controller is already the subject."""
+    from ..dies_this_turn import dies_consequence_effect
+
+    if dies_consequence_effect(consequence) is not None:
+        return consequence
+    if consequence.lower().startswith("you "):
+        stripped = consequence[4:].strip()
+        if dies_consequence_effect(stripped) is not None:
+            return stripped
+    return None
+
+
+@SPELL_TEXT.rung("s12")
+def _parse_choose_target_then_dies_this_turn_clause(effect_text: str) -> Effect | None:
+    """`_CHOOSE_THEN_DIES_THIS_TURN_RE`'s shape - see the banner above."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split()).rstrip(".")
+    match = _CHOOSE_THEN_DIES_THIS_TURN_RE.fullmatch(whole)
+    if match is None:
+        return None
+    phrase = match.group("phrase")
+    fights = match.group("rest") is not None
+    chosen_is_opposing = re.search(
+        r"you don'?t control|an opponent controls", phrase, re.IGNORECASE
+    )
+    if fights and not chosen_is_opposing:
+        return None  # "that creature" could not be told apart from the fighter.
+    consequence = _dies_this_turn_consequence_text(match.group("consequence").strip())
+    if consequence is None:
+        return None
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+    if fights and not _targets_understood("target creature you control", count_agnostic=True):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ..dies_this_turn import source_id_of_object
+
+        controller = game.controller_of(spell)
+        targets = [
+            target
+            for target in game.resolve_targets(spell)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if fights:
+            mine = [t for t in targets if game.controller_of(t).username == controller.username]
+            chosen = [t for t in targets if game.controller_of(t).username != controller.username]
+        else:
+            mine, chosen = [], targets
+        if not chosen:
+            return  # CR 608.2b: the chosen creature is gone, nothing to watch.
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=consequence,
+                event=TriggerEvent.DIES,
+                controller=controller.username,
+                source_id=source_id_of_object(spell),
+                source_name=spell.card.name,
+                subject_id=chosen[0].id,
+                remaining=1,
+                expires_end_of_turn=True,
+                effect=ThatCreatureDiesConsequence(),
+            )
+        )
+        if fights and mine:
+            fighter, opponent = mine[0], chosen[0]
+            if game.characteristics_of(fighter).is_creature and (
+                game.characteristics_of(opponent).is_creature
+            ):
+                _fight(game, fighter, opponent)  # CR 701.14b
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Choose [up to one] target creature <...>. Each creature you control <filter>
+# deals damage equal to its power to that creature."
+# --------------------------------------------------------------------------
+#
+# A group bite: every qualifying creature you control, read off the computed
+# board when the spell resolves (CR 613.5), is its own damage source dealing its
+# own power (CR 120.3); the chosen creature is the one target (CR 115.1), and a
+# chosen creature that is gone by resolution takes nothing (CR 608.2b).
+
+_CHOOSE_THEN_GROUP_BITE_RE = re.compile(
+    r"^choose (?P<phrase>(?:up to one )?target creature "
+    r"(?:you don'?t control|an opponent controls))\. "
+    r"each creature you control (?P<filter>that'?s an? \w+(?: or an? \w+)*|with an? "
+    r"\+1/\+1 counter on it) deals damage equal to its power to that creature$",
+    re.IGNORECASE,
+)
+_GROUP_BITE_KINDS_RE = re.compile(r"an? (\w+)", re.IGNORECASE)
+
+
+def _group_bite_predicate(game_filter: str) -> "Callable[[Game, CardState], bool] | None":
+    """The printed qualifier as a test on a creature you control, or `None`."""
+    lowered = game_filter.lower()
+    if lowered.startswith("with"):
+        return lambda game, creature: creature.counters["+1/+1"] > 0
+    words = {word.lower() for word in _GROUP_BITE_KINDS_RE.findall(lowered)}
+    if not words or not all(word in subtype_vocabulary() for word in words):
+        return None
+
+    def matches(game: "Game", creature: CardState) -> bool:
+        characteristics = game.characteristics_of(creature)
+        return bool(words & {sub.lower() for sub in characteristics.subtypes})
+
+    return matches
+
+
+@SPELL_TEXT.rung("s12")
+def _parse_choose_target_then_group_bite_clause(effect_text: str) -> Effect | None:
+    """`_CHOOSE_THEN_GROUP_BITE_RE`'s shape - see the banner above."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split()).rstrip(".")
+    match = _CHOOSE_THEN_GROUP_BITE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    qualifies = _group_bite_predicate(match.group("filter"))
+    if qualifies is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        victims = [
+            target
+            for target in game.resolve_targets(spell)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not victims:
+            return
+        victim = victims[0]
+        biters = [
+            creature
+            for creature in list(game.battlefield)
+            if creature.zone is Zone.BATTLEFIELD
+            and game.controller_of(creature).username == controller.username
+            and game.characteristics_of(creature).is_creature
+            and qualifies(game, creature)
+        ]
+        for biter in biters:
+            amount = game.power_of(biter) or 0
+            if amount > 0 and victim.zone is Zone.BATTLEFIELD:
+                game.deal_damage(victim, amount, source=biter)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# A spell's CR 603.12 reflexive ability: "<instruction>. When you do, <that
+# creature | it> fights up to one target creature you don't control."
+# --------------------------------------------------------------------------
+#
+# The spell's first sentence acts on the one object it targets (a Role token
+# attached to it, a card returned to the battlefield); "that creature"/"it" in
+# the reflexive sentence is that object, carried on the reflexive ability's own
+# `DelayedTrigger.subject_id` (CR 603.7c) - not re-targeted. The reflexive
+# ability's own target is chosen as it goes on the stack (CR 603.3d), so the
+# spell announces only the first sentence's target. CR 701.14b: a fighter that
+# is gone, or no longer a creature, or an illegal fight target, means no fight.
+
+_PHRASE_FIGHT_TARGET = r"(?:up to one )?target creature (?:you don'?t control|an opponent controls)"
+_REFLEXIVE_SUBJECT_FIGHTS_RE = re.compile(
+    rf"^(?:that creature|it) fights {_PHRASE_FIGHT_TARGET}$", re.IGNORECASE
+)
+_FIRST_THEN_REFLEXIVE_FIGHT_RE = re.compile(
+    rf"^(?P<first>[^.]*\btarget\b[^.]*)\.\s*when you do, "
+    rf"(?P<clause>(?:that creature|it) fights {_PHRASE_FIGHT_TARGET})$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD, before=["damage._parse_self_fights_target_clause"])
+def _parse_reflexive_subject_fights_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "`<that creature | it>` fights up to one target creature `<...>`" as a
+    reflexive ability's own clause: the fighter is the creature the creating
+    spell acted on (`DelayedTrigger.subject_id`), the opponent is this
+    ability's own target, rechecked as it resolves (CR 608.2b). An "it"
+    with no such subject is `_parse_self_fights_target_clause`'s own plain
+    CR 109.2 self-reference, which this rung sits ahead of and defers to."""
+    if for_spell:
+        return None
+    stripped = clause.strip().rstrip(".").strip()
+    if _REFLEXIVE_SUBJECT_FIGHTS_RE.fullmatch(stripped) is None:
+        return None
+    if not _targets_understood(stripped.split(" fights ", 1)[1], count_agnostic=True):
+        return None
+    self_fight = _parse_self_fights_target_clause(clause, for_spell=False)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        trigger = game.delayed_triggers.trigger_for(ability)
+        if trigger is None or trigger.subject_id is None:
+            if self_fight is not None:
+                self_fight(game, ability)
+            return
+        fighter = game.find_by_id(trigger.subject_id)
+        controller = game.controller_of(ability)
+        if not isinstance(fighter, CardState) or fighter.zone is not Zone.BATTLEFIELD:
+            return
+        opponents = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState)
+            and target.zone is Zone.BATTLEFIELD
+            and game.controller_of(target).username != controller.username
+        ]
+        if not opponents:
+            return  # CR 115.6's "up to one" chose none, or CR 608.2b removed it.
+        if game.characteristics_of(fighter).is_creature and (
+            game.characteristics_of(opponents[0]).is_creature
+        ):
+            _fight(game, fighter, opponents[0])  # CR 701.14b
+
+    return effect
+
+
+@SPELL_TEXT.rung("s12")
+def _parse_first_then_reflexive_subject_fights_clause(effect_text: str) -> Effect | None:
+    """`_FIRST_THEN_REFLEXIVE_FIGHT_RE`'s shape - see the banner above. The
+    first sentence is read as an ordinary clause sequence and runs first (CR
+    608.2c); the reflexive ability exists only if the object it acted on is
+    still a creature on the battlefield afterwards."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _FIRST_THEN_REFLEXIVE_FIGHT_RE.fullmatch(whole.rstrip("."))
+    if match is None:
+        return None
+    first = _parse_mixed_clauses(match.group("first").strip() + ".", for_spell=True)
+    if first is None:
+        return None
+    reflexive_text = f"When you do, {match.group('clause').strip()}."
+    if reflexive_consequence_effect(reflexive_text.removeprefix("When you do, ")) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        subjects = [
+            target for target in game.resolve_targets(spell) if isinstance(target, CardState)
+        ]
+        for clause in first:
+            clause(game, spell)
+        if not subjects:
+            return
+        subject = game.find_by_id(subjects[0].id)
+        if (
+            not isinstance(subject, CardState)
+            or subject.zone is not Zone.BATTLEFIELD
+            or not game.characteristics_of(subject).is_creature
+        ):
+            return
+        game.create_reflexive_trigger(
+            text=reflexive_text,
+            controller=game.controller_of(spell).username,
+            source_id=spell.id,
+            source_name=spell.card.name,
+            callback=ReflexiveWhenYouDoConsequence(),
+            subject_id=subject.id,
+        )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# A spell's optional action, then a CR 603.12 reflexive consequence:
+# "<instruction>. Then you may <discard N cards | sacrifice <restriction>>.
+# When you do, <consequence>."
+# --------------------------------------------------------------------------
+#
+# `_parse_reflexive_may_discard_clause`/`_parse_reflexive_sacrifice_clause`
+# already read this on an ability; a spell's own text is the same grammar with
+# a leading instruction. The reflexive ability exists only when the action was
+# actually taken (CR 603.12): a discard of fewer cards than the spell asked for
+# does not count, since "you may discard two cards" is only performed in full.
+# "where X is the greatest mana value among cards discarded this way" is
+# worked out from the cards actually discarded and written into the reflexive
+# ability's text as a number (CR 107.3a), the same way a cast X is.
+
+_GREATEST_DISCARDED_RE = re.compile(
+    r", where X is the greatest mana value among cards discarded this way$", re.IGNORECASE
+)
+_FIRST_THEN_MAY_ACTION_REFLEXIVE_RE = re.compile(
+    rf"^(?P<first>[^.]+)\.\s*then you may "
+    rf"(?:discard (?P<n>{COUNT}) cards?|sacrifice (?P<restriction>[^.]+))\.\s*"
+    r"when you do, (?P<consequence>[^.]+)$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s12")
+def _parse_first_then_may_action_reflexive_clause(effect_text: str) -> Effect | None:
+    """`_FIRST_THEN_MAY_ACTION_REFLEXIVE_RE`'s shape - see the banner above."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _FIRST_THEN_MAY_ACTION_REFLEXIVE_RE.fullmatch(whole.rstrip("."))
+    if match is None:
+        return None
+    first = _parse_mixed_clauses(match.group("first").strip() + ".", for_spell=True)
+    if first is None:
+        return None
+    consequence = match.group("consequence").strip()
+    discard_count = parse_count(match.group("n")) if match.group("n") else None
+    restriction = None
+    if match.group("restriction") is not None:
+        restriction = _sacrifice_restriction(match.group("restriction"))
+        if restriction is None:
+            return None
+    elif discard_count is None:
+        return None
+    greatest = _GREATEST_DISCARDED_RE.search(consequence)
+    if greatest is not None:
+        if discard_count is None:
+            return None
+        consequence = consequence[: greatest.start()]
+    if re.search(r"\bX\b", consequence) and greatest is None:
+        return None
+    if reflexive_consequence_effect(_carry_count(consequence, 2, x=True)) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        for clause in first:
+            clause(game, spell)
+        player = game.controller_of(spell)
+        source_id = source_id_of(spell)
+        source_name = spell.card.name
+        if restriction is not None:
+            candidates = restriction.candidates(game, player, spell.id)
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=player.username,
+                prompt=f"sacrifice {match.group('restriction').strip()}",
+                source=source_name,
+                affirmative_is_legal=_sacrifice_is_payable(restriction.quantity, candidates),
+                source_id=source_id,
+            )
+            if not game.ask(decision):
+                return
+            chosen = _choose_permanents_to_sacrifice(
+                game, player, restriction, candidates, source_name=source_name, source_id=source_id
+            )
+            if not chosen:
+                return
+            for permanent in chosen:
+                game.sacrifice(permanent)
+            game.record_count(len(chosen))
+            amount = len(chosen)
+        else:
+            assert discard_count is not None
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=player.username,
+                prompt=f"discard {discard_count} card(s)",
+                source=source_name,
+                affirmative_is_legal=len(player.hand) >= discard_count,
+                source_id=source_id,
+            )
+            if not game.ask(decision):
+                return
+            discarded = _discard_cards(
+                game, player, discard_count, source_name, source_id=source_id, exact=True
+            )
+            if len(discarded) < discard_count:
+                return
+            amount = int(max((card.mana_value for card in discarded), default=0))
+        game.create_reflexive_trigger(
+            text=f"When you do, {_carry_count(consequence, amount, x=True)}.",
+            controller=player.username,
+            source_id=spell.id,
+            source_name=source_name,
+            callback=ReflexiveWhenYouDoConsequence(),
+        )
+
+    return effect
 
 
 def _linked_pile(game: "Game", ability: AbilityOnStack) -> list[CardState]:
@@ -5390,7 +5957,8 @@ from .continuous import (  # noqa: E402
     layer_context_for,
 )
 from .control_copy import _parse_if_control_colored_permanent_damage_clause  # noqa: E402
-from .counters import _parse_counters_and_becomes_type_clause  # noqa: E402
+from .counters import _counter_kind, _parse_counters_and_becomes_type_clause  # noqa: E402
+from .damage import _fight, _parse_self_fights_target_clause, _resolve_bite_damage  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
     _c02_t6_spell_effect,

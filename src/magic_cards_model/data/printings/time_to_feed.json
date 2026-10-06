@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "86e89e51-fd37-4f41-ad13-d1b8a93e5277",
+  "oracle_id": "59642d6f-8a25-4f79-9e81-643eac775658",
+  "multiverse_ids": [
+    489421
+  ],
+  "tcgplayer_id": 216464,
+  "cardmarket_id": 474014,
+  "name": "Time to Feed",
+  "lang": "en",
+  "released_at": "2020-07-17",
+  "uri": "https://api.scryfall.com/cards/86e89e51-fd37-4f41-ad13-d1b8a93e5277",
+  "scryfall_uri": "https://scryfall.com/card/jmp/438/time-to-feed?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:12:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.jpg?1783930349",
+    "normal": "https://cards.scryfall.io/normal/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.jpg?1783930349",
+    "large": "https://cards.scryfall.io/large/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.jpg?1783930349",
+    "png": "https://cards.scryfall.io/png/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.png?1783930349",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.jpg?1783930349",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.jpg?1783930349",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.webp?1783930349",
+    "grid": "https://cards.scryfall.io/grid/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.webp?1783930349",
+    "display": "https://cards.scryfall.io/display/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.webp?1783930349",
+    "art": "https://cards.scryfall.io/art/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.webp?1783930349",
+    "crop": "https://cards.scryfall.io/crop/front/8/6/86e89e51-fd37-4f41-ad13-d1b8a93e5277.webp?1783930349"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Choose target creature an opponent controls. When that creature dies this turn, you gain 3 life. Target creature you control fights that creature. (Each deals damage equal to its power to the other.)",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Fight"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "0f6ccf25-a627-4263-86df-5757137f1696",
+  "set": "jmp",
+  "set_name": "Jumpstart",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/0f6ccf25-a627-4263-86df-5757137f1696",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ajmp&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/jmp?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/86e89e51-fd37-4f41-ad13-d1b8a93e5277/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A59642d6f-8a25-4f79-9e81-643eac775658&unique=prints",
+  "collector_number": "438",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wayne Reynolds",
+  "artist_ids": [
+    "afc47cec-3ccc-404e-a8c6-4d83dd504271"
+  ],
+  "illustration_id": "01bfdf6b-8a50-48be-9829-dd7b69b6e750",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21665,
+  "penny_rank": 17994,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2020-06-19"
+  },
+  "prices": {
+    "usd": "0.10",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489421&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTime%2Bto%2BFeed",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTime%2Bto%2BFeed",
+    "edhrec": "https://edhrec.com/route/?cc=Time+to+Feed"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216464%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=474014&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Time+to+Feed&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
