@@ -3851,6 +3851,43 @@ def _parse_choose_target_prelude_spell_text(text: str) -> Effect | None:
     return None
 
 
+#: "that player" in a spell's later sentence or instruction is the player its
+#: one "target player"/"target opponent" named (CR 608.2c: later text on the
+#: card may modify the meaning of earlier text; CR 115.1a: the target was
+#: chosen as the spell was cast) - Aggressive Sabotage's "Target player
+#: discards two cards. If this spell was kicked, it deals 3 damage to that
+#: player.", Hidetsugu's Second Rite's "If target player has exactly 10 life,
+#: <self> deals 10 damage to that player.". The same normalisation as the
+#: "Choose <target>." opener's reading 1: the anaphor is written back as the
+#: target phrase, and every reader that acts on "target player" acts on the
+#: chosen one (`game.resolve_targets`, CR 608.2b's recheck included). Only
+#: when that is the one "target" in the whole text, so there is exactly one
+#: player the anaphor could mean.
+_TARGET_PLAYER_PHRASE_RE = re.compile(r"\btarget (?:player|opponent)\b", re.IGNORECASE)
+_THAT_PLAYER_RE = re.compile(r"\bthat player\b(?!\s+or\b)", re.IGNORECASE)
+
+
+@SPELL_TEXT.rung("s22")
+def _parse_that_player_anaphor_spell_text(text: str) -> Effect | None:
+    """`_THAT_PLAYER_RE`'s anaphor bound to the one targeted player; see the
+    banner above."""
+    lowered = text.lower()
+    if "that player" not in lowered or "target " not in lowered:
+        return None
+    if len(re.findall(r"\btargets?\b", text, re.IGNORECASE)) != 1:
+        return None
+    phrase = _TARGET_PLAYER_PHRASE_RE.search(text)
+    anaphor = _THAT_PLAYER_RE.search(text)
+    if phrase is None or anaphor is None or anaphor.start() < phrase.start():
+        return None
+    bound = phrase.group(0).lower()
+    rewritten = _THAT_PLAYER_RE.sub(
+        lambda found: bound[0].upper() + bound[1:] if found.group(0)[0].isupper() else bound, text
+    )
+    effect = _spell_effect_or_notice(rewritten)
+    return effect if _readable(effect) else None
+
+
 def _the_one_chosen_permanent(game: "Game", stack_object: "StackObject") -> CardState | None:
     """The one permanent the resolving object targets and still may affect
     (CR 608.2b), the referent of its later "that creature"; `None` when it
