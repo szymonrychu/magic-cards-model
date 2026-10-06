@@ -428,6 +428,12 @@ class TargetRequirement(EngineModel):
     same way `combat_states` reads "attacking"/"blocking" off `Game.combat`,
     not a per-turn historical fact the way `must_have_attacked_this_turn`
     below is."""
+    must_have_dealt_damage_this_turn: bool = False
+    """"target creature that dealt damage this turn" (Executioner's Swing) -
+    the active counterpart of `object_dealt_damage_clause`'s "that was dealt
+    damage": the target must be the source (CR 120.1) of one of this turn's
+    damage events (`Game.damage_dealt_this_turn`'s `source_id`), combat or
+    not."""
     must_have_attacked_this_turn: bool = False
     """"target creature that attacked this turn" (Hexhaven Dueling Arena).
     Unlike `combat_states`' live "is this creature currently attacking",
@@ -1207,6 +1213,9 @@ class TargetRequirement(EngineModel):
         attacked = self._rejects_attacked_this_turn(target, game)
         if attacked is not None:
             return attacked
+        dealt = self._rejects_dealt_damage_this_turn(target, game)
+        if dealt is not None:
+            return dealt
         entered = self._rejects_entered_this_turn(target, game)
         if entered is not None:
             return entered
@@ -1517,6 +1526,18 @@ class TargetRequirement(EngineModel):
         if target.id in attacked:
             return None
         return f"{self.phrase} needs a creature that attacked this turn, and {target.name} did not"
+
+    def _rejects_dealt_damage_this_turn(self, target: CardState, game: Any) -> str | None:
+        """`must_have_dealt_damage_this_turn`. No game to read it from fails
+        open, the way every other per-turn restriction here does."""
+        history = getattr(game, "damage_dealt_this_turn", None)
+        if not self.must_have_dealt_damage_this_turn or history is None:
+            return None
+        if any(record.source_id == target.id and record.amount > 0 for record in history):
+            return None
+        return (
+            f"{self.phrase} needs a creature that dealt damage this turn, and {target.name} did not"
+        )
 
     def _rejects_put_there_from_battlefield(self, target: Any, game: Any) -> str | None:
         """ "... in a graveyard that was put there from the battlefield this
@@ -3130,6 +3151,19 @@ _COUNTER_ON_TARGET_IF_STAT_CONDITION = re.compile(
     re.IGNORECASE,
 )
 
+#: "Target creature you control gets +2/+2 until end of turn if its power is
+#: 2. Then it fights target creature you don't control." (Savage Swipe): the
+#: same cut `_COUNTER_ON_TARGET_IF_STAT_CONDITION` makes, for a pump
+#: instruction - the trailing "if ..." gates the pump as it resolves (CR
+#: 608.2c), it is no requirement of the target (CR 601.2c), so a creature of
+#: any other power is still a legal target that fights unpumped. Only a
+#: "gets +N/+N ... if its power/toughness is ..." instruction is cut.
+_PUMP_ON_TARGET_IF_STAT_CONDITION = re.compile(
+    r"(\btarget\b[^.]*?\bgets? [+-][\dx]+/[+-][\dx]+[^.]*?) if its (?:power|toughness) is "
+    r"(?:x|\d+)(?: or (?:less|greater))?(?=[.,]|$)",
+    re.IGNORECASE,
+)
+
 #: "... with a single target" (Bolt Bend's "Change the target of target spell
 #: or ability with a single target") - CR 115.9a's "[spell or ability] with [a
 #: number of] targets", a *property of the thing being targeted*, not a second
@@ -4416,6 +4450,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _COPY_TARGETS_DECLARATION.sub("", text)
     text = _TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE.sub("", text)
     text = _COUNTER_ON_TARGET_IF_STAT_CONDITION.sub(r"\1", text)
+    text = _PUMP_ON_TARGET_IF_STAT_CONDITION.sub(r"\1", text)
     text = _SINGLE_TARGET_RESTRICTION.sub(_SINGLE_TARGET_PLACEHOLDER, text)
     text = _ANY_OTHER_TARGET_THEN_AND.sub(r"\1;", text)
     mentions = len(_TARGET_WORD.findall(text))
@@ -5580,6 +5615,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     attacked_this_turn, rest = _extract_attacked_this_turn(rest)
 
+    dealt_damage_this_turn, rest = _extract_dealt_damage_this_turn(rest)
+
     entered_this_turn, rest = _extract_entered_this_turn(rest)
 
     crewed_source_this_turn, rest = _extract_crewed_this_turn(rest)
@@ -5882,6 +5919,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         excluded_combat_states=frozenset(adjectives.excluded_combat_states),
         must_be_attacking_alone=attacking_alone,
         must_have_attacked_this_turn=attacked_this_turn,
+        must_have_dealt_damage_this_turn=dealt_damage_this_turn,
         must_have_entered_this_turn=entered_this_turn,
         must_have_crewed_source_this_turn=crewed_source_this_turn,
         dealt_damage_clause=dealt_damage_clause,
@@ -6719,6 +6757,23 @@ def _extract_color_disjunction(rest: str) -> tuple[frozenset[Color], str]:
     words = re.findall(r"[a-z]+", match.group("colors").lower())
     colors = frozenset(_COLOR_WORDS[word] for word in words if word in _COLOR_WORDS)
     return colors, (rest[: match.start()] + rest[match.end() :]).strip()
+
+
+#: "target creature that dealt damage this turn" (Executioner's Swing) - the
+#: same trailing-relative-clause shape as `_ATTACKED_THIS_TURN_RE` below, in
+#: the active voice ("that was dealt damage" is `_OBJECT_THAT_WAS_DEALT_RE`'s).
+_DEALT_DAMAGE_THIS_TURN_RE = re.compile(r"\bthat dealt damage this turn\b", re.IGNORECASE)
+
+
+def _extract_dealt_damage_this_turn(rest: str) -> tuple[bool, str]:
+    """Read a trailing "that dealt damage this turn" clause out of `rest`,
+    or leave it untouched when there is none."""
+    if "dealt damage this turn" not in rest.lower():
+        return False, rest
+    match = _DEALT_DAMAGE_THIS_TURN_RE.search(rest)
+    if match is None:
+        return False, rest
+    return True, (rest[: match.start()] + rest[match.end() :]).strip()
 
 
 #: "target creature that attacked this turn" (Hexhaven Dueling Arena) - a

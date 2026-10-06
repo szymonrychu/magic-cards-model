@@ -249,6 +249,43 @@ def _parse_player_counters_up_to_threshold_clause(text: str) -> AbilityEffect | 
     return effect
 
 
+#: "Each opponent gets a poison counter." (Infectious Bite, Infectious
+#: Inquiry, Prologue to Phyresis) / "Each player gets two poison counters." -
+#: CR 122.1f: poison counters are a kind a player gets; ten or more lose the
+#: game as a state-based action (CR 704.5c). "Each opponent" is every player
+#: in the game but the clause's own controller, each getting the counters in
+#: turn.
+_EACH_PLAYER_GETS_COUNTERS_RE = re.compile(
+    rf"^each (?P<who>opponent|player) gets (?P<n>{COUNT}) (?P<kind>poison|energy|rad) "
+    r"counters?\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
+def _parse_each_player_gets_counters_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_PLAYER_GETS_COUNTERS_RE`'s shape, or `None`."""
+    match = _EACH_PLAYER_GETS_COUNTERS_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    opponents_only = match.group("who").lower() == "opponent"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        for player in list(game.players_in_game):
+            if opponents_only and player.username == controller:
+                continue
+            game.add_player_counters(player, kind, amount)
+
+    return effect
+
+
 #: Diamond City: "Move a shield counter from this land onto target creature."
 #: CR 122.5's "move" keyword action, self-referential source (`_COUNTER_
 #: SELF_SUBJECT`'s "this `<noun>`" shape, reused from `cost.py`'s own counter
