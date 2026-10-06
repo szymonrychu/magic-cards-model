@@ -9357,26 +9357,31 @@ _OPPONENTS_ATTACK_IF_ABLE_RE = re.compile(
 def _parse_opponents_creatures_attack_if_able_clause(text: str) -> AbilityEffect | None:
     """ "Until your next turn, creatures your opponents control attack each
     combat if able." (The Akroan War's chapter II): CR 508.1d's requirement
-    granted, as `_parse_target_attacks_if_able_clause` grants it, to each
-    creature the opponents control as the effect begins - CR 611.2c fixes the
-    set, so a creature that arrives later is not bound - for CR 611.2a's
-    stated duration."""
+    for CR 611.2a's stated duration. It modifies the rules of the game, not
+    characteristics or controller, so CR 611.2c does not fix the set: the
+    selector is live and a creature that arrives under an opponent's control
+    before your next turn is bound too. It is carried as the same granted
+    "attacks each combat if able" line `machines/combat.py` already counts."""
     if _OPPONENTS_ATTACK_IF_ABLE_RE.fullmatch(" ".join(text.split())) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = game.controller_of(ability).username
-        board = game.computed_board()
-        for permanent in list(game.battlefield):
-            if board.of(permanent).is_creature and board.of(permanent).controller != controller:
-                _grant_keywords_to(
-                    game,
-                    permanent,
-                    ["This creature attacks each combat if able."],
-                    "until your next turn",
-                    controller=controller,
-                    source_name=ability.source_name,
-                )
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=(
+                    f"{ability.source_name}: creatures {controller}'s opponents control "
+                    "attack each combat if able"
+                ),
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_YOUR_NEXT_TURN,
+                until_next_turn_of=controller,
+                selector=creatures_controlled_by_opponents_of(controller),
+                modification=grant_ability("This creature attacks each combat if able."),
+            )
+        )
 
     return effect
 

@@ -3,8 +3,9 @@ your opponents control attack each combat if able."
 
 Listed-card context (NW-01, task T3): **The Akroan War** chapter II. The
 requirement is CR 508.1d's; "until your next turn" is CR 611.2a's duration;
-the set of creatures is fixed as the effect begins (CR 611.2c), so a creature
-that enters afterwards is not bound.
+the requirement modifies the rules of the game rather than characteristics or
+controller, so CR 611.2c does not fix the set: a creature that enters under an
+opponent's control before your next turn is bound too.
 
 Rules read with `mise run rules:find` in the session that wrote this file:
 CR 508.1d, CR 611.2a, CR 611.2c.
@@ -108,18 +109,19 @@ def test_a_tapped_opponent_creature_breaks_no_requirement():
     assert scenario.attackers() == [giant]
 
 
-def test_a_creature_that_arrives_later_is_not_bound():
-    """CR 611.2c: only the creatures on the battlefield as chapter II resolved."""
+def test_a_creature_that_arrives_later_is_bound_too():
+    """CR 611.2c: a requirement modifies the rules, so it reaches later arrivals."""
     scenario = _saga_at_chapter_two()
     runeclaw = scenario.creature("Runeclaw Bear", "bob")
     giant = scenario.creature("Hill Giant", "bob")
     late = scenario.put_onto_battlefield("Grizzly Bears", "bob")
     _to_bobs_attack(scenario)
 
-    scenario.attack_with(runeclaw, giant)
+    with pytest.raises(ValueError, match=r"CR 508\.1d"):
+        scenario.attack_with(runeclaw, giant)
 
-    assert scenario.attackers() == [runeclaw, giant]
-    assert late.zone is Zone.BATTLEFIELD
+    scenario.attack_with(runeclaw, giant, late)
+    assert scenario.attackers() == [runeclaw, giant, late]
 
 
 def test_the_requirement_ends_when_alices_next_turn_begins():
