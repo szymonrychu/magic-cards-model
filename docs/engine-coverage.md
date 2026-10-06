@@ -7454,3 +7454,12 @@ No new persisted field (schema stays 115).
 | "Each player shuffles the cards from their hand into their library, then draws that many cards." (each player's own count, APNAP) followed by "Metalcraft - If you control three or more artifacts, `<src>` deals damage to each opponent equal to the number of cards that player has drawn this turn." (per-opponent `Game.cards_drawn_this_turn`) | 701.24a, 121.2, 608.2c, 207.2c, 101.4, 120.3a | `draw_discard._parse_each_player_wheel_text`, `damage._parse_damage_each_opponent_equal_to_their_draws_clause` | Molten Psyche (sole printing) | `test_nw02_wheel_then_metalcraft_damage.py` |
 
 No new persisted field (schema stays 115 here; the reserved 121 is unused).
+
+## NW03-T3: "If a `<quality>` is dealt damage this way" branches, and life equal to the excess damage
+
+| Mechanic | CR | Reader | Proof cards | Test |
+|---|---|---|---|---|
+| "`<damage sentence>`. If `<a quality>` is dealt damage this way, `<effect>`." - the damage runs first, then the branch acts on exactly what it reached (`Game.damage_dealt_this_turn` by source): prevented damage was never dealt, an illegal target means no damage. The quality is "player", "opponent" or any counted permanent phrase `_permanent_quality` reads ("creature", "nonred permanent"), joined by "or", tested on computed characteristics. An effect naming "it"/"that creature" runs once per matching permanent through the referent readers (pump, loses indestructible, a following "If that creature would die this turn, exile it instead."); any other effect (you sacrifice a land, scry 1) runs once when anything matched | 120.3, 615.6, 608.2b, 608.2c, 105.2, 613.5, 701.21a | `merges._parse_if_quality_dealt_damage_this_way_spell` | Provoke the Trolls, Redcap Melee (listed); Play with Fire, Burn from Within (proof) | `test_nw03_dealt_damage_this_way_branch.py` |
+| "`<src>` deals N\|X damage to `<target phrase>`. You gain life equal to the excess damage dealt this way." - excess is the damage actually dealt above the threshold read before it landed (marked damage counted), summed over the targets, a player never has excess; nothing is gained for 0 | 120.10, 120.6, 615.6, 608.2b, 608.2c | `merges._merge_damage_then_life_per_excess_spell` | Razor Rings (sole in-pool printing) | `test_nw03_excess_damage_lifegain.py` |
+
+No new persisted field (schema unchanged).
