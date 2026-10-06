@@ -3562,6 +3562,74 @@ def _parse_put_n_counters_on_self_then_draw_half_n_clause(text: str) -> AbilityE
     return effect
 
 
+#: "exile a(n) `<quality>` card from your graveyard. Put a number of `<kind>`
+#: counters on `<this permanent>` equal to [half] that card's mana value[,
+#: rounded up/down]." - Torrent Sculptor's own ETB trigger. CR 608.2c: "that
+#: card" is the card the first instruction exiled, so the pair is read whole
+#: rather than as two clauses (the second would have no antecedent). The count
+#: is the exiled card's mana value (CR 202.3), read once as the card leaves
+#: the graveyard (CR 608.2h); with no card of that quality in the graveyard
+#: nothing is exiled and so there is no "that card" to count (CR 608.2c's
+#: instructions are followed as far as they can be).
+_EXILE_FROM_GRAVEYARD_THEN_COUNTERS_EQUAL_TO_ITS_MANA_VALUE_RE = re.compile(
+    r"^exile an? (?P<quality>[a-z, ]+?) card from your graveyard\.\s*"
+    r"put a number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters on (?:him|her|it|this \w+) "
+    r"equal to (?P<half>half )?that card'?s mana value(?:, rounded (?P<round>up|down))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s3")
+def _parse_exile_from_graveyard_then_counters_equal_to_mana_value_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_EXILE_FROM_GRAVEYARD_THEN_COUNTERS_EQUAL_TO_ITS_MANA_VALUE_RE`'s shape
+    - see its own docstring. More than one card of the quality is the
+    controller's choice (CR 608.2d), asked as one exact-one `CHOOSE_CARDS`."""
+    match = _EXILE_FROM_GRAVEYARD_THEN_COUNTERS_EQUAL_TO_ITS_MANA_VALUE_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    matches_quality = _nonland_or_typed_card_matcher(match.group("quality"))
+    if matches_quality is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    halved = match.group("half") is not None
+    round_up = match.group("round") != "down"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        candidates = [state for state in player.graveyard if matches_quality(state)]
+        if not candidates:
+            return
+        chosen = candidates[0]
+        if len(candidates) > 1:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"exile {with_indefinite_article(match.group('quality'))} card "
+                    "from your graveyard",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                    exact=True,
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            chosen = next(state for state in candidates if state.id in chosen_ids)
+        mana_value = int(chosen.mana_value)
+        game.exile_cards([chosen])
+        amount = halve(mana_value, round_up=round_up) if halved else mana_value
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD and amount > 0:
+            game.add_counters(source, kind, amount)
+
+    return effect
+
+
 #: "[Until end of turn, ]you may activate loyalty abilities of `<subject>`
 #: on any player's turn any time you could cast an instant." - Jace's
 #: Machinations' own first sentence ("Jace planeswalkers you control",
@@ -4002,6 +4070,7 @@ from ._common import (  # noqa: E402
     UnreadableCounterAmountNotice,
     _card_description_is_readable,
     _effect_condition_is_readable,
+    _nonland_or_typed_card_matcher,
     _quality_matcher,
     _targets_understood,
 )

@@ -2919,7 +2919,7 @@ class Casting(EngineModel):
     def _optional_sentence(self, pattern: re.Pattern[str], what: str, rule: str) -> str:
         """The cost of the card's own "As an additional cost to cast this
         spell, you may <cost>" sentence matching `pattern` (CR 118.8b)."""
-        for phrase in additional_cost_phrases(self.spell.card):
+        for phrase in additional_cost_phrases(self.spell.card, face=self.face):
             match = pattern.match(phrase)
             if match is not None:
                 return match.group("cost")
@@ -3032,7 +3032,7 @@ class Casting(EngineModel):
             if refusal is not None:
                 raise ValueError(refusal)
         if chosen:
-            per_card = per_object_exile_cost_reduction(self.spell.card)
+            per_card = per_object_exile_cost_reduction(self.spell.card, face=self.face)
             if per_card is None:
                 raise ValueError(
                     f"{self.spell.name} prints no per-card cost reduction to apply (CR 118.7a)"
@@ -3074,7 +3074,7 @@ class Casting(EngineModel):
         if chosen:
             self.add_additional_cost(TotalCost(components=[component]))
         if chosen:
-            per_object = per_object_sacrifice_cost_reduction(self.spell.card)
+            per_object = per_object_sacrifice_cost_reduction(self.spell.card, face=self.face)
             if per_object is None:
                 raise ValueError(
                     f"{self.spell.name} prints no per-object cost reduction to apply (CR 118.7a)"

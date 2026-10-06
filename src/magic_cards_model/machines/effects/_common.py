@@ -1309,6 +1309,12 @@ _TOKEN_KEYWORDS = {
     # abilities` read it off the token the same way they read Rot-Curse
     # Rakshasa's own printed keyword.
     "decayed",
+    # CR 702.90a: infect, a static ability - Carrion Call's and Trigon of
+    # Infestation's "Phyrexian Insect creature token(s) with infect".
+    # `TokenDefinition.keywords` carries it as a printed keyword, so
+    # `machines/combat.has_keyword` and CR 120.3b/120.3d's damage results read
+    # it off the token exactly as they read it off a printed creature.
+    "infect",
 }
 
 _TOKEN_COLOR_WORDS = {

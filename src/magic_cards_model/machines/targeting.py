@@ -3838,6 +3838,14 @@ def _expand_support_keyword(text: str) -> str:
 
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
+    if spell_only:
+        # CR 603.12: a reflexive ability's own targets are chosen when *it* goes
+        # on the stack (CR 603.3d), so a spell's "When you discard a nonland
+        # card this way, <source> deals 3 damage to target creature." asks for
+        # no target at cast time - the same cut `profile_for_text` makes for an
+        # ability (an ability's own text is cut there, so `spell_only=False`
+        # callers still see the whole text).
+        text = _REFLEXIVE_CLAUSE_TAIL.sub("", text)
     text = _QUOTED_SPAN.sub("", text)
     text = _RETARGETING.sub("", text)
     text = _expand_support_keyword(text)
