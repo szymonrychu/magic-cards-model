@@ -86,6 +86,7 @@ from ..layers import (
     grant_ability,
     is_genuine_resolution_layer_sentence,
     is_resolution_layer_effect_text,
+    is_x_substituted_layer_sentence,
     lose_all_abilities,
     lose_keyword,
     modify_power_toughness,
@@ -3148,6 +3149,7 @@ def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
         sentence
         for sentence in sentences
         if not is_genuine_resolution_layer_sentence(sentence)
+        and not is_x_substituted_layer_sentence(sentence)
         and not _is_resolution_neutral_keyword_line(sentence)
         # Strive's per-target cost increase (Setessan Tactics) is CR 601.2f's
         # cost, already charged as the spell was cast - never an instruction
