@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "300f766f-9609-4105-9ed5-4299c48f7fa7",
+  "oracle_id": "b7ac6e89-941f-4ad9-a437-38ec38ec5263",
+  "multiverse_ids": [
+    625335
+  ],
+  "mtgo_id": 114201,
+  "tcgplayer_id": 505778,
+  "cardmarket_id": 723010,
+  "name": "Narset of the Ancient Way",
+  "lang": "en",
+  "released_at": "2023-08-04",
+  "uri": "https://api.scryfall.com/cards/300f766f-9609-4105-9ed5-4299c48f7fa7",
+  "scryfall_uri": "https://scryfall.com/card/cmm/930/narset-of-the-ancient-way?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:03:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.jpg?1783915415",
+    "normal": "https://cards.scryfall.io/normal/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.jpg?1783915415",
+    "large": "https://cards.scryfall.io/large/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.jpg?1783915415",
+    "png": "https://cards.scryfall.io/png/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.png?1783915415",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.jpg?1783915415",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.jpg?1783915415",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.webp?1783915415",
+    "grid": "https://cards.scryfall.io/grid/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.webp?1783915415",
+    "display": "https://cards.scryfall.io/display/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.webp?1783915415",
+    "art": "https://cards.scryfall.io/art/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.webp?1783915415",
+    "crop": "https://cards.scryfall.io/crop/front/3/0/300f766f-9609-4105-9ed5-4299c48f7fa7.webp?1783915415"
+  },
+  "mana_cost": "{1}{U}{R}{W}",
+  "cmc": 4.0,
+  "type_line": "Legendary Planeswalker \u2014 Narset",
+  "oracle_text": "+1: You gain 2 life. Add {U}, {R}, or {W}. Spend this mana only to cast a noncreature spell.\n\u22122: Draw a card, then you may discard a card. When you discard a nonland card this way, Narset deals damage equal to that card's mana value to target creature or planeswalker.\n\u22126: You get an emblem with \"Whenever you cast a noncreature spell, this emblem deals 2 damage to any target.\"",
+  "loyalty": "4",
+  "colors": [
+    "R",
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "U",
+    "W"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "R",
+    "U",
+    "W"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "c6ea709d-2470-4552-92b3-25d617155e51",
+      "component": "combo_piece",
+      "name": "Narset of the Ancient Way Emblem",
+      "type_line": "Emblem",
+      "uri": "https://api.scryfall.com/cards/c6ea709d-2470-4552-92b3-25d617155e51"
+    },
+    {
+      "object": "related_card",
+      "id": "300f766f-9609-4105-9ed5-4299c48f7fa7",
+      "component": "combo_piece",
+      "name": "Narset of the Ancient Way",
+      "type_line": "Legendary Planeswalker \u2014 Narset",
+      "uri": "https://api.scryfall.com/cards/300f766f-9609-4105-9ed5-4299c48f7fa7"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set": "cmm",
+  "set_name": "Commander Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acmm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cmm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/300f766f-9609-4105-9ed5-4299c48f7fa7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab7ac6e89-941f-4ad9-a437-38ec38ec5263&unique=prints",
+  "collector_number": "930",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Yongjae Choi",
+  "artist_ids": [
+    "5ab91c3b-a6da-4751-a56e-81d0f61a67ab"
+  ],
+  "illustration_id": "f4a5268e-92b0-43c3-964d-9211b0089793",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 7053,
+  "penny_rank": 5532,
+  "prices": {
+    "usd": "0.62",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.60",
+    "eur_foil": null,
+    "tix": "0.07"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=625335&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNarset%2Bof%2Bthe%2BAncient%2BWay",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNarset%2Bof%2Bthe%2BAncient%2BWay",
+    "edhrec": "https://edhrec.com/route/?cc=Narset+of+the+Ancient+Way"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F505778%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=723010&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/114201?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

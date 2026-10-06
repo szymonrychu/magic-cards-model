@@ -741,6 +741,24 @@ def _read_any_combination_mana(
     return palette, lambda _game, _stack_object: fixed
 
 
+def _choose_mana_unit_color(
+    game: "Game", stack_object: "StackObject", palette: Sequence[Color]
+) -> Color:
+    """One unit's colour among `palette`, the controller's choice as the
+    instruction resolves (CR 608.2d); a palette of one is no choice at all."""
+    if len(palette) == 1:
+        return palette[0]
+    source = stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+    return _choose_a_color(
+        game,
+        game.controller_of(stack_object),
+        source,
+        "choose a color for mana",
+        source_id=source_id_of(stack_object),
+        colors=None if len(palette) == len(_COLOR_LETTERS) else palette,
+    )
+
+
 def _add_mana_in_any_combination(
     game: "Game",
     stack_object: "StackObject",
@@ -751,26 +769,11 @@ def _add_mana_in_any_combination(
     retain_until: "ManaRetentionScope | None" = None,
 ) -> None:
     """Add `count` mana to the controller's pool, each unit's colour chosen
-    on its own among `palette` (CR 106.1a, CR 608.2d); a palette of one is
-    no choice at all."""
-    player = game.controller_of(stack_object)
-    source = (
-        stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
-    )
+    on its own among `palette` (CR 106.1a, CR 608.2d)."""
+    pool = game.controller_of(stack_object).mana_pool
     for _ in range(max(count, 0)):
-        color = (
-            palette[0]
-            if len(palette) == 1
-            else _choose_a_color(
-                game,
-                player,
-                source,
-                "choose a color for mana",
-                source_id=source_id_of(stack_object),
-                colors=None if len(palette) == len(_COLOR_LETTERS) else palette,
-            )
-        )
-        player.mana_pool.add(color, restriction=restriction, retain_until=retain_until)
+        color = _choose_mana_unit_color(game, stack_object, palette)
+        pool.add(color, restriction=restriction, retain_until=retain_until)
 
 
 @MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
@@ -838,6 +841,114 @@ def _parse_add_mana_in_any_combination_trigger(text: str) -> AbilityEffect | Non
         )
 
     return effect
+
+
+#: "add `<n>` mana of any [one] color" - CR 105.1's five colours, one choice
+#: for the whole count (CR 608.2d): Ancient Ziggurat's own "one mana of any
+#: color" wording, read as a resolving instruction rather than a `{T}` mana
+#: ability. A count with no fixed number is not read here.
+_ADD_FIXED_MANA_OF_ANY_COLOR_RE = re.compile(
+    rf"^add {count_pattern('n')} mana of any (?:one )?colou?r\.?$", re.IGNORECASE
+)
+
+#: What one "Add ..." instruction does as it resolves, given the CR 106.6
+#: restriction (or `None`) every unit it adds is tagged with.
+ManaAdder = Callable[["Game", "StackObject", "ManaRestriction | None"], None]
+
+
+def _add_one_chosen_color(
+    game: "Game",
+    stack_object: "StackObject",
+    count: int,
+    palette: Sequence[Color],
+    restriction: "ManaRestriction | None",
+) -> None:
+    """`count` mana of one colour chosen once among `palette` (CR 608.2d:
+    "any **one** color" is a single choice for every unit) -
+    `_add_mana_in_any_combination` asks once per unit instead."""
+    if count <= 0:
+        return
+    color = _choose_mana_unit_color(game, stack_object, palette)
+    pool = game.controller_of(stack_object).mana_pool
+    for _ in range(count):
+        pool.add(color, restriction=restriction)
+
+
+def read_add_mana_instruction(clause: str) -> ManaAdder | None:
+    """One CR 106.4 "Add ..." instruction, read as it resolves on any spell or
+    ability, or `None` when it is not one of these shapes:
+
+    - a literal run of symbols - "Add {U}." / "Add {C}{C}." (`_ADD_MANA_RE`);
+    - one of a printed list - "Add {U}, {R}, or {W}." / "Add {U} or {R}."
+      (`_ADD_ONE_OF_LISTED_MANA_RE`), the colour chosen as it resolves
+      (CR 608.2d);
+    - "Add `<n>` mana of any [one] color." - one CR 105.1 colour, chosen once;
+    - "Add `<n>` mana in any combination of `<palette>`."
+      (`_ADD_ANY_COMBINATION_MANA_RE`), one choice per unit.
+
+    The adder tags every unit with the restriction it is handed, so a CR 106.6
+    sentence printed after the instruction (`spend_restriction`) rides on all
+    of it.
+    """
+    text = clause.strip()
+    literal = _ADD_MANA_RE.fullmatch(text.rstrip("."))
+    if literal is not None:
+        colors = [
+            Color(symbol.upper()) for symbol in _MANA_SYMBOL_RE.findall(literal.group("mana"))
+        ]
+
+        def add_literal(
+            game: "Game", stack_object: "StackObject", restriction: "ManaRestriction | None"
+        ) -> None:
+            pool = game.controller_of(stack_object).mana_pool
+            for color in colors:
+                pool.add(color, restriction=restriction)
+
+        return add_literal
+    listed = _ADD_ONE_OF_LISTED_MANA_RE.fullmatch(text)
+    if listed is not None:
+        symbols = f"{listed.group('first')}{listed.group('middle')}{listed.group('last')}"
+        options = tuple(
+            dict.fromkeys(Color(letter.upper()) for letter in _MANA_SYMBOL_RE.findall(symbols))
+        )
+
+        def add_listed(
+            game: "Game", stack_object: "StackObject", restriction: "ManaRestriction | None"
+        ) -> None:
+            _add_one_chosen_color(game, stack_object, 1, options, restriction)
+
+        return add_listed
+    any_color = _ADD_FIXED_MANA_OF_ANY_COLOR_RE.fullmatch(text)
+    if any_color is not None:
+        count = parse_count(any_color.group("n"))
+        if count is None or count <= 0:
+            return None
+        five = tuple(Color(letter) for letter in _COLOR_LETTERS)
+
+        def add_any_color(
+            game: "Game", stack_object: "StackObject", restriction: "ManaRestriction | None"
+        ) -> None:
+            _add_one_chosen_color(game, stack_object, count, five, restriction)
+
+        return add_any_color
+    combination = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(text)
+    if combination is not None:
+        read = _read_any_combination_mana(combination, clause)
+        if read is None:
+            return None
+        palette, count_of = read
+
+        def add_combination(
+            game: "Game", stack_object: "StackObject", restriction: "ManaRestriction | None"
+        ) -> None:
+            count = count_of(game, stack_object)
+            if count:
+                _add_mana_in_any_combination(
+                    game, stack_object, count, palette, restriction=restriction
+                )
+
+        return add_combination
+    return None
 
 
 from ._common import (  # noqa: E402

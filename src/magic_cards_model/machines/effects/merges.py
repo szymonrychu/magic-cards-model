@@ -1339,42 +1339,43 @@ def _merge_damage_any_target_then_destroy_if_type_clauses(
     return 2, effect
 
 
-#: "Add `<n>` mana in any combination of colors. Spend this mana only to
-#: `<restriction>`." - CR 106.6's own restriction sentence, printed as its
-#: own clause right after the production it tags (Desolation of Smaug's own
-#: "Add four mana in any combination of colors. Spend this mana only to
-#: cast Dragon spells.") - one CR 608.2c instruction, split by the clause
-#: splitter's period the same way the damage-then-destroy pair above is.
-#: `machines/cost.spend_restriction` is the exact CR 106.6 reader every mana
-#: ability's own trailing restriction sentence already goes through, reused
-#: here rather than rebuilt.
+#: "Add `<mana>`. Spend this mana only to `<restriction>`." - CR 106.6's own
+#: restriction sentence, printed as its own clause right after the
+#: production it tags, on a spell or a resolving (non-mana) ability: one
+#: CR 608.2c instruction, split by the clause splitter's period the same way
+#: the damage-then-destroy pair above is. The production is any shape
+#: `mana.read_add_mana_instruction` reads - Desolation of Smaug's "Add four
+#: mana in any combination of colors.", Narset of the Ancient Way's loyalty
+#: "Add {U}, {R}, or {W}." (CR 605.1a: a loyalty ability is never a mana
+#: ability, so its mana arrives as it resolves), "Add one mana of any
+#: color.", a literal "Add {U}." behind another instruction. The restriction
+#: is `machines/cost.spend_restriction`, the exact CR 106.6 reader every
+#: mana ability's own trailing sentence already goes through; one it cannot
+#: read fails the whole instruction closed. It is read again against the
+#: source as the instruction resolves, so "the chosen type" names the
+#: source's own recorded choice (CR 614.12a), as a mana ability's does.
 def _merge_add_any_combination_mana_with_restriction_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """`_ADD_ANY_COMBINATION_MANA_RE` + `machines.cost.spend_restriction`,
-    read as one CR 608.2c instruction; see the banner above."""
+    """`read_add_mana_instruction` + `machines.cost.spend_restriction`, read
+    as one CR 608.2c instruction; see the banner above."""
     if index + 1 >= len(clauses):
         return None
-    match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(clauses[index].strip())
-    if match is None:
+    add = read_add_mana_instruction(clauses[index])
+    if add is None:
         return None
-    read = _read_any_combination_mana(match, clauses[index])
-    if read is None:
-        return None
-    palette, count_of = read
-    second = clauses[index + 1].strip()
-    if not second.endswith("."):
-        second = second + "."
-    restriction = spend_restriction(second)
+    sentence = clauses[index + 1].strip()
+    if not sentence.endswith("."):
+        sentence = sentence + "."
+    restriction = spend_restriction(sentence)
     if restriction is None or not restriction.understood:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        count = count_of(game, stack_object)
-        if count:
-            _add_mana_in_any_combination(
-                game, stack_object, count, palette, restriction=restriction
-            )
+        source = (
+            stack_object.source(game) if isinstance(stack_object, AbilityOnStack) else stack_object
+        )
+        add(game, stack_object, spend_restriction(sentence, source))
 
     return 2, effect
 
@@ -5481,7 +5482,6 @@ def _merge_return_target_from_graveyard_tapped_then_attacking_clauses(
 
 
 from ._common import (  # noqa: E402
-    _ADD_ANY_COMBINATION_MANA_RE,
     _ANY_TYPE_MANA_STANDALONE_RE,
     _COLOR_COUNT_WORDS,
     _COUNTER_TARGET_RE,
@@ -5556,7 +5556,7 @@ from .library import (  # noqa: E402
     _shuffle_remainder_to_bottom,
 )
 from .life import _loses_life_unless_step  # noqa: E402
-from .mana import _add_mana_in_any_combination, _read_any_combination_mana  # noqa: E402
+from .mana import read_add_mana_instruction  # noqa: E402
 from .modal import (  # noqa: E402
     _choose_a_color,
     _choose_one_card,
