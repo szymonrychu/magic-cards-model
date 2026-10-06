@@ -25,9 +25,11 @@ from ...models.mana import (
     ManaRestriction,
     ManaSpend,
     ManaSpendEffect,
+    ManaSymbol,
     PaymentOption,
     SpendClause,
     SpendPurpose,
+    SymbolKind,
     _assign_sources,
     _Bucket,
     _candidate_options,
@@ -1705,7 +1707,10 @@ def _unpayable_cost_message(payment: "CostPayment", sources: Iterable[CardState]
     unpayable cost - two Forests asked for {R}{W} - is never made to sound as
     though some source was passed over when none was.
     """
-    base = f"no combination of the available mana sources can pay {payment.mana_owed}"
+    base = (
+        f"no combination of the available mana sources can pay {payment.mana_owed}"
+        f"{payment.x_restriction_note()}"
+    )
     withheld = _withheld_mana_sources(payment, sources)
     if not withheld:
         return base
@@ -3010,6 +3015,32 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
     )
 
 
+def _x_share_in_colors(cost: ManaCost, x_mana: int, colors: Sequence[Color]) -> ManaCost:
+    """`cost` with `x_mana` of its generic mana (X's share, "Spend only
+    <colour> mana on X.") written as symbols only `colors` can pay: one colour
+    is `{B}` per mana, two are `{B/R}` (CR 107.4e - each mana chosen on its
+    own). A share larger than the generic mana left after reductions is cut
+    to it (CR 601.2f: cost reductions take generic first)."""
+    share = min(x_mana, cost.generic)
+    if share <= 0 or not colors:
+        return cost
+    restricted = (
+        ManaSymbol(kind=SymbolKind.COLORED, colors=(colors[0],))
+        if len(colors) == 1
+        else ManaSymbol(kind=SymbolKind.HYBRID, colors=tuple(colors))
+    )
+    symbols: list[ManaSymbol] = []
+    left = cost.generic - share
+    for symbol in cost.symbols:
+        if symbol.kind is SymbolKind.GENERIC:
+            continue
+        symbols.append(symbol)
+    if left:
+        symbols.insert(0, ManaSymbol(kind=SymbolKind.GENERIC, amount=left))
+    symbols.extend([restricted] * share)
+    return ManaCost(symbols=tuple(symbols))
+
+
 class CostPayment(EngineModel):
     """Paying one total cost, from tapping sources through to the leftover mana."""
 
@@ -3101,6 +3132,16 @@ class CostPayment(EngineModel):
     when nothing distinguishes the waterbend's own generic from the rest
     (every printing in the pool today) - `waterbend` then bounds itself by
     `cost` alone, exactly as convoke and delve already do."""
+
+    x_only_colors: tuple[Color, ...] = ()
+    x_mana: int = 0
+    x_restriction_text: str = ""
+    """"Spend only <colour> mana on X." (Consume Spirit, Crypt Rats): the colours
+    allowed to pay `x_mana` of the cost's generic mana - X's share of it (CR
+    107.3a, 601.2f). `mana_owed` writes that share as coloured symbols, so the
+    pool is asked for exactly the mana the sentence allows and the cost itself
+    (mana value, what was paid) stays the real total cost. Set by
+    `restrict_x_mana`; empty for every other payment."""
 
     mana_payment: ManaPayment | None = None
     """How the mana part was settled, once it has been (CR 118.13)."""
@@ -3195,9 +3236,39 @@ class CostPayment(EngineModel):
         substitution changes is only which resource pays one symbol, and that
         is this property.
         """
-        if not self.substitutions:
-            return self.cost
-        return cost_less(self.cost, [entry.option for entry in self.substitutions])
+        owed = (
+            cost_less(self.cost, [entry.option for entry in self.substitutions])
+            if self.substitutions
+            else self.cost
+        )
+        return _x_share_in_colors(owed, self.x_mana, self.x_only_colors)
+
+    def restrict_x_from_text(self, text: str, x_count: int, x_value: int) -> None:
+        """Apply the "Spend only <colour> mana on X." sentence `text` prints, if
+        it prints one: `x_count * x_value` of the cost's generic mana (X's
+        share, CR 107.3a) may only be paid with mana of those colours. Nothing
+        happens when X is 0, when the sentence is absent, or when this payment
+        may spend mana as though it were any type (CR 609.4b), which makes
+        every mana the colour asked for."""
+        colors = x_spend_colours(text)
+        share = x_count * x_value
+        if not colors or share <= 0 or (self.spend is not None and self.spend.any_color):
+            return
+        sentence = SPEND_ONLY_ON_X_RE.search(text)
+        assert sentence is not None
+        self.x_only_colors = colors
+        self.x_mana = share
+        self.x_restriction_text = sentence.group(0).strip()
+
+    def x_restriction_note(self) -> str:
+        """The refusal's own explanation when X is restricted, or ""."""
+        if not self.x_only_colors or not self.x_mana:
+            return ""
+        for_what = self.spend.name if self.spend is not None and self.spend.name else "this cost"
+        return (
+            f": {self.x_restriction_text} - {self.x_mana} of the mana for {for_what} pays X "
+            "and only that colour may (CR 107.3a, 601.2h)"
+        )
 
     def substitute(
         self,
@@ -3737,7 +3808,10 @@ class CostPayment(EngineModel):
             spend=self.spend,
         )
         if payment is None:
-            raise ValueError(f"pool {self.pool.floating} cannot pay {owed}{self._blocked()}")
+            raise ValueError(
+                f"pool {self.pool.floating} cannot pay {owed}"
+                f"{self._blocked()}{self.x_restriction_note()}"
+            )
         return payment
 
     def _blocked(self) -> str:
@@ -4122,5 +4196,7 @@ class CostPayment(EngineModel):
         self.step = target
 
 
+from ..modes import SPEND_ONLY_ON_X_RE  # noqa: E402
 from ._common import _PHRASE_PAY_LIFE, _QUALITY_CONNECTORS, _TYPE_WORDS  # noqa: E402
 from .components import ComponentKind, MixedProduction, cost_less, pay_life_cost  # noqa: E402
+from .text import x_spend_colours  # noqa: E402

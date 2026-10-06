@@ -2552,6 +2552,15 @@ class ActivationMixin:
             ),
         )
         payment.paying_for = "ability"
+        payment.restrict_x_from_text(
+            ability.text,
+            sum(
+                ManaCost.parse(piece.text).x_count
+                for piece in ability.costs
+                if piece.kind is CostKind.MANA
+            ),
+            x_value,
+        )
         if announced is not None:
             self._announced_targets[key] = (announced, payment)
         self._opened_payments[key] = payment

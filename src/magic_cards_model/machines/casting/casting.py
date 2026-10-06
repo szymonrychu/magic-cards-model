@@ -4063,6 +4063,13 @@ class Casting(EngineModel):
         )
         self.payment.paying_for = "spell"
         self.payment.paying_for_keyword = (self.keyword_used or "").lower() or None
+        if self.permission_used is None or not self.permission_used.any_type_mana:
+            # "Spend only black mana on X." (Consume Spirit): X's share of the
+            # cost (`x_count * X`, CR 107.3a) is payable only with that colour,
+            # unless mana of any type may be spent (CR 609.4b).
+            self.payment.restrict_x_from_text(
+                self.spell.oracle_text or "", self.base_cost.x_count, self.x_value
+            )
         if choices is not None:
             self.payment.choose(choices)
         return self.payment

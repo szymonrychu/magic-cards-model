@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ...data.subtypes import canonical_subtype
-from ...models.card import Color, Layout, Type
+from ...models.card import Color, Layout, Supertype, Type
 from ...models.card_state import (
     PERMANENT_TYPES,
     CardState,
@@ -158,6 +158,7 @@ _COUNT_YOU_CONTROL_RE = re.compile(
     r"^(?:the )?(?:number of )?(?:(?P<status>tapped|untapped|attacking) )?"
     r"(?:(?P<nontoken>nontoken) )?"
     rf"(?:(?P<colors>{_COUNT_COLOR_WORD}(?:(?: and/or | or ){_COUNT_COLOR_WORD})*) )?"
+    r"(?:(?P<snow>snow|nonsnow) )?"
     r"(?P<qualifier>[a-z]+) "
     r"(?P<whose>you control|they control|your opponents control|on the battlefield)$"
     # CR 508.1k: every attacking creature, whoever controls it - Path of
@@ -183,10 +184,12 @@ _COUNT_NUMBER_PLUS_RE = re.compile(r"^(?P<n>\d+|[a-z]+) plus (?P<rest>.+)$", re.
 #: "the number of creatures and/or Spacecraft you control" (Focus Fire) and
 #: "the number of permanents you control that are creatures and/or Vehicles"
 #: (Collision Course): a count of the permanents that are *any* item of an
-#: "and/or" (or "or") list of card types and subtypes - a permanent that is
-#: two of them (a crewed Vehicle) is still one permanent and counts once.
+#: "and/or" (or "or", or a plain "and": Road Rage's "the number of Mounts and
+#: Vehicles you control", Runebound Wolf's "Wolves and Werewolves") list of card
+#: types and subtypes - a permanent that is two of them (a crewed Vehicle, a
+#: changeling) is still one permanent and counts once.
 _COUNT_TYPE_LIST_WORD = r"[A-Za-z]+"
-_COUNT_TYPE_LIST = rf"{_COUNT_TYPE_LIST_WORD}(?:,? (?:and/or|or) {_COUNT_TYPE_LIST_WORD})+"
+_COUNT_TYPE_LIST = rf"{_COUNT_TYPE_LIST_WORD}(?:,? (?:and/or|and|or) {_COUNT_TYPE_LIST_WORD})+"
 _COUNT_AND_OR_YOU_CONTROL_RE = re.compile(
     rf"^(?:the )?number of (?P<list>{_COUNT_TYPE_LIST}) "
     r"(?P<whose>you control|your opponents control)$"
@@ -507,7 +510,7 @@ def _count_permanents_matching_any(
     rather than counting only the half it knew."""
     words = [
         word
-        for word in re.split(r",?\s*(?:and/or|or)\s+|,\s*", listed, flags=re.IGNORECASE)
+        for word in re.split(r",?\s*(?:and/or|and|or)\s+|,\s*", listed, flags=re.IGNORECASE)
         if word
     ]
     wanted_types = frozenset(
@@ -584,6 +587,12 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         return history_count
     if (player_counters := player_counter_count(stripped)) is not None:
         return player_counters
+    if "mana spent to cast" in stripped and _COLORS_OF_MANA_SPENT_TO_CAST_IT_RE.fullmatch(stripped):
+        # "where X is the number of colors of mana spent to cast this spell"
+        # (Radiant Flames, Kaleidoscorch): the converge count, read off the
+        # spell now resolving - any damage/amount clause that defines its X
+        # this way reads through here instead of needing a template per card.
+        return _colors_spent_on_resolving
     if stripped.lower() == "that number":
         # The count channel (`Game.record_count`): the number an earlier
         # instruction of the same resolving object recorded (CR 608.2c) - the
@@ -634,10 +643,9 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
         return count_planeswalker_types
 
-    if (
-        "and/or" in stripped
-        and (listed := _COUNT_AND_OR_YOU_CONTROL_RE.fullmatch(stripped)) is not None
-    ):
+    if ("and/or" in stripped or " and " in stripped or " or " in stripped) and (
+        listed := _COUNT_AND_OR_YOU_CONTROL_RE.fullmatch(stripped)
+    ) is not None:
         return _count_permanents_matching_any(
             listed.group("list") or listed.group("list2"),
             opponents=(listed.group("whose") or listed.group("whose2")).lower()
@@ -682,6 +690,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             # least one of them; no colour list asks nothing.
             return not wanted_colors or bool(wanted_colors & set(colors))
 
+        snow_word = (match.group("snow") or "").lower()
+
+        def _has_wanted_snow(supertypes: "Sequence[Supertype]") -> bool:
+            # CR 205.4g: a snow permanent is any permanent with the supertype
+            # snow; a nonsnow permanent is any that does not have it.
+            return not snow_word or (Supertype.SNOW in supertypes) == (snow_word == "snow")
+
         def _belongs_to_group(board_controller: str | None, controller: str) -> bool:
             if wants_anyone:
                 return True
@@ -702,6 +717,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                     for permanent in game.battlefield
                     if _belongs_to_group(board.of(permanent).controller, controller)
                     and _has_wanted_color(board.of(permanent).colors)
+                    and _has_wanted_snow(board.of(permanent).supertypes)
                     and (wants_tapped is None or permanent.tapped == wants_tapped)
                     and (not wants_attacking or permanent.id in game.combat.attacker_ids)
                     and (not wants_nontoken or not is_token(permanent))
@@ -724,6 +740,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                     if _belongs_to_group(board.of(permanent).controller, controller)
                     and any(word.lower() == subtype for word in board.of(permanent).subtypes)
                     and _has_wanted_color(board.of(permanent).colors)
+                    and _has_wanted_snow(board.of(permanent).supertypes)
                     and (wants_tapped is None or permanent.tapped == wants_tapped)
                     and (not wants_attacking or permanent.id in game.combat.attacker_ids)
                     and (not wants_nontoken or not is_token(permanent))
@@ -739,6 +756,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                 if _belongs_to_group(board.of(permanent).controller, controller)
                 and card_type in board.of(permanent).types
                 and _has_wanted_color(board.of(permanent).colors)
+                and _has_wanted_snow(board.of(permanent).supertypes)
                 and (wants_tapped is None or permanent.tapped == wants_tapped)
                 and (not wants_attacking or permanent.id in game.combat.attacker_ids)
                 and (not wants_nontoken or not is_token(permanent))
@@ -1105,9 +1123,22 @@ _OBJECT_COUNTER_COUNT_RE = re.compile(
 #: future printing that spells the count out that way instead of the "for
 #: each" shape. See `machines/converge.colors_of_mana_spent`.
 _COLORS_OF_MANA_SPENT_TO_CAST_IT_RE = re.compile(
-    r"^colors? of mana spent to cast (?:it|this (?:spell|creature|permanent))$",
+    r"^(?:the number of )?colors? of mana spent to cast (?:it|this (?:spell|creature|permanent))$",
     re.IGNORECASE,
 )
+
+
+def _colors_spent_on_resolving(game: "Game", _controller: str) -> int:
+    """Converge's count (CR 207.2c; `machines/converge.colors_of_mana_spent`)
+    for whatever is resolving now: the spell itself, or - for a trigger written
+    on a permanent ("When this creature enters, ... where X is the number of
+    colors of mana spent to cast this creature") - the permanent its ability
+    came from, whose cast record `Game._carry_cast_record` re-keyed onto it
+    (CR 400.7a)."""
+    resolving = game.resolving
+    if resolving is not None and is_ability(resolving):
+        resolving = resolving.source_or_last_known(game)
+    return colors_of_mana_spent(game, resolving)
 
 
 #: "the number of Equipment attached to him" (Whiplash, Vengeful Engineer;
@@ -1731,9 +1762,14 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
     remainder_effect = parse_mixed_effect(remainder_text) if remainder_text else None
 
     def run_pump(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
-        if source is None or source.zone is not Zone.BATTLEFIELD:
+        # CR 608.2h: a source its own cost removed (Priest of the Haunted Edge's
+        # "{T}, Sacrifice this creature: Target creature gets -X/-X ...") is
+        # still the source of this ability; only a pump that is *of the source
+        # itself* has nothing to act on once it has left the battlefield.
+        source = ability.source_or_last_known(game)
+        if source is None:
             return
+        source_gone = ability.source(game) is None or source.zone is not Zone.BATTLEFIELD
         magnitude = (
             controller_magnitude_expr(game, ability.controller)
             if controller_magnitude_expr is not None
@@ -1758,6 +1794,8 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
         else:
             profile = profile_for_text(literal)
             requires_target = profile.understood and bool(profile.requirements)
+            if not requires_target and source_gone:
+                return
             targets = game.resolve_card_targets(ability) if requires_target else [source]
         if not targets:
             # CR 115.6: "up to one target" legally choosing zero, or every
