@@ -5,8 +5,8 @@
     "modes": [],
     "on_stack": true,
     "source": "Sorin, Vengeful Bloodlord@alice#1",
-    "targets": ["Memnite@alice#2"],
-    "x": 0
+    "targets": ["Llanowar Elves@alice#1"],
+    "x": 1
   },
   "board": {
     "busy_turn": false,
@@ -39,7 +39,7 @@
     "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
-      "Memnite@alice#2": {
+      "Llanowar Elves@alice#1": {
         "zone": ["graveyard", "battlefield"]
       }
     },

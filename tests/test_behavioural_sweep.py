@@ -4992,9 +4992,23 @@ def _activated_ability(card: Card, text: str) -> ActivatedAbility:
     raise AssertionError(f"{card.name}: no activated ability reads {text!r}")
 
 
+#: A loyalty cost of "-X"/"+X" (CR 606.4, CR 107.3a): X is chosen on
+#: activation, just like a mana `{X}`, so it is driven at 1 too - at 0 a
+#: "-X: ... X damage divided as you choose" ability is refused outright
+#: (CR 601.2d: each target must receive at least 1).
+_LOYALTY_X_RE = re.compile(r"^[+\-\u2212]x$")
+
+
 def _x_for(ability: ActivatedAbility) -> int:
     cost = ability.cost.lower()
-    return 1 if "{x}" in cost or " x " in f" {cost} " or "remove any number of" in cost else 0
+    return (
+        1
+        if "{x}" in cost
+        or " x " in f" {cost} "
+        or "remove any number of" in cost
+        or _LOYALTY_X_RE.match(cost.strip())
+        else 0
+    )
 
 
 def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbility) -> None:

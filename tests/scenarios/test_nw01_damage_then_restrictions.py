@@ -293,6 +293,42 @@ def test_ballista_wielder_at_a_player_restricts_no_creature():
     assert not _cant_block(scenario, giant)
 
 
+def _huatli(bob_battlefield):
+    scenario = _board([], ["Huatli, Warrior Poet", "Colossal Dreadmaw"], bob_battlefield)
+    huatli = scenario.find("Huatli, Warrior Poet", Zone.BATTLEFIELD, "alice")
+    return scenario, huatli
+
+
+def test_huatli_minus_x_divided_damage_stops_exactly_the_damaged_creatures_blocking():
+    """CR 107.3a/606.4: "-X" is announced on activation; CR 601.2d divides
+    it. Only the creatures actually dealt damage this way can't block."""
+    scenario, huatli = _huatli(["Hill Giant", "Watchwolf", "Grizzly Bears"])
+    giant = scenario.creature("Hill Giant", "bob")
+    wolf = scenario.creature("Watchwolf", "bob")
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.activate(huatli, index=2, x_value=2, targets=[giant, wolf], division=[1, 1])
+    scenario.pass_until_resolved()
+
+    assert huatli.counters[Counter.LOYALTY] == 1
+    assert giant.damage == 1 and wolf.damage == 1
+    assert _cant_block(scenario, giant)
+    assert _cant_block(scenario, wolf)
+    assert not _cant_block(scenario, bears)
+
+
+def test_huatli_creature_killed_by_the_damage_leaves_nothing_restricted():
+    scenario, huatli = _huatli(["Grizzly Bears", "Hill Giant"])
+    bears = scenario.creature("Grizzly Bears", "bob")
+    giant = scenario.creature("Hill Giant", "bob")
+
+    scenario.activate(huatli, index=2, x_value=2, targets=[bears], division=[2])
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert not _cant_block(scenario, giant)
+
+
 # -- Group "can't block this turn" ---------------------------------------------
 
 

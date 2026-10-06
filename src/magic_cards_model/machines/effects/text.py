@@ -1,7 +1,7 @@
 import functools
 import re
 from collections.abc import Callable, Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Layout, Supertype, Type
@@ -46,6 +46,7 @@ from ..layers import (
 )
 from ..targeting import (
     ControllerRestriction,
+    TargetingProfile,
     permanent_description,
     profile_for_text,
     spell_profile_for_text,
@@ -59,11 +60,12 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT
+from ._chains import ABILITY_TEXT, SPELL_TEXT
 from ._common import (
     _OBJECT_ANAPHOR,
     AbilityEffect,
     ClauseEffect,
+    Effect,
     ReferentObjectClause,
     ReferentReader,
     TargetedClause,
@@ -3547,6 +3549,150 @@ def _self_referential_delayed_effect(clause: str) -> AbilityEffect:
             game.create_delayed_trigger(trigger)
 
     return effect
+
+
+#: A word that points back at an object named earlier (CR 608.2c) - ahead of
+#: a sentence's own "target", it ties that sentence to an earlier one ("Then
+#: it fights target creature ..."), so the two cannot be read apart.
+_BACK_REFERENCE_RE = re.compile(r"\b(?:then|it|its|they|them|their|that|those)\b", re.I)
+
+
+def _target_sentence_groups(whole: str) -> list[tuple[str, int]] | None:
+    """`whole`'s sentences grouped so each group opens with a sentence that
+    names its own "target" (CR 601.2c) and carries the targetless sentences
+    after it ("Tap target land. That land doesn't untap ..."): each group's
+    text and how many target requirements it opens with. `None` when a
+    sentence names a target this cannot attribute, or one leans on an
+    earlier group's object ahead of its own target."""
+    groups: list[tuple[list[str], int]] = []
+    leading: list[str] = []
+    for sentence in _plain_resolution_sentences(whole):
+        own = profile_for_text(sentence)
+        count = len(own.requirements) if own.understood else 0
+        if count == 0:
+            if re.search(r"\btargets?\b", sentence, re.I):
+                return None
+            if groups:
+                groups[-1][0].append(sentence)
+            else:
+                leading.append(sentence)
+            continue
+        word = re.search(r"\btarget", sentence, re.I)
+        opening = sentence[: word.start()] if word is not None else sentence
+        if groups and _BACK_REFERENCE_RE.search(opening):
+            return None
+        groups.append(([*leading, sentence], count))
+        leading = []
+    if leading or len(groups) < 2:
+        return None
+    return [(" ".join(sentences), count) for sentences, count in groups]
+
+
+#: One sentence group's own effect: an `Effect` for a spell, an
+#: `AbilityEffect` for an ability - called with whichever is resolving.
+_GroupStep = Callable[["Game", Any], None]
+
+
+def _per_target_sentence_steps(
+    whole: str, *, for_spell: bool
+) -> tuple[list[tuple[_GroupStep, frozenset[int]]], TargetingProfile] | None:
+    """Each sentence group of `whole` (`_target_sentence_groups`) read on its
+    own, with the requirement slots (CR 601.2c, `TargetRef.slot`) its own
+    "target" phrases filled - or `None` when any group does not read cleanly
+    or its targets cannot be told apart."""
+    from .dispatch import _ability_effect_or_notice, _spell_effect_or_notice
+    from .tokens import _is_notice_only
+
+    groups = _target_sentence_groups(whole)
+    if groups is None:
+        return None
+    full = spell_profile_for_text(whole) if for_spell else profile_for_text(whole)
+    if not full.understood or len(full.requirements) != sum(n for _, n in groups):
+        return None
+    # The profile's requirement order is not the printed order (Jeskai
+    # Revelation's lists "any target" first), so a group's slots are found by
+    # phrase - each phrase printed once, or which slot is whose is unknowable.
+    slot_of = {r.phrase.lower(): index for index, r in enumerate(full.requirements)}
+    if len(slot_of) != len(full.requirements):
+        return None
+    steps: list[tuple[_GroupStep, frozenset[int]]] = []
+    for group_text, _ in groups:
+        phrases = [r.phrase.lower() for r in profile_for_text(group_text).requirements]
+        if any(phrase not in slot_of for phrase in phrases):
+            return None
+        read: _GroupStep | None = (
+            _spell_effect_or_notice(group_text)
+            if for_spell
+            else _ability_effect_or_notice(group_text)
+        )
+        if (
+            read is None
+            or _is_notice_only(read)
+            or getattr(read, "unparsed_remainder", None) is not None
+        ):
+            return None
+        steps.append((read, frozenset(slot_of[phrase] for phrase in phrases)))
+    return steps, full
+
+
+def _per_target_sentence_effect(whole: str, *, for_spell: bool) -> TargetedClause | None:
+    """A spell or ability whose sentences each name their own target - Jeskai
+    Revelation's "Return target spell or permanent to its owner's hand.
+    Jeskai Revelation deals 4 damage to any target. ...", Everything Pizza's
+    "Target player gains 3 life ... This artifact deals 3 damage to any
+    target. ..." - read sentence group by sentence group, each group seeing
+    only the targets announced for its own phrase.
+
+    CR 601.2c: each target is chosen for one instance of the word "target",
+    and `TargetRef.slot` records which. The generic per-clause readers
+    (`parse_mixed_effect_for_spell`/`parse_mixed_effect`) hand every clause
+    the whole target list, so Jeskai Revelation's bounce sentence also
+    returned its damage target. Every group must read on its own (no notice,
+    no unread remainder) and the groups' requirements must be the whole
+    text's; otherwise this declines and the text reaches the readers it
+    always did."""
+    read = _per_target_sentence_steps(whole.strip(), for_spell=for_spell)
+    if read is None:
+        return None
+    steps, full = read
+
+    def per_target_sentence_groups(game: "Game", stack_object: "StackObject") -> None:
+        refs = list(stack_object.targets)
+        division = stack_object.division
+        if all(ref.slot is not None for ref in refs):
+            slots = [ref.slot for ref in refs]
+        else:
+            slots = full.assign_slots(
+                [game.resolve_target(ref) for ref in refs],
+                game.controller_of(stack_object).username,
+                game,
+                source_id_of(stack_object),
+            )
+        try:
+            for step, wanted in steps:
+                keep = [index for index, slot in enumerate(slots) if slot in wanted]
+                stack_object.targets = [refs[index] for index in keep]
+                if division is not None and len(division) == len(refs):
+                    stack_object.division = [division[index] for index in keep]
+                step(game, stack_object)
+                game.announce_batched_events()  # CR 603.2c: one event per instruction
+        finally:
+            stack_object.targets = refs
+            stack_object.division = division
+
+    return per_target_sentence_groups
+
+
+@SPELL_TEXT.rung("s23", before=["dispatch.parse_mixed_effect_for_spell"])
+def _parse_per_target_sentence_groups(text: str) -> Effect | None:
+    """`_per_target_sentence_effect` for a spell."""
+    return _per_target_sentence_effect(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", before=["dispatch.parse_mixed_effect"])
+def _parse_per_target_sentence_groups_ability(text: str) -> AbilityEffect | None:
+    """`_per_target_sentence_effect` for an activated or triggered ability."""
+    return _per_target_sentence_effect(text, for_spell=False)
 
 
 from ._common import (  # noqa: E402

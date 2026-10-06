@@ -6,7 +6,7 @@
     "on_stack": true,
     "source": "Chandra, Chill of Compliance@alice#1",
     "targets": ["Memnite@alice#1"],
-    "x": 0
+    "x": 1
   },
   "board": {
     "busy_turn": false,
@@ -36,10 +36,16 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["became_tapped_count_this_turn"],
+    "fields_changed": ["became_tapped_count_this_turn", "counters_put_this_turn"],
     "notices": {},
     "objects": {
       "Memnite@alice#1": {
+        "counters": [
+          {},
+          {
+            "stun": 1
+          }
+        ],
         "tapped": [false, true]
       }
     },

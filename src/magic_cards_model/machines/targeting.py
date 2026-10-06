@@ -3022,6 +3022,10 @@ _SUPERTYPE_NOUNS = {
     "world": Supertype.WORLD,
 }
 _PERMANENT_NOUNS = frozenset({"permanent"})
+#: CR 110.4a's six permanent card types.
+_PERMANENT_CARD_TYPES = frozenset(
+    {Type.ARTIFACT, Type.BATTLE, Type.CREATURE, Type.ENCHANTMENT, Type.LAND, Type.PLANESWALKER}
+)
 #: A bare "card", with no type in front of it, is never on the battlefield -
 #: it needs a zone clause to say where it is (CR 115.2, CR 400.1).
 _CARD_NOUNS = frozenset({"card"})
@@ -4725,6 +4729,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     zones = {Zone.BATTLEFIELD}
     must_be_tapped: bool | None = adjectives.must_be_tapped
     bare_card = False
+    #: "permanent" was one of the nouns - see the "card" branch below.
+    permanent_noun = False
     nouns_read = 0
     noun_end = index
     or_any_spell = False
@@ -4776,6 +4782,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             allows_cards = True
         elif singular in _PERMANENT_NOUNS:
             allows_cards = True
+            permanent_noun = True
         elif singular in _SPELL_NOUNS:
             allows_cards = True
             if nouns_read == 0:
@@ -4991,6 +4998,12 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         # "target creature card in your graveyard" is a card, not a permanent,
         # and so is a bare "target card". Either way the zone has to be stated:
         # a card that is not a permanent is somewhere else (CR 115.2).
+        if permanent_noun:
+            # CR 110.4a: a "permanent card" is an artifact, battle, creature,
+            # enchantment, land, or planeswalker card - never an instant or
+            # sorcery card (Tamiyo, Compleated Sage's "-X: Exile target nonland
+            # permanent card with mana value X from your graveyard").
+            card_types |= _PERMANENT_CARD_TYPES
         zone_match = _ZONE_CLAUSE.search(rest)
         if zone_match is None:
             if _EXILED_WITH_RE.search(rest) is not None:

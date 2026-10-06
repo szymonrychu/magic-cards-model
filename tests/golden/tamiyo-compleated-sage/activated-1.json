@@ -5,8 +5,8 @@
     "modes": [],
     "on_stack": true,
     "source": "Tamiyo, Compleated Sage@alice#1",
-    "targets": ["Memnite@alice#2"],
-    "x": 0
+    "targets": ["Bonesplitter@alice#2"],
+    "x": 1
   },
   "board": {
     "busy_turn": false,
@@ -35,7 +35,7 @@
   "card": "Tamiyo, Compleated Sage",
   "delta": {
     "created": {
-      "Memnite@alice+1": {
+      "Bonesplitter@alice+1": {
         "attached_to": null,
         "class_level": 1,
         "controller": "alice",
@@ -44,9 +44,9 @@
         "face_up": true,
         "granted": [],
         "monstrous": false,
-        "power": 1,
+        "power": null,
         "tapped": false,
-        "toughness": 1,
+        "toughness": null,
         "transformed": false,
         "zone": "battlefield"
       }
@@ -55,7 +55,7 @@
     "fields_changed": ["continuous_effects", "exile_residents_seen", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
-      "Memnite@alice#2": {
+      "Bonesplitter@alice#2": {
         "zone": ["graveyard", "exile"]
       }
     },

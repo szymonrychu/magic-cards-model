@@ -8680,17 +8680,39 @@ def _parse_multi_part_sacrifice_gain_draw_discard_damage_counters_clause(
     counters = parse_count(match.group("counters"))
     if life is None or damage is None or counters is None:
         return None
+    # CR 601.2c: which requirement each target was announced for
+    # (`TargetRef.slot`), by phrase - "any target" may itself be a player, so
+    # the first player found is not necessarily the "target player".
+    phrases = [r.phrase.lower() for r in profile_for_text(text).requirements]
+    wanted = [
+        phrases.index(p) if p in phrases else None
+        for p in ("target player", "any target", "target creature")
+    ]
+
+    def by_slot(game: "Game", ability: AbilityOnStack) -> list[Any] | None:
+        if None in wanted or any(ref.slot is None for ref in ability.targets):
+            return None
+        found: list[Any] = [None, None, None]
+        for ref in ability.targets:
+            if ref.slot in wanted:
+                found[wanted.index(ref.slot)] = game.legal_target(ability, ref)
+        return found
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source_or_last_known(game)
         source_id = source_id_of(ability)
+        slotted = by_slot(game, ability)
         remaining: list[Any] = list(game.resolve_targets(ability))
         player_target: Player | None = None
-        for candidate in remaining:
-            if isinstance(candidate, Player):
-                player_target = candidate
-                remaining.remove(candidate)
-                break
+        if slotted is not None:
+            player_target = slotted[0] if isinstance(slotted[0], Player) else None
+            remaining = slotted[1:]
+        else:
+            for candidate in remaining:
+                if isinstance(candidate, Player):
+                    player_target = candidate
+                    remaining.remove(candidate)
+                    break
         if player_target is not None:
             game.gain_life(player_target, life)
             game.draw_cards(player_target.username, 1)
