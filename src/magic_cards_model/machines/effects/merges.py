@@ -1339,6 +1339,162 @@ def _merge_damage_any_target_then_destroy_if_type_clauses(
     return 2, effect
 
 
+#: "`<damage sentence>`. If `<a quality>` is dealt damage this way, `<effect>`."
+#: (Provoke the Trolls, Redcap Melee, Play with Fire, Burn from Within.) The
+#: leading text is read by the ordinary spell dispatcher and run first (CR
+#: 608.2c); the branch then acts on exactly what that damage reached, read off
+#: `Game.damage_dealt_this_turn` by source (CR 120.1) - damage that was
+#: prevented was never dealt (CR 615.6) and an illegal target means no damage
+#: at all (CR 608.2b). The quality is read generically: "player", "opponent",
+#: or any counted permanent phrase `_permanent_quality` reads ("creature",
+#: "nonred permanent", "planeswalker"), alternatives joined by "or"; a
+#: permanent's colour and types are read as it is, off its computed
+#: characteristics (CR 105.2, CR 613.5). Sentences after the branch that name
+#: the same referent ("If that creature would die this turn, exile it
+#: instead.") are read as more instructions on it.
+_IF_QUALITY_DEALT_DAMAGE_THIS_WAY_RE = re.compile(
+    r"^if (?:an? )?(?P<quality>[^,]+?) is dealt damage this way, (?P<effect>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: (game, stack object, permanents that matched) -> None
+_ThisWayConsequence = Callable[["Game", "StackObject", list[CardState]], None]
+
+
+def _dealt_quality_test(
+    quality: str,
+) -> tuple[Callable[["Game", str, str], bool], Callable[[object], bool] | None] | None:
+    """`quality` as (does a player qualify, does a permanent's characteristics
+    qualify), or `None` when any alternative is a word this does not read."""
+    from ...models.game._conditions import _permanent_quality
+
+    player_tests: list[Callable[[Game, str, str], bool]] = []
+    permanent_tests: list[Callable[[object], bool]] = []
+    for alternative in re.split(r"\s+and/or\s+|\s+or\s+", quality.strip().lower()):
+        if alternative == "player":
+            player_tests.append(lambda _game, _controller, _player: True)
+        elif alternative == "opponent":
+            player_tests.append(lambda _game, controller, player: player != controller)
+        else:
+            test = _permanent_quality(alternative)
+            if test is None:
+                return None
+            permanent_tests.append(test)
+    return (
+        lambda game, controller, player: any(
+            test(game, controller, player) for test in player_tests
+        ),
+        (lambda chars: any(test(chars) for test in permanent_tests)) if permanent_tests else None,
+    )
+
+
+def _read_this_way_consequence(text: str) -> tuple[bool, _ThisWayConsequence] | None:
+    """One instruction of a "dealt damage this way" branch as (acts on the
+    permanents that matched, the instruction), or `None` when it is not
+    readable. An instruction naming "it"/"that creature" runs once per
+    matching permanent through the referent readers; any other instruction
+    (a player's own - "you sacrifice a land", "scry 1") runs once when
+    anything matched. A branch that names a target is not this shape."""
+    from .removal import _parse_bare_sacrifice_of_choice_clause
+    from .text import _OBJECT_ANAPHOR_RE, _parse_referent_object_clause
+
+    clean = text.strip().rstrip(".").strip()
+    if not clean or re.search(r"\btarget\b", clean, re.IGNORECASE):
+        return None
+    if _OBJECT_ANAPHOR_RE.search(clean):
+        referent = _parse_referent_object_clause(clean)
+        if referent is None:
+            return None
+        return True, lambda game, stack_object, matched: referent(game, matched, stack_object)
+    clauses = _parse_mixed_clauses(clean, for_spell=True)
+    if clauses is not None:
+
+        def run_clauses(
+            game: "Game", stack_object: "StackObject", matched: list[CardState]
+        ) -> None:
+            for clause in clauses:
+                clause(game, stack_object)
+
+        return False, run_clauses
+    sacrifice = _parse_bare_sacrifice_of_choice_clause(re.sub(r"^you ", "", clean, flags=re.I))
+    if sacrifice is None or not re.match(r"you ", clean, re.IGNORECASE):
+        return None
+
+    def run_sacrifice(game: "Game", stack_object: "StackObject", matched: list[CardState]) -> None:
+        source = stack_object if isinstance(stack_object, CardState) else None
+        if source is None:
+            return
+        sacrifice(game, game.controller_of(source), source.name, source_id_of(source))
+
+    return False, run_sacrifice
+
+
+@SPELL_TEXT.rung("s18")
+def _parse_if_quality_dealt_damage_this_way_spell(effect_text: str) -> Effect | None:
+    """`_IF_QUALITY_DEALT_DAMAGE_THIS_WAY_RE`'s shape; see the banner above."""
+    if "dealt damage this way" not in effect_text.lower():  # cheap literal gate
+        return None
+    sentences = _plain_resolution_sentences(
+        " ".join(_strip_non_effect_preamble(effect_text).split())
+    )
+    index = next(
+        (
+            position
+            for position, sentence in enumerate(sentences)
+            if position > 0 and _IF_QUALITY_DEALT_DAMAGE_THIS_WAY_RE.fullmatch(sentence.strip())
+        ),
+        None,
+    )
+    if index is None:
+        return None
+    branch = _IF_QUALITY_DEALT_DAMAGE_THIS_WAY_RE.fullmatch(sentences[index].strip())
+    assert branch is not None
+    quality = _dealt_quality_test(branch.group("quality"))
+    if quality is None:
+        return None
+    player_test, permanent_test = quality
+    consequences = [_read_this_way_consequence(branch.group("effect"))]
+    consequences += [_read_this_way_consequence(rest) for rest in sentences[index + 1 :]]
+    if any(consequence is None for consequence in consequences):
+        return None
+    if any(not on_matched for on_matched, _ in consequences[1:]):  # type: ignore[misc]
+        return None
+    rest = _spell_effect_or_notice(" ".join(sentences[:index]))
+    if rest is None or _is_notice_only(rest):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        start = len(game.damage_dealt_this_turn)
+        rest(game, spell)
+        matched: list[CardState] = []
+        player_matched = False
+        for record in game.damage_dealt_this_turn[start:]:
+            if record.source_id != spell.id or record.amount <= 0:
+                continue
+            if record.recipient_id is not None:
+                found = game.find_by_id(record.recipient_id)
+                if (
+                    isinstance(found, CardState)
+                    and found not in matched
+                    and permanent_test is not None
+                    and permanent_test(game.characteristics_of(found))
+                ):
+                    matched.append(found)
+            elif record.recipient_player is not None and player_test(
+                game, controller, record.recipient_player
+            ):
+                player_matched = True
+        if not matched and not player_matched:
+            return
+        for on_matched, consequence in consequences:  # type: ignore[misc]
+            if on_matched and not matched:
+                continue
+            consequence(game, spell, matched)
+
+    return effect
+
+
 #: "Add `<mana>`. Spend this mana only to `<restriction>`." - CR 106.6's own
 #: restriction sentence, printed as its own clause right after the
 #: production it tags, on a spell or a resolving (non-mana) ability: one
@@ -3471,6 +3627,58 @@ def _merge_damage_then_tokens_per_excess_spell(effect_text: str) -> Effect | Non
             dealt = game.deal_damage(target, amount, source=spell)
             if threshold is not None:
                 create(game, spell, dealt - threshold)
+
+    return effect
+
+
+#: "`<source>` deals `<n>` damage to `<target>`. You gain life equal to the
+#: excess damage dealt this way." (Razor Rings). The same two-sentence
+#: instruction as `_DAMAGE_THEN_TOKENS_PER_EXCESS_RE` (CR 608.2c), with the
+#: target phrase left open - "target attacking or blocking creature" is not a
+#: bare "target creature" - and the payoff a life gain.
+_DAMAGE_THEN_LIFE_PER_EXCESS_RE = re.compile(
+    rf"^(?P<subject>[^.]*?) deals? {count_pattern('n', x=True)} damage to "
+    r"(?P<phrase>(?:any )?target [^.]*?)"
+    r"(?:,\s*where\s+x\s+is\s+(?P<where_x>[^.]+))?\.\s*"
+    r"you gain life equal to the (?:amount of )?excess damage dealt "
+    r"(?:to that [a-z]+ )?this way\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@SPELL_TEXT.rung("s18")
+def _merge_damage_then_life_per_excess_spell(effect_text: str) -> Effect | None:
+    """`_DAMAGE_THEN_LIFE_PER_EXCESS_RE`'s shape.
+
+    CR 120.10: the excess is what the damage dealt *actually* was (prevention
+    already applied, CR 615.6) above the threshold read before it landed, so
+    prevented or absorbed damage gains nothing; with several targets the
+    excesses add up, and a player has no lethal damage, so damage to one is
+    never excess. Nothing is gained for 0 excess; the caster gains the life."""
+    if "excess damage" not in effect_text.lower():  # cheap literal gate
+        return None
+    match = _DAMAGE_THEN_LIFE_PER_EXCESS_RE.fullmatch(
+        _strip_non_effect_preamble(effect_text).strip()
+    )
+    if match is None:
+        return None
+    amount_of = _read_excess_damage_spell(match)
+    if amount_of is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        amount = amount_of(game, spell)
+        excess = 0
+        for target in game.resolve_targets(spell):
+            if not isinstance(target, CardState):
+                game.deal_damage(target, amount, source=spell)
+                continue
+            threshold = _excess_threshold(game, target, spell)
+            dealt = game.deal_damage(target, amount, source=spell)
+            if threshold is not None:
+                excess += max(dealt - threshold, 0)
+        if excess > 0:
+            game.gain_life(game.controller_of(spell), excess)
 
     return effect
 
@@ -5763,7 +5971,9 @@ from .damage import (  # noqa: E402
 )
 from .dispatch import (  # noqa: E402
     _parse_mixed_clause,
+    _parse_mixed_clauses,
     _parse_targeted_clause,
+    _spell_effect_or_notice,
     parse_clause_effect,
     parse_mixed_effect,
     parse_mixed_effect_for_spell,
@@ -5816,8 +6026,13 @@ from .search import (  # noqa: E402
     _search_descriptions,
     _search_quality_is_readable,
 )
-from .text import _as_sentence, _strip_non_effect_preamble  # noqa: E402
+from .text import (  # noqa: E402
+    _as_sentence,
+    _plain_resolution_sentences,
+    _strip_non_effect_preamble,
+)
 from .tokens import (  # noqa: E402
+    _is_notice_only,
     _parse_token_clause,
     _token_creator_for_count,
     _token_definition_from_words,
