@@ -436,7 +436,7 @@ def _tribute_paid(context: "ConditionContext", match: re.Match[str]) -> bool:
 
 
 def _x_compared(context: "ConditionContext", match: re.Match[str]) -> bool:
-    """ "X is 5 or more" (Banefire, Martial Coup, Red Sun's Twilight) - CR
+    """ "X is 5 or more" (Banefire, Finale of Eternity) - CR
     107.3a: "While a spell is on the stack, any X in its mana cost ... equals
     the announced value", which `CastRecord.x_value` holds. No record (the
     object was never cast) is X = 0, CR 107.3b's free-cast answer too."""
