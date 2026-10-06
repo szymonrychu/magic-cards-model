@@ -17,8 +17,9 @@ count.
 
 Proof printings on the same readers: Rolling Spoil and Dryad's Caress (a
 trailing/leading gate after an unconditional instruction), Rally for the
-Throne (Adamant, "at least three white mana"), Slaying Fire (Adamant with
-"instead"), and Torrent of Souls (two gated sentences, hybrid cost).
+Throne (Adamant, "at least three white mana") and Slaying Fire (Adamant with
+"instead"); Stronghold Discipline and Netherborn Phalanx prove the per-player
+life count.
 """
 
 from magic_cards_model.machines import Step
