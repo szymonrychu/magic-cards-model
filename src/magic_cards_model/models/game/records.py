@@ -812,6 +812,11 @@ class GraveyardArrival(EngineModel):
     "no printed types" - wrong for a real card, which is why every reader of
     this field is an *additional* gate alongside `is_permanent_card`/
     `permanent_types`, never the only one a card's identity depends on."""
+    combat: int = 0
+    """Which combat phase of the turn the card arrived during (the same
+    `Game.turn_count("combat_phases", ...)` ordinal `TurnHistoryEntry.combat`
+    uses, CR 506.1/500.8), or `0` for an arrival outside any combat phase -
+    what "that wasn't put there this combat" (Storrev, Devkarin Lich) asks."""
 
 
 class CombatDamageToPlayer(EngineModel):

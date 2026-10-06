@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "aecdc315-95e5-450c-bedc-998eea46cf8c",
+  "oracle_id": "f6ed46e2-08f9-4e89-aae3-e5dd7f30f007",
+  "multiverse_ids": [
+    466763
+  ],
+  "mtgo_id": 72917,
+  "arena_id": 69794,
+  "tcgplayer_id": 192792,
+  "cardmarket_id": 379266,
+  "name": "Brought Back",
+  "lang": "en",
+  "released_at": "2019-07-12",
+  "uri": "https://api.scryfall.com/cards/aecdc315-95e5-450c-bedc-998eea46cf8c",
+  "scryfall_uri": "https://scryfall.com/card/m20/9/brought-back?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:57:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.jpg?1783933031",
+    "normal": "https://cards.scryfall.io/normal/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.jpg?1783933031",
+    "large": "https://cards.scryfall.io/large/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.jpg?1783933031",
+    "png": "https://cards.scryfall.io/png/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.png?1783933031",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.jpg?1783933031",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.jpg?1783933031",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.webp?1783933031",
+    "grid": "https://cards.scryfall.io/grid/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.webp?1783933031",
+    "display": "https://cards.scryfall.io/display/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.webp?1783933031",
+    "art": "https://cards.scryfall.io/art/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.webp?1783933031",
+    "crop": "https://cards.scryfall.io/crop/front/a/e/aecdc315-95e5-450c-bedc-998eea46cf8c.webp?1783933031"
+  },
+  "mana_cost": "{W}{W}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Choose up to two target permanent cards in your graveyard that were put there from the battlefield this turn. Return them to the battlefield tapped.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set": "m20",
+  "set_name": "Core Set 2020",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/aecdc315-95e5-450c-bedc-998eea46cf8c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af6ed46e2-08f9-4e89-aae3-e5dd7f30f007&unique=prints",
+  "collector_number": "9",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"As long as your courage remains, your life will not falter.\"\n\u2014Sephara, Sky's Blade",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mitchell Malloy",
+  "artist_ids": [
+    "23547f21-a6c7-44e0-bbb7-fd5e5e32d97c"
+  ],
+  "illustration_id": "1b4da555-bfb0-4e11-8ffe-b4216165f7a4",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4944,
+  "penny_rank": 8107,
+  "preview": {
+    "source": "MMCast",
+    "source_uri": "https://twitter.com/theMMcast/status/1143195544661061632",
+    "previewed_at": "2019-06-24"
+  },
+  "prices": {
+    "usd": "2.26",
+    "usd_foil": "3.53",
+    "usd_etched": null,
+    "eur": "1.50",
+    "eur_foil": "2.81",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=466763&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrought%2BBack",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrought%2BBack",
+    "edhrec": "https://edhrec.com/route/?cc=Brought+Back"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192792%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=379266&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/72917?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

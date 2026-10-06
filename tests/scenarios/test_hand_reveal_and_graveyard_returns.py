@@ -57,6 +57,7 @@ session that wrote this file:
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.keywords import discard
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import TargetRef
 from tests.scenarios.harness import Scenario
@@ -69,14 +70,16 @@ def test_night_nurse_returns_a_card_put_into_the_graveyard_this_turn():
         Scenario()
         .player(
             "alice",
-            hand=["Night Nurse, Healer of Heroes"],
+            hand=["Night Nurse, Healer of Heroes", "Grizzly Bears"],
             battlefield=["Plains", "Plains"],
-            graveyard=["Grizzly Bears"],
         )
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    # "that was put there from anywhere this turn": a card the scenario seeds
+    # into the graveyard was never put there this turn, so it arrives for real.
+    discard(scenario.game, bears, "alice")
     scenario.will_choose_targets(bears)
     sources = scenario.untapped_sources("Plains", "Plains")
     scenario.cast_and_resolve("Night Nurse, Healer of Heroes", *sources)

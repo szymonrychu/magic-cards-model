@@ -1386,6 +1386,9 @@ class ConditionsMixin:
         owner = card_state.owner
         if owner is None:
             return
+        from ...machines.turn import Phase
+
+        in_combat = self.turn is not None and self.turn.phase is Phase.COMBAT
         self.graveyard_arrivals_this_turn.append(
             GraveyardArrival(
                 player=owner,
@@ -1394,6 +1397,11 @@ class ConditionsMixin:
                 permanent_types=permanent_types,
                 card_id=card_state.id,
                 card_types=tuple(card_state.types),
+                combat=(
+                    self.turn_count("combat_phases", self.turn.active_player)
+                    if in_combat and self.turn is not None
+                    else 0
+                ),
             )
         )
 

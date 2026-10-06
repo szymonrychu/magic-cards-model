@@ -959,6 +959,13 @@ class TriggersDecisionsMixin:
             .for_event_player(_that_player_of(ability))
             .for_defending_player(self._defending_player_of(ability))
         )
+        subject_card = ability.event.subject_card if ability.event is not None else None
+        if subject_card is not None:
+            power = str(subject_card.power) if subject_card.power is not None else ""
+            profile = profile.for_event_subject(
+                mana_value=subject_card.cmc,
+                power=int(power) if power.lstrip("-").isdigit() else None,
+            )
         return profile, text
 
     def stamp_target_slots(
