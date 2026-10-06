@@ -50,19 +50,19 @@ def _on(scenario, name: str) -> bool:
     return name in scenario.battlefield_names()
 
 
-def test_red_spent_hits_only_the_creatures_without_flying():
+def test_firespout_red_spent_hits_only_the_creatures_without_flying():
     scenario = _cast_firespout("Mountain", "Mountain", "Plains")
     assert not _on(scenario, "Grizzly Bears")
     assert _on(scenario, "Wind Drake")
 
 
-def test_green_spent_hits_only_the_creatures_with_flying():
+def test_firespout_green_spent_hits_only_the_creatures_with_flying():
     scenario = _cast_firespout("Forest", "Forest", "Plains")
     assert _on(scenario, "Grizzly Bears")
     assert not _on(scenario, "Wind Drake")
 
 
-def test_both_colours_spent_do_both():
+def test_firespout_both_colours_spent_do_both():
     scenario = _cast_firespout("Mountain", "Forest", "Plains")
     assert not _on(scenario, "Grizzly Bears")
     assert not _on(scenario, "Wind Drake")
@@ -96,13 +96,13 @@ def _attack_then_brume(*lands: str):
     return scenario
 
 
-def test_white_spent_prevents_all_combat_damage():
+def test_brume_white_spent_prevents_all_combat_damage():
     scenario = _attack_then_brume("Plains", "Plains")
     assert scenario.player("bob").life == 20
     assert scenario.player("alice").life == 20
 
 
-def test_black_spent_alone_makes_each_player_lose_life_per_their_attackers():
+def test_brume_black_spent_alone_makes_each_player_lose_life_per_their_attackers():
     """Two attackers are alice's, so alice loses 2; bob attacks with nothing
     and loses 0 - and with no white spent, the combat damage is not
     prevented (3 + 2 from the two attackers)."""
@@ -111,7 +111,7 @@ def test_black_spent_alone_makes_each_player_lose_life_per_their_attackers():
     assert scenario.player("bob").life == 20 - 5
 
 
-def test_both_colours_spent_do_both():
+def test_brume_both_colours_spent_do_both():
     scenario = _attack_then_brume("Plains", "Swamp")
     assert scenario.player("alice").life == 18
     assert scenario.player("bob").life == 20
