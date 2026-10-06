@@ -2771,6 +2771,9 @@ def _parse_expression_amount_damage_clause(
     X" is bounded by the X announced (CR 601.2c), which the targeting reader
     reads off the announced text."""
     text = clause.strip()
+    lowered = text.lower()
+    if "damage" not in lowered or "target" not in lowered:  # every shape prints both
+        return None
     for_target_player = False
     match = _EXPRESSION_DAMAGE_RE.fullmatch(text)
     if match is not None and not (

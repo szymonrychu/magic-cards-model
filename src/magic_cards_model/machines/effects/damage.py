@@ -3224,6 +3224,8 @@ def _parse_damage_each_to_its_controller_or_host_text(text: str) -> TargetedClau
     an earlier instruction) is not there for the next - nothing is cached
     across parts.
     """
+    if "damage to" not in text.lower():  # both shapes print it
+        return None
     whole = _strip_non_effect_preamble(text).strip().rstrip(".")
     steps: list[tuple[Callable[..., None], GroupPredicate, int, str | None]] = []
     for sentence in _THEN_SEPARATOR_RE.split(whole):
@@ -4217,7 +4219,10 @@ def _parse_damage_each_group_named_player_controls_clause(
     snapshotted before any damage is dealt (CR 608.2f's simultaneity); a
     player target no longer legal names nobody and nothing is dealt (CR
     608.2b)."""
-    match = _DAMAGE_EACH_GROUP_NAMED_PLAYER_CONTROLS_RE.fullmatch(" ".join(clause.split()))
+    text = " ".join(clause.split())
+    if " damage to each " not in text.lower():
+        return None
+    match = _DAMAGE_EACH_GROUP_NAMED_PLAYER_CONTROLS_RE.fullmatch(text)
     if match is None:
         return None
     target_phrase = match.group("target")
@@ -4389,6 +4394,8 @@ def _this_way_rider(sentence: str) -> _ThisWayRider | None:
 def _split_this_way_riders(text: str) -> tuple[str, list[_ThisWayRider]] | None:
     """`text` as its leading instructions and the trailing "dealt damage this
     way" rider sentences, or `None` when it ends in none."""
+    if "dealt damage this way" not in " ".join(text.split()).lower():
+        return None
     sentences = _plain_resolution_sentences(" ".join(_strip_non_effect_preamble(text).split()))
     riders: list[_ThisWayRider] = []
     while len(sentences) > 1:

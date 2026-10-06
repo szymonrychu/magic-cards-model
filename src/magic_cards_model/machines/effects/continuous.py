@@ -10165,6 +10165,9 @@ def _parse_target_gains_and_pump_for_each_spell(text: str) -> Effect | None:
     the literal "+N/+M and gains ..." sentence with the count multiplied in
     (CR 611.2, CR 613.4c, CR 613.1f), applied to the target if still legal
     (CR 608.2b)."""
+    lowered = text.lower()
+    if "for each" not in " ".join(lowered.split()) or "gains" not in lowered:
+        return None
     whole = " ".join(_strip_non_effect_preamble(text).split())
     sentences = _plain_resolution_sentences(whole)
     if not sentences:
@@ -10244,6 +10247,8 @@ def _target_you_control_then_fights(text: str, *, for_spell: bool) -> TargetedCl
     toughness as this resolves (CR 701.10b, sublayer 7c, CR 613.4c), then
     fights the opponent's creature if one was chosen (CR 115.6's "up to
     one") and both are still creatures on the battlefield (CR 701.14b)."""
+    if "fights" not in text.lower():
+        return None
     whole = " ".join(_strip_non_effect_preamble(text).split())
     sentences = _plain_resolution_sentences(whole)
     if len(sentences) != 2:

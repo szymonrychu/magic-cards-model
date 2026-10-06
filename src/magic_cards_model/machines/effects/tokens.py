@@ -1629,6 +1629,8 @@ def _parse_sentence_then_role_on_up_to_one_target_clauses(
     Role's target into its place. Zero targets for the "up to one" half is a
     legal announcement (CR 115.6) and then no Role is created.
     """
+    if "role token" not in text.lower():
+        return None
     sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
     if len(sentences) != 2:
         return None
@@ -1686,6 +1688,8 @@ def _parse_token_with_keywords_and_quoted_ability_sentences(
     (`_parse_token_clause`) already reads the whole sentence correctly, so this
     only hands it the sentence the splitter should not have cut.
     """
+    if '"' not in text and "\u201c" not in text:  # the shape needs a quoted ability
+        return None
     sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
     if not any(_TOKEN_WITH_KEYWORDS_AND_QUOTED_ABILITY_RE.match(s) for s in sentences):
         return None

@@ -3568,6 +3568,12 @@ def _self_referential_delayed_effect(clause: str) -> AbilityEffect:
 _BACK_REFERENCE_RE = re.compile(r"\b(?:then|it|its|they|them|their|that|those)\b", re.I)
 
 
+#: The words without which `profile_for_text` reads no requirement: "target"
+#: itself, and the keyword actions it spells out into targets (Support N, CR
+#: 701.41a; Earthbend N, CR 701.66a).
+_MAY_NAME_A_TARGET_RE = re.compile(r"target|support|earthbend", re.I)
+
+
 def _target_sentence_groups(whole: str) -> list[tuple[str, int]] | None:
     """`whole`'s sentences grouped so each group opens with a sentence that
     names its own "target" (CR 601.2c) and carries the targetless sentences
@@ -3575,11 +3581,15 @@ def _target_sentence_groups(whole: str) -> list[tuple[str, int]] | None:
     text and how many target requirements it opens with. `None` when a
     sentence names a target this cannot attribute, or one leans on an
     earlier group's object ahead of its own target."""
+    if len(_MAY_NAME_A_TARGET_RE.findall(whole)) < 2:  # two groups, two targets
+        return None
     groups: list[tuple[list[str], int]] = []
     leading: list[str] = []
     for sentence in _plain_resolution_sentences(whole):
-        own = profile_for_text(sentence)
-        count = len(own.requirements) if own.understood else 0
+        count = 0
+        if _MAY_NAME_A_TARGET_RE.search(sentence):
+            own = profile_for_text(sentence)
+            count = len(own.requirements) if own.understood else 0
         if count == 0:
             if re.search(r"\btargets?\b", sentence, re.I):
                 return None

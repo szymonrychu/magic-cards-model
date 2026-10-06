@@ -489,6 +489,8 @@ def damage_then_followup_spell_effect(effect_text: str) -> Any:
         _targets_understood,
     )
 
+    if "damage" not in effect_text.lower():  # the head or its controller rider deals it
+        return None
     sentences = _plain_resolution_sentences(_strip_non_effect_preamble(effect_text))
     if len(sentences) < 1:
         return None
