@@ -3065,6 +3065,21 @@ _TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE = re.compile(
     r"\bthat targets only a single creature you control\b", re.IGNORECASE
 )
 
+#: "Put a +1/+1 counter on target creature you control if its power is 4 or
+#: greater." (Ent's Fury): the trailing "if ..." is a condition on the
+#: counter instruction, checked as that instruction resolves (CR 608.2c), not
+#: a requirement of the target (CR 115.1, CR 601.2c) - a 3-power creature is a
+#: legal target that simply gets no counter, and the rest of the spell (the
+#: pump, the fight) still applies to it. Read as part of the target phrase it
+#: made the spell refuse every creature with less power at announcement.
+#: Only a counter-placing instruction is cut this way, so Fatal Push's "Destroy
+#: target creature if it has mana value 2 or less" is unchanged.
+_COUNTER_ON_TARGET_IF_STAT_CONDITION = re.compile(
+    r"(\bput\b[^.]*?\bcounters?\b[^.]*?\btarget\b[^.]*?) if its (?:power|toughness) is "
+    r"(?:x|\d+) or (?:less|greater)(?=[.,]|$)",
+    re.IGNORECASE,
+)
+
 #: "... with a single target" (Bolt Bend's "Change the target of target spell
 #: or ability with a single target") - CR 115.9a's "[spell or ability] with [a
 #: number of] targets", a *property of the thing being targeted*, not a second
@@ -4350,6 +4365,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _COST_INCREASE_PER_TARGET_LINE.sub("", text)
     text = _COPY_TARGETS_DECLARATION.sub("", text)
     text = _TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE.sub("", text)
+    text = _COUNTER_ON_TARGET_IF_STAT_CONDITION.sub(r"\1", text)
     text = _SINGLE_TARGET_RESTRICTION.sub(_SINGLE_TARGET_PLACEHOLDER, text)
     mentions = len(_TARGET_WORD.findall(text))
     if not mentions:

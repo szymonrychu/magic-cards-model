@@ -5,7 +5,7 @@ from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
 
-from ...data.subtypes import canonical_subtype
+from ...data.subtypes import canonical_subtype, creature_type_vocabulary
 from ...models.card import Color, Type, types_of
 from ...models.card_state import (
     CardState,
@@ -80,6 +80,7 @@ from ..layers import (
     all_permanents_controlled_by,
     creatures_controlled_by,
     creatures_controlled_by_opponents_of,
+    creatures_controlled_by_with_subtype,
     every_creature,
     genuine_resolution_layer_text,
     grant_ability,
@@ -479,32 +480,66 @@ def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | Non
             for target in game.resolve_targets(ability)
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
         ]
-        if not targets:
-            return
-        target = targets[0]
-        source = ability.source(game)
-        source_name = source.name if source is not None else ability.source_name
-        controller = game.controller_of(ability)
-        color = _choose_a_color(
-            game,
-            controller,
-            source_name,
-            f"choose a color for {source_name}'s protection",
-            source_id=source_id_of(ability),
-        )
-        store = continuous_effects(game)
-        store.add(
-            ContinuousEffect(
-                description=f"{source_name}: {target.name} has protection from {color.value}",
-                layer=Layer.ABILITY,
-                timestamp=store.tick(),
-                duration=Duration.UNTIL_END_OF_TURN,
-                selector=_only(target.id),
-                modification=grant_ability(f"Protection from {_COLOR_NAME[color]}"),
-            )
-        )
+        if targets:
+            _grant_chosen_color_protection(game, ability, targets[0])
 
     return effect
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_protection_from_chosen_color_spell(text: str) -> Effect | None:
+    """A spell whose first sentence is `_PROTECTION_FROM_CHOSEN_COLOR_RE`'s
+    clause (Gods Willing, Center Soul), with the sentences after it (Gods
+    Willing's "Scry 1.") read as the ordinary instructions that follow it (CR
+    608.2c). Without this the spell went to `create_continuous_effect`, which
+    cannot name a colour chosen at resolution and recorded a `LayerNotice`."""
+    if "protection from the color of your choice" not in text.lower():
+        return None
+    sentences = _plain_resolution_sentences(" ".join(_strip_non_effect_preamble(text).split()))
+    if not sentences:
+        return None
+    protection = _parse_protection_from_chosen_color_clause(sentences[0])
+    if protection is None:
+        return None
+    if len(sentences) == 1:
+        return protection  # type: ignore[return-value]
+    rest = _spell_effect_or_notice(" ".join(sentences[1:]))
+    if rest is None or _is_notice_only(rest):
+        return None
+    return sequence(protection, rest)  # type: ignore[arg-type]
+
+
+def _grant_chosen_color_protection(
+    game: "Game", stack_object: "StackObject", target: CardState
+) -> None:
+    """CR 608.2d: the resolving spell's or ability's controller names a colour,
+    and `target` gains "Protection from <that colour>" (CR 702.16a) in layer 6
+    (CR 613.1f) until end of turn (CR 611.2a). Shared by the targeted "gains
+    protection from the color of your choice" clause above and the anaphoric
+    "It gains protection from the color of your choice" rider."""
+    if isinstance(stack_object, CardState):
+        source_name = stack_object.name
+    else:
+        source = stack_object.source(game)
+        source_name = source.name if source is not None else stack_object.source_name
+    color = _choose_a_color(
+        game,
+        game.controller_of(stack_object),
+        source_name,
+        f"choose a color for {source_name}'s protection",
+        source_id=source_id_of(stack_object),
+    )
+    store = continuous_effects(game)
+    store.add(
+        ContinuousEffect(
+            description=f"{source_name}: {target.name} has protection from {color.value}",
+            layer=Layer.ABILITY,
+            timestamp=store.tick(),
+            duration=Duration.UNTIL_END_OF_TURN,
+            selector=_only(target.id),
+            modification=grant_ability(f"Protection from {_COLOR_NAME[color]}"),
+        )
+    )
 
 
 #: "Until end of turn, Mondo Gecko becomes the color of your choice and gains
@@ -10006,6 +10041,58 @@ _GROUP_CANT_BLOCK_THIS_TURN_RE = re.compile(
 )
 
 
+#: "<Creature type>s can't block this turn." (Pyrophobia's "Cowards can't
+#: block this turn.") - CR 509.1b's restriction on every creature of a CR
+#: 205.3m creature type, whoever controls it. A changeling is every creature
+#: type (CR 702.73a), so it is included, read off the computed board.
+_CREATURE_TYPE_CANT_BLOCK_THIS_TURN_RE = re.compile(
+    r"^(?P<plural>[a-z][a-z'\u2019-]*) can(?:'|\u2019)?t block this turn\.?$", re.IGNORECASE
+)
+
+
+def _parse_creature_type_cant_block_this_turn_clause(clause: str) -> TargetedClause | None:
+    """`_CREATURE_TYPE_CANT_BLOCK_THIS_TURN_RE`'s shape, or `None`.
+
+    Like `_parse_group_cant_block_this_turn_clause`'s own groups it is a live
+    selector, not a set fixed as the spell resolves: "can't block" changes no
+    characteristic and no controller, so CR 611.2c does not lock it, and a
+    creature that becomes (or enters as) a member later this turn is
+    restricted too. The selector names a controller, so one effect is added
+    per player in the game."""
+    if "block this turn" not in clause.lower():
+        return None
+    match = _CREATURE_TYPE_CANT_BLOCK_THIS_TURN_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    word = canonical_subtype(match.group("plural"))
+    creature_type = next(
+        (each for each in creature_type_vocabulary() if each.lower() == word), None
+    )
+    if creature_type is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        store = continuous_effects(game)
+        for player in game.players:
+            store.add(
+                ContinuousEffect(
+                    description=f"{source_name}: {creature_type}s can't block this turn",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=creatures_controlled_by_with_subtype(player.username, [creature_type]),
+                    modification=grant_ability("This creature can't block."),
+                )
+            )
+
+    return effect
+
+
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_group_cant_block_this_turn_clause(
     clause: str, *, for_spell: bool
@@ -10021,7 +10108,7 @@ def _parse_group_cant_block_this_turn_clause(
     nobody (CR 608.2b), so nothing is restricted."""
     match = _GROUP_CANT_BLOCK_THIS_TURN_RE.fullmatch(" ".join(clause.split()))
     if match is None:
-        return None
+        return _parse_creature_type_cant_block_this_turn_clause(clause)
     target_phrase = match.group("target")
     if target_phrase is not None and not _targets_understood(
         target_phrase, battlefield_only=False, allow_player_targets=True
@@ -10648,6 +10735,353 @@ def _parse_target_you_control_then_fights_ability(text: str) -> TargetedClause |
     return _target_you_control_then_fights(text, for_spell=False)
 
 
+#: A counter or a pump on "target creature you control", then it fights or
+#: bites (NW-03 T5): Ancient Animus' "Put a +1/+1 counter on target creature
+#: you control if it's legendary. Then it fights target creature an opponent
+#: controls.", Ent's Fury's "... if its power is 4 or greater. Then that
+#: creature gets +1/+1 until end of turn and fights target creature you don't
+#: control.", Throw from the Saddle's "Target creature you control gets +1/+1
+#: until end of turn. Put a +1/+1 counter on it instead if it's a Mount. Then
+#: it deals damage equal to its power to target creature you don't control."
+#:
+#: One CR 608.2c sequence over the same two targets `_parse_pump_then_fight_
+#: clause_pair` splits by controller: the printed "if" is its own condition,
+#: asked of the creature as that instruction resolves (never at announcement,
+#: CR 601.2c) and answered by `Game.condition_holds` with the creature as the
+#: object "it" names; "instead" replaces the pump with the counter (CR
+#: 614.1a); the fight (CR 701.14a) or the bite (CR 120.3, damage with no
+#: damage back) follows whatever the first instructions did, since a failed
+#: condition does not stop "Then it fights".
+_CHAIN_COUNTER_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?P<phrase>target (?:(?:non)?(?:white|blue|black|red|green) )?creature you control)"
+    r"(?: if (?P<cond>.+))?$",
+    re.IGNORECASE,
+)
+_CHAIN_INSTEAD_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|that creature) "
+    r"instead if (?P<cond>.+)$",
+    re.IGNORECASE,
+)
+_CHAIN_FIGHT_RE = re.compile(
+    r"^(?:it|that creature)(?: gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn"
+    r" and)? fights (?P<phrase>(?:up to \S+ )?target .+)$",
+    re.IGNORECASE,
+)
+_CHAIN_BITE_RE = re.compile(
+    r"^(?:it|that creature) deals damage equal to its power to "
+    r"(?P<phrase>(?:up to \S+ )?target .+)$",
+    re.IGNORECASE,
+)
+_CHAIN_CONDITION_SUBJECT_RE = re.compile(r"^(?:it|its|it's|that creature)\b", re.IGNORECASE)
+
+
+def _creature_condition_holds(
+    game: "Game",
+    stack_object: "StackObject",
+    creature: CardState,
+    condition: str,
+    text: str,
+) -> bool:
+    """`condition` asked of `creature` as the object "it" names (CR 608.2c).
+    One the shared reader cannot answer fails closed with a notice."""
+    held = game.condition_holds(game.controller_of(stack_object).username, condition, creature)
+    if held is not None:
+        return held
+    notice = ConditionalClauseNotice(
+        source_id=source_id_of(stack_object),
+        source_name=(
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        ),
+        text=text,
+    )
+    if notice not in game.conditional_clause_notices:
+        game.conditional_clause_notices.append(notice)
+    return False
+
+
+def _target_you_control_chain(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """The counter-or-pump-then-fight-or-bite sequences above, or `None`.
+
+    Only the shapes `_parse_pump_then_fight_clause_pair` and the plain bite
+    readers do not already read are claimed here: a conditional counter, an
+    "instead" counter after a pump, or a fight rider that pumps as well."""
+    lowered = text.lower()
+    if "you control" not in lowered or not (
+        "fights" in lowered or "deals damage equal to its power" in lowered
+    ):
+        return None
+    sentences = [
+        sentence.strip().rstrip(".").strip()
+        for sentence in _plain_resolution_sentences(
+            " ".join(_strip_non_effect_preamble(text).split())
+        )
+    ]
+    if len(sentences) not in (2, 3):
+        return None
+    pump = _PUMP_TARGET_YOU_CONTROL_RE.fullmatch(sentences[0])
+    counter = None if pump is not None else _CHAIN_COUNTER_RE.fullmatch(sentences[0])
+    if pump is None and counter is None:
+        return None
+    instead = None
+    if len(sentences) == 3:
+        if pump is None:
+            return None
+        instead = _CHAIN_INSTEAD_RE.fullmatch(sentences[1])
+        if instead is None:
+            return None
+    rider_text = re.sub(r"^then\s+", "", sentences[-1], flags=re.IGNORECASE)
+    fight = _CHAIN_FIGHT_RE.fullmatch(rider_text)
+    bite = None if fight is not None else _CHAIN_BITE_RE.fullmatch(rider_text)
+    if fight is None and bite is None:
+        return None
+    gated = counter is not None and counter.group("cond") is not None
+    if not (gated or instead is not None or (fight is not None and fight.group("power"))):
+        return None
+    antecedent = pump if pump is not None else counter
+    assert antecedent is not None
+    victim_phrase = (fight or bite).group("phrase")  # type: ignore[union-attr]
+    if not _targets_understood(antecedent.group("phrase"), count_agnostic=True):
+        return None
+    if not _targets_understood(victim_phrase, count_agnostic=True):
+        return None
+    conditions = [
+        group
+        for group in (
+            counter.group("cond") if counter is not None else None,
+            instead.group("cond") if instead is not None else None,
+        )
+        if group is not None
+    ]
+    for condition in conditions:
+        condition = condition.strip()
+        if _CHAIN_CONDITION_SUBJECT_RE.match(condition) is None:
+            return None
+        if not _effect_condition_is_readable(condition, allow_anaphor=True):
+            return None
+
+    def pump_builder(power: str, toughness: str):
+        return parsed_layer_effects(f"Target creature gets {power}/{toughness} until end of turn.")
+
+    antecedent_builder = (
+        pump_builder(pump.group("power"), pump.group("toughness")) if pump is not None else None
+    )
+    rider_builder = (
+        pump_builder(fight.group("power"), fight.group("toughness"))
+        if fight is not None and fight.group("power")
+        else None
+    )
+    if (pump is not None and antecedent_builder is None) or (
+        fight is not None and fight.group("power") and rider_builder is None
+    ):
+        return None
+    counter_source = instead if instead is not None else counter
+    amount = parse_count(counter_source.group("n")) if counter_source is not None else None
+    if counter_source is not None and amount is None:
+        return None
+    kind = _counter_kind(counter_source.group("kind")) if counter_source is not None else None
+    sentence_text = " ".join(sentences)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        mine = [t for t in targets if game.controller_of(t).username == controller.username]
+        theirs = [t for t in targets if game.controller_of(t).username != controller.username]
+        if not mine:
+            return
+        creature = mine[0]
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        if source is None:
+            return
+        effects = game.continuous_effects
+
+        def pump_creature(builder) -> None:
+            for built in builder(
+                source, effects.tick(), [creature], layer_context_for(game, controller)
+            ):
+                effects.add(built, game)
+
+        if antecedent_builder is not None:
+            if instead is not None and _creature_condition_holds(
+                game, stack_object, creature, instead.group("cond").strip(), sentence_text
+            ):
+                game.add_counters(creature, kind, amount)
+            else:
+                pump_creature(antecedent_builder)
+        elif counter.group("cond") is None or _creature_condition_holds(  # type: ignore[union-attr]
+            game,
+            stack_object,
+            creature,
+            counter.group("cond").strip(),
+            sentence_text,  # type: ignore[union-attr]
+        ):
+            game.add_counters(creature, kind, amount)
+        if rider_builder is not None:
+            pump_creature(rider_builder)
+        if bite is not None:
+            _resolve_bite_damage(game, stack_object, "power")
+            return
+        if not theirs:
+            return  # CR 115.6: "up to one" chose none, so nothing fights.
+        opponent = theirs[0]
+        if not game.characteristics_of(creature).is_creature:
+            return  # CR 701.14b
+        if not game.characteristics_of(opponent).is_creature:
+            return  # CR 701.14b
+        _fight(game, creature, opponent)
+
+    return effect
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_target_you_control_chain_spell(text: str) -> TargetedClause | None:
+    """`_target_you_control_chain` on a resolving spell."""
+    return _target_you_control_chain(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s11")
+def _parse_target_you_control_chain_ability(text: str) -> TargetedClause | None:
+    """`_target_you_control_chain` on a resolving ability."""
+    return _target_you_control_chain(text, for_spell=False)
+
+
+#: "<Antecedent>. It gains protection from the color of your choice until end
+#: of turn." (Feat of Resistance after its counter, Pristine Skywise after
+#: "Untap this creature.") and "<Antecedent>. Those creatures can't block this
+#: turn." (Sparkmage's Gambit, Wrap in Flames, Rowan, Fearless Sparkmage's -2):
+#: a second sentence whose "it"/"those creatures" is whatever the first one
+#: acted on (CR 608.2c), found by `_referent_reader` before the first runs.
+#: Each referent that is still on the battlefield afterwards gets the rider;
+#: one the antecedent removed, or that was no longer a legal target (CR
+#: 608.2b), gets nothing, and no colour is asked for when none is left.
+_ANAPHOR_PROTECTION_RE = re.compile(
+    r"^(?:it|that (?:creature|permanent)) gains protection from the color of your choice "
+    r"until end of turn$",
+    re.IGNORECASE,
+)
+#: "If it's legendary, it also gains trample until end of turn." (Gimli's Fury,
+#: Blessing of Belzenlok) - a conditional rider on what the antecedent acted
+#: on. The condition is asked of the referent itself (CR 205.4d's supertype,
+#: read off its computed characteristics as the instruction resolves, CR
+#: 608.2c), not of the spell, and "also" only says the grant adds to the
+#: antecedent's effect.
+_CONDITIONAL_ALSO_RIDER_RE = re.compile(
+    r"^if (?P<condition>(?:it|that creature)(?:'s| is| has)\b[^,]*), "
+    r"(?P<rider>(?:it|that creature) also (?:gains|gets|has) .+)$",
+    re.IGNORECASE,
+)
+_THOSE_CANT_RE = re.compile(
+    r"^those (?:creatures|permanents) can['\u2019]?t (?P<what>block|attack) this turn$",
+    re.IGNORECASE,
+)
+
+
+def _antecedent_then_referent_rider(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """The two sentences `_ANAPHOR_PROTECTION_RE` and `_THOSE_CANT_RE` close, or
+    `None`."""
+    lowered = text.lower()
+    if not (
+        "protection from the color of your choice" in lowered
+        or "those " in lowered
+        or " also gains " in lowered
+    ):
+        return None
+    sentences = [
+        sentence.strip().rstrip(".").strip()
+        for sentence in _plain_resolution_sentences(
+            " ".join(_strip_non_effect_preamble(text).split())
+        )
+    ]
+    if len(sentences) != 2:
+        return None
+    first, second = sentences
+    protection = _ANAPHOR_PROTECTION_RE.fullmatch(second)
+    cant = None if protection is not None else _THOSE_CANT_RE.fullmatch(second)
+    conditional = (
+        None
+        if protection is not None or cant is not None
+        else _CONDITIONAL_ALSO_RIDER_RE.fullmatch(second)
+    )
+    if protection is None and cant is None and conditional is None:
+        return None
+    granted = None
+    if conditional is not None:
+        condition = conditional.group("condition").strip()
+        if not _effect_condition_is_readable(condition, allow_anaphor=True):
+            return None
+        granted = _parse_referent_object_clause(
+            re.sub(r"\balso\s+", "", conditional.group("rider"), count=1, flags=re.IGNORECASE)
+        )
+        if granted is None:
+            return None
+    referent_of = _referent_reader(first)
+    if referent_of is None:
+        return None
+    first_sentence = f"{first}."
+    antecedent = (
+        parse_mixed_effect_for_spell(first_sentence)
+        if for_spell
+        else parse_mixed_effect(first_sentence)
+    )
+    if antecedent is None or _is_notice_only(antecedent):
+        return None
+    line = f"This creature can't {cant.group('what').lower()}." if cant is not None else ""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        referents = referent_of(game, stack_object)
+        antecedent(game, stack_object)
+        referents = [r for r in referents if r.zone is Zone.BATTLEFIELD]
+        if not referents:
+            return  # CR 608.2b: nothing left for the rider to name.
+        if protection is not None:
+            _grant_chosen_color_protection(game, stack_object, referents[0])
+            return
+        if granted is not None:
+            for referent in referents:
+                if _creature_condition_holds(game, stack_object, referent, condition, second):
+                    granted(game, [referent], stack_object)
+            return
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        store = continuous_effects(game)
+        for referent in referents:
+            store.add(
+                ContinuousEffect(
+                    description=f"{source_name}: {referent.name} {line[5:-1].lower()} this turn",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(referent, referent.zone_change_stamp),
+                    modification=grant_ability(line),
+                )
+            )
+
+    return effect
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_antecedent_then_referent_rider_spell(text: str) -> TargetedClause | None:
+    """`_antecedent_then_referent_rider` on a resolving spell."""
+    return _antecedent_then_referent_rider(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s11")
+def _parse_antecedent_then_referent_rider_ability(text: str) -> TargetedClause | None:
+    """`_antecedent_then_referent_rider` on a resolving ability."""
+    return _antecedent_then_referent_rider(text, for_spell=False)
+
+
 from ._common import (  # noqa: E402
     _ANAPHOR_GAINS_KEYWORDS_RE,
     _COST_INCREASE_PER_TARGET_LINE_RE,
@@ -10711,6 +11145,7 @@ from .text import (  # noqa: E402
     _parse_referent_object_clause,
     _plain_resolution_sentences,
     _referent_of_it,
+    _referent_reader,
     _self_referential_delayed_effect,
     _singular_subtype_for_transform_all,
     _split_choice_keywords,
