@@ -5,18 +5,18 @@
     "modes": [],
     "on_stack": true,
     "source": "Night Nurse, Healer of Heroes@alice#1",
-    "targets": ["Grizzly Bears@alice#2"],
+    "targets": ["Memnite@alice#2"],
     "x": 0
   },
   "board": {
-    "busy_turn": false,
+    "busy_turn": true,
     "entering": [],
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Intangible Virtue", "Serra Angel", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Snow-Covered Forest", "Snow-Covered Forest", "Snow-Covered Forest"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Night Nurse, Healer of Heroes"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Night Nurse, Healer of Heroes", "Giant Growth", "Memnite", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -29,7 +29,7 @@
     "step": "precombat_main",
     "tapped": [],
     "tokens": [],
-    "variant": "quiet",
+    "variant": "busy",
     "war_turn": false
   },
   "card": "Night Nurse, Healer of Heroes",
@@ -39,7 +39,7 @@
     "fields_changed": ["known_carries"],
     "notices": {},
     "objects": {
-      "Grizzly Bears@alice#2": {
+      "Memnite@alice#2": {
         "zone": ["graveyard", "hand"]
       }
     },
@@ -56,6 +56,6 @@
     "params": {
       "tapped": false
     },
-    "variant": "quiet"
+    "variant": "busy"
   }
 }

@@ -129,6 +129,7 @@ from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.machines.special_actions import locked_doors
 from magic_cards_model.machines.speed import effective_speed, increase_speed
 from magic_cards_model.machines.targeting import (
+    _KEYWORD_FAMILIES,
     CombatState,
     ControllerRestriction,
     TargetRequirement,
@@ -974,6 +975,20 @@ def _quick_fit(card: Card, requirement: TargetRequirement) -> bool:
         return False
     if requirement.color_count == "colorless" and card.colors:
         return False
+    # Card-in-zone qualifiers the printing alone settles, mirroring the
+    # requirement's own rejectors: "named <name>" (CR 201.2), "that has an
+    # Adventure" (CR 715.1), "with cycling"/"with a kicker ability" (any
+    # printed keyword of the family, CR 702.29/702.33c).
+    if requirement.required_name is not None and requirement.required_name not in {
+        part.strip().lower() for part in card.name.split("//")
+    }:
+        return False
+    if requirement.must_have_adventure and card.layout is not Layout.ADVENTURE:
+        return False
+    if requirement.required_keyword in _KEYWORD_FAMILIES and not any(
+        word.lower().endswith(requirement.required_keyword) for word in card.keywords
+    ):
+        return False
     return not requirement.excluded_colors & set(card.colors or ())
 
 
@@ -1202,8 +1217,15 @@ def _find_material(requirement: TargetRequirement) -> Material | None:
                     return candidate
     tried = 0
     for card in _format_pool():
-        if card.card_faces or not _quick_fit(card, requirement):
+        if not _quick_fit(card, requirement):
             continue
+        name = card.name
+        if card.card_faces:
+            # A two-part card is staged by its front face; only an
+            # adventurer (CR 715.1) is tried, for "that has an Adventure".
+            if not (requirement.must_have_adventure and card.layout is Layout.ADVENTURE):
+                continue
+            name = card.card_faces[0].name
         for zone in zones:
             if zone is Zone.BATTLEFIELD and not set(card.types) & _PERMANENT_TYPES:
                 continue
@@ -1212,7 +1234,7 @@ def _find_material(requirement: TargetRequirement) -> Material | None:
                 if tried > 40:
                     return None
                 candidate = Material(
-                    card.name, owner, zone, tapped, entered, requirement.required_counter_kind
+                    name, owner, zone, tapped, entered, requirement.required_counter_kind
                 )
                 saved = _STAGING.material
                 _STAGING.material = (candidate,)
@@ -1221,7 +1243,7 @@ def _find_material(requirement: TargetRequirement) -> Material | None:
                 finally:
                     _STAGING.material = saved
                 try:
-                    staged = _last(scenario, card.name, zone, owner)
+                    staged = _last(scenario, name, zone, owner)
                 except _Unavailable:
                     continue
                 if requirement.rejects(staged, ALICE, scenario.game, None) is None:
