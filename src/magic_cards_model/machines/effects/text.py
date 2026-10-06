@@ -189,7 +189,10 @@ def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
 
 
 #: "`<self>` is all colors." (Awaken the Maelstrom, Sphinx of the Guildpact's
-#: identical line on a permanent) is CR 604.3's characteristic-defining
+#: identical line on a permanent) and "`<self>` is colorless." (Ghostfire, CR
+#: 105.2c - the card's colour is already the printing's empty `colors`, never
+#: derived from its {2}{R} cost, CR 202.2's cost-derived colour being the
+#: default a CDA overrides) are CR 604.3's characteristic-defining
 #: ability: it functions in every zone, including on the stack, and - unlike
 #: everything else `effect_for` reads - it is not a CR 608.2c resolution
 #: instruction at all, so it never goes on the stack and never "runs".
@@ -202,12 +205,13 @@ def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
 #: `_spell_effect_or_notice` as though it were one of the spell's own
 #: instructions (CR 608.2c has no verb "is" among its resolution steps).
 def _strip_self_is_all_colors_sentence(card_name: str, text: str) -> str:
-    if " is all colors" not in text.lower():
+    lowered = text.lower()
+    if " is all colors" not in lowered and " is colorless" not in lowered:
         return text
     names = {card_name, card_name.split("//")[0].strip()}
     pattern = re.compile(
         r"^(?:" + "|".join(re.escape(name) for name in sorted(names, key=len, reverse=True)) + r") "
-        r"is all colors\.\s*",
+        r"is (?:all colors|colorless)\.\s*",
         re.IGNORECASE,
     )
     return pattern.sub("", text, count=1)

@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "59587fde-c3f9-48c3-b991-46abb5423314",
+  "oracle_id": "6de27cba-5500-4448-abef-68e69fe519dc",
+  "multiverse_ids": [
+    338473
+  ],
+  "mtgo_id": 46162,
+  "mtgo_foil_id": 46163,
+  "tcgplayer_id": 66379,
+  "cardmarket_id": 258177,
+  "name": "Vigor Mortis",
+  "lang": "en",
+  "released_at": "2012-09-07",
+  "uri": "https://api.scryfall.com/cards/59587fde-c3f9-48c3-b991-46abb5423314",
+  "scryfall_uri": "https://scryfall.com/card/ddj/74/vigor-mortis?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:59:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.jpg?1783940393",
+    "normal": "https://cards.scryfall.io/normal/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.jpg?1783940393",
+    "large": "https://cards.scryfall.io/large/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.jpg?1783940393",
+    "png": "https://cards.scryfall.io/png/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.png?1783940393",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.jpg?1783940393",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.jpg?1783940393",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.webp?1783940393",
+    "grid": "https://cards.scryfall.io/grid/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.webp?1783940393",
+    "display": "https://cards.scryfall.io/display/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.webp?1783940393",
+    "art": "https://cards.scryfall.io/art/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.webp?1783940393",
+    "crop": "https://cards.scryfall.io/crop/front/5/9/59587fde-c3f9-48c3-b991-46abb5423314.webp?1783940393"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Return target creature card from your graveyard to the battlefield. If {G} was spent to cast this spell, that creature enters with an additional +1/+1 counter on it.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "2dfea68b-b0c4-4f63-ba6c-36c9a6e3030f",
+  "set": "ddj",
+  "set_name": "Duel Decks: Izzet vs. Golgari",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/2dfea68b-b0c4-4f63-ba6c-36c9a6e3030f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/59587fde-c3f9-48c3-b991-46abb5423314/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6de27cba-5500-4448-abef-68e69fe519dc&unique=prints",
+  "collector_number": "74",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "golgari",
+  "flavor_text": "After fear and weakness rot away, that which remains is stronger than its living form.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Dan Murayama Scott",
+  "artist_ids": [
+    "f852fa13-137e-40f2-bbc1-0f01df09c0e0"
+  ],
+  "illustration_id": "628bc225-f898-453c-81bb-faf29d328fba",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 18420,
+  "penny_rank": 7680,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.32",
+    "eur_foil": null,
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=338473&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVigor%2BMortis",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVigor%2BMortis",
+    "edhrec": "https://edhrec.com/route/?cc=Vigor+Mortis"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F66379%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=258177&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/46162?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

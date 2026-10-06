@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "a7abbd14-936e-4b46-8d5b-9071990bdcf6",
+  "oracle_id": "eb2524ae-899a-4f91-9feb-0716cf689db3",
+  "multiverse_ids": [
+    651925
+  ],
+  "mtgo_id": 123172,
+  "tcgplayer_id": 535176,
+  "cardmarket_id": 753160,
+  "name": "Firespout",
+  "lang": "en",
+  "released_at": "2024-02-23",
+  "uri": "https://api.scryfall.com/cards/a7abbd14-936e-4b46-8d5b-9071990bdcf6",
+  "scryfall_uri": "https://scryfall.com/card/clu/190/firespout?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:15:21Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.jpg?1783912521",
+    "normal": "https://cards.scryfall.io/normal/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.jpg?1783912521",
+    "large": "https://cards.scryfall.io/large/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.jpg?1783912521",
+    "png": "https://cards.scryfall.io/png/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.png?1783912521",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.jpg?1783912521",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.jpg?1783912521",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.webp?1783912521",
+    "grid": "https://cards.scryfall.io/grid/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.webp?1783912521",
+    "display": "https://cards.scryfall.io/display/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.webp?1783912521",
+    "art": "https://cards.scryfall.io/art/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.webp?1783912521",
+    "crop": "https://cards.scryfall.io/crop/front/a/7/a7abbd14-936e-4b46-8d5b-9071990bdcf6.webp?1783912521"
+  },
+  "mana_cost": "{2}{R/G}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Firespout deals 3 damage to each creature without flying if {R} was spent to cast this spell and 3 damage to each creature with flying if {G} was spent to cast this spell. (Do both if {R}{G} was spent.)",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d4bfabcf-a859-43a4-9d8a-665533c8b174",
+  "set": "clu",
+  "set_name": "Ravnica: Clue Edition",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/d4bfabcf-a859-43a4-9d8a-665533c8b174",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aclu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/clu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a7abbd14-936e-4b46-8d5b-9071990bdcf6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aeb2524ae-899a-4f91-9feb-0716cf689db3&unique=prints",
+  "collector_number": "190",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "gruul",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jeff Miracola",
+  "artist_ids": [
+    "9b465bde-3656-4495-ace4-af4ce29999ed"
+  ],
+  "illustration_id": "2717c3f0-f269-49b3-af23-d37c3e4aa031",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 23111,
+  "penny_rank": 2027,
+  "prices": {
+    "usd": "0.41",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.24",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=651925&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFirespout",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFirespout",
+    "edhrec": "https://edhrec.com/route/?cc=Firespout"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535176%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=753160&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/123172?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
