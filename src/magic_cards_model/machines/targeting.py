@@ -1991,6 +1991,18 @@ class Division(EngineModel):
     or plain-X division that carries no such clause."""
 
 
+def _player_named_by(target: Any) -> str | None:
+    """The player a chosen target names for "that player": the player
+    itself, or a permanent's controller (owner when it has none)."""
+    if isinstance(target, str):
+        return target
+    username = getattr(target, "username", None)
+    if username is not None:
+        return str(username)
+    found = getattr(target, "controller_or_owner", None) or getattr(target, "controller", None)
+    return None if found is None else str(found)
+
+
 class TargetingProfile(EngineModel):
     """Everything one card's text asks it to target."""
 
@@ -2261,7 +2273,38 @@ class TargetingProfile(EngineModel):
         self, targets: list[Any], caster: str, game: Any, source_id: UUID | None
     ) -> None:
         """`ControllerRestriction.PRIOR_TARGET_PLAYER`, across the whole
-        announcement (CR 601.2c)."""
+        announcement (CR 601.2c).
+
+        Read by the requirement each target filled (`assign_slots`) when every
+        target fills one: Mutiny's anchor and dependent are both "creature"
+        requirements, so a target that would also fit the anchor is still
+        checked when it was announced for the dependent."""
+        slots = self.assign_slots(list(targets), caster, game, source_id)
+        if targets and all(slot is not None for slot in slots):
+            for position, requirement in enumerate(self.requirements):
+                if (
+                    requirement.controller is not ControllerRestriction.PRIOR_TARGET_PLAYER
+                    or position == 0
+                ):
+                    continue
+                anchors = [t for t, s in zip(targets, slots, strict=True) if s == position - 1]
+                if not anchors:
+                    continue
+                anchor = _player_named_by(anchors[0])
+                if anchor is None:
+                    continue
+                for target, slot in zip(targets, slots, strict=True):
+                    if slot != position or isinstance(target, str):
+                        continue
+                    if getattr(target, "username", None) is not None:
+                        continue
+                    found = _player_named_by(target)
+                    if found is not None and found != anchor:
+                        raise ValueError(
+                            f"{requirement.phrase} needs a creature {anchor} controls, and "
+                            f"{target.name} is not (CR 601.2c)"
+                        )
+            return
         for requirement in self.requirements:
             if requirement.controller is not ControllerRestriction.PRIOR_TARGET_PLAYER:
                 continue
@@ -2957,6 +3000,13 @@ _ANY_TARGET = re.compile(r"\bany target\b", re.IGNORECASE)
 #: `_TARGET_WORD` scan below, which reads its "other" as `excludes_source`
 #: exactly as it always did.
 _ANY_OTHER_TARGET = re.compile(r"\bany other target\b", re.IGNORECASE)
+#: Self-Destruct's "deals X damage to any other target and X damage to
+#: itself": the noun-less "any other target" ends at the "and" that starts
+#: the next recipient (no further "target" in the sentence), so the "and X"
+#: after it is not a noun of the phrase. Cut there for the scan alone.
+_ANY_OTHER_TARGET_THEN_AND = re.compile(
+    r"\b(any other target)(?=\s+and\s+(?![^.;]*\btarget))", re.IGNORECASE
+)
 #: Cone of Flame's "1 damage to any target, 2 damage to another target, and 3
 #: damage to a third target" (CR 115.1, CR 115.3): a bare "another target" or
 #: "a second/third target", with no noun after it, is the same paired idiom as
@@ -4367,6 +4417,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _TARGETS_ONLY_SINGLE_CREATURE_CONDITION_CLAUSE.sub("", text)
     text = _COUNTER_ON_TARGET_IF_STAT_CONDITION.sub(r"\1", text)
     text = _SINGLE_TARGET_RESTRICTION.sub(_SINGLE_TARGET_PLACEHOLDER, text)
+    text = _ANY_OTHER_TARGET_THEN_AND.sub(r"\1;", text)
     mentions = len(_TARGET_WORD.findall(text))
     if not mentions:
         return TargetingProfile()
@@ -4470,6 +4521,22 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
             # a different object than that one (CR 115.3, Hostile Takeover).
             requirement = requirement.model_copy(
                 update={"excludes_source": False, "distinct_from_prior_requirement": True}
+            )
+        if (
+            requirement.controller is ControllerRestriction.EVENT_PLAYER
+            and position > 0
+            and requirements
+            and requirements[-1].controller is ControllerRestriction.OPPONENT
+            and not requirements[-1].allows_players
+            and not re.search(r"[.;]", text[scan[position - 1].end() : match.start()])
+        ):
+            # Mutiny's "target creature an opponent controls ... another
+            # target creature that player controls": "that player" is the
+            # opponent the same sentence's previous target named, not a
+            # trigger event's player - the creature must be controlled by
+            # whoever controls the target chosen for it (CR 601.2c).
+            requirement = requirement.model_copy(
+                update={"controller": ControllerRestriction.PRIOR_TARGET_PLAYER}
             )
         if (
             spell_only

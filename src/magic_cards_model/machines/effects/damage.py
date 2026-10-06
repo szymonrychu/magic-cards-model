@@ -1,7 +1,7 @@
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
 from ...data.creature_types import creature_types
@@ -60,8 +60,11 @@ from ..layers import (
     set_power_toughness,
 )
 from ..targeting import (
+    ControllerRestriction,
+    TargetingProfile,
     permanent_description,
     profile_for_text,
+    spell_profile_for_text,
 )
 from ..triggers import (
     AbilityOnStack,
@@ -2413,15 +2416,18 @@ _DAMAGE_TARGET_KICKED_INSTEAD_RE = re.compile(
 #: controller." (Chandra, Flame's Fury's -2) - the rider's player is read off
 #: the same resolved target the same way, just with no condition gating it.
 #: The target noun may be any permanent type the anaphor repeats ("that
-#: permanent's controller").
+#: permanent's controller"), or the bare possessive "its controller"
+#: (Neonate's Rush: "deals 1 damage to target creature and 1 damage to its
+#: controller").
 _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE = re.compile(
     rf"^(?P<subject>[^.]*?) deals? (?P<n>{COUNT}) damage to "
     r"(?P<phrase>[^.]*?target (?P<noun>creature|permanent|planeswalker|artifact|enchantment|land)"
     r"[^.]*?)"
     r"(?:\.\s*if (?P<condition>[^,]+), (?:it|this spell|(?P=subject)) also deals"
     r"|\.\s*(?:it|this spell|(?P=subject)) also deals|\s+and) "
-    rf"{count_pattern('extra_n', x=True)} damage to that "
-    r"(?:creature|permanent|planeswalker|artifact|enchantment|land|battle)'?s controller"
+    rf"{count_pattern('extra_n', x=True)} damage to "
+    r"(?:that (?:creature|permanent|planeswalker|artifact|enchantment|land|battle)'?s"
+    r"|(?P<its>its)) controller"
     rf"(?: if (?P<post_condition>[^.,]+?))?{where_x_pattern()}\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -2442,6 +2448,11 @@ def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Any
     if match is None:
         return None
     if not _targets_understood(match.group("phrase")):
+        return None
+    if match.group("its") is not None and "also deals" in whole.lower():
+        # "its controller" is the target's only in the one-sentence "and"
+        # form (Neonate's Rush); after "it also deals" the "its" would be the
+        # spell's own.
         return None
     condition_text = (
         match.group("condition") or match.group("post_condition") or ""
@@ -3954,50 +3965,290 @@ def _parse_target_fights_target_clause(clause: str, *, for_spell: bool) -> Targe
     return effect
 
 
+#: "<target X> deals damage equal to its power|loyalty to <victims>[, then
+#: each of those creatures deals damage equal to its power to that
+#: creature]." - the bite (CR 120.2b: the targeted creature is the source; CR
+#: 701.14 is never invoked). `<victims>` is either more targets of the same
+#: sentence ("any [other] target", "[another] target ...", "each of two other
+#: target creatures", "each of X target creatures and/or planeswalkers") or an
+#: untargeted group (CR 115.10: "each other creature [that player controls]",
+#: "each opponent", joined by "and each").
 _BITE_DAMAGE_RE = re.compile(
-    r"^target (?P<subject_kind>creature|planeswalker) you control deals damage equal to "
-    r"its (?P<stat>power|loyalty) to (?P<object>target .+)$",
+    r"^(?P<subject>target [^.]+?) deals damage equal to its (?P<stat>power|loyalty) to "
+    r"(?P<object>[^.]+?)"
+    r"(?P<retaliate>,? then each of those creatures deals damage equal to its power to "
+    r"that creature)?$",
+    re.IGNORECASE,
+)
+_TARGETED_VICTIMS_RE = re.compile(
+    r"^(?:each of )?(?P<phrase>(?:\S+ (?:other )?|another |any (?:other )?)?targets?\b.*)$",
     re.IGNORECASE,
 )
 
 
+class _BiteSlots(NamedTuple):
+    """Which "target" instance of a bite's own sentence is the biter (CR
+    601.2c): `profile` is that sentence's requirements as the caster announced
+    them, `biter` the index of the one the subject phrase filled. Every other
+    requirement is a victim."""
+
+    profile: TargetingProfile
+    biter: int
+
+
+def _bite_slots(clause: str, subject: str, *, for_spell: bool) -> _BiteSlots | None:
+    """`_BiteSlots` for one bite sentence, or `None` when its targets cannot be
+    told apart. The subject's requirement is the one whose phrase it printed;
+    when the victims print the same phrase ("target creature ... another target
+    creature") the subject is the first, as the sentence prints it (the scan
+    reads "target" words in order; only a bare "any target" is listed
+    first)."""
+    profile = (spell_profile_for_text if for_spell else profile_for_text)(clause)
+    if not profile.understood or len(profile.requirements) < 1:
+        return None
+    own = profile_for_text(subject)
+    if not own.understood or len(own.requirements) != 1:
+        return None
+    phrase = own.requirements[0].phrase.lower()
+    hits = [i for i, r in enumerate(profile.requirements) if r.phrase.lower() == phrase]
+    if not hits:
+        return None
+    biter = hits[0]
+    if profile.requirements[biter].count != 1 or profile.requirements[biter].minimum != 1:
+        return None
+    return _BiteSlots(profile, biter)
+
+
+def _clause_slots(
+    game: "Game", stack_object: "StackObject", profile: TargetingProfile
+) -> list[int | None]:
+    """For each of `stack_object`'s targets, the requirement of `profile` (one
+    clause's own) it was announced for (CR 601.2c), or `None` for a target of
+    another clause. `TargetRef.slot` indexes the whole spell's or ability's
+    requirements, so the clause's run is found inside those; without stored
+    slots the clause's own profile places the targets in announcement order."""
+    refs = list(stack_object.targets)
+    size = len(profile.requirements)
+    if refs and all(ref.slot is not None for ref in refs):
+        whole = game._stack_object_profile(stack_object)
+        keys = [(r.phrase.lower(), r.controller) for r in whole.requirements]
+        own = [(r.phrase.lower(), r.controller) for r in profile.requirements]
+        offsets = [k for k in range(len(keys) - size + 1) if keys[k : k + size] == own]
+        if len(offsets) == 1:
+            k = offsets[0]
+            return [
+                ref.slot - k if ref.slot is not None and k <= ref.slot < k + size else None
+                for ref in refs
+            ]
+    things = [game.resolve_target(ref) for ref in refs]
+    return profile.assign_slots(
+        things, game.controller_of(stack_object).username, game, source_id_of(stack_object)
+    )
+
+
+def _bite_participants(
+    game: "Game", stack_object: "StackObject", slots: _BiteSlots
+) -> tuple[CardState | None, list[Any]]:
+    """The biter and the victims, each still legal for the requirement it was
+    announced for (CR 608.2b) - not merely for some other one of the
+    spell's: a biter that changed controller is no longer "target creature you
+    control" even though it is still a fine victim. A "that player controls"
+    victim (`PRIOR_TARGET_PLAYER`) must still be controlled by the biter's
+    controller. The biter is `None` when it is illegal; victims are in
+    announcement order."""
+    controller = game.controller_of(stack_object).username
+    source_id = source_id_of(stack_object)
+    biter: CardState | None = None
+    victims: list[tuple[Any, Any]] = []
+    for ref, slot in zip(
+        stack_object.targets, _clause_slots(game, stack_object, slots.profile), strict=True
+    ):
+        if slot is None:
+            continue
+        thing = game.legal_target(stack_object, ref)
+        if thing is None or isinstance(thing, AbilityOnStack):
+            continue
+        if isinstance(thing, CardState) and thing.zone is not Zone.BATTLEFIELD:
+            continue
+        requirement = slots.profile.requirements[slot]
+        if requirement.rejects(thing, controller, game, source_id) is not None:
+            continue
+        if slot == slots.biter:
+            if isinstance(thing, CardState):
+                biter = thing
+        else:
+            victims.append((thing, requirement))
+    if biter is None:
+        return None, []
+    biter_controller = game.controller_of(biter).username
+    kept = [
+        thing
+        for thing, requirement in victims
+        if requirement.controller is not ControllerRestriction.PRIOR_TARGET_PLAYER
+        or (isinstance(thing, CardState) and game.controller_of(thing).username == biter_controller)
+    ]
+    return biter, kept
+
+
+def _bite_amount(game: "Game", biter: CardState, stat: str) -> int:
+    """CR 608.2h: the biter's power (CR 613.5's computed value) or loyalty
+    (CR 306.5c's loyalty-counter count) as the damage is dealt."""
+    return (game.power_of(biter) or 0) if stat == "power" else (biter.loyalty or 0)
+
+
 @MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
 def _parse_bite_damage_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
-    """ "Target creature you control deals damage equal to its power to
-    target `<X>`." / "... planeswalker you control deals damage equal to its
-    loyalty to target `<X>`." - see the banner above. Both participants are
-    this clause's own, independent targets; the anaphoric-object twin
-    (Flourishing Grapple's "... to that permanent.") is
+    """`_BITE_DAMAGE_RE`'s shape - see the banner above. The biter and each
+    victim are told apart by the "target" instance each was announced for
+    (`_BiteSlots`), never by who controls them: Fall of the Hammer's victim may
+    be yours, Mutiny's biter and victim are both an opponent's. The
+    anaphoric-object twin (Flourishing Grapple's "... to that permanent.") is
     `_parse_bite_damage_clause_pair`'s shape, not this one.
     """
-    match = _BITE_DAMAGE_RE.fullmatch(clause.strip().rstrip(".").strip())
+    if "deals damage equal to its" not in clause.lower():
+        return None
+    text = clause.strip().rstrip(".").strip()
+    match = _BITE_DAMAGE_RE.fullmatch(text)
     if match is None:
         return None
-    subject_phrase = f"target {match.group('subject_kind')} you control"
-    object_phrase = match.group("object").strip()
-    if not _targets_understood(subject_phrase, count_agnostic=False):
-        return None
-    if not _targets_understood(object_phrase, count_agnostic=True):
+    subject = match.group("subject").strip()
+    if not _targets_understood(subject, count_agnostic=False):
         return None
     stat = match.group("stat").lower()
+    obj = match.group("object").strip()
+    targeted = _TARGETED_VICTIMS_RE.fullmatch(obj)
+    if targeted is not None:
+        if match.group("retaliate") is not None:
+            return None
+        if not _targets_understood(
+            targeted.group("phrase"), count_agnostic=True, allow_player_targets=True
+        ):
+            return None
+        slots = _bite_slots(text, subject, for_spell=for_spell)
+        if slots is None or len(slots.profile.requirements) != 2:
+            return None
 
-    def effect(game: "Game", stack_object: "StackObject") -> None:
-        _resolve_bite_damage(game, stack_object, stat)
+        def effect(game: "Game", stack_object: "StackObject") -> None:
+            _resolve_bite_damage(game, stack_object, stat, slots=slots)
 
-    return effect
+        return effect
+    group = _bite_group_recipients(obj)
+    if group is None:
+        return None
+    slots = _bite_slots(text, subject, for_spell=for_spell)
+    if slots is None or len(slots.profile.requirements) != 1:
+        return None
+    retaliate = match.group("retaliate") is not None
+
+    def group_effect(game: "Game", stack_object: "StackObject") -> None:
+        biter, _ = _bite_participants(game, stack_object, slots)
+        if biter is None:
+            return  # CR 608.2b
+        controller = game.controller_of(stack_object).username
+        recipients = group(game, biter, controller)
+        amount = _bite_amount(game, biter, stat)
+        _deal_all(game, [(biter, recipient, amount) for recipient in recipients])
+        if not retaliate:
+            return
+        # CR 608.2c: then each of those creatures - lethally damaged or not,
+        # since state-based actions wait for the whole spell (CR 704.3) -
+        # deals damage equal to its power as it now is (CR 608.2h) back.
+        those = [r for r in recipients if isinstance(r, CardState) and r.zone is Zone.BATTLEFIELD]
+        _deal_all(game, [(creature, biter, game.power_of(creature) or 0) for creature in those])
+
+    return group_effect
 
 
-def _resolve_bite_damage(game: "Game", stack_object: "StackObject", stat: str) -> None:
-    """The shared body `_parse_bite_damage_clause` and
-    `_parse_bite_damage_clause_pair` both call: the biter is whichever
-    resolved target its controller controls, the victim is whichever target
-    (or referent) is not, and the amount is CR 119.2's ordinary damage event
-    for `stat`'s current value (CR 613.5's own "continually" for power,
-    CR 306.5c's loyalty-counter count for loyalty) - CR 701.14 is never
-    invoked, so a biter that stopped being a creature, or a planeswalker
-    biter at 0 loyalty, still deals its damage; only CR 608.2b's own
-    legal-target recheck governs whether either side is still there at all.
+#: One part of an untargeted bite group: "opponent", "player", or a creature
+#: group ("other creature", "creature you don't control", "other creature
+#: that player controls").
+_THAT_PLAYER_CONTROLS_RE = re.compile(r"\s+that player controls$", re.IGNORECASE)
+
+
+def _bite_group_recipients(
+    obj: str,
+) -> Callable[["Game", CardState, str], list[Any]] | None:
+    """The recipients of "each <group>[ and each <group>]" for a bite (CR
+    115.10: untargeted, read as the damage is dealt, CR 608.2h). "other"
+    leaves out the biter; "that player controls" is the biter's controller
+    (Alpha Brawl's "Target creature an opponent controls ... each other
+    creature that player controls"); "opponent" is the spell's controller's."""
+    lowered = obj.strip()
+    if not lowered.lower().startswith("each "):
+        return None
+    parts = re.split(r"\s+and\s+each\s+", lowered[len("each ") :], flags=re.IGNORECASE)
+    readers: list[Callable[[Game, CardState, str], list[Any]]] = []
+    for part in parts:
+        word = part.strip().lower()
+        if word == "opponent":
+            readers.append(lambda game, biter, controller: list(_opponents(game, controller)))
+            continue
+        if word == "player":
+            readers.append(lambda game, biter, controller: list(game.players_in_game))
+            continue
+        other = word.startswith("other ")
+        rest = part.strip()[len("other ") :] if other else part.strip()
+        that_player = _THAT_PLAYER_CONTROLS_RE.search(rest) is not None
+        rest = _THAT_PLAYER_CONTROLS_RE.sub("", rest)
+        predicate = _parse_damage_group_phrase(rest)
+        if predicate is None:
+            return None
+
+        def members(
+            game: "Game",
+            biter: CardState,
+            controller: str,
+            predicate: GroupPredicate = predicate,
+            other: bool = other,
+            that_player: bool = that_player,
+        ) -> list[Any]:
+            owner = game.controller_of(biter).username
+            return [
+                permanent
+                for permanent in list(game.battlefield)
+                if predicate(game, permanent, controller)
+                and not (other and permanent.id == biter.id)
+                and not (that_player and game.controller_of(permanent).username != owner)
+            ]
+
+        readers.append(members)
+
+    def recipients(game: "Game", biter: CardState, controller: str) -> list[Any]:
+        found: list[Any] = []
+        for reader in readers:
+            for recipient in reader(game, biter, controller):
+                if not any(recipient is seen for seen in found):
+                    found.append(recipient)
+        return found
+
+    return recipients
+
+
+def _resolve_bite_damage(
+    game: "Game", stack_object: "StackObject", stat: str, *, slots: _BiteSlots | None = None
+) -> CardState | None:
+    """Deal a bite and return its biter (or `None` when there was none).
+
+    With `slots`, the biter and every victim are the targets announced for
+    their own requirement (`_bite_participants`): an illegal biter deals
+    nothing, an illegal victim is skipped and the rest are still dealt the
+    biter's power or loyalty (CR 608.2b), all at once (CR 120.3, `_deal_all`).
+    A caller that builds on the bite (a "Then sacrifice it." after it) reads
+    the returned biter.
+
+    Without `slots` - `continuous.py`'s pump-then-bite readers, whose
+    sentence is not this one's - the biter is whichever resolved target its
+    controller controls and the victim whichever is not, as before. Either
+    way CR 701.14 is never invoked, so a biter that stopped being a creature,
+    or a planeswalker biter at 0 loyalty, still deals its damage.
     """
+    if slots is not None:
+        biter, victims = _bite_participants(game, stack_object, slots)
+        if biter is None:
+            return None
+        amount = _bite_amount(game, biter, stat)
+        _deal_all(game, [(biter, victim, amount) for victim in victims])
+        return biter
     controller = game.controller_of(stack_object)
     targets = [
         target
@@ -4007,12 +4258,13 @@ def _resolve_bite_damage(game: "Game", stack_object: "StackObject", stat: str) -
     mine = [t for t in targets if game.controller_of(t).username == controller.username]
     theirs = [t for t in targets if game.controller_of(t).username != controller.username]
     if not mine or not theirs:
-        return
+        return None
     source, victim = mine[0], theirs[0]
-    amount = (game.power_of(source) or 0) if stat == "power" else (source.loyalty or 0)
+    amount = _bite_amount(game, source, stat)
     if amount <= 0:
-        return
+        return source
     game.deal_damage(victim, amount, source=source)
+    return source
 
 
 _BITE_DAMAGE_RIDER_RE = re.compile(
@@ -4331,23 +4583,39 @@ def _parse_damage_group_and_you_and_group_text(text: str) -> TargetedClause | No
 #: "Each <group> deals damage to itself equal to its power." (Solar Blaze, The
 #: Akroan War's chapter III) and "Target creature deals damage to itself equal
 #: to its power." (Justice Strike, Kiku's Shadow) - every named permanent is
-#: its own source and its own recipient.
+#: its own source and its own recipient. Both word orders are printed ("deals
+#: damage equal to its power to itself", Wisecrack). The targeted shape may
+#: carry one rider sentence about that creature, checked as it is reached
+#: (CR 608.2c): "If that creature <condition>, <source> deals N damage to that
+#: creature's controller." (Wisecrack) or "If that creature <condition>, it
+#: deals twice that much damage to itself instead." (Cut Propulsion - the
+#: "instead" changes the first instruction, one damage event of the doubled
+#: amount).
+_TO_ITSELF_EQUAL_TO_ITS_POWER = (
+    r"deals damage (?:to itself equal to its power|equal to its power to itself)"
+)
 _EACH_DEALS_DAMAGE_TO_ITSELF_RE = re.compile(
-    r"^each (?P<group>[^.]+?) deals damage to itself equal to its power\.?$", re.IGNORECASE
+    rf"^each (?P<group>[^.]+?) {_TO_ITSELF_EQUAL_TO_ITS_POWER}\.?$", re.IGNORECASE
 )
 _TARGET_DEALS_DAMAGE_TO_ITSELF_RE = re.compile(
-    r"^(?P<phrase>target [^.]+?) deals damage to itself equal to its power\.?$", re.IGNORECASE
+    rf"^(?P<phrase>target [^.]+?) {_TO_ITSELF_EQUAL_TO_ITS_POWER}"
+    r"(?:\.\s*if that creature (?P<condition>[^,.]+), "
+    rf"(?:[^,.]+? deals (?P<n>{COUNT}) damage to that creature'?s controller"
+    r"|it deals (?P<twice>twice) that much damage to itself instead))?\.?$",
+    re.IGNORECASE,
 )
 
 
 @ABILITY_TEXT.rung("s9")
 @SPELL_TEXT.rung("s10")
 def _parse_damage_to_itself_equal_to_its_power_text(text: str) -> TargetedClause | None:
-    """The two "deals damage to itself equal to its power" shapes above.
+    """The "deals damage to itself equal to its power" shapes above.
 
     CR 608.2h: the amount is the power as it resolves. A group deals all its
     damage as one event batch (CR 120.4), so a creature killed by its own
-    damage does not change what the others deal.
+    damage does not change what the others deal. The rider's condition is
+    asked of the targeted creature itself (`Game.condition_holds` with it as
+    the subject); its controller is read before any damage lands.
     """
     whole = _strip_non_effect_preamble(text).strip()
     each = _EACH_DEALS_DAMAGE_TO_ITSELF_RE.fullmatch(whole)
@@ -4369,18 +4637,164 @@ def _parse_damage_to_itself_equal_to_its_power_text(text: str) -> TargetedClause
     targeted = _TARGET_DEALS_DAMAGE_TO_ITSELF_RE.fullmatch(whole)
     if targeted is None or not _targets_understood(targeted.group("phrase"), count_agnostic=False):
         return None
+    condition = targeted.group("condition")
+    condition_text = None if condition is None else f"this creature {condition.strip()}"
+    if condition_text is not None and not _effect_condition_is_readable(condition_text):
+        return None
+    to_controller = parse_count(targeted.group("n")) if targeted.group("n") else 0
+    doubled = targeted.group("twice") is not None
 
     def target_effect(game: "Game", stack_object: "StackObject") -> None:
-        _deal_all(
-            game,
-            [
-                (target, target, game.power_of(target) or 0)
-                for target in game.resolve_targets(stack_object)
-                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
-            ],
-        )
+        controller = game.controller_of(stack_object).username
+        source = _resolving_source(game, stack_object)
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            held = condition_text is not None and bool(
+                game.condition_holds(controller, condition_text, target)
+            )
+            target_controller = game.controller_of(target).username
+            amount = game.power_of(target) or 0
+            if held and doubled:
+                amount *= 2  # CR 608.2c: "instead" - one event of the doubled amount
+            _deal_all(game, [(target, target, amount)])
+            if held and to_controller:
+                game.deal_damage(game.player(target_controller), to_controller, source=source)
 
     return target_effect
+
+
+@SPELL_TEXT.rung("s18", after=["merges._parse_damage_then_followup_spell"])
+def _parse_damage_target_and_controller_then_rest(effect_text: str) -> Effect | None:
+    """`_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE`'s one-sentence "and"
+    form, followed by sentences that read on their own and run after it in
+    order (CR 608.2c) - Neonate's Rush's "... and 1 damage to its controller.
+    Draw a card." With its only target illegal the spell does not resolve at
+    all (CR 608.2b), so nothing after it happens either."""
+    if "controller" not in effect_text.lower():
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(effect_text))
+    if len(sentences) < 2:
+        return None
+    first = sentences[0].strip()
+    if " and " not in first.lower():
+        return None
+    head = _parse_damage_target_also_damages_controller_clause(first)
+    if head is None:
+        return None
+    rest = _spell_effect_or_notice(" ".join(sentences[1:]))
+    if (
+        rest is None
+        or _is_notice_only(rest)
+        or getattr(rest, "unparsed_remainder", None) is not None
+    ):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        head(game, spell)
+        rest(game, spell)
+
+    return effect
+
+
+#: "<target X> deals X damage to <victim> and X damage to itself, where X is
+#: its power." (Self-Destruct) - one instruction, both recipients dealt the
+#: same locked amount at once (CR 120.3, CR 608.2h). The victim is a target of
+#: its own (CR 601.2c, `_BiteSlots`); with only the victim illegal the biter
+#: still damages itself (CR 608.2b), with the biter illegal nothing happens.
+_BITE_X_AND_ITSELF_RE = re.compile(
+    r"^(?P<subject>target [^.]+?) deals x damage to "
+    r"(?P<victim>any other target|(?:another )?target [^.,]+?) and x damage to itself, "
+    r"where x is its (?P<stat>power|loyalty)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+@SPELL_TEXT.rung("s10")
+def _parse_bite_x_and_itself_text(text: str) -> TargetedClause | None:
+    """`_BITE_X_AND_ITSELF_RE`'s shape."""
+    if "damage to itself" not in text.lower():
+        return None
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _BITE_X_AND_ITSELF_RE.fullmatch(whole)
+    if match is None:
+        return None
+    subject = match.group("subject").strip()
+    if not _targets_understood(subject, count_agnostic=False):
+        return None
+    if not _targets_understood(match.group("victim"), allow_player_targets=True):
+        return None
+    sentence = whole.rstrip(".")
+    spell_slots = _bite_slots(sentence, subject, for_spell=True)
+    ability_slots = _bite_slots(sentence, subject, for_spell=False)
+    if spell_slots is None or ability_slots is None:
+        return None
+    if len(spell_slots.profile.requirements) != 2:
+        return None
+    stat = match.group("stat").lower()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        slots = spell_slots if isinstance(stack_object, CardState) else ability_slots
+        biter, victims = _bite_participants(game, stack_object, slots)
+        if biter is None:
+            return
+        amount = _bite_amount(game, biter, stat)
+        _deal_all(game, [*((biter, victim, amount) for victim in victims), (biter, biter, amount)])
+
+    return effect
+
+
+#: A bite whose victims are an untargeted group ("... to each other creature
+#: and each opponent", "..., then each of those creatures deals damage equal to
+#: its power to that creature"), read off the whole text: the clause splitter
+#: cuts such a sentence at its "and each"/", then" into fragments no per-clause
+#: reader can put back together. Any further sentences (Waltz of Rage's
+#: "Until end of turn, whenever ...") are read on their own and follow in
+#: order (CR 608.2c).
+
+
+def _group_bite_then_rest(text: str, *, for_spell: bool) -> Any:
+    if "deals damage equal to its" not in text.lower():
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if not sentences:
+        return None
+    first = sentences[0].strip().rstrip(".")
+    match = _BITE_DAMAGE_RE.fullmatch(first)
+    if match is None or _TARGETED_VICTIMS_RE.fullmatch(match.group("object").strip()):
+        return None
+    bite = _parse_bite_damage_clause(first, for_spell=for_spell)
+    if bite is None:
+        return None
+    if len(sentences) == 1:
+        return bite
+    rest_text = " ".join(sentences[1:])
+    rest = _spell_effect_or_notice(rest_text) if for_spell else _ability_effect_or_notice(rest_text)
+    if (
+        rest is None
+        or _is_notice_only(rest)
+        or getattr(rest, "unparsed_remainder", None) is not None
+    ):
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        bite(game, stack_object)
+        rest(game, stack_object)
+
+    return effect
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_group_bite_text(text: str) -> Effect | None:
+    """`_group_bite_then_rest` for a spell."""
+    return _group_bite_then_rest(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_group_bite_ability_text(text: str) -> AbilityEffect | None:
+    """`_group_bite_then_rest` for an activated or triggered ability."""
+    return _group_bite_then_rest(text, for_spell=False)
 
 
 #: "Each <group> deals N damage to its controller" (Aura Barbs, Rakdos Charm)
