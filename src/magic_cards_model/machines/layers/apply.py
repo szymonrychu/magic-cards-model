@@ -793,6 +793,17 @@ class LayerContext(EngineModel):
     #: graveyard is. Read when the effects are built, like every field here.
     life_by_player: Mapping[str, int] = Field(default_factory=dict)
 
+    #: The counters on each player (CR 122.1), keyed by username and kind -
+    #: Mycosynth Fiend's "gets +1/+1 for each poison counter your opponents
+    #: have" reads them, and they are not on the battlefield either. Read
+    #: when the effects are built, like `life_by_player`.
+    counters_by_player: Mapping[str, Mapping[str, int]] = Field(default_factory=dict)
+
+    def player_counters(self, kind: str, players: Iterable[str]) -> int:
+        """The total of `kind` counters on these players (0 for one this
+        context knows nothing about)."""
+        return sum(self.counters_by_player.get(player, {}).get(kind, 0) for player in players)
+
     #: Each player's starting life total (CR 103.4, `Player.starting_life`),
     #: keyed by username - Path of Bravery's "As long as your life total is
     #: greater than or equal to your starting life total, ..." compares the

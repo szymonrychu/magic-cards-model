@@ -215,6 +215,40 @@ def _parse_put_counter_then_for_each_counter_punisher_clause(
     return effect
 
 
+#: Vraska, Betrayal's Sting's -9: "If target player has fewer than nine poison
+#: counters, they get a number of poison counters equal to the difference."
+#: CR 122.1: counters on a player; the difference is the threshold minus the
+#: counters the target already has, counted once as the ability resolves (CR
+#: 608.2h) - a player at or past the threshold gets none.
+_PLAYER_COUNTERS_UP_TO_THRESHOLD_RE = re.compile(
+    rf"^if target (?:player|opponent) has fewer than (?P<n>{COUNT}) (?P<kind>[a-z]+) counters, "
+    r"they get a number of (?P<kind2>[a-z]+) counters equal to the difference\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s26")
+def _parse_player_counters_up_to_threshold_clause(text: str) -> AbilityEffect | None:
+    """`_PLAYER_COUNTERS_UP_TO_THRESHOLD_RE`'s shape, or `None`."""
+    match = _PLAYER_COUNTERS_UP_TO_THRESHOLD_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None or match.group("kind").lower() != match.group("kind2").lower():
+        return None
+    threshold = parse_count(match.group("n"))
+    if threshold is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        target = next((t for t in game.resolve_targets(ability) if isinstance(t, Player)), None)
+        if target is None:  # CR 608.2b: the target is gone, the ability does nothing
+            return
+        missing = threshold - target.counters[kind]
+        if missing > 0:
+            game.add_player_counters(target, kind, missing)
+
+    return effect
+
+
 #: Diamond City: "Move a shield counter from this land onto target creature."
 #: CR 122.5's "move" keyword action, self-referential source (`_COUNTER_
 #: SELF_SUBJECT`'s "this `<noun>`" shape, reused from `cost.py`'s own counter

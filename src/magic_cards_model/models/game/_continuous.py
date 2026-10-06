@@ -933,6 +933,9 @@ class ContinuousMixin:
             # ..." read their controller's, neither of which stands on the
             # battlefield as a characteristic the layer engine could see.
             life_by_player={player.username: player.life for player in self.players_in_game},
+            counters_by_player={
+                player.username: dict(player.counters.counts) for player in self.players_in_game
+            },
             starting_life_by_player={
                 player.username: player.starting_life for player in self.players_in_game
             },

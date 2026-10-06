@@ -982,6 +982,59 @@ def _self_pump_per_own_counter_builder(
     return builder
 
 
+#: "This creature gets +1/+1 for each poison counter your opponents have."
+#: (Mycosynth Fiend, Vishgraz, the Doomhive) - counters on *players* (CR
+#: 122.1) scale a self bonus in sublayer 7c (CR 613.4c). `each` is read by
+#: `effects.amounts.parse_player_counter_phrase`, the same grammar the
+#: resolving-effect readers use; only the scopes a static ability can name
+#: without a target or an event are built.
+_SELF_PUMP_PER_PLAYER_COUNTER_RE = re.compile(
+    r"^this (?:creature|token|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"for each (?P<each>.+?)\.?$",
+    re.IGNORECASE,
+)
+_STATIC_PLAYER_COUNTER_SCOPES = frozenset({"you have", "your opponents have", "among players"})
+
+
+def _self_pump_per_player_counter_builder(
+    power: int, toughness: int, counted: tuple[str, str], *, line: str
+) -> EffectBuilder:
+    """`_SELF_PUMP_PER_PLAYER_COUNTER_RE`'s shape; `counted` is
+    `parse_player_counter_phrase`'s `(kind, whose)`. The count is read when
+    the effects are built (`LayerContext.counters_by_player`), and the board
+    is rebuilt on every `computed_board()` call (CR 613.5), so it follows the
+    counters live (CR 611.3a)."""
+    kind, whose = counted
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if whose == "you have":
+            players: list[str] = [source.controller]
+        elif whose == "your opponents have":
+            players = _opponents_of(source.controller, context.counters_by_player)
+        else:
+            players = list(context.counters_by_player)
+        count = context.player_counters(kind, players)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {power:+d}/{toughness:+d} for each {kind} counter",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=modify_power_toughness_per(FixedCount(value=count), power, toughness),
+            )
+        ]
+
+    return builder
+
+
 #: "This creature gets +2/+2 for each Equipment attached to it." (Loxodon
 #: Punisher) and Winter Soldier, Icy Assassin's "Winter Soldier gets +2/+0
 #: for each Equipment attached to him." (a legend's own pronoun, CR 201.5's
@@ -11246,6 +11299,17 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             match.group("counter").lower(),
             line=sentence,
         )
+    if match := _SELF_PUMP_PER_PLAYER_COUNTER_RE.fullmatch(sentence):
+        from ..effects.amounts import parse_player_counter_phrase
+
+        counted = parse_player_counter_phrase(match.group("each"))
+        if counted is not None and counted[1] in _STATIC_PLAYER_COUNTER_SCOPES:
+            return _self_pump_per_player_counter_builder(
+                int(match.group("power")),
+                int(match.group("toughness")),
+                counted,
+                line=sentence,
+            )
     if match := _TURN_FACT_GATED_SELF_PUMP_RE.fullmatch(sentence):
         fact = _TURN_FACT_CONDITION_PHRASES.get(match.group("condition").strip().lower())
         granted = _split_gated_grants(re.sub(r"^\s*and\s+", ", ", match.group("rest")))
