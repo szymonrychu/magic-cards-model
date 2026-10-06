@@ -156,3 +156,28 @@ def test_scrap_trawler_takes_only_a_lesser_mana_value_artifact_than_the_event_ob
 
     assert requirement.rejects(sol_ring, "alice", scenario.game) is None
     assert requirement.rejects(mind_stone, "alice", scenario.game) is not None
+
+
+def test_groffskithur_returns_a_graveyard_copy_named_groffskithur_when_blocked():
+    """ "Whenever this creature becomes blocked, you may return target card
+    named Groffskithur from your graveyard to your hand." - the name is a
+    name test (CR 201.2a), so the copy in the graveyard is a legal target
+    when the trigger resolves (CR 608.2b), not only when it is announced."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Groffskithur"], graveyard=["Groffskithur"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    attacker = scenario.creature("Groffskithur", "alice")
+    scenario.attack_with(attacker, defending="bob")
+    scenario.block(attacker, scenario.creature("Grizzly Bears", "bob"))
+    copy = scenario.find("Groffskithur", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_targets(copy)
+    scenario.will_take_the_may(True)
+
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert copy.zone is Zone.HAND

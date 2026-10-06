@@ -231,3 +231,31 @@ def test_goblin_warchief_does_not_shorten_goblin_to_itself():
 
     assert normalized == warchief.oracle_text
     assert "this permanent" not in normalized
+
+
+def test_a_card_named_its_own_name_is_a_name_test_not_a_self_reference():
+    """CR 201.5 rewrites text that "refers to the object it's on by name";
+    Groffskithur's "return target card named Groffskithur from your
+    graveyard" names any card with that name (a second copy in the
+    graveyard), never the object the ability is on. Rewritten to "named this
+    permanent", the CR 608.2b recheck read a name nothing has and fizzled
+    the ability."""
+    groffskithur = card("Groffskithur")
+
+    normalized = self_normalized_effect_text(groffskithur.name, groffskithur.oracle_text)
+
+    assert "target card named Groffskithur from your graveyard" in normalized
+    assert "named this permanent" not in normalized
+
+
+def test_a_static_count_of_creatures_named_its_own_name_keeps_the_name_off_pool():
+    """Off-pool generality: Seven Dwarves' static count ("for each other
+    creature named Seven Dwarves you control") is the same "named <own
+    name>" test in a different shape - a battlefield count, not a graveyard
+    target."""
+    dwarves = card("Seven Dwarves")
+
+    normalized = self_normalized_effect_text(dwarves.name, dwarves.oracle_text)
+
+    assert "for each other creature named Seven Dwarves you control" in normalized
+    assert "named this permanent" not in normalized

@@ -35,10 +35,24 @@
   "card": "Groffskithur",
   "delta": {
     "created": {},
-    "decisions": [],
-    "fields_changed": [],
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "return target card named Groffskithur from your graveyard to your hand",
+        "source": "Groffskithur"
+      }
+    ],
+    "fields_changed": ["known_carries"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Groffskithur@alice#2": {
+        "zone": ["graveyard", "hand"]
+      }
+    },
     "players": {},
     "stack": []
   },

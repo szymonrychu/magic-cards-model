@@ -2510,6 +2510,12 @@ _TYPE_NOUN_LOOKBEHIND = (
     r"(?<!(?i:red ))(?<!(?i:green ))(?<!(?i:colorless ))(?<!(?i:target ))"
 )
 
+#: "a card named Groffskithur", "each other creature named Seven Dwarves": a
+#: name test (CR 201.2a), never the object the text is on naming itself
+#: (CR 201.5) - it matches every object with that name, the source's other
+#: copies included.
+_NAMED_LOOKBEHIND = r"(?<!(?i:named ))"
+
 #: A candidate self-name is never a match when what follows it in the text is
 #: the start of a *different*, longer capitalized name - "Hanweir" inside "a
 #: creature named Hanweir Garrison" (another card's own full name, `\s+[A-Z]`)
@@ -2558,7 +2564,8 @@ def self_reference_pattern(name: str) -> str:
     reading that works for one ending in punctuation - M.O.D.O.K.'s own
     "M.O.D.O.K. connives." has no `\b` after its final period at all."""
     return (
-        rf"{_EMPOWER_KEYWORD_LOOKBEHIND}{_TYPE_NOUN_LOOKBEHIND}(?<!\w){re.escape(name)}(?!\w)"
+        rf"{_EMPOWER_KEYWORD_LOOKBEHIND}{_TYPE_NOUN_LOOKBEHIND}{_NAMED_LOOKBEHIND}"
+        rf"(?<!\w){re.escape(name)}(?!\w)"
         rf"{_LONGER_NAME_CONTINUATION_LOOKAHEAD}"
     )
 
