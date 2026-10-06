@@ -1060,6 +1060,8 @@ class StackPriorityMixin:
                 gift_chosen_player=original_record.gift_chosen_player,
                 additional_cost_cards=list(original_record.additional_cost_cards),
                 additional_cost_mana_values=list(original_record.additional_cost_mana_values),
+                additional_cost_kinds=list(original_record.additional_cost_kinds),
+                additional_cost_powers=list(original_record.additional_cost_powers),
                 is_copy=True,
                 # CR 707.10: the additional and alternative cost decisions.
                 kicker_costs_paid=list(original_record.kicker_costs_paid),

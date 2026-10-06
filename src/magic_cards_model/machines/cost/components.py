@@ -498,6 +498,13 @@ class CostComponent(EngineModel):
     Greatwurm, Hopeful Initiate) - `amount` is the total taken across every
     chosen permanent (`cards`), not a count taken from each (CR 118.3: the
     counters have to be there, summed over the chosen permanents)."""
+    every_matching: bool = False
+    """`ComponentKind.SACRIFICE` only: "sacrifice all creatures you control"
+    (Soulblast's additional cost), "Sacrifice all lands you control" (Tomb of
+    Urami's activation cost). Nobody chooses: CR 601.2h pays it with every
+    permanent the payer controls that meets `requirement` at the moment the
+    cost is paid, so `cards` is filled by `pay` itself and an empty board
+    pays it with nothing (CR 701.21a: only permanents the payer controls)."""
     variable_count: bool = False
     """The printed count is CR 107.3a's X or "one or more", so the number is
     whatever the payer announced or chose rather than one the text fixes. For
@@ -877,6 +884,18 @@ class CostComponent(EngineModel):
                 )
         return None
 
+    def _every_matching_permanent(self, game: Any) -> list[CardState]:
+        """`every_matching`'s objects: each permanent the payer controls that
+        meets `requirement`, read off the computed board (CR 613.5)."""
+        if self.payer is None:
+            return []
+        return [
+            permanent
+            for permanent in game.permanents_controlled_by(self.payer)
+            if self.requirement is None
+            or self.requirement.why_not(permanent, game, self.payer) is None
+        ]
+
     def _why_not_sacrifice(self, _game: Any) -> str | None:
         for card in self.cards:
             if card.zone is not Zone.BATTLEFIELD:
@@ -914,6 +933,9 @@ class CostComponent(EngineModel):
     # -- paying and rewinding ---------------------------------------------
 
     def pay(self, game: Any) -> None:
+        if self.every_matching and game is not None and not self.paid:
+            self.cards = self._every_matching_permanent(game)
+            self.required = len(self.cards)
         reason = self.why_not(game)
         if reason is not None:
             raise ValueError(reason)
@@ -1527,6 +1549,28 @@ def announce_reveal(
         else:
             required = x_value
     return component.model_copy(update={"cards": cards, "required": required, "source": source})
+
+
+def take_from_pool(component: CostComponent, pool: list[CardState]) -> None:
+    """Fill a printed additional cost's object component from the objects the
+    caster nominated for its kind (CR 601.2b), taking them off `pool`.
+
+    A fixed count takes that many, in order. CR 107.1c's "any number of" and
+    "one or more" (`variable_count` - CR 107.3a's X is already substituted
+    into the phrase by now, so it reads as a fixed count) take every
+    nominated object: the number is whatever the caster chose, zero included
+    for "any number", and `required` becomes it. A component that already
+    holds its objects, or is paid by `every_matching`, is left alone.
+    """
+    if component.cards or component.every_matching:
+        return
+    take = len(pool) if component.variable_count else component.required
+    if not take:
+        return
+    component.cards = pool[:take]
+    del pool[:take]
+    if component.variable_count:
+        component.required = max(component.required, len(component.cards))
 
 
 def announce_count(component: CostComponent, x_value: int, nominated: int) -> CostComponent:

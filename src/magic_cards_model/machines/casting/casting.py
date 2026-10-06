@@ -41,6 +41,7 @@ from ..cost import (
     announce_reveal,
     apply_modifications,
     behold_cost,
+    cost_announces_x,
     cost_component_for_phrase,
     mana_value_cap_for,
     pay_life_cost,
@@ -48,6 +49,7 @@ from ..cost import (
     per_object_sacrifice_cost_reduction,
     place_counters_cost,
     static_free_cast_grant,
+    take_from_pool,
     tap_cost,
     total_cost_for_phrase,
 )
@@ -1500,7 +1502,16 @@ class Casting(EngineModel):
             # then refuses the cast for "too few targets" before the caster is
             # ever asked which modes they want. Modal stays `understood=False`
             # until `choose_modes` runs, which is what the fallthrough gives.
-            if self.modal is None and "{X}" in (self.spell.mana_cost or ""):
+            if self.modal is None and (
+                "{X}" in (self.spell.mana_cost or "")
+                # CR 107.3a: an X announced through an additional cost
+                # ("discard X cards", Nahiri's Wrath) bounds "up to X
+                # targets" exactly as a `{X}` in the mana cost does.
+                or any(
+                    cost_announces_x(phrase)
+                    for phrase in additional_cost_phrases(self.spell.card, face=self.face)
+                )
+            ):
                 # Spell-scoped, not `profile_for_text`: that one reads text
                 # whole because it exists for an ability's own words, and a
                 # creature spell with an activated ability that targets
@@ -3904,10 +3915,8 @@ class Casting(EngineModel):
                     component.source = filled.source
                     continue
                 pool = pools.get(component.kind)
-                if pool is None or component.cards or not component.required:
-                    continue
-                component.cards = pool[: component.required]
-                del pool[: component.required]
+                if pool is not None:
+                    take_from_pool(component, pool)
             built.append(cost.assign_payer(self.caster))
         return built
 
@@ -4487,6 +4496,12 @@ class Casting(EngineModel):
                     for extra in self.additional_costs
                     for component in extra.components
                     for card in component.cards
+                ],
+                additional_cost_kinds=[
+                    component.kind.value
+                    for extra in self.additional_costs
+                    for component in extra.components
+                    for _card in component.cards
                 ],
             )
             if self.keyword_once_per_turn_key is not None:

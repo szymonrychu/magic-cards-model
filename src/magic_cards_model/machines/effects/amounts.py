@@ -20,11 +20,13 @@ from ...models.token import (
 from ...models.zone import Zone
 from ...numbers import (
     COUNT,
+    MULTIPLIER,
     ORDINAL,
     count_pattern,
     halve,
     parse_count,
     parse_half,
+    parse_multiplier,
     parse_ordinal,
 )
 from ..abilities import (
@@ -68,7 +70,14 @@ from ..triggers import (
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
 from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
-from ._common import AbilityEffect, AmountReader, ClauseEffect, Effect, TargetedClause
+from ._common import (
+    _UNQUOTED_PREFIX,
+    AbilityEffect,
+    AmountReader,
+    ClauseEffect,
+    Effect,
+    TargetedClause,
+)
 
 
 def _x_substituted_spell_text(game: "Game", spell: CardState) -> str | None:
@@ -138,10 +147,19 @@ def _cast_trigger_x_value(game: "Game", ability: AbilityOnStack) -> int | None:
 #: one the way a bare "token(s)" qualifier does not exist in this shape at
 #: all (Caretaker's Talent's own "one or more tokens" is an *entry*
 #: condition, not a count expression).
+#:
+#: A leading colour list (CR 105.1) narrows it the same way - Chaotic
+#: Backlash's "the number of white and/or blue permanents they control" counts
+#: a permanent that is either colour - and "on the battlefield" (Chain
+#: Reaction's "the number of creatures on the battlefield", War Report's
+#: "the number of artifacts on the battlefield") counts everyone's.
+_COUNT_COLOR_WORD = r"(?:white|blue|black|red|green)"
 _COUNT_YOU_CONTROL_RE = re.compile(
     r"^(?:the )?(?:number of )?(?:(?P<status>tapped|untapped|attacking) )?"
     r"(?:(?P<nontoken>nontoken) )?"
-    r"(?P<qualifier>[a-z]+) (?P<whose>you control|they control|your opponents control)$"
+    rf"(?:(?P<colors>{_COUNT_COLOR_WORD}(?:(?: and/or | or ){_COUNT_COLOR_WORD})*) )?"
+    r"(?P<qualifier>[a-z]+) "
+    r"(?P<whose>you control|they control|your opponents control|on the battlefield)$"
     # CR 508.1k: every attacking creature, whoever controls it - Path of
     # Bravery's "the number of attacking creatures", with no "you control".
     r"|^(?:the )?number of (?P<attacking_any>attacking) (?P<attacking_qualifier>[a-z]+)$",
@@ -218,9 +236,27 @@ _COUNT_PLANESWALKER_TYPES_RE = re.compile(
 #: `counted_this_way`.
 _COUNT_THIS_WAY_RE = re.compile(
     r"^(?:the )?number of (?P<noun>[a-z ]+?) "
-    r"(?P<verb>exiled|sacrificed|discarded|milled) this way$",
+    r"(?P<verb>exiled|sacrificed|discarded|milled|tapped) this way$",
     re.IGNORECASE,
 )
+#: "the total power of the sacrificed creatures" (Soulblast, Corpse Cobble),
+#: "the total mana value of the discarded cards" (Nahiri's Wrath) - a sum
+#: over what the resolving spell's own additional cost paid with that verb
+#: (CR 118.8, 601.2h), read off its cast record's snapshots (CR 608.2h's last
+#: known information; CR 202.3's mana value), `total_of_paid_for_cost`.
+_TOTAL_OF_PAID_RE = re.compile(
+    r"^(?:the )?total (?P<stat>power|mana value) of the "
+    r"(?P<verb>sacrificed|discarded|exiled|tapped) (?P<noun>[a-z ]+)$",
+    re.IGNORECASE,
+)
+#: The `ComponentKind` value each "this way" verb names (`CastRecord.
+#: additional_cost_kinds`).
+_THIS_WAY_VERB_KINDS = {
+    "exiled": "exile",
+    "sacrificed": "sacrifice",
+    "discarded": "discard",
+    "tapped": "tap",
+}
 #: "the number of cards in your hand" - Jolrael, Voice of Zhalfir's own X.
 #: Not a filtered count the way the two above are: CR 402.1 makes the hand a
 #: zone with no type restriction to read ("the hand is where a player holds
@@ -403,10 +439,19 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         # documents (a permanent with no controller at all belongs to
         # neither side).
         whose = match.group("whose")
-        wants_anyone = whose is None
+        wants_anyone = whose is None or whose.lower() == "on the battlefield"
         wants_opponents = whose is not None and whose.lower() == "your opponents control"
         wants_nontoken = match.group("nontoken") is not None
         qualifier = match.group("qualifier") or match.group("attacking_qualifier")
+        wanted_colors = frozenset(
+            _COLOR_WORD_TO_COLOR[word]
+            for word in re.findall(_COUNT_COLOR_WORD, match.group("colors") or "", re.IGNORECASE)
+        )
+
+        def _has_wanted_color(colors: "Sequence[Color]") -> bool:
+            # CR 105.1/105.2: "white and/or blue" is any permanent that is at
+            # least one of them; no colour list asks nothing.
+            return not wanted_colors or bool(wanted_colors & set(colors))
 
         def _belongs_to_group(board_controller: str | None, controller: str) -> bool:
             if wants_anyone:
@@ -427,6 +472,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                     1
                     for permanent in game.battlefield
                     if _belongs_to_group(board.of(permanent).controller, controller)
+                    and _has_wanted_color(board.of(permanent).colors)
                     and (wants_tapped is None or permanent.tapped == wants_tapped)
                     and (not wants_attacking or permanent.id in game.combat.attacker_ids)
                     and (not wants_nontoken or not is_token(permanent))
@@ -448,6 +494,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                     for permanent in game.battlefield
                     if _belongs_to_group(board.of(permanent).controller, controller)
                     and any(word.lower() == subtype for word in board.of(permanent).subtypes)
+                    and _has_wanted_color(board.of(permanent).colors)
                     and (wants_tapped is None or permanent.tapped == wants_tapped)
                     and (not wants_attacking or permanent.id in game.combat.attacker_ids)
                     and (not wants_nontoken or not is_token(permanent))
@@ -462,6 +509,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                 for permanent in game.battlefield
                 if _belongs_to_group(board.of(permanent).controller, controller)
                 and card_type in board.of(permanent).types
+                and _has_wanted_color(board.of(permanent).colors)
                 and (wants_tapped is None or permanent.tapped == wants_tapped)
                 and (not wants_attacking or permanent.id in game.combat.attacker_ids)
                 and (not wants_nontoken or not is_token(permanent))
@@ -562,6 +610,11 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     if match := _COUNT_THIS_WAY_RE.fullmatch(stripped):
         verb = match.group("verb").lower()
         return lambda game, _controller: counted_this_way(game, verb)
+
+    if match := _TOTAL_OF_PAID_RE.fullmatch(stripped):
+        total_verb = match.group("verb").lower()
+        stat = match.group("stat").lower()
+        return lambda game, _controller: total_of_paid_for_cost(game, total_verb, stat)
 
     if _COUNT_CARDS_IN_YOUR_HAND_RE.fullmatch(stripped):
 
@@ -752,8 +805,10 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 #: The two joining words an amount expression prints between its terms -
 #: Slumbering Trudge's "three minus X".
 _AMOUNT_OPERATOR_RE = re.compile(r"\s+(minus|plus)\s+", re.IGNORECASE)
-#: "twice <term>" - CR 107.1's plain arithmetic on one term.
-_AMOUNT_TWICE_RE = re.compile(r"^twice (?P<term>.+)$", re.IGNORECASE)
+#: "twice <term>", "three times <term>", "five times X" - CR 107.1's plain
+#: arithmetic on one term: Burn at the Stake's "three times the number of
+#: creatures tapped this way", Crackle with Power's "five times X".
+_AMOUNT_TWICE_RE = re.compile(rf"^(?P<multiplier>{MULTIPLIER}) (?P<term>.+)$", re.IGNORECASE)
 
 
 def _greatest_mana_value_among(cards: "Sequence[CardState]") -> int:
@@ -984,10 +1039,11 @@ def _amount_term(term: str) -> AmountReader | None:
 
         return read_attached_count
     if match := _AMOUNT_TWICE_RE.fullmatch(text):
+        factor = parse_multiplier(match.group("multiplier"))
         inner = _amount_term(match.group("term"))
-        if inner is None:
+        if factor is None or inner is None:
             return None
-        return lambda game, controller, obj, x: 2 * inner(game, controller, obj, x)
+        return lambda game, controller, obj, x: factor * inner(game, controller, obj, x)
     if lowered == "the greatest mana value among cards in exile":
         return lambda game, _controller, _object, _x: _greatest_mana_value_among_cards_in_exile(
             game
@@ -1575,6 +1631,65 @@ def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | 
     return effect
 
 
+#: "Target creature gets +2/+2 until end of turn for each creature sacrificed
+#: this way." (Vicious Betrayal), "... +1/+1 ... for each creature you
+#: control." (Might of the Masses), "... -1/-1 ... for each Swamp you
+#: control." (Defile) - a targeted pump scaled by a "for each" count, the
+#: spell-side twin of `_MASS_PUMP_FOR_EACH_RE`'s mass pump. The count is
+#: `_for_each_multiplier`'s, taken once as the spell resolves (CR 608.2h).
+_TARGET_PUMP_FOR_EACH_RE = re.compile(
+    r"^(?P<subject>(?:up to one )?target [^.]+?) gets? "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn "
+    r"for each (?P<each>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s1", for_spell=FORWARD, before=["dispatch._parse_targeted_clause"])
+def _parse_target_pump_for_each_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_TARGET_PUMP_FOR_EACH_RE`'s shape on a resolving spell: the count is
+    read once, multiplied into a literal "+N/+N until end of turn" sentence,
+    and that sentence's own layer effect (CR 611.2, CR 613.4c) is applied to
+    each target still legal (CR 608.2b)."""
+    if not for_spell:
+        return None
+    match = _TARGET_PUMP_FOR_EACH_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    subject = match.group("subject")
+    if not _targets_understood(subject):
+        return None
+    multiplier = _for_each_multiplier(match.group("each"))
+    if multiplier is None:
+        return None
+    power, toughness = int(match.group("power")), int(match.group("toughness"))
+    if parsed_layer_effects(f"{subject} gets {power:+d}/{toughness:+d} until end of turn.") is None:
+        return None
+
+    def effect(game: "Game", spell: "StackObject") -> None:
+        assert isinstance(spell, CardState)
+        controller = game.controller_of(spell)
+        count = multiplier(game, controller.username, str(spell.id))
+        literal = f"{subject} gets {power * count:+d}/{toughness * count:+d} until end of turn."
+        builder = parsed_layer_effects(literal)
+        if builder is None:
+            continuous_effects(game).layer_notices.append(
+                LayerNotice(source_id=spell.id, source_name=spell.card.name, text=literal)
+            )
+            return
+        targets = game.resolve_card_targets(spell)
+        if not targets:
+            return
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        context = layer_context_for(game, controller)
+        for built in builder(spell, timestamp, targets, context):
+            if built.holds(game):
+                store.add(built)
+
+    return effect
+
+
 def _bounded_quality_matcher(
     quality: str | None, max_mv: str | None, mv_cmp: str = "less"
 ) -> Callable[[CardState], bool]:
@@ -1952,6 +2067,25 @@ def _for_each_attacking_count(phrase: str) -> Callable[["Game", str, str | None]
     return count
 
 
+#: "`<qualifier>` target opponent controls" / "... target player controls" -
+#: a "for each" count over the resolving object's own targeted player.
+_TARGET_PLAYER_CONTROLS_TAIL_RE = re.compile(
+    r"^(?P<inner>.+?) target (?:opponent|player) controls$", re.IGNORECASE
+)
+
+
+def _count_for_targeted_player(game: "Game", counted: Callable[["Game", str], int]) -> int:
+    """`counted` for the player the resolving object targets, 0 when it
+    targets none still legal (CR 608.2b)."""
+    resolving = game.resolving
+    if resolving is None:
+        return 0
+    for target in game.resolve_targets(resolving):
+        if isinstance(target, Player):
+            return counted(game, target.username)
+    return 0
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -1967,6 +2101,14 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     spells the count out that way instead.
     """
     stripped = phrase.strip().rstrip(".")
+    if target_player := _TARGET_PLAYER_CONTROLS_TAIL_RE.fullmatch(stripped):
+        # Kithkin Zealot's "for each black and/or red permanent target
+        # opponent controls": counted on the targeted player's board (CR
+        # 115.1 names them; CR 608.2h counts once, as the effect applies).
+        counted = count_expression(f"{target_player.group('inner')} you control")
+        if counted is None:
+            return None
+        return lambda game, _controller, _source_id: _count_for_targeted_player(game, counted)
     types_among = card_types_among_spells_cast_reader(stripped)
     if types_among is not None:
         # CR 608.2h: counted once, as the effect applies.
@@ -2292,14 +2434,34 @@ def that_many(game: "Game", stack_object: "StackObject | None" = None) -> int | 
     return None
 
 
+def _paid_for_cast_cost(game: "Game", verb: str) -> list[int] | None:
+    """The positions in the resolving spell's `CastRecord.additional_cost_
+    cards` that its additional cost paid with `verb` (CR 118.8, 601.2h) -
+    `None` when the resolving object is not a spell, or its cost paid nothing
+    with that verb, so the caller falls back to its other readings."""
+    resolving = game.resolving
+    kind = _THIS_WAY_VERB_KINDS.get(verb)
+    if not isinstance(resolving, CardState) or kind is None:
+        return None
+    record = game.cast_record_of(resolving)
+    if record is None:
+        return None
+    positions = [index for index, paid in enumerate(record.additional_cost_kinds) if paid == kind]
+    return positions or None
+
+
 def counted_this_way(game: "Game", verb: str) -> int:
     """ "`<noun>` `<verb>` this way" - how many objects the resolving
     object moved with that verb: first its own activation cost's (CR 602.2b
     pays the cost before the ability exists, so the paid objects are carried
     on it - `AbilityOnStack.cost_exiled_card_ids` /
-    `cost_sacrificed_card_ids`), else the count its own latest instruction
-    recorded (`Game.recorded_count`, CR 608.2c). Nothing moved is zero, not
-    an unknown: "the number of cards exiled this way" with none exiled is 0.
+    `cost_sacrificed_card_ids`), or a spell's own additional cost's (CR
+    601.2h: paid before it was cast - Burn at the Stake's "the number of
+    creatures tapped this way", Vicious Betrayal's "for each creature
+    sacrificed this way", off `CastRecord.additional_cost_kinds`), else the
+    count its own latest instruction recorded (`Game.recorded_count`, CR
+    608.2c). Nothing moved is zero, not an unknown: "the number of cards
+    exiled this way" with none exiled is 0.
     """
     resolving = game.resolving
     if isinstance(resolving, AbilityOnStack):
@@ -2309,8 +2471,34 @@ def counted_this_way(game: "Game", verb: str) -> int:
         }.get(verb, ())
         if paid:
             return len(paid)
+    cast_paid = _paid_for_cast_cost(game, verb)
+    if cast_paid is not None:
+        return len(cast_paid)
     recorded = game.recorded_count()
     return recorded if recorded is not None else 0
+
+
+def total_of_paid_for_cost(game: "Game", verb: str, stat: str) -> int:
+    """ "the total `<stat>` of the `<verb>` `<noun>`" - the sum, over what
+    the resolving spell's additional cost paid with `verb`, of each object's
+    power or mana value as the record snapshotted it when the cost was paid
+    (CR 608.2h's last known information: the sacrificed creatures are gone,
+    a sacrificed token has ceased to exist, CR 704.5d). Nothing paid is 0
+    (CR 107.2)."""
+    positions = _paid_for_cast_cost(game, verb)
+    if not positions:
+        return 0
+    resolving = game.resolving
+    assert isinstance(resolving, CardState)
+    record = game.cast_record_of(resolving)
+    assert record is not None
+    values = (
+        record.additional_cost_powers if stat == "power" else record.additional_cost_mana_values
+    )
+    return max(
+        int(sum(values[index] for index in positions if index < len(values))),
+        0,
+    )
 
 
 def _that_many_or_notice(
@@ -2378,6 +2566,143 @@ def _parse_x_damage_divided_and_doubled_clause(text: str) -> Effect | None:
         _deal_divided_damage_shares(game, spell, total)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Damage whose amount is an expression `_DAMAGE_TARGET_RE`'s plain count
+# cannot carry: arithmetic over X (Crackle with Power's "five times X",
+# Crater's Claws's "X plus 2"), an "equal to <expr>" dealt to "each of" a
+# group of targets (Nahiri's Wrath), and an "equal to <expr>" that counts
+# what the *targeted player* has (Chaotic Backlash's "they control").
+# --------------------------------------------------------------------------
+
+#: "deals five times X damage to each of up to X targets" (Crackle with
+#: Power), "deals X plus 2 damage to any target" (Crater's Claws's ferocious
+#: alternative), "deals twice X damage to target creature". `expr` must carry
+#: one of CR 107.1's operators - a bare count or X stays with
+#: `_DAMAGE_TARGET_RE`.
+_EXPRESSION_DAMAGE_RE = re.compile(
+    rf"^{_UNQUOTED_PREFIX}\bdeals? "
+    rf"(?P<expr>(?:{MULTIPLIER} )?(?:x|{COUNT})(?: (?:plus|minus) (?:x|{COUNT}))*) "
+    r"damage to (?P<phrase>any target|.*?\btargets?\b.*?)\.?$",
+    re.IGNORECASE,
+)
+#: "deals damage equal to `<expr>` to each of up to X target creatures and/or
+#: planeswalkers" (Nahiri's Wrath): every target chosen takes the whole
+#: amount, which "each of" says outright.
+_EQUAL_TO_DAMAGE_TO_EACH_RE = re.compile(
+    rf"^{_UNQUOTED_PREFIX}\bdeals? damage equal to (?P<expr>[^.]+?) to "
+    r"each of (?P<phrase>[^.]*?\btargets?\b[^.]*?)\.?$",
+    re.IGNORECASE,
+)
+#: "deals damage to target player equal to twice the number of white and/or
+#: blue permanents they control" (Chaotic Backlash), "deals damage to target
+#: player equal to the number of cards in that player's hand" (Sudden
+#: Impact): `expr` names the targeted player ("they", "their", "that
+#: player"), never the caster.
+_DAMAGE_TO_PLAYER_EQUAL_TO_THEIR_RE = re.compile(
+    rf"^{_UNQUOTED_PREFIX}\bdeals? damage to "
+    r"(?P<phrase>target (?:player|opponent)) equal to (?P<expr>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+#: The targeted player's own words inside `_DAMAGE_TO_PLAYER_EQUAL_TO_THEIR_RE`
+#: 's `expr`, rewritten to the second person `count_expression` reads, then
+#: evaluated for that player (CR 608.2h).
+_TARGET_PLAYER_REFERENCES = (
+    (re.compile(r"\b(?:they|that player) controls?\b", re.IGNORECASE), "you control"),
+    (re.compile(r"\b(?:their|that player's)\b", re.IGNORECASE), "your"),
+)
+#: A subject that is itself chosen - "Target creature you control deals
+#: damage equal to its power to each of ..." (bite) - is not the spell
+#: dealing damage, and is left to the readers built for it.
+_TARGETED_SUBJECT_RE = re.compile(r"\btarget\b|\bthat creature\b", re.IGNORECASE)
+
+
+def _announced_x(game: "Game", stack_object: "StackObject") -> int:
+    """CR 107.3a's X of the resolving spell or ability (0 when none was)."""
+    if isinstance(stack_object, AbilityOnStack):
+        return stack_object.x_value or 0
+    return game.cast_record(stack_object).x_value or 0
+
+
+def _deal_expression_damage(
+    reader: AmountReader, *, for_target_player: bool = False
+) -> TargetedClause:
+    """Each target still legal (CR 608.2b) is dealt `reader`'s amount, read
+    as the effect applies (CR 608.2h) with the resolving object's own X; the
+    spell itself, or an ability's source, deals it (CR 120.1). With
+    `for_target_player`, the amount is read for the targeted player rather
+    than the controller."""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        x_value = _announced_x(game, stack_object)
+        if isinstance(stack_object, AbilityOnStack):
+            source = stack_object.source_or_last_known(game)
+        else:
+            source = stack_object
+        shared = None if for_target_player else max(reader(game, controller, source, x_value), 0)
+        for target in game.resolve_targets(stack_object):
+            amount = shared
+            if amount is None:
+                whose = target.username if isinstance(target, Player) else controller
+                amount = max(reader(game, whose, source, x_value), 0)
+            game.deal_damage(target, amount, source=source)
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s1", for_spell=FORWARD, before=["dispatch._parse_targeted_clause"])
+def _parse_expression_amount_damage_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EXPRESSION_DAMAGE_RE`, `_EQUAL_TO_DAMAGE_TO_EACH_RE` and
+    `_DAMAGE_TO_PLAYER_EQUAL_TO_THEIR_RE`: damage whose amount is an
+    `amount_expression` the plain damage readers do not carry. Every target
+    takes the whole amount (CR 115.6's "up to" allows zero of them); "up to
+    X" is bounded by the X announced (CR 601.2c), which the targeting reader
+    reads off the announced text."""
+    text = clause.strip()
+    for_target_player = False
+    match = _EXPRESSION_DAMAGE_RE.fullmatch(text)
+    if match is not None and not (
+        re.search(r"\b(?:plus|minus|times|twice|thrice)\b", match.group("expr"), re.IGNORECASE)
+        # A spell's bare, caster-announced X (CR 107.3a) with no definition
+        # of its own: read off the cast record here rather than as
+        # `_DAMAGE_TARGET_RE`'s fixed count, which has no number for it -
+        # Crater's Claws's base "deals X damage to any target", read beside
+        # its ferocious alternative.
+        or (
+            for_spell
+            and match.group("expr").strip().lower() == "x"
+            and not re.search(r"\b(?:where|for each)\b", match.group("phrase"), re.IGNORECASE)
+        )
+    ):
+        match = None
+    if match is None:
+        match = _EQUAL_TO_DAMAGE_TO_EACH_RE.fullmatch(text)
+    if match is None:
+        match = _DAMAGE_TO_PLAYER_EQUAL_TO_THEIR_RE.fullmatch(text)
+        if match is None:
+            return None
+        expr = match.group("expr")
+        rewritten = expr
+        for pattern, replacement in _TARGET_PLAYER_REFERENCES:
+            rewritten = pattern.sub(replacement, rewritten)
+        if rewritten == expr:
+            return None
+        for_target_player = True
+        reader = amount_expression(rewritten)
+    else:
+        reader = amount_expression(match.group("expr"))
+    subject = re.split(r"\bdeals?\b", text, maxsplit=1, flags=re.IGNORECASE)[0]
+    if reader is None or _TARGETED_SUBJECT_RE.search(subject):
+        return None
+    if not _targets_understood(
+        match.group("phrase"), count_agnostic=True, allow_player_targets=True
+    ):
+        return None
+    return _deal_expression_damage(reader, for_target_player=for_target_player)
 
 
 # --------------------------------------------------------------------------

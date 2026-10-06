@@ -481,6 +481,23 @@ class CastRecord(EngineModel):
     value on the battlefield (CR 707.2) is not its card's. Read through
     `Game.last_known_mana_value`, the same number either way."""
 
+    additional_cost_kinds: list[str] = Field(default_factory=list)
+    """`additional_cost_cards`' `ComponentKind` values ("tap", "sacrifice",
+    "discard", ...), aligned by position - which verb paid each one. A
+    resolving spell's "the number of creatures tapped this way" (Burn at the
+    Stake), "the sacrificed creatures" (Soulblast) or "the discarded cards"
+    (Nahiri's Wrath) counts only the cards its own verb paid (CR 118.8,
+    CR 601.2h), never every card any additional cost touched."""
+
+    additional_cost_powers: list[int] = Field(default_factory=list)
+    """`additional_cost_cards`' powers, aligned by position and taken as the
+    record is written - CR 608.2h's last known information for "the total
+    power of the sacrificed creatures" (Soulblast, Corpse Cobble). Like
+    `additional_cost_mana_values` this is a snapshot, not an id lookup: a
+    sacrificed token ceases to exist (CR 704.5d) before the spell resolves.
+    A card with no power (a discarded instant, a `*` it cannot compute off
+    the battlefield) reads 0 (CR 107.2)."""
+
     enters_with_counters: list[str] = Field(default_factory=list)
     """One counter kind per counter the permanent this spell becomes enters
     with because of how it was cast - a cast permission's own rider, "If you
