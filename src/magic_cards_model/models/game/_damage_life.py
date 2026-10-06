@@ -745,6 +745,15 @@ class DamageLifeMixin:
         # happens").
         if prevented > 0 and shield.gains_life_when_prevented:
             self.gain_life(shield.controller, prevented)
+        if (
+            prevented > 0
+            and shield.counters_when_prevented is not None
+            and event.card is not None
+            and event.card.zone is Zone.BATTLEFIELD
+        ):
+            self.add_counters(
+                event.card, shield.counters_when_prevented, prevented, putter=shield.controller
+            )
         if prevented > 0 and shield.reflects is not None:
             self._deal_reflected_damage(shield.reflects, prevented, shield.controller)
 

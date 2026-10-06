@@ -879,6 +879,12 @@ class PreventionShield(EngineModel):
     the general mechanism and does not pretend to be.
     """
 
+    counters_when_prevented: str | None = None
+    """CR 615.5's "For each 1 damage prevented this way, put a +1/+1 counter
+    on that creature." (Test of Faith, Brace for Impact): the counter kind put
+    on the shielded permanent, one per 1 damage this shield prevents, as the
+    damage would have been dealt. `None` for a shield with no such rider."""
+
     @property
     def spent(self) -> bool:
         return self.used_up or (self.kind is ShieldKind.AMOUNT and self.amount <= 0)
