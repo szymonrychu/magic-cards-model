@@ -14,6 +14,9 @@ targets = ["components", "payment", "text"]
 CostPayment = "payment"
 _SpendContext = "payment"
 _ActivatedMana = "payment"
+# auto-tap helpers over MixedProduction alternatives; only payment reads them
+_mixed_options = "payment"
+_spelled_out = "payment"
 
 [[rules]]  # every other class is part of the cost model
 pattern = '.*'

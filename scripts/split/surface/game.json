@@ -1,5 +1,5 @@
 {
-  "captured_at": "f414649c1935ae9bd0ef8407ab954bb113be4845",
+  "captured_at": "da7abfa3490d5c7feb83a7183ab6b757be67f224",
   "defined": [
     "ActivationInstructions",
     "ActivationProhibition",
@@ -137,6 +137,7 @@
     "_UNRESOLVED_PROTECTION_QUALITY",
     "_WHO_MAY_ACTIVATE",
     "_ZERO_LOYALTY_EXEMPTION_RE",
+    "_activate_named_mana_abilities",
     "_activation_condition",
     "_card_characteristics",
     "_card_quality",
@@ -153,6 +154,7 @@
     "_is_cast_this_turn_quality",
     "_is_minus_symbol",
     "_is_spell_quality",
+    "_named_mana_abilities",
     "_names_match",
     "_names_the_source",
     "_negated_card_type_named",
@@ -275,6 +277,7 @@
     "ModeNotice",
     "NAMESPACE_OID",
     "NO_FURTHER_MODES",
+    "NamedManaAbility",
     "NamedTuple",
     "NextSpellFreeCastGrant",
     "NextSpellKeywordGrant",
@@ -492,6 +495,7 @@
     "search_prohibition_source",
     "self_normalized_effect_text",
     "self_reference_names",
+    "settle_mana_loss",
     "source_had_keyword",
     "source_id_of",
     "spell_has_quality",

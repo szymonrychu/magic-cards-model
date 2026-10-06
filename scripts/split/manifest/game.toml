@@ -209,6 +209,9 @@ stay = [
 announcement_profile = "_casting"
 # module-level helper; bake places members only, and its readers are targeting
 _that_player_of = "_stack_priority"
+# module-level helpers of PAY_MANA answers naming mana abilities; their readers pay costs
+_named_mana_abilities = "_costs_mana"
+_activate_named_mana_abilities = "_costs_mana"
 [[rules]]  # _turn_sba (any position, before first-word rules): state-based actions and the mulligan procedure wherever they appear
 pattern = '(?:[A-Za-z0-9_]*_)?(?:state_based|mulligan)(?:_[A-Za-z0-9_]*)?'
 target = "_turn_sba"
