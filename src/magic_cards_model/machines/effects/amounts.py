@@ -360,6 +360,94 @@ _DIFFERENT_CHARACTERISTIC_AMONG_RE = re.compile(
 )
 
 
+#: CR 122.1: a counter is "a marker placed on an object or player", and the
+#: set of kinds is open - poison (CR 122.1f), energy (CR 107.14), experience,
+#: rad (CR 122.1i) and ticket all sit on *players*. Whose counters is the
+#: tail: "you have", "your opponents have" (their total), "target player
+#: has", "they have"/"that player has" (an anaphor only the caller can
+#: resolve), and "among players" (everyone's total, Vault 12: The
+#: Necropolis).
+_PLAYER_COUNTER_KIND = r"(?P<kind>\{e\}|\+1/\+1|-1/-1|[a-z]+)"
+_PLAYER_COUNTER_WHO = (
+    r"(?P<who>you have|your opponents have|target (?:player|opponent) has"
+    r"|they have|that player has|among (?:all )?players|(?:all )?players have)"
+)
+_PLAYER_COUNTER_COUNT_RE = re.compile(
+    rf"^(?:(?:the )?(?:total )?(?:number|amount) of )?{_PLAYER_COUNTER_KIND}"
+    rf"(?: counters?)? {_PLAYER_COUNTER_WHO}$",
+    re.IGNORECASE,
+)
+
+
+def _player_counters_held(game: "Game", username: str, kind: str) -> int:
+    return game.player(username).counters[kind]
+
+
+def parse_player_counter_phrase(phrase: str) -> tuple[str, str] | None:
+    """`(kind, whose)` of a count of counters on players - `kind` the counter
+    key (`"poison"`, `"energy"`, ...) and `whose` one of "you have", "your
+    opponents have", "target player has", "they have", "that player has",
+    "among players" (every spelling folded onto those) - or `None` when
+    `phrase` is not one. Shared by the effect reader below and the layer
+    engine's static "for each poison counter your opponents have"."""
+    match = _PLAYER_COUNTER_COUNT_RE.fullmatch(phrase.strip().rstrip("."))
+    if match is None:
+        return None
+    word = match.group("kind").lower()
+    if word != "{e}" and "counter" not in phrase.lower():
+        return None
+    kind = str(Counter.ENERGY if word == "{e}" else _counter_kind(word))
+    who = match.group("who").lower()
+    if who.startswith("target "):
+        who = "target player has"
+    elif who.startswith("among") or who.endswith("players have"):
+        who = "among players"
+    return kind, who
+
+
+def player_counter_count(
+    phrase: str, *, anaphoric: bool = False
+) -> Callable[["Game", str], int] | None:
+    """Parse a count of counters on players - "the number of poison counters
+    you have", "poison counter your opponents have", "the total number of rad
+    counters among players", "{E} you have" - into `(game, controller) ->
+    int`, or `None` when `phrase` is not one.
+
+    The kind is any counter word (CR 122.1's open set) or `{E}` (energy,
+    CR 107.14). "Your opponents" is the total over every other player and
+    "among players" the total over all of them; "target player/opponent has"
+    reads the one player the resolving object targets (CR 608.2b: 0 when none
+    is left). "They have"/"that player has" name a player only the caller
+    knows, so they read through `anaphoric=True`, where the function's second
+    argument is that player's username rather than the controller's, and are
+    `None` otherwise.
+
+    CR 608.2h: the count is determined once, when the effect applies - the
+    caller keeps the `int`, not the function.
+    """
+    parsed = parse_player_counter_phrase(phrase)
+    if parsed is None:
+        return None
+    kind, who = parsed
+    if who in ("they have", "that player has"):
+        if not anaphoric:
+            return None
+        return lambda game, username: _player_counters_held(game, username, kind)
+    if anaphoric:
+        return None
+    if who == "you have":
+        return lambda game, controller: _player_counters_held(game, controller, kind)
+    if who == "your opponents have":
+        return lambda game, controller: sum(
+            opponent.counters[kind] for opponent in _opponents(game, controller)
+        )
+    if who == "target player has":
+        return lambda game, _controller: _count_for_targeted_player(
+            game, lambda g, username: _player_counters_held(g, username, kind)
+        )
+    return lambda game, _controller: sum(player.counters[kind] for player in game.players_in_game)
+
+
 def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     """Parse "the number of <type>[s] you control" or "... card(s) in your
     graveyard" into `(game, controller) -> int`, or `None` if `phrase` is not
@@ -383,6 +471,8 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
     if (history_count := counter_history_count(stripped)) is not None:
         return history_count
+    if (player_counters := player_counter_count(stripped)) is not None:
+        return player_counters
     if stripped.lower() == "that number":
         # The count channel (`Game.record_count`): the number an earlier
         # instruction of the same resolving object recorded (CR 608.2c) - the

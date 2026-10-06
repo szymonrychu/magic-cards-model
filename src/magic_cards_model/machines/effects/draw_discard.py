@@ -1513,6 +1513,47 @@ def _parse_target_player_discards_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "That player discards a card for each poison counter they have." - Whispering
+#: Specter's reflexive consequence. "That player" is CR 607.1 anaphora back to
+#: the player the triggering event named (the one dealt combat damage), and "they
+#: have" is the same player, so the count is read on *them* (CR 122.1: counters
+#: on a player), once, as the clause applies (CR 608.2h) - before any card goes.
+_THAT_PLAYER_DISCARDS_PER_COUNTER_RE = re.compile(
+    rf"^that player discards (?P<n>{COUNT}) cards? for each (?P<each>.+?)\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_that_player_discards_per_counter_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_THAT_PLAYER_DISCARDS_PER_COUNTER_RE`'s shape (ability-only: a spell
+    has no triggering event), or `None`."""
+    if for_spell:
+        return None
+    match = _THAT_PLAYER_DISCARDS_PER_COUNTER_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    per_unit = parse_count(match.group("n"))
+    counted = player_counter_count(match.group("each"), anaphoric=True)
+    if per_unit is None or counted is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        event = getattr(stack_object, "event", None)
+        username = None if event is None else event.player or event.subject_controller
+        if username is None:
+            return
+        player = game.player(username)
+        needed = min(per_unit * counted(game, username), len(player.hand))
+        if needed <= 0:
+            return
+        source = stack_object.source_name  # type: ignore[union-attr]
+        _discard_cards(game, player, needed, source, source_id=source_id_of(stack_object))
+
+    return effect
+
+
 #: "Each opponent discards N cards."/"Each player discards N cards." with
 #: nothing after it - CR 102.2's "each opponent"/"each player", CR 701.9a's
 #: plain discard, CR 701.9b's default chooser (the discarding player
@@ -2633,7 +2674,7 @@ from ._common import (  # noqa: E402
     _targets_understood,
     computed_permanents,
 )
-from .amounts import count_expression  # noqa: E402
+from .amounts import count_expression, player_counter_count  # noqa: E402
 from .continuous import _who_cant_discard_consequence  # noqa: E402
 from .dispatch import (  # noqa: E402
     _parse_mixed_clauses,
