@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "d285a7a1-bb7e-4a78-a49f-c2add62b829a",
+  "oracle_id": "89abdf4c-ba9d-4602-ae50-cf79c68ea08d",
+  "multiverse_ids": [
+    513588
+  ],
+  "mtgo_id": 88699,
+  "arena_id": 76504,
+  "tcgplayer_id": 235974,
+  "cardmarket_id": 558026,
+  "name": "Pigment Storm",
+  "lang": "en",
+  "released_at": "2021-04-23",
+  "uri": "https://api.scryfall.com/cards/d285a7a1-bb7e-4a78-a49f-c2add62b829a",
+  "scryfall_uri": "https://scryfall.com/card/stx/111/pigment-storm?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:22:30Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.jpg?1783927350",
+    "normal": "https://cards.scryfall.io/normal/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.jpg?1783927350",
+    "large": "https://cards.scryfall.io/large/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.jpg?1783927350",
+    "png": "https://cards.scryfall.io/png/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.png?1783927350",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.jpg?1783927350",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.jpg?1783927350",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.webp?1783927350",
+    "grid": "https://cards.scryfall.io/grid/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.webp?1783927350",
+    "display": "https://cards.scryfall.io/display/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.webp?1783927350",
+    "art": "https://cards.scryfall.io/art/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.webp?1783927350",
+    "crop": "https://cards.scryfall.io/crop/front/d/2/d285a7a1-bb7e-4a78-a49f-c2add62b829a.webp?1783927350"
+  },
+  "mana_cost": "{3}{R}{R}",
+  "cmc": 5.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Pigment Storm deals 5 damage to target creature. Excess damage is dealt to that creature's controller instead.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "541c3c28-8747-40e5-a231-8e8f33234859",
+  "set": "stx",
+  "set_name": "Strixhaven: School of Mages",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/541c3c28-8747-40e5-a231-8e8f33234859",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Astx&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/stx?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d285a7a1-bb7e-4a78-a49f-c2add62b829a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A89abdf4c-ba9d-4602-ae50-cf79c68ea08d&unique=prints",
+  "collector_number": "111",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "When art projects collapse, Prismari students revel in the beauty of destruction. Everyone else runs for cover.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Bayard Wu",
+  "artist_ids": [
+    "b089963c-610a-4d50-9206-d64b7caedef1"
+  ],
+  "illustration_id": "ad5bebe8-b326-4000-b05e-fe99602fc98e",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 25697,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/card-image-gallery/strixhaven",
+    "previewed_at": "2021-04-02"
+  },
+  "prices": {
+    "usd": "0.09",
+    "usd_foil": "0.11",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.10",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=513588&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPigment%2BStorm",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPigment%2BStorm",
+    "edhrec": "https://edhrec.com/route/?cc=Pigment+Storm"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F235974%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=558026&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/88699?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

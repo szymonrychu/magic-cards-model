@@ -7373,3 +7373,13 @@ No new persisted field (schema unchanged). Known gap seen while choosing proof c
 | Support N credited by the support oracle as an executed keyword action (the clause `counters._parse_support_clause` reads, on a spell's own "Support N." line or an enters trigger's "support N.") | 701.41a | `support.executed_keywords` | Shoulder to Shoulder, Expedition Raptor | `test_nw01_support_keyword.py` |
 
 No new persisted field from F1-F5 (schema stays 115).
+
+## NW-02 T6: excess damage dealt to the controller, and tokens equal to the excess
+
+| Mechanic | CR | Reader | Proof cards | Test |
+|---|---|---|---|---|
+| "`<src>` deals N\|X damage to target creature[, where X is ...]. Excess damage is dealt to that creature's controller instead." - the creature is dealt damage up to what is still lethal (marked damage counted; a deathtouch source's lethal damage is 1), its controller the rest, each a separate damage event by the same source; the controller is captured before the damage; an illegal sole target does nothing | 120.4a, 120.10, 702.2, 608.2b, 608.2h | `merges._merge_damage_then_excess_to_controller_spell`, `_deal_with_excess_to_controller`, `_excess_threshold` (reads `damage._lethal_amount_before_damage`) | Flame Spill, Pigment Storm, Gandalf's Sanction (listed); Ram Through (second printing) | `scenarios/test_nw02_excess_damage_to_controller.py` |
+| "Target creature you control deals damage equal to its power to target creature you don't control. If the creature you control has `<keyword>`, excess damage is dealt to that creature's controller instead." - the keyword is read off the biter as the damage is dealt, and the biter is the source (deathtouch counts) | 120.4a, 614.1a, 613.5 | `merges._merge_bite_then_excess_to_controller_spell` | Ram Through | `scenarios/test_nw02_excess_damage_to_controller.py` |
+| "`<src>` deals N\|X damage to target creature. Create a number of `<tokens>` equal to the amount of excess damage dealt to that creature this way." - excess is the damage actually dealt above the threshold read before it landed, so prevented damage makes none; the caster creates 1/1 Goblins, tapped Treasures or Blood tokens | 120.10, 111.10a, 111.10g | `merges._merge_damage_then_tokens_per_excess_spell`, `tokens._token_creator_for_count`, `models.token.BLOOD` (the predefined Blood token with its quoted ability) | Goblin Negotiation, Hell to Pay, Lacerate Flesh | `scenarios/test_nw02_tokens_per_excess_damage.py` |
+
+No new persisted field (schema stays 115).

@@ -3780,6 +3780,25 @@ def _parse_create_tokens_equal_to_event_subject_stat_clause(
     return effect
 
 
+def _token_creator_for_count(desc: str) -> Callable[["Game", "StackObject", int], None] | None:
+    """The token half of "create a number of `<desc>` tokens equal to ...":
+    the same one-token reader `_parse_token_clause` already gives "create a
+    `<desc>` token" (a 1/1 red Goblin creature, a tapped Treasure, a Blood
+    token - CR 111.10a/111.10g's predefined rows), run `count` times, the
+    count being whatever the caller read off the rest of the sentence.
+    CR 107.1b: a zero or negative count creates nothing.
+    """
+    template = _parse_token_clause(f"create a {desc.strip()} token", for_spell=True)
+    if template is None:
+        return None
+
+    def create(game: "Game", stack_object: "StackObject", count: int) -> None:
+        for _ in range(max(count, 0)):
+            template(game, stack_object)
+
+    return create
+
+
 #: "Target player creates a token that's a copy of target creature you
 #: control." (Echocasting Symposium) - CR 111.2: the player the instruction
 #: names creates the token, so that player owns and controls it; CR 707.2:
