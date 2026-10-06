@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "bb0f0260-b737-43aa-a6fc-9e0b55b24369",
+  "oracle_id": "d4a61685-7149-4d14-bc17-85b060945687",
+  "multiverse_ids": [
+    651851
+  ],
+  "mtgo_id": 123016,
+  "tcgplayer_id": 535225,
+  "cardmarket_id": 753210,
+  "name": "Mausoleum Turnkey",
+  "lang": "en",
+  "released_at": "2024-02-23",
+  "uri": "https://api.scryfall.com/cards/bb0f0260-b737-43aa-a6fc-9e0b55b24369",
+  "scryfall_uri": "https://scryfall.com/card/clu/116/mausoleum-turnkey?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:15:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.jpg?1783912546",
+    "normal": "https://cards.scryfall.io/normal/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.jpg?1783912546",
+    "large": "https://cards.scryfall.io/large/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.jpg?1783912546",
+    "png": "https://cards.scryfall.io/png/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.png?1783912546",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.jpg?1783912546",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.jpg?1783912546",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.webp?1783912546",
+    "grid": "https://cards.scryfall.io/grid/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.webp?1783912546",
+    "display": "https://cards.scryfall.io/display/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.webp?1783912546",
+    "art": "https://cards.scryfall.io/art/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.webp?1783912546",
+    "crop": "https://cards.scryfall.io/crop/front/b/b/bb0f0260-b737-43aa-a6fc-9e0b55b24369.webp?1783912546"
+  },
+  "mana_cost": "{3}{B}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Ogre Rogue",
+  "oracle_text": "When this creature enters, return target creature card of an opponent's choice from your graveyard to your hand.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d4bfabcf-a859-43a4-9d8a-665533c8b174",
+  "set": "clu",
+  "set_name": "Ravnica: Clue Edition",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/d4bfabcf-a859-43a4-9d8a-665533c8b174",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aclu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/clu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bb0f0260-b737-43aa-a6fc-9e0b55b24369/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad4a61685-7149-4d14-bc17-85b060945687&unique=prints",
+  "collector_number": "116",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "When he reaches for his key ring, you should be running for the exit.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Darrell Riche",
+  "artist_ids": [
+    "262c8e55-4efc-467b-a042-6f734b9d2e01"
+  ],
+  "illustration_id": "a8ae0294-bf39-466a-aff9-df0f05ad282f",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 27976,
+  "prices": {
+    "usd": "0.11",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=651851&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMausoleum%2BTurnkey",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMausoleum%2BTurnkey",
+    "edhrec": "https://edhrec.com/route/?cc=Mausoleum+Turnkey"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535225%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=753210&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/123016?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

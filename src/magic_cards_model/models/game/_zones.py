@@ -2895,6 +2895,16 @@ class ZonesMixin:
                 )
             return card_state
 
+    def graveyard_arrival_of(self: "Game", card_id: UUID) -> GraveyardArrival | None:
+        """The *latest* arrival of `card_id` in a graveyard this turn, or None
+        when it did not arrive this turn: a card that has since moved on is a
+        new object (CR 400.7), so only its last trip counts."""
+        latest = None
+        for arrival in self.graveyard_arrivals_this_turn:
+            if arrival.card_id == card_id:
+                latest = arrival
+        return latest
+
     def cards_put_into_graveyard_from_battlefield_this_turn(
         self: "Game", owner: str
     ) -> list[CardState]:
