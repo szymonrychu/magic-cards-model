@@ -59,6 +59,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT
 from ._common import (
     _OBJECT_ANAPHOR,
     AbilityEffect,
@@ -3193,6 +3194,7 @@ _TRAILING_IF_OTHERWISE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s2", for_spell=False)
 def _parse_leading_then_if_otherwise_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_LEADING_THEN_IF_OTHERWISE_RE`'s shape - see its own docstring.
 

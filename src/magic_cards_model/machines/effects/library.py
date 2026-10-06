@@ -48,6 +48,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import _OWNER_PUTS_IT_INTO_LIBRARY_TAIL, AbilityEffect, Effect, TargetedClause
 
 #: "Scry N." - the default half of Forsaken Crossroads' own paragraph, read
@@ -209,6 +210,7 @@ _HIDEAWAY_LOOK_EXILE_ONE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_hideaway_clause(text: str) -> AbilityEffect | None:
     """`_HIDEAWAY_LOOK_EXILE_ONE_RE`'s shape (CR 702.75a).
 
@@ -284,6 +286,7 @@ _HIDEAWAY_COUNTER_THEN_CONDITIONAL_FREE_CAST_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_hideaway_counter_then_conditional_free_cast_clause(text: str) -> AbilityEffect | None:
     """`_HIDEAWAY_COUNTER_THEN_CONDITIONAL_FREE_CAST_RE`'s shape - Fight
     Rigging's whole beginning-of-combat trigger (CR 122.1a's counter;
@@ -436,6 +439,7 @@ _HIDEAWAY_PLAY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_hideaway_play_clause(text: str) -> AbilityEffect | None:
     """`_HIDEAWAY_PLAY_RE`'s shape.
 
@@ -503,6 +507,7 @@ _THAT_PLAYER_MILLS_THAT_MANY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_that_player_mills_that_many_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -569,6 +574,7 @@ _BOTTOM_HAND_THEN_DRAW_PLUS_ONE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s19")
 def _parse_bottom_hand_then_draw_plus_one_clause(text: str) -> Effect | None:
     """Valakut Awakening - see `_BOTTOM_HAND_THEN_DRAW_PLUS_ONE_RE`.
 
@@ -627,6 +633,7 @@ _LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_BONUS_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s19")
 def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect | None:
     """Turntimber Symbiosis - see `_LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_
     BONUS_RE`. An impulsive-look shape close to
@@ -721,6 +728,7 @@ _REVEAL_TOP_N_MAY_BATTLEFIELD_CREATURE_TEAMWORK_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s18")
 def _parse_reveal_top_n_may_battlefield_creature_teamwork_clause(text: str) -> Effect | None:
     """`_REVEAL_TOP_N_MAY_BATTLEFIELD_CREATURE_TEAMWORK_RE`'s shape - see
     above. CR 701.20a: every one of the revealed cards is recorded through
@@ -829,6 +837,7 @@ _REVEAL_UNTIL_LAND_DAMAGE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s16")
 def _parse_reveal_until_land_damage_clause(text: str) -> AbilityEffect | None:
     """`_REVEAL_UNTIL_LAND_DAMAGE_RE`'s shape - see above.
 
@@ -958,6 +967,7 @@ _REVEAL_UNTIL_X_KIND_PUT_ANY_ONTO_BATTLEFIELD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_reveal_until_x_kind_put_any_onto_battlefield_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
@@ -1039,6 +1049,7 @@ _REVEAL_UNTIL_X_NONLAND_EXILE_PER_COLOR_RE = re.compile(
 _NONLAND_PREDICATE: Callable[[CardState], bool] = lambda state: Type.LAND not in state.types  # noqa: E731
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_reveal_until_x_nonland_exile_per_color_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
@@ -1246,6 +1257,7 @@ _REVEAL_TOP_N_PUT_RANDOM_KIND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s34")
 def _parse_reveal_top_n_put_random_kind_clause(text: str) -> AbilityEffect | None:
     """`_REVEAL_TOP_N_PUT_RANDOM_KIND_RE`'s shape - see above.
 
@@ -1345,6 +1357,7 @@ _MILL_THEN_MAY_RETURN_CREATURE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_mill_then_may_return_creature_clause(text: str) -> AbilityEffect | None:
     """`_MILL_THEN_MAY_RETURN_CREATURE_RE`'s shape - Tyvar, Jubilant
     Brawler's `-2`.
@@ -1653,6 +1666,7 @@ def _select_from_top_runner(
     return run
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_select_from_top_clause(text: str) -> AbilityEffect | None:
     """The family above, on a triggered or activated ability (CR 603.3a,
     CR 602.2a): the controller is the ability's, and "this creature" is the
@@ -1673,6 +1687,7 @@ def _parse_select_from_top_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+@SPELL_TEXT.rung("s19")
 def _parse_select_from_top_spell_clause(text: str) -> Effect | None:
     """The same family on a spell or a spell's mode (CR 608.2c) - Scout the
     City's "Look Around". A spell is not on the battlefield, so the
@@ -1719,6 +1734,7 @@ _LOOK_TOP_X_PUT_PERMANENTS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_look_top_x_put_permanents_clause(text: str) -> AbilityEffect | None:
     """`_LOOK_TOP_X_PUT_PERMANENTS_RE`'s shape - see the banner above.
 
@@ -1807,6 +1823,7 @@ _MILL_THEN_MAY_PUT_ON_TOP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s34")
 def _parse_mill_then_may_put_on_top_clause(text: str) -> AbilityEffect | None:
     """`_MILL_THEN_MAY_PUT_ON_TOP_RE`'s shape - see the banner above.
 
@@ -2148,6 +2165,7 @@ def _look_top_reveal_consequence(text: str) -> _RevealedCardEffect | None:
     return lambda game, ability, _revealed: plain(game, ability)
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_look_top_may_reveal_clause(text: str) -> AbilityEffect | None:
     """`_LOOK_TOP_MAY_REVEAL_RE`'s shape - see the banner above.
 
@@ -2210,6 +2228,7 @@ _LEAD_THEN_LOOK_TOP_CARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     """`_LOOK_TOP_CARD_CONDITIONAL_RE`'s shape - Fecund Greenshell's own
     enters trigger, and Coiling Oracle's, Risen Reef's, and Skyward Eye
@@ -2368,6 +2387,7 @@ _MILL_THAT_MANY_THEN_TAKE_FROM_AMONG_THEM_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s23")
 def _parse_mill_that_many_then_take_from_among_them(text: str) -> AbilityEffect | None:
     """`_MILL_THAT_MANY_THEN_TAKE_FROM_AMONG_THEM_RE`'s shape - see it for what
     each sentence points back at.
@@ -2442,6 +2462,7 @@ _LOOK_TOP_KEEP_ONE_ON_TOP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_look_top_keep_one_on_top_clause(text: str) -> AbilityEffect | None:
     """`_LOOK_TOP_KEEP_ONE_ON_TOP_RE`'s shape, through `Game.look_at_top_and_
     split`: the "moved" half is the card kept on top (at most one - the card
@@ -2501,6 +2522,7 @@ _CAST_TRIGGER_LOOK_TOP_X_TAKE_ONE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_cast_trigger_look_top_x_take_one_clause(effect_text: str) -> AbilityEffect | None:
     """`_CAST_TRIGGER_LOOK_TOP_X_TAKE_ONE_RE`'s shape - see the banner above.
 
@@ -2572,6 +2594,7 @@ _CAST_TRIGGER_REVEAL_TOP_X_PUT_ONE_PERMANENT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_cast_trigger_reveal_top_x_put_one_permanent_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
@@ -2673,6 +2696,7 @@ _CAST_TRIGGER_REVEAL_UNTIL_X_KIND_TO_GRAVEYARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_cast_trigger_reveal_until_x_kind_to_graveyard_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
@@ -2712,6 +2736,7 @@ _PUT_EACH_ON_BOTTOM_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_put_each_on_bottom_clause(sentence: str) -> TargetedClause | None:
     """ "Put each/all <qualifier> on the bottom of their owners' libraries."
 
@@ -2767,6 +2792,7 @@ _VENTURE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s17", for_spell=FORWARD)
 def _parse_venture_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Venture into the dungeon." (Veteran Dungeoneer, Dungeon Map, Bar the
     Gate) - `machines/dungeon.venture` for the resolving object's controller."""
@@ -2804,6 +2830,7 @@ _LOOK_AT_TOP_CARD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s29")
 def _parse_look_at_top_card_clause(
     clause: str,
 ) -> Callable[["Game", "StackObject"], None] | None:
@@ -2966,6 +2993,7 @@ def _parse_look_hand_may_exile_owner_may_play_clause(text: str) -> AbilityEffect
 _DISCOVER_RE = re.compile(r"^discover (?P<n>\d+)$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_discover_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Discover N." - `_DISCOVER_RE`'s shape, as one clause among however
     many the card prints around it.
@@ -3064,6 +3092,7 @@ def _is_lesson(state: CardState) -> bool:
     return any(subtype.lower() == "lesson" for subtype in state.subtypes)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_learn_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Learn." - `_LEARN_RE`'s shape, as one clause among however many the
     card prints around it.
@@ -3119,6 +3148,7 @@ def manifest(game: "Game", controller: str, card_state: CardState) -> CardState:
     return game.put_onto_battlefield(card_state, controller)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_manifest_top_card_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Manifest the top card of your library." or "Manifest the top N
     cards of your library." (Ethereal Ambush) - `_MANIFEST_TOP_CARD_RE`'s
@@ -3196,6 +3226,7 @@ def manifest_dread(game: "Game", controller: str, source: str, *, source_id: str
             game.put_into_graveyard(state)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_manifest_dread_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Manifest dread." - `_MANIFEST_DREAD_RE`'s shape.
 
@@ -3243,6 +3274,7 @@ _MANIFEST_FROM_HAND_THEN_DRAW_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s5")
 def _parse_manifest_from_hand_then_draw_clause(effect_text: str) -> AbilityEffect | None:
     """`_MANIFEST_FROM_HAND_THEN_DRAW_RE`'s shape - see the banner above."""
     match = _MANIFEST_FROM_HAND_THEN_DRAW_RE.fullmatch(" ".join(effect_text.split()))
@@ -3315,6 +3347,7 @@ _DEFENDING_PLAYER_REVEALS_TOP_CONDITIONAL_LAND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_defending_player_reveals_top_conditional_land_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -3389,6 +3422,7 @@ _REVEAL_N_CARDS_FROM_HAND_THEN_CHOOSE_DISCARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s10", for_spell=False)
 def _parse_reveal_n_cards_then_choose_discard_whole_text(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -3480,6 +3514,7 @@ _PUT_CARDS_FROM_HAND_INTO_LIBRARY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_put_cards_from_hand_into_library_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -3679,6 +3714,7 @@ _REVEAL_HAND_CHOOSE_TWO_BOUNDED_CARDS_THEN_DISCARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s5")
 def _parse_reveal_hand_choose_two_bounded_cards_then_discard_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
@@ -3764,6 +3800,7 @@ _TARGET_PLAYER_SHUFFLES_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_target_player_shuffles_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_TARGET_PLAYER_SHUFFLES_RE`'s shape, or `None` if this is not it."""
     if _TARGET_PLAYER_SHUFFLES_RE.fullmatch(clause.strip()) is None:
@@ -3982,6 +4019,7 @@ _LOOK_TOP_SPLIT_CONDITIONAL_INSTEAD_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_look_top_split_conditional_instead_clause(effect_text: str) -> Effect | None:
     """`_LOOK_TOP_SPLIT_CONDITIONAL_INSTEAD_RE`'s shape, or `None`.
 
@@ -4179,6 +4217,7 @@ _DEAD_OBJECT_TO_LIBRARY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_dead_object_to_library_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_DEAD_OBJECT_TO_LIBRARY_RE`'s shape.
 
@@ -4280,6 +4319,7 @@ _OWNER_SHUFFLES_GRAVEYARD_INTO_LIBRARY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_owner_shuffles_graveyard_into_library_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -4495,6 +4535,7 @@ _TARGET_PLAYER_NAME_REVEAL_BRANCH_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s18")
 def _parse_target_player_name_reveal_branch_clause(text: str) -> AbilityEffect | None:
     """`_TARGET_PLAYER_NAME_REVEAL_BRANCH_RE`'s shape; see the banner above."""
     match = _TARGET_PLAYER_NAME_REVEAL_BRANCH_RE.fullmatch(text.strip())
@@ -4566,6 +4607,7 @@ _EACH_PLAYER_NAME_REVEAL_BRANCH_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s18")
 def _parse_each_player_name_reveal_branch_clause(text: str) -> AbilityEffect | None:
     """`_EACH_PLAYER_NAME_REVEAL_BRANCH_RE`'s shape; see the banner above.
 
@@ -4625,6 +4667,7 @@ _SHUFFLE_TARGET_CARDS_INTO_LIBRARY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s5", for_spell=FORWARD)
 def _parse_shuffle_target_cards_into_library_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -4689,6 +4732,7 @@ _SHUFFLE_TARGET_PERMANENT_INTO_LIBRARY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s5", for_spell=FORWARD)
 def _parse_shuffle_target_permanent_into_library_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -4923,6 +4967,7 @@ def _reveal_a_quality_card_from_outside_the_game(
         _reveal_and_bring_into_hand(game, controller, by_id[card_id], source)
 
 
+@SPELL_TEXT.rung("s21")
 def _parse_reveal_from_outside_the_game_into_hand_clause(effect_text: str) -> Effect | None:
     """`_REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`'s shape on a spell, or
     `None`. "Exile <this>" is CR 201.5's reference to this very spell, done
@@ -4986,6 +5031,7 @@ _SELF_OWNER_SHUFFLES_SELF_INTO_LIBRARY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_self_owner_shuffles_self_into_library_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -5061,6 +5107,7 @@ _RECRUIT_TOKEN = TokenDefinition(
 )
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_recruit_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_RECRUIT_RE`'s shape - CR 701.70a, spelled out.
 
@@ -5241,6 +5288,7 @@ _EXPLORES_CLAUSE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s7", for_spell=FORWARD)
 def _parse_explores_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_EXPLORES_CLAUSE_RE`'s shape; see the banner above.
 
@@ -5310,6 +5358,7 @@ _EXPLORES_THEN_CONDITIONAL_MASS_DESTROY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_explores_then_conditional_mass_destroy(text: str) -> AbilityEffect | None:
     """`_EXPLORES_THEN_CONDITIONAL_MASS_DESTROY_RE`'s shape - Amalia
     Benavides Aguirre's own "whenever you gain life" trigger.
@@ -5382,6 +5431,7 @@ _MILL_THEN_PLAY_THAT_CARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_mill_then_play_that_card(text: str) -> AbilityEffect | None:
     """`_MILL_THEN_PLAY_THAT_CARD_RE`'s shape - Tablet of Discovery's own
     enters trigger.
@@ -5449,6 +5499,8 @@ _MILL_THEN_RETURN_TO_HAND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
+@SPELL_TEXT.rung("s22")
 def _parse_mill_then_return_to_hand_clause(text: str) -> TargetedClause | None:
     """`_MILL_THEN_RETURN_TO_HAND_RE`'s shape, for a spell, a mode, or an
     activated or triggered ability alike - the effect reads only
@@ -5832,6 +5884,7 @@ def _mill_then_may_take_from_milled_runner(
     return run
 
 
+@SPELL_TEXT.rung("s22", before=["library._parse_mill_then_put_all_from_milled"])
 def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
     """The runner above, on a spell (CR 608.3) - Rapid Rescue."""
     run = _mill_then_may_take_from_milled_runner(text)
@@ -5844,6 +5897,7 @@ def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s34", before=["library._parse_mill_then_put_all_from_milled_ability"])
 def _parse_mill_then_may_take_from_milled_ability(text: str) -> AbilityEffect | None:
     """The runner above, on a triggered or activated ability (CR 603.3a,
     CR 602.2a) - Vorinclex // The Grand Evolution's chapter I."""
@@ -5917,6 +5971,7 @@ def _mill_then_put_all_from_milled_runner(
     return run
 
 
+@SPELL_TEXT.rung("s22")
 def _parse_mill_then_put_all_from_milled(text: str) -> Effect | None:
     """The runner above, on a spell (CR 608.3) - Gleam of Death."""
     run = _mill_then_put_all_from_milled_runner(text)
@@ -5929,6 +5984,7 @@ def _parse_mill_then_put_all_from_milled(text: str) -> Effect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s34")
 def _parse_mill_then_put_all_from_milled_ability(text: str) -> AbilityEffect | None:
     """The runner above, on a triggered or activated ability."""
     run = _mill_then_put_all_from_milled_runner(text)
@@ -6087,6 +6143,7 @@ _LOOK_TOP_LANDS_TAKE_TO_HAND_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s22")
 def _parse_look_top_lands_take_to_hand(text: str) -> Effect | None:
     """`_LOOK_TOP_LANDS_TAKE_TO_HAND_RE`'s shape - Consult the Star Charts.
 
@@ -6153,6 +6210,7 @@ _LOOK_TOP_N_PUT_TOTAL_MV_ONTO_BATTLEFIELD_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s22")
 def _parse_look_top_n_put_total_mv_onto_battlefield(text: str) -> Effect | None:
     """`_LOOK_TOP_N_PUT_TOTAL_MV_ONTO_BATTLEFIELD_RE`'s shape -
     Michelangelo's Technique.

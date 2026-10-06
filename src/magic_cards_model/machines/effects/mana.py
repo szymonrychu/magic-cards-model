@@ -34,6 +34,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE
 from ._common import AbilityEffect, TargetedClause
 
 #: "..., where X is the amount of mana spent to cast that spell." - Aberrant
@@ -173,6 +174,13 @@ def _parse_landfall_type_then_add_mana_clause_pair(
     return effect
 
 
+@ABILITY_TEXT.rung(
+    "s22",
+    before=[
+        "mana._parse_add_one_mana_of_any_color_trigger",
+        "mana._parse_add_mana_in_any_combination_trigger",
+    ],
+)
 def _parse_mana_adding_trigger(text: str) -> AbilityEffect | None:
     """CR 605.1b's triggered mana ability, resolving: the mana
     `parse_triggered_mana` reads off the effect text goes into the recipient's
@@ -314,6 +322,7 @@ _KEEP_MANA_UNTIL_END_OF_TURN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_add_one_mana_of_any_color_trigger(text: str) -> AbilityEffect | None:
     """`_ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE`'s shape - Crumbling Vestige's
     "one", Boommobile's printed "four", and Sanctum of Fruitful Harvest's
@@ -447,6 +456,7 @@ _ADD_THAT_MUCH_COLORED_MANA_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_add_that_much_colored_mana_trigger(text: str) -> AbilityEffect | None:
     """`_ADD_THAT_MUCH_COLORED_MANA_RE`'s shape."""
     match = _ADD_THAT_MUCH_COLORED_MANA_RE.fullmatch(text.strip())
@@ -535,6 +545,7 @@ _MAY_PAY_MANA_IF_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_may_pay_mana_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_MAY_PAY_MANA_IF_YOU_DO_RE`'s shape - see its own docstring for why
     this is CR 118.12, not CR 603.12. The symbol run is mana only
@@ -580,6 +591,7 @@ def _parse_may_pay_mana_if_you_do_clause(text: str) -> AbilityEffect | None:
 _ADD_MANA_RE = re.compile(r"^add (?P<mana>(?:\{[wubrgc]\}\s*)+)$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_add_mana_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Add {C}{C}{C}" on a resolving ability or spell (CR 106.4).
 
@@ -629,6 +641,7 @@ _IF_CONDITION_ADD_MANA_EQUAL_TO_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_if_condition_add_mana_equal_to_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -760,6 +773,7 @@ def _add_mana_in_any_combination(
         player.mana_pool.add(color, restriction=restriction, retain_until=retain_until)
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_add_any_combination_mana_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -785,6 +799,7 @@ def _parse_add_any_combination_mana_clause(
 #: the instruction with its own trailing sentences, read whole: CR 500.5b's
 #: retention (`_KEEP_MANA_UNTIL_END_OF_TURN_RE`, Grand Warlord Radha) and
 #: CR 106.6's restriction tag every unit it adds.
+@ABILITY_TEXT.rung("s22")
 def _parse_add_mana_in_any_combination_trigger(text: str) -> AbilityEffect | None:
     """`_ADD_ANY_COMBINATION_MANA_RE` plus its trailing sentences, as one
     triggered ability's whole effect - see the banner above."""

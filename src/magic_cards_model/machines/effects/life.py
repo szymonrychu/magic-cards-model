@@ -25,6 +25,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import AbilityEffect, ClauseEffect, Effect, TargetedClause
 
 
@@ -47,6 +48,7 @@ _EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_each_opponent_loses_life_equal_to(text: str) -> AbilityEffect | None:
     """Grist, the Hunger Tide's -5, see `_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_RE`.
 
@@ -101,6 +103,7 @@ _ITS_CONTROLLER_MAY_PAY_LIFE_THEN_DRAW_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_its_controller_may_pay_life_then_draw_clause(text: str) -> AbilityEffect | None:
     """`_ITS_CONTROLLER_MAY_PAY_LIFE_THEN_DRAW_RE`'s shape - Gix, Yawgmoth
     Praetor's whole trigger. Ability-only: nothing in the pool prints this on
@@ -143,6 +146,7 @@ _PAY_ANY_LIFE_THEN_DRAW_THAT_MANY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_pay_any_life_then_draw_that_many_clause(text: str) -> AbilityEffect | None:
     """`_PAY_ANY_LIFE_THEN_DRAW_THAT_MANY_RE`'s shape - Necrodominance's
     whole end-step trigger, via `Game.pay_any_amount_of_life`
@@ -360,6 +364,7 @@ _YOU_AND_EVENT_PLAYER_GAIN_THAT_MUCH_LIFE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s39", for_spell=False)
 def _parse_you_and_event_player_gain_that_much_life_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -407,6 +412,7 @@ _THAT_PLAYER_LOSES_LIFE_SEARCHES_PUTS_IN_HAND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s33", for_spell=False)
 def _parse_that_player_loses_life_searches_puts_in_hand_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -462,6 +468,7 @@ _GAIN_LIFE_EQUAL_TO_ADDITIONAL_COST_CARD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s25", for_spell=FORWARD)
 def _parse_gain_life_equal_to_additional_cost_card_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -568,6 +575,7 @@ _GAIN_LIFE_IF_COLOR_SPENT_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_gain_life_if_color_spent_clause(effect_text: str) -> Effect | None:
     """`_GAIN_LIFE_IF_COLOR_SPENT_RE`'s shape, or `None` if this is not it."""
     match = _GAIN_LIFE_IF_COLOR_SPENT_RE.fullmatch(effect_text.strip())
@@ -605,6 +613,7 @@ _MAY_PAY_LIFE_IF_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_may_pay_life_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_MAY_PAY_LIFE_IF_YOU_DO_RE`'s shape; the consequence is
     `pay_consequence_effect`'s, shared with the mana and energy twins."""
@@ -643,6 +652,7 @@ _THEY_GAIN_OR_LOSE_LIFE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_they_gain_or_lose_life_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_THEY_GAIN_OR_LOSE_LIFE_RE`'s shape. Ability-only: a spell has no
     `ability.event` to read "they" against."""
@@ -730,6 +740,7 @@ _GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_gain_life_equal_to_sacrificed_creature_clause(text: str) -> AbilityEffect | None:
     """`_GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE`'s shape."""
     match = _GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE.fullmatch(text.strip())
@@ -755,6 +766,7 @@ _EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_each_opponent_loses_life_equal_to_sacrificed_creature_clause(
     text: str,
 ) -> AbilityEffect | None:

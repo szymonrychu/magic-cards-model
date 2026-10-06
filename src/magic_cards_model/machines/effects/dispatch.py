@@ -72,6 +72,7 @@ from ..zone_resets import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _SPELL_QUALIFIER_WORD,
     _UNQUOTED_PREFIX,
@@ -187,6 +188,7 @@ _WANDERWINE_FAREWELL_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s17", for_spell=True)
 def _parse_wanderwine_farewell_clause(text: str, *, for_spell: bool) -> Effect | None:
     """`_WANDERWINE_FAREWELL_RE`'s shape, or `None`."""
     if not for_spell:
@@ -1620,6 +1622,7 @@ _TARGET_GAINS_KEYWORDS_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s1", for_spell=FORWARD)
 def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a targeted effect, or `None` if this wave does not cover
     its shape or cannot confidently read its restriction.
@@ -2431,6 +2434,8 @@ _CAST_TARGET_CARD_FROM_GRAVEYARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
+@SPELL_TEXT.rung("s10")
 def _parse_cast_target_card_from_graveyard_clause(text: str) -> TargetedClause | None:
     """`_CAST_TARGET_CARD_FROM_GRAVEYARD_RE`'s shape.
 
@@ -2583,6 +2588,7 @@ _PUT_CARDS_THAT_DIED_THIS_TURN_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s8")
 def _parse_put_cards_that_died_this_turn_clause(text: str) -> Effect | None:
     """`_PUT_CARDS_THAT_DIED_THIS_TURN_RE`'s shape - see the banner above."""
     match = _PUT_CARDS_THAT_DIED_THIS_TURN_RE.fullmatch(" ".join(text.strip().split()))
@@ -2741,32 +2747,8 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         parse_sacrifice_self_when_you_do,
     )
 
-    blight_counter_punisher = _parse_put_counter_then_for_each_counter_punisher_clause(effect_text)
-    if blight_counter_punisher is not None:
-        return blight_counter_punisher
-    optional_behold_then_if_you_do = _parse_optional_behold_then_if_you_do_clause(effect_text)
-    if optional_behold_then_if_you_do is not None:
-        return optional_behold_then_if_you_do
-    exile_until_n_quality_cast_one_free = _parse_exile_until_n_quality_cast_one_free_clause(
-        effect_text
-    )
-    if exile_until_n_quality_cast_one_free is not None:
-        return exile_until_n_quality_cast_one_free
-    exile_hand_draw_then_play_ability = (
-        _parse_exile_hand_draw_then_play_until_next_turn_ability_clause(effect_text)
-    )
-    if exile_hand_draw_then_play_ability is not None:
-        return exile_hand_draw_then_play_ability
-    exile_top_card_then_play_permission = _parse_exile_top_card_then_play_permission_clause(
-        effect_text
-    )
-    if exile_top_card_then_play_permission is not None:
-        return exile_top_card_then_play_permission
-    search_library_graveyard_outside_the_game = (
-        _parse_search_library_graveyard_outside_the_game_clause(effect_text)
-    )
-    if search_library_graveyard_outside_the_game is not None:
-        return search_library_graveyard_outside_the_game
+    if (seg_hit := ABILITY_TEXT.run("s1", effect_text)) is not None:
+        return seg_hit
     counter_resolution = _parse_counter_resolution_text(effect_text)
     if counter_resolution is not None:
         return counter_resolution
@@ -2780,20 +2762,10 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     lose_then_destroy = lose_abilities_then_destroy_ability_effect(effect_text)
     if lose_then_destroy is not None:
         return lose_then_destroy
-    leading_then_if_otherwise = _parse_leading_then_if_otherwise_clause(
-        effect_text, for_spell=False
-    )
-    if leading_then_if_otherwise is not None:
-        return leading_then_if_otherwise
-    counters_then_draw_half = _parse_put_n_counters_on_self_then_draw_half_n_clause(effect_text)
-    if counters_then_draw_half is not None:
-        return counters_then_draw_half
-    choose_card_name = _parse_choose_card_name_for_source_clause(effect_text)
-    if choose_card_name is not None:
-        return choose_card_name
-    source_relative = _source_relative_whole_text_ability_effect(effect_text)
-    if source_relative is not None:
-        return source_relative
+    if (seg_hit := ABILITY_TEXT.run("s2", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s3", effect_text)) is not None:
+        return seg_hit
     meld_activation = parse_meld_activation_clause(effect_text)
     if meld_activation is not None:
         return meld_activation
@@ -2808,12 +2780,8 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         plan_effect = plan_shape(effect_text)
         if plan_effect is not None:
             return plan_effect
-    doubled = _parse_double_power_and_toughness_clause(effect_text)
-    if doubled is not None:
-        return doubled
-    self_base_pt_with_keywords = _parse_self_base_pt_set_with_keywords_clause(effect_text)
-    if self_base_pt_with_keywords is not None:
-        return self_base_pt_with_keywords
+    if (seg_hit := ABILITY_TEXT.run("s4", effect_text)) is not None:
+        return seg_hit
     if re.search(r"\bif you don'?t,", effect_text, re.IGNORECASE):
         # Origin of the Avengers' "... from your hand onto the battlefield.
         # If you don't, draw a card." - the tail belongs to the put, so the
@@ -2821,553 +2789,81 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         put_or_else = _parse_may_put_card_from_hand_clause(effect_text, for_spell=False)
         if put_or_else is not None:
             return put_or_else
-    r0a_t5 = _r0a_t5_ability_effect(effect_text)
-    if r0a_t5 is not None:
-        return r0a_t5
-    c02_t6 = _c02_t6_ability_effect(effect_text)
-    if c02_t6 is not None:
-        return c02_t6
     # EC7: Kozilek, the Broken Reality's own "Up to two target players each
     # manifest two cards from their hands. For each card manifested this
     # way, you draw a card." - read whole, ahead of the clause splitter: the
     # second sentence's "manifested this way" is CR 608.2c anaphora back to
     # the first sentence's own count, which no per-clause parser below has
     # any room to carry across the period.
-    manifest_from_hand_then_draw = _parse_manifest_from_hand_then_draw_clause(effect_text)
-    if manifest_from_hand_then_draw is not None:
-        return manifest_from_hand_then_draw
     # EC7: Distended Mindbender's own "Target opponent reveals their hand.
     # You choose from it a `<qualityA>` card with mana value N or less and a
     # `<qualityB>` card with mana value M or greater. That player discards
     # those cards." - read whole, ahead of the clause splitter's bare-"and"
     # cut through "... or less and a card ...".
-    reveal_two_bounds = _parse_reveal_hand_choose_two_bounded_cards_then_discard_clause(effect_text)
-    if reveal_two_bounds is not None:
-        return reveal_two_bounds
     # EC7: Hydroid Krasis's own "You gain half X life and draw half X cards.
     # Round down each time." - read whole: the trailing "Round down each
     # time." sentence governs both halves in the sentence before it, which
     # no per-clause parser below has any room to see together.
-    half_x_life_and_draw = _parse_half_x_life_and_draw_half_x_cards_clause(effect_text)
-    if half_x_life_and_draw is not None:
-        return half_x_life_and_draw
+    if (seg_hit := ABILITY_TEXT.run("s5", effect_text)) is not None:
+        return seg_hit
     # ecl-T8: Meek Attack's own "... a creature card with total power and
     # toughness 5 or less from your hand onto the battlefield." - read whole,
     # ahead of the clause splitter, the same reason `_DOUBLE_TARGET_POWER_
     # AND_TOUGHNESS_RE` is: the bare "and" inside "power and toughness" is
     # not a conjunction between two instructions, and `split_effect_clauses`
     # cuts clean through it regardless.
-    put_permanent_from_hand = _parse_put_permanent_card_from_hand_clause(
-        effect_text, for_spell=False
-    )
-    if put_permanent_from_hand is not None:
-        return put_permanent_from_hand
+    if (seg_hit := ABILITY_TEXT.run("s6", effect_text)) is not None:
+        return seg_hit
     # ecl-T8: Mutable Explorer's own "create a tapped Mutavault token. (It's a
     # land with "..." and "...")." - read whole, ahead of the splitter, since
     # the reminder text's own inner quoted ability can carry a period of its
     # own that a sentence split would cut in half.
-    create_named_token = _parse_create_named_permanent_token_clause(effect_text)
-    if create_named_token is not None:
-        return create_named_token
-    any_player_may_punisher = _parse_any_player_may_punisher_clause(effect_text)
-    if any_player_may_punisher is not None:
-        return any_player_may_punisher
+    if (seg_hit := ABILITY_TEXT.run("s7", effect_text)) is not None:
+        return seg_hit
     from ..infusion import infusion_ability_effect
 
     infused = infusion_ability_effect(effect_text)
     if infused is not None:
         return infused
-    base_pt_become = _parse_base_pt_become_clause(effect_text)
-    if base_pt_become is not None:
-        return base_pt_become
-    prevent_dealt_by_target = _parse_prevent_damage_dealt_by_target_clause(effect_text)
-    if prevent_dealt_by_target is not None:
-        return prevent_dealt_by_target
-    exchange_control_clause = _parse_exchange_control_clause(effect_text)
-    if exchange_control_clause is not None:
-        return exchange_control_clause
+    if (seg_hit := ABILITY_TEXT.run("s8", effect_text)) is not None:
+        return seg_hit
     meld_resolution = parse_meld_resolution_clause(effect_text)
     if meld_resolution is not None:
         return meld_resolution
-    draw_equal_to_sacrificed_then_discard = (
-        _parse_draw_equal_to_sacrificed_creature_power_then_discard_clause(effect_text)
-    )
-    if draw_equal_to_sacrificed_then_discard is not None:
-        # Read whole, ahead of the comma split: "then discard a card" is not
-        # a readable clause on its own (nothing to discard *to*), and the
-        # draw half needs the activation's own cost-sacrificed card, which no
-        # per-clause parser below has access to.
-        return draw_equal_to_sacrificed_then_discard
-    opponents_lose_equal_to_sacrificed = (
-        _parse_each_opponent_loses_life_equal_to_sacrificed_creature_clause(effect_text)
-    )
-    if opponents_lose_equal_to_sacrificed is not None:
-        return opponents_lose_equal_to_sacrificed
-
-    gain_life_equal_to_sacrificed = _parse_gain_life_equal_to_sacrificed_creature_clause(
-        effect_text
-    )
-    if gain_life_equal_to_sacrificed is not None:
-        return gain_life_equal_to_sacrificed
-    may_transform_self_if_you_do = _parse_may_transform_self_if_you_do_clause(effect_text)
-    if may_transform_self_if_you_do is not None:
-        return may_transform_self_if_you_do
-    self_layer_and_verb = _parse_self_layer_and_verb_clause(effect_text)
-    if self_layer_and_verb is not None:
-        return self_layer_and_verb
-    cast_from_graveyard_now = _parse_cast_from_graveyard_now_clause(effect_text)
-    if cast_from_graveyard_now is not None:
-        return cast_from_graveyard_now
-    counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(effect_text)
-    if counter_exile_may_cast is not None:
-        return counter_exile_may_cast
-    face_down_exile_play = _parse_face_down_exile_play_clause(effect_text)
-    if face_down_exile_play is not None:
-        return face_down_exile_play
-    cast_from_hand_then_exile = _parse_cast_from_hand_then_exile_clause(effect_text)
-    if cast_from_hand_then_exile is not None:
-        return cast_from_hand_then_exile
-    linked_exile = _parse_linked_exile_clause(effect_text)
-    if linked_exile is not None:
-        return linked_exile
-    exile_cards_from_your_hand = _parse_exile_cards_from_your_hand_clause(effect_text)
-    if exile_cards_from_your_hand is not None:
-        return exile_cards_from_your_hand
-    look_top_keep_one_on_top = _parse_look_top_keep_one_on_top_clause(effect_text)
-    if look_top_keep_one_on_top is not None:
-        return look_top_keep_one_on_top
-    cast_trigger_look_top_x = _parse_cast_trigger_look_top_x_take_one_clause(effect_text)
-    if cast_trigger_look_top_x is not None:
-        return cast_trigger_look_top_x
-    cast_trigger_reveal_top_x_put_one_permanent = (
-        _parse_cast_trigger_reveal_top_x_put_one_permanent_clause(effect_text)
-    )
-    if cast_trigger_reveal_top_x_put_one_permanent is not None:
-        return cast_trigger_reveal_top_x_put_one_permanent
-    cast_trigger_reveal_until_x_kind_to_graveyard = (
-        _parse_cast_trigger_reveal_until_x_kind_to_graveyard_clause(effect_text)
-    )
-    if cast_trigger_reveal_until_x_kind_to_graveyard is not None:
-        return cast_trigger_reveal_until_x_kind_to_graveyard
-    target_opponent_exile_top_then_put_lands = (
-        _parse_target_opponent_exile_top_then_put_lands_clause(effect_text)
-    )
-    if target_opponent_exile_top_then_put_lands is not None:
-        return target_opponent_exile_top_then_put_lands
-    damage_target_player_and_theirs = _parse_damage_target_player_and_their_creatures_clause(
-        effect_text
-    )
-    if damage_target_player_and_theirs is not None:
-        return damage_target_player_and_theirs
-    cast_target_from_graveyard = _parse_cast_target_card_from_graveyard_clause(effect_text)
-    if cast_target_from_graveyard is not None:
-        return cast_target_from_graveyard
-    it_gains_quoted_ability = _parse_it_gains_quoted_ability_clause(effect_text)
-    if it_gains_quoted_ability is not None:
-        return it_gains_quoted_ability
-    target_attacking_alone_pump_gain_life = _parse_target_attacking_alone_pump_gain_life_clause(
-        effect_text
-    )
-    if target_attacking_alone_pump_gain_life is not None:
-        return target_attacking_alone_pump_gain_life
-    it_dynamic_x_pump = _parse_it_dynamic_x_pump_clause(effect_text)
-    if it_dynamic_x_pump is not None:
-        return it_dynamic_x_pump
-    self_gains_quoted_ability_until_eot = _parse_self_gains_quoted_ability_until_eot_clause(
-        effect_text
-    )
-    if self_gains_quoted_ability_until_eot is not None:
-        return self_gains_quoted_ability_until_eot
-    choose_target_then_return_to_your_hand = _parse_choose_target_then_return_to_your_hand_pair(
-        effect_text
-    )
-    if choose_target_then_return_to_your_hand is not None:
-        return choose_target_then_return_to_your_hand
-    reveal_n_then_choose_discard = _parse_reveal_n_cards_then_choose_discard_whole_text(
-        effect_text, for_spell=False
-    )
-    if reveal_n_then_choose_discard is not None:
-        return reveal_n_then_choose_discard
-    choose_opponent_reveal_exile_choice = (
-        _parse_choose_opponent_and_creature_reveal_exile_choice_whole_text(
-            effect_text, for_spell=False
-        )
-    )
-    if choose_opponent_reveal_exile_choice is not None:
-        return choose_opponent_reveal_exile_choice
+    if (seg_hit := ABILITY_TEXT.run("s9", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s10", effect_text)) is not None:
+        return seg_hit
     # S22's whole-text readers: each names its own object ("exiled with this
     # creature", "that card" after an exile, "them" after a count), so none
     # of them may be cut apart by the clause splitter below.
-    target_attacks_if_able = _parse_target_attacks_if_able_clause(effect_text)
-    if target_attacks_if_able is not None:
-        return target_attacks_if_able
-    target_blocks_self_if_able = _parse_target_blocks_self_if_able_clause(effect_text)
-    if target_blocks_self_if_able is not None:
-        return target_blocks_self_if_able
-    exile_card_then_token_copy = _parse_exile_card_then_token_copy_clause(
-        effect_text, for_spell=False
-    )
-    if exile_card_then_token_copy is not None:
-        return exile_card_then_token_copy
-    put_card_exiled_with_self = _parse_put_card_exiled_with_self_clause(effect_text)
-    if put_card_exiled_with_self is not None:
-        return put_card_exiled_with_self
-    remove_all_counters_then_that_many = _parse_remove_all_counters_then_that_many_clause(
-        effect_text
-    )
-    if remove_all_counters_then_that_many is not None:
-        return remove_all_counters_then_that_many
-    flashback_grant = _parse_grant_flashback_clause(effect_text)
-    if flashback_grant is not None:
-        return flashback_grant
+    if (seg_hit := ABILITY_TEXT.run("s11", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s12", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s13", effect_text)) is not None:
+        return seg_hit
     casting_rule_whole = parse_casting_rule_clause(effect_text, for_spell=False)
     if casting_rule_whole is not None:
         return casting_rule_whole
-    until_your_next_turn_attack_pump = _parse_until_your_next_turn_attack_pump_clause(effect_text)
-    if until_your_next_turn_attack_pump is not None:
-        return until_your_next_turn_attack_pump
-    divided_damage_then_retaliate = _parse_divided_damage_then_retaliate_clause(effect_text)
-    if divided_damage_then_retaliate is not None:
-        return divided_damage_then_retaliate
-    attacks_alone_this_turn_counters_and_keywords = (
-        _parse_attacks_alone_this_turn_counters_and_keywords_clause(effect_text)
-    )
-    if attacks_alone_this_turn_counters_and_keywords is not None:
-        return attacks_alone_this_turn_counters_and_keywords
-    until_your_next_turn_group_attack_pump = _parse_until_your_next_turn_group_attack_pump_clause(
-        effect_text
-    )
-    if until_your_next_turn_group_attack_pump is not None:
-        return until_your_next_turn_group_attack_pump
-    batched_attack_group_pump = _parse_batched_attack_group_pump_clause(effect_text)
-    if batched_attack_group_pump is not None:
-        return batched_attack_group_pump
-    ante_self = _parse_ante_self_if_you_do_clause(effect_text)
-    if ante_self is not None:
-        return ante_self
-    exile_until_leaves_then_counters = _parse_exile_targets_until_leaves_then_counters(effect_text)
-    if exile_until_leaves_then_counters is not None:
-        return exile_until_leaves_then_counters
-    mass_gain_control = _parse_mass_gain_control_untap_ability(effect_text)
-    if mass_gain_control is not None:
-        return mass_gain_control
-    copy_of_linked_exile = _parse_copy_of_card_exiled_with_self_clause(effect_text)
-    if copy_of_linked_exile is not None:
-        return copy_of_linked_exile
-    may_exile_return_others = _parse_may_exile_that_card_return_others_clause(effect_text)
-    if may_exile_return_others is not None:
-        return may_exile_return_others
-    ability_return_as_creature = _parse_return_as_creature_clause(effect_text)
-    if ability_return_as_creature is not None:
-        return ability_return_as_creature
-    untap_and_gain_control = _parse_untap_and_gain_control_ability(effect_text)
-    if untap_and_gain_control is not None:
-        return untap_and_gain_control
-    token_copies_except = _parse_create_token_copies_except_clause(effect_text, for_spell=False)
-    if token_copies_except is not None:
-        return token_copies_except
-    for_each_creature_target_player_copy = _parse_for_each_creature_target_player_copy_clause(
-        effect_text, for_spell=False
-    )
-    if for_each_creature_target_player_copy is not None:
-        return for_each_creature_target_player_copy
-    for_each_creature_you_control_copy = _parse_for_each_creature_you_control_copy_clause(
-        effect_text, for_spell=False
-    )
-    if for_each_creature_you_control_copy is not None:
-        return for_each_creature_you_control_copy
-    modal_triggered = _resolve_modal_triggered_ability_clause(effect_text)
-    if modal_triggered is not None:
-        return modal_triggered
-    put_land_repeat = _parse_put_land_from_hand_repeat_clause(effect_text)
-    if put_land_repeat is not None:
-        return put_land_repeat
-    draw_then_put_land_cave = _parse_draw_then_put_land_cave_bonus_clause(effect_text)
-    if draw_then_put_land_cave is not None:
-        return draw_then_put_land_cave
-    discard_then_draw_token_per_nonland = _parse_discard_then_draw_token_per_nonland_clause(
-        effect_text
-    )
-    if discard_then_draw_token_per_nonland is not None:
-        return discard_then_draw_token_per_nonland
-    return_self_then_create_tokens = _parse_return_self_then_create_tokens_clause(effect_text)
-    if return_self_then_create_tokens is not None:
-        return return_self_then_create_tokens
-    reveal_until_land = _parse_reveal_until_land_damage_clause(effect_text)
-    if reveal_until_land is not None:
-        return reveal_until_land
-    outside_the_game = _parse_outside_the_game_fetch(effect_text)
-    if outside_the_game is not None:
-        return outside_the_game
-    undergrowth_pump_and_fight = _parse_undergrowth_pump_and_fight_clause(effect_text)
-    if undergrowth_pump_and_fight is not None:
-        return undergrowth_pump_and_fight
-    each_opponent_choose_then_sacrifice = (
-        _parse_each_opponent_choose_one_of_each_type_then_sacrifice(effect_text)
-    )
-    if each_opponent_choose_then_sacrifice is not None:
-        return each_opponent_choose_then_sacrifice
-    each_sacrifices_then_if_you_did = _parse_each_sacrifices_then_if_you_did_clause(
-        effect_text, for_spell=False
-    )
-    if each_sacrifices_then_if_you_did is not None:
-        return each_sacrifices_then_if_you_did
-    choose_target_owner_shuffles_it = _parse_choose_target_owner_shuffles_it_clause(
-        effect_text, for_spell=False
-    )
-    if choose_target_owner_shuffles_it is not None:
-        return choose_target_owner_shuffles_it
-    target_player_name_reveal_branch = _parse_target_player_name_reveal_branch_clause(effect_text)
-    if target_player_name_reveal_branch is not None:
-        return target_player_name_reveal_branch
-    each_player_name_reveal_branch = _parse_each_player_name_reveal_branch_clause(effect_text)
-    if each_player_name_reveal_branch is not None:
-        return each_player_name_reveal_branch
-    damage_that_player = _parse_damage_that_player_clause(effect_text, for_spell=False)
-    if damage_that_player is not None:
-        return damage_that_player
-    damage_that_much = _parse_damage_that_much_clause(effect_text, for_spell=False)
-    if damage_that_much is not None:
-        return damage_that_much
-    may_discard_or_sacrifice = _parse_may_discard_or_sacrifice_if_you_do_clause(
-        effect_text, for_spell=False
-    )
-    if may_discard_or_sacrifice is not None:
-        return may_discard_or_sacrifice
-    conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=False)
-    if conditional_sacrifice is not None:
-        return conditional_sacrifice
-    conditional_remove_counter_from_self = _parse_conditional_remove_counter_from_self_clause(
-        effect_text, for_spell=False
-    )
-    if conditional_remove_counter_from_self is not None:
-        return conditional_remove_counter_from_self
-    may_tap_untapped_if_you_do = _parse_may_tap_untapped_if_you_do_clause(effect_text)
-    if may_tap_untapped_if_you_do is not None:
-        return may_tap_untapped_if_you_do
-    tap_another_untapped_when_you_do = _parse_tap_another_untapped_subtype_when_you_do_clause(
-        effect_text
-    )
-    if tap_another_untapped_when_you_do is not None:
-        return tap_another_untapped_when_you_do
-    reflexive_sacrifice_or_discard = _parse_reflexive_sacrifice_or_discard_clause(effect_text)
-    if reflexive_sacrifice_or_discard is not None:
-        return reflexive_sacrifice_or_discard
-    reflexive_sacrifice = _parse_reflexive_sacrifice_clause(effect_text)
-    if reflexive_sacrifice is not None:
-        return reflexive_sacrifice
-    reflexive_may_discard = _parse_reflexive_may_discard_clause(effect_text)
-    if reflexive_may_discard is not None:
-        return reflexive_may_discard
-    reflexive_pay_energy = _parse_reflexive_pay_energy_clause(effect_text)
-    if reflexive_pay_energy is not None:
-        return reflexive_pay_energy
-    may_pay_energy_if_you_do = _parse_may_pay_energy_if_you_do_clause(effect_text)
-    if may_pay_energy_if_you_do is not None:
-        return may_pay_energy_if_you_do
-    get_energy_then_pay_create_x_token = _parse_get_energy_then_pay_create_x_token_clause(
-        effect_text
-    )
-    if get_energy_then_pay_create_x_token is not None:
-        return get_energy_then_pay_create_x_token
-    reflexive_pay_mana = _parse_reflexive_pay_mana_clause(effect_text)
-    if reflexive_pay_mana is not None:
-        return reflexive_pay_mana
-    reflexive_pay_mana_and_life = _parse_reflexive_pay_mana_and_life_clause(effect_text)
-    if reflexive_pay_mana_and_life is not None:
-        return reflexive_pay_mana_and_life
-    reflexive_pay_life = _parse_reflexive_pay_life_clause(effect_text)
-    if reflexive_pay_life is not None:
-        return reflexive_pay_life
-    reflexive_may_tap_self = _parse_reflexive_may_tap_self_clause(effect_text)
-    if reflexive_may_tap_self is not None:
-        return reflexive_may_tap_self
-    reflexive_pay_up_to_n_times_choose_modes = (
-        _parse_reflexive_pay_up_to_n_times_choose_modes_clause(effect_text)
-    )
-    if reflexive_pay_up_to_n_times_choose_modes is not None:
-        return reflexive_pay_up_to_n_times_choose_modes
-    may_pay_mana_if_you_do = _parse_may_pay_mana_if_you_do_clause(effect_text)
-    if may_pay_mana_if_you_do is not None:
-        return may_pay_mana_if_you_do
-    may_pay_life_if_you_do = _parse_may_pay_life_if_you_do_clause(effect_text)
-    if may_pay_life_if_you_do is not None:
-        return may_pay_life_if_you_do
-    may_exile_hand_if_you_do = _parse_may_exile_hand_if_you_do_clause(effect_text)
-    if may_exile_hand_if_you_do is not None:
-        return may_exile_hand_if_you_do
-    reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
-    if reflexive_mandatory_token is not None:
-        return reflexive_mandatory_token
-    reflexive_mandatory_mill = _parse_reflexive_mandatory_mill_clause(effect_text)
-    if reflexive_mandatory_mill is not None:
-        return reflexive_mandatory_mill
-    reflexive_self_counter_if = _parse_reflexive_self_counter_if_clause(effect_text)
-    if reflexive_self_counter_if is not None:
-        return reflexive_self_counter_if
-    create_token_then_may_attach = _parse_create_token_then_may_attach_clause(effect_text)
-    if create_token_then_may_attach is not None:
-        return create_token_then_may_attach
-    create_token_then_attach = _parse_create_token_then_attach_clause(effect_text)
-    if create_token_then_attach is not None:
-        return create_token_then_attach
-    may_attach_to_entering_creature = _parse_may_attach_to_entering_creature_clause(effect_text)
-    if may_attach_to_entering_creature is not None:
-        return may_attach_to_entering_creature
-    return_then_instead_battlefield = (
-        _parse_return_target_card_then_instead_battlefield_if_cost_paid_clause(effect_text)
-    )
-    if return_then_instead_battlefield is not None:
-        return return_then_instead_battlefield
-    choose_exile_until_leaves_then_permanent = (
-        _parse_choose_target_exile_until_leaves_then_instead_permanent_clause(effect_text)
-    )
-    if choose_exile_until_leaves_then_permanent is not None:
-        return choose_exile_until_leaves_then_permanent
-    named_equipment_token = _parse_named_equipment_token_clause(effect_text)
-    if named_equipment_token is not None:
-        return named_equipment_token
-    attach_then_when_you_do = _parse_attach_self_then_when_you_do_clause(effect_text)
-    if attach_then_when_you_do is not None:
-        return attach_then_when_you_do
-    attach_self_to_target = _attach_self_to_target_effect(effect_text)
-    if attach_self_to_target is not None:
-        return attach_self_to_target
-    amass_then_attach = _parse_amass_then_attach_clause(effect_text)
-    if amass_then_attach is not None:
-        return amass_then_attach
-    attach_target_equipment_up_to_one_creature = (
-        _parse_attach_target_equipment_up_to_one_creature_clause(effect_text)
-    )
-    if attach_target_equipment_up_to_one_creature is not None:
-        return attach_target_equipment_up_to_one_creature
-    attach_any_number_equipment = _parse_attach_any_number_equipment_clause(effect_text)
-    if attach_any_number_equipment is not None:
-        return attach_any_number_equipment
-    put_self_counter_then_attach = (
-        _parse_put_self_counter_for_each_opponent_creature_then_attach_clause(effect_text)
-    )
-    if put_self_counter_then_attach is not None:
-        return put_self_counter_then_attach
-    choose_type_treasure = _parse_choose_creature_type_treasure_per_match_clause(effect_text)
-    if choose_type_treasure is not None:
-        return choose_type_treasure
-    equipped_attackers_gain_keywords = _parse_equipped_attacking_creatures_gain_keywords_clause(
-        effect_text
-    )
-    if equipped_attackers_gain_keywords is not None:
-        return equipped_attackers_gain_keywords
-    dalkovan_attack_tokens = _parse_attack_this_turn_create_tapped_attacking_tokens(effect_text)
-    if dalkovan_attack_tokens is not None:
-        return dalkovan_attack_tokens
-    self_combat_damage_draw = _parse_until_end_of_turn_self_combat_damage_draw_clause(effect_text)
-    if self_combat_damage_draw is not None:
-        return self_combat_damage_draw
-    cast_noncreature_this_turn_copy_token = (
-        _parse_cast_noncreature_spell_this_turn_copy_token_clause(effect_text)
-    )
-    if cast_noncreature_this_turn_copy_token is not None:
-        return cast_noncreature_this_turn_copy_token
-    created_trigger = _parse_created_trigger_ability_text(effect_text)
-    if created_trigger is not None:
-        return created_trigger
-    created_replacement = _parse_created_replacement_ability_text(effect_text)
-    if created_replacement is not None:
-        return created_replacement
-    event_subject_counters_and_keywords = _parse_event_subject_counters_and_keywords_clause(
-        effect_text
-    )
-    if event_subject_counters_and_keywords is not None:
-        return event_subject_counters_and_keywords
-    attacking_tokens_then_sacrifice = _parse_create_tapped_attacking_tokens_then_sacrifice(
-        effect_text
-    )
-    if attacking_tokens_then_sacrifice is not None:
-        return attacking_tokens_then_sacrifice
-    tapped_attacking_tokens = _parse_tapped_attacking_tokens_whole_text(
-        effect_text, for_spell=False
-    )
-    if tapped_attacking_tokens is not None:
-        return tapped_attacking_tokens
-    may_cost_then_attacking_token = _parse_may_cost_then_attacking_token_clause(effect_text)
-    if may_cost_then_attacking_token is not None:
-        return may_cost_then_attacking_token
-    put_from_hand_attacking = _parse_put_creature_from_hand_attacking_then_return(effect_text)
-    if put_from_hand_attacking is not None:
-        return put_from_hand_attacking
-    put_mv_x_from_hand_attacking = _parse_put_creature_mv_x_from_hand_attacking(effect_text)
-    if put_mv_x_from_hand_attacking is not None:
-        return put_mv_x_from_hand_attacking
-    exchange_life = _parse_exchange_life_totals_then_draw(effect_text)
-    if exchange_life is not None:
-        return exchange_life
-    copy_exiled_and_cast = _parse_copy_exiled_card_and_cast(effect_text)
-    if copy_exiled_and_cast is not None:
-        return copy_exiled_and_cast
-    copy_cost_exiled = _parse_copy_cost_exiled_cards_and_cast(effect_text)
-    if copy_cost_exiled is not None:
-        return copy_cost_exiled
-    exile_one_of_each_type_copy_cast = _parse_exile_one_of_each_type_copy_cast_clause(effect_text)
-    if exile_one_of_each_type_copy_cast is not None:
-        return exile_one_of_each_type_copy_cast
-    exile_target_copy_cast = _parse_exile_target_card_copy_it_cast_clause(effect_text)
-    if exile_target_copy_cast is not None:
-        return exile_target_copy_cast
-    mana_adding = _parse_mana_adding_trigger(effect_text)
-    if mana_adding is not None:
-        return mana_adding
-    firebending = _parse_firebending_add_mana(effect_text)
-    if firebending is not None:
-        return firebending
-    add_one_mana_of_any_color = _parse_add_one_mana_of_any_color_trigger(effect_text)
-    if add_one_mana_of_any_color is not None:
-        return add_one_mana_of_any_color
-    add_mana_in_any_combination = _parse_add_mana_in_any_combination_trigger(effect_text)
-    if add_mana_in_any_combination is not None:
-        return add_mana_in_any_combination
-    add_that_much_colored_mana = _parse_add_that_much_colored_mana_trigger(effect_text)
-    if add_that_much_colored_mana is not None:
-        return add_that_much_colored_mana
-    sacrifice_unless_discard = _parse_sacrifice_unless_discard_trigger(effect_text)
-    if sacrifice_unless_discard is not None:
-        return sacrifice_unless_discard
-    draw_then_discard_unless_ability = _parse_draw_then_discard_unless_ability(effect_text)
-    if draw_then_discard_unless_ability is not None:
-        return draw_then_discard_unless_ability
-    tap_any_number_when_you_do = _parse_tap_any_number_of_untapped_creatures_when_you_do_clause(
-        effect_text
-    )
-    if tap_any_number_when_you_do is not None:
-        return tap_any_number_when_you_do
-    counter_on_subject_and_shared_type = _parse_counter_on_subject_and_shared_type_clause(
-        effect_text
-    )
-    if counter_on_subject_and_shared_type is not None:
-        return counter_on_subject_and_shared_type
-    self_keyword_choice_until_eot = _parse_self_keyword_choice_until_eot_trigger(effect_text)
-    if self_keyword_choice_until_eot is not None:
-        return self_keyword_choice_until_eot
-    each_other_attacking_pump = _parse_each_other_attacking_creature_pump_trigger(effect_text)
-    if each_other_attacking_pump is not None:
-        return each_other_attacking_pump
-    other_attacking_grant = _parse_other_attacking_creatures_grant_trigger(effect_text)
-    if other_attacking_grant is not None:
-        return other_attacking_grant
-    counters_on_target_where_x_is = _parse_put_counters_on_target_where_x_is_clause(effect_text)
-    if counters_on_target_where_x_is is not None:
-        return counters_on_target_where_x_is
-    may_then_if_you_do_layer = _parse_may_then_if_you_do_layer_clause(effect_text)
-    if may_then_if_you_do_layer is not None:
-        return may_then_if_you_do_layer
-    emblem_then = _parse_get_an_emblem_then_clause(effect_text)
-    if emblem_then is not None:
-        return emblem_then
-    tap_untap_two_targets = _parse_tap_untap_two_targets_clause(effect_text)
-    if tap_untap_two_targets is not None:
-        return tap_untap_two_targets
-    emblem = _parse_get_an_emblem_clause(effect_text)
-    if emblem is not None:
-        return emblem
+    if (seg_hit := ABILITY_TEXT.run("s14", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s15", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s16", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s17", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s18", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s19", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s20", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s21", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s22", effect_text)) is not None:
+        return seg_hit
     choose_type_then_emblem = parse_choose_creature_type_then_emblem_clause(effect_text)
     if choose_type_then_emblem is not None:
         return choose_type_then_emblem
@@ -3379,82 +2875,23 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     gathering_stone_look = parse_gathering_stone_look_clause(effect_text)
     if gathering_stone_look is not None:
         return gathering_stone_look
-    counters_by_subtype = _parse_counters_more_if_subtype_clause(effect_text)
-    if counters_by_subtype is not None:
-        return counters_by_subtype
-    nth_resolution = _parse_nth_resolution_clause(effect_text)
-    if nth_resolution is not None:
-        return nth_resolution
-    mill_then_take = _parse_mill_that_many_then_take_from_among_them(effect_text)
-    if mill_then_take is not None:
-        return mill_then_take
     # Tried against the whole, unsplit text, the same precedent
     # `parse_casting_rule_clause` above documents: "tapped and transformed"
     # has a bare " and " in it, which `split_effect_clauses`'s
     # `_CLAUSE_SEPARATOR` cuts into "return it to the battlefield tapped" /
     # "transformed under its owner's control" before either fragment reaches
     # a clause parser - Ojer Taq, Deepest Foundation's own death trigger.
-    return_self_as_type = _parse_return_self_as_type_clause(effect_text)
-    if return_self_as_type is not None:
-        return return_self_as_type
-    counter_targeting_unless = _parse_counter_targeting_object_unless_clause(effect_text)
-    if counter_targeting_unless is not None:
-        return counter_targeting_unless
-    if_you_do_self_gains = _parse_targeted_then_self_gains_clause(effect_text)
-    if if_you_do_self_gains is not None:
-        return if_you_do_self_gains
-    return_self_transformed_whole = _parse_return_self_to_battlefield_transformed_clause(
-        effect_text, for_spell=False
-    )
-    if return_self_transformed_whole is not None:
-        return return_self_transformed_whole
-    transform_self = _parse_transform_clause(effect_text)
-    if transform_self is not None:
-        return transform_self
-    exile_self_then_return = _parse_may_exile_self_then_return_clause(effect_text)
-    if exile_self_then_return is not None:
-        return exile_self_then_return
-    mandatory_exile_self_then_return = _parse_exile_self_then_return_clause(effect_text)
-    if mandatory_exile_self_then_return is not None:
-        return mandatory_exile_self_then_return
-    sacrifice_unless_energy = _parse_sacrifice_unless_pay_energy(effect_text)
-    if sacrifice_unless_energy is not None:
-        return sacrifice_unless_energy
-    destroy_each_then_remove_counters = _parse_destroy_each_then_remove_all_counters(effect_text)
-    if destroy_each_then_remove_counters is not None:
-        return destroy_each_then_remove_counters
+    if (seg_hit := ABILITY_TEXT.run("s23", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s24", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s25", effect_text)) is not None:
+        return seg_hit
     destroy_each = _parse_destroy_each_clause(_strip_non_effect_preamble(effect_text).strip())
     if destroy_each is not None:
         return destroy_each
-    put_counters_on_group = _parse_put_counters_on_group_clause(effect_text)
-    if put_counters_on_group is not None:
-        return put_counters_on_group
-    counters_on_named_group = _parse_counters_on_named_group_clause(effect_text)
-    if counters_on_named_group is not None:
-        return counters_on_named_group
-    counter_then_if_count = _parse_put_counter_on_self_then_if_count_clause(effect_text)
-    if counter_then_if_count is not None:
-        return counter_then_if_count
-    put_counters_on_self = _parse_put_counters_on_self_clause(effect_text)
-    if put_counters_on_self is not None:
-        return put_counters_on_self
-    put_up_to_n_counters_on_self_capped = _parse_put_up_to_n_counters_on_self_capped_clause(
-        effect_text
-    )
-    if put_up_to_n_counters_on_self_capped is not None:
-        return put_up_to_n_counters_on_self_capped
-    put_counters_equal_to = _parse_put_counters_equal_to_clause(effect_text)
-    if put_counters_equal_to is not None:
-        return put_counters_equal_to
-    adapt = _parse_adapt_clause(effect_text)
-    if adapt is not None:
-        return adapt
-    endure = _parse_endure_clause(effect_text)
-    if endure is not None:
-        return endure
-    monstrosity = _parse_monstrosity_clause(effect_text)
-    if monstrosity is not None:
-        return monstrosity
+    if (seg_hit := ABILITY_TEXT.run("s26", effect_text)) is not None:
+        return seg_hit
     # Tried against the whole, unsplit text - "copy that spell. You may
     # choose new targets for the copy." has a bare period joining its two
     # sentences, which `_prepare_effect_clauses` cuts into two separate
@@ -3462,186 +2899,33 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     # dispatch, the same precedent already documented above for `parse_
     # casting_rule_clause` and `_parse_return_self_to_battlefield_
     # transformed_clause`.
-    copy_that_spell_whole = _parse_copy_that_spell_clause(effect_text, for_spell=False)
-    if copy_that_spell_whole is not None:
-        return copy_that_spell_whole
-    create_x_tokens_where_x_is = _parse_create_x_tokens_where_x_is_clause(effect_text)
-    if create_x_tokens_where_x_is is not None:
-        return create_x_tokens_where_x_is
-    double_counters_on_group = _parse_double_counters_on_group_clause(effect_text)
-    if double_counters_on_group is not None:
-        return double_counters_on_group
-    defending_player_reveals_top_land = _parse_defending_player_reveals_top_conditional_land_clause(
-        effect_text
-    )
-    if defending_player_reveals_top_land is not None:
-        return defending_player_reveals_top_land
-    untap_self = _parse_untap_self_clause(effect_text)
-    if untap_self is not None:
-        return untap_self
-    deals_damage_lose_life_then_transform = (
-        _parse_deals_damage_lose_life_then_transform_if_low_clause(effect_text)
-    )
-    if deals_damage_lose_life_then_transform is not None:
-        return deals_damage_lose_life_then_transform
-    untap_trigger_subject = _parse_untap_trigger_subject_clause(effect_text)
-    if untap_trigger_subject is not None:
-        return untap_trigger_subject
-    untap_trigger_subject_and_scry = _parse_untap_trigger_subject_and_scry_clause(effect_text)
-    if untap_trigger_subject_and_scry is not None:
-        return untap_trigger_subject_and_scry
-    attached_subject_gains_keywords_until = _parse_attached_subject_gains_keywords_until_clause(
-        effect_text
-    )
-    if attached_subject_gains_keywords_until is not None:
-        return attached_subject_gains_keywords_until
-    return_a_land_you_control = _parse_return_a_land_you_control_clause(effect_text)
-    if return_a_land_you_control is not None:
-        return return_a_land_you_control
-    gains_ability = _parse_gains_ability_clause(effect_text)
-    if gains_ability is not None:
-        return gains_ability
-    remove_time_counter_self = _parse_remove_time_counter_from_self_clause(effect_text)
-    if remove_time_counter_self is not None:
-        return remove_time_counter_self
-    remove_all_counters_from_target = _parse_remove_all_counters_from_target_clause(effect_text)
-    if remove_all_counters_from_target is not None:
-        return remove_all_counters_from_target
-    remove_up_to_n_counters_from_target = _parse_remove_up_to_n_counters_from_target_clause(
-        effect_text
-    )
-    if remove_up_to_n_counters_from_target is not None:
-        return remove_up_to_n_counters_from_target
-    remove_n_counters_from_self = _parse_remove_n_counters_from_self_clause(effect_text)
-    if remove_n_counters_from_self is not None:
-        return remove_n_counters_from_self
-    self_cant_block = _parse_self_cant_block_clause(effect_text)
-    if self_cant_block is not None:
-        return self_cant_block
-    put_its_counters_on_target = _parse_put_its_counters_on_target_clause(
-        effect_text, for_spell=False
-    )
-    if put_its_counters_on_target is not None:
-        return put_its_counters_on_target
-    for_each_opponent_tap_then_stun = _parse_for_each_opponent_tap_then_stun_clause(
-        effect_text, for_spell=False
-    )
-    if for_each_opponent_tap_then_stun is not None:
-        return for_each_opponent_tap_then_stun
-    for_each_opponent_tap = _parse_for_each_opponent_tap_clause(effect_text, for_spell=False)
-    if for_each_opponent_tap is not None:
-        return for_each_opponent_tap
-    goad_then_counters = _parse_goad_for_each_opponent_then_counters_clause(
-        effect_text, for_spell=False
-    )
-    if goad_then_counters is not None:
-        return goad_then_counters
-    for_each_opponent_counters = _parse_for_each_opponent_counters_clause(
-        effect_text, for_spell=False
-    )
-    if for_each_opponent_counters is not None:
-        return for_each_opponent_counters
-    for_each_opponent_destroy = _parse_for_each_opponent_destroy_clause(
-        effect_text, for_spell=False
-    )
-    if for_each_opponent_destroy is not None:
-        return for_each_opponent_destroy
-    for_each_opponent_exile = _parse_for_each_opponent_exile_clause(effect_text, for_spell=False)
-    if for_each_opponent_exile is not None:
-        return for_each_opponent_exile
-    for_each_opponent_return_to_hand = _parse_for_each_opponent_return_to_hand_clause(
-        effect_text, for_spell=False
-    )
-    if for_each_opponent_return_to_hand is not None:
-        return for_each_opponent_return_to_hand
-    whole_text_token = _parse_whole_text_token_clause(effect_text)
-    if whole_text_token is not None:
-        return whole_text_token
+    if (seg_hit := ABILITY_TEXT.run("s27", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s28", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s29", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s30", effect_text)) is not None:
+        return seg_hit
     # Read whole, ahead of the clause splitter, for the same reason
     # `_parse_whole_text_token_clause` above is: Parhelion II's own "with
     # flying and vigilance" carries a bare " and " inside one noun phrase,
     # which `_CLAUSE_SEPARATOR` would cut into two fragments neither half of
     # which is a token clause at all.
-    attacking_token_whole = _parse_attacking_token_clause(effect_text, for_spell=False)
-    if attacking_token_whole is not None:
-        return attacking_token_whole
-    exile_reflexive_creature_counter = _parse_exile_target_card_reflexive_creature_counter(
-        effect_text
-    )
-    if exile_reflexive_creature_counter is not None:
-        return exile_reflexive_creature_counter
-    create_token_mill_repeat = _parse_create_token_mill_repeat_clause(effect_text)
-    if create_token_mill_repeat is not None:
-        return create_token_mill_repeat
-    mill_then_may_return_creature = _parse_mill_then_may_return_creature_clause(effect_text)
-    if mill_then_may_return_creature is not None:
-        return mill_then_may_return_creature
+    if (seg_hit := ABILITY_TEXT.run("s31", effect_text)) is not None:
+        return seg_hit
     # -- whole-text shapes whose sentences point back at one another -------
-    reflexive_discard_count = _parse_reflexive_discard_count_clause(effect_text)
-    if reflexive_discard_count is not None:
-        return reflexive_discard_count
-    explores_then_destroy = _parse_explores_then_conditional_mass_destroy(effect_text)
-    if explores_then_destroy is not None:
-        return explores_then_destroy
-    sacrifice_then_reanimate = _parse_each_player_sacrifices_then_mass_reanimate(effect_text)
-    if sacrifice_then_reanimate is not None:
-        return sacrifice_then_reanimate
-    reanimate_gains_then_bounce = _parse_return_target_from_graveyard_gains_then_bounce(effect_text)
-    if reanimate_gains_then_bounce is not None:
-        return reanimate_gains_then_bounce
-    mill_then_play = _parse_mill_then_play_that_card(effect_text)
-    if mill_then_play is not None:
-        return mill_then_play
-    mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(effect_text)
-    if mill_then_return_to_hand is not None:
-        return mill_then_return_to_hand
-    conditional_token_count = _parse_conditional_token_count_on_sacrificed(effect_text)
-    if conditional_token_count is not None:
-        return conditional_token_count
-    double_power = _parse_double_power_target_clause(effect_text)
-    if double_power is not None:
-        return double_power
     # -- end whole-text shapes ---------------------------------------------
     # The general "mill or look at the top N, then optionally move one"
     # family. It replaced a card-specific `_parse_mill_then_may_put_land_in_hand_clause`
     # (Six only), which is why the dispatch entry for that parser is not
     # carried over here - the function no longer exists.
-    look_top_may_reveal = _parse_look_top_may_reveal_clause(effect_text)
-    if look_top_may_reveal is not None:
-        return look_top_may_reveal
-    select_from_top = _parse_select_from_top_clause(effect_text)
-    if select_from_top is not None:
-        return select_from_top
-    look_top_x_put_permanents = _parse_look_top_x_put_permanents_clause(effect_text)
-    if look_top_x_put_permanents is not None:
-        return look_top_x_put_permanents
-    exile_top_n_put_from_among = _parse_exile_top_n_put_from_among_clause(effect_text)
-    if exile_top_n_put_from_among is not None:
-        return exile_top_n_put_from_among
-    that_player_loses_life_searches = _parse_that_player_loses_life_searches_puts_in_hand_clause(
-        effect_text, for_spell=False
-    )
-    if that_player_loses_life_searches is not None:
-        return that_player_loses_life_searches
-    mill_then_may_put_on_top = _parse_mill_then_may_put_on_top_clause(effect_text)
-    if mill_then_may_put_on_top is not None:
-        return mill_then_may_put_on_top
-    mill_then_take_from_milled_ability = _parse_mill_then_may_take_from_milled_ability(effect_text)
-    if mill_then_take_from_milled_ability is not None:
-        return mill_then_take_from_milled_ability
-    mill_then_put_all_from_milled_ability = _parse_mill_then_put_all_from_milled_ability(
-        effect_text
-    )
-    if mill_then_put_all_from_milled_ability is not None:
-        return mill_then_put_all_from_milled_ability
-    reveal_top_n_put_random_kind = _parse_reveal_top_n_put_random_kind_clause(effect_text)
-    if reveal_top_n_put_random_kind is not None:
-        return reveal_top_n_put_random_kind
-    search_put_battlefield_tapped_then_behold_untap = (
-        _parse_search_put_battlefield_tapped_then_behold_untap_clause(effect_text)
-    )
-    if search_put_battlefield_tapped_then_behold_untap is not None:
-        return search_put_battlefield_tapped_then_behold_untap
+    if (seg_hit := ABILITY_TEXT.run("s32", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s33", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s34", effect_text)) is not None:
+        return seg_hit
     # R0a-T2: Fabled Passage's own "... then shuffle. Then if you control
     # <n> or more lands, untap that land." - additive, see machines/
     # map_tokens.py.
@@ -3650,209 +2934,27 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if search_put_battlefield_tapped_then_count_lands_untap is not None:
         return search_put_battlefield_tapped_then_count_lands_untap
-    look_top_card_conditional = _parse_look_top_card_conditional_clause(effect_text)
-    if look_top_card_conditional is not None:
-        return look_top_card_conditional
-    damage_to_that_spells_controller = _parse_damage_to_that_spells_controller_clause(effect_text)
-    if damage_to_that_spells_controller is not None:
-        return damage_to_that_spells_controller
-    discard_hand_draw_x = _parse_discard_hand_draw_x_clause(effect_text)
-    if discard_hand_draw_x is not None:
-        return discard_hand_draw_x
-    pump_per_discard_then_delayed_draw = _parse_pump_per_discard_then_delayed_draw_clause(
-        effect_text
-    )
-    if pump_per_discard_then_delayed_draw is not None:
-        return pump_per_discard_then_delayed_draw
-    each_opponent_skips_next_untap = _parse_each_opponent_skips_next_untap_clause(effect_text)
-    if each_opponent_skips_next_untap is not None:
-        return each_opponent_skips_next_untap
-    hideaway = _parse_hideaway_clause(effect_text)
-    if hideaway is not None:
-        return hideaway
-    hideaway_counter_then_free_cast = _parse_hideaway_counter_then_conditional_free_cast_clause(
-        effect_text
-    )
-    if hideaway_counter_then_free_cast is not None:
-        return hideaway_counter_then_free_cast
-    target_opponent_draw_then_copy = _parse_target_opponent_draw_then_copy_that_spell_clause(
-        effect_text
-    )
-    if target_opponent_draw_then_copy is not None:
-        return target_opponent_draw_then_copy
-    create_token_then_copy_spell_retargeted = _parse_create_token_then_copy_spell_retargeted_clause(
-        effect_text
-    )
-    if create_token_then_copy_spell_retargeted is not None:
-        return create_token_then_copy_spell_retargeted
-    copy_that_spell_retargeted = _parse_copy_that_spell_retargeted_clause(effect_text)
-    if copy_that_spell_retargeted is not None:
-        return copy_that_spell_retargeted
-    copy_next_spell_you_cast = _parse_copy_next_spell_you_cast_clause(effect_text)
-    if copy_next_spell_you_cast is not None:
-        return copy_next_spell_you_cast
-    copy_next_instant_or_sorcery_you_cast = _parse_copy_next_instant_or_sorcery_you_cast_clause(
-        effect_text
-    )
-    if copy_next_instant_or_sorcery_you_cast is not None:
-        return copy_next_instant_or_sorcery_you_cast
-    its_controller_may_pay_life_then_draw = _parse_its_controller_may_pay_life_then_draw_clause(
-        effect_text
-    )
-    if its_controller_may_pay_life_then_draw is not None:
-        return its_controller_may_pay_life_then_draw
-    next_spell_cannot_be_countered = _parse_next_spell_cannot_be_countered_clause(effect_text)
-    if next_spell_cannot_be_countered is not None:
-        return next_spell_cannot_be_countered
-    pay_any_life_then_draw = _parse_pay_any_life_then_draw_that_many_clause(effect_text)
-    if pay_any_life_then_draw is not None:
-        return pay_any_life_then_draw
-    each_opponent_loses_life = _parse_each_opponent_loses_life_equal_to(effect_text)
-    if each_opponent_loses_life is not None:
-        return each_opponent_loses_life
-    pump_for_each_color_spent = _parse_pump_for_each_color_spent_on_that_spell_clause(effect_text)
-    if pump_for_each_color_spent is not None:
-        return pump_for_each_color_spent
+    if (seg_hit := ABILITY_TEXT.run("s35", effect_text)) is not None:
+        return seg_hit
     same_is_true = mass_pump_conditions.same_is_true_effect(effect_text)
     if same_is_true is not None:
         return same_is_true
-    mass_pump = _mass_pump_ability_effect(effect_text)
-    if mass_pump is not None:
-        return mass_pump
-    where_x_is_continuous = _parse_where_x_is_continuous_effect(effect_text)
-    if where_x_is_continuous is not None:
-        return where_x_is_continuous
-    tap_then_no_untap = _parse_tap_target_then_no_untap_clause(effect_text)
-    if tap_then_no_untap is not None:
-        return tap_then_no_untap
-    tap_enchanted_then_unprepared = _parse_tap_enchanted_then_unprepared_clause(effect_text)
-    if tap_enchanted_then_unprepared is not None:
-        return tap_enchanted_then_unprepared
-    copy_cast_spell = _parse_copy_cast_spell_clause(effect_text)
-    if copy_cast_spell is not None:
-        return copy_cast_spell
-    move_counter = _parse_move_counter_clause(effect_text)
-    if move_counter is not None:
-        return move_counter
-    pump_and_becomes_chosen_color = _parse_pump_and_becomes_chosen_color_clause(effect_text)
-    if pump_and_becomes_chosen_color is not None:
-        return pump_and_becomes_chosen_color
-    self_keyword_grant_until_eot = _parse_self_keyword_grant_until_eot_clause(effect_text)
-    if self_keyword_grant_until_eot is not None:
-        return self_keyword_grant_until_eot
-    protection_from_chosen_color = _parse_protection_from_chosen_color_clause(effect_text)
-    if protection_from_chosen_color is not None:
-        return protection_from_chosen_color
-    becomes_chosen_color = _parse_becomes_chosen_color_clause(effect_text)
-    if becomes_chosen_color is not None:
-        return becomes_chosen_color
-    put_exiled_target_onto_battlefield = _parse_put_exiled_target_onto_battlefield_clause(
-        effect_text
-    )
-    if put_exiled_target_onto_battlefield is not None:
-        return put_exiled_target_onto_battlefield
-    hideaway_play = _parse_hideaway_play_clause(effect_text)
-    if hideaway_play is not None:
-        return hideaway_play
-    token_copy_of_cost_exiled_card = _parse_create_token_copy_of_cost_exiled_card_clause(
-        effect_text
-    )
-    if token_copy_of_cost_exiled_card is not None:
-        return token_copy_of_cost_exiled_card
-    exiled_card_owner_token = _parse_exiled_card_owner_creates_x_token_clause(effect_text)
-    if exiled_card_owner_token is not None:
-        return exiled_card_owner_token
-    event_subject_pump = _parse_event_subject_pump_clause(effect_text)
-    if event_subject_pump is not None:
-        return event_subject_pump
-    event_subject_variable_pump = _parse_event_subject_variable_pump_clause(effect_text)
-    if event_subject_variable_pump is not None:
-        return event_subject_variable_pump
-    target_plus_x_minus_x = _parse_target_plus_x_minus_x_clause(effect_text)
-    if target_plus_x_minus_x is not None:
-        return target_plus_x_minus_x
-    reveal_until_x_kind_put_any = _parse_reveal_until_x_kind_put_any_onto_battlefield_clause(
-        effect_text
-    )
-    if reveal_until_x_kind_put_any is not None:
-        return reveal_until_x_kind_put_any
-    reveal_until_x_nonland_exile_per_color = _parse_reveal_until_x_nonland_exile_per_color_clause(
-        effect_text
-    )
-    if reveal_until_x_nonland_exile_per_color is not None:
-        return reveal_until_x_nonland_exile_per_color
     # TMT T7 (see that section, near the bottom of this file, for why each of
     # these is read whole rather than through the ordinary clause split).
-    exile_several_then_return = _parse_exile_several_up_to_one_targets_then_return_clause(
-        effect_text
-    )
-    if exile_several_then_return is not None:
-        return exile_several_then_return
-    exile_then_return_tapped_attacking = (
-        _parse_exile_target_then_return_tapped_and_attacking_clause(effect_text)
-    )
-    if exile_then_return_tapped_attacking is not None:
-        return exile_then_return_tapped_attacking
-    exile_then_pay_or_else_return = _parse_exile_then_pay_or_else_return_clause(effect_text)
-    if exile_then_pay_or_else_return is not None:
-        return exile_then_pay_or_else_return
-    draw_then_delayed_discard = _parse_draw_then_delayed_discard_at_random_clause(effect_text)
-    if draw_then_delayed_discard is not None:
-        return draw_then_delayed_discard
-    mass_return_entered_this_turn = _parse_mass_return_entered_this_turn_clause(
-        effect_text, for_spell=False
-    )
-    if mass_return_entered_this_turn is not None:
-        return mass_return_entered_this_turn
-    reflexive_may_exile_dead_self = _parse_reflexive_may_exile_dead_self_clause(
-        effect_text, for_spell=False
-    )
-    if reflexive_may_exile_dead_self is not None:
-        return reflexive_may_exile_dead_self
-    return_target_and_same_name_from_graveyard = (
-        _parse_return_target_and_same_name_from_graveyard_clause(effect_text, for_spell=False)
-    )
-    if return_target_and_same_name_from_graveyard is not None:
-        return return_target_and_same_name_from_graveyard
-    linked_exile_return_pair = _parse_linked_exile_return_pair_clause(effect_text)
-    if linked_exile_return_pair is not None:
-        return linked_exile_return_pair
-    if_condition_exile_self_and_each = _parse_if_condition_exile_self_and_each_clause(
-        effect_text, for_spell=False
-    )
-    if if_condition_exile_self_and_each is not None:
-        # Read whole, ahead of `parse_mixed_effect`'s per-clause split:
-        # `split_effect_clauses` cuts on a bare " and " regardless of the
-        # comma already separating the leading "if" from the effect, and
-        # slices "each artifact and creature your opponents control" into
-        # three fragments none of which reads as a known clause on its own
-        # (the same reason `_parse_draw_equal_to_sacrificed_creature_power_
-        # then_discard_clause` above is read whole too).
-        return if_condition_exile_self_and_each
-    you_and_event_player_gain = _parse_you_and_event_player_gain_that_much_life_clause(
-        effect_text, for_spell=False
-    )
-    if you_and_event_player_gain is not None:
-        # Read whole, ahead of the splitter: "you and that player each gain
-        # that much life" has a bare " and " of its own that `split_effect_
-        # clauses` cuts clean through, leaving "you" on one side and "that
-        # player each gain that much life" on the other, neither of which is
-        # a clause any per-clause parser reads.
-        return you_and_event_player_gain
-    parsed = parse_mixed_effect(effect_text)
-    if parsed is not None:
-        return parsed
-    put_then_grant_then_delayed = _parse_put_then_grant_then_delayed_whole_text(
-        effect_text, for_spell=False
-    )
-    if put_then_grant_then_delayed is not None:
-        return put_then_grant_then_delayed
-    condition_instead = _parse_condition_instead_clause_for_ability(effect_text)
-    if condition_instead is not None:
-        return condition_instead
-    damage_target_and_controller = _parse_damage_target_also_damages_controller_clause(effect_text)
-    if damage_target_and_controller is not None:
-        return damage_target_and_controller
+    if (seg_hit := ABILITY_TEXT.run("s36", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s37", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s38", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s39", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s40", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s41", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := ABILITY_TEXT.run("s42", effect_text)) is not None:
+        return seg_hit
     # "... deals N damage to target creature and each other creature that
     # shares a color with it / with the same name as that creature" -
     # `machines/damage_backrefs.py`.
@@ -3861,15 +2963,8 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     damage_backref = damage_backref_ability_effect(effect_text)
     if damage_backref is not None:
         return damage_backref
-    composed = _compose_layer_effect_with_remainder_for_ability(effect_text)
-    if composed is not None:
-        return composed
-    then_exile_self_and_return = _parse_then_exile_self_and_return_clause(effect_text)
-    if then_exile_self_and_return is not None:
-        return then_exile_self_and_return
-    then_if_moved_this_way = _parse_then_if_moved_this_way_clause(effect_text)
-    if then_if_moved_this_way is not None:
-        return then_if_moved_this_way
+    if (seg_hit := ABILITY_TEXT.run("s43", effect_text)) is not None:
+        return seg_hit
 
     # CR 701.68's Blight as an ordinary resolving effect (not the cost
     # `machines/cost.py` already reads) - `machines/blight_effects.py`,
@@ -4120,24 +3215,20 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     multi_slot = spell_sentence_sequence_effect(whole)
     if multi_slot is not None:
         return multi_slot
-    r0a_t5 = _r0a_t5_spell_effect(whole)
-    if r0a_t5 is not None:
-        return r0a_t5
+    if (seg_hit := SPELL_TEXT.run("s1", whole)) is not None:
+        return seg_hit
     # Pre-split: a trailing win condition can carry its own "and" (Coalition
     # Victory's "a land of each basic land type and a creature of each
     # color"), which `split_effect_clauses` would cut in half.
-    win_if = _parse_if_condition_you_win_the_game_clause(whole, for_spell=True)
-    if win_if is not None:
-        return win_if
-    c02_t6 = _c02_t6_spell_effect(whole)
-    if c02_t6 is not None:
-        return c02_t6
+    if (seg_hit := SPELL_TEXT.run("s2", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s3", whole)) is not None:
+        return seg_hit
     # ecl-T8: the spell-side twin of the same early, pre-split try above -
     # see its own comment for why "power and toughness" cannot survive
     # `split_effect_clauses`.
-    put_permanent_from_hand = _parse_put_permanent_card_from_hand_clause(whole, for_spell=True)
-    if put_permanent_from_hand is not None:
-        return put_permanent_from_hand
+    if (seg_hit := SPELL_TEXT.run("s4", whole)) is not None:
+        return seg_hit
     from ..infusion import infusion_spell_effect
 
     infused = infusion_spell_effect(whole)
@@ -4146,288 +3237,43 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     # TMT T7 proof printing: Echoing Return shares Rat King, Verminister's own
     # "and all other cards with the same name as that card" grouping, as a
     # spell rather than an activated ability.
-    return_target_and_same_name_from_graveyard = (
-        _parse_return_target_and_same_name_from_graveyard_clause(whole, for_spell=True)
-    )
-    if return_target_and_same_name_from_graveyard is not None:
-        return return_target_and_same_name_from_graveyard  # type: ignore[return-value]
-    exile_all_creatures_then_hand_refill = _parse_exile_all_creatures_then_hand_refill_clause(whole)
-    if exile_all_creatures_then_hand_refill is not None:
-        return exile_all_creatures_then_hand_refill
-    source_relative = _source_relative_whole_text_spell_effect(whole)
-    if source_relative is not None:
-        return source_relative
-    dealt_damage_this_way = _parse_dealt_damage_this_way_die_to_exile(whole)
-    if dealt_damage_this_way is not None:
-        return dealt_damage_this_way
-    destroy_then_rider_if_type_destroyed = (
-        _parse_destroy_target_then_rider_if_type_destroyed_clause(whole, for_spell=True)
-    )
-    if destroy_then_rider_if_type_destroyed is not None:
-        return destroy_then_rider_if_type_destroyed  # type: ignore[return-value]
-    create_tokens_then_instead_tapped_attacking = (
-        _parse_create_tokens_then_instead_tapped_attacking_if_cost_paid_clause(whole)
-    )
-    if create_tokens_then_instead_tapped_attacking is not None:
-        return create_tokens_then_instead_tapped_attacking
-    prevent_dealt_by_target = _parse_prevent_damage_dealt_by_target_clause(whole)
-    if prevent_dealt_by_target is not None:
-        return prevent_dealt_by_target  # type: ignore[return-value]
-    put_cards_that_died = _parse_put_cards_that_died_this_turn_clause(whole)
-    if put_cards_that_died is not None:
-        return put_cards_that_died
-    exchange_control_clause = _parse_exchange_control_clause(whole)
-    if exchange_control_clause is not None:
-        return exchange_control_clause  # type: ignore[return-value]
-    exile_card_then_token_copy = _parse_exile_card_then_token_copy_clause(whole, for_spell=True)
-    if exile_card_then_token_copy is not None:
-        return exile_card_then_token_copy
-    damage_target_player_and_theirs = _parse_damage_target_player_and_their_creatures_clause(whole)
-    if damage_target_player_and_theirs is not None:
-        return damage_target_player_and_theirs
-    cast_target_from_graveyard = _parse_cast_target_card_from_graveyard_clause(whole)
-    if cast_target_from_graveyard is not None:
-        return cast_target_from_graveyard
-    target_attacks_if_able = _parse_target_attacks_if_able_clause(whole)
-    if target_attacks_if_able is not None:
-        return target_attacks_if_able
-    target_blocks_self_if_able = _parse_target_blocks_self_if_able_clause(whole)
-    if target_blocks_self_if_able is not None:
-        return target_blocks_self_if_able
-    created_trigger = _parse_created_trigger_spell_text(whole)
-    if created_trigger is not None:
-        return created_trigger
-    created_replacement = _parse_created_replacement_spell_text(whole)
-    if created_replacement is not None:
-        return created_replacement
-    created_replacement_then_rest = _parse_created_replacement_then_rest_spell_text(whole)
-    if created_replacement_then_rest is not None:
-        return created_replacement_then_rest
-    draw_x_from_target_graveyard_from_library = (
-        _parse_draw_x_from_target_graveyard_from_library_clause(whole)
-    )
-    if draw_x_from_target_graveyard_from_library is not None:
-        return draw_x_from_target_graveyard_from_library
-    copy_next_instant_or_sorcery_you_cast = (
-        _parse_copy_next_instant_or_sorcery_you_cast_spell_clause(whole)
-    )
-    if copy_next_instant_or_sorcery_you_cast is not None:
-        return copy_next_instant_or_sorcery_you_cast
-    choose_target_owner_may_top_else_bottom = _parse_choose_target_owner_may_top_else_bottom_clause(
-        whole, for_spell=True
-    )
-    if choose_target_owner_may_top_else_bottom is not None:
-        return choose_target_owner_may_top_else_bottom
-    choose_target_owner_shuffles_it = _parse_choose_target_owner_shuffles_it_clause(
-        whole, for_spell=True
-    )
-    if choose_target_owner_shuffles_it is not None:
-        return choose_target_owner_shuffles_it
-    choose_creature_type_destroy_except = _parse_choose_creature_type_destroy_except_clause(
-        whole, for_spell=True
-    )
-    if choose_creature_type_destroy_except is not None:
-        return choose_creature_type_destroy_except
-    each_sacrifices_then_if_you_did = _parse_each_sacrifices_then_if_you_did_clause(
-        whole, for_spell=True
-    )
-    if each_sacrifices_then_if_you_did is not None:
-        return each_sacrifices_then_if_you_did
-    exile_if_mv_return_then_re_exile = _parse_exile_if_mv_return_then_re_exile_clause(
-        whole, for_spell=True
-    )
-    if exile_if_mv_return_then_re_exile is not None:
-        return exile_if_mv_return_then_re_exile
-    switch_power_toughness_then_draw = _parse_switch_power_toughness_then_draw_clause(whole)
-    if switch_power_toughness_then_draw is not None:
-        return switch_power_toughness_then_draw
-    delirium_damage_instead = _parse_delirium_damage_instead_clause(whole)
-    if delirium_damage_instead is not None:
-        return delirium_damage_instead
-    choose_then_return = _parse_choose_targets_then_return_to_hand_pair(whole)
-    if choose_then_return is not None:
-        return choose_then_return
-    choose_then_token_copies = _parse_choose_target_then_create_token_copies_pair(whole)
-    if choose_then_token_copies is not None:
-        return choose_then_token_copies
-    token_copies_except = _parse_create_token_copies_except_clause(whole, for_spell=True)
-    if token_copies_except is not None:
-        return token_copies_except
-    for_each_creature_target_player_copy = _parse_for_each_creature_target_player_copy_clause(
-        whole, for_spell=True
-    )
-    if for_each_creature_target_player_copy is not None:
-        return for_each_creature_target_player_copy
-    for_each_creature_you_control_copy = _parse_for_each_creature_you_control_copy_clause(
-        whole, for_spell=True
-    )
-    if for_each_creature_you_control_copy is not None:
-        return for_each_creature_you_control_copy
-    tokens_graveyard_cast_counters = _parse_create_tokens_graveyard_cast_counters_clause(whole)
-    if tokens_graveyard_cast_counters is not None:
-        return tokens_graveyard_cast_counters
-    tokens_then_counter_other_subtype = _parse_create_tokens_then_counter_other_subtype_clause(
-        whole
-    )
-    if tokens_then_counter_other_subtype is not None:
-        return tokens_then_counter_other_subtype
-    mass_gain_control = _parse_mass_gain_control_untap_clause(whole)
-    if mass_gain_control is not None:
-        return mass_gain_control
-    return_as_creature = _parse_return_as_creature_clause(whole)
-    if return_as_creature is not None:
-        return return_as_creature
-    untap_and_gain_control = _parse_untap_and_gain_control_clause(whole)
-    if untap_and_gain_control is not None:
-        return untap_and_gain_control
+    if (seg_hit := SPELL_TEXT.run("s5", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s6", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s7", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s8", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s9", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s10", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s11", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s12", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s13", whole)) is not None:
+        return seg_hit
     # -- Wave W6's own whole-text additions, contiguous block -------------
-    revolt_destroy = _parse_revolt_destroy_or_exile_clause(whole)
-    if revolt_destroy is not None:
-        return revolt_destroy
-    converge_exile = _parse_converge_exile_by_colors_spent(whole)
-    if converge_exile is not None:
-        return converge_exile
-    gain_life_if_color_spent = _parse_gain_life_if_color_spent_clause(whole)
-    if gain_life_if_color_spent is not None:
-        return gain_life_if_color_spent
-    x_life_mass_debuff = _parse_x_life_mass_debuff(whole)
-    if x_life_mass_debuff is not None:
-        return x_life_mass_debuff
-    x_life_return_types_mv_x = _parse_x_life_return_types_mv_x_clause(whole)
-    if x_life_return_types_mv_x is not None:
-        return x_life_return_types_mv_x
-    exile_target_and_top_owner_may_play = _parse_exile_target_and_top_owner_may_play_clause(whole)
-    if exile_target_and_top_owner_may_play is not None:
-        return exile_target_and_top_owner_may_play
     # -- end Wave W6 whole-text additions -----------------------------------
     # -- sos-t2's own converge/Fractal/X-count whole-text additions --------
-    converge_discard = _parse_converge_discard_by_colors_spent(whole)
-    if converge_discard is not None:
-        return converge_discard
-    converge_damage_then_exile_excess = _parse_converge_damage_then_exile_excess_clause(whole)
-    if converge_damage_then_exile_excess is not None:
-        return converge_damage_then_exile_excess
-    converge_fractal_tokens_and_life = _parse_converge_fractal_tokens_and_life_clause(whole)
-    if converge_fractal_tokens_and_life is not None:
-        return converge_fractal_tokens_and_life
-    converge_draw_damage_life = _parse_converge_draw_damage_life_clause(whole)
-    if converge_draw_damage_life is not None:
-        return converge_draw_damage_life
-    converge_draw_and_lose_life = _parse_converge_draw_and_lose_life_clause(whole)
-    if converge_draw_and_lose_life is not None:
-        return converge_draw_and_lose_life
-    fractal_token_by_cards_drawn = _parse_fractal_token_by_cards_drawn_this_turn_clause(whole)
-    if fractal_token_by_cards_drawn is not None:
-        return fractal_token_by_cards_drawn
-    power_of_two_draw = _parse_power_of_two_draw_clause(whole)
-    if power_of_two_draw is not None:
-        return power_of_two_draw
-    tokens_then_counter_if_not_from_hand = _parse_tokens_then_counter_if_not_cast_from_hand_clause(
-        whole
-    )
-    if tokens_then_counter_if_not_from_hand is not None:
-        return tokens_then_counter_if_not_from_hand
     # -- end sos-t2 whole-text additions -------------------------------------
-    citys_blessing_instead = _parse_citys_blessing_instead_clause(whole)
-    if citys_blessing_instead is not None:
-        return citys_blessing_instead
-    kicked_choose_return = _parse_kicked_choose_return_delayed_clause(whole)
-    if kicked_choose_return is not None:
-        return kicked_choose_return
-    counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(whole)
-    if counter_exile_may_cast is not None:
-        return counter_exile_may_cast
-    face_down_exile_play = _parse_face_down_exile_play_clause(whole)
-    if face_down_exile_play is not None:
-        return face_down_exile_play
-    look_top_split_conditional_instead = _parse_look_top_split_conditional_instead_clause(whole)
-    if look_top_split_conditional_instead is not None:
-        return look_top_split_conditional_instead
-    condition_instead = _parse_condition_instead_clause(whole)
-    if condition_instead is not None:
-        return condition_instead
-    gift_promised_return = _parse_gift_promised_return_instead_clause(whole)
-    if gift_promised_return is not None:
-        return gift_promised_return
+    if (seg_hit := SPELL_TEXT.run("s14", whole)) is not None:
+        return seg_hit
     if _EACH_PLAYER_EXILE_SACRIFICE_RETURN_RE.fullmatch(whole):
         # Read whole, ahead of `parse_mixed_effect_for_spell`: the sentence's
         # own ", then " joins are CR 608.2c instructions in one breath, not
         # three clauses `_CLAUSE_SEPARATOR` may cut apart and fail separately.
         return each_player_exiles_sacrifices_and_returns_creatures
-    may_discard_or_sacrifice = _parse_may_discard_or_sacrifice_if_you_do_clause(
-        effect_text, for_spell=True
-    )
-    if may_discard_or_sacrifice is not None:
-        return may_discard_or_sacrifice
-    conditional_sacrifice = _parse_conditional_sacrifice_clause(effect_text, for_spell=True)
-    if conditional_sacrifice is not None:
-        return conditional_sacrifice
-    mandatory_sacrifice_then_return = _parse_mandatory_sacrifice_then_return_to_hand_clause(
-        effect_text, for_spell=True
-    )
-    if mandatory_sacrifice_then_return is not None:
-        return mandatory_sacrifice_then_return
-    may_exile_self_and_named_copies = _parse_may_exile_self_and_named_copies_if_you_do_clause(
-        effect_text
-    )
-    if may_exile_self_and_named_copies is not None:
-        return may_exile_self_and_named_copies
-    target_energy_damage = _parse_target_get_energy_pay_damage(effect_text)
-    if target_energy_damage is not None:
-        return target_energy_damage
-    x_energy_destroy = _parse_x_energy_pay_destroy_by_mana_value(effect_text)
-    if x_energy_destroy is not None:
-        return x_energy_destroy
-    x_divided_damage_doubled = _parse_x_damage_divided_and_doubled_clause(effect_text)
-    if x_divided_damage_doubled is not None:
-        return x_divided_damage_doubled
-    behold_chosen_type_search = _parse_behold_chosen_type_search_clause(effect_text, for_spell=True)
-    if behold_chosen_type_search is not None:
-        return behold_chosen_type_search
-    shared_type_sacrifice = _parse_shared_type_sacrifice_clause(effect_text, for_spell=True)
-    if shared_type_sacrifice is not None:
-        return shared_type_sacrifice
-    choose_type_return_from_graveyard = _parse_choose_type_return_from_graveyard_clause(
-        effect_text, for_spell=True
-    )
-    if choose_type_return_from_graveyard is not None:
-        return choose_type_return_from_graveyard
-    choose_type_draw_per_permanent = _parse_choose_type_draw_per_permanent_clause(
-        effect_text, for_spell=True
-    )
-    if choose_type_draw_per_permanent is not None:
-        return choose_type_draw_per_permanent
-    wanderwine_farewell = _parse_wanderwine_farewell_clause(effect_text, for_spell=True)
-    if wanderwine_farewell is not None:
-        return wanderwine_farewell
-    damage_target_kicked_instead = _parse_damage_target_kicked_instead_clause(effect_text)
-    if damage_target_kicked_instead is not None:
-        return damage_target_kicked_instead
-    damage_target_also_damages_controller = _parse_damage_target_also_damages_controller_clause(
-        effect_text
-    )
-    if damage_target_also_damages_controller is not None:
-        return damage_target_also_damages_controller
-    choose_target_return_chosen_card = _parse_choose_target_return_chosen_card_clause(effect_text)
-    if choose_target_return_chosen_card is not None:
-        return choose_target_return_chosen_card
-    reveal_top_n_may_battlefield_creature_teamwork = (
-        _parse_reveal_top_n_may_battlefield_creature_teamwork_clause(effect_text)
-    )
-    if reveal_top_n_may_battlefield_creature_teamwork is not None:
-        return reveal_top_n_may_battlefield_creature_teamwork
-    damage_then_empower_if_excess = _parse_damage_then_empower_if_excess_clause(effect_text)
-    if damage_then_empower_if_excess is not None:
-        return damage_then_empower_if_excess
-    cant_cast_kicked_attack = _parse_target_player_cant_cast_kicked_attack_clause(effect_text)
-    if cant_cast_kicked_attack is not None:
-        return cant_cast_kicked_attack
-    destroy_two_targets = _parse_destroy_two_targets_clause(effect_text)
-    if destroy_two_targets is not None:
-        return destroy_two_targets
-    tap_untap_two_targets = _parse_tap_untap_two_targets_clause(effect_text)
-    if tap_untap_two_targets is not None:
-        return tap_untap_two_targets
+    if (seg_hit := SPELL_TEXT.run("s15", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s16", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s17", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s18", effect_text)) is not None:
+        return seg_hit
     if _CONTROL_REPLACEMENT_RE.fullmatch(whole):
 
         def control_replacement_notice_only(game: "Game", spell: CardState) -> None:
@@ -4438,76 +3284,17 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
             )
 
         return control_replacement_notice_only
-    bottom_hand_then_draw = _parse_bottom_hand_then_draw_plus_one_clause(effect_text)
-    if bottom_hand_then_draw is not None:
-        return bottom_hand_then_draw
-    look_top_n_battlefield = _parse_look_top_n_may_battlefield_creature_bonus_clause(effect_text)
-    if look_top_n_battlefield is not None:
-        return look_top_n_battlefield
-    select_from_top_spell = _parse_select_from_top_spell_clause(effect_text)
-    if select_from_top_spell is not None:
-        return select_from_top_spell
+    if (seg_hit := SPELL_TEXT.run("s19", effect_text)) is not None:
+        return seg_hit
     if _EACH_PLAYER_SACRIFICES_COLORED_RE.fullmatch(whole):
         return each_player_sacrifices_colored_permanents
-    destroy_each_then_add_mana = _parse_destroy_each_then_add_mana_per_destroyed(effect_text)
-    if destroy_each_then_add_mana is not None:
-        return destroy_each_then_add_mana
-    destroy_each_for_spell = _parse_destroy_each_clause(whole)
-    if destroy_each_for_spell is not None:
-        return destroy_each_for_spell
-    mass_pump_for_spell = _mass_pump_spell_effect(whole)
-    if mass_pump_for_spell is not None:
-        return mass_pump_for_spell
-    flashback_grant = _parse_grant_flashback_clause(whole)
-    if flashback_grant is not None:
-        return flashback_grant
-    tap_land_additional_mana = _parse_until_end_of_turn_tap_land_additional_mana_clause(whole)
-    if tap_land_additional_mana is not None:
-        return tap_land_additional_mana
-    each_graveyard_flashback_grant = _parse_each_graveyard_instant_sorcery_gains_flashback_clause(
-        whole
-    )
-    if each_graveyard_flashback_grant is not None:
-        return each_graveyard_flashback_grant
-    outside_the_game_play = _parse_outside_the_game_play_clause(whole)
-    if outside_the_game_play is not None:
-        return outside_the_game_play
-    reveal_from_outside_into_hand = _parse_reveal_from_outside_the_game_into_hand_clause(whole)
-    if reveal_from_outside_into_hand is not None:
-        return reveal_from_outside_into_hand
-    put_from_outside_into_hand = _parse_put_from_outside_the_game_into_hand_spell(whole)
-    if put_from_outside_into_hand is not None:
-        return put_from_outside_into_hand
-    exile_hand_draw_then_play = _parse_exile_hand_draw_then_play_until_next_turn_clause(whole)
-    if exile_hand_draw_then_play is not None:
-        return exile_hand_draw_then_play
+    if (seg_hit := SPELL_TEXT.run("s20", effect_text)) is not None:
+        return seg_hit
     # -- whole-text shapes whose sentences point back at one another -------
-    return_then_conditional_draw = _parse_return_target_then_conditional_draw(whole)
-    if return_then_conditional_draw is not None:
-        return return_then_conditional_draw
-    mill_then_take_from_milled = _parse_mill_then_may_take_from_milled(effect_text)
-    if mill_then_take_from_milled is not None:
-        return mill_then_take_from_milled
-    mill_then_put_all_from_milled = _parse_mill_then_put_all_from_milled(effect_text)
-    if mill_then_put_all_from_milled is not None:
-        return mill_then_put_all_from_milled
-    mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(effect_text)
-    if mill_then_return_to_hand is not None:
-        return mill_then_return_to_hand
-    draw_then_discard_unless = _parse_draw_then_discard_unless(effect_text)
-    if draw_then_discard_unless is not None:
-        return draw_then_discard_unless
-    look_top_lands_to_hand = _parse_look_top_lands_take_to_hand(effect_text)
-    if look_top_lands_to_hand is not None:
-        return look_top_lands_to_hand
-    look_top_n_total_mv = _parse_look_top_n_put_total_mv_onto_battlefield(effect_text)
-    if look_top_n_total_mv is not None:
-        return look_top_n_total_mv
-    return_up_to_n_total_mv_from_graveyard = (
-        _parse_return_up_to_n_total_mv_from_graveyard_to_battlefield(effect_text)
-    )
-    if return_up_to_n_total_mv_from_graveyard is not None:
-        return return_up_to_n_total_mv_from_graveyard
+    if (seg_hit := SPELL_TEXT.run("s21", whole)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s22", effect_text)) is not None:
+        return seg_hit
     # -- end whole-text shapes ---------------------------------------------
     if _DAMAGE_THEN_GROUP_TYPE_ABILITY_GRANT_RE.fullmatch(whole):
 
@@ -4532,17 +3319,12 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     cost_reduction_stripped = _SELF_COST_REDUCTION_LINE_RE.sub("", effect_text)
     cost_reduction_stripped = _PER_COUNT_COST_REDUCTION_LINE_RE.sub("", cost_reduction_stripped)
     cost_reduction_stripped = _TIMING_COST_REDUCTION_LINE_RE.sub("", cost_reduction_stripped)
-    parsed = parse_mixed_effect_for_spell(cost_reduction_stripped)
-    if parsed is not None:
-        return parsed
-    composed = _compose_layer_effect_with_remainder(effect_text)
-    if composed is not None:
-        return composed
-    put_then_grant_then_delayed = _parse_put_then_grant_then_delayed_whole_text(
-        effect_text, for_spell=True
-    )
-    if put_then_grant_then_delayed is not None:
-        return put_then_grant_then_delayed
+    if (seg_hit := SPELL_TEXT.run("s23", cost_reduction_stripped)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s24", effect_text)) is not None:
+        return seg_hit
+    if (seg_hit := SPELL_TEXT.run("s25", effect_text)) is not None:
+        return seg_hit
 
     # CR 701.68's Blight as a spell effect (Dose of Dawnglow's own "Then if
     # it isn't your main phase, blight 2." tail) - see the ability-side hook
@@ -4749,6 +3531,7 @@ _LOOK_AT_TARGET_HAND_RE = re.compile(r"^look at target player'?s hand$", re.IGNO
 _RING_TEMPTS_YOU_RE = re.compile(r"^(?:then,?\s+)?the ring tempts you$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_ring_tempts_you_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "The Ring tempts you." as one clause among however many the card
     prints around it. It targets nothing (CR 701.54a's "choose a creature you
@@ -4813,6 +3596,7 @@ _EMPOWER_JACE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_empower_jace_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Empower Jace N." or "Empower Jace X, where X is `<expr>`." - the
     whole of a spell's or an ability's effect text once any trigger
@@ -5013,6 +3797,7 @@ _TURN_RULES_BAN_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
 def _parse_turn_rules_ban_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_TURN_RULES_BAN_RE`'s three shapes, as a recorded `CastingRuleEffect`."""
     match = _TURN_RULES_BAN_RE.fullmatch(clause.strip())
@@ -5054,6 +3839,7 @@ _YOU_AND_TARGET_PLAYER_EACH_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s12")
 def _parse_you_and_target_player_each_clause(clause: str) -> TargetedClause | None:
     """`_YOU_AND_TARGET_PLAYER_EACH_RE`'s shape, or `None`."""
     match = _YOU_AND_TARGET_PLAYER_EACH_RE.fullmatch(clause.strip())
@@ -5136,86 +3922,39 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if then_if_not_main_phase is not None:
         return then_if_not_main_phase  # type: ignore[return-value]
 
-    targeted = _parse_targeted_clause(clause, for_spell=for_spell)
-    if targeted is not None:
-        return targeted
-    this_turn_spell_grant = _parse_this_turn_spell_grant_clause(clause, for_spell=for_spell)
-    if this_turn_spell_grant is not None:
-        return this_turn_spell_grant
-    exile_other_tops = _parse_exile_top_of_other_libraries_clause(clause)
-    if exile_other_tops is not None:
-        return exile_other_tops
-    each_player_exiles = _parse_each_player_exiles_until_clause(clause, for_spell=for_spell)
-    if each_player_exiles is not None:
-        return each_player_exiles
-    play_exiled_with = _parse_play_a_card_exiled_with_clause(clause, for_spell=for_spell)
-    if play_exiled_with is not None:
-        return play_exiled_with
-    poison_that_many = _parse_event_player_gets_that_many_poison_clause(clause, for_spell=for_spell)
-    if poison_that_many is not None:
-        return poison_that_many
+    if (seg_hit := MIXED_CLAUSE.run("s1", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s2", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s3", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     subject_controller_poison = parse_event_subject_controller_poison_clause(
         clause, for_spell=for_spell
     )
     if subject_controller_poison is not None:
         return subject_controller_poison
-    each_player_attacked_loses = _parse_each_player_this_creature_attacked_loses_clause(
-        clause, for_spell=for_spell
-    )
-    if each_player_attacked_loses is not None:
-        return each_player_attacked_loses
-    draw_the_difference = _parse_draw_the_difference_clause(clause, for_spell=for_spell)
-    if draw_the_difference is not None:
-        return draw_the_difference
+    if (seg_hit := MIXED_CLAUSE.run("s4", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     from ..player_control import parse_control_target_player_next_turn
 
     control_player = parse_control_target_player_next_turn(clause, for_spell=for_spell)
     if control_player is not None:
         return control_player
-    shuffle_targets = _parse_shuffle_target_cards_into_library_clause(clause, for_spell=for_spell)
-    if shuffle_targets is not None:
-        return shuffle_targets
-    shuffle_permanent_target = _parse_shuffle_target_permanent_into_library_clause(
-        clause, for_spell=for_spell
-    )
-    if shuffle_permanent_target is not None:
-        return shuffle_permanent_target
-    prevent_all_to_you_next_turn = _parse_prevent_all_damage_to_you_until_next_turn_clause(clause)
-    if prevent_all_to_you_next_turn is not None:
-        return prevent_all_to_you_next_turn
-    prevent_all_to_self = _parse_prevent_all_damage_to_self_this_turn_clause(
-        clause, for_spell=for_spell
-    )
-    if prevent_all_to_self is not None:
-        return prevent_all_to_self
-    exile_self = _parse_exile_self_clause(clause, for_spell=for_spell)
-    if exile_self is not None:
-        return exile_self
-    explores = _parse_explores_clause(clause, for_spell=for_spell)
-    if explores is not None:
-        return explores
+    if (seg_hit := MIXED_CLAUSE.run("s5", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s6", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s7", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     connives = parse_connive_clause(clause, for_spell=for_spell)
     if connives is not None:
         return connives
-    loyalty_instant_speed = _parse_loyalty_instant_speed_clause(clause, for_spell=for_spell)
-    if loyalty_instant_speed is not None:
-        return loyalty_instant_speed
-    proliferate = _parse_proliferate_clause(clause)
-    if proliferate is not None:
-        return proliferate
-    token = _parse_token_clause(clause, for_spell=for_spell)
-    if token is not None:
-        return token
-    that_many_color_pip_tokens = _parse_create_that_many_color_pip_tokens_clause(
-        clause, for_spell=for_spell
-    )
-    if that_many_color_pip_tokens is not None:
-        return that_many_color_pip_tokens
-    damage_equal_to_that_spells_mv = _parse_damage_equal_to_that_spells_mv_clause(
-        clause, for_spell=for_spell
-    )
-    if damage_equal_to_that_spells_mv is not None:
-        return damage_equal_to_that_spells_mv
+    if (seg_hit := MIXED_CLAUSE.run("s8", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s9", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s10", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     if not for_spell:
         self_gains_quoted_ability = _parse_self_gains_quoted_ability_until_eot_clause(clause)
         if self_gains_quoted_ability is not None:
@@ -5241,172 +3980,36 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         )
         if return_that_card_to_owners_hand is not None:
             return return_that_card_to_owners_hand
-    mass_pump = _parse_mass_pump_group_clause(clause, for_spell=for_spell)
-    if mass_pump is not None:
-        return mass_pump
-    target_player_creatures_pump = _parse_target_player_creatures_pump_clause(
-        clause, for_spell=for_spell
-    )
-    if target_player_creatures_pump is not None:
-        return target_player_creatures_pump
-    mass_lose_all = _parse_mass_lose_all_abilities_clause(clause, for_spell=for_spell)
-    if mass_lose_all is not None:
-        return mass_lose_all
-    spells_cant_be_countered = _parse_spells_cant_be_countered_clause(clause, for_spell=for_spell)
-    if spells_cant_be_countered is not None:
-        return spells_cant_be_countered
-    turn_rules_ban = _parse_turn_rules_ban_clause(clause, for_spell=for_spell)
-    if turn_rules_ban is not None:
-        return turn_rules_ban
-    you_and_group_gain = _parse_you_and_group_gain_clause(clause, for_spell=for_spell)
-    if you_and_group_gain is not None:
-        return you_and_group_gain
-    you_and_target_player_each = _parse_you_and_target_player_each_clause(clause)
-    if you_and_target_player_each is not None:
-        return you_and_target_player_each
-    target_player_creates = _parse_target_player_creates_clause(clause)
-    if target_player_creates is not None:
-        return target_player_creates
-    named_token = _parse_named_token_clause(clause, for_spell=for_spell)
-    if named_token is not None:
-        return named_token
-    variable_count_token = _parse_variable_count_token_clause(clause, for_spell=for_spell)
-    if variable_count_token is not None:
-        return variable_count_token
-    self_fights_target = _parse_self_fights_target_clause(clause, for_spell=for_spell)
-    if self_fights_target is not None:
-        return self_fights_target
-    enchanted_fights_target = _parse_enchanted_creature_fights_target_clause(
-        clause, for_spell=for_spell
-    )
-    if enchanted_fights_target is not None:
-        return enchanted_fights_target
-    target_fights_target = _parse_target_fights_target_clause(clause, for_spell=for_spell)
-    if target_fights_target is not None:
-        return target_fights_target
-    bite_damage = _parse_bite_damage_clause(clause, for_spell=for_spell)
-    if bite_damage is not None:
-        return bite_damage
-    counter_each_other_creature = _parse_counter_each_other_creature_clause(
-        clause, for_spell=for_spell
-    )
-    if counter_each_other_creature is not None:
-        return counter_each_other_creature
-    counter_each_attacked_this_turn = _parse_counter_each_attacked_this_turn_clause(clause)
-    if counter_each_attacked_this_turn is not None:
-        return counter_each_attacked_this_turn
-    counter_each_creature_with_counter = _parse_counter_each_creature_with_counter_clause(
-        clause, for_spell=for_spell
-    )
-    if counter_each_creature_with_counter is not None:
-        return counter_each_creature_with_counter
-    remove_all_counters_from_target = _parse_remove_all_counters_from_target_clause(clause)
-    if remove_all_counters_from_target is not None:
-        return remove_all_counters_from_target  # type: ignore[return-value]
-    remove_up_to_n_counters_from_target = _parse_remove_up_to_n_counters_from_target_clause(clause)
-    if remove_up_to_n_counters_from_target is not None:
-        return remove_up_to_n_counters_from_target  # type: ignore[return-value]
-    untap_all_group = _parse_untap_all_group_clause(clause, for_spell=for_spell)
-    if untap_all_group is not None:
-        return untap_all_group
-    untap_each_subtype = _parse_untap_each_subtype_clause(clause, for_spell=for_spell)
-    if untap_each_subtype is not None:
-        return untap_each_subtype
-    goad = _parse_goad_clause(clause, for_spell=for_spell)
-    if goad is not None:
-        return goad
-    suspect_clause = _parse_suspect_clause(clause, for_spell=for_spell)
-    if suspect_clause is not None:
-        return suspect_clause
-    venture_clause = _parse_venture_clause(clause, for_spell=for_spell)
-    if venture_clause is not None:
-        return venture_clause
-    renown = _parse_renown_clause(clause, for_spell=for_spell)
-    if renown is not None:
-        return renown
-    additional_combat_and_main_phase = _parse_additional_combat_and_main_phase_clause(clause)
-    if additional_combat_and_main_phase is not None:
-        return additional_combat_and_main_phase  # type: ignore[return-value]
-    untap_all_attacking = _parse_untap_all_attacking_clause(clause)
-    if untap_all_attacking is not None:
-        return untap_all_attacking  # type: ignore[return-value]
-    self_pump_for_each = _parse_self_pump_for_each_clause(clause)
-    if self_pump_for_each is not None:
-        return self_pump_for_each  # type: ignore[return-value]
-    self_damage_equal_to_count = _parse_self_damage_equal_to_count_clause(
-        clause, for_spell=for_spell
-    )
-    if self_damage_equal_to_count is not None:
-        return self_damage_equal_to_count  # type: ignore[return-value]
-    additional_combat_phase_only = _parse_additional_combat_phase_only_clause(clause)
-    if additional_combat_phase_only is not None:
-        return additional_combat_phase_only  # type: ignore[return-value]
-    for_each_opponent_tap_then_stun = _parse_for_each_opponent_tap_then_stun_clause(
-        clause, for_spell=for_spell
-    )
-    if for_each_opponent_tap_then_stun is not None:
-        return for_each_opponent_tap_then_stun  # type: ignore[return-value]
-    for_each_opponent_tap = _parse_for_each_opponent_tap_clause(clause, for_spell=for_spell)
-    if for_each_opponent_tap is not None:
-        return for_each_opponent_tap  # type: ignore[return-value]
-    for_each_opponent_counters = _parse_for_each_opponent_counters_clause(
-        clause, for_spell=for_spell
-    )
-    if for_each_opponent_counters is not None:
-        return for_each_opponent_counters  # type: ignore[return-value]
-    for_each_opponent_destroy = _parse_for_each_opponent_destroy_clause(clause, for_spell=for_spell)
-    if for_each_opponent_destroy is not None:
-        return for_each_opponent_destroy  # type: ignore[return-value]
-    for_each_opponent_exile = _parse_for_each_opponent_exile_clause(clause, for_spell=for_spell)
-    if for_each_opponent_exile is not None:
-        return for_each_opponent_exile  # type: ignore[return-value]
-    for_each_opponent_return_to_hand = _parse_for_each_opponent_return_to_hand_clause(
-        clause, for_spell=for_spell
-    )
-    if for_each_opponent_return_to_hand is not None:
-        return for_each_opponent_return_to_hand  # type: ignore[return-value]
-    counter_each_creature_target_player = _parse_counter_each_creature_target_player_clause(
-        clause, for_spell=for_spell
-    )
-    if counter_each_creature_target_player is not None:
-        return counter_each_creature_target_player
-    role_token = _parse_create_role_token_clause(clause, for_spell=for_spell)
-    if role_token is not None:
-        return role_token
-    city_blessing_copy = _parse_city_blessing_token_copy_clause(clause, for_spell=for_spell)
-    if city_blessing_copy is not None:
-        return city_blessing_copy
-    self_copy_token = _parse_self_copy_token_clause(clause, for_spell=for_spell)
-    if self_copy_token is not None:
-        return self_copy_token
-    create_token_copy_of_target = _parse_create_token_copy_of_target_clause(
-        clause, for_spell=for_spell
-    )
-    if create_token_copy_of_target is not None:
-        return create_token_copy_of_target
-    create_token_copy_of_quality_you_control = (
-        _parse_create_token_copy_of_quality_you_control_clause(clause)
-    )
-    if create_token_copy_of_quality_you_control is not None:
-        return create_token_copy_of_quality_you_control
-    create_token_copies_except = _parse_create_token_copies_except_clause(
-        clause, for_spell=for_spell
-    )
-    if create_token_copies_except is not None:
-        return create_token_copies_except
-    counter_on_additional_cost_card = _parse_counter_on_additional_cost_card_clause(clause)
-    if counter_on_additional_cost_card is not None:
-        return counter_on_additional_cost_card
-    gain_life_equal_to_cost_card = _parse_gain_life_equal_to_additional_cost_card_clause(
-        clause, for_spell=for_spell
-    )
-    if gain_life_equal_to_cost_card is not None:
-        return gain_life_equal_to_cost_card
-    each_player_may_discard_hand_draw = _parse_each_player_may_discard_hand_and_draw_clause(
-        clause, for_spell=for_spell
-    )
-    if each_player_may_discard_hand_draw is not None:
-        return each_player_may_discard_hand_draw
+    if (seg_hit := MIXED_CLAUSE.run("s11", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s12", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s13", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s14", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s15", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s16", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s17", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s18", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s19", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s20", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s21", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s22", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s23", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s24", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s25", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     if for_spell:
         # "Put two +1/+1 counters on each creature you control." as a spell
         # (Germination Practicum, Basri's Solidarity) - the ability-side read
@@ -5477,282 +4080,32 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         untap_named_self = _parse_untap_named_self_clause(clause)
         if untap_named_self is not None:
             return untap_named_self  # type: ignore[return-value]
-    return_from_your_graveyard = _parse_return_cards_from_your_graveyard_clause(
-        clause, for_spell=for_spell
-    )
-    if return_from_your_graveyard is not None:
-        return return_from_your_graveyard
-    return_a_card_at_random_from_graveyard = _parse_return_a_card_at_random_from_graveyard_clause(
-        clause, for_spell=for_spell
-    )
-    if return_a_card_at_random_from_graveyard is not None:
-        return return_a_card_at_random_from_graveyard
-    transform_all = _parse_transform_all_subtype_clause(clause, for_spell=for_spell)
-    if transform_all is not None:
-        return transform_all
-    search_hand_or_graveyard = _parse_search_hand_or_graveyard_clause(clause, for_spell=for_spell)
-    if search_hand_or_graveyard is not None:
-        return search_hand_or_graveyard
-    draw_equal_to_target_hand = _parse_draw_cards_equal_to_target_hand_clause(
-        clause, for_spell=for_spell
-    )
-    if draw_equal_to_target_hand is not None:
-        return draw_equal_to_target_hand
-    search = _parse_search_clause(clause, for_spell=for_spell)
-    if search is not None:
-        return search
-    search_and_exile_then_shuffle = _parse_search_and_exile_then_shuffle_clause(
-        clause, for_spell=for_spell
-    )
-    if search_and_exile_then_shuffle is not None:
-        return search_and_exile_then_shuffle
-    search_split_destination = _parse_search_split_destination_clause(clause, for_spell=for_spell)
-    if search_split_destination is not None:
-        return search_split_destination
-    search_reveal_shuffle_top = _parse_search_reveal_shuffle_top_clause(clause, for_spell=for_spell)
-    if search_reveal_shuffle_top is not None:
-        return search_reveal_shuffle_top
-    search_distinct_names = _parse_search_distinct_names_clause(clause, for_spell=for_spell)
-    if search_distinct_names is not None:
-        return search_distinct_names
-    put_land_from_hand = _parse_put_land_from_hand_clause(clause, for_spell=for_spell)
-    if put_land_from_hand is not None:
-        return put_land_from_hand
-    search_mv_lte_count = _parse_search_mv_lte_count_clause(clause, for_spell=for_spell)
-    if search_mv_lte_count is not None:
-        return search_mv_lte_count
-    search_mv_equal_to_sacrificed = _parse_search_mv_equal_to_sacrificed_clause(
-        clause, for_spell=for_spell
-    )
-    if search_mv_equal_to_sacrificed is not None:
-        return search_mv_equal_to_sacrificed
-    imprint = _parse_imprint_clause(clause, for_spell=for_spell)
-    if imprint is not None:
-        return imprint
-    return_imprinted = _parse_return_imprinted_clause(clause, for_spell=for_spell)
-    if return_imprinted is not None:
-        return return_imprinted
-    self_return = _parse_self_return_clause(clause, for_spell=for_spell)
-    if self_return is not None:
-        return self_return
-    exile_dead_self = _parse_exile_dead_self_clause(clause, for_spell=for_spell)
-    if exile_dead_self is not None:
-        return exile_dead_self
-    return_dead_self = _parse_return_dead_self_to_hand_clause(clause, for_spell=for_spell)
-    if return_dead_self is not None:
-        return return_dead_self
-    dead_object_to_library = _parse_dead_object_to_library_clause(clause, for_spell=for_spell)
-    if dead_object_to_library is not None:
-        return dead_object_to_library
-    owner_shuffles_graveyard = _parse_owner_shuffles_graveyard_into_library_clause(
-        clause, for_spell=for_spell
-    )
-    if owner_shuffles_graveyard is not None:
-        return owner_shuffles_graveyard
-    tokens_equal_to_event_subject_stat = _parse_create_tokens_equal_to_event_subject_stat_clause(
-        clause, for_spell=for_spell
-    )
-    if tokens_equal_to_event_subject_stat is not None:
-        return tokens_equal_to_event_subject_stat
-    sacrifice_self = _parse_sacrifice_self_clause(clause, for_spell=for_spell)
-    if sacrifice_self is not None:
-        return sacrifice_self
-    delayed = _parse_delayed_single_clause(clause, for_spell=for_spell)
-    if delayed is not None:
-        return delayed
-    airbend_clause = _parse_airbend_clause(clause, for_spell=for_spell)
-    if airbend_clause is not None:
-        return airbend_clause
-    earthbend_clause = _parse_earthbend_clause(clause, for_spell=for_spell)
-    if earthbend_clause is not None:
-        return earthbend_clause
-    amass_clause = _parse_amass_clause(clause, for_spell=for_spell)
-    if amass_clause is not None:
-        return amass_clause
-    ring_tempts_clause = _parse_ring_tempts_you_clause(clause, for_spell=for_spell)
-    if ring_tempts_clause is not None:
-        return ring_tempts_clause
-    blocker_sacrificed = _parse_blocking_creature_sacrificed_clause(clause, for_spell=for_spell)
-    if blocker_sacrificed is not None:
-        return blocker_sacrificed
-    empower_jace_clause = _parse_empower_jace_clause(clause, for_spell=for_spell)
-    if empower_jace_clause is not None:
-        return empower_jace_clause
-    investigate_clause = _parse_investigate_clause(clause, for_spell=for_spell)
-    if investigate_clause is not None:
-        return investigate_clause
-    discover_clause = _parse_discover_clause(clause, for_spell=for_spell)
-    if discover_clause is not None:
-        return discover_clause
-    learn_clause = _parse_learn_clause(clause, for_spell=for_spell)
-    if learn_clause is not None:
-        return learn_clause
-    manifest_top_clause = _parse_manifest_top_card_clause(clause, for_spell=for_spell)
-    if manifest_top_clause is not None:
-        return manifest_top_clause
-    manifest_dread_clause = _parse_manifest_dread_clause(clause, for_spell=for_spell)
-    if manifest_dread_clause is not None:
-        return manifest_dread_clause
-    if_graveyard_count = _parse_if_graveyard_count_clause(clause, for_spell=for_spell)
-    if if_graveyard_count is not None:
-        return if_graveyard_count
-    if_additional_cost_paid = _parse_if_additional_cost_paid_clause(clause, for_spell=for_spell)
-    if if_additional_cost_paid is not None:
-        return if_additional_cost_paid
-    if_keyword_cost_paid = _parse_if_keyword_cost_paid_clause(clause, for_spell=for_spell)
-    if if_keyword_cost_paid is not None:
-        return if_keyword_cost_paid
-    exile_that_players_library = _parse_exile_that_players_library_clause(
-        clause, for_spell=for_spell
-    )
-    if exile_that_players_library is not None:
-        return exile_that_players_library
-    it_gains_rebound = _parse_it_gains_rebound_clause(clause, for_spell=for_spell)
-    if it_gains_rebound is not None:
-        return it_gains_rebound
-    grant_enters_with_colors_spent = _parse_grant_enters_with_colors_spent_counters_clause(
-        clause, for_spell=for_spell
-    )
-    if grant_enters_with_colors_spent is not None:
-        return grant_enters_with_colors_spent
-    they_gain_or_lose_life = _parse_they_gain_or_lose_life_clause(clause, for_spell=for_spell)
-    if they_gain_or_lose_life is not None:
-        return they_gain_or_lose_life
-    that_permanent_no_untap = _parse_that_permanent_no_untap_clause(clause, for_spell=for_spell)
-    if that_permanent_no_untap is not None:
-        return that_permanent_no_untap
-    distribute_counters = _parse_distribute_counters_among_targets_clause(
-        clause, for_spell=for_spell
-    )
-    if distribute_counters is not None:
-        return distribute_counters
-    distribute_counters_you_control = _parse_distribute_counters_among_you_control_clause(clause)
-    if distribute_counters_you_control is not None:
-        return distribute_counters_you_control
-    copy_that_spell = _parse_copy_that_spell_clause(clause, for_spell=for_spell)
-    if copy_that_spell is not None:
-        return copy_that_spell
-    counter_that_spell = _parse_counter_that_spell_clause(clause, for_spell=for_spell)
-    if counter_that_spell is not None:
-        return counter_that_spell
-    defending_player_exiles = _parse_defending_player_exiles_top_n_clause(
-        clause, for_spell=for_spell
-    )
-    if defending_player_exiles is not None:
-        return defending_player_exiles
-    look_at_top_card = _parse_look_at_top_card_clause(clause)
-    if look_at_top_card is not None:
-        return look_at_top_card
+    if (seg_hit := MIXED_CLAUSE.run("s26", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s27", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s28", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s29", clause)) is not None:
+        return seg_hit
     if _LOOK_AT_TARGET_HAND_RE.fullmatch(clause.strip()):
         return _look_at_target_hand
     # -- Wave W1's own single-clause additions, contiguous block ----------
-    target_player_discards = _parse_target_player_discards_clause(clause, for_spell=for_spell)
-    if target_player_discards is not None:
-        return target_player_discards
-    each_opponent_discards = _parse_each_opponent_discards_clause(clause, for_spell=for_spell)
-    if each_opponent_discards is not None:
-        return each_opponent_discards
-    target_player_may_put_from_hand = _parse_target_player_may_put_card_from_hand_clause(
-        clause, for_spell=for_spell
-    )
-    if target_player_may_put_from_hand is not None:
-        return target_player_may_put_from_hand
     # `_parse_owner_puts_it_into_library_clause`'s single-clause shape is
     # already tried above through `_parse_targeted_clause`, this function's
     # very first check - a second call here could never be reached.
-    target_player_draws = _parse_target_player_draws_clause(clause, for_spell=for_spell)
-    if target_player_draws is not None:
-        return target_player_draws
-    target_player_becomes_monarch = _parse_target_player_becomes_monarch_clause(
-        clause, for_spell=for_spell
-    )
-    if target_player_becomes_monarch is not None:
-        return target_player_becomes_monarch
-    n_target_players_each_draw = _parse_n_target_players_each_draw_clause(
-        clause, for_spell=for_spell
-    )
-    if n_target_players_each_draw is not None:
-        return n_target_players_each_draw
-    target_player_shuffles = _parse_target_player_shuffles_clause(clause, for_spell=for_spell)
-    if target_player_shuffles is not None:
-        return target_player_shuffles
-    target_player_sacrifices = _parse_target_player_sacrifices_clause(clause, for_spell=for_spell)
-    if target_player_sacrifices is not None:
-        return target_player_sacrifices
+    if (seg_hit := MIXED_CLAUSE.run("s30", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     if _EXILE_THAT_PLAYERS_GRAVEYARD_RE.fullmatch(clause.strip()):
         return exile_target_players_graveyard
     # -- end Wave W1 single-clause additions -------------------------------
     # -- CR 702.124j: "Partner with [name]" -------------------------------
-    target_player_may_search_named_card = _parse_target_player_may_search_named_card_clause(
-        clause, for_spell=for_spell
-    )
-    if target_player_may_search_named_card is not None:
-        return target_player_may_search_named_card
     # -- end Partner with ---------------------------------------------------
     # -- Wave W11's own single-clause addition (CR 106.4, CR 605.1a) ------
-    add_mana = _parse_add_mana_clause(clause, for_spell=for_spell)
-    if add_mana is not None:
-        return add_mana
-    add_combination_mana = _parse_add_any_combination_mana_clause(clause, for_spell=for_spell)
-    if add_combination_mana is not None:
-        return add_combination_mana
     # -- end Wave W11 single-clause addition -------------------------------
-    conditional_add_mana_equal_to = _parse_if_condition_add_mana_equal_to_clause(
-        clause, for_spell=for_spell
-    )
-    if conditional_add_mana_equal_to is not None:
-        return conditional_add_mana_equal_to
     # -- returning cards from a graveyard, and mass returns to hand --------
-    return_self_from_graveyard = _parse_return_self_from_graveyard_to_battlefield_clause(
-        clause, for_spell=for_spell
-    )
-    if return_self_from_graveyard is not None:
-        return return_self_from_graveyard
-    return_self_from_graveyard_attached = (
-        _parse_return_self_from_graveyard_to_battlefield_attached_clause(
-            clause, for_spell=for_spell
-        )
-    )
-    if return_self_from_graveyard_attached is not None:
-        return return_self_from_graveyard_attached
-    return_self_transformed = _parse_return_self_to_battlefield_transformed_clause(
-        clause, for_spell=for_spell
-    )
-    if return_self_transformed is not None:
-        return return_self_transformed
-    return_event_subject = _parse_return_event_subject_to_battlefield_clause(
-        clause, for_spell=for_spell
-    )
-    if return_event_subject is not None:
-        return return_event_subject
-    self_owner_shuffles_self = _parse_self_owner_shuffles_self_into_library_clause(
-        clause, for_spell=for_spell
-    )
-    if self_owner_shuffles_self is not None:
-        return self_owner_shuffles_self
-    if_condition_you_win_the_game = _parse_if_condition_you_win_the_game_clause(
-        clause, for_spell=for_spell
-    )
-    if if_condition_you_win_the_game is not None:
-        return if_condition_you_win_the_game
-    if_condition_players_cant_cast = _parse_if_condition_players_cant_cast_clause(
-        clause, for_spell=for_spell
-    )
-    if if_condition_players_cant_cast is not None:
-        return if_condition_players_cant_cast
-    mass_return_from_graveyard = _parse_mass_return_from_graveyard_to_battlefield_clause(
-        clause, for_spell=for_spell
-    )
-    if mass_return_from_graveyard is not None:
-        return mass_return_from_graveyard
-    mass_return_from_graveyard_to_hand = _parse_mass_return_from_graveyard_to_hand_clause(
-        clause, for_spell=for_spell
-    )
-    if mass_return_from_graveyard_to_hand is not None:
-        return mass_return_from_graveyard_to_hand
-    mass_return_to_hand = _parse_mass_return_to_hand_clause(clause, for_spell=for_spell)
-    if mass_return_to_hand is not None:
-        return mass_return_to_hand
+    if (seg_hit := MIXED_CLAUSE.run("s31", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     each_player_may_shuffle_hand_graveyard_then_draw = (
         parse_each_player_may_shuffle_hand_graveyard_then_draw_clause(clause, for_spell=for_spell)
     )
@@ -5761,118 +4114,26 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         # hand_graveyard_then_draw_clauses`'s own docstring for why the
         # ordinary case never reaches this single-clause form at all.
         return each_player_may_shuffle_hand_graveyard_then_draw
-    sacrifice_group = _parse_sacrifice_n_of_a_group_clause(clause, for_spell=for_spell)
-    if sacrifice_group is not None:
-        return sacrifice_group
-    that_player_sacrifices = _parse_that_player_sacrifices_of_their_choice_clause(
-        clause, for_spell=for_spell
-    )
-    if that_player_sacrifices is not None:
-        return that_player_sacrifices
-    sacrifice_of_their_choice = _parse_each_sacrifices_of_their_choice_clause(clause)
-    if sacrifice_of_their_choice is not None:
-        return sacrifice_of_their_choice
-    target_opponent_sacrifice_greatest_mv = _parse_target_opponent_sacrifice_greatest_mv_clause(
-        clause, for_spell=for_spell
-    )
-    if target_opponent_sacrifice_greatest_mv is not None:
-        return target_opponent_sacrifice_greatest_mv
-    attacking_tokens = _parse_attacking_token_clause(clause, for_spell=for_spell)
-    if attacking_tokens is not None:
-        return attacking_tokens
-    recruit = _parse_recruit_clause(clause, for_spell=for_spell)
-    if recruit is not None:
-        return recruit
-    that_player_mills_that_many = _parse_that_player_mills_that_many_clause(
-        clause, for_spell=for_spell
-    )
-    if that_player_mills_that_many is not None:
-        return that_player_mills_that_many
-    copy_this_spell = _parse_copy_this_spell_clause(clause, for_spell=for_spell)
-    if copy_this_spell is not None:
-        return copy_this_spell
-    choose_new_targets = _parse_choose_new_targets_clause(clause, for_spell=for_spell)
-    if choose_new_targets is not None:
-        return choose_new_targets
-    change_target = _parse_change_target_clause(clause, for_spell=for_spell)
-    if change_target is not None:
-        return change_target
-    put_from_hand_into_library = _parse_put_cards_from_hand_into_library_clause(
-        clause, for_spell=for_spell
-    )
-    if put_from_hand_into_library is not None:
-        return put_from_hand_into_library
-    put_permanent_from_hand = _parse_put_permanent_card_from_hand_clause(
-        clause, for_spell=for_spell
-    )
-    if put_permanent_from_hand is not None:
-        return put_permanent_from_hand
-    draw_equal_to_count = _parse_draw_cards_equal_to_count_clause(clause, for_spell=for_spell)
-    if draw_equal_to_count is not None:
-        return draw_equal_to_count
-    return_self_to_hand = _parse_return_self_to_owners_hand_clause(clause, for_spell=for_spell)
-    if return_self_to_hand is not None:
-        return return_self_to_hand
-    transform_self_later = _parse_transform_self_at_next_step_clause(clause, for_spell=for_spell)
-    if transform_self_later is not None:
-        return transform_self_later
+    if (seg_hit := MIXED_CLAUSE.run("s32", clause, for_spell=for_spell)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s33", clause)) is not None:
+        return seg_hit
+    if (seg_hit := MIXED_CLAUSE.run("s34", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     # -- end graveyard/return/token/keyword-action additions ----------------
     # -- Wave W6's own single-clause additions (Brotherhood's End's modes) -
-    destroy_each = _parse_destroy_each_clause(clause)
-    if destroy_each is not None:
-        return destroy_each
-    remove_all_counters_from_each = _parse_remove_all_counters_from_each_clause(clause)
-    if remove_all_counters_from_each is not None:
-        return remove_all_counters_from_each
-    exile_each = _parse_exile_each_clause(clause)
-    if exile_each is not None:
-        return exile_each
-    put_each_on_bottom = _parse_put_each_on_bottom_clause(clause)
-    if put_each_on_bottom is not None:
-        return put_each_on_bottom
-    untap_all_you_control = _parse_untap_all_you_control_clause(clause)
-    if untap_all_you_control is not None:
-        return untap_all_you_control
-    sacrifice_all_you_control = _parse_sacrifice_all_you_control_clause(clause)
-    if sacrifice_all_you_control is not None:
-        return sacrifice_all_you_control
-    tap_all_group = _parse_tap_all_group_clause(clause)
-    if tap_all_group is not None:
-        return tap_all_group
-    tap_attached = _parse_tap_attached_clause(clause)
-    if tap_attached is not None:
-        return tap_attached
-    destroy_or_exile_attached = _parse_destroy_or_exile_attached_clause(clause)
-    if destroy_or_exile_attached is not None:
-        return destroy_or_exile_attached
-    target_gains_ability_until_cast = _parse_target_gains_ability_until_cast_from_exile_clause(
-        clause
-    )
-    if target_gains_ability_until_cast is not None:
-        return target_gains_ability_until_cast
-    self_cast_while_exiled = _parse_self_cast_while_exiled_clause(clause)
-    if self_cast_while_exiled is not None:
-        return self_cast_while_exiled
-    damage_each_group = _parse_damage_each_group_clause(clause)
-    if damage_each_group is not None:
-        return damage_each_group
-    damage_each_filtered = _parse_damage_each_filtered_clause(clause)
-    if damage_each_filtered is not None:
-        return damage_each_filtered
     # -- end Wave W6 single-clause additions --------------------------------
     # -- draw-if-you-control clause (Ral, Monsoon Mage's -2) ---------------
-    draw_if_control = _parse_draw_if_you_control_color_permanent_clause(clause)
-    if draw_if_control is not None:
-        return draw_if_control
+    if (seg_hit := MIXED_CLAUSE.run("s35", clause)) is not None:
+        return seg_hit
     # -- end draw-if-you-control clause --------------------------------------
     # -- plain "if <condition>, <consequence>" / "<consequence> if
     # <condition>" clause (G2a), tried only once every more specific reader
     # above - `draw_if_control` included, so Ral, Monsoon Mage's own colour
     # shape keeps its winner - and every whole-text "instead" reader has
     # already failed (see `_parse_condition_clause`'s own docstring) ------
-    plain_condition = _parse_condition_clause(clause, for_spell=for_spell)
-    if plain_condition is not None:
-        return plain_condition
+    if (seg_hit := MIXED_CLAUSE.run("s36", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     # -- end plain if-condition clause ---------------------------------------
     # -- Wave W5's own single-clause addition (CR 611.1) -------------------
     casting_rule = parse_casting_rule_clause(clause, for_spell=for_spell)
@@ -5899,9 +4160,8 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         )
         if self_assigns_no_combat_damage is not None:
             return self_assigns_no_combat_damage
-    minus_counters_clause = _parse_minus_counters_mixed_clause(clause, for_spell=for_spell)
-    if minus_counters_clause is not None:
-        return minus_counters_clause
+    if (seg_hit := MIXED_CLAUSE.run("s37", clause, for_spell=for_spell)) is not None:
+        return seg_hit
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         # Last resort: a "you may" over a board instruction rather than over
@@ -5932,6 +4192,7 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     return effect
 
 
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
 def _parse_shared_subject_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
     """Every sentence of `text` read through `_parse_shared_subject_sentence`
     where that sentence opens one of the five subject shapes, and through
@@ -6561,12 +4822,8 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if greatest_mv_sacrifice_whole is not None:
         return [greatest_mv_sacrifice_whole]
-    shared_subject_clauses = _parse_shared_subject_clauses(text, for_spell=for_spell)
-    if shared_subject_clauses is not None:
-        # G7: read whole, ahead of the comma/"and" clause split, for the
-        # same reason every whole-text try above it is - see `_parse_shared_
-        # subject_clauses`'s own docstring for the fail-open this closes.
-        return shared_subject_clauses
+    if (seg_hit := MIXED_CLAUSES.run("s1", text, for_spell=for_spell)) is not None:
+        return seg_hit
     effect_sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
     if len(effect_sentences) == 3:
         # Cling to Dust's "... If it was a creature card, ... Otherwise, ..."
@@ -7433,6 +5690,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     return parsed
 
 
+@SPELL_TEXT.rung("s23")
 def parse_mixed_effect_for_spell(text: str) -> Effect | None:
     """A spell whose clauses may be targeted, player-only, or a mix of both,
     read off the card's own printed text - Lightning Helix, with no `EFFECTS`
@@ -7455,6 +5713,7 @@ def parse_mixed_effect_for_spell(text: str) -> Effect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s40")
 def parse_mixed_effect(text: str) -> AbilityEffect | None:
     """The ability-resolution twin of `parse_mixed_effect_for_spell`: a
     triggered or activated ability whose clauses may be targeted, a search, a
@@ -7495,6 +5754,7 @@ _NEXT_SPELL_CANNOT_BE_COUNTERED_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_next_spell_cannot_be_countered_clause(text: str) -> AbilityEffect | None:
     """`_NEXT_SPELL_CANNOT_BE_COUNTERED_RE`'s shape, the same CR 603.7
     delayed-trigger machinery `_parse_copy_next_spell_you_cast_clause` above
@@ -7599,6 +5859,7 @@ _CAST_FROM_GRAVEYARD_NOW_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_cast_from_graveyard_now_clause(effect_text: str) -> AbilityEffect | None:
     """`_CAST_FROM_GRAVEYARD_NOW_RE`'s shape.
 
@@ -7695,6 +5956,7 @@ def _parse_cast_from_graveyard_now_clause(effect_text: str) -> AbilityEffect | N
     return effect
 
 
+@ABILITY_TEXT.rung("s5")
 def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
     """R0a-T5's whole-text ability readers, tried ahead of the clause split
     (each reads a multi-sentence instruction chain), one per owning module."""
@@ -7731,6 +5993,7 @@ def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
     return None
 
 
+@SPELL_TEXT.rung("s1")
 def _r0a_t5_spell_effect(effect_text: str) -> Effect | None:
     """The spell-side twin of `_r0a_t5_ability_effect`."""
     from ..graveyard_cast_transform import parse_cast_from_graveyard_transform_clause
@@ -7738,6 +6001,7 @@ def _r0a_t5_spell_effect(effect_text: str) -> Effect | None:
     return parse_cast_from_graveyard_transform_clause(effect_text)
 
 
+@ABILITY_TEXT.rung("s5")
 def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
     """C02-T6's whole-text ability readers, tried ahead of the clause split
     (each reads an instruction chain `_prepare_effect_clauses` would cut
@@ -7768,6 +6032,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
     return None
 
 
+@SPELL_TEXT.rung("s3")
 def _c02_t6_spell_effect(effect_text: str) -> Effect | None:
     """The spell-side twin of `_c02_t6_ability_effect`."""
     from ..control_change import control_change_spell_effect
@@ -7785,6 +6050,7 @@ def _c02_t6_spell_effect(effect_text: str) -> Effect | None:
     return None
 
 
+@ABILITY_TEXT.rung("s3")
 def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffect | None:
     """The readers above, tried in turn on a resolving ability's whole text -
     `_ability_effect_or_notice` asks this first."""
@@ -7821,6 +6087,7 @@ def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffec
     return None
 
 
+@SPELL_TEXT.rung("s6")
 def _source_relative_whole_text_spell_effect(effect_text: str) -> Effect | None:
     """The spell-side twin, for `_spell_effect_or_notice`: Pym Particles'
     shared-subject evasion rider, and Char's own "deals `<n>` damage to any
@@ -7899,55 +6166,22 @@ from .amounts import (  # noqa: E402
     _carry_where_x_forward,
     _fixed_or_where_x_amount,
     _for_each_multiplier,
-    _parse_converge_damage_then_exile_excess_clause,
-    _parse_converge_discard_by_colors_spent,
-    _parse_converge_draw_and_lose_life_clause,
-    _parse_converge_draw_damage_life_clause,
-    _parse_converge_exile_by_colors_spent,
-    _parse_converge_fractal_tokens_and_life_clause,
     _parse_count_the_number_of_clause,
     _parse_counted_life_change_clause,
     _parse_devotion_drain_clauses,
-    _parse_event_subject_variable_pump_clause,
     _parse_half_life_loss_clause,
-    _parse_half_x_life_and_draw_half_x_cards_clause,
     _parse_if_graveyard_count_clause,
-    _parse_it_dynamic_x_pump_clause,
-    _parse_nth_resolution_clause,
-    _parse_put_creature_mv_x_from_hand_attacking,
-    _parse_variable_count_token_clause,
-    _parse_where_x_is_continuous_effect,
-    _parse_x_damage_divided_and_doubled_clause,
-    _parse_x_energy_pay_destroy_by_mana_value,
-    _parse_x_life_mass_debuff,
-    _parse_x_life_return_types_mv_x_clause,
     _resolve_multiplied_amount,
     _that_many_or_notice,
     amount_expression,
     count_expression,
 )
 from .continuous import (  # noqa: E402
-    _attach_self_to_target_effect,
-    _compose_layer_effect_with_remainder,
-    _compose_layer_effect_with_remainder_for_ability,
     _gains_and_cant_be_blocked_this_turn,
-    _mass_pump_ability_effect,
-    _mass_pump_spell_effect,
-    _parse_additional_combat_and_main_phase_clause,
-    _parse_additional_combat_phase_only_clause,
-    _parse_attach_any_number_equipment_clause,
     _parse_attach_self_then_conditional_rider_clause,
     _parse_attach_self_then_that_creature,
-    _parse_attach_self_then_when_you_do_clause,
     _parse_attach_target_equipment_to_self,
-    _parse_attach_target_equipment_up_to_one_creature_clause,
-    _parse_attached_subject_gains_keywords_until_clause,
-    _parse_attack_this_turn_create_tapped_attacking_tokens,
-    _parse_attacks_alone_this_turn_counters_and_keywords_clause,
     _parse_bare_self_pump_until_eot_clause,
-    _parse_base_pt_become_clause,
-    _parse_batched_attack_group_pump_clause,
-    _parse_becomes_chosen_color_clause,
     _parse_becomes_prepared_group_clause,
     _parse_becomes_prepared_self_clause,
     _parse_becomes_unprepared_self_clause,
@@ -7957,103 +6191,25 @@ from .continuous import (  # noqa: E402
     _parse_conditional_pump_then_bite_clause_pair,
     _parse_conditional_self_pump_instead_pair,
     _parse_delayed_pay_or_lose_clauses,
-    _parse_double_power_and_toughness_clause,
-    _parse_double_power_target_clause,
     _parse_double_target_power_and_toughness_clause,
-    _parse_each_graveyard_instant_sorcery_gains_flashback_clause,
     _parse_each_opponent_loses_x_you_gain_x,
-    _parse_each_opponent_skips_next_untap_clause,
-    _parse_each_other_attacking_creature_pump_trigger,
-    _parse_each_player_this_creature_attacked_loses_clause,
-    _parse_equipped_attacking_creatures_gain_keywords_clause,
-    _parse_event_player_gets_that_many_poison_clause,
-    _parse_event_subject_pump_clause,
-    _parse_for_each_opponent_tap_clause,
-    _parse_for_each_opponent_tap_then_stun_clause,
-    _parse_gains_ability_clause,
-    _parse_get_an_emblem_clause,
-    _parse_get_an_emblem_then_clause,
-    _parse_get_energy_then_pay_create_x_token_clause,
-    _parse_goad_clause,
-    _parse_goad_for_each_opponent_then_counters_clause,
-    _parse_grant_enters_with_colors_spent_counters_clause,
-    _parse_grant_flashback_clause,
     _parse_grant_quoted_ability_then_return_front_face_whole_text,
-    _parse_if_condition_players_cant_cast_clause,
-    _parse_if_keyword_cost_paid_clause,
-    _parse_it_gains_quoted_ability_clause,
-    _parse_it_gains_rebound_clause,
     _parse_lands_dont_untap_next_step_clause,
-    _parse_mass_gain_control_untap_ability,
-    _parse_mass_gain_control_untap_clause,
-    _parse_mass_lose_all_abilities_clause,
     _parse_mass_pump_group_clause,
-    _parse_may_attach_to_entering_creature_clause,
-    _parse_may_tap_untapped_if_you_do_clause,
-    _parse_may_then_if_you_do_layer_clause,
-    _parse_may_transform_self_if_you_do_clause,
-    _parse_other_attacking_creatures_grant_trigger,
     _parse_player_loses_all_counters_clause,
-    _parse_protection_from_chosen_color_clause,
-    _parse_pump_and_becomes_chosen_color_clause,
-    _parse_pump_for_each_color_spent_on_that_spell_clause,
-    _parse_pump_per_discard_then_delayed_draw_clause,
     _parse_pump_then_fight_clause_pair,
-    _parse_put_then_grant_then_delayed_whole_text,
     _parse_put_type_from_hand_attach_if_subtype,
-    _parse_self_base_pt_set_with_keywords_clause,
-    _parse_self_cant_block_clause,
     _parse_self_gains_quoted_ability_until_eot_clause,
-    _parse_self_keyword_choice_until_eot_trigger,
     _parse_self_keyword_grant_until_eot_clause,
-    _parse_self_layer_and_verb_clause,
-    _parse_self_pump_for_each_clause,
     _parse_self_pump_then_conditional_also_gains_pair,
-    _parse_spells_cant_be_countered_clause,
-    _parse_suspect_clause,
-    _parse_switch_power_toughness_then_draw_clause,
-    _parse_tap_all_group_clause,
     _parse_tap_all_pay_energy_counter_chosen_whole_text,
-    _parse_tap_another_untapped_subtype_when_you_do_clause,
-    _parse_tap_any_number_of_untapped_creatures_when_you_do_clause,
-    _parse_tap_attached_clause,
-    _parse_tap_enchanted_then_unprepared_clause,
-    _parse_tap_target_then_no_untap_clause,
-    _parse_tap_untap_two_targets_clause,
-    _parse_tapped_attacking_tokens_whole_text,
-    _parse_target_attacking_alone_pump_gain_life_clause,
-    _parse_target_attacks_if_able_clause,
-    _parse_target_blocks_self_if_able_clause,
-    _parse_target_gains_ability_until_cast_from_exile_clause,
     _parse_target_gains_then_dies_this_turn_token_whole_text,
-    _parse_target_get_energy_pay_damage,
-    _parse_target_player_becomes_monarch_clause,
-    _parse_target_player_cant_cast_kicked_attack_clause,
     _parse_target_player_creatures_pump_clause,
-    _parse_target_plus_x_minus_x_clause,
-    _parse_targeted_then_self_gains_clause,
-    _parse_that_permanent_no_untap_clause,
-    _parse_this_turn_spell_grant_clause,
-    _parse_transform_all_subtype_clause,
     _parse_transform_clause,
     _parse_transform_it,
-    _parse_transform_self_at_next_step_clause,
-    _parse_undergrowth_pump_and_fight_clause,
-    _parse_untap_all_attacking_clause,
-    _parse_untap_all_group_clause,
-    _parse_untap_all_you_control_clause,
-    _parse_untap_and_gain_control_ability,
-    _parse_untap_and_gain_control_clause,
-    _parse_untap_each_subtype_clause,
     _parse_untap_named_self_clause,
     _parse_untap_self_clause,
     _parse_untap_then_if_type_counter_clause_pair,
-    _parse_untap_trigger_subject_and_scry_clause,
-    _parse_untap_trigger_subject_clause,
-    _parse_until_end_of_turn_tap_land_additional_mana_clause,
-    _parse_until_your_next_turn_attack_pump_clause,
-    _parse_until_your_next_turn_group_attack_pump_clause,
-    _parse_you_and_group_gain_clause,
     _player_gains_hexproof_clause,
     _untap_all_qualifier_matches,
     become_prepared_ability_targets,
@@ -8063,40 +6219,12 @@ from .continuous import (  # noqa: E402
     transform_permanent,
     untap_ability_targets,
 )
-from .control_copy import (  # noqa: E402
-    _parse_cast_noncreature_spell_this_turn_copy_token_clause,
-    _parse_change_target_clause,
-    _parse_copy_cast_spell_clause,
-    _parse_copy_cost_exiled_cards_and_cast,
-    _parse_copy_exiled_card_and_cast,
-    _parse_copy_next_instant_or_sorcery_you_cast_clause,
-    _parse_copy_next_instant_or_sorcery_you_cast_spell_clause,
-    _parse_copy_next_spell_you_cast_clause,
-    _parse_copy_of_card_exiled_with_self_clause,
-    _parse_copy_target_spell_clause,
-    _parse_copy_that_spell_clause,
-    _parse_copy_that_spell_retargeted_clause,
-    _parse_copy_this_spell_clause,
-    _parse_exchange_control_clause,
-    _parse_exchange_life_totals_then_draw,
-    _parse_for_each_creature_target_player_copy_clause,
-    _parse_for_each_creature_you_control_copy_clause,
-    _parse_self_copy_token_clause,
-)
+from .control_copy import _parse_copy_target_spell_clause  # noqa: E402
 from .counters import (  # noqa: E402
     _counter_kind,
-    _parse_adapt_clause,
-    _parse_conditional_remove_counter_from_self_clause,
-    _parse_counter_each_attacked_this_turn_clause,
-    _parse_counter_each_creature_target_player_clause,
-    _parse_counter_each_creature_with_counter_clause,
-    _parse_counter_each_other_creature_clause,
-    _parse_counter_exile_may_cast_free_clause,
     _parse_counter_exile_then_cast_free_clauses,
     _parse_counter_if_mana_value_clause,
-    _parse_counter_on_additional_cost_card_clause,
     _parse_counter_on_it_trigger_subject_clause,
-    _parse_counter_on_subject_and_shared_type_clause,
     _parse_counter_on_trigger_subject_clause,
     _parse_counter_then_create_tokens_by_mana_value_pair,
     _parse_counter_then_delayed_any_combination_mana_pair,
@@ -8105,41 +6233,16 @@ from .counters import (  # noqa: E402
     _parse_counter_then_referent_pair,
     _parse_counter_then_wizard_mana_from_countered_pair,
     _parse_counter_threshold_whole_text,
-    _parse_counters_more_if_subtype_clause,
     _parse_counters_on_named_group_clause,
     _parse_counters_then_look_top_may_battlefield_transform_clause,
-    _parse_distribute_counters_among_targets_clause,
-    _parse_distribute_counters_among_you_control_clause,
     _parse_distribute_counters_then_targets_gain_clause_pair,
-    _parse_double_counters_on_group_clause,
-    _parse_endure_clause,
-    _parse_event_subject_counters_and_keywords_clause,
-    _parse_for_each_opponent_counters_clause,
-    _parse_loyalty_instant_speed_clause,
-    _parse_minus_counters_mixed_clause,
-    _parse_monstrosity_clause,
     _parse_move_counter_clause,
-    _parse_proliferate_clause,
-    _parse_put_counter_on_self_then_if_count_clause,
-    _parse_put_counter_then_for_each_counter_punisher_clause,
     _parse_put_counters_equal_to_clause,
     _parse_put_counters_on_group_clause,
     _parse_put_counters_on_self_clause,
     _parse_put_counters_on_target_by_that_spells_mana_value_clause,
-    _parse_put_counters_on_target_where_x_is_clause,
-    _parse_put_its_counters_on_target_clause,
-    _parse_put_n_counters_on_self_then_draw_half_n_clause,
-    _parse_put_self_counter_for_each_opponent_creature_then_attach_clause,
-    _parse_put_up_to_n_counters_on_self_capped_clause,
     _parse_quest_counter_threshold_sacrifice_search_clause,
-    _parse_remove_all_counters_from_each_clause,
-    _parse_remove_all_counters_from_target_clause,
     _parse_remove_all_counters_then_cant_have_clause,
-    _parse_remove_all_counters_then_that_many_clause,
-    _parse_remove_n_counters_from_self_clause,
-    _parse_remove_time_counter_from_self_clause,
-    _parse_remove_up_to_n_counters_from_target_clause,
-    _parse_renown_clause,
     _parse_self_counter_then_rider,
     _parse_two_counters_on_self_clause,
     put_counters_on_ability_targets,
@@ -8152,38 +6255,12 @@ from .damage import (  # noqa: E402
     _deal_damage_for_each,
     _deal_divided_damage_for_expression,
     _deal_x_divided_damage,
-    _parse_airbend_clause,
-    _parse_bite_damage_clause,
     _parse_bite_damage_clause_pair,
     _parse_combat_damage_reanimate_from_that_players_graveyard_attacking_clause,
-    _parse_damage_each_filtered_clause,
-    _parse_damage_each_group_clause,
-    _parse_damage_equal_to_that_spells_mv_clause,
-    _parse_damage_target_also_damages_controller_clause,
-    _parse_damage_target_kicked_instead_clause,
-    _parse_damage_target_player_and_their_creatures_clause,
-    _parse_damage_that_much_clause,
-    _parse_damage_that_player_clause,
-    _parse_damage_then_empower_if_excess_clause,
-    _parse_damage_to_that_spells_controller_clause,
-    _parse_deals_damage_lose_life_then_transform_if_low_clause,
-    _parse_dealt_damage_this_way_die_to_exile,
-    _parse_delirium_damage_instead_clause,
     _parse_divided_damage_among_target_players_creatures_clause,
-    _parse_divided_damage_then_retaliate_clause,
-    _parse_earthbend_clause,
-    _parse_enchanted_creature_fights_target_clause,
     _parse_etb_damage_any_target_and_self_clause,
-    _parse_firebending_add_mana,
-    _parse_prevent_all_damage_to_self_this_turn_clause,
-    _parse_prevent_all_damage_to_you_until_next_turn_clause,
-    _parse_prevent_damage_dealt_by_target_clause,
     _parse_self_assigns_no_combat_damage_clause,
-    _parse_self_damage_equal_to_count_clause,
-    _parse_self_fights_target_clause,
     _parse_target_fights_other_target_clause,
-    _parse_target_fights_target_clause,
-    _parse_until_end_of_turn_self_combat_damage_draw_clause,
     _parse_until_eot_assigns_toughness,
     _self_deals_damage_equal_to_its_stat,
     damage_ability_targets,
@@ -8207,113 +6284,35 @@ from .damage import (  # noqa: E402
 from .draw_discard import (  # noqa: E402
     _discard_cards,
     _each_opponent_draws_clause,
-    _parse_discard_hand_draw_x_clause,
-    _parse_discard_then_draw_token_per_nonland_clause,
     _parse_discard_unless_condition_clause,
     _parse_draw_and_gain_off_sacrificed_clause,
-    _parse_draw_cards_equal_to_count_clause,
-    _parse_draw_cards_equal_to_target_hand_clause,
-    _parse_draw_equal_to_sacrificed_creature_power_then_discard_clause,
     _parse_draw_equal_to_then_lose_life_clause_pair,
     _parse_draw_if_power_at_least,
-    _parse_draw_if_you_control_color_permanent_clause,
-    _parse_draw_the_difference_clause,
-    _parse_draw_then_delayed_discard_at_random_clause,
-    _parse_draw_then_discard_unless,
-    _parse_draw_then_discard_unless_ability,
-    _parse_draw_then_put_land_cave_bonus_clause,
-    _parse_draw_x_from_target_graveyard_from_library_clause,
     _parse_each_group_discards_then_consequence_per_failure_clause_pair,
-    _parse_each_opponent_discards_clause,
     _parse_each_opponent_discards_then_draw_per_shortfall_whole_text,
     _parse_each_opponent_discards_then_shortfall_loses_life_whole_text,
     _parse_each_player_may_discard_hand_and_draw_clause,
-    _parse_may_discard_or_sacrifice_if_you_do_clause,
     _parse_may_put_card_from_hand_clause,
-    _parse_n_target_players_each_draw_clause,
     _parse_next_time_draw_replacement_pair,
-    _parse_power_of_two_draw_clause,
-    _parse_put_land_from_hand_clause,
-    _parse_put_land_from_hand_repeat_clause,
-    _parse_put_permanent_card_from_hand_clause,
     _parse_put_two_card_groups_and_or_from_hand_clause,
-    _parse_target_opponent_draw_then_copy_that_spell_clause,
-    _parse_target_player_discards_clause,
     _parse_target_player_discards_then_play_land_clause_pair,
     _parse_target_player_draws_and_loses_life_clause,
-    _parse_target_player_draws_clause,
-    _parse_target_player_may_put_card_from_hand_clause,
 )
 from .library import (  # noqa: E402
     _look_at_target_hand,
     _mill,
     _mill_then_may_take_from_milled_runner,
-    _parse_bottom_hand_then_draw_plus_one_clause,
-    _parse_cast_trigger_look_top_x_take_one_clause,
-    _parse_cast_trigger_reveal_top_x_put_one_permanent_clause,
-    _parse_cast_trigger_reveal_until_x_kind_to_graveyard_clause,
-    _parse_dead_object_to_library_clause,
-    _parse_defending_player_reveals_top_conditional_land_clause,
-    _parse_discover_clause,
-    _parse_each_player_name_reveal_branch_clause,
     _parse_explores_clause,
-    _parse_explores_then_conditional_mass_destroy,
-    _parse_hideaway_clause,
-    _parse_hideaway_counter_then_conditional_free_cast_clause,
-    _parse_hideaway_play_clause,
-    _parse_learn_clause,
-    _parse_look_at_top_card_clause,
     _parse_look_hand_may_exile_owner_may_play_clause,
-    _parse_look_top_card_conditional_clause,
     _parse_look_top_cast_le_greatest_attacking_power_whole_text,
-    _parse_look_top_keep_one_on_top_clause,
-    _parse_look_top_lands_take_to_hand,
-    _parse_look_top_may_reveal_clause,
-    _parse_look_top_n_may_battlefield_creature_bonus_clause,
-    _parse_look_top_n_put_total_mv_onto_battlefield,
     _parse_look_top_separate_face_down_face_up_piles_clause,
-    _parse_look_top_split_conditional_instead_clause,
-    _parse_look_top_x_put_permanents_clause,
-    _parse_manifest_dread_clause,
-    _parse_manifest_from_hand_then_draw_clause,
-    _parse_manifest_top_card_clause,
-    _parse_mill_that_many_then_take_from_among_them,
-    _parse_mill_then_may_put_on_top_clause,
-    _parse_mill_then_may_return_creature_clause,
-    _parse_mill_then_may_take_from_milled,
-    _parse_mill_then_may_take_from_milled_ability,
-    _parse_mill_then_play_that_card,
-    _parse_mill_then_put_all_from_milled,
-    _parse_mill_then_put_all_from_milled_ability,
-    _parse_mill_then_return_to_hand_clause,
     _parse_owner_puts_it_into_library_clause,
-    _parse_owner_shuffles_graveyard_into_library_clause,
-    _parse_put_cards_from_hand_into_library_clause,
-    _parse_put_each_on_bottom_clause,
-    _parse_recruit_clause,
     _parse_reveal_any_number_then_x_plus_damage_clause,
-    _parse_reveal_from_outside_the_game_into_hand_clause,
-    _parse_reveal_hand_choose_two_bounded_cards_then_discard_clause,
-    _parse_reveal_n_cards_then_choose_discard_whole_text,
     _parse_reveal_top_card_if_quality_clause,
-    _parse_reveal_top_n_may_battlefield_creature_teamwork_clause,
-    _parse_reveal_top_n_put_random_kind_clause,
     _parse_reveal_two_outside_opponent_chooses_clause,
     _parse_reveal_until_creature_then_attacking_rest_random_clause,
-    _parse_reveal_until_land_damage_clause,
-    _parse_reveal_until_x_kind_put_any_onto_battlefield_clause,
-    _parse_reveal_until_x_nonland_exile_per_color_clause,
     _parse_scry_or_untap_if_not_starting_player_clauses,
-    _parse_select_from_top_clause,
-    _parse_select_from_top_spell_clause,
-    _parse_self_owner_shuffles_self_into_library_clause,
     _parse_shuffle_self_and_targets_into_owners_libraries_clause,
-    _parse_shuffle_target_cards_into_library_clause,
-    _parse_shuffle_target_permanent_into_library_clause,
-    _parse_target_player_name_reveal_branch_clause,
-    _parse_target_player_shuffles_clause,
-    _parse_that_player_mills_that_many_clause,
-    _parse_venture_clause,
     _put_card_from_hand_on_bottom_of_library,
     put_ability_targets_on_bottom_of_owners_library,
     put_ability_targets_on_top_of_owners_library,
@@ -8322,36 +6321,15 @@ from .library import (  # noqa: E402
 from .life import (  # noqa: E402
     _life_total_becomes_amount_reader,
     _parse_double_your_life_total_clause,
-    _parse_each_opponent_loses_life_equal_to,
-    _parse_each_opponent_loses_life_equal_to_sacrificed_creature_clause,
     _parse_each_opponent_loses_life_unless_sacrifice_or_discard_clause,
-    _parse_gain_life_equal_to_additional_cost_card_clause,
     _parse_gain_life_equal_to_event_subject_toughness_clause,
-    _parse_gain_life_equal_to_sacrificed_creature_clause,
-    _parse_gain_life_if_color_spent_clause,
-    _parse_its_controller_may_pay_life_then_draw_clause,
-    _parse_may_pay_life_if_you_do_clause,
     _parse_may_pay_life_then_rider,
     _parse_may_pay_then_drain_total,
-    _parse_pay_any_life_then_draw_that_many_clause,
     _parse_target_player_loses_life_equal_to_sacrificed_creature_clause,
-    _parse_that_player_loses_life_searches_puts_in_hand_clause,
     _parse_that_players_life_total_becomes_clause,
-    _parse_they_gain_or_lose_life_clause,
-    _parse_you_and_event_player_gain_that_much_life_clause,
     life_total_becomes_effect_for,
 )
-from .mana import (  # noqa: E402
-    _parse_add_any_combination_mana_clause,
-    _parse_add_mana_clause,
-    _parse_add_mana_in_any_combination_trigger,
-    _parse_add_one_mana_of_any_color_trigger,
-    _parse_add_that_much_colored_mana_trigger,
-    _parse_if_condition_add_mana_equal_to_clause,
-    _parse_landfall_type_then_add_mana_clause_pair,
-    _parse_mana_adding_trigger,
-    _parse_may_pay_mana_if_you_do_clause,
-)
+from .mana import _parse_landfall_type_then_add_mana_clause_pair  # noqa: E402
 from .merges import (  # noqa: E402
     _merge_add_any_combination_mana_with_restriction_clauses,
     _merge_choose_a_color_then_add_clauses,
@@ -8417,64 +6395,24 @@ from .merges import (  # noqa: E402
 )
 from .modal import (  # noqa: E402
     _optional_targeted_clause,
-    _parse_ante_self_if_you_do_clause,
-    _parse_any_player_may_punisher_clause,
-    _parse_choose_card_name_for_source_clause,
     _parse_choose_creature_copy_keywords_clause,
-    _parse_choose_creature_type_destroy_except_clause,
-    _parse_choose_creature_type_treasure_per_match_clause,
     _parse_choose_exactly_two_draw_pump_trample_clause,
     _parse_choose_name_search_and_exile_whole_text,
-    _parse_choose_new_targets_clause,
     _parse_choose_new_targets_for_that_spell_clause,
     _parse_choose_odd_or_even_then_destroy_clause,
-    _parse_choose_opponent_and_creature_reveal_exile_choice_whole_text,
-    _parse_choose_target_exile_until_leaves_then_instead_permanent_clause,
-    _parse_choose_target_owner_may_top_else_bottom_clause,
-    _parse_choose_target_owner_shuffles_it_clause,
-    _parse_choose_target_return_chosen_card_clause,
-    _parse_choose_target_then_create_token_copies_pair,
-    _parse_choose_target_then_return_to_your_hand_pair,
-    _parse_choose_targets_then_return_to_hand_pair,
     _parse_choose_then_object_anaphor_clause_pair,
-    _parse_choose_type_draw_per_permanent_clause,
-    _parse_choose_type_return_from_graveyard_clause,
-    _parse_citys_blessing_instead_clause,
-    _parse_condition_clause,
-    _parse_condition_instead_clause,
-    _parse_condition_instead_clause_for_ability,
-    _parse_delayed_single_clause,
-    _parse_each_opponent_choose_one_of_each_type_then_sacrifice,
     _parse_each_player_chooses_creature_then_sacrifices_rest_whole_text,
-    _parse_gift_promised_return_instead_clause,
-    _parse_if_additional_cost_paid_clause,
-    _parse_if_condition_you_win_the_game_clause,
     _parse_if_it_was_quality_card_otherwise_triple,
     _parse_if_it_was_target_card_quality_rider_clause_pair,
     _parse_if_self_isnt_a_creature_clause,
     _parse_if_target_card_quality_rider_clause_pair,
-    _parse_kicked_choose_return_delayed_clause,
-    _parse_may_pay_energy_if_you_do_clause,
-    _parse_optional_behold_then_if_you_do_clause,
     _parse_optional_mixed_clause,
     _parse_optional_player_clause,
-    _parse_reflexive_discard_count_clause,
-    _parse_reflexive_mandatory_mill_clause,
     _parse_reflexive_mandatory_token_clause,
     _parse_reflexive_may_discard_clause,
-    _parse_reflexive_may_exile_dead_self_clause,
-    _parse_reflexive_may_tap_self_clause,
     _parse_reflexive_pay_energy_clause,
-    _parse_reflexive_pay_life_clause,
-    _parse_reflexive_pay_mana_and_life_clause,
-    _parse_reflexive_pay_mana_clause,
-    _parse_reflexive_pay_up_to_n_times_choose_modes_clause,
     _parse_reflexive_sacrifice_clause,
-    _parse_reflexive_sacrifice_or_discard_clause,
-    _parse_reflexive_self_counter_if_clause,
     _parse_separate_into_two_piles_then_consequence_whole_text,
-    _parse_then_if_moved_this_way_clause,
-    _resolve_modal_triggered_ability_clause,
     end_the_turn_if_your_turn_effect,
 )
 from .removal import (  # noqa: E402
@@ -8483,95 +6421,31 @@ from .removal import (  # noqa: E402
     _exile_matching_from_all_graveyards,
     _graveyard_exile_quality_matcher,
     _hand_exile_quality_matcher,
-    _parse_blocking_creature_sacrificed_clause,
-    _parse_cast_from_hand_then_exile_clause,
     _parse_conditional_exile_then_play_permission_clauses,
     _parse_conditional_sacrifice_clause,
-    _parse_counter_targeting_object_unless_clause,
-    _parse_counter_that_spell_clause,
     _parse_counter_unless_pays_then_condition_upgrade_pair,
-    _parse_defending_player_exiles_top_n_clause,
     _parse_destroy_each_clause,
-    _parse_destroy_each_then_add_mana_per_destroyed,
-    _parse_destroy_each_then_remove_all_counters,
-    _parse_destroy_or_exile_attached_clause,
-    _parse_destroy_target_then_rider_if_type_destroyed_clause,
     _parse_destroy_then_amass_by_referent_then_draw_if_controlled_clause,
     _parse_destroy_then_if_not_attacking_clause_pair,
     _parse_destroy_then_if_that_permanent_was_draw_clause_pair,
-    _parse_destroy_two_targets_clause,
-    _parse_each_player_exiles_until_clause,
-    _parse_each_player_sacrifices_then_mass_reanimate,
-    _parse_each_sacrifices_of_their_choice_clause,
     _parse_each_sacrifices_then_if_you_did_clause,
     _parse_exile_all_but_bottom_of_library_clause,
     _parse_exile_all_cards_from_hands_and_graveyards_clause,
-    _parse_exile_all_creatures_then_hand_refill_clause,
     _parse_exile_any_number_of_your_permanents_then_delayed_return_clauses,
-    _parse_exile_card_then_token_copy_clause,
-    _parse_exile_cards_from_your_hand_clause,
-    _parse_exile_dead_self_clause,
-    _parse_exile_each_clause,
     _parse_exile_from_own_library_end_clause,
     _parse_exile_graveyard_then_creature_rider_clause,
-    _parse_exile_hand_draw_then_play_until_next_turn_ability_clause,
-    _parse_exile_hand_draw_then_play_until_next_turn_clause,
-    _parse_exile_if_mv_return_then_re_exile_clause,
     _parse_exile_into_suspend_clauses,
-    _parse_exile_one_of_each_type_copy_cast_clause,
-    _parse_exile_self_clause,
-    _parse_exile_self_then_return_clause,
-    _parse_exile_several_up_to_one_targets_then_return_clause,
-    _parse_exile_target_and_top_owner_may_play_clause,
-    _parse_exile_target_card_copy_it_cast_clause,
-    _parse_exile_target_card_reflexive_creature_counter,
-    _parse_exile_target_then_return_tapped_and_attacking_clause,
     _parse_exile_targets_then_owner_play_permission_clauses,
-    _parse_exile_targets_until_leaves_then_counters,
-    _parse_exile_that_players_library_clause,
-    _parse_exile_then_pay_or_else_return_clause,
     _parse_exile_then_play_permission_clauses,
     _parse_exile_then_return_clause_pair,
-    _parse_exile_top_card_then_play_permission_clause,
-    _parse_exile_top_n_put_from_among_clause,
-    _parse_exile_top_of_other_libraries_clause,
     _parse_exile_top_then_cast_types_free_this_turn_whole_text,
     _parse_exile_top_then_play_during_resolution_whole_text,
     _parse_exile_until_leaves_battlefield_clause,
-    _parse_exile_until_n_quality_cast_one_free_clause,
-    _parse_exiled_card_owner_creates_x_token_clause,
-    _parse_face_down_exile_play_clause,
-    _parse_for_each_opponent_destroy_clause,
-    _parse_for_each_opponent_exile_clause,
-    _parse_if_condition_exile_self_and_each_clause,
-    _parse_imprint_clause,
-    _parse_linked_exile_clause,
-    _parse_linked_exile_return_pair_clause,
-    _parse_mandatory_sacrifice_then_return_to_hand_clause,
     _parse_mass_destroy_then_conditional_graveyard_hate_clause,
-    _parse_may_exile_hand_if_you_do_clause,
-    _parse_may_exile_self_and_named_copies_if_you_do_clause,
-    _parse_may_exile_self_then_return_clause,
-    _parse_may_exile_that_card_return_others_clause,
     _parse_may_sacrifice_then_damage_then_amass_if_excess_clause,
     _parse_multi_part_sacrifice_gain_draw_discard_damage_counters_clause,
-    _parse_play_a_card_exiled_with_clause,
-    _parse_put_card_exiled_with_self_clause,
-    _parse_put_exiled_target_onto_battlefield_clause,
     _parse_regenerate_self_clause,
-    _parse_revolt_destroy_or_exile_clause,
-    _parse_sacrifice_all_you_control_clause,
-    _parse_sacrifice_n_of_a_group_clause,
-    _parse_sacrifice_self_clause,
-    _parse_sacrifice_unless_discard_trigger,
-    _parse_sacrifice_unless_pay_energy,
-    _parse_self_cast_while_exiled_clause,
-    _parse_shared_type_sacrifice_clause,
-    _parse_target_opponent_exile_top_then_put_lands_clause,
     _parse_target_opponent_sacrifice_greatest_mv_clause,
-    _parse_target_player_sacrifices_clause,
-    _parse_that_player_sacrifices_of_their_choice_clause,
-    _parse_then_exile_self_and_return_clause,
     counter_targets,
     destroy_ability_targets,
     each_player_exiles_sacrifices_and_returns_creatures,
@@ -8585,59 +6459,22 @@ from .removal import (  # noqa: E402
 from .returns import (  # noqa: E402
     _parse_delayed_blink_clauses,
     _parse_delayed_reanimate_haste_exile_clauses,
-    _parse_for_each_opponent_return_to_hand_clause,
-    _parse_mass_return_entered_this_turn_clause,
-    _parse_mass_return_from_graveyard_to_battlefield_clause,
-    _parse_mass_return_from_graveyard_to_hand_clause,
-    _parse_mass_return_to_hand_clause,
-    _parse_put_creature_from_hand_attacking_then_return,
     _parse_put_from_graveyard_onto_battlefield_clause,
-    _parse_return_a_card_at_random_from_graveyard_clause,
-    _parse_return_a_land_you_control_clause,
-    _parse_return_as_creature_clause,
-    _parse_return_cards_from_your_graveyard_clause,
-    _parse_return_dead_self_to_hand_clause,
-    _parse_return_event_subject_to_battlefield_clause,
-    _parse_return_imprinted_clause,
-    _parse_return_self_as_type_clause,
-    _parse_return_self_from_graveyard_to_battlefield_attached_clause,
-    _parse_return_self_from_graveyard_to_battlefield_clause,
-    _parse_return_self_then_create_tokens_clause,
     _parse_return_self_then_may_attach_equipment,
-    _parse_return_self_to_battlefield_transformed_clause,
-    _parse_return_self_to_owners_hand_clause,
-    _parse_return_target_and_same_name_from_graveyard_clause,
-    _parse_return_target_card_then_instead_battlefield_if_cost_paid_clause,
-    _parse_return_target_from_graveyard_gains_then_bounce,
     _parse_return_target_from_graveyard_tapped_and_attacking_clause,
-    _parse_return_target_then_conditional_draw,
     _parse_return_that_card_to_owners_hand_clause,
     _parse_return_up_to_n_total_mv_from_graveyard_to_battlefield,
     _parse_return_with_rider_clause,
-    _parse_self_return_clause,
     _return_ability_targets_to_battlefield_with_counter,
     return_ability_targets_to_battlefield,
     return_ability_targets_to_hand,
 )
 from .search import (  # noqa: E402
-    _parse_behold_chosen_type_search_clause,
-    _parse_outside_the_game_fetch,
-    _parse_outside_the_game_play_clause,
-    _parse_put_from_outside_the_game_into_hand_spell,
-    _parse_search_and_exile_then_shuffle_clause,
-    _parse_search_clause,
-    _parse_search_distinct_names_clause,
-    _parse_search_hand_or_graveyard_clause,
     _parse_search_library_and_outside_distinct_names_opponent_chooses_clause,
-    _parse_search_library_graveyard_outside_the_game_clause,
-    _parse_search_mv_equal_to_sacrificed_clause,
     _parse_search_mv_less_than_self_power_clause,
-    _parse_search_mv_lte_count_clause,
-    _parse_search_put_battlefield_tapped_then_behold_untap_clause,
     _parse_search_reveal_shuffle_top_clause,
     _parse_search_split_destination_clause,
     _parse_search_that_many_battlefield_clause,
-    _parse_target_player_may_search_named_card_clause,
     _read_search_count,
     _search_descriptions,
 )
@@ -8645,7 +6482,6 @@ from .text import (  # noqa: E402
     _parse_all_of_target_player_then_referent_pair,
     _parse_anaphoric_clause_pair,
     _parse_controller_split_target_clause_pair,
-    _parse_leading_then_if_otherwise_clause,
     _parse_object_anaphor_clause_pair,
     _parse_object_anaphor_clause_series,
     _parse_plural_target_gain_quoted_ability_whole_text,
@@ -8658,48 +6494,14 @@ from .text import (  # noqa: E402
 )
 from .tokens import (  # noqa: E402
     _fold_following_token_grant,
-    _parse_amass_clause,
-    _parse_amass_then_attach_clause,
-    _parse_attacking_token_clause,
-    _parse_city_blessing_token_copy_clause,
-    _parse_conditional_token_count_on_sacrificed,
-    _parse_create_named_permanent_token_clause,
-    _parse_create_role_token_clause,
-    _parse_create_tapped_attacking_tokens_then_sacrifice,
-    _parse_create_that_many_color_pip_tokens_clause,
-    _parse_create_token_copies_except_clause,
-    _parse_create_token_copy_of_cost_exiled_card_clause,
-    _parse_create_token_copy_of_quality_you_control_clause,
     _parse_create_token_copy_of_target_clause,
-    _parse_create_token_mill_repeat_clause,
-    _parse_create_token_then_attach_clause,
-    _parse_create_token_then_copy_spell_retargeted_clause,
     _parse_create_token_then_if_control_n_sacrifice_self_then_clause,
     _parse_create_token_then_if_control_n_that_player_half_life_clause,
-    _parse_create_token_then_may_attach_clause,
-    _parse_create_tokens_equal_to_event_subject_stat_clause,
-    _parse_create_tokens_graveyard_cast_counters_clause,
-    _parse_create_tokens_then_counter_other_subtype_clause,
-    _parse_create_tokens_then_instead_tapped_attacking_if_cost_paid_clause,
-    _parse_create_x_tokens_where_x_is_clause,
-    _parse_created_replacement_ability_text,
-    _parse_created_replacement_spell_text,
-    _parse_created_replacement_then_rest_spell_text,
-    _parse_created_trigger_ability_text,
-    _parse_created_trigger_spell_text,
     _parse_delayed_token_copy_of_it_clauses,
-    _parse_fractal_token_by_cards_drawn_this_turn_clause,
-    _parse_investigate_clause,
-    _parse_may_cost_then_attacking_token_clause,
-    _parse_named_equipment_token_clause,
-    _parse_named_token_clause,
     _parse_offspring_token_copy_clause,
-    _parse_target_player_creates_clause,
     _parse_target_player_creates_token,
     _parse_token_clause,
     _parse_token_list_clause,
     _parse_token_then_object_anaphor_clause_pair,
-    _parse_tokens_then_counter_if_not_cast_from_hand_clause,
-    _parse_whole_text_token_clause,
     create_continuous_effect,
 )

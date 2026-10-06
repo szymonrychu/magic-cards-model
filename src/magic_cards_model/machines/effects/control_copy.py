@@ -46,6 +46,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import _SPELL_QUALIFIER, AbilityEffect, Effect, TargetedClause, _CopyExceptionList
 
 #: A power qualifier trailing the group - Mob Rule's "creatures with power 4
@@ -95,6 +96,7 @@ _COPY_CAST_SPELL_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_copy_cast_spell_clause(text: str) -> AbilityEffect | None:
     """`_COPY_CAST_SPELL_RE`'s shape - see its own docstring."""
     match = _COPY_CAST_SPELL_RE.fullmatch(text.strip())
@@ -144,6 +146,8 @@ _EXCHANGE_CONTROL_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s8")
+@SPELL_TEXT.rung("s8")
 def _parse_exchange_control_clause(text: str) -> TargetedClause | None:
     """`_EXCHANGE_CONTROL_RE`'s shape, on a spell or an ability."""
     from ..control import exchange_control
@@ -281,6 +285,7 @@ _CAST_NONCREATURE_SPELL_THIS_TURN_COPY_TOKEN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_cast_noncreature_spell_this_turn_copy_token_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -350,6 +355,7 @@ _COPY_EXILED_CARD_AND_CAST_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
     """`_COPY_EXILED_CARD_AND_CAST_RE`'s shape - Isochron Scepter's activated
     ability.
@@ -438,6 +444,7 @@ _COPY_COST_EXILED_CARDS_AND_CAST_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_copy_cost_exiled_cards_and_cast(text: str) -> AbilityEffect | None:
     """`_COPY_COST_EXILED_CARDS_AND_CAST_RE`'s shape; see the banner above."""
     match = _COPY_COST_EXILED_CARDS_AND_CAST_RE.fullmatch(" ".join(text.split()))
@@ -519,6 +526,7 @@ _EXCHANGE_LIFE_TOTALS_THEN_DRAW_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_exchange_life_totals_then_draw(text: str) -> AbilityEffect | None:
     """`_EXCHANGE_LIFE_TOTALS_THEN_DRAW_RE`'s shape - Mister Negative's own
     enters trigger.
@@ -605,6 +613,8 @@ _COPY_THAT_SPELL_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s27", for_spell=False)
+@MIXED_CLAUSE.rung("s28", for_spell=FORWARD)
 def _parse_copy_that_spell_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """Ability-only (`for_spell=False`), the same restriction `_parse_
     counter_that_spell_clause` holds itself to: "that spell" only resolves
@@ -819,6 +829,7 @@ def _self_copy_token_object(game: "Game", ability: AbilityOnStack, word: str) ->
     return ability.source_or_last_known(game)
 
 
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_SELF_COPY_TOKEN_RE`'s shape, or `None` if this is not it.
 
@@ -896,6 +907,8 @@ def _parse_copy_added_ability_lines(tail: str) -> tuple[str, ...] | None:
     return tuple(added)
 
 
+@ABILITY_TEXT.rung("s15", for_spell=False)
+@SPELL_TEXT.rung("s13", for_spell=True)
 def _parse_for_each_creature_target_player_copy_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -952,6 +965,8 @@ _FOR_EACH_CREATURE_YOU_CONTROL_COPY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s15", for_spell=False)
+@SPELL_TEXT.rung("s13", for_spell=True)
 def _parse_for_each_creature_you_control_copy_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1059,6 +1074,7 @@ _COPY_THAT_SPELL_RETARGETED_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_copy_that_spell_retargeted_clause(text: str) -> AbilityEffect | None:
     """`_COPY_THAT_SPELL_RETARGETED_RE`'s shape - Ivy, Gleeful Spellthief.
 
@@ -1125,6 +1141,7 @@ _COPY_NEXT_SPELL_YOU_CAST_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
     """`_COPY_NEXT_SPELL_YOU_CAST_RE`'s shape - Flamehold Grappler.
 
@@ -1212,6 +1229,7 @@ _COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_copy_next_instant_or_sorcery_you_cast_clause(text: str) -> AbilityEffect | None:
     """`_COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE`'s shape."""
     match = _COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE.fullmatch(
@@ -1240,6 +1258,7 @@ def _parse_copy_next_instant_or_sorcery_you_cast_clause(text: str) -> AbilityEff
     return effect
 
 
+@SPELL_TEXT.rung("s10")
 def _parse_copy_next_instant_or_sorcery_you_cast_spell_clause(text: str) -> Effect | None:
     """`_COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE`'s shape, for a resolving
     *spell* rather than an ability - Doublecast, Galvanic Iteration, Howl of
@@ -1299,6 +1318,7 @@ def _parse_copy_next_instant_or_sorcery_you_cast_spell_clause(text: str) -> Effe
 _COPY_THIS_SPELL_RE = re.compile(r"^copy this spell\.?$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_copy_this_spell_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_COPY_THIS_SPELL_RE`'s shape - Sage of the Skies' cast trigger.
 
@@ -1344,6 +1364,7 @@ _CHANGE_TARGET_RE = re.compile(
 _RETARGET_SCOPES = {"the": RetargetScope.ALL, "a": RetargetScope.ONE, "any": RetargetScope.ANY}
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_change_target_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_CHANGE_TARGET_RE`'s shape: change the target(s) of this object's own
     single target, a spell or ability on the stack, through
@@ -1407,6 +1428,7 @@ _COPY_OF_CARD_EXILED_WITH_SELF_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_copy_of_card_exiled_with_self_clause(text: str) -> AbilityEffect | None:
     """`_COPY_OF_CARD_EXILED_WITH_SELF_RE`'s shape, or `None`.
 

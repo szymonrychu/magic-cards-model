@@ -73,6 +73,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import (
     _SACRIFICED_MANA_VALUE_TERM,
     AbilityEffect,
@@ -179,6 +180,7 @@ def hangarback_dies(game: "Game", ability: AbilityOnStack) -> None:
 _EXILE_SELF_NAME_CLAUSE_RE = re.compile(r"^exile (?P<name>[A-Z][A-Za-z' ,.-]*[A-Za-z])\.?$")
 
 
+@MIXED_CLAUSE.rung("s7", for_spell=FORWARD)
 def _parse_exile_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_EXILE_SELF_NAME_CLAUSE_RE`'s shape - only ever a spell (CR 608.2n's
     own graveyard step is what this clause overrides for an instant or
@@ -660,6 +662,7 @@ _WINNOWING_SACRIFICE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s17", for_spell=True)
 def _parse_shared_type_sacrifice_clause(text: str, *, for_spell: bool) -> Effect | None:
     """`_WINNOWING_SACRIFICE_RE`'s shape, or `None`.
 
@@ -953,6 +956,7 @@ _PUT_EXILED_TARGET_ONTO_BATTLEFIELD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_put_exiled_target_onto_battlefield_clause(text: str) -> AbilityEffect | None:
     """`_PUT_EXILED_TARGET_ONTO_BATTLEFIELD_RE`'s shape.
 
@@ -1076,6 +1080,7 @@ _PLAY_A_CARD_EXILED_WITH_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s3", for_spell=FORWARD)
 def _parse_play_a_card_exiled_with_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_PLAY_A_CARD_EXILED_WITH_RE`: a `PlayPermission` (CR 601.3) for every
     face-up card in the source's own pile (`_linked_pile`, that incarnation
@@ -1183,6 +1188,7 @@ def _put_card_exiled_with_it_into_owners_hand_effect(game: "Game", ability: Abil
         game.player(chosen.owner).add(chosen, Zone.HAND)
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_linked_exile_clause(text: str) -> AbilityEffect | None:
     """`_CAST_FROM_LINKED_EXILE_RE`, `_TURN_LINKED_FACE_UP_THEN_PUT_
     PERMANENTS_RE` or `_SEARCH_UP_TO_AND_EXILE_RE`, read off the whole
@@ -1498,6 +1504,7 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
             owner.add(state, Zone.LIBRARY)  # the bottom of the library
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_cast_from_hand_then_exile_clause(text: str) -> AbilityEffect | None:
     """Knowledge Pool's and Possibility Storm's shared opening clause - see
     the block comment above `_CAST_FROM_HAND_THEN_EXILE_RE` for the two
@@ -1552,6 +1559,7 @@ _SELF_CAST_WHILE_EXILED_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_self_cast_while_exiled_clause(text: str) -> AbilityEffect | None:
     """`_SELF_CAST_WHILE_EXILED_RE`'s shape.
 
@@ -1602,6 +1610,7 @@ _DESTROY_TWO_TARGETS_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s18")
 def _parse_destroy_two_targets_clause(effect_text: str) -> Effect | None:
     """`_DESTROY_TWO_TARGETS_RE`'s shape, or `None` if this is not it.
 
@@ -1639,6 +1648,7 @@ _DESTROY_TARGET_THEN_RIDER_IF_TYPE_DESTROYED_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s7", for_spell=True)
 def _parse_destroy_target_then_rider_if_type_destroyed_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1973,6 +1983,7 @@ def _watch_for_the_exiled_card_returning_and_add_counters(
     )
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_exile_targets_until_leaves_then_counters(text: str) -> AbilityEffect | None:
     """Lagrella, the Magpie, read off her own printed text.
 
@@ -2061,6 +2072,7 @@ _EXILED_CARD_OWNER_CREATES_X_TOKEN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_exiled_card_owner_creates_x_token_clause(text: str) -> AbilityEffect | None:
     """`_EXILED_CARD_OWNER_CREATES_X_TOKEN_RE`'s shape, or `None`.
 
@@ -2128,6 +2140,7 @@ _SACRIFICE_UNLESS_DISCARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_sacrifice_unless_discard_trigger(text: str) -> AbilityEffect | None:
     """`_SACRIFICE_UNLESS_DISCARD_RE`'s shape."""
     match = _SACRIFICE_UNLESS_DISCARD_RE.fullmatch(text.strip())
@@ -2184,6 +2197,7 @@ _SACRIFICE_UNLESS_PAY_ENERGY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s25")
 def _parse_sacrifice_unless_pay_energy(text: str) -> AbilityEffect | None:
     """CR 107.14, CR 118.3: "Sacrifice this <type> unless you pay {E}...",
     read off the ability's own printed text (Static Prison's upkeep trigger).
@@ -2237,6 +2251,7 @@ _EXILE_TOP_N_PUT_FROM_AMONG_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_exile_top_n_put_from_among_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_TOP_N_PUT_FROM_AMONG_RE`'s shape - see the banner above."""
     match = _EXILE_TOP_N_PUT_FROM_AMONG_RE.fullmatch(
@@ -2308,6 +2323,7 @@ _MAY_EXILE_SELF_THEN_RETURN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s25")
 def _parse_may_exile_self_then_return_clause(text: str) -> AbilityEffect | None:
     """ "You may exile <this>, then return it to the battlefield transformed
     under its owner's control." as one CR 608.2c instruction.
@@ -2386,6 +2402,7 @@ _EXILE_SELF_THEN_RETURN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s25")
 def _parse_exile_self_then_return_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_SELF_THEN_RETURN_RE`'s shape - see
     `_parse_may_exile_self_then_return_clause`'s docstring for the two rules
@@ -2461,6 +2478,7 @@ _THEN_EXILE_SELF_AND_RETURN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s43")
 def _parse_then_exile_self_and_return_clause(text: str) -> AbilityEffect | None:
     """`_THEN_EXILE_SELF_AND_RETURN_RE`'s shape.
 
@@ -2532,6 +2550,7 @@ _EXILE_CARDS_FROM_YOUR_HAND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_exile_cards_from_your_hand_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_CARDS_FROM_YOUR_HAND_RE`'s shape: the controller chooses that
     many cards from their own hand, and `Game.exile_cards` puts them into the
@@ -2588,6 +2607,7 @@ _TARGET_OPPONENT_EXILE_TOP_THEN_PUT_LANDS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_target_opponent_exile_top_then_put_lands_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
@@ -2987,6 +3007,8 @@ def _destroy_matching(
     return destroyed
 
 
+@SPELL_TEXT.rung("s21")
+@MIXED_CLAUSE.rung("s35")
 def _parse_destroy_each_clause(sentence: str) -> TargetedClause | None:
     """ "Destroy each <qualifier>[ without a counter][ with mana value ...]."
     on its own, with no second instruction - Engineered Explosives's whole
@@ -3041,6 +3063,7 @@ def _exile_matching(
     return sum(1 for card in exiled if card.zone is Zone.EXILE)
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_exile_each_clause(sentence: str) -> TargetedClause | None:
     """ "Exile each/all <qualifier>." on its own - `_EXILE_EACH_RE`'s shape.
 
@@ -3088,6 +3111,7 @@ _IF_CONDITION_EXILE_SELF_AND_EACH_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s39", for_spell=False)
 def _parse_if_condition_exile_self_and_each_clause(
     sentence: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -3137,6 +3161,7 @@ _SACRIFICE_ALL_YOU_CONTROL_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_sacrifice_all_you_control_clause(sentence: str) -> TargetedClause | None:
     """`_SACRIFICE_ALL_YOU_CONTROL_RE`'s shape - CR 701.21a: to sacrifice a
     permanent is to move it, as its controller, from the battlefield directly
@@ -3180,6 +3205,7 @@ _DESTROY_OR_EXILE_ATTACHED_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_destroy_or_exile_attached_clause(clause: str) -> TargetedClause | None:
     """`_DESTROY_OR_EXILE_ATTACHED_RE`'s shape."""
     match = _DESTROY_OR_EXILE_ATTACHED_RE.fullmatch(clause.strip())
@@ -3211,6 +3237,7 @@ _DESTROY_EACH_THEN_REMOVE_ALL_COUNTERS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s25")
 def _parse_destroy_each_then_remove_all_counters(text: str) -> AbilityEffect | None:
     """`_DESTROY_EACH_THEN_REMOVE_ALL_COUNTERS_RE`'s shape: destroy every
     matching permanent, then remove every counter of the named kind from
@@ -3252,6 +3279,7 @@ _DESTROY_EACH_THEN_ADD_MANA_PER_DESTROYED_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s20")
 def _parse_destroy_each_then_add_mana_per_destroyed(text: str) -> Effect | None:
     """`_DESTROY_EACH_THEN_ADD_MANA_PER_DESTROYED_RE`'s shape.
 
@@ -3343,6 +3371,7 @@ _EXILE_ALL_CREATURES_THEN_HAND_REFILL_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s6")
 def _parse_exile_all_creatures_then_hand_refill_clause(text: str) -> Effect | None:
     """`_EXILE_ALL_CREATURES_THEN_HAND_REFILL_RE`'s shape, or `None`."""
     if _EXILE_ALL_CREATURES_THEN_HAND_REFILL_RE.fullmatch(text.strip()) is None:
@@ -3440,6 +3469,7 @@ _REVOLT_DESTROY_OR_EXILE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_revolt_destroy_or_exile_clause(effect_text: str) -> Effect | None:
     """`_REVOLT_DESTROY_OR_EXILE_RE`'s shape, or `None` if this is not it."""
     match = _REVOLT_DESTROY_OR_EXILE_RE.fullmatch(effect_text.strip())
@@ -3480,6 +3510,7 @@ _EXILE_TARGET_NONLAND_AND_TOP_OWNER_MAY_PLAY_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_exile_target_and_top_owner_may_play_clause(effect_text: str) -> Effect | None:
     """`_EXILE_TARGET_NONLAND_AND_TOP_OWNER_MAY_PLAY_RE`'s shape, or `None`."""
     match = _EXILE_TARGET_NONLAND_AND_TOP_OWNER_MAY_PLAY_RE.fullmatch(effect_text.strip())
@@ -3654,6 +3685,7 @@ _EXILE_IF_MV_RETURN_THEN_RE_EXILE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s11", for_spell=True)
 def _parse_exile_if_mv_return_then_re_exile_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -4038,6 +4070,7 @@ def _hand_exile_description(match: re.Match[str]) -> str:
     return f"{_article(description)} {description}"
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_imprint_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Imprint — When this land enters, you may exile a colorless card with
     mana value 7 or greater from your hand." (Ugin's Labyrinth), read off the
@@ -4302,6 +4335,7 @@ _MANDATORY_SACRIFICE_THEN_RETURN_TO_HAND_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s15", for_spell=True)
 def _parse_mandatory_sacrifice_then_return_to_hand_clause(
     text: str, *, for_spell: bool
 ) -> Effect | None:
@@ -4472,6 +4506,8 @@ def _parse_sacrifice_consequence(consequence: str) -> _SacrificeConsequence | No
     return None
 
 
+@ABILITY_TEXT.rung("s19", for_spell=False)
+@SPELL_TEXT.rung("s15", for_spell=True)
 def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
     """ "You may sacrifice `<restriction>`. If you do, `<consequence>`." (CR
     118.12), read off the ability's own printed text so no registry row is
@@ -4609,6 +4645,7 @@ _EXILE_TARGET_REFLEXIVE_CREATURE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_exile_target_card_reflexive_creature_counter(text: str) -> AbilityEffect | None:
     """`_EXILE_TARGET_REFLEXIVE_CREATURE_RE`'s shape - Agatha's Soul
     Cauldron's `{T}` ability.
@@ -4666,6 +4703,7 @@ _MAY_EXILE_HAND_IF_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_may_exile_hand_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_MAY_EXILE_HAND_IF_YOU_DO_RE`'s shape, or `None`."""
     match = _MAY_EXILE_HAND_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
@@ -4700,6 +4738,8 @@ _FOR_EACH_OPPONENT_DESTROY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s29", for_spell=False)
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_for_each_opponent_destroy_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """ "For each opponent, destroy up to one target `<X>` that player
     controls." - the real, off-set printing Age of Ultron's own Saga chapter
@@ -4745,6 +4785,7 @@ _EXILE_TARGET_CARD_COPY_IT_CAST_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_exile_target_card_copy_it_cast_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_TARGET_CARD_COPY_IT_CAST_RE`'s shape, or `None`.
 
@@ -4820,6 +4861,7 @@ _EXILE_ONE_OF_EACH_TYPE_COPY_CAST_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_exile_one_of_each_type_copy_cast_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_ONE_OF_EACH_TYPE_COPY_CAST_RE`'s shape, or `None`.
 
@@ -5106,6 +5148,7 @@ _BLOCKING_CREATURE_SACRIFICED_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_blocking_creature_sacrificed_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -5282,6 +5325,7 @@ _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_exile_that_players_library_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -5324,6 +5368,7 @@ _DEFENDING_PLAYER_EXILES_TOP_N_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s28", for_spell=FORWARD)
 def _parse_defending_player_exiles_top_n_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -5364,6 +5409,7 @@ def _parse_defending_player_exiles_top_n_clause(
 _COUNTER_THAT_SPELL_RE = re.compile(r"^counter that spell$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s28", for_spell=FORWARD)
 def _parse_counter_that_spell_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """Ability-only (`for_spell=False`): a spell has no `ability.event` to
     resolve "that spell" against, and nothing in the pool prints this clause
@@ -5410,6 +5456,7 @@ def _parse_counter_that_spell_clause(clause: str, *, for_spell: bool) -> Targete
 _EXILE_TOP_CARD_MANDATORY_RE = re.compile(r"^exile the top card of your library$", re.IGNORECASE)
 
 
+@ABILITY_TEXT.rung("s1")
 def _parse_exile_top_card_then_play_permission_clause(effect_text: str) -> AbilityEffect | None:
     """`_EXILE_TOP_CARD_MANDATORY_RE` followed by `_PLAY_PERMISSION_RE`'s
     "that card" permission, or `None`."""
@@ -5613,6 +5660,7 @@ _EXILE_UNTIL_N_QUALITY_CAST_ONE_FREE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s1")
 def _parse_exile_until_n_quality_cast_one_free_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_UNTIL_N_QUALITY_CAST_ONE_FREE_RE`'s shape, or `None`."""
     whole = _strip_non_effect_preamble(text).strip()
@@ -5886,6 +5934,7 @@ def _each_player_exile_until(clause: str) -> "ExileAntecedent | None":
     return exile_each
 
 
+@MIXED_CLAUSE.rung("s3", for_spell=FORWARD)
 def _parse_each_player_exiles_until_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -6472,6 +6521,7 @@ def _sacrifice_of_choice_clause_effect(
     return effect
 
 
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_target_player_sacrifices_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -6727,6 +6777,7 @@ def _parse_exile_top_then_play_during_resolution_whole_text(
 _EXILE_IT_RE = re.compile(r"^exile it$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_exile_dead_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Exile it" - moves the ability's own source to exile from wherever
     CR 700.4's move just put it (almost always the graveyard, since this only
@@ -6802,6 +6853,7 @@ _SELF_SACRIFICE_UNLESS_CONDITIONS: dict[str, Callable[["Game", CardState], bool]
 }
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Sacrifice it" / "Sacrifice this enchantment" - CR 701.21a's keyword
     action aimed at the ability's own source: "To sacrifice a permanent, its
@@ -7008,6 +7060,7 @@ _EXILE_SEVERAL_UP_TO_ONE_TARGETS_THEN_RETURN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_exile_several_up_to_one_targets_then_return_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_SEVERAL_UP_TO_ONE_TARGETS_THEN_RETURN_RE`'s shape, or `None`.
 
@@ -7094,6 +7147,7 @@ _EXILE_TARGET_THEN_RETURN_TAPPED_AND_ATTACKING_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_exile_target_then_return_tapped_and_attacking_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -7181,6 +7235,7 @@ _EXILE_THEN_PAY_OR_ELSE_RETURN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_exile_then_pay_or_else_return_clause(text: str) -> AbilityEffect | None:
     """`_EXILE_THEN_PAY_OR_ELSE_RETURN_RE`'s shape, or `None`.
 
@@ -7243,6 +7298,7 @@ def _parse_exile_then_pay_or_else_return_clause(text: str) -> AbilityEffect | No
 #: *whole*, unsplit ability text, so the split happens here rather than
 #: through `parse_mixed_effect`, keeping both clauses' shared "this land" the
 #: one thing `machines/linked_exile.py` has to reason about.
+@ABILITY_TEXT.rung("s38")
 def _parse_linked_exile_return_pair_clause(text: str) -> AbilityEffect | None:
     """Northampton Farm's own two-sentence ability, or Endless Sands' own
     (Modern-legal proof printing) single-sentence one - `None` if `text` is
@@ -7301,6 +7357,7 @@ _MAY_EXILE_SELF_AND_NAMED_COPIES_IF_YOU_DO_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s16")
 def _parse_may_exile_self_and_named_copies_if_you_do_clause(text: str) -> Effect | None:
     """`_MAY_EXILE_SELF_AND_NAMED_COPIES_IF_YOU_DO_RE`'s shape, or `None`.
 
@@ -7426,6 +7483,7 @@ def _exile_hand_draw_then_play_until_next_turn(
         )
 
 
+@SPELL_TEXT.rung("s21")
 def _parse_exile_hand_draw_then_play_until_next_turn_clause(effect_text: str) -> Effect | None:
     """`_EXILE_HAND_DRAW_THEN_PLAY_UNTIL_NEXT_TURN_RE`'s shape on a spell,
     or `None`."""
@@ -7438,6 +7496,7 @@ def _parse_exile_hand_draw_then_play_until_next_turn_clause(effect_text: str) ->
     return effect
 
 
+@ABILITY_TEXT.rung("s1")
 def _parse_exile_hand_draw_then_play_until_next_turn_ability_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
@@ -7468,6 +7527,7 @@ _COUNTER_TARGETING_OBJECT_UNLESS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s23")
 def _parse_counter_targeting_object_unless_clause(text: str) -> AbilityEffect | None:
     """`_COUNTER_TARGETING_OBJECT_UNLESS_RE`'s shape.
 
@@ -7547,6 +7607,7 @@ _SACRIFICE_N_GROUP_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s32", for_spell=FORWARD)
 def _parse_sacrifice_n_of_a_group_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_SACRIFICE_N_GROUP_RE`'s shape - Lotus Field's "sacrifice two lands."
     and Scapeshift's "Sacrifice any number of lands."
@@ -7640,6 +7701,7 @@ _EACH_SACRIFICES_OF_THEIR_CHOICE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s33")
 def _parse_each_sacrifices_of_their_choice_clause(clause: str) -> TargetedClause | None:
     """`_EACH_SACRIFICES_OF_THEIR_CHOICE_RE`'s shape; see the banner above."""
     match = _EACH_SACRIFICES_OF_THEIR_CHOICE_RE.fullmatch(clause.strip())
@@ -7712,6 +7774,7 @@ _TARGET_OPPONENT_SACRIFICE_GREATEST_MV_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_target_opponent_sacrifice_greatest_mv_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -7800,6 +7863,8 @@ _EACH_SACRIFICES_THEN_IF_YOU_DID_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s17", for_spell=False)
+@SPELL_TEXT.rung("s11", for_spell=True)
 def _parse_each_sacrifices_then_if_you_did_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -7885,6 +7950,7 @@ _THAT_PLAYER_SACRIFICES_OF_THEIR_CHOICE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s32", for_spell=FORWARD)
 def _parse_that_player_sacrifices_of_their_choice_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -7967,6 +8033,7 @@ _EACH_PLAYER_SACRIFICES_THEN_MASS_REANIMATE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_each_player_sacrifices_then_mass_reanimate(text: str) -> AbilityEffect | None:
     """`_EACH_PLAYER_SACRIFICES_THEN_MASS_REANIMATE_RE`'s shape - Bringer of
     the Last Gift's own enters trigger, whose intervening *if* ("if you cast
@@ -8042,6 +8109,8 @@ _EXILE_CARD_THEN_TOKEN_COPY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s12", for_spell=False)
+@SPELL_TEXT.rung("s9", for_spell=True)
 def _parse_exile_card_then_token_copy_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -8112,6 +8181,7 @@ _MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_may_exile_that_card_return_others_clause(text: str) -> AbilityEffect | None:
     """`_MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE`'s shape, or `None`."""
     if _MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE.fullmatch(" ".join(text.strip().split())) is None:
@@ -8157,6 +8227,7 @@ _PUT_CARD_EXILED_WITH_SELF_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s13")
 def _parse_put_card_exiled_with_self_clause(text: str) -> AbilityEffect | None:
     """`_PUT_CARD_EXILED_WITH_SELF_RE`'s shape, or `None`.
 
@@ -8278,6 +8349,7 @@ def _parse_exile_top_of_other_libraries_antecedent(
     return exile_tops, not targeted or count_word is not None
 
 
+@MIXED_CLAUSE.rung("s2")
 def _parse_exile_top_of_other_libraries_clause(clause: str) -> TargetedClause | None:
     """`_EXILE_TOP_OF_OTHER_LIBRARIES_RE` standing alone - Maralen, Fae
     Ascendant's "exile the top two cards of target opponent's library." and
@@ -8317,6 +8389,8 @@ _FACE_DOWN_EXILE_PLAY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
+@SPELL_TEXT.rung("s14")
 def _parse_face_down_exile_play_clause(effect_text: str) -> TargetedClause | None:
     """`_FACE_DOWN_EXILE_PLAY_RE`'s shape.
 
@@ -8398,6 +8472,8 @@ _FOR_EACH_OPPONENT_EXILE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s29", for_spell=False)
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_for_each_opponent_exile_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_FOR_EACH_OPPONENT_EXILE_RE`'s shape.
 

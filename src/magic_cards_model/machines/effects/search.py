@@ -29,6 +29,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import _HAVING_PATTERN, _MANA_COST_LIST, AbilityEffect, Effect, TargetedClause
 
 
@@ -460,6 +461,7 @@ _SEARCH_HAND_OR_GRAVEYARD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_hand_or_graveyard_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -516,6 +518,7 @@ def _parse_search_hand_or_graveyard_clause(
     return effect
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a search, fed either the whole ability text (a fetchland
     with nothing else on it) or one clause a multi-clause dispatcher split out
@@ -556,6 +559,7 @@ _SEARCH_SPLIT_DESTINATION_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_split_destination_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -676,6 +680,7 @@ _SEARCH_PUT_BATTLEFIELD_TAPPED_THEN_BEHOLD_UNTAP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s34")
 def _parse_search_put_battlefield_tapped_then_behold_untap_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -795,6 +800,7 @@ _SEARCH_AND_EXILE_THEN_SHUFFLE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_and_exile_then_shuffle_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -877,6 +883,7 @@ _SEARCH_REVEAL_SHUFFLE_TOP_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_reveal_shuffle_top_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -948,6 +955,7 @@ _SEARCH_DISTINCT_NAMES_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_distinct_names_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_SEARCH_DISTINCT_NAMES_RE`'s shape, or `None`."""
     match = _SEARCH_DISTINCT_NAMES_RE.fullmatch(clause.strip())
@@ -1028,6 +1036,7 @@ _SEARCH_MV_LTE_COUNT_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_SEARCH_MV_LTE_COUNT_RE`'s shape, or `None` if this is not it."""
     match = _SEARCH_MV_LTE_COUNT_RE.fullmatch(clause.strip())
@@ -1083,6 +1092,7 @@ _BEHOLD_CHOSEN_TYPE_SEARCH_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s17", for_spell=True)
 def _parse_behold_chosen_type_search_clause(text: str, *, for_spell: bool) -> Effect | None:
     """`_BEHOLD_CHOSEN_TYPE_SEARCH_RE`'s shape, or `None`.
 
@@ -1197,6 +1207,7 @@ def _parse_search_mv_less_than_self_power_clause(
     return effect
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_mv_equal_to_sacrificed_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1438,6 +1449,7 @@ _TARGET_PLAYER_MAY_SEARCH_NAMED_CARD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_target_player_may_search_named_card_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1659,6 +1671,7 @@ def _put_from_outside_the_game_into_hand(
         controller.bring_into_the_game(by_id[card_id], Zone.HAND)
 
 
+@SPELL_TEXT.rung("s21")
 def _parse_put_from_outside_the_game_into_hand_spell(effect_text: str) -> Effect | None:
     """The spell (or spell mode) form of `_PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE`."""
     match = _PUT_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(" ".join(effect_text.split()))
@@ -1674,6 +1687,7 @@ def _parse_put_from_outside_the_game_into_hand_spell(effect_text: str) -> Effect
     return effect
 
 
+@ABILITY_TEXT.rung("s16")
 def _parse_outside_the_game_fetch(effect_text: str) -> AbilityEffect | None:
     """Karn's `−2` shape, or a notice for a near miss, or None.
 
@@ -1795,6 +1809,7 @@ _SEARCH_LIBRARY_GRAVEYARD_OUTSIDE_THE_GAME_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s1")
 def _parse_search_library_graveyard_outside_the_game_clause(text: str) -> AbilityEffect | None:
     """`_SEARCH_LIBRARY_GRAVEYARD_OUTSIDE_THE_GAME_RE`'s shape, or `None`."""
     match = _SEARCH_LIBRARY_GRAVEYARD_OUTSIDE_THE_GAME_RE.fullmatch(
@@ -1885,6 +1900,7 @@ _OUTSIDE_THE_GAME_PLAY_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s21")
 def _parse_outside_the_game_play_clause(effect_text: str) -> Effect | None:
     """`_OUTSIDE_THE_GAME_PLAY_RE`'s shape, or `None` if this is not it."""
     if _OUTSIDE_THE_GAME_PLAY_RE.fullmatch(effect_text.strip()) is None:

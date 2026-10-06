@@ -67,6 +67,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import AbilityEffect, AmountReader, ClauseEffect, Effect, TargetedClause
 
 
@@ -1363,6 +1364,7 @@ def _source_characteristic_expr(
     return read
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | None:
     """A continuous-effect sentence whose power and toughness are an X the
     ability defines in its own words - Jolrael, Voice of Zhalfir's symmetric
@@ -2352,6 +2354,7 @@ _X_DAMAGE_DIVIDED_DOUBLED_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s16")
 def _parse_x_damage_divided_and_doubled_clause(text: str) -> Effect | None:
     """Shatterskull Smashing's own shape - see `_X_DAMAGE_DIVIDED_DOUBLED_RE`.
 
@@ -2533,6 +2536,7 @@ _VARIABLE_COUNT_TOKEN_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
 def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_VARIABLE_COUNT_TOKEN_RE`'s shape, or `None` if this is not it."""
     match = _VARIABLE_COUNT_TOKEN_RE.fullmatch(clause.strip())
@@ -2590,6 +2594,7 @@ _EVENT_SUBJECT_VARIABLE_PUMP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_event_subject_variable_pump_clause(effect_text: str) -> AbilityEffect | None:
     """`_EVENT_SUBJECT_VARIABLE_PUMP_RE`'s shape, or `None`.
 
@@ -2680,6 +2685,7 @@ def _nth_resolution_branch_effect(text: str) -> AbilityEffect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s23")
 def _parse_nth_resolution_clause(text: str) -> AbilityEffect | None:
     """`_NTH_RESOLUTION_RE`'s and `_NTH_RESOLUTION_LEADING_RE`'s shapes, each
     with any number of trailing `_NTH_RESOLUTION_BRANCH_RE` branches. The
@@ -2743,6 +2749,7 @@ _IT_GETS_DYNAMIC_X_PUMP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_it_dynamic_x_pump_clause(text: str) -> AbilityEffect | None:
     """`_IT_GETS_DYNAMIC_X_PUMP_RE`'s shape; see the banner above."""
     match = _IT_GETS_DYNAMIC_X_PUMP_RE.fullmatch(" ".join(text.strip().split()))
@@ -2818,6 +2825,7 @@ _HALF_X_LIFE_AND_DRAW_HALF_X_CARDS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s5")
 def _parse_half_x_life_and_draw_half_x_cards_clause(effect_text: str) -> AbilityEffect | None:
     """`_HALF_X_LIFE_AND_DRAW_HALF_X_CARDS_RE`'s shape - see the banner
     above. `of` other than a bare "x" falls back to `amount_expression`,
@@ -2870,6 +2878,7 @@ _X_ENERGY_PAY_DESTROY_BY_MANA_VALUE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s16")
 def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
     """Wrath of the Skies's own shape, see
     `_X_ENERGY_PAY_DESTROY_BY_MANA_VALUE_RE`.
@@ -2949,6 +2958,7 @@ _CONVERGE_EXILE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_converge_exile_by_colors_spent(effect_text: str) -> Effect | None:
     """`_CONVERGE_EXILE_RE`'s shape, or `None` if this is not it."""
     if _CONVERGE_EXILE_RE.fullmatch(effect_text.strip()) is None:
@@ -2981,6 +2991,7 @@ _CONVERGE_DISCARD_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_converge_discard_by_colors_spent(effect_text: str) -> Effect | None:
     """`_CONVERGE_DISCARD_RE`'s shape, or `None` if this is not it. The
     discard call itself is `_parse_target_player_discards_clause`'s own -
@@ -3044,6 +3055,7 @@ _CONVERGE_DAMAGE_THEN_EXILE_EXCESS_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_converge_damage_then_exile_excess_clause(effect_text: str) -> Effect | None:
     """`_CONVERGE_DAMAGE_THEN_EXILE_EXCESS_RE`'s shape, or `None`.
 
@@ -3111,6 +3123,7 @@ _CONVERGE_TOKENS_COUNTERS_AND_LIFE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_converge_fractal_tokens_and_life_clause(effect_text: str) -> Effect | None:
     """`_CONVERGE_TOKENS_COUNTERS_AND_LIFE_RE`'s shape, or `None`.
 
@@ -3170,6 +3183,7 @@ _CONVERGE_DRAW_DAMAGE_LIFE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_converge_draw_damage_life_clause(effect_text: str) -> Effect | None:
     """`_CONVERGE_DRAW_DAMAGE_LIFE_RE`'s shape, or `None`."""
     match = _CONVERGE_DRAW_DAMAGE_LIFE_RE.fullmatch(effect_text.strip())
@@ -3212,6 +3226,7 @@ _CONVERGE_DRAW_AND_LOSE_LIFE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_converge_draw_and_lose_life_clause(effect_text: str) -> Effect | None:
     """`_CONVERGE_DRAW_AND_LOSE_LIFE_RE`'s shape, or `None`."""
     if _CONVERGE_DRAW_AND_LOSE_LIFE_RE.fullmatch(effect_text.strip()) is None:
@@ -3248,6 +3263,7 @@ _X_LIFE_MASS_DEBUFF_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_x_life_mass_debuff(effect_text: str) -> Effect | None:
     """`_X_LIFE_MASS_DEBUFF_RE`'s shape, or `None` if this is not it."""
     if _X_LIFE_MASS_DEBUFF_RE.fullmatch(effect_text.strip()) is None:
@@ -3285,6 +3301,7 @@ _X_LIFE_RETURN_TYPES_MV_X_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_x_life_return_types_mv_x_clause(effect_text: str) -> Effect | None:
     """`_X_LIFE_RETURN_TYPES_MV_X_RE`'s shape, or `None` if this is not it."""
     match = _X_LIFE_RETURN_TYPES_MV_X_RE.fullmatch(effect_text.strip())
@@ -3400,6 +3417,7 @@ _PUT_CREATURE_MV_X_FROM_HAND_ATTACKING_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_put_creature_mv_x_from_hand_attacking(text: str) -> AbilityEffect | None:
     """`_PUT_CREATURE_MV_X_FROM_HAND_ATTACKING_RE`'s shape; see the banner
     above."""
@@ -3472,6 +3490,7 @@ _IF_GRAVEYARD_COUNT_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_if_graveyard_count_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_IF_GRAVEYARD_COUNT_RE`'s shape: the controller's own graveyard is
     counted as the clause resolves, and the rest runs only at or above the

@@ -89,6 +89,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import AbilityEffect, ClauseEffect, Effect, TargetedClause, _SacrificeRestriction
 
 
@@ -231,6 +232,7 @@ _OPTIONAL_BEHOLD_THEN_IF_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s1")
 def _parse_optional_behold_then_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_OPTIONAL_BEHOLD_THEN_IF_YOU_DO_RE`'s shape, or `None`.
 
@@ -310,6 +312,7 @@ _CHOOSE_TYPE_RETURN_FROM_GRAVEYARD_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s17", for_spell=True)
 def _parse_choose_type_return_from_graveyard_clause(text: str, *, for_spell: bool) -> Effect | None:
     """`_CHOOSE_TYPE_RETURN_FROM_GRAVEYARD_RE`'s shape, or `None`."""
     if not for_spell:
@@ -347,6 +350,7 @@ _CHOOSE_TYPE_DRAW_PER_PERMANENT_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s17", for_spell=True)
 def _parse_choose_type_draw_per_permanent_clause(text: str, *, for_spell: bool) -> Effect | None:
     """`_CHOOSE_TYPE_DRAW_PER_PERMANENT_RE`'s shape, or `None`."""
     if not for_spell:
@@ -542,6 +546,7 @@ _CHOOSE_TARGET_RETURN_CHOSEN_CARD_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s18")
 def _parse_choose_target_return_chosen_card_clause(effect_text: str) -> Effect | None:
     """`_CHOOSE_TARGET_RETURN_CHOSEN_CARD_RE`'s shape - see the banner above.
 
@@ -592,6 +597,7 @@ _CHOOSE_TARGET_EXILE_UNTIL_LEAVES_THEN_INSTEAD_PERMANENT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_choose_target_exile_until_leaves_then_instead_permanent_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -968,6 +974,7 @@ def mode_effect_body(mode: Mode) -> str:
     return mode_effect_text(mode).strip()
 
 
+@ABILITY_TEXT.rung("s16")
 def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
     """A modal *triggered* ability's own "choose one/one or both -" tail
     (CR 700.2, CR 603.3c) - Elder Gargaroth, Abiding Grace, Flash Thompson.
@@ -1176,6 +1183,7 @@ def _moved_quality_understood(quality: str) -> bool:
     )
 
 
+@ABILITY_TEXT.rung("s43")
 def _parse_then_if_moved_this_way_clause(text: str) -> AbilityEffect | None:
     """`_THEN_IF_MOVED_THIS_WAY_RE`'s shape - the first sentence runs, then
     exactly one of `rest` / an optional "Otherwise, ..." branch runs,
@@ -1249,6 +1257,7 @@ _EACH_OPPONENT_CHOOSE_ONE_OF_EACH_TYPE_THEN_SACRIFICE_RE = re.compile(
 _TYPE_ITEM_RE = re.compile(r"^an?\s+(?P<type>[a-z]+)$", re.IGNORECASE)
 
 
+@ABILITY_TEXT.rung("s16")
 def _parse_each_opponent_choose_one_of_each_type_then_sacrifice(
     text: str,
 ) -> AbilityEffect | None:
@@ -1630,6 +1639,7 @@ def _parse_punisher_action(
     return None
 
 
+@ABILITY_TEXT.rung("s7")
 def _parse_any_player_may_punisher_clause(text: str) -> AbilityEffect | None:
     """`_ANY_PLAYER_MAY_PUNISHER_RE`'s shape, or `None`."""
     match = _ANY_PLAYER_MAY_PUNISHER_RE.fullmatch(" ".join(text.strip().split()))
@@ -1672,6 +1682,7 @@ _CHOOSE_TARGETS_THEN_RETURN_TO_HAND_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s12")
 def _parse_choose_targets_then_return_to_hand_pair(text: str) -> Effect | None:
     """`_CHOOSE_TARGETS_THEN_RETURN_TO_HAND_RE`'s shape - Run Away Together.
 
@@ -1723,6 +1734,7 @@ _CHOOSE_TARGET_THEN_RETURN_TO_YOUR_HAND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_choose_target_then_return_to_your_hand_pair(text: str) -> AbilityEffect | None:
     """`_CHOOSE_TARGET_THEN_RETURN_TO_YOUR_HAND_RE`'s shape, or `None`.
 
@@ -1761,6 +1773,7 @@ _CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s12")
 def _parse_choose_target_then_create_token_copies_pair(text: str) -> Effect | None:
     """`_CHOOSE_TARGET_THEN_CREATE_TOKEN_COPIES_RE`'s shape - Rebuild the
     City.
@@ -1823,6 +1836,7 @@ _CITYS_BLESSING_INSTEAD_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14", before=["modal._parse_condition_instead_clause"])
 def _parse_citys_blessing_instead_clause(effect_text: str) -> Effect | None:
     """`_CITYS_BLESSING_INSTEAD_RE`'s shape, or `None`."""
     whole = " ".join(_strip_non_effect_preamble(effect_text).split())
@@ -1866,6 +1880,7 @@ _GIFT_PROMISED_RETURN_INSTEAD_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_gift_promised_return_instead_clause(effect_text: str) -> Effect | None:
     """`_GIFT_PROMISED_RETURN_INSTEAD_RE`'s shape, or `None` if this is not it.
 
@@ -2265,6 +2280,7 @@ _REFLEXIVE_MAY_SACRIFICE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
     """ "You may sacrifice `<restriction>`. When you do, `<consequence>`."
     (CR 603.12), read off the ability's own printed text so no registry row
@@ -2356,6 +2372,7 @@ _REFLEXIVE_MAY_DISCARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_may_discard_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_MAY_DISCARD_RE`'s shape, or `None`.
 
@@ -2451,6 +2468,7 @@ _REFLEXIVE_MAY_PAY_ENERGY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_pay_energy_clause(text: str) -> AbilityEffect | None:
     """ "You may pay {E}{E}{E}. When you do, `<consequence>`." (CR 603.12,
     CR 107.14, CR 118.3) - Guide of Souls' attack trigger, the fixed-amount
@@ -2552,6 +2570,7 @@ _MAY_PAY_ENERGY_IF_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_may_pay_energy_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_MAY_PAY_ENERGY_IF_YOU_DO_RE`'s shape - see its own docstring for why
     this is CR 118.12, not CR 603.12. The consequence is `pay_consequence_
@@ -2588,6 +2607,7 @@ _REFLEXIVE_MANDATORY_MILL_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_mandatory_mill_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_MANDATORY_MILL_RE`'s shape, or `None`.
 
@@ -2639,6 +2659,7 @@ _REFLEXIVE_MAY_PAY_MANA_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_pay_mana_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_MAY_PAY_MANA_RE`'s shape (CR 603.12, CR 601.2h, CR 118.3) -
     `Game.may_pay_mana_cost` asks CR 608.2g's payment question and pays it in
@@ -2684,6 +2705,7 @@ _REFLEXIVE_MAY_PAY_LIFE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_pay_life_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_MAY_PAY_LIFE_RE`'s shape - `Game.may_pay_life` asks CR
     119.4's payment question and pays it in full or not at all, the same
@@ -2733,6 +2755,7 @@ _REFLEXIVE_MAY_PAY_MANA_AND_LIFE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_pay_mana_and_life_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_MAY_PAY_MANA_AND_LIFE_RE`'s shape - see its own docstring."""
     match = _REFLEXIVE_MAY_PAY_MANA_AND_LIFE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
@@ -2788,6 +2811,7 @@ _REFLEXIVE_MAY_TAP_SELF_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_may_tap_self_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_MAY_TAP_SELF_RE`'s shape - see the banner above. An
     already-tapped source, or one that has since left the battlefield,
@@ -2863,6 +2887,7 @@ _REFLEXIVE_MAY_SACRIFICE_OR_DISCARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_sacrifice_or_discard_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_MAY_SACRIFICE_OR_DISCARD_RE`'s shape - see the banner
     above."""
@@ -2967,6 +2992,7 @@ _REFLEXIVE_MODE_BULLET_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_pay_up_to_n_times_choose_modes_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_PAY_UP_TO_N_TIMES_CHOOSE_MODES_RE`'s shape - see the
     banner above. Each mode may be chosen at most once (no "you may choose
@@ -3077,6 +3103,7 @@ _CHOOSE_TARGET_OWNER_MAY_TOP_ELSE_BOTTOM_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s11", for_spell=True)
 def _parse_choose_target_owner_may_top_else_bottom_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -3136,6 +3163,8 @@ _CHOOSE_TARGET_OWNER_SHUFFLES_IT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s17", for_spell=False)
+@SPELL_TEXT.rung("s11", for_spell=True)
 def _parse_choose_target_owner_shuffles_it_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -3174,6 +3203,7 @@ _CHOOSE_CREATURE_TYPE_DESTROY_EXCEPT_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s11", for_spell=True)
 def _parse_choose_creature_type_destroy_except_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -3229,6 +3259,7 @@ _CHOOSE_CREATURE_TYPE_TREASURE_PER_MATCH_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_choose_creature_type_treasure_per_match_clause(text: str) -> AbilityEffect | None:
     """`_CHOOSE_CREATURE_TYPE_TREASURE_PER_MATCH_RE`'s shape; see the banner
     above."""
@@ -3317,6 +3348,7 @@ _REFLEXIVE_DISCARD_COUNT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_reflexive_discard_count_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_DISCARD_COUNT_RE`'s shape, or `None`.
 
@@ -3399,6 +3431,7 @@ _REFLEXIVE_MANDATORY_TOKEN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_mandatory_token_clause(text: str) -> AbilityEffect | None:
     """ "Create `<n>` `<token>` token[s]. When you do, if ..., `<damage>`."
     (CR 603.12, CR 603.4) - Ajani, Nacatl Avenger's `0`.
@@ -3505,6 +3538,7 @@ def _reflexive_counter_count_parts(
     return holds, consequence
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_reflexive_self_counter_if_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_SELF_COUNTER_IF_RE`'s shape (CR 603.12, CR 603.4).
 
@@ -3563,6 +3597,7 @@ _IF_ADDITIONAL_COST_PAID_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_if_additional_cost_paid_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_IF_ADDITIONAL_COST_PAID_RE`'s shape - a resolution-time conditional
     on the spell's own announcement (CR 608.2b), not a triggered ability's
@@ -3589,6 +3624,7 @@ def _parse_if_additional_cost_paid_clause(clause: str, *, for_spell: bool) -> Ta
     return effect
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
@@ -3806,6 +3842,7 @@ _CHOOSE_OPPONENT_AND_CREATURE_REVEAL_EXILE_CHOICE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s10", for_spell=False)
 def _parse_choose_opponent_and_creature_reveal_exile_choice_whole_text(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -3973,6 +4010,7 @@ def _resolve_instead_alternative(base_text: str, alternative_text: str) -> Effec
     return parse_mixed_effect_for_spell(spliced)
 
 
+@SPELL_TEXT.rung("s14", before=["modal._parse_gift_promised_return_instead_clause"])
 def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     """`_CONDITION_INSTEAD_RE`'s shape: the base instruction, or - when the
     condition holds as the spell resolves - the alternative in its place.
@@ -4091,6 +4129,7 @@ def _ability_instead_branch_effect(text: str) -> AbilityEffect | None:
     return parse_mixed_effect(text) or parse_gain_control_untimed_clause(text)
 
 
+@ABILITY_TEXT.rung("s42")
 def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffect | None:
     """`_parse_condition_instead_clause`'s shape on an activated or triggered
     ability: "`<base>`. If `<condition>`, `<alternative>` instead." - Mine
@@ -4404,6 +4443,7 @@ _ANTE_ZONE_TO_GRAVEYARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_ante_self_if_you_do_clause(text: str) -> AbilityEffect | None:
     """Jeweled Bird's whole ability, read as one CR 608.2c instruction.
 
@@ -4465,6 +4505,7 @@ _CHOOSE_A_CARD_NAME_EFFECT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s3")
 def _parse_choose_card_name_for_source_clause(text: str) -> AbilityEffect | None:
     """`_CHOOSE_A_CARD_NAME_EFFECT_RE`'s shape: ask the ability's controller
     for a card name, refuse one whose Oracle text does not match the printed
@@ -4676,6 +4717,7 @@ _LEADING_IF_CLAUSE_RE = re.compile(r"^if (?P<condition>.+?), (?P<consequence>.+)
 _TRAILING_IF_CLAUSE_RE = re.compile(r"^(?P<consequence>.+?) if (?P<condition>.+)$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s36", for_spell=FORWARD)
 def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_LEADING_IF_CLAUSE_RE`/`_TRAILING_IF_CLAUSE_RE`'s shape - see the
     banner above for the two word orders and why this is tried this late.
@@ -4799,6 +4841,7 @@ _REFLEXIVE_MAY_EXILE_DEAD_SELF_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s37", for_spell=False)
 def _parse_reflexive_may_exile_dead_self_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -4986,6 +5029,8 @@ _YOU_WIN_THE_GAME_IF_CONDITION_RE = re.compile(
 _YOU_WIN_THE_GAME_RE = re.compile(r"^you win the game\.?$", re.IGNORECASE)
 
 
+@SPELL_TEXT.rung("s2", for_spell=True)
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_if_condition_you_win_the_game_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -5121,6 +5166,7 @@ _CHOOSE_NEW_TARGETS_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_choose_new_targets_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_CHOOSE_NEW_TARGETS_RE`'s shape - Deflecting Swat's second sentence.
 
@@ -5195,6 +5241,7 @@ _SINGLE_TOKEN_CLAUSE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_kicked_choose_return_delayed_clause(effect_text: str) -> Effect | None:
     """`_KICKED_CHOOSE_RETURN_DELAYED_RE`'s shape.
 

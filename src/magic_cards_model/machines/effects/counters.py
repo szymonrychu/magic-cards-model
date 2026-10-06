@@ -64,6 +64,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import _SELF_ANAPHOR, _SPELL_QUALIFIER, AbilityEffect, Effect, TargetedClause
 
 #: "Put a number of `<kind>` counters on it/this `<noun>`/`<Name>` equal to
@@ -83,6 +84,7 @@ _COUNTERS_EQUAL_TO_ON_OBJECT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s26")
 def _parse_put_counters_equal_to_clause(text: str) -> AbilityEffect | None:
     """`_COUNTERS_EQUAL_TO_ON_OBJECT_RE`'s shape (CR 122.1, 608.2c).
 
@@ -172,6 +174,7 @@ _PUT_COUNTER_THEN_FOR_EACH_COUNTER_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s1")
 def _parse_put_counter_then_for_each_counter_punisher_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -232,6 +235,7 @@ _MOVE_COUNTER_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_move_counter_clause(text: str) -> AbilityEffect | None:
     """CR 122.5: "to 'move' a counter ... means to remove that counter from
     the object it's currently on and put it onto a second object. If either
@@ -350,6 +354,7 @@ _COUNTER_EACH_OTHER_CREATURE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
 def _parse_counter_each_other_creature_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -407,6 +412,7 @@ _COUNTER_EACH_CREATURE_WITH_COUNTER_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s15", for_spell=FORWARD)
 def _parse_counter_each_creature_with_counter_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -460,6 +466,7 @@ _COUNTER_EACH_ATTACKED_THIS_TURN_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s14")
 def _parse_counter_each_attacked_this_turn_clause(clause: str) -> AbilityEffect | None:
     """`_COUNTER_EACH_ATTACKED_THIS_TURN_RE`'s shape, or `None`.
 
@@ -486,6 +493,7 @@ def _parse_counter_each_attacked_this_turn_clause(clause: str) -> AbilityEffect 
     return effect
 
 
+@ABILITY_TEXT.rung("s26")
 def _parse_put_counters_on_group_clause(
     text: str, *, for_spell: bool = False
 ) -> AbilityEffect | None:
@@ -650,6 +658,7 @@ _COUNTERS_ON_NAMED_GROUP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s26")
 def _parse_counters_on_named_group_clause(text: str) -> AbilityEffect | None:
     """`_COUNTERS_ON_NAMED_GROUP_RE`'s shape, or `None`.
 
@@ -762,6 +771,7 @@ _DISTRIBUTE_COUNTERS_AMONG_TARGETS_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_distribute_counters_among_targets_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -871,6 +881,7 @@ _DISTRIBUTE_COUNTERS_AMONG_YOU_CONTROL_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s27")
 def _parse_distribute_counters_among_you_control_clause(clause: str) -> Effect | None:
     """`_DISTRIBUTE_COUNTERS_AMONG_YOU_CONTROL_RE`'s shape, or `None`."""
     match = _DISTRIBUTE_COUNTERS_AMONG_YOU_CONTROL_RE.fullmatch(clause.strip())
@@ -1014,6 +1025,7 @@ def _parse_two_counters_on_self_clause(text: str, *, for_spell: bool) -> Ability
     return effect
 
 
+@ABILITY_TEXT.rung("s26")
 def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     """`_COUNTER_ON_SELF_RE`'s shape - Walking Ballista's `{4}` ability and
     The Filigree Sylex's `{T}` ability (CR 122.1), Heroes' Bane's own
@@ -1129,6 +1141,7 @@ _PUT_UP_TO_N_COUNTERS_ON_SELF_CAPPED_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s26")
 def _parse_put_up_to_n_counters_on_self_capped_clause(text: str) -> AbilityEffect | None:
     """`_PUT_UP_TO_N_COUNTERS_ON_SELF_CAPPED_RE`'s shape; see the banner
     above."""
@@ -1222,6 +1235,7 @@ _COUNTER_COUNT_COMPARISONS: dict[str, Callable[[int, int], bool]] = {
 }
 
 
+@ABILITY_TEXT.rung("s26")
 def _parse_put_counter_on_self_then_if_count_clause(text: str) -> AbilityEffect | None:
     """`_PUT_COUNTER_ON_SELF_THEN_IF_COUNT_RE`'s shape - Ayara's Oathsworn.
 
@@ -1272,6 +1286,7 @@ def _parse_put_counter_on_self_then_if_count_clause(text: str) -> AbilityEffect 
 _ADAPT_RE = re.compile(r"^adapt (?P<n>\d+)\.?$", re.IGNORECASE)
 
 
+@ABILITY_TEXT.rung("s26")
 def _parse_adapt_clause(text: str) -> AbilityEffect | None:
     """CR 701.46a's "Adapt N" - see `_ADAPT_RE`.
 
@@ -1313,6 +1328,7 @@ _ENDURE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s26")
 def _parse_endure_clause(text: str) -> AbilityEffect | None:
     """CR 701.63a's "endure N" - see `_ENDURE_RE`.
 
@@ -1374,6 +1390,7 @@ def _parse_endure_clause(text: str) -> AbilityEffect | None:
 _MONSTROSITY_RE = re.compile(r"^monstrosity (?P<n>\d+)\.?$", re.IGNORECASE)
 
 
+@ABILITY_TEXT.rung("s26")
 def _parse_monstrosity_clause(text: str) -> AbilityEffect | None:
     """CR 701.37a's "Monstrosity N" - see `_MONSTROSITY_RE`.
 
@@ -1541,6 +1558,7 @@ _REMOVE_TIME_COUNTER_SELF_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_remove_time_counter_from_self_clause(text: str) -> AbilityEffect | None:
     """`_REMOVE_TIME_COUNTER_SELF_RE`'s shape - Greater Gargadon's suspend-
     only sacrifice ability (CR 702.62a, CR 702.62b).
@@ -1596,6 +1614,8 @@ _REMOVE_ALL_COUNTERS_FROM_TARGET_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
+@MIXED_CLAUSE.rung("s16")
 def _parse_remove_all_counters_from_target_clause(text: str) -> AbilityEffect | None:
     """`_REMOVE_ALL_COUNTERS_FROM_TARGET_RE`'s shape.
 
@@ -1710,6 +1730,7 @@ _REMOVE_ALL_COUNTERS_FROM_EACH_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_remove_all_counters_from_each_clause(text: str) -> TargetedClause | None:
     """`_REMOVE_ALL_COUNTERS_FROM_EACH_RE`'s shape; see the banner above."""
     match = _REMOVE_ALL_COUNTERS_FROM_EACH_RE.fullmatch(text.strip())
@@ -1751,6 +1772,8 @@ _REMOVE_UP_TO_N_COUNTERS_FROM_TARGET_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
+@MIXED_CLAUSE.rung("s16")
 def _parse_remove_up_to_n_counters_from_target_clause(text: str) -> AbilityEffect | None:
     """`_REMOVE_UP_TO_N_COUNTERS_FROM_TARGET_RE`'s shape; see the banner above."""
     match = _REMOVE_UP_TO_N_COUNTERS_FROM_TARGET_RE.fullmatch(text.strip())
@@ -1800,6 +1823,7 @@ _PUT_ITS_COUNTERS_ON_TARGET_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s29", for_spell=False)
 def _parse_put_its_counters_on_target_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_PUT_ITS_COUNTERS_ON_TARGET_RE`'s shape; see the banner above."""
     if for_spell:
@@ -1851,6 +1875,7 @@ _DOUBLE_COUNTERS_ON_GROUP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_double_counters_on_group_clause(text: str) -> AbilityEffect | None:
     """`_DOUBLE_COUNTERS_ON_GROUP_RE`'s shape - Kalonian Hydra's "double the
     number of +1/+1 counters on each creature you control" (CR 701.10e).
@@ -1973,6 +1998,7 @@ _COUNTER_ON_ADDITIONAL_COST_CARD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s24")
 def _parse_counter_on_additional_cost_card_clause(clause: str) -> TargetedClause | None:
     """`_COUNTER_ON_ADDITIONAL_COST_CARD_RE`'s shape, or `None` if not it."""
     match = _COUNTER_ON_ADDITIONAL_COST_CARD_RE.fullmatch(clause.strip())
@@ -2118,6 +2144,7 @@ _PUT_COUNTERS_ON_TARGET_WHERE_X_IS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_put_counters_on_target_where_x_is_clause(text: str) -> AbilityEffect | None:
     """`_PUT_COUNTERS_ON_TARGET_WHERE_X_IS_RE`'s shape - see its own docstring."""
     match = _PUT_COUNTERS_ON_TARGET_WHERE_X_IS_RE.fullmatch(text.strip())
@@ -2203,6 +2230,7 @@ _COUNTERS_MORE_IF_SUBTYPE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s23")
 def _parse_counters_more_if_subtype_clause(text: str) -> AbilityEffect | None:
     """`_COUNTERS_MORE_IF_SUBTYPE_RE`'s shape, ability-side."""
     match = _COUNTERS_MORE_IF_SUBTYPE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
@@ -2256,6 +2284,7 @@ _COUNTER_ON_SUBJECT_AND_SHARED_TYPE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_counter_on_subject_and_shared_type_clause(text: str) -> AbilityEffect | None:
     """`_COUNTER_ON_SUBJECT_AND_SHARED_TYPE_RE`'s shape; see the banner
     above. CR 122.1c: counters never change a creature's own types or
@@ -2463,6 +2492,7 @@ _REMOVE_N_COUNTERS_FROM_SELF_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_remove_n_counters_from_self_clause(text: str) -> AbilityEffect | None:
     """`_REMOVE_N_COUNTERS_FROM_SELF_RE`'s shape; see the banner above."""
     match = _REMOVE_N_COUNTERS_FROM_SELF_RE.fullmatch(text.strip())
@@ -3017,6 +3047,7 @@ _MAY_REMOVE_COUNTER_FROM_SELF_IF_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s19", for_spell=False)
 def _parse_conditional_remove_counter_from_self_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -3142,6 +3173,7 @@ _COUNTER_EACH_CREATURE_TARGET_PLAYER_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_counter_each_creature_target_player_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -3185,6 +3217,7 @@ def _parse_counter_each_creature_target_player_clause(
 _BECOMES_RENOWNED_RE = re.compile(r"^(?:it|this creature) becomes renowned\.?$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s17", for_spell=FORWARD)
 def _parse_renown_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "It becomes renowned" (CR 702.112a/b): the ability's source becomes
     renowned - if it is still the permanent the ability came from (CR 400.7),
@@ -3317,6 +3350,8 @@ _FOR_EACH_OPPONENT_COUNTERS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s29", for_spell=False)
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_for_each_opponent_counters_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """ "For each opponent, put X `<kind>` counters on up to one target `<X>`
     that player controls[, where X is `<expr>`]." - Hapatra, the Desert
@@ -3380,6 +3415,7 @@ _EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_event_subject_counters_and_keywords_clause(text: str) -> AbilityEffect | None:
     """`_EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE`'s shape."""
     match = _EVENT_SUBJECT_COUNTERS_AND_KEYWORDS_RE.fullmatch(" ".join(text.strip().split()))
@@ -3423,6 +3459,7 @@ _PUT_SELF_COUNTER_FOR_EACH_OPPONENT_CREATURE_THEN_ATTACH_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_put_self_counter_for_each_opponent_creature_then_attach_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -3500,6 +3537,7 @@ _PUT_N_COUNTERS_ON_SELF_THEN_DRAW_HALF_N_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s3")
 def _parse_put_n_counters_on_self_then_draw_half_n_clause(text: str) -> AbilityEffect | None:
     """`_PUT_N_COUNTERS_ON_SELF_THEN_DRAW_HALF_N_RE`'s shape - see its own
     docstring."""
@@ -3542,6 +3580,7 @@ _LOYALTY_INSTANT_SPEED_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s8", for_spell=FORWARD)
 def _parse_loyalty_instant_speed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_LOYALTY_INSTANT_SPEED_RE`'s shape."""
     match = _LOYALTY_INSTANT_SPEED_RE.fullmatch(clause.strip())
@@ -3588,6 +3627,7 @@ _PROLIFERATE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s9")
 def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
     """`_PROLIFERATE_RE`'s shape.
 
@@ -3679,6 +3719,7 @@ def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
     return effect
 
 
+@MIXED_CLAUSE.rung("s37", for_spell=FORWARD)
 def _parse_minus_counters_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`machines/minus_counters.parse_resolution_text`, tried as one more
     entry in `_parse_mixed_clause`'s own dispatch chain below.
@@ -3716,6 +3757,7 @@ _REMOVE_ALL_COUNTERS_THEN_THAT_MANY_RE = re.compile(
 _INTERVENING_COUNTER_KIND_RE = re.compile(r"\b(?P<kind>[a-z0-9+/-]+) counters? on it$")
 
 
+@ABILITY_TEXT.rung("s13")
 def _parse_remove_all_counters_then_that_many_clause(text: str) -> AbilityEffect | None:
     """`_REMOVE_ALL_COUNTERS_THEN_THAT_MANY_RE`'s shape, or `None`.
 
@@ -3797,6 +3839,8 @@ def _counter_exile_quality_holds(spell: CardState, quality: str | None) -> bool:
     return word in types
 
 
+@ABILITY_TEXT.rung("s9")
+@SPELL_TEXT.rung("s14")
 def _parse_counter_exile_may_cast_free_clause(effect_text: str) -> TargetedClause | None:
     """`_COUNTER_EXILE_MAY_CAST_FREE_RE`'s shape, read whole: the three
     sentences are one CR 608.2c instruction, "it" and "that card" both CR

@@ -58,6 +58,7 @@ from ..turn import Step
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
     from ..layers import Modification
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import AbilityEffect, Effect, TargetedClause, _CreatureRider
 
 #: The rider of a return from the graveyard that makes the card a creature it
@@ -199,6 +200,8 @@ def _return_as_creature(
             store.add(built, game)
 
 
+@ABILITY_TEXT.rung("s14")
+@SPELL_TEXT.rung("s14")
 def _parse_return_as_creature_clause(text: str) -> TargetedClause | None:
     """Brilliance Unleashed's mode (`_CHOOSE_RETURN_OTHERWISE_CREATURE_RE`)
     or Abuelo's Awakening (`_RETURN_THEN_ITS_A_CREATURE_RE`), on a spell or
@@ -259,6 +262,7 @@ _RETURN_SELF_THEN_CREATE_TOKENS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s16")
 def _parse_return_self_then_create_tokens_clause(text: str) -> AbilityEffect | None:
     """`_RETURN_SELF_THEN_CREATE_TOKENS_RE`'s shape - Thopter Assembly's whole
     upkeep trigger (CR 401's return, CR 111.9's token creation).
@@ -297,6 +301,7 @@ _RETURN_SELF_TO_OWNERS_HAND_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_return_self_to_owners_hand_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -467,6 +472,7 @@ _RETURN_A_LAND_YOU_CONTROL_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
     """`_RETURN_A_LAND_YOU_CONTROL_RE`'s shape - a Karoo-cycle bounce land's
     own ETB trigger, or Khalni Gem's own printed-N one.
@@ -655,6 +661,7 @@ _RETURN_CARDS_FROM_YOUR_GRAVEYARD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_return_cards_from_your_graveyard_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -758,6 +765,7 @@ _RETURN_A_CARD_AT_RANDOM_FROM_GRAVEYARD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_return_a_card_at_random_from_graveyard_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -813,6 +821,7 @@ _RETURN_IMPRINTED_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_return_imprinted_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """The other half of the imprint shape: giving the linked card back.
 
@@ -849,6 +858,8 @@ _FOR_EACH_OPPONENT_RETURN_TO_HAND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s29", for_spell=False)
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_for_each_opponent_return_to_hand_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -893,6 +904,7 @@ _PUT_CREATURE_FROM_HAND_ATTACKING_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_put_creature_from_hand_attacking_then_return(text: str) -> AbilityEffect | None:
     """`_PUT_CREATURE_FROM_HAND_ATTACKING_RE`'s shape - Ilharg's attack trigger.
 
@@ -1378,6 +1390,7 @@ _RETURN_TARGET_CARD_THEN_INSTEAD_BATTLEFIELD_IF_COST_PAID_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_return_target_card_then_instead_battlefield_if_cost_paid_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -1453,6 +1466,7 @@ _ZONE_BY_NAME: dict[str, Zone] = {
 }
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_self_return_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Return this card from your `<zone>` to your `<zone>`." - a plain
     zone change of the ability's own source, read off the clause's own words
@@ -1504,6 +1518,7 @@ def _parse_self_return_clause(clause: str, *, for_spell: bool) -> TargetedClause
 _RETURN_IT_TO_OWNERS_HAND_RE = re.compile(r"^return it to its owner'?s hand$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_return_dead_self_to_hand_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1591,6 +1606,7 @@ _RETURN_EACH_OTHER_ENTERED_THIS_TURN_TO_HAND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s37", for_spell=False)
 def _parse_mass_return_entered_this_turn_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -1666,6 +1682,8 @@ _RETURN_TARGET_AND_SAME_NAME_FROM_GRAVEYARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s37", for_spell=False)
+@SPELL_TEXT.rung("s5", for_spell=True)
 def _parse_return_target_and_same_name_from_graveyard_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1892,6 +1910,7 @@ _RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_return_self_from_graveyard_to_battlefield_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1951,6 +1970,7 @@ _RETURN_SELF_FROM_GRAVEYARD_ATTACHED_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_return_self_from_graveyard_to_battlefield_attached_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2043,6 +2063,7 @@ _RETURN_SELF_AS_TYPE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s23")
 def _parse_return_self_as_type_clause(text: str) -> AbilityEffect | None:
     """`_RETURN_SELF_AS_TYPE_RE`'s shape.
 
@@ -2101,6 +2122,8 @@ def _parse_return_self_as_type_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s24", for_spell=False)
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_return_self_to_battlefield_transformed_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2170,6 +2193,7 @@ _RETURN_EVENT_SUBJECT_TO_BATTLEFIELD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_return_event_subject_to_battlefield_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2225,6 +2249,7 @@ _MASS_RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_mass_return_from_graveyard_to_battlefield_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2271,6 +2296,7 @@ _MASS_RETURN_FROM_GRAVEYARD_TO_HAND_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_mass_return_from_graveyard_to_hand_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2310,6 +2336,7 @@ _MASS_RETURN_TO_HAND_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_mass_return_to_hand_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_MASS_RETURN_TO_HAND_RE`'s shape - Sunderflock's "return all
     non-Elemental creatures to their owners' hands."
@@ -2374,6 +2401,7 @@ _RETURN_TARGET_THEN_CONDITIONAL_DRAW_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s21")
 def _parse_return_target_then_conditional_draw(text: str) -> Effect | None:
     """`_RETURN_TARGET_THEN_CONDITIONAL_DRAW_RE`'s shape - Boomerang Basics.
 
@@ -2429,6 +2457,7 @@ _RETURN_TARGET_FROM_GRAVEYARD_GAINS_THEN_BOUNCE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_return_target_from_graveyard_gains_then_bounce(text: str) -> AbilityEffect | None:
     """`_RETURN_TARGET_FROM_GRAVEYARD_GAINS_THEN_BOUNCE_RE`'s shape -
     Greasefang, Okiba Boss's own combat trigger.
@@ -2502,6 +2531,7 @@ _RETURN_UP_TO_N_TOTAL_MV_FROM_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s22")
 def _parse_return_up_to_n_total_mv_from_graveyard_to_battlefield(text: str) -> Effect | None:
     """`_RETURN_UP_TO_N_TOTAL_MV_FROM_GRAVEYARD_TO_BATTLEFIELD_RE`'s shape,
     or `None`. Both bounds are the choosing player's own to respect, refused

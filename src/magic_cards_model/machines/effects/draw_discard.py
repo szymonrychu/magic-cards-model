@@ -49,6 +49,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import AbilityEffect, ClauseEffect, Effect, TargetedClause
 
 
@@ -102,6 +103,7 @@ _DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s16")
 def _parse_discard_then_draw_token_per_nonland_clause(text: str) -> AbilityEffect | None:
     """`_DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE`'s shape - Seasoned
     Pyromancer's whole enters-the-battlefield trigger.
@@ -164,6 +166,7 @@ def _parse_discard_then_draw_token_per_nonland_clause(text: str) -> AbilityEffec
     return effect
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_draw_cards_equal_to_count_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -291,6 +294,7 @@ def _land_cards_in_hand(player: Player) -> list[CardState]:
     return [state for state in player.hand if Type.LAND in state.types]
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_put_land_from_hand_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_PUT_LAND_FROM_HAND_RE`'s shape - Arboreal Grazer's whole trigger, or
     Wrenn and Seven's loyalty 0.
@@ -431,6 +435,7 @@ _TARGET_PLAYER_MAY_PUT_CARD_FROM_HAND_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_target_player_may_put_card_from_hand_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -511,6 +516,7 @@ _PUT_LAND_FROM_HAND_REPEAT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s16")
 def _parse_put_land_from_hand_repeat_clause(text: str) -> AbilityEffect | None:
     """`_PUT_LAND_FROM_HAND_REPEAT_RE`'s shape.
 
@@ -573,6 +579,7 @@ _DRAW_THEN_PUT_LAND_CAVE_BONUS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s16")
 def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | None:
     """`_DRAW_THEN_PUT_LAND_CAVE_BONUS_RE`'s shape - Spelunking's whole enters
     trigger. CR 305.6: "Cave" is a land subtype like any other, so `has_land_
@@ -797,6 +804,7 @@ _DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s10")
 def _parse_draw_x_from_target_graveyard_from_library_clause(text: str) -> Effect | None:
     """`_DRAW_X_FROM_TARGET_GRAVEYARD_FROM_LIBRARY_RE`'s shape - see the
     banner above."""
@@ -828,6 +836,7 @@ def _parse_draw_x_from_target_graveyard_from_library_clause(text: str) -> Effect
 _POWER_OF_TWO_DRAW_RE = re.compile(r"^target player draws 2ˣ cards\.?$", re.IGNORECASE)
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_power_of_two_draw_clause(effect_text: str) -> Effect | None:
     """`_POWER_OF_TWO_DRAW_RE`'s shape, or `None`."""
     rules_text, _reminder = strip_reminder_text(effect_text.strip())
@@ -864,6 +873,7 @@ _DRAW_CARDS_EQUAL_TO_TARGET_HAND_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_draw_cards_equal_to_target_hand_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1175,6 +1185,8 @@ _MAY_DISCARD_OR_SACRIFICE_IF_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s19", for_spell=False)
+@SPELL_TEXT.rung("s15", for_spell=True)
 def _parse_may_discard_or_sacrifice_if_you_do_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1292,6 +1304,7 @@ _DISCARD_HAND_DRAW_X_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_discard_hand_draw_x_clause(text: str) -> AbilityEffect | None:
     """`_DISCARD_HAND_DRAW_X_RE`'s shape, or None - an unreadable rider
     condition reads nothing rather than dropping the rider."""
@@ -1343,6 +1356,7 @@ _FEWER_THAN_N_CARDS_IN_HAND_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s4", for_spell=FORWARD)
 def _parse_draw_the_difference_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_DRAW_THE_DIFFERENCE_RE`, on a triggered ability whose intervening if
     is `_FEWER_THAN_N_CARDS_IN_HAND_RE`: its controller draws N minus the
@@ -1449,6 +1463,7 @@ _TARGET_PLAYER_DISCARDS_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_target_player_discards_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Target player discards N cards." (CR 701.9a), CR 701.9b's default
     chooser untouched - unlike Thoughtseize's own discard
@@ -1519,6 +1534,7 @@ _EACH_OPPONENT_DISCARDS_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_each_opponent_discards_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_EACH_OPPONENT_DISCARDS_RE`'s shape - CR 701.9a/701.9b/CR 102.2, no
     target at all (an opponent is not a target, CR 115.1) and no shortfall
@@ -1578,6 +1594,7 @@ _TARGET_PLAYER_DRAWS_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_TARGET_PLAYER_DRAWS_RE`'s shape, or `None` if this is not it."""
     match = _TARGET_PLAYER_DRAWS_RE.fullmatch(clause.strip())
@@ -1609,6 +1626,7 @@ _N_TARGET_PLAYERS_EACH_DRAW_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_n_target_players_each_draw_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1684,6 +1702,7 @@ _EACH_PLAYER_MAY_DISCARD_HAND_DRAW_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s25", for_spell=FORWARD)
 def _parse_each_player_may_discard_hand_and_draw_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -1731,6 +1750,7 @@ _DRAW_IF_YOU_CONTROL_COLOR_PERMANENT_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_draw_if_you_control_color_permanent_clause(clause: str) -> TargetedClause | None:
     """`_DRAW_IF_YOU_CONTROL_COLOR_PERMANENT_RE`'s shape, or `None`."""
     match = _DRAW_IF_YOU_CONTROL_COLOR_PERMANENT_RE.fullmatch(clause.strip())
@@ -1786,6 +1806,7 @@ _TARGET_OPPONENT_DRAW_THEN_COPY_THAT_SPELL_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_target_opponent_draw_then_copy_that_spell_clause(text: str) -> AbilityEffect | None:
     """`_TARGET_OPPONENT_DRAW_THEN_COPY_THAT_SPELL_RE`'s shape - Alania,
     Divergent Storm's whole cast trigger (CR 121.1's draw; CR 707.10's copy,
@@ -1845,6 +1866,7 @@ _DRAW_THEN_DELAYED_DISCARD_AT_RANDOM_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_draw_then_delayed_discard_at_random_clause(text: str) -> AbilityEffect | None:
     """`_DRAW_THEN_DELAYED_DISCARD_AT_RANDOM_RE`'s shape, or `None`."""
     match = _DRAW_THEN_DELAYED_DISCARD_AT_RANDOM_RE.fullmatch(" ".join(text.strip().split()))
@@ -2076,6 +2098,9 @@ _PUT_PERMANENT_CARD_FROM_HAND_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s6", for_spell=False)
+@SPELL_TEXT.rung("s4", for_spell=True)
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_put_permanent_card_from_hand_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2275,6 +2300,7 @@ def _parse_draw_then_discard_unless_shape(
     return _draw_then_discard_unless_runner(draw, penalty, predicate, quality)
 
 
+@SPELL_TEXT.rung("s22")
 def _parse_draw_then_discard_unless(text: str) -> Effect | None:
     """`_DRAW_THEN_DISCARD_UNLESS_RE`'s shape on a resolving spell -
     Winternight Stories, Mystic Meditation, Thirst for Identity."""
@@ -2288,6 +2314,7 @@ def _parse_draw_then_discard_unless(text: str) -> Effect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_draw_then_discard_unless_ability(text: str) -> AbilityEffect | None:
     """`_DRAW_THEN_DISCARD_UNLESS_RE`'s shape on an activated or triggered
     ability instead of a spell - Invasion of New Phyrexia // Teferi Akosa of
@@ -2320,6 +2347,7 @@ _DRAW_EQUAL_TO_SACRIFICED_CREATURE_POWER_THEN_DISCARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_draw_equal_to_sacrificed_creature_power_then_discard_clause(
     text: str,
 ) -> AbilityEffect | None:

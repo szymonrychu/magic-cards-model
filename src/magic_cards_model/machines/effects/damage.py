@@ -66,6 +66,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import _OBJECT_ANAPHOR, AbilityEffect, Effect, GroupPredicate, TargetedClause
 
 
@@ -271,6 +272,7 @@ _DELIRIUM_DAMAGE_INSTEAD_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s12")
 def _parse_delirium_damage_instead_clause(text: str) -> Effect | None:
     """`_DELIRIUM_DAMAGE_INSTEAD_RE`'s shape - Unholy Heat's whole text.
 
@@ -372,6 +374,7 @@ _PREVENT_ALL_DAMAGE_TO_YOU_UNTIL_NEXT_TURN_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s6")
 def _parse_prevent_all_damage_to_you_until_next_turn_clause(clause: str) -> TargetedClause | None:
     """`_PREVENT_ALL_DAMAGE_TO_YOU_UNTIL_NEXT_TURN_RE`'s shape, or `None`."""
     if _PREVENT_ALL_DAMAGE_TO_YOU_UNTIL_NEXT_TURN_RE.fullmatch(clause.strip()) is None:
@@ -409,6 +412,7 @@ _PREVENT_ALL_DAMAGE_TO_SELF_THIS_TURN_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s7", for_spell=FORWARD)
 def _parse_prevent_all_damage_to_self_this_turn_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -720,6 +724,7 @@ _DAMAGE_THAT_PLAYER_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s19", for_spell=False)
 def _parse_damage_that_player_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_DAMAGE_THAT_PLAYER_RE`'s shape; see the banner above."""
     if for_spell:
@@ -794,6 +799,7 @@ _CANT_GAIN_LIFE_REST_OF_GAME_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s19", for_spell=False)
 def _parse_damage_that_much_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_DAMAGE_THAT_MUCH_RE`'s shape; see the banner above.
 
@@ -1187,6 +1193,7 @@ def _deal_divided_damage_then_retaliate_shares(
             game.deal_damage(source, power, source=creature)
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_divided_damage_then_retaliate_clause(text: str) -> AbilityEffect | None:
     """`_DIVIDED_DAMAGE_THEN_RETALIATE_RE`'s shape, or `None`."""
     match = _DIVIDED_DAMAGE_THEN_RETALIATE_RE.fullmatch(" ".join(text.split()))
@@ -1228,6 +1235,7 @@ _DEALS_DAMAGE_LOSE_LIFE_THEN_TRANSFORM_IF_LOW_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_deals_damage_lose_life_then_transform_if_low_clause(text: str) -> AbilityEffect | None:
     """`_DEALS_DAMAGE_LOSE_LIFE_THEN_TRANSFORM_IF_LOW_RE`'s shape."""
     if _DEALS_DAMAGE_LOSE_LIFE_THEN_TRANSFORM_IF_LOW_RE.fullmatch(text.strip()) is None:
@@ -1310,6 +1318,8 @@ _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s42")
+@SPELL_TEXT.rung("s18")
 def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Any:
     """`_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE`'s shape, on a spell or an
     activated or triggered ability, whose damage source is the ability's
@@ -1369,6 +1379,7 @@ def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Any
     return effect
 
 
+@SPELL_TEXT.rung("s18")
 def _parse_damage_target_kicked_instead_clause(effect_text: str) -> Effect | None:
     """`_DAMAGE_TARGET_KICKED_INSTEAD_RE`'s shape, or `None` if this is not it."""
     whole = _strip_non_effect_preamble(effect_text).strip()
@@ -1424,6 +1435,7 @@ _DAMAGE_THEN_EMPOWER_IF_EXCESS_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s18")
 def _parse_damage_then_empower_if_excess_clause(effect_text: str) -> Effect | None:
     """`_DAMAGE_THEN_EMPOWER_IF_EXCESS_RE`'s shape, or `None` if this is not
     it.
@@ -1528,6 +1540,7 @@ _DAMAGE_EQUAL_TO_THAT_SPELLS_MV_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s10", for_spell=FORWARD)
 def _parse_damage_equal_to_that_spells_mv_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -1671,6 +1684,8 @@ _PREVENT_DAMAGE_DEALT_BY_TARGET_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s8")
+@SPELL_TEXT.rung("s8")
 def _parse_prevent_damage_dealt_by_target_clause(text: str) -> TargetedClause | None:
     """`_PREVENT_DAMAGE_DEALT_BY_TARGET_RE`'s shape, on a spell or an ability."""
     match = _PREVENT_DAMAGE_DEALT_BY_TARGET_RE.fullmatch(" ".join(text.strip().split()))
@@ -1778,6 +1793,7 @@ _FIREBENDING_ADD_MANA_RE = re.compile(
 _FIREBENDING_X_IS_POWER_RE = re.compile(r"^this creature'?s power$", re.IGNORECASE)
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_firebending_add_mana(text: str) -> AbilityEffect | None:
     """CR 702.189a's "add N {R}", off the triggered ability keyword expansion.
 
@@ -1854,6 +1870,7 @@ _SELF_DAMAGE_EQUAL_TO_COUNT_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s19", for_spell=FORWARD)
 def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_SELF_DAMAGE_EQUAL_TO_COUNT_RE`'s shape; see the banner above.
 
@@ -1932,6 +1949,7 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
     return effect
 
 
+@MIXED_CLAUSE.rung("s35", before=["damage._parse_damage_each_filtered_clause"])
 def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
     """`_DAMAGE_EACH_GROUP_RE`'s shape: simultaneous, non-targeted damage
     (CR 120.1) to every permanent presently on the battlefield matching one of
@@ -2001,6 +2019,8 @@ _DAMAGE_TARGET_PLAYER_AND_THEIR_CREATURES_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
+@SPELL_TEXT.rung("s10")
 def _parse_damage_target_player_and_their_creatures_clause(
     text: str,
 ) -> TargetedClause | None:
@@ -2269,6 +2289,7 @@ _DAMAGE_FILTER_KEYWORDS = frozenset(
 )
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
     """`_DAMAGE_EACH_FILTERED_RE`'s shape: simultaneous, non-targeted damage
     (CR 120.1, CR 608.2f) to every permanent on the battlefield matching the
@@ -2416,6 +2437,7 @@ _DEALT_DAMAGE_QUALITY_TYPES: dict[str, Type] = {
 }
 
 
+@SPELL_TEXT.rung("s6")
 def _parse_dealt_damage_this_way_die_to_exile(text: str) -> Effect | None:
     """A damage-dealing spell followed by "If a `<quality>` dealt damage this
     way would die this turn, exile it instead." (CR 614.1a, CR 700.4).
@@ -2528,6 +2550,7 @@ _SELF_FIGHTS_TARGET_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
 def _parse_self_fights_target_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "[It/This creature] fights up to one target creature ..." with no
     antecedent sentence to derive a referent from - CR 109.2's plain
@@ -2583,6 +2606,7 @@ _ENCHANTED_CREATURE_FIGHTS_TARGET_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
 def _parse_enchanted_creature_fights_target_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2628,6 +2652,7 @@ _TARGET_FIGHTS_TARGET_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
 def _parse_target_fights_target_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "<target X> fights <target Y>." - both fighters this clause's own,
     independent targets (Yoshimaru, Scrappy Stray's own ETB; the real,
@@ -2685,6 +2710,7 @@ _BITE_DAMAGE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
 def _parse_bite_damage_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Target creature you control deals damage equal to its power to
     target `<X>`." / "... planeswalker you control deals damage equal to its
@@ -2841,6 +2867,7 @@ _UNTIL_END_OF_TURN_SELF_COMBAT_DAMAGE_DRAW_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20", before=["tokens._parse_created_trigger_ability_text"])
 def _parse_until_end_of_turn_self_combat_damage_draw_clause(text: str) -> AbilityEffect | None:
     match = _UNTIL_END_OF_TURN_SELF_COMBAT_DAMAGE_DRAW_RE.fullmatch(
         _strip_non_effect_preamble(text).strip()
@@ -2952,6 +2979,7 @@ def airbend(game: "Game", objects: list[CardState], player: str | None = None) -
     _record_bending(game, "airbent", ExtraTriggerEvent.AIRBENDS, player)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_airbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Airbend ... target ..." - see `_AIRBEND_RE` and the section note.
 
@@ -3127,6 +3155,7 @@ def earthbend(
     _record_bending(game, "earthbent", ExtraTriggerEvent.EARTHBENDS, controller)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Earthbend N." or "Earthbend X, where X is `<expr>`." - the whole of
     a spell's or an ability's effect text once any trigger condition ("When
@@ -3246,6 +3275,7 @@ _DAMAGE_TO_THAT_SPELLS_CONTROLLER_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_damage_to_that_spells_controller_clause(text: str) -> AbilityEffect | None:
     """`_DAMAGE_TO_THAT_SPELLS_CONTROLLER_RE`'s shape - Bonecrusher Giant's
     whole trigger (CR 120.1, 120.3a: damage to a player)."""

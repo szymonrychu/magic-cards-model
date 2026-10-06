@@ -83,6 +83,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import _OBJECT_ANAPHOR, AbilityEffect, Effect, TargetedClause
 
 
@@ -302,6 +303,7 @@ _CREATE_TOKEN_COPY_OF_THAT_CARD_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_create_token_copy_of_cost_exiled_card_clause(text: str) -> AbilityEffect | None:
     """`_CREATE_TOKEN_COPY_OF_THAT_CARD_RE`'s shape.
 
@@ -326,6 +328,7 @@ def _parse_create_token_copy_of_cost_exiled_card_clause(text: str) -> AbilityEff
     return effect
 
 
+@ABILITY_TEXT.rung("s30")
 def _parse_whole_text_token_clause(text: str) -> AbilityEffect | None:
     """A "Create ... token ..." ability read as *one whole, unsplit clause* -
     The Legend of Roku's `{8}` ability, "Create a 4/4 red Dragon creature
@@ -621,6 +624,7 @@ _CREATE_X_TOKENS_WHERE_X_IS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_create_x_tokens_where_x_is_clause(text: str) -> AbilityEffect | None:
     """`_CREATE_X_TOKENS_WHERE_X_IS_RE`'s shape.
 
@@ -667,6 +671,7 @@ _CREATE_THAT_MANY_COLOR_PIP_TOKENS_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s10", for_spell=FORWARD)
 def _parse_create_that_many_color_pip_tokens_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -828,6 +833,7 @@ _NAMED_TOKEN_TYPE_WORDS: dict[str, Type] = {
 }
 
 
+@ABILITY_TEXT.rung("s7")
 def _parse_create_named_permanent_token_clause(text: str) -> TargetedClause | None:
     """`_CREATE_NAMED_PERMANENT_TOKEN_RE`'s shape - see the banner above.
 
@@ -855,6 +861,7 @@ def _parse_create_named_permanent_token_clause(text: str) -> TargetedClause | No
     return _token_creation_clause(definition, 1, tapped=tapped)
 
 
+@MIXED_CLAUSE.rung("s10", for_spell=FORWARD)
 def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of "create ... token(s)" (CR 701.7a), read off the card's
     own printed text - see the section banner above for what this reads and
@@ -961,6 +968,7 @@ _NAMED_TOKEN_CLAUSE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
 def _parse_named_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_NAMED_TOKEN_CLAUSE_RE`'s shape; see the banner above.
 
@@ -1213,6 +1221,7 @@ _CREATE_TOKEN_MILL_REPEAT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_create_token_mill_repeat_clause(text: str) -> AbilityEffect | None:
     """`_CREATE_TOKEN_MILL_REPEAT_RE`'s shape - Grist, the Hunger Tide's `+1`.
 
@@ -1272,6 +1281,7 @@ _CREATE_TOKENS_GRAVEYARD_CAST_COUNTERS_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_create_tokens_graveyard_cast_counters_clause(text: str) -> Effect | None:
     """`_CREATE_TOKENS_GRAVEYARD_CAST_COUNTERS_RE`'s shape, or `None`.
 
@@ -1355,6 +1365,7 @@ _CREATE_TOKENS_THEN_COUNTER_OTHER_SUBTYPE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_create_tokens_then_counter_other_subtype_clause(text: str) -> Effect | None:
     """`_CREATE_TOKENS_THEN_COUNTER_OTHER_SUBTYPE_RE`'s shape, or `None`.
 
@@ -1423,6 +1434,7 @@ _TOKEN_AND_PUT_X_COUNTERS_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_fractal_token_by_cards_drawn_this_turn_clause(effect_text: str) -> Effect | None:
     """`_TOKEN_AND_PUT_X_COUNTERS_RE`'s shape, or `None`."""
     match = _TOKEN_AND_PUT_X_COUNTERS_RE.fullmatch(effect_text.strip())
@@ -1475,6 +1487,7 @@ _TOKENS_THEN_COUNTER_IF_NOT_CAST_FROM_HAND_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_tokens_then_counter_if_not_cast_from_hand_clause(effect_text: str) -> Effect | None:
     """`_TOKENS_THEN_COUNTER_IF_NOT_CAST_FROM_HAND_RE`'s shape, or `None`.
 
@@ -1541,6 +1554,7 @@ _CREATE_ROLE_TOKEN_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_create_role_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Create a(n) <Role> Role token attached to <X>." (CR 111.10j-r).
 
@@ -1761,6 +1775,7 @@ _CREATE_TOKEN_THEN_MAY_ATTACH_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_create_token_then_may_attach_clause(text: str) -> AbilityEffect | None:
     """`_CREATE_TOKEN_THEN_MAY_ATTACH_RE`'s shape.
 
@@ -1837,6 +1852,7 @@ _CREATE_TOKEN_THEN_ATTACH_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_create_token_then_attach_clause(text: str) -> AbilityEffect | None:
     """`_CREATE_TOKEN_THEN_ATTACH_RE`'s shape - see the banner above.
 
@@ -1912,6 +1928,7 @@ _NAMED_EQUIPMENT_TOKEN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_named_equipment_token_clause(text: str) -> AbilityEffect | None:
     """`_NAMED_EQUIPMENT_TOKEN_RE`'s shape - see the banner above.
 
@@ -2073,6 +2090,7 @@ def _create_turn_scoped_trigger(
     )
 
 
+@SPELL_TEXT.rung("s10")
 def _parse_created_trigger_spell_text(text: str) -> Effect | None:
     """The spell side: see the banner above."""
     split = _split_created_trigger_paragraph(text)
@@ -2103,6 +2121,7 @@ def _parse_created_trigger_spell_text(text: str) -> Effect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_created_trigger_ability_text(text: str) -> AbilityEffect | None:
     """The ability side (a loyalty ability, a triggered ability's effect)."""
     split = _split_created_trigger_paragraph(_strip_non_effect_preamble(text))
@@ -2175,6 +2194,7 @@ def _created_replacement_record(
     )
 
 
+@SPELL_TEXT.rung("s10")
 def _parse_created_replacement_spell_text(text: str) -> Effect | None:
     """The spell side: the whole resolution text is the one sentence."""
     if created_replacement_spec(text) is None:
@@ -2209,6 +2229,7 @@ def _parse_created_replacement_spell_text(text: str) -> Effect | None:
 _LEADING_SENTENCE_RE = re.compile(r"^(?P<first>[^\n]+?\.)\s+(?P<rest>\S.*)$", re.DOTALL)
 
 
+@SPELL_TEXT.rung("s10")
 def _parse_created_replacement_then_rest_spell_text(text: str) -> Effect | None:
     """A spell whose first sentence creates a replacement effect
     (`_parse_created_replacement_spell_text`) and whose remaining text the
@@ -2231,6 +2252,7 @@ def _parse_created_replacement_then_rest_spell_text(text: str) -> Effect | None:
     return created_replacement_then_rest
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_created_replacement_ability_text(text: str) -> AbilityEffect | None:
     """The ability side (Prairie Dog's activated ability, Crafty Cutpurse's
     enters trigger)."""
@@ -2296,6 +2318,7 @@ _ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_create_tapped_attacking_tokens_then_sacrifice(text: str) -> AbilityEffect | None:
     """`_ATTACK_TAPPED_ATTACKING_TOKENS_THEN_SACRIFICE_RE`'s shape - see it for
     what this reads and why it is one paragraph rather than two clauses.
@@ -2452,6 +2475,7 @@ def _attacking_token_sacrifice_candidates(
     return candidates
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | None:
     """`_MAY_COST_THEN_ATTACKING_TOKEN_RE`'s shape - see the section note.
 
@@ -2692,6 +2716,7 @@ def amass(
     return army
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Amass `<subtype>` N." or "Amass `<subtype>` X, where X is `<expr>`." -
     `_AMASS_RE`'s shape, as one clause among however many the card prints
@@ -2750,6 +2775,7 @@ _AMASS_THEN_ATTACH_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_amass_then_attach_clause(clause: str) -> AbilityEffect | None:
     """`_AMASS_THEN_ATTACH_RE`'s shape - see the banner above."""
     match = _AMASS_THEN_ATTACH_RE.fullmatch(clause.strip().rstrip("."))
@@ -2809,6 +2835,7 @@ def investigate(game: "Game", controller: str, amount: int = 1) -> None:
     create_tokens(game, PREDEFINED["Clue"], controller, amount)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_investigate_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Investigate[, [word] times]." - `_INVESTIGATE_RE`'s shape.
 
@@ -3051,6 +3078,7 @@ _EXCEPT_ADDED_CARD_TYPE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_create_token_copy_of_target_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -3177,6 +3205,7 @@ _CREATE_TOKEN_COPY_OF_QUALITY_YOU_CONTROL_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s22")
 def _parse_create_token_copy_of_quality_you_control_clause(clause: str) -> Effect | None:
     """`_CREATE_TOKEN_COPY_OF_QUALITY_YOU_CONTROL_RE`'s shape, or `None`."""
     match = _CREATE_TOKEN_COPY_OF_QUALITY_YOU_CONTROL_RE.fullmatch(clause.strip())
@@ -3398,6 +3427,9 @@ def _read_token_copy_except(
     return None
 
 
+@ABILITY_TEXT.rung("s15", for_spell=False)
+@SPELL_TEXT.rung("s13", for_spell=True)
+@MIXED_CLAUSE.rung("s23", for_spell=FORWARD)
 def _parse_create_token_copies_except_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -3501,6 +3533,7 @@ _CITY_BLESSING_TOKEN_COPY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_city_blessing_token_copy_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -3560,6 +3593,7 @@ def _parse_city_blessing_token_copy_clause(
     return effect
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_create_tokens_equal_to_event_subject_stat_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -3670,6 +3704,7 @@ def _parse_target_player_creates_token_copy_clause(clause: str) -> TargetedClaus
     return effect
 
 
+@MIXED_CLAUSE.rung("s12")
 def _parse_target_player_creates_clause(clause: str) -> TargetedClause | None:
     """ "Target player/opponent creates `<token>`" as one clause of a longer
     effect - Emeritus of Truce's "target player creates a 1/1 white and black
@@ -3700,6 +3735,7 @@ _CREATE_TOKEN_THEN_COPY_SPELL_RETARGETED_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_create_token_then_copy_spell_retargeted_clause(text: str) -> AbilityEffect | None:
     """`_CREATE_TOKEN_THEN_COPY_SPELL_RETARGETED_RE`'s shape, or `None` if
     this is not it, or if the token half is not `_TOKEN_CLAUSE_RE`'s own
@@ -3775,6 +3811,8 @@ _ATTACKING_TOKEN_CLAUSE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s31", for_spell=False)
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_attacking_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_ATTACKING_TOKEN_CLAUSE_RE`'s shape - Parhelion II's own attack
     trigger. The token itself is read by the same
@@ -3831,6 +3869,7 @@ _CREATE_TOKENS_THEN_INSTEAD_TAPPED_ATTACKING_IF_COST_PAID_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s8")
 def _parse_create_tokens_then_instead_tapped_attacking_if_cost_paid_clause(
     text: str,
 ) -> Effect | None:
@@ -3903,6 +3942,7 @@ _CONDITIONAL_TOKEN_COUNT_ON_SACRIFICED_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_conditional_token_count_on_sacrificed(text: str) -> AbilityEffect | None:
     """`_CONDITIONAL_TOKEN_COUNT_ON_SACRIFICED_RE`'s shape - Witch's Oven.
 

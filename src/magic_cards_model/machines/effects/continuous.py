@@ -117,6 +117,7 @@ from ..turn_scoped_riders import (
 
 if TYPE_CHECKING:
     from ...models.game import CastRecord, Game, StackObject
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import (
     _OBJECT_ANAPHOR,
     _SELF_ANAPHOR,
@@ -169,6 +170,7 @@ _SWITCH_POWER_TOUGHNESS_THEN_DRAW_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s12")
 def _parse_switch_power_toughness_then_draw_clause(text: str) -> Effect | None:
     """`_SWITCH_POWER_TOUGHNESS_THEN_DRAW_RE`'s shape - Twisted Image's whole
     text (CR 608.2c orders the draw after the switch, the order printed).
@@ -259,6 +261,7 @@ _PUMP_AND_BECOMES_CHOSEN_COLOR_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_pump_and_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
     """Wild Mongrel's own shape - see `_PUMP_AND_BECOMES_CHOSEN_COLOR_RE`.
 
@@ -353,6 +356,7 @@ _SELF_CHOICE_KEYWORD_GRANT_UNTIL_EOT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36", before=["continuous._parse_event_subject_pump_clause"])
 def _parse_self_keyword_grant_until_eot_clause(text: str) -> AbilityEffect | None:
     """`_SELF_KEYWORD_GRANT_UNTIL_EOT_RE`/`_SELF_CHOICE_KEYWORD_GRANT_UNTIL_
     EOT_RE`'s two shapes - see either regex's own docstring. Tried as one
@@ -441,6 +445,7 @@ _PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | None:
     """Mother of Runes' own shape - see `_PROTECTION_FROM_CHOSEN_COLOR_RE`.
 
@@ -524,6 +529,7 @@ _BECOMES_CHOSEN_COLOR_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
     """`_BECOMES_CHOSEN_COLOR_RE`'s shape, or `None`.
 
@@ -1259,6 +1265,7 @@ def _parse_mass_pump_counter_on_each(remainder_text: str) -> tuple[int, "Counter
     return amount, _counter_kind(match.group("kind"))
 
 
+@ABILITY_TEXT.rung("s36", before=["amounts._parse_where_x_is_continuous_effect"])
 def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
     """Craterhoof Behemoth's own ETB shape: a mass pump read whole off a
     resolving *ability's* text, with `ability.controller` and its own source.
@@ -1395,6 +1402,7 @@ _PUMP_FOR_EACH_COLOR_SPENT_ON_THAT_SPELL_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_pump_for_each_color_spent_on_that_spell_clause(effect_text: str) -> AbilityEffect | None:
     """`_PUMP_FOR_EACH_COLOR_SPENT_ON_THAT_SPELL_RE`'s shape, or `None`.
 
@@ -1546,6 +1554,7 @@ def _untap_and_apply_control_sentences(
                 store.add(built)
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_untap_and_gain_control_clause(effect_text: str) -> Effect | None:
     """A spell printing either word order of "gain control of target creature
     until end of turn, untap it, it gains haste until end of turn" - Threaten,
@@ -1565,6 +1574,7 @@ def _parse_untap_and_gain_control_clause(effect_text: str) -> Effect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_untap_and_gain_control_ability(effect_text: str) -> AbilityEffect | None:
     """The same effect printed on an activated or triggered ability -
     Captivating Crew's "{3}{R}: ...", Conquering Manticore's "When this
@@ -1648,6 +1658,7 @@ def _parse_mass_gain_control_untap(
     return apply
 
 
+@SPELL_TEXT.rung("s14")
 def _parse_mass_gain_control_untap_clause(effect_text: str) -> Effect | None:
     """`_parse_mass_gain_control_untap` on a resolving spell (Broadcast
     Takeover, each of Mob Rule's modes)."""
@@ -1661,6 +1672,7 @@ def _parse_mass_gain_control_untap_clause(effect_text: str) -> Effect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_mass_gain_control_untap_ability(effect_text: str) -> AbilityEffect | None:
     """The same effect on an activated or triggered ability (a planeswalker's
     "-9: Gain control of all creatures until end of turn. Untap them. They
@@ -1680,6 +1692,7 @@ def _parse_mass_gain_control_untap_ability(effect_text: str) -> AbilityEffect | 
     return effect
 
 
+@SPELL_TEXT.rung("s21")
 def _mass_pump_spell_effect(effect_text: str) -> Effect | None:
     """Violent Outburst's own pump line, the spell-side twin of
     `_mass_pump_ability_effect` above - its cascade half is unaffected (CR
@@ -1794,6 +1807,7 @@ _EACH_OPPONENT_SKIPS_NEXT_UNTAP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_each_opponent_skips_next_untap_clause(text: str) -> AbilityEffect | None:
     """`_EACH_OPPONENT_SKIPS_NEXT_UNTAP_RE`'s shape - Brine Elemental's whole
     trigger. `Game.untap_step` is what actually consumes
@@ -1850,6 +1864,7 @@ _TRANSFORM_SELF_AT_NEXT_STEP_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_transform_self_at_next_step_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2069,6 +2084,7 @@ _TAP_TARGET_THEN_NO_UNTAP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
     """`_TAP_TARGET_THEN_NO_UNTAP_RE`'s shape.
 
@@ -2109,6 +2125,7 @@ _TAP_ENCHANTED_THEN_UNPREPARED_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_tap_enchanted_then_unprepared_clause(text: str) -> AbilityEffect | None:
     """`_TAP_ENCHANTED_THEN_UNPREPARED_RE`'s shape - see its own docstring."""
     whole = _strip_non_effect_preamble(text).strip()
@@ -2141,6 +2158,7 @@ _EVENT_PLAYER_GETS_THAT_MANY_POISON_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s3", for_spell=FORWARD)
 def _parse_event_player_gets_that_many_poison_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2187,6 +2205,7 @@ _EACH_PLAYER_THIS_CREATURE_ATTACKED_LOSES_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s4", for_spell=FORWARD)
 def _parse_each_player_this_creature_attacked_loses_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -2212,6 +2231,7 @@ def _parse_each_player_this_creature_attacked_loses_clause(
 _UNTAP_SELF_RE = re.compile(r"^untap this \w+\.?$", re.IGNORECASE)
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_untap_self_clause(text: str) -> AbilityEffect | None:
     """`_UNTAP_SELF_RE`'s shape - Devoted Druid's "Put a -1/-1 counter on this
     creature: Untap this creature." (CR 701.26b).
@@ -2348,6 +2368,7 @@ _UNTAP_EACH_OTHER_SUBTYPE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s17", for_spell=FORWARD)
 def _parse_untap_each_subtype_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_UNTAP_EACH_OTHER_SUBTYPE_RE`'s shape - see the banner above."""
     match = _UNTAP_EACH_OTHER_SUBTYPE_RE.fullmatch(clause.strip())
@@ -2377,6 +2398,7 @@ def _parse_untap_each_subtype_clause(clause: str, *, for_spell: bool) -> Targete
     return effect
 
 
+@MIXED_CLAUSE.rung("s17", for_spell=FORWARD)
 def _parse_untap_all_group_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_UNTAP_ALL_GROUP_RE`'s shape; see the banner above."""
     match = _UNTAP_ALL_GROUP_RE.fullmatch(clause.strip())
@@ -2423,6 +2445,7 @@ _ADDITIONAL_COMBAT_AND_MAIN_PHASE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s18")
 def _parse_additional_combat_and_main_phase_clause(clause: str) -> AbilityEffect | None:
     """`_ADDITIONAL_COMBAT_AND_MAIN_PHASE_RE`'s shape; see the banner above."""
     if _ADDITIONAL_COMBAT_AND_MAIN_PHASE_RE.fullmatch(clause.strip()) is None:
@@ -2452,6 +2475,7 @@ def _parse_additional_combat_and_main_phase_clause(clause: str) -> AbilityEffect
 _UNTAP_ALL_ATTACKING_RE = re.compile(r"^untap all attacking creatures\.?$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s18")
 def _parse_untap_all_attacking_clause(clause: str) -> AbilityEffect | None:
     """`_UNTAP_ALL_ATTACKING_RE`'s shape; see the banner above."""
     if _UNTAP_ALL_ATTACKING_RE.fullmatch(clause.strip()) is None:
@@ -2479,6 +2503,7 @@ _ADDITIONAL_COMBAT_PHASE_ONLY_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s20")
 def _parse_additional_combat_phase_only_clause(clause: str) -> AbilityEffect | None:
     """`_ADDITIONAL_COMBAT_PHASE_ONLY_RE`'s shape; see the banner above."""
     if _ADDITIONAL_COMBAT_PHASE_ONLY_RE.fullmatch(clause.strip()) is None:
@@ -2504,6 +2529,7 @@ def _parse_additional_combat_phase_only_clause(clause: str) -> AbilityEffect | N
 _UNTAP_TRIGGER_SUBJECT_RE = re.compile(r"^untap it\.?$", re.IGNORECASE)
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_untap_trigger_subject_clause(text: str) -> AbilityEffect | None:
     """`_UNTAP_TRIGGER_SUBJECT_RE`'s shape - Amulet of Vigor's "Whenever a
     permanent you control enters tapped, untap it."
@@ -2545,6 +2571,7 @@ _UNTAP_TRIGGER_SUBJECT_AND_SCRY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_untap_trigger_subject_and_scry_clause(text: str) -> AbilityEffect | None:
     """`_UNTAP_TRIGGER_SUBJECT_AND_SCRY_RE`'s shape - see the banner above."""
     match = _UNTAP_TRIGGER_SUBJECT_AND_SCRY_RE.fullmatch(text.strip())
@@ -2584,6 +2611,7 @@ _GAINS_ABILITY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_gains_ability_clause(text: str) -> AbilityEffect | None:
     """`_GAINS_ABILITY_RE`'s shape.
 
@@ -2633,6 +2661,7 @@ _TARGET_GAINS_ABILITY_UNTIL_CAST_FROM_EXILE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_target_gains_ability_until_cast_from_exile_clause(text: str) -> AbilityEffect | None:
     """`_TARGET_GAINS_ABILITY_UNTIL_CAST_FROM_EXILE_RE`'s shape.
 
@@ -2756,6 +2785,8 @@ _TAP_UNTAP_TWO_TARGETS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
+@SPELL_TEXT.rung("s18")
 def _parse_tap_untap_two_targets_clause(effect_text: str) -> Effect | None:
     """`_TAP_UNTAP_TWO_TARGETS_RE`'s shape, on a spell or an ability - both
     resolve through the same stack-object-generic target effects."""
@@ -2796,6 +2827,7 @@ _TARGET_PLAYER_CANT_CAST_KICKED_ATTACK_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s18")
 def _parse_target_player_cant_cast_kicked_attack_clause(effect_text: str) -> Effect | None:
     """`_TARGET_PLAYER_CANT_CAST_KICKED_ATTACK_RE`'s shape, or `None`."""
     whole = _strip_non_effect_preamble(effect_text).strip()
@@ -2859,6 +2891,8 @@ _GRANT_FLASHBACK_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s13")
+@SPELL_TEXT.rung("s21")
 def _parse_grant_flashback_clause(effect_text: str) -> Effect | None:
     """`_GRANT_FLASHBACK_RE`'s shape, or `None` if this is not it."""
     match = _GRANT_FLASHBACK_RE.fullmatch(effect_text.strip())
@@ -2900,6 +2934,7 @@ _EACH_GRAVEYARD_INSTANT_SORCERY_GAINS_FLASHBACK_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s21")
 def _parse_each_graveyard_instant_sorcery_gains_flashback_clause(effect_text: str) -> Effect | None:
     """`_EACH_GRAVEYARD_INSTANT_SORCERY_GAINS_FLASHBACK_RE`'s shape, or `None`."""
     if _EACH_GRAVEYARD_INSTANT_SORCERY_GAINS_FLASHBACK_RE.fullmatch(effect_text.strip()) is None:
@@ -3001,6 +3036,7 @@ def _is_resolution_neutral_keyword_line(sentence: str) -> bool:
     )
 
 
+@SPELL_TEXT.rung("s24")
 def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
     """A whole resolving spell's own effect text, when some sentence of it is
     a CR 611.2 layer shape (`_is_layer_effect_text`) but the text as a whole
@@ -3147,6 +3183,7 @@ _EVENT_SUBJECT_PUMP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_event_subject_pump_clause(effect_text: str) -> AbilityEffect | None:
     """`_EVENT_SUBJECT_PUMP_RE`'s shape - see the banner above.
 
@@ -3214,6 +3251,7 @@ _TARGET_PLUS_X_MINUS_X_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s36")
 def _parse_target_plus_x_minus_x_clause(effect_text: str) -> AbilityEffect | None:
     """`_TARGET_PLUS_X_MINUS_X_RE`'s shape, or `None`.
 
@@ -3307,6 +3345,7 @@ def _base_pt_become_object(game: "Game", ability: AbilityOnStack, word: str) -> 
     return ability.source(game)
 
 
+@ABILITY_TEXT.rung("s8")
 def _parse_base_pt_become_clause(effect_text: str) -> AbilityEffect | None:
     """`_BASE_PT_BECOME_RE`'s shape - see the banner above."""
     match = _BASE_PT_BECOME_RE.fullmatch(" ".join(effect_text.strip().split()))
@@ -3390,6 +3429,7 @@ _SELF_BASE_PT_SET_WITH_KEYWORDS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s4")
 def _parse_self_base_pt_set_with_keywords_clause(effect_text: str) -> AbilityEffect | None:
     """`_SELF_BASE_PT_SET_WITH_KEYWORDS_RE`'s shape: the source's base power
     and toughness set in layer 7b and each keyword granted in layer 6 (CR
@@ -3460,6 +3500,7 @@ def _layer_sentences_come_last(sentences: Sequence[str]) -> bool:
     return bool(layer_positions and other_positions) and min(layer_positions) > max(other_positions)
 
 
+@ABILITY_TEXT.rung("s43")
 def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> AbilityEffect | None:
     """The ability-side twin of `_compose_layer_effect_with_remainder`, for
     `_ability_effect_or_notice`'s own `_is_layer_effect_text` fallback."""
@@ -3692,6 +3733,7 @@ _UNTIL_END_OF_TURN_TAP_LAND_ADDITIONAL_MANA_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s21")
 def _parse_until_end_of_turn_tap_land_additional_mana_clause(text: str) -> AbilityEffect | None:
     """`_UNTIL_END_OF_TURN_TAP_LAND_ADDITIONAL_MANA_RE`'s shape - a whole,
     single-clause spell effect (Molten Tide and High Tide each print nothing
@@ -3751,6 +3793,7 @@ _SELF_KEYWORD_CHOICE_UNTIL_EOT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_self_keyword_choice_until_eot_trigger(text: str) -> AbilityEffect | None:
     """`_SELF_KEYWORD_CHOICE_UNTIL_EOT_RE`'s shape - CR 608.2d's choice, asked
     once per resolution, the identical `ContinuousEffect`/`grant_ability`
@@ -3812,6 +3855,7 @@ _EACH_OTHER_ATTACKING_CREATURE_PUMP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_each_other_attacking_creature_pump_trigger(text: str) -> AbilityEffect | None:
     """`_EACH_OTHER_ATTACKING_CREATURE_PUMP_RE`'s shape."""
     match = _EACH_OTHER_ATTACKING_CREATURE_PUMP_RE.fullmatch(text.strip())
@@ -3854,6 +3898,7 @@ _OTHER_ATTACKING_CREATURES_GRANT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_other_attacking_creatures_grant_trigger(text: str) -> AbilityEffect | None:
     """`_OTHER_ATTACKING_CREATURES_GRANT_RE`'s shape."""
     match = _OTHER_ATTACKING_CREATURES_GRANT_RE.fullmatch(text.strip())
@@ -3913,6 +3958,7 @@ _TRANSFORM_ALL_SUBTYPE_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_transform_all_subtype_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_TRANSFORM_ALL_SUBTYPE_RE`'s shape - Moonmist's "Transform all Humans."
 
@@ -3954,6 +4000,7 @@ def _parse_transform_all_subtype_clause(clause: str, *, for_spell: bool) -> Targ
     return effect
 
 
+@ABILITY_TEXT.rung("s25")
 def _parse_transform_clause(text: str) -> AbilityEffect | None:
     """CR 701.27a: "To transform a permanent, turn it over so that its other
     face is up", read off the ability's own printed text.
@@ -4148,6 +4195,7 @@ def _attach_self_to_announced_target(game: "Game", ability: AbilityOnStack) -> C
     return None
 
 
+@ABILITY_TEXT.rung("s20")
 def _attach_self_to_target_effect(text: str) -> AbilityEffect | None:
     """`_ATTACH_SELF_TO_TARGET_RE`: the source attached to the target the
     ability announced (CR 603.3d), rechecked by `Game.resolve_targets` (CR
@@ -4194,6 +4242,7 @@ _ATTACH_SELF_THEN_WHEN_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_attach_self_then_when_you_do_clause(text: str) -> AbilityEffect | None:
     """`_ATTACH_SELF_THEN_WHEN_YOU_DO_RE`'s shape, or `None`. Read only when
     the reflexive consequence is itself readable, so the pair is never half
@@ -4303,6 +4352,7 @@ def _optional_transform_payoff(payoff: str) -> AbilityEffect | None:
     return parse_mixed_effect(" ".join(sentences))
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_may_transform_self_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_MAY_TRANSFORM_SELF_IF_YOU_DO_RE`'s shape - see the section note."""
     match = _MAY_TRANSFORM_SELF_IF_YOU_DO_RE.fullmatch(
@@ -4394,6 +4444,7 @@ _MAY_THEN_IF_YOU_DO_LAYER_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_may_then_if_you_do_layer_clause(text: str) -> AbilityEffect | None:
     """`_MAY_THEN_IF_YOU_DO_LAYER_RE`'s shape.
 
@@ -4456,6 +4507,7 @@ _GET_AN_EMBLEM_THEN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_get_an_emblem_then_clause(text: str) -> AbilityEffect | None:
     """`_GET_AN_EMBLEM_THEN_RE`'s shape: the emblem, then everything after it
     read by `_ability_effect_or_notice` - or `None` when that remainder does
@@ -4482,6 +4534,7 @@ def _parse_get_an_emblem_then_clause(text: str) -> AbilityEffect | None:
 _LEADING_THEN_WORD_RE = re.compile(r"^then,?\s+", re.IGNORECASE)
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_get_an_emblem_clause(text: str) -> AbilityEffect | None:
     """Jaya Ballard's -8, read whole (the quoted abilities contain full stops
     the clause splitter would cut at)."""
@@ -4514,6 +4567,7 @@ _UNTIL_YOUR_NEXT_TURN_ATTACK_PUMP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_until_your_next_turn_attack_pump_clause(text: str) -> AbilityEffect | None:
     """`_UNTIL_YOUR_NEXT_TURN_ATTACK_PUMP_RE`'s shape.
 
@@ -4594,6 +4648,7 @@ _UNTIL_YOUR_NEXT_TURN_GROUP_ATTACK_PUMP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_attacks_alone_this_turn_counters_and_keywords_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -4630,6 +4685,7 @@ def _parse_attacks_alone_this_turn_counters_and_keywords_clause(
     return effect
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_until_your_next_turn_group_attack_pump_clause(text: str) -> AbilityEffect | None:
     """`_UNTIL_YOUR_NEXT_TURN_GROUP_ATTACK_PUMP_RE`'s shape - see the banner
     above. The same two-tier duration split (CR 603.7b's stated-duration
@@ -4687,6 +4743,7 @@ _BATCHED_ATTACK_GROUP_PUMP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s14")
 def _parse_batched_attack_group_pump_clause(text: str) -> AbilityEffect | None:
     """`_BATCHED_ATTACK_GROUP_PUMP_RE`'s shape.
 
@@ -4802,6 +4859,7 @@ _SELF_ATTACK_PUMP_FOR_EACH_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s18")
 def _parse_self_pump_for_each_clause(text: str) -> AbilityEffect | None:
     """`_SELF_ATTACK_PUMP_FOR_EACH_RE`'s shape; see the banner above."""
     match = _SELF_ATTACK_PUMP_FOR_EACH_RE.fullmatch(text.strip())
@@ -4860,6 +4918,7 @@ _TARGET_ATTACKING_ALONE_PUMP_GAIN_LIFE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_target_attacking_alone_pump_gain_life_clause(text: str) -> AbilityEffect | None:
     """`_TARGET_ATTACKING_ALONE_PUMP_GAIN_LIFE_RE`'s shape - see the banner
     above."""
@@ -5027,6 +5086,7 @@ _TARGET_GET_ENERGY_PAY_DAMAGE_RE = re.compile(
 )
 
 
+@SPELL_TEXT.rung("s16")
 def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
     """Galvanic Discharge's own shape, see `_TARGET_GET_ENERGY_PAY_DAMAGE_RE`.
 
@@ -5074,6 +5134,7 @@ _UNTAP_ALL_YOU_CONTROL_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
     """`_UNTAP_ALL_YOU_CONTROL_RE`'s shape - CR 701.26b: untapping is not
     targeted, so every matching permanent the controller has right now is
@@ -5200,6 +5261,7 @@ def _attached_object(game: "Game", stack_object: "StackObject") -> CardState | N
     return attached
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_tap_attached_clause(clause: str) -> TargetedClause | None:
     """`_TAP_ATTACHED_RE`'s shape - CR 701.26a's tap, silent on an
     already-tapped permanent (`CardState.tap_if_untapped`)."""
@@ -5214,6 +5276,7 @@ def _parse_tap_attached_clause(clause: str) -> TargetedClause | None:
     return effect
 
 
+@MIXED_CLAUSE.rung("s35")
 def _parse_tap_all_group_clause(clause: str) -> TargetedClause | None:
     """`_TAP_ALL_GROUP_RE`'s shape as an ordinary clause - see
     `_tap_all_group_runner`."""
@@ -5386,6 +5449,7 @@ _SELF_CANT_BLOCK_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_self_cant_block_clause(text: str) -> AbilityEffect | None:
     """`_SELF_CANT_BLOCK_RE`'s shape; see the banner above."""
     match = _SELF_CANT_BLOCK_RE.fullmatch(text.strip())
@@ -6165,6 +6229,7 @@ _MAY_TAP_UNTAPPED_IF_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_may_tap_untapped_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_MAY_TAP_UNTAPPED_IF_YOU_DO_RE`'s shape. The permanents are read the
     way `_sacrifice_restriction` reads a counted description ("three other
@@ -6250,6 +6315,7 @@ _TAP_ANOTHER_UNTAPPED_SUBTYPE_WHEN_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_tap_another_untapped_subtype_when_you_do_clause(text: str) -> AbilityEffect | None:
     """`_TAP_ANOTHER_UNTAPPED_SUBTYPE_WHEN_YOU_DO_RE`'s shape; see the banner
     above. A shape neither this reads nor `reflexive_consequence_effect`
@@ -6350,6 +6416,7 @@ _TAP_ANY_NUMBER_OF_UNTAPPED_CREATURES_WHEN_YOU_DO_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s22")
 def _parse_tap_any_number_of_untapped_creatures_when_you_do_clause(
     text: str,
 ) -> AbilityEffect | None:
@@ -6512,6 +6579,7 @@ _GET_ENERGY_THEN_PAY_CREATE_X_TOKEN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_get_energy_then_pay_create_x_token_clause(text: str) -> AbilityEffect | None:
     """`_GET_ENERGY_THEN_PAY_CREATE_X_TOKEN_RE`'s shape."""
     match = _GET_ENERGY_THEN_PAY_CREATE_X_TOKEN_RE.fullmatch(
@@ -6558,6 +6626,7 @@ _EQUIPPED_ATTACKING_CREATURES_GAIN_KEYWORDS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_equipped_attacking_creatures_gain_keywords_clause(text: str) -> AbilityEffect | None:
     """`_EQUIPPED_ATTACKING_CREATURES_GAIN_KEYWORDS_RE`'s shape; see the
     banner above."""
@@ -6667,6 +6736,7 @@ def _named_object(game: "Game", stack_object: "StackObject", word: str) -> CardS
     return source
 
 
+@MIXED_CLAUSE.rung("s17", for_spell=FORWARD)
 def _parse_suspect_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """The suspect family - see the banner above."""
     text = clause.strip()
@@ -6765,6 +6835,7 @@ def _goad_group_member(
     return controller != goader
 
 
+@MIXED_CLAUSE.rung("s17", for_spell=FORWARD)
 def _parse_goad_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Goad `<target phrase>`." or "Goad each creature / all creatures
     `<whose>`." - see the banner above."""
@@ -6843,6 +6914,7 @@ _GOAD_FOR_EACH_OPPONENT_THEN_COUNTERS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s29", for_spell=False)
 def _parse_goad_for_each_opponent_then_counters_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -6887,6 +6959,7 @@ _MAY_ATTACH_TO_ENTERING_CREATURE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_may_attach_to_entering_creature_clause(text: str) -> AbilityEffect | None:
     """`_MAY_ATTACH_TO_ENTERING_CREATURE_RE`'s shape, or `None`."""
     if (
@@ -6965,6 +7038,8 @@ _FOR_EACH_OPPONENT_TAP_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s29", for_spell=False)
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_for_each_opponent_tap_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_FOR_EACH_OPPONENT_TAP_RE`'s shape - Hapatra, the Desert Frost's own
     antecedent sentence. The rider that follows it ("Put a stun counter on
@@ -6993,6 +7068,8 @@ _FOR_EACH_OPPONENT_TAP_THEN_STUN_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s29", for_spell=False)
+@MIXED_CLAUSE.rung("s21", for_spell=FORWARD)
 def _parse_for_each_opponent_tap_then_stun_clause(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -7040,6 +7117,7 @@ _UNDERGROWTH_PUMP_AND_FIGHT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s16")
 def _parse_undergrowth_pump_and_fight_clause(text: str) -> AbilityEffect | None:
     """Kraul Harpooner: "choose up to one target creature you don't control
     with flying. This creature gets +X/+0 until end of turn, where X is the
@@ -7142,6 +7220,7 @@ _ATTACK_THIS_TURN_TAPPED_ATTACKING_TOKENS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20", before=["tokens._parse_created_trigger_ability_text"])
 def _parse_attack_this_turn_create_tapped_attacking_tokens(text: str) -> AbilityEffect | None:
     match = _ATTACK_THIS_TURN_TAPPED_ATTACKING_TOKENS_RE.fullmatch(
         _strip_non_effect_preamble(text).strip()
@@ -7204,6 +7283,7 @@ _TAPPED_ATTACKING_TOKENS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s21", for_spell=False)
 def _parse_tapped_attacking_tokens_whole_text(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
@@ -7317,6 +7397,7 @@ _ATTACH_TARGET_EQUIPMENT_UP_TO_ONE_CREATURE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_attach_target_equipment_up_to_one_creature_clause(text: str) -> AbilityEffect | None:
     """`_ATTACH_TARGET_EQUIPMENT_UP_TO_ONE_CREATURE_RE`'s shape - see the
     banner above. The Equipment target is picked out of the resolved targets
@@ -7361,6 +7442,7 @@ _ATTACH_ANY_NUMBER_EQUIPMENT_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s20")
 def _parse_attach_any_number_equipment_clause(text: str) -> AbilityEffect | None:
     """`_ATTACH_ANY_NUMBER_EQUIPMENT_RE`'s shape - see the banner above.
 
@@ -7431,6 +7513,7 @@ _IF_KEYWORD_COST_PAID_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_if_keyword_cost_paid_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_IF_KEYWORD_COST_PAID_RE`'s shape. Spell-only, like
     `_parse_if_additional_cost_paid_clause`: an ability has no `CastRecord`."""
@@ -7471,6 +7554,7 @@ _THAT_PERMANENT_NO_UNTAP_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_that_permanent_no_untap_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_THAT_PERMANENT_NO_UNTAP_RE`'s shape. Ability-only, like `_parse_
     they_gain_or_lose_life_clause`: a spell has no `ability.event` to read
@@ -7512,6 +7596,7 @@ def _parse_that_permanent_no_untap_clause(clause: str, *, for_spell: bool) -> Ta
 _IT_GAINS_REBOUND_RE = re.compile(r"^it gains rebound$", re.IGNORECASE)
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_it_gains_rebound_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_IT_GAINS_REBOUND_RE`'s shape. Ability-only: a spell has no
     `ability.event` to read "it" against."""
@@ -7550,6 +7635,7 @@ _GRANT_ENTERS_WITH_COLORS_SPENT_COUNTERS_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_grant_enters_with_colors_spent_counters_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -7628,6 +7714,7 @@ _LEADING_UNTIL_EOT_SELF_GAINS_QUOTED_ABILITY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_self_gains_quoted_ability_until_eot_clause(text: str) -> AbilityEffect | None:
     """`_SELF_GAINS_QUOTED_ABILITY_UNTIL_EOT_RE`'s shape, read whole - the
     quoted ability ends in a full stop of its own, which the clause splitter
@@ -7718,6 +7805,7 @@ _IT_GAINS_QUOTED_ABILITY_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_it_gains_quoted_ability_clause(text: str) -> AbilityEffect | None:
     """`_IT_GAINS_QUOTED_ABILITY_RE`'s shape, read whole - the quoted ability
     ends in a full stop of its own, which the clause splitter would cut at."""
@@ -7759,6 +7847,7 @@ _PUMP_PER_DISCARD_THEN_DELAYED_DRAW_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s35")
 def _parse_pump_per_discard_then_delayed_draw_clause(text: str) -> AbilityEffect | None:
     """`_PUMP_PER_DISCARD_THEN_DELAYED_DRAW_RE`'s shape - Captain Howler,
     Sea Scourge's whole trigger (CR 119.3's pump has no such rule number of
@@ -7887,6 +7976,7 @@ def _parse_next_spell_has_keyword(text: str) -> TargetedClause | None:
     return effect
 
 
+@MIXED_CLAUSE.rung("s1", for_spell=FORWARD)
 def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_NEXT_SPELL_FREE_CAST_RE` (CR 118.9) or `_SPELLS_COST_LESS_THIS_TURN_
     RE` (CR 601.2f), for the resolving object's controller, this turn."""
@@ -8018,6 +8108,7 @@ _TARGET_PLAYER_BECOMES_MONARCH_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_target_player_becomes_monarch_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -8157,6 +8248,7 @@ def _parse_grant_quoted_ability_then_return_front_face_whole_text(
     return effect
 
 
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
 def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A CR 611.2 mass pump/keyword-grant clause ("creatures you control
     gain <keyword(s)>[ and get +N/+N] until end of turn") as *one* clause of
@@ -8214,6 +8306,7 @@ _TARGET_PLAYER_CREATURES_PUMP_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
 def _parse_target_player_creatures_pump_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -8322,6 +8415,7 @@ _MASS_LOSE_ALL_ABILITIES_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
 def _parse_mass_lose_all_abilities_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_MASS_LOSE_ALL_ABILITIES_RE`'s shape, on a spell or an ability.
 
@@ -8438,6 +8532,7 @@ _SPELLS_CANT_BE_COUNTERED_THIS_TURN_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
 def _parse_spells_cant_be_countered_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -8480,6 +8575,7 @@ _YOU_AND_GROUP_SUBJECT_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
 def _parse_you_and_group_gain_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_YOU_AND_GROUP_SUBJECT_RE`'s shape: a CR 608.2c compound subject read
     as two independent instructions with the same predicate (CR 205.3m has
@@ -8586,6 +8682,7 @@ _TARGETED_THEN_SELF_GAINS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s23")
 def _parse_targeted_then_self_gains_clause(text: str) -> AbilityEffect | None:
     """`_TARGETED_THEN_SELF_GAINS_RE`'s shape.
 
@@ -8648,6 +8745,7 @@ _IF_CONDITION_PLAYERS_CANT_CAST_RE = re.compile(
 )
 
 
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_if_condition_players_cant_cast_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -8707,6 +8805,7 @@ _DOUBLE_POWER_TARGET_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s32")
 def _parse_double_power_target_clause(text: str) -> AbilityEffect | None:
     """`_DOUBLE_POWER_TARGET_RE`'s shape - Mightform Harmonizer.
 
@@ -8775,6 +8874,7 @@ _DOUBLE_POWER_AND_TOUGHNESS_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s4")
 def _parse_double_power_and_toughness_clause(text: str) -> AbilityEffect | None:
     """`_DOUBLE_POWER_AND_TOUGHNESS_RE`'s shape. CR 701.10a/b: the creature
     gets +X/+Y where X and Y are its power and toughness as this resolves - a
@@ -8924,6 +9024,7 @@ _ATTACHED_SUBJECT_GAINS_KEYWORDS_UNTIL_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s28")
 def _parse_attached_subject_gains_keywords_until_clause(text: str) -> AbilityEffect | None:
     """`_ATTACHED_SUBJECT_GAINS_KEYWORDS_UNTIL_RE`'s shape - see the banner
     above. A permanent with nothing attached to it (an Aura/Equipment that
@@ -8982,6 +9083,8 @@ _ANAPHOR_GAINS_QUOTED_RE = re.compile(
 _QUOTED_ABILITY_RE = re.compile(r'"([^"]+)"')
 
 
+@ABILITY_TEXT.rung("s41", for_spell=False)
+@SPELL_TEXT.rung("s25", for_spell=True)
 def _parse_put_then_grant_then_delayed_whole_text(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -9126,6 +9229,8 @@ _TARGET_BLOCKS_SELF_IF_ABLE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s11")
+@SPELL_TEXT.rung("s10")
 def _parse_target_blocks_self_if_able_clause(text: str) -> TargetedClause | None:
     """`_TARGET_BLOCKS_SELF_IF_ABLE_RE`'s shape, or `None`.
 
@@ -9186,6 +9291,8 @@ _TARGET_ATTACKS_IF_ABLE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s11")
+@SPELL_TEXT.rung("s10")
 def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
     """`_TARGET_ATTACKS_IF_ABLE_RE`'s shape, or `None`.
 
@@ -9262,6 +9369,7 @@ _SELF_LAYER_AND_VERB_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s9")
 def _parse_self_layer_and_verb_clause(effect_text: str) -> AbilityEffect | None:
     """`_SELF_LAYER_AND_VERB_RE`'s shape: the layer half through
     `_create_continuous_effect_of_ability_for_mode_text` (which does nothing
