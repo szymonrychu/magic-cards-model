@@ -161,6 +161,7 @@ from magic_cards_model.machines.layers import (
     parsed_layer_effects,
     plays_lands_from_graveyard_line,
 )
+from magic_cards_model.machines.layers.parse import read_cant_lose_cant_win
 from magic_cards_model.machines.map_tokens import credits_explore_via_created_token
 from magic_cards_model.machines.modes import Mode, modal_profile, substitute_x
 from magic_cards_model.machines.objects_as_costs import (
@@ -1989,6 +1990,10 @@ def _static_ability_category(
     if is_additional_trigger_line(text):
         # CR 603.2d: `triggers.additional_trigger_times` multiplies what an
         # entrance the cause names makes trigger.
+        return HANDLED
+    if read_cant_lose_cant_win(text) is not None:
+        # CR 101.2 over CR 104.2b/104.3e/704.5a-c: `Game.why_cant_lose_the_game`
+        # and `why_cant_win_the_game` read the line off the computed board.
         return HANDLED
     opening_hand = read_opening_hand_line(effective_name, text)
     if opening_hand is not None:
