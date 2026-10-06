@@ -413,6 +413,14 @@ TREASURE = TokenDefinition(
     rules_text="{T}, Sacrifice this token: Add one mana of any color.",
 )
 
+#: CR 111.10g: "A Blood token is a colorless Blood artifact token with '{1},
+#: {T}, Discard a card, Sacrifice this token: Draw a card.'" - Lacerate Flesh.
+BLOOD = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Blood",),
+    rules_text="{1}, {T}, Discard a card, Sacrifice this token: Draw a card.",
+)
+
 #: CR 111.10b: "A Food token is a colorless Food artifact token with '{2}, {T},
 #: Sacrifice this token: You gain 3 life.'" - Generous Ent.
 FOOD = TokenDefinition(
@@ -635,6 +643,7 @@ JACE = TokenDefinition(
 PREDEFINED: dict[str, TokenDefinition] = {
     "Treasure": TREASURE,
     "Food": FOOD,
+    "Blood": BLOOD,
     "Clue": CLUE,
     "Shard": SHARD,
     "Map": MAP,

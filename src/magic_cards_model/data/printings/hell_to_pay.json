@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "84ad8ed7-1429-432e-8217-a4db3b97675c",
+  "oracle_id": "7dc7d90d-5979-4c4a-9183-392e0e0b878a",
+  "multiverse_ids": [
+    655067
+  ],
+  "mtgo_id": 124163,
+  "arena_id": 90472,
+  "tcgplayer_id": 541314,
+  "cardmarket_id": 759033,
+  "name": "Hell to Pay",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/84ad8ed7-1429-432e-8217-a4db3b97675c",
+  "scryfall_uri": "https://scryfall.com/card/otj/126/hell-to-pay?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:03:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.jpg?1783911820",
+    "normal": "https://cards.scryfall.io/normal/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.jpg?1783911820",
+    "large": "https://cards.scryfall.io/large/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.jpg?1783911820",
+    "png": "https://cards.scryfall.io/png/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.png?1783911820",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.jpg?1783911820",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.jpg?1783911820",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.webp?1783911820",
+    "grid": "https://cards.scryfall.io/grid/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.webp?1783911820",
+    "display": "https://cards.scryfall.io/display/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.webp?1783911820",
+    "art": "https://cards.scryfall.io/art/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.webp?1783911820",
+    "crop": "https://cards.scryfall.io/crop/front/8/4/84ad8ed7-1429-432e-8217-a4db3b97675c.webp?1783911820"
+  },
+  "mana_cost": "{X}{R}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Hell to Pay deals X damage to target creature. Create a number of tapped Treasure tokens equal to the amount of excess damage dealt to that creature this way.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Treasure"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7ec6f053-96f7-4e57-b2eb-4e7699a40a4f",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/7ec6f053-96f7-4e57-b2eb-4e7699a40a4f"
+    },
+    {
+      "object": "related_card",
+      "id": "c522c232-0f86-49ad-969f-a2b086432a97",
+      "component": "combo_piece",
+      "name": "Hell to Pay",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/c522c232-0f86-49ad-969f-a2b086432a97"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/84ad8ed7-1429-432e-8217-a4db3b97675c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7dc7d90d-5979-4c4a-9183-392e0e0b878a&unique=prints",
+  "collector_number": "126",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "For years afterward, lucky explorers who found the cave could chip gold fragments off the rocky walls.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Liiga Smilshkalne",
+  "artist_ids": [
+    "5a50ced2-b301-4195-8af4-f7e1bae07d28"
+  ],
+  "illustration_id": "620773fa-12d5-4804-b494-49089c0b95d9",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2872,
+  "penny_rank": 7273,
+  "prices": {
+    "usd": "0.87",
+    "usd_foil": "0.59",
+    "usd_etched": null,
+    "eur": "0.51",
+    "eur_foil": "0.56",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=655067&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHell%2Bto%2BPay",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHell%2Bto%2BPay",
+    "edhrec": "https://edhrec.com/route/?cc=Hell+to+Pay"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F541314%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=759033&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124163?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -3249,6 +3249,232 @@ def _parse_damage_then_followup_spell(effect_text: str) -> Effect | None:
     return damage_then_followup_spell_effect(effect_text)
 
 
+# --------------------------------------------------------------------------
+# Excess damage (CR 120.4a, CR 120.10): a damage spell whose next sentence
+# does something with the part of the damage above what is lethal.
+# --------------------------------------------------------------------------
+
+
+def _excess_threshold(game: "Game", target: CardState, source: CardState | None) -> int | None:
+    """What damage `target` can take before the rest is excess (CR 120.4a /
+    CR 120.10), read *before* the damage is dealt: `_lethal_amount_before_
+    damage`'s remaining toughness / loyalty, except that CR 120.4a makes a
+    deathtouch source's lethal damage to a creature 1 (CR 702.2), so "any
+    amount of damage greater than 1 is excess". `None` for a permanent that is
+    neither a creature nor a planeswalker."""
+    from ..combat import source_had_keyword
+
+    threshold = _lethal_amount_before_damage(game, target)
+    if threshold is None or source is None:
+        return threshold
+    chars = game.computed_board().of(target)
+    if Type.CREATURE not in chars.types or not source_had_keyword(source, "deathtouch", game):
+        return threshold
+    creature_part = min(max(chars.numeric_toughness - target.damage, 0), 1)
+    loyalty_part = (target.loyalty or 0) if Type.PLANESWALKER in chars.types else 0
+    return max(creature_part, loyalty_part)
+
+
+#: "`<source>` deals `<n>` damage to target creature[, where X is `<expr>`].
+#: Excess damage is dealt to that creature's controller instead." (Flame
+#: Spill, Pigment Storm, Gandalf's Sanction). The two sentences are one CR
+#: 608.2c instruction: the second modifies the first's damage event (CR
+#: 120.4a), so they are read whole, the same reason `_DAMAGE_THEN_EMPOWER_IF_
+#: EXCESS_RE` is. `n` is a count, or CR 107.3a's announced X with or without
+#: a printed definition.
+_DAMAGE_THEN_EXCESS_TO_CONTROLLER_RE = re.compile(
+    rf"^(?P<subject>[^.]*?) deals? {count_pattern('n', x=True)} damage to "
+    r"(?P<phrase>(?:any )?target (?P<noun>creature|planeswalker|permanent)[^.,]*?)"
+    r"(?:,\s*where\s+x\s+is\s+(?P<where_x>[^.]+))?\.\s*"
+    r"excess damage is dealt to that (?P=noun)['’]s controller instead\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "`<source>` deals `<n>` damage to target creature. Create a number of
+#: `<tokens>` equal to the amount of excess damage dealt to that creature this
+#: way." (Goblin Negotiation, Hell to Pay, Lacerate Flesh); a trailing
+#: reminder-text parenthetical is not part of the instruction.
+_DAMAGE_THEN_TOKENS_PER_EXCESS_RE = re.compile(
+    rf"^(?P<subject>[^.]*?) deals? {count_pattern('n', x=True)} damage to "
+    r"(?P<phrase>(?:any )?target (?P<noun>creature|planeswalker|permanent)[^.,]*?)"
+    r"(?:,\s*where\s+x\s+is\s+(?P<where_x>[^.]+))?\.\s*"
+    r"create a number of (?P<desc>[^.]+?) tokens? equal to the amount of excess damage "
+    r"dealt to that (?P=noun) this way\.?(?:\s*\([^)]*\))?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _excess_damage_amount(
+    n: str, where_x: str | None
+) -> Callable[["Game", str, CardState, int], int] | None:
+    """The damage a spell prints, as `(game, controller, spell, announced_x)`
+    -> int: a count, a bare X (CR 107.3a, the announced value), or an X the
+    card defines ("where X is ...", CR 107.3f)."""
+    if n.strip().lower() == "x" and where_x is None:
+        return lambda _game, _controller, _spell, x: x
+    return _fixed_or_where_x_amount(n, where_x)
+
+
+def _read_excess_damage_spell(
+    match: re.Match[str],
+) -> Callable[["Game", CardState], int] | None:
+    """The printed damage of an excess-damage spell as a function of the
+    resolving spell, or `None` when its subject, targets or amount are not
+    readable (a "target ..." subject is a fight or bite, never this shape)."""
+    if re.search(r"\btarget\b", match.group("subject"), re.IGNORECASE):
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    reader = _excess_damage_amount(match.group("n"), match.group("where_x"))
+    if reader is None:
+        return None
+
+    def amount_of(game: "Game", spell: CardState) -> int:
+        controller = game.controller_of(spell).username
+        return max(reader(game, controller, spell, _announced_x(game, spell)), 0)
+
+    return amount_of
+
+
+@SPELL_TEXT.rung("s18")
+def _merge_damage_then_excess_to_controller_spell(effect_text: str) -> Effect | None:
+    """`_DAMAGE_THEN_EXCESS_TO_CONTROLLER_RE`'s shape.
+
+    CR 120.4a: the creature is dealt damage up to lethal (marked damage
+    counted) and its controller is dealt the rest, by the same source. The
+    controller is captured before the damage (CR 608.2h: last known
+    information if the creature dies); CR 608.2b: with the creature an illegal
+    target nothing happens at all, the controller's share included."""
+    if "excess damage" not in effect_text.lower():  # cheap literal gate
+        return None
+    match = _DAMAGE_THEN_EXCESS_TO_CONTROLLER_RE.fullmatch(
+        _strip_non_effect_preamble(effect_text).strip()
+    )
+    if match is None:
+        return None
+    amount_of = _read_excess_damage_spell(match)
+    if amount_of is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        amount = amount_of(game, spell)
+        for target in game.resolve_targets(spell):
+            if isinstance(target, CardState):
+                _deal_with_excess_to_controller(game, target, amount, spell)
+
+    return effect
+
+
+def _deal_with_excess_to_controller(
+    game: "Game", target: CardState, amount: int, source: CardState
+) -> None:
+    """CR 120.4a: `target` is dealt `amount` up to its threshold and its
+    controller is dealt the excess. Each recipient's damage is its own event,
+    so a prevention effect on one leaves the other alone."""
+    controller = game.controller_of(target)
+    threshold = _excess_threshold(game, target, source)
+    to_target = amount if threshold is None else min(amount, threshold)
+    if to_target > 0:
+        game.deal_damage(target, to_target, source=source)
+    if amount - to_target > 0:
+        game.deal_damage(game.player(controller.username), amount - to_target, source=source)
+
+
+#: "Target creature you control deals damage equal to its power to target
+#: creature you don't control. If the creature you control has `<keyword>`,
+#: excess damage is dealt to that creature's controller instead." (Ram
+#: Through). A bite (`_parse_bite_damage_clause`'s first sentence) whose
+#: second sentence is `_DAMAGE_THEN_EXCESS_TO_CONTROLLER_RE`'s modification,
+#: gated on the biter's keyword as the damage is dealt (CR 614.1a: the
+#: replacement applies when the damage event happens).
+_BITE_THEN_EXCESS_TO_CONTROLLER_RE = re.compile(
+    r"^target creature you control deals damage equal to its power to "
+    r"(?P<victim>target creature you don['’]t control)\.\s*"
+    r"if the creature you control has (?P<keyword>[a-z]+), "
+    r"excess damage is dealt to that creature['’]s controller instead\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s18")
+def _merge_bite_then_excess_to_controller_spell(effect_text: str) -> Effect | None:
+    """`_BITE_THEN_EXCESS_TO_CONTROLLER_RE`'s shape.
+
+    The biter is the target `spell`'s controller controls, the victim the one
+    they do not (the same split `_resolve_bite_damage` makes); CR 608.2b: with
+    either gone nothing is dealt. The keyword is read off the biter as the
+    damage is dealt (CR 613.5), by last known information if it has left (CR
+    608.2h); CR 120.4a deathtouch counts through the biter as the source."""
+    if "excess damage" not in effect_text.lower():  # cheap literal gate
+        return None
+    match = _BITE_THEN_EXCESS_TO_CONTROLLER_RE.fullmatch(
+        _strip_non_effect_preamble(effect_text).strip()
+    )
+    if match is None:
+        return None
+    if not _targets_understood("target creature you control", count_agnostic=False):
+        return None
+    if not _targets_understood(match.group("victim"), count_agnostic=True):
+        return None
+    keyword = match.group("keyword").lower()
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ..combat import source_had_keyword
+
+        controller = game.controller_of(spell).username
+        targets = [
+            target
+            for target in game.resolve_targets(spell)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        mine = [t for t in targets if game.controller_of(t).username == controller]
+        theirs = [t for t in targets if game.controller_of(t).username != controller]
+        if not mine or not theirs:
+            return
+        biter, victim = mine[0], theirs[0]
+        amount = game.power_of(biter) or 0
+        if amount <= 0:
+            return
+        if source_had_keyword(biter, keyword, game):
+            _deal_with_excess_to_controller(game, victim, amount, biter)
+        else:
+            game.deal_damage(victim, amount, source=biter)
+
+    return effect
+
+
+@SPELL_TEXT.rung("s18")
+def _merge_damage_then_tokens_per_excess_spell(effect_text: str) -> Effect | None:
+    """`_DAMAGE_THEN_TOKENS_PER_EXCESS_RE`'s shape.
+
+    CR 120.10: the excess is what the damage dealt *actually* was (prevention
+    already applied) above the threshold read before it landed, so prevented
+    or absorbed damage makes no tokens; the caster creates them."""
+    if "excess damage" not in effect_text.lower():  # cheap literal gate
+        return None
+    match = _DAMAGE_THEN_TOKENS_PER_EXCESS_RE.fullmatch(
+        _strip_non_effect_preamble(effect_text).strip()
+    )
+    if match is None:
+        return None
+    amount_of = _read_excess_damage_spell(match)
+    create = _token_creator_for_count(match.group("desc"))
+    if amount_of is None or create is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        amount = amount_of(game, spell)
+        for target in game.resolve_targets(spell):
+            if not isinstance(target, CardState):
+                continue
+            threshold = _excess_threshold(game, target, spell)
+            dealt = game.deal_damage(target, amount, source=spell)
+            if threshold is not None:
+                create(game, spell, dealt - threshold)
+
+    return effect
+
+
 def _merge_each_player_may_discard_hand_and_draw_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -5512,6 +5738,7 @@ from ._common import (  # noqa: E402
 )
 from .amounts import (  # noqa: E402
     _amount_reader,
+    _announced_x,
     _bounded_quality_matcher,
     _fixed_or_where_x_amount,
     _for_each_multiplier,
@@ -5528,6 +5755,7 @@ from .continuous import (  # noqa: E402
 )
 from .counters import _counter_kind, put_counters_on_ability_targets  # noqa: E402
 from .damage import (  # noqa: E402
+    _lethal_amount_before_damage,
     _parse_damage_each_filtered_clause,
     _parse_damage_each_group_clause,
     _prevent_next_damage_from_target,
@@ -5588,9 +5816,10 @@ from .search import (  # noqa: E402
     _search_descriptions,
     _search_quality_is_readable,
 )
-from .text import _as_sentence  # noqa: E402
+from .text import _as_sentence, _strip_non_effect_preamble  # noqa: E402
 from .tokens import (  # noqa: E402
     _parse_token_clause,
+    _token_creator_for_count,
     _token_definition_from_words,
     create_continuous_effect,
 )
