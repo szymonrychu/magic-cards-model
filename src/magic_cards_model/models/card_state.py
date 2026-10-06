@@ -2912,6 +2912,17 @@ class CardState(EngineModel):
         return self._left_in_epoch is not None and self._left_in_epoch == epoch
 
     @property
+    def last_left_the_battlefield(self) -> bool:
+        """Whether this object's last zone change started on the battlefield,
+        so the `last_known_*` snapshot describes it as a permanent (CR
+        608.2h, CR 113.7a). `last_known_keywords` is that marker: always a
+        tuple once `Game._note_left_battlefield` stamps it, and cleared by
+        `move_to` on any move that does not start there (CR 400.7). False for
+        a card that never was a permanent - a creature card discarded to pay
+        its own cost was a creature card, never a creature (CR 109.2)."""
+        return self.zone is not Zone.BATTLEFIELD and self.last_known_keywords is not None
+
+    @property
     def abilities_as_it_left(self) -> tuple[str, ...] | None:
         """See `_abilities_as_it_left`."""
         return self._abilities_as_it_left

@@ -337,3 +337,88 @@ def test_haze_frog_prevents_combat_damage_only():
     _ping(scenario, ballista, "alice")
 
     assert scenario.player("alice").life == 19
+
+
+# -- a creature source that has left the battlefield (CR 608.2h, CR 113.7a) ------
+#
+# A shield's recheck (CR 609.7b) of a source that is gone reads its last known
+# information: a Walking Ballista that removed its last counter, or a Mogg
+# Fanatic sacrificed to its own ability, was a creature as it last existed on
+# the battlefield, so "damage creatures would deal" still covers it. A creature
+# *card* that never was a permanent (CR 109.2: "creature" alone means a
+# creature permanent) - Trumpeting Carnosaur discarded from hand - is not.
+
+
+def test_chameleon_blur_covers_a_ballista_that_removed_its_last_counter():
+    scenario = _board(alice_hand=["Chameleon Blur"], bob_battlefield=["Walking Ballista"])
+    ballista = scenario.creature("Walking Ballista", "bob")
+    ballista.add_counters("+1/+1", 1)
+    _cast(scenario, "Chameleon Blur")
+
+    _ping(scenario, ballista, "alice")
+
+    assert ballista.zone is Zone.GRAVEYARD  # a 0/0 before its ability resolved
+    assert scenario.player("alice").life == 20
+
+
+def test_eerie_interference_covers_a_sacrificed_creatures_damage():
+    scenario = _board(
+        alice_hand=["Eerie Interference"],
+        alice_battlefield=["Grizzly Bears"],
+        bob_battlefield=["Mogg Fanatic"],
+    )
+    _cast(scenario, "Eerie Interference")
+    fanatic = scenario.creature("Mogg Fanatic", "bob")
+    if scenario.priority_holder != "bob":
+        scenario.pass_priority(scenario.priority_holder)
+
+    scenario.activate(fanatic, username="bob", sacrificing=[fanatic], targets=["alice"])
+    scenario.pass_until_resolved()
+
+    assert fanatic.zone is Zone.GRAVEYARD
+    assert scenario.player("alice").life == 20
+
+
+def test_eerie_interference_lets_a_creature_cards_hand_ability_through():
+    scenario = _board(
+        alice_hand=["Eerie Interference"],
+        alice_battlefield=["Hill Giant"],
+        bob_hand=["Trumpeting Carnosaur"],
+    )
+    _cast(scenario, "Eerie Interference")
+    giant = scenario.creature("Hill Giant", "alice")
+    carnosaur = scenario.find("Trumpeting Carnosaur", Zone.HAND, "bob")
+    if scenario.priority_holder != "bob":
+        scenario.pass_priority(scenario.priority_holder)
+
+    scenario.activate(carnosaur, username="bob", targets=[giant], auto=True)
+    scenario.pass_until_resolved()
+
+    assert carnosaur.zone is Zone.GRAVEYARD
+    assert giant.zone is Zone.GRAVEYARD  # a creature card, never a creature
+
+
+def test_repel_the_abominable_reads_a_gone_sources_subtypes_as_it_last_existed():
+    """Amoeboid Changeling made Mogg Fanatic every creature type, Human
+    included; sacrificed to its own ability, it is judged as it last existed
+    on the battlefield (CR 608.2h), so "non-Human sources" does not cover it."""
+    scenario = _board(
+        alice_hand=["Repel the Abominable"],
+        bob_battlefield=["Amoeboid Changeling", "Mogg Fanatic"],
+    )
+    _cast(scenario, "Repel the Abominable")
+    changeling = scenario.creature("Amoeboid Changeling", "bob")
+    changeling.summoning_sick = False
+    fanatic = scenario.creature("Mogg Fanatic", "bob")
+    if scenario.priority_holder != "bob":
+        scenario.pass_priority(scenario.priority_holder)
+    scenario.activate(changeling, index=0, username="bob", targets=[fanatic])
+    scenario.pass_until_resolved()
+    if scenario.priority_holder != "bob":
+        scenario.pass_priority(scenario.priority_holder)
+
+    scenario.activate(fanatic, username="bob", sacrificing=[fanatic], targets=["alice"])
+    scenario.pass_until_resolved()
+
+    assert fanatic.zone is Zone.GRAVEYARD
+    assert scenario.player("alice").life == 19

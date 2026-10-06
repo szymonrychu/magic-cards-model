@@ -608,9 +608,11 @@ class ShieldSourceFilter(EngineModel):
     If the properties no longer match, the damage isn't prevented." A
     creature that grows past the power limit, or gets a counter, after the
     shield was made is no longer covered; one that arrives later is. A
-    filter that names creatures (`creatures`, the default) never matches a
-    source that is not a creature on the battlefield as the damage is dealt;
-    one that names sources ("by colorless sources", "that black sources and
+    filter that names creatures (`creatures`, the default) matches a creature
+    on the battlefield as the damage is dealt, or a source that has left the
+    battlefield and was a creature as it last existed there (CR 608.2h, its
+    last known information) - never a creature card that was not a
+    permanent; one that names sources ("by colorless sources", "that black sources and
     red sources would deal", "by sources you don't control") reads any
     source, on the battlefield or not.
     """
@@ -645,17 +647,28 @@ class ShieldSourceFilter(EngineModel):
     """"sources you don't control": a source this player does not control."""
 
     def matches(self, game: "Game", source: CardState) -> bool:
-        from ...machines.combat import has_keyword
+        from ...machines.combat import source_had_keyword
 
         if source.zone is Zone.BATTLEFIELD:
             chars = game.characteristics_of(source)
             colors = set(chars.colors)
-            if self.creatures and Type.CREATURE not in chars.types:
-                return False
-        elif self.creatures:
-            return False
+            types = set(chars.types)
+            counters = chars.counters
+        elif self.creatures and not source.last_left_the_battlefield:
+            return False  # a creature card never was a creature (CR 109.2)
         else:
-            colors = set(source.colors)
+            # CR 608.2h / 113.7a: a source gone from the battlefield is read
+            # off its last known information - a Walking Ballista that
+            # removed its last counter was a creature as it last existed.
+            colors = set(
+                source.last_known_colors if source.last_known_colors is not None else source.colors
+            )
+            types = set(
+                source.last_known_types if source.last_known_types is not None else source.types
+            )
+            counters = source.last_known_counters
+        if self.creatures and Type.CREATURE not in types:
+            return False
         if self.colors_any and not set(self.colors_any) & colors:
             return False
         if self.colorless and colors:
@@ -670,9 +683,11 @@ class ShieldSourceFilter(EngineModel):
             return False
         if set(self.excluded_colors) & colors:
             return False
-        if self.without_counter is not None and chars.counters.get(self.without_counter, 0) > 0:
+        if self.without_counter is not None and counters.get(self.without_counter, 0) > 0:
             return False
-        if self.without_keyword is not None and has_keyword(source, self.without_keyword, game):
+        if self.without_keyword is not None and source_had_keyword(
+            source, self.without_keyword, game
+        ):
             return False
         if self.max_power is not None and (game.power_of(source) or 0) > self.max_power:
             return False

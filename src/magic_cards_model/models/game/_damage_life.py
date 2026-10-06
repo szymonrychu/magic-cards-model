@@ -682,9 +682,14 @@ class DamageLifeMixin:
             # the same reason: a shield that *names* what it covers cannot
             # match an unknown source, and one that names what it does *not*
             # cover cannot rule an unknown source out.
-            subtypes = {
-                subtype.lower() for subtype in self.characteristics_of(event.source).subtypes
-            }
+            # A source gone from the battlefield is judged as it last existed
+            # there (CR 608.2h).
+            source = event.source
+            if source.last_left_the_battlefield and source.last_known_subtypes is not None:
+                source_subtypes = tuple(source.last_known_subtypes)
+            else:
+                source_subtypes = tuple(self.characteristics_of(source).subtypes)
+            subtypes = {subtype.lower() for subtype in source_subtypes}
             if subtypes & {excluded.lower() for excluded in shield.excluded_source_subtypes}:
                 return False
         return not (
