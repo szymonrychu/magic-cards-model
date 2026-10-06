@@ -345,7 +345,9 @@ _PLURAL_PUMP_SUBJECT = rf"{_PLURAL_TARGET_SUBJECT}(?: each)?"
 #: `_split_and_validate_keywords`.
 _PUMP_RE = re.compile(
     rf"^(?:{_SUBJECT}|{_PLURAL_PUMP_SUBJECT}) (?:"
-    rf"gets? (?P<power>[+-](?:{COUNT}|x))/(?P<toughness>[+-](?:{COUNT}|x))"
+    # "an additional" names no new rule - sublayer 7c modifications simply add
+    # (CR 613.4c): Faerie Fencing's "That creature gets an additional -3/-3".
+    rf"gets? (?:an additional )?(?P<power>[+-](?:{COUNT}|x))/(?P<toughness>[+-](?:{COUNT}|x))"
     rf"(?: and gains? (?P<keyword>[a-z ,]+?))?"
     rf"|gains (?P<keyword2>[a-z ]+) and gets? "
     rf"(?P<power2>[+-](?:{COUNT}|x))/(?P<toughness2>[+-](?:{COUNT}|x))"
@@ -9866,7 +9868,68 @@ def _parse_designation_gated_sentence(
     return builder
 
 
+#: "`<subject>` gets an additional -3/-3 until end of turn if `<condition>`" -
+#: a layer sentence with a trailing "if" rider (Faerie Fencing: "That creature
+#: gets an additional -3/-3 until end of turn if you controlled a Faerie as
+#: you cast this spell."). The subject is either a "target ..." phrase or the
+#: anaphor back to the instruction before it; the anaphor is read as a
+#: "target creature" stand-in, the same recognise-only rewrite
+#: `machines/effects/text._RIDER_LAYER_SUBJECT_RE` makes - the objects it
+#: applies to are handed in as `targets`, never derived from the wording.
+_IF_RIDER_ANAPHOR_SUBJECT_RE = re.compile(
+    r"^(?:that (?:creature|permanent|token)|it|they|those creatures) (?=gets? |gains? )",
+    re.IGNORECASE,
+)
+
+
+def _parse_if_gated_layer_sentence(sentence: str) -> EffectBuilder | None:
+    """`_IF_RIDER_ANAPHOR_SUBJECT_RE`'s shape, or `None`.
+
+    The sentence minus its "if `<condition>`" tail must itself be a layer
+    shape (`_parse_layer_sentence_ungated`), and the condition one of
+    `machines/conditions/cast_record.py`'s own (`reads_cast_record`): how the
+    spell was cast and paid for - "as you cast this spell", "was kicked".
+    CR 608.2c: the rider is part of the same one-shot instruction, so it is
+    asked once, as the effect is created - `LayerContext.condition_holds`,
+    which for those reads the spell's own `CastRecord` (CR 601.2i), the fact
+    locked as it was cast, never the board as it resolves. An unreadable
+    condition parses to `None` here, so the sentence fails closed as before.
+    """
+    from ..conditions.cast_record import reads_cast_record
+
+    text = sentence.strip().rstrip(".")
+    for found in re.finditer(r" if ", text):
+        body, condition = text[: found.start()], text[found.end() :].strip()
+        if not reads_cast_record(condition):
+            continue
+        body = _IF_RIDER_ANAPHOR_SUBJECT_RE.sub("Target creature ", body, count=1)
+        base = _parse_layer_sentence_ungated(body + ".")
+        if base is not None:
+            return _if_gated_builder(base, condition)
+    return None
+
+
+def _if_gated_builder(base: EffectBuilder, condition: str) -> EffectBuilder:
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if context.condition_holds is None or not context.condition_holds(condition, source):
+            return []
+        return base(source, timestamp, targets, context)
+
+    return builder
+
+
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
+    """`_parse_layer_sentence_ungated`, then - for a sentence that is none of
+    those shapes - `_parse_if_gated_layer_sentence`'s trailing "if" rider."""
+    return _parse_layer_sentence_ungated(sentence) or _parse_if_gated_layer_sentence(sentence)
+
+
+def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
     """One of the generalised shapes below, or `None` if this is not one of them.
 
     `sentence` is normalised for a duration-first opening
@@ -11770,6 +11833,28 @@ def _classify_resolution_layer_sentence(sentence: str) -> tuple[bool, bool]:
     if _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE.match(normalized):
         return False, True
     return False, False
+
+
+#: A pump magnitude that is still a bare X - "gets -X/-X" (Faerie Fencing) -
+#: has no number until the spell is cast (CR 107.3a), which is what the
+#: resolving read substitutes (`_x_substituted_spell_text`); the text a
+#: composer classifies is the printed one, so it probes the sentence's
+#: *shape* with a placeholder value.
+_BARE_X_PUMP_RE = re.compile(r"(?<=[+-])X(?=/|\b)")
+
+
+def is_x_substituted_layer_sentence(sentence: str) -> bool:
+    """Whether `sentence` is a layer shape that only reads once its bare X pump
+    magnitude has a value (Faerie Fencing's "Target creature gets -X/-X until
+    end of turn."): the resolving spell applies it through its own announced X
+    (`create_continuous_effect`), so a composer must not count it as an unread
+    remainder beside a sentence that parsed."""
+    probed = _BARE_X_PUMP_RE.sub("1", sentence)
+    return (
+        probed != sentence
+        and _parse_layer_sentence(sentence) is None
+        and _parse_layer_sentence(probed) is not None
+    )
 
 
 def is_genuine_resolution_layer_sentence(sentence: str) -> bool:

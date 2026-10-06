@@ -702,6 +702,20 @@ class LayerContext(EngineModel):
             return 0
         return self.unspent_mana_by_controller.get(controller, {}).get(color, 0)
 
+    #: Reads a printed "if <condition>" rider on a resolving spell's or
+    #: ability's own layer sentence against the game as it is *now*, for the
+    #: `source` the builder was handed (`Game.condition_holds`, so the cast
+    #: record readers of `machines/conditions/cast_record.py` apply: "if you
+    #: controlled a Faerie as you cast this spell" is the fact `CastRecord`
+    #: locked at cast time, CR 601.2i, never the board as the spell resolves).
+    #: A builder only ever asks it as the effects are *created* - `None` (a
+    #: context nobody gave a game to) answers every rider unread, which
+    #: builds nothing. Excluded from serialisation like the rest of this
+    #: transient context.
+    condition_holds: Callable[[str, CardState], bool | None] | None = Field(
+        default=None, exclude=True
+    )
+
     #: The shared exile zone (CR 406.1) - a fourth thing the layer engine
     #: never sees on the battlefield. Keen-Eyed Curator's "As long as there
     #: are four or more card types among cards exiled with this creature"
