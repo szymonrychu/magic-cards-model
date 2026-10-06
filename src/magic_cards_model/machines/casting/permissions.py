@@ -2011,6 +2011,38 @@ def conditional_flash_condition(text: str) -> str | None:
     return None
 
 
+#: "If this spell was kicked, it has split second." (Molten Disaster) - the
+#: conditional grant of CR 702.61a's keyword, a static ability of the spell
+#: itself that functions while it is on the stack (CR 604.5).
+_CONDITIONAL_SPLIT_SECOND_RE = re.compile(
+    r"^if (?P<condition>[^.,]+), (?:it|this spell) has split second\.?$", re.IGNORECASE
+)
+
+
+def conditional_split_second_condition(text: str) -> str | None:
+    """The condition of an "If `<condition>`, it has split second." sentence
+    printed on this spell's own text, or `None` if the text carries none.
+    Read one printed line at a time, like `conditional_flash_condition`."""
+    for line in (text or "").split("\n"):
+        match = _CONDITIONAL_SPLIT_SECOND_RE.fullmatch(re.sub(r"\s*\([^)]*\)", "", line).strip())
+        if match is not None:
+            return match.group("condition").strip()
+    return None
+
+
+def _has_conditional_split_second(game: Any, spell: CardState) -> bool:
+    """Whether `spell`, on the stack, holds a conditional split second grant
+    whose condition is true now (read off its cast record like any other
+    "this spell was kicked" condition)."""
+    text = spell.card.oracle_text or ""
+    if "split second" not in text.lower():
+        return False
+    condition = conditional_split_second_condition(text)
+    if condition is None or spell.controller is None:
+        return False
+    return game.condition_holds(spell.controller, condition, spell) is True
+
+
 def has_split_second(card: Card) -> bool:
     """Whether this printing has split second (CR 702.61a), read the same
     way `has_flash` reads its own keyword - off the printing's own Scryfall
@@ -2049,6 +2081,8 @@ def split_second_restriction_source(game: Any) -> str | None:
         obj_card = getattr(obj, "card", None)
         if obj_card is not None and has_split_second(obj_card):
             return getattr(obj, "name", None) or obj_card.name
+        if isinstance(obj, CardState) and _has_conditional_split_second(game, obj):
+            return obj.name
         if (
             isinstance(obj, CardState)
             and obj_card is not None

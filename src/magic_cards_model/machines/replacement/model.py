@@ -1277,6 +1277,16 @@ def _shield_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEff
     ]
 
 
+#: The ability line a "can't be regenerated this turn" effect grants the
+#: creature it names (CR 701.19c); `_regeneration_effects` reads it off the
+#: computed characteristics, so it ends with the effect's duration.
+CANT_BE_REGENERATED_LINE = "This creature can't be regenerated."
+
+
+def _cant_be_regenerated(game: "Game", permanent: CardState) -> bool:
+    return CANT_BE_REGENERATED_LINE in game.characteristics_of(permanent).abilities
+
+
 def _regeneration_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """The regeneration shields waiting on this destruction (CR 701.19a).
 
@@ -1307,6 +1317,8 @@ def _regeneration_effects(game: "Game", event: ReplaceableEvent) -> list[Applica
     permanent = event.card
     if permanent is None or permanent.regeneration_shields <= 0:
         return []
+    if _cant_be_regenerated(game, permanent):
+        return []  # CR 701.19c: the shield is not applied (and not used up)
 
     def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
         card = event.card

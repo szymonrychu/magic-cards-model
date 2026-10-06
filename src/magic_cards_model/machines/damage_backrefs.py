@@ -39,6 +39,8 @@ _DAMAGE_TARGET_AND_EACH_OTHER_RE = re.compile(
 
 
 def _parse_damage_target_and_each_other(text: str) -> Any:
+    if " and each other creature " not in text:
+        return None
     match = _DAMAGE_TARGET_AND_EACH_OTHER_RE.fullmatch(text)
     if match is None:
         return None
@@ -47,11 +49,15 @@ def _parse_damage_target_and_each_other(text: str) -> Any:
         return None
     by_color = match.group("color") is not None
 
-    def effect(game: "Game", ability: "AbilityOnStack") -> None:
-        source = ability.source_or_last_known(game)
+    def effect(game: "Game", stack_object: "AbilityOnStack | CardState") -> None:
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)
+        )
         targets = [
             target
-            for target in game.resolve_targets(ability)
+            for target in game.resolve_targets(stack_object)
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
         ]
         if not targets:
@@ -76,6 +82,13 @@ def _parse_damage_target_and_each_other(text: str) -> Any:
             game.deal_damage(creature, amount, source=source)
 
     return effect
+
+
+def damage_backref_spell_effect(effect_text: str) -> Any:
+    """`damage_backref_ability_effect`'s shape on a resolving spell (Homing
+    Lightning's "deals 4 damage to target creature and each other creature with
+    the same name as that creature"), or None."""
+    return damage_backref_ability_effect(effect_text)
 
 
 def damage_backref_ability_effect(effect_text: str) -> Any:

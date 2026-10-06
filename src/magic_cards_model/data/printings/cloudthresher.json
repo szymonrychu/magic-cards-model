@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "4e18bff6-bf0b-48f8-93e2-09d435247596",
+  "oracle_id": "ab0e2aa0-1ddd-4a4c-b7cd-4063caaa8bcd",
+  "multiverse_ids": [
+    430315
+  ],
+  "tcgplayer_id": 131995,
+  "cardmarket_id": 298045,
+  "name": "Cloudthresher",
+  "lang": "en",
+  "released_at": "2017-06-09",
+  "uri": "https://api.scryfall.com/cards/4e18bff6-bf0b-48f8-93e2-09d435247596",
+  "scryfall_uri": "https://scryfall.com/card/cma/96/cloudthresher?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:51:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.jpg?1783936269",
+    "normal": "https://cards.scryfall.io/normal/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.jpg?1783936269",
+    "large": "https://cards.scryfall.io/large/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.jpg?1783936269",
+    "png": "https://cards.scryfall.io/png/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.png?1783936269",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.jpg?1783936269",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.jpg?1783936269",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.webp?1783936269",
+    "grid": "https://cards.scryfall.io/grid/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.webp?1783936269",
+    "display": "https://cards.scryfall.io/display/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.webp?1783936269",
+    "art": "https://cards.scryfall.io/art/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.webp?1783936269",
+    "crop": "https://cards.scryfall.io/crop/front/4/e/4e18bff6-bf0b-48f8-93e2-09d435247596.webp?1783936269"
+  },
+  "mana_cost": "{2}{G}{G}{G}{G}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "Flash\nReach\nWhen this creature enters, it deals 2 damage to each creature with flying and each player.\nEvoke {2}{G}{G} (You may cast this spell for its evoke cost. If you do, it's sacrificed when it enters.)",
+  "power": "7",
+  "toughness": "7",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Reach",
+    "Evoke",
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set": "cma",
+  "set_name": "Commander Anthology",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acma&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cma?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4e18bff6-bf0b-48f8-93e2-09d435247596/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aab0e2aa0-1ddd-4a4c-b7cd-4063caaa8bcd&unique=prints",
+  "collector_number": "96",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Christopher Moeller",
+  "artist_ids": [
+    "21e10012-06ae-44f2-b38d-3824dd2e73d4"
+  ],
+  "illustration_id": "fc0b3ead-ce3f-41c5-a318-3dddd684d67a",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 17082,
+  "penny_rank": 7377,
+  "prices": {
+    "usd": "0.25",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430315&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCloudthresher",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCloudthresher",
+    "edhrec": "https://edhrec.com/route/?cc=Cloudthresher"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F131995%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298045&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Cloudthresher&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

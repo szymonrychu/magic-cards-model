@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "2d5391a9-6c30-4f9b-b746-a4427a3e63fc",
+  "oracle_id": "041e2a01-3652-46c1-a9d1-d38ae7ee0551",
+  "multiverse_ids": [
+    87943
+  ],
+  "mtgo_id": 23214,
+  "mtgo_foil_id": 23215,
+  "tcgplayer_id": 13385,
+  "cardmarket_id": 13500,
+  "name": "Rain of Embers",
+  "lang": "en",
+  "released_at": "2005-10-07",
+  "uri": "https://api.scryfall.com/cards/2d5391a9-6c30-4f9b-b746-a4427a3e63fc",
+  "scryfall_uri": "https://scryfall.com/card/rav/138/rain-of-embers?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:54:08Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.jpg?1783943648",
+    "normal": "https://cards.scryfall.io/normal/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.jpg?1783943648",
+    "large": "https://cards.scryfall.io/large/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.jpg?1783943648",
+    "png": "https://cards.scryfall.io/png/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.png?1783943648",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.jpg?1783943648",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.jpg?1783943648",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.webp?1783943648",
+    "grid": "https://cards.scryfall.io/grid/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.webp?1783943648",
+    "display": "https://cards.scryfall.io/display/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.webp?1783943648",
+    "art": "https://cards.scryfall.io/art/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.webp?1783943648",
+    "crop": "https://cards.scryfall.io/crop/front/2/d/2d5391a9-6c30-4f9b-b746-a4427a3e63fc.webp?1783943648"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Rain of Embers deals 1 damage to each creature and each player.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "15fccbe8-2825-41ca-9d0a-67aebdf91c4a",
+  "set": "rav",
+  "set_name": "Ravnica: City of Guilds",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/15fccbe8-2825-41ca-9d0a-67aebdf91c4a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Arav&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rav?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2d5391a9-6c30-4f9b-b746-a4427a3e63fc/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A041e2a01-3652-46c1-a9d1-d38ae7ee0551&unique=prints",
+  "collector_number": "138",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "There's plenty to talk about in the marketplaces of Ravnica, be it the latest feud between guilds or the terrible weather.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tsutomu Kawade",
+  "artist_ids": [
+    "433a40d2-2caa-4cba-ba8d-0308a951d026"
+  ],
+  "illustration_id": "d0d89a68-4ba2-46fc-aec8-22588d364ca6",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16810,
+  "penny_rank": 15073,
+  "prices": {
+    "usd": "0.12",
+    "usd_foil": "1.48",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.27",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=87943&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRain%2Bof%2BEmbers",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRain%2Bof%2BEmbers",
+    "edhrec": "https://edhrec.com/route/?cc=Rain+of+Embers"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F13385%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=13500&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/23214?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
