@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "c9fdfebf-98e0-4718-bac3-6eee1cd0623d",
+  "oracle_id": "4080f7e3-06d3-4d3d-9929-4e826cb66713",
+  "multiverse_ids": [
+    679094
+  ],
+  "mtgo_id": 133602,
+  "arena_id": 93730,
+  "tcgplayer_id": 589345,
+  "cardmarket_id": 795100,
+  "name": "Herald of Eternal Dawn",
+  "lang": "en",
+  "released_at": "2024-11-15",
+  "uri": "https://api.scryfall.com/cards/c9fdfebf-98e0-4718-bac3-6eee1cd0623d",
+  "scryfall_uri": "https://scryfall.com/card/fdn/17/herald-of-eternal-dawn?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:18:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.jpg?1783909125",
+    "normal": "https://cards.scryfall.io/normal/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.jpg?1783909125",
+    "large": "https://cards.scryfall.io/large/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.jpg?1783909125",
+    "png": "https://cards.scryfall.io/png/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.png?1783909125",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.jpg?1783909125",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.jpg?1783909125",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.webp?1783909125",
+    "grid": "https://cards.scryfall.io/grid/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.webp?1783909125",
+    "display": "https://cards.scryfall.io/display/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.webp?1783909125",
+    "art": "https://cards.scryfall.io/art/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.webp?1783909125",
+    "crop": "https://cards.scryfall.io/crop/front/c/9/c9fdfebf-98e0-4718-bac3-6eee1cd0623d.webp?1783909125"
+  },
+  "mana_cost": "{4}{W}{W}{W}",
+  "cmc": 7.0,
+  "type_line": "Creature \u2014 Angel",
+  "oracle_text": "Flash (You may cast this spell any time you could cast an instant.)\nFlying\nYou can't lose the game and your opponents can't win the game.",
+  "power": "6",
+  "toughness": "6",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set": "fdn",
+  "set_name": "Foundations",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fdn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c9fdfebf-98e0-4718-bac3-6eee1cd0623d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4080f7e3-06d3-4d3d-9929-4e826cb66713&unique=prints",
+  "collector_number": "17",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "\"I am the light that breaks the darkness.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Martina Fa\u010dkov\u00e1",
+  "artist_ids": [
+    "6338124e-8e53-498d-8bf9-93a55db2f61c"
+  ],
+  "illustration_id": "78e8b6fa-6464-411f-a0d4-3daf9b0f4b3b",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4100,
+  "penny_rank": 5499,
+  "prices": {
+    "usd": "1.40",
+    "usd_foil": "1.97",
+    "usd_etched": null,
+    "eur": "1.44",
+    "eur_foil": "1.93",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=679094&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHerald%2Bof%2BEternal%2BDawn",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHerald%2Bof%2BEternal%2BDawn",
+    "edhrec": "https://edhrec.com/route/?cc=Herald+of+Eternal+Dawn"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F589345%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=795100&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/133602?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

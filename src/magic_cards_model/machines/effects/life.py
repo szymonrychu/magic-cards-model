@@ -601,6 +601,140 @@ def _parse_gain_life_if_color_spent_clause(effect_text: str) -> Effect | None:
     return effect
 
 
+#: A leading "You can't lose the game this turn and your opponents can't win
+#: the game this turn." sentence (Angel's Grace), then whatever else the
+#: spell says - Angel's Grace's "Until end of turn, damage that would reduce
+#: your life total to less than 1 reduces it to 1 instead.", the created
+#: replacement `_parse_created_replacement_spell_text` reads (CR 614.1a).
+_GAME_OUTCOME_PROHIBITION_SENTENCE_RE = re.compile(
+    r"^(?P<first>you can't (?:lose|win) the game[^.\n]*\.|"
+    r"your opponents can't (?:lose|win) the game[^.\n]*\.)\s*(?P<rest>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_lose_the_game_prohibition_then_rest(effect_text: str) -> Effect | None:
+    """A spell whose first sentence is a turn-long "can't lose the game" /
+    "your opponents can't win the game" (`turn_scoped_riders.
+    game_outcome_prohibition_rider`, CR 101.2, CR 611.2a) and whose rest, if
+    any, the ordinary spell dispatcher reads. CR 608.2c: in the order
+    written. Either half unread leaves the whole unread (fail closed)."""
+    if "the game" not in effect_text:
+        return None
+    match = _GAME_OUTCOME_PROHIBITION_SENTENCE_RE.match(effect_text.strip())
+    if match is None:
+        return None
+    prohibition = game_outcome_prohibition_rider(match.group("first"))
+    if prohibition is None:
+        return None
+    rest_text = match.group("rest").strip()
+    rest = _spell_effect_or_notice(rest_text) if rest_text else None
+    if rest_text and (rest is None or _is_notice_only(rest)):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        prohibition(game, spell)
+        if rest is not None:
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
+            rest(game, spell)
+
+    return effect
+
+
+#: "you lose the game." as a triggered ability's whole instruction - Lich's
+#: Mastery's "When Lich's Mastery leaves the battlefield, you lose the game."
+#: (CR 603.6c). CR 104.3e's stated loss, so `Game.player_loses_the_game` both
+#: honours a "can't lose the game" still in force (CR 101.2) and offers it to
+#: "if you would lose the game, instead" replacements (CR 614).
+_YOU_LOSE_THE_GAME_RE = re.compile(r"^you lose the game\.?$", re.IGNORECASE)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_you_lose_the_game_clause(text: str) -> AbilityEffect | None:
+    """`_YOU_LOSE_THE_GAME_RE`'s shape: the ability's controller loses."""
+    if "lose the game" not in text or _YOU_LOSE_THE_GAME_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.player_loses_the_game(ability.controller)
+
+    return effect
+
+
+#: "for each 1 life you lost, exile a permanent you control or a card from
+#: your hand or graveyard." - Lich's Mastery's "Whenever you lose life, ..."
+#: (CR 119.3). The count is the triggering life-loss event's own amount
+#: (`amounts.that_many`, CR 603.2c); the objects are the controller's choice
+#: as the ability resolves (CR 608.2d), any mix of the places the clause
+#: lists, and each is exiled (CR 701.13a). Fewer objects than the count
+#: exiles every one of them. The places read: "a permanent you control",
+#: "a card from your hand", "a card from your graveyard", and "a card from
+#: your hand or graveyard", joined by "or".
+_EXILE_PLACE = (
+    r"a permanent you control|a card from your (?:hand|graveyard)(?: or (?:hand|graveyard))?"
+)
+_EXILE_FOR_EACH_LIFE_LOST_RE = re.compile(
+    rf"^for each 1 life you lost, exile "
+    rf"(?P<places>(?:{_EXILE_PLACE})(?: or (?:{_EXILE_PLACE}))*)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_exile_for_each_life_lost_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_FOR_EACH_LIFE_LOST_RE`'s shape - see the banner above."""
+    if "life you lost" not in text:
+        return None
+    match = _EXILE_FOR_EACH_LIFE_LOST_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    places = match.group("places").lower()
+    from_battlefield = "a permanent you control" in places
+    from_hand = "hand" in places
+    from_graveyard = "graveyard" in places
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        count = _that_many_or_notice(
+            game,
+            text,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            stack_object=ability,
+        )
+        if not count:
+            return
+        player = game.player(ability.controller)
+        candidates: list[CardState] = []
+        if from_battlefield:
+            candidates.extend(game.permanents_controlled_by(player.username))
+        if from_hand:
+            candidates.extend(player.hand)
+        if from_graveyard:
+            candidates.extend(player.graveyard)
+        if not candidates:
+            return
+        amount = min(count, len(candidates))
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose {amount} to exile",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=amount,
+                exact=True,
+                default_cards=tuple(state.id for state in candidates[:amount]),
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        by_id = {state.id: state for state in candidates}
+        game.exile_cards([by_id[card_id] for card_id in chosen])
+
+    return effect
+
+
 #: "you may pay `<N>` life. If you do, `<consequence>`." - Voracious
 #: Tome-Skimmer's "Whenever you cast a spell during an opponent's turn, you
 #: may pay 1 life. If you do, draw a card." and Crossway Troublemakers'
@@ -1016,6 +1150,7 @@ def gain_life_equal_to_damage_dealt(sentence: str) -> "Callable[[Game, str, int]
     return gain
 
 
+from ..turn_scoped_riders import game_outcome_prohibition_rider  # noqa: E402
 from ._common import (  # noqa: E402
     AmountReader,
     _opponents,
@@ -1024,6 +1159,7 @@ from ._common import (  # noqa: E402
 )
 from .amounts import _that_many_or_notice, amount_expression, count_expression  # noqa: E402
 from .damage import _parse_until_eot_assigns_toughness  # noqa: E402
+from .dispatch import _spell_effect_or_notice  # noqa: E402
 from .draw_discard import _discard_cards  # noqa: E402
 from .modal import _choose_permanents_to_sacrifice  # noqa: E402
 from .removal import (  # noqa: E402
@@ -1034,3 +1170,4 @@ from .removal import (  # noqa: E402
 )
 from .search import _search_library  # noqa: E402
 from .text import _strip_non_effect_preamble  # noqa: E402
+from .tokens import _is_notice_only  # noqa: E402

@@ -1763,17 +1763,28 @@ class TurnSbaMixin:
         - **CR 704.5c** - "If a player has ten or more poison counters, that
           player loses the game." `Player.loses_to_poison` is the threshold; the
           Two-Headed Giant exception the rule names is not modelled.
+
+        A player who can't lose the game (`why_cant_lose_the_game`) is left
+        out of all three.
         """
-        return [
-            player.username
-            for player in self.players
-            if self.is_in_game(player.username)
-            and (
+        losing: list[str] = []
+        for player in self.players:
+            if not self.is_in_game(player.username) or not (
                 player.life <= 0
                 or player.tried_to_draw_from_empty_library
                 or player.loses_to_poison
-            )
-        ]
+            ):
+                continue
+            if self.why_cant_lose_the_game(player.username) is not None:
+                # CR 101.2: "can't lose the game" beats every CR 704.5a-c
+                # loss. CR 704.5b counts only a draw "since the last time
+                # state-based actions were checked", and this check has now
+                # looked, so the failed draw is not held over to the check
+                # after the effect ends; life and poison are state, and are.
+                player.tried_to_draw_from_empty_library = False
+                continue
+            losing.append(player.username)
+        return losing
 
     def _apply_lose_the_game_replacements(self: "Game", username: str) -> bool:
         """CR 614: raise `username`'s loss as a replaceable event (CR 104.3b/
@@ -1967,6 +1978,8 @@ class TurnSbaMixin:
         """
         if not self.is_in_game(username):
             return
+        if self.why_cant_lose_the_game(username) is not None:
+            return  # CR 101.2: the loss can't happen, so nothing replaces it
         if not self._apply_lose_the_game_replacements(username):
             return
         self._lose_the_game(username)
@@ -1990,7 +2003,70 @@ class TurnSbaMixin:
         """
         if not self.is_in_game(username) or self.is_over:
             return
+        if self.why_cant_win_the_game(username) is not None:
+            return  # CR 101.2 over CR 104.2b; only CR 104.2a overrides it
         self.end_with_winner(username)
+
+    def why_cant_lose_the_game(self: "Game", username: str) -> str | None:
+        """Why `username` can't lose the game right now, or None (CR 101.2).
+
+        "You can't lose the game" stops every loss but a concession (CR
+        104.3a, `concede`): CR 704.5a-c's state-based losses
+        (`_losing_players`) and an effect saying the player loses (CR 104.3e,
+        `player_loses_the_game`). Two sources, one sentence shape
+        (`machines/layers/parse.read_cant_lose_cant_win`):
+
+        - a permanent's static line (Platinum Angel, Herald of Eternal Dawn),
+          read off its computed abilities so it applies only while the
+          permanent is on the battlefield and still has it (CR 604.2, CR
+          611.3a, CR 613 layer 6) and only for its current controller;
+        - a resolved "this turn" form (Angel's Grace), recorded on
+          `casting_rule_effects` (CR 611.2a) until CR 514.2 ends it.
+        """
+        return self._game_outcome_prohibition(username, lose=True)
+
+    def why_cant_win_the_game(self: "Game", username: str) -> str | None:
+        """Why `username` can't win the game right now, or None (CR 101.2):
+        an opponent's "your opponents can't win the game", from the same two
+        sources as `why_cant_lose_the_game`. It stops a win an effect states
+        (CR 104.2b, `player_wins_the_game`); CR 104.2a's last-player-standing
+        win "overrides all effects that would preclude that player from
+        winning the game", so `_check_for_a_winner` never asks."""
+        return self._game_outcome_prohibition(username, lose=False)
+
+    def _game_outcome_prohibition(self: "Game", username: str, *, lose: bool) -> str | None:
+        def applies(controller: str, you_cant_lose: bool, opponents_cant_win: bool) -> bool:
+            if lose:
+                return you_cant_lose and controller == username
+            return opponents_cant_win and controller != username
+
+        verb = "lose" if lose else "win"
+        for effect in self.casting_rule_effects:
+            if applies(
+                effect.controller,
+                effect.kind == CANT_LOSE_THE_GAME,
+                effect.kind == OPPONENTS_CANT_WIN_THE_GAME,
+            ):
+                return (
+                    f"{username} can't {verb} the game this turn: {effect.source_name} "
+                    "says so (CR 101.2, CR 611.2a)"
+                )
+        # Asked only when a loss or a win is about to happen, so the whole
+        # computed board is read: a granted line (an Equipment's quoted
+        # ability) is as much the permanent's own as a printed one.
+        for permanent in self.battlefield:
+            characteristics = self.characteristics_of(permanent)
+            controller = characteristics.controller or permanent.controller
+            for line in characteristics.abilities:
+                prohibition = read_cant_lose_cant_win(line)
+                if prohibition is None or prohibition.this_turn:
+                    continue
+                if applies(controller, prohibition.you_cant_lose, prohibition.opponents_cant_win):
+                    return (
+                        f"{username} can't {verb} the game: {permanent.name} says so "
+                        "(CR 101.2, CR 604.2)"
+                    )
+        return None
 
     def advance(self: "Game", username: str | None = None) -> Step:
         """Move to the next step (CR 500.1), as `username`'s own decision.
@@ -2302,3 +2378,10 @@ class TurnSbaMixin:
             )
         self.sync_priority_with_step()  # CR 502.4, 514.3
         return self.turn.step
+
+
+from ...machines.layers.parse import read_cant_lose_cant_win  # noqa: E402
+from ...machines.turn_scoped_riders import (  # noqa: E402
+    CANT_LOSE_THE_GAME,
+    OPPONENTS_CANT_WIN_THE_GAME,
+)

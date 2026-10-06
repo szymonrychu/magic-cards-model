@@ -318,7 +318,10 @@ class Player(EngineModel):
 
     tried_to_draw_from_empty_library: bool = False
     """Set when a draw found no cards. The player loses the next time state-based
-    actions are checked (CR 104.3c, 704.5b) - which the game does, not the player."""
+    actions are checked (CR 104.3c, 704.5b) - which the game does, not the player.
+    A player who can't lose the game then (`Game.why_cant_lose_the_game`) has it
+    cleared by that check instead: CR 704.5b counts only a draw "since the last
+    time state-based actions were checked"."""
 
     has_citys_blessing: bool = False
     """CR 702.131c: "a designation that has no rules meaning other than to act

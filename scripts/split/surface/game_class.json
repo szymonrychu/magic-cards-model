@@ -187,6 +187,7 @@
     "_face_up_while_announced",
     "_find_card_named_anywhere",
     "_forget_counts",
+    "_game_outcome_prohibition",
     "_get_value",
     "_grant_dash_haste",
     "_grant_player_keyword",
@@ -657,6 +658,8 @@
     "why_cannot_turn_face_up_as",
     "why_cannot_unlock_door",
     "why_cannot_unlock_door_as",
+    "why_cant_lose_the_game",
+    "why_cant_win_the_game",
     "why_game_is_over",
     "why_not_holding_priority"
   ],

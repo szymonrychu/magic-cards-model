@@ -442,3 +442,53 @@ def parse_event_subject_controller_poison_clause(clause: str, *, for_spell: bool
         game.add_player_counters(game.player(username), Counter.POISON, amount)
 
     return poison
+
+
+# -- "you can't lose the game this turn and your opponents can't win ..." ----
+
+#: `CastingRuleEffect.kind` for a resolved "You can't lose the game this
+#: turn": `controller` can't lose (CR 101.2 over CR 104.3/704.5a-c). Kept on
+#: `Game.casting_rule_effects`, the record every other resolved CR 611.1
+#: "rules of the game" effect already lives on, and ended there by CR 514.2.
+CANT_LOSE_THE_GAME = "cant_lose_the_game"
+#: "... and your opponents can't win the game this turn": every opponent of
+#: `controller` can't win (CR 101.2 over CR 104.2b; CR 104.2a still wins).
+OPPONENTS_CANT_WIN_THE_GAME = "opponents_cant_win_the_game"
+
+
+def game_outcome_prohibition_rider(sentence: str) -> Rider | None:
+    """Angel's Grace's "You can't lose the game this turn and your opponents
+    can't win the game this turn." (or either half alone), as a rider that
+    records the effect for the resolving object's controller (CR 611.2a: it
+    lasts the turn; CR 514.2 ends it). The static form with no duration is
+    a permanent's own line and is read off the battlefield instead
+    (`Game.why_cant_lose_the_game`)."""
+    prohibition = read_cant_lose_cant_win(sentence)
+    if prohibition is None or not prohibition.this_turn:
+        return None
+    kinds = [
+        kind
+        for kind, applies in (
+            (CANT_LOSE_THE_GAME, prohibition.you_cant_lose),
+            (OPPONENTS_CANT_WIN_THE_GAME, prohibition.opponents_cant_win),
+        )
+        if applies
+    ]
+
+    def record(game: Game, stack_object: Any) -> None:
+        controller = _controller(game, stack_object)
+        for kind in kinds:
+            game.casting_rule_effects.append(
+                CastingRuleEffect(
+                    kind=kind,
+                    controller=controller,
+                    source_name=_source_name(stack_object),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                )
+            )
+
+    return record
+
+
+from .casting_restrictions import CastingRuleEffect  # noqa: E402
+from .layers.parse import read_cant_lose_cant_win  # noqa: E402

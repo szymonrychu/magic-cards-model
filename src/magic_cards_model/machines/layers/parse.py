@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
@@ -11865,6 +11865,57 @@ def additional_land_plays(abilities: Iterable[str]) -> int:
     reading the board at every question means the grant is gone the moment
     its source is."""
     return sum(additional_land_plays_of_line(line) or 0 for line in abilities)
+
+
+class GameOutcomeProhibition(NamedTuple):
+    """One read "You can't lose the game and your opponents can't win the
+    game." sentence (CR 101.2's "can't" over CR 104.2b/104.3/704.5a-c), or
+    either half of it alone. Like CR 611.3d's land grants above it changes no
+    characteristic - CR 611.1's "affects players or the rules of the game" -
+    so it is read where the rules ask the question (`Game.
+    why_cant_lose_the_game` / `why_cant_win_the_game`), not applied in a
+    layer. `this_turn` is the resolved-spell form (Angel's Grace), which
+    lasts the turn (CR 611.2a)."""
+
+    you_cant_lose: bool
+    opponents_cant_win: bool
+    this_turn: bool
+
+
+_CANT_LOSE_HALF = "you can't lose the game"
+_CANT_WIN_HALF = "your opponents can't win the game"
+_GAME_OUTCOME_HALF = rf"(?:{_CANT_LOSE_HALF}|{_CANT_WIN_HALF})"
+#: Both halves carry the same duration or neither does: a mixed sentence is
+#: not one effect and is left unread.
+_GAME_OUTCOME_PROHIBITION_RE = re.compile(
+    rf"^(?P<first>{_GAME_OUTCOME_HALF})(?P<turn>(?: this turn)?)"
+    rf"(?: and (?P<second>{_GAME_OUTCOME_HALF})(?P=turn))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def read_cant_lose_cant_win(text: str) -> GameOutcomeProhibition | None:
+    """`text` as a `GameOutcomeProhibition`, or None. Reads "You can't lose
+    the game and your opponents can't win the game." (Platinum Angel, Herald
+    of Eternal Dawn), its "this turn" form (Angel's Grace) and either half
+    alone ("You can't lose the game.", Lich's Mastery). A half repeated, or
+    Abyssal Persecutor's reversed "You can't win the game and your opponents
+    can't lose the game.", is not this effect."""
+    if "the game" not in text:
+        return None
+    match = _GAME_OUTCOME_PROHIBITION_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    halves = [match.group("first").lower()]
+    if match.group("second") is not None:
+        halves.append(match.group("second").lower())
+    if len(set(halves)) != len(halves):
+        return None
+    return GameOutcomeProhibition(
+        you_cant_lose=_CANT_LOSE_HALF in halves,
+        opponents_cant_win=_CANT_WIN_HALF in halves,
+        this_turn=bool(match.group("turn")),
+    )
 
 
 from ._common import _COLOR_WORDS, _KNOWN_KEYWORDS, _YOU_CONTROL_ATTACHED_RE  # noqa: E402
