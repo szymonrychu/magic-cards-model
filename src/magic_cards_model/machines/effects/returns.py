@@ -2727,6 +2727,60 @@ def _parse_return_self_then_may_attach_equipment(text: str) -> AbilityEffect | N
     return effect
 
 
+# --------------------------------------------------------------------------
+# "Choose <target cards in graveyards>. [<payment>.] Put them onto the
+# battlefield under your control."
+# --------------------------------------------------------------------------
+#
+# Command the Dreadhorde: "Choose any number of target creature and/or
+# planeswalker cards in graveyards. Command the Dreadhorde deals damage to
+# you equal to the total mana value of those cards. Put them onto the
+# battlefield under your control." Grim Return: "Choose target creature card
+# in a graveyard that was put there from the battlefield this turn. Put that
+# card onto the battlefield under your control." The opener only names the
+# targets (CR 115.1a; the "put there from the battlefield this turn"
+# restriction is `TargetRequirement.put_there_from_battlefield_this_turn`'s);
+# "those cards" / "them" / "that card" are the ones still legal as the spell
+# resolves (CR 608.2b - one that left its graveyard is neither paid for nor
+# returned). The optional payment is the spell dealing damage to its
+# controller equal to the total mana value of the chosen cards (CR 202.3).
+_CHOSEN_GRAVEYARD_CARDS_ONTO_BATTLEFIELD_RE = re.compile(
+    r"^choose (?P<phrase>[^.]*\btarget\b[^.]*\bcards? in (?:a )?graveyards?"
+    r"(?: that (?:was|were) put there from the battlefield this turn)?)\.\s+"
+    r"(?:(?P<payment>[^.]+? deals damage to you) equal to "
+    r"the total mana value of those cards\.\s+)?"
+    r"put (?:them|that card) onto the battlefield under your control\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s21")
+def _parse_return_chosen_graveyard_cards_spell_text(text: str) -> Effect | None:
+    """`_CHOSEN_GRAVEYARD_CARDS_ONTO_BATTLEFIELD_RE`'s shape; see the banner."""
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _CHOSEN_GRAVEYARD_CARDS_ONTO_BATTLEFIELD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+    pays_damage = match.group("payment") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        chosen = [card for card in game.resolve_card_targets(spell) if card.zone is Zone.GRAVEYARD]
+        if not chosen:
+            return
+        if pays_damage:
+            total = int(sum(card.mana_value for card in chosen))
+            if total > 0:
+                game.deal_damage(controller, total, source=spell)
+        for card in chosen:
+            if card.zone is Zone.GRAVEYARD:
+                game.put_onto_battlefield(card, controller.username)
+
+    return effect
+
+
 from ._common import (  # noqa: E402
     _EXILE_TARGET_RE,
     _NON_SUBTYPE_PREFIX_RE,

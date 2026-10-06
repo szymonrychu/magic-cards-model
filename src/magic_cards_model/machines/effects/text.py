@@ -32,6 +32,8 @@ from ..delayed import (
     DelayedTrigger,
     RevokeGrantedAbility,
     anaphoric_delayed_trigger,
+    chosen_object_turn_trigger_line,
+    create_chosen_object_turn_trigger,
 )
 from ..layers import (
     KNOWN_KEYWORDS,
@@ -60,7 +62,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT, SPELL_TEXT
+from ._chains import ABILITY_TEXT, MIXED_CLAUSE, SPELL_TEXT
 from ._common import (
     _OBJECT_ANAPHOR,
     AbilityEffect,
@@ -2989,6 +2991,15 @@ def _referent_of_it(game: "Game", ability: AbilityOnStack) -> CardState | None:
     return referent
 
 
+#: A created trigger whose condition names "that creature" (an object an
+#: earlier instruction chose) or a target: the generic created trigger has no
+#: object to bind it to and would watch every creature, so it is refused here
+#: and read by `_parse_that_object_turn_trigger_*` (CR 603.7c) instead.
+_CREATED_TRIGGER_ANAPHORIC_CONDITION_RE = re.compile(
+    r"^whenever (?:that|those|target)\b[^,]*,", re.IGNORECASE
+)
+
+
 def _split_created_trigger_paragraph(text: str) -> tuple[str, TriggeredAbility, str] | None:
     """(printed line, its parse, the rest of the text) when `text` opens with
     a readable created "this turn" trigger. CR 603.1: the whole paragraph is
@@ -2999,7 +3010,7 @@ def _split_created_trigger_paragraph(text: str) -> tuple[str, TriggeredAbility, 
     if not paragraphs:
         return None
     line = created_trigger_line(paragraphs[0])
-    if line is None:
+    if line is None or _CREATED_TRIGGER_ANAPHORIC_CONDITION_RE.match(line):
         return None
     ability = _readable_created_trigger(line)
     if ability is None:
@@ -3695,6 +3706,238 @@ def _parse_per_target_sentence_groups_ability(text: str) -> AbilityEffect | None
     return _per_target_sentence_effect(text, for_spell=False)
 
 
+# --------------------------------------------------------------------------
+# "Choose <target phrase>." openers and the anaphor that refers back to them
+# --------------------------------------------------------------------------
+#
+# CR 115.1a: "An instant or sorcery spell is targeted if its spell ability
+# identifies something it will affect by using the phrase 'target
+# [something]' ... The target(s) are chosen as the spell is cast". Harnessed
+# Lightning, Practiced Tactics, Blast of Genius and Drown in Filth open with a
+# bare "Choose target creature." / "Choose any target." sentence that does
+# nothing on resolution itself: it only names the target, and a later
+# sentence acts on it through an anaphor - "that creature", "that permanent
+# or player" (CR 608.2c: "later text on the card may modify the meaning of
+# earlier text"). `machines/targeting.py` already reads the target phrase
+# wherever it sits, so the spell is cast with the right target; what no
+# reader could do was act on "that creature" with no "target" word left in
+# the sentence that acts.
+#
+# The opener is read here once, as a normaliser, and the rest of the spell
+# handed back to the ordinary readers in one of three readings, first
+# readable wins:
+#
+# 1. the anaphor replaced by the target phrase itself - "Mill four cards,
+#    then target creature gets -1/-1 ... for each land card in your
+#    graveyard" - so every reader that already acts on "target creature"
+#    acts on the chosen one (`game.resolve_targets`, CR 608.2b's recheck
+#    included);
+# 2. the rest as printed, for a reader that binds the anaphor to the
+#    spell's target itself (a delayed trigger about "that creature",
+#    `_parse_that_object_turn_trigger_spell_text` below);
+# 3. the opener kept and the anaphor named by its generic noun, "that
+#    permanent", for a whole-text reader written against that noun -
+#    "that creature" and "that permanent" are the same chosen object.
+#
+# Only one target requirement, and no other "target" in the rest: a second
+# requirement ("Choose target creature you control and target creature you
+# don't control") is the fight/bite openers' shape, read elsewhere.
+_CHOOSE_TARGET_PRELUDE_RE = re.compile(
+    r"^choose (?P<phrase>any target|[^.]*?\btargets?\b[^.]*?)\.\s+(?P<rest>\S.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: The anaphors a "Choose <target>." opener's later sentences refer back with.
+_PRELUDE_REFERENT_RE = re.compile(
+    r"\b(?:that|the chosen|the) (?P<noun>permanent or player|creature or planeswalker|"
+    r"creature|permanent|player|planeswalker|artifact|enchantment|land|card)\b"
+    r"|\bthose (?P<plural>cards|creatures|permanents)\b",
+    re.IGNORECASE,
+)
+
+#: Nouns that name only a permanent, so "that permanent" names the same object.
+_PERMANENT_REFERENT_NOUNS = frozenset(
+    {"creature", "planeswalker", "artifact", "enchantment", "land", "creature or planeswalker"}
+)
+
+
+def split_choose_target_prelude(text: str) -> "tuple[str, str] | None":
+    """(target phrase, the rest) when `text` opens with "Choose <one target
+    phrase>." and the rest names no target of its own, else `None`."""
+    match = _CHOOSE_TARGET_PRELUDE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    phrase = match.group("phrase").strip()
+    rest = match.group("rest").strip()
+    if len(re.findall(r"\btargets?\b", phrase, re.IGNORECASE)) != 1:
+        return None
+    if re.search(r"\btargets?\b", rest, re.IGNORECASE):
+        return None
+    return phrase, rest
+
+
+def _prelude_readings(phrase: str, rest: str) -> list[str]:
+    """The readings of `_CHOOSE_TARGET_PRELUDE_RE`'s banner, in order."""
+    readings: list[str] = []
+    referents = [
+        found
+        for found in _PRELUDE_REFERENT_RE.finditer(rest)
+        if found.group(0).lower().startswith(("that", "the chosen", "those"))
+        or found.start() == 0
+        or rest[: found.start()].rstrip().endswith(".")
+    ]
+    sentence_start = rest.rfind(".", 0, referents[0].start()) + 1 if len(referents) == 1 else 0
+    in_trigger_condition = len(referents) == 1 and re.match(
+        r"\s*(?:whenever|when)\b", rest[sentence_start:], re.IGNORECASE
+    )
+    if len(referents) == 1 and not in_trigger_condition:
+        # A trigger condition is never bound this way: "Whenever target
+        # creature ..." names no object at all (CR 603.7c needs the one the
+        # opener chose), so reading 2 below reads it instead.
+        found = referents[0]
+        bound = phrase[0].upper() + phrase[1:] if found.group(0)[0].isupper() else phrase
+        readings.append(rest[: found.start()] + bound + rest[found.end() :])
+    readings.append(rest)
+    if (
+        len(referents) == 1
+        and (referents[0].group("noun") or "").lower() in _PERMANENT_REFERENT_NOUNS
+    ):
+        found = referents[0]
+        readings.append(
+            f"Choose {phrase}. {rest[: found.start()]}that permanent{rest[found.end() :]}"
+        )
+    return readings
+
+
+def _readable(effect: object) -> bool:
+    return (
+        effect is not None
+        and not _is_notice_only(effect)
+        and getattr(effect, "unparsed_remainder", None) is None
+    )
+
+
+@SPELL_TEXT.rung("s21")
+def _parse_choose_target_prelude_spell_text(text: str) -> Effect | None:
+    """A "Choose <target phrase>." opener and the rest of the spell; see the
+    banner above. The opener itself does nothing on resolution (the target
+    was chosen on casting, CR 115.1a), so the spell is exactly its rest."""
+    split = split_choose_target_prelude(_strip_non_effect_preamble(text))
+    if split is None:
+        return None
+    phrase, rest = split
+    if not _targets_understood(
+        phrase, count_agnostic=True, battlefield_only=False, allow_player_targets=True
+    ):
+        return None
+    for reading in _prelude_readings(phrase, rest):
+        effect = _spell_effect_or_notice(reading)
+        if _readable(effect):
+            return effect
+    return None
+
+
+def _the_one_chosen_permanent(game: "Game", stack_object: "StackObject") -> CardState | None:
+    """The one permanent the resolving object targets and still may affect
+    (CR 608.2b), the referent of its later "that creature"; `None` when it
+    chose none ("up to one", CR 115.6) or that one is gone."""
+    chosen = [
+        target
+        for target in game.resolve_targets(stack_object)
+        if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+    ]
+    return chosen[0] if len(chosen) == 1 else None
+
+
+@SPELL_TEXT.rung("s10", before=["tokens._parse_created_trigger_spell_text"])
+def _parse_that_object_turn_trigger_spell_text(text: str) -> Effect | None:
+    """ "Whenever that creature `<condition>` this turn, `<effect>`" about the
+    spell's own target (`machines/delayed.ChosenObjectTriggeredAbility`):
+    the creature the spell targets, not every creature - the generic created
+    "this turn" trigger (`tokens._parse_created_trigger_spell_text`) has no
+    object to bind "that creature" to, so this reads first."""
+    line = chosen_object_turn_trigger_line(text)
+    if line is None:
+        return None
+    printed = " ".join(text.strip().split())
+
+    def effect(game: "Game", spell: CardState) -> None:
+        chosen = _the_one_chosen_permanent(game, spell)
+        if chosen is None:
+            return
+        create_chosen_object_turn_trigger(
+            game,
+            line,
+            chosen,
+            text=printed,
+            controller=game.controller_of(spell).username,
+            source_id=spell.id,
+            source_name=spell.name,
+        )
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s2")
+def _parse_that_object_turn_trigger_clause(clause: str) -> TargetedClause | None:
+    """One clause of a mixed effect: the same sentence after a targeted
+    clause the clause splitter already read (Niko Aris's "+1: Up to one
+    target creature you control can't be blocked this turn. Whenever that
+    creature deals damage this turn, return it to its owner's hand.")."""
+    line = chosen_object_turn_trigger_line(clause)
+    if line is None:
+        return None
+    printed = " ".join(clause.strip().split())
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        chosen = _the_one_chosen_permanent(game, stack_object)
+        if chosen is None:
+            return
+        if isinstance(stack_object, AbilityOnStack):
+            source_id, source_name = stack_object.source_id, stack_object.source_name
+        else:
+            source_id, source_name = stack_object.id, stack_object.name
+        create_chosen_object_turn_trigger(
+            game,
+            line,
+            chosen,
+            text=printed,
+            controller=game.controller_of(stack_object).username,
+            source_id=source_id,
+            source_name=source_name,
+        )
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s20", before=["tokens._parse_created_trigger_ability_text"])
+def _parse_that_object_turn_trigger_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of `_parse_that_object_turn_trigger_spell_text`:
+    Niko Aris's "+1: Up to one target creature you control can't be blocked
+    this turn. Whenever that creature deals damage this turn, return it to
+    its owner's hand." - its second sentence, bound to the ability's target."""
+    line = chosen_object_turn_trigger_line(_strip_non_effect_preamble(text))
+    if line is None:
+        return None
+    printed = " ".join(text.strip().split())
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        chosen = _the_one_chosen_permanent(game, ability)
+        if chosen is None:
+            return
+        create_chosen_object_turn_trigger(
+            game,
+            line,
+            chosen,
+            text=printed,
+            controller=ability.controller,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+        )
+
+    return effect
+
+
 from ._common import (  # noqa: E402
     _ANAPHORIC_SUBJECT_RE,
     _CLAUSE_SEPARATOR,
@@ -3731,6 +3974,7 @@ from .counters import _counter_kind  # noqa: E402
 from .damage import _parse_damage_each_other_type_and_each_opponent_clause  # noqa: E402
 from .dispatch import (  # noqa: E402
     _parse_mixed_clause,
+    _spell_effect_or_notice,
     parse_clause_effect,
     parse_mixed_effect,
     parse_mixed_effect_for_spell,
@@ -3739,6 +3983,7 @@ from .library import manifest_dread  # noqa: E402
 from .removal import _parse_bare_sacrifice_of_choice_clause  # noqa: E402
 from .search import _parse_search_mv_equal_to_sacrificed_clause, _search_and_place_for  # noqa: E402
 from .tokens import (  # noqa: E402
+    _is_notice_only,
     _parse_generic_token_descriptor,
     _readable_created_trigger,
     created_trigger_line,

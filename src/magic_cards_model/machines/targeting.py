@@ -556,6 +556,13 @@ class TargetRequirement(EngineModel):
     `_rejects_card` accepts anything on the stack outright when it is set, and
     everything else still goes through the ordinary permanent checks."""
     exiled_with_source: bool = False
+    put_there_from_battlefield_this_turn: bool = False
+    """"target creature card in a graveyard that was put there from the
+    battlefield this turn" (Grim Return) - a per-turn zone-change history,
+    read off `Game.cards_put_into_graveyard_from_battlefield_this_turn`: the
+    card's *latest* arrival in its graveyard this turn came off the
+    battlefield, so one that died and then came back some other way is a new
+    object (CR 400.7) this does not describe."""
     """True for "target ... card exiled with `<name>`" (The Darkness Crystal,
     Mosswort Bridge's own hideaway-play permission does not use this - it
     names no target at all). CR 201.5: an object's own printed name inside
@@ -991,6 +998,9 @@ class TargetRequirement(EngineModel):
                     f"{self.phrase} needs a card exiled with this permanent, "
                     f"and {target.name} is not one"
                 )
+        from_battlefield = self._rejects_put_there_from_battlefield(target, game)
+        if from_battlefield is not None:
+            return from_battlefield
         if not spell_on_stack and (self.card_types or self.excluded_card_types):
             current_types = set(self._current_types(target, game))
             if self.card_types and not (current_types & self.card_types):
@@ -1419,6 +1429,23 @@ class TargetRequirement(EngineModel):
         if target.id in attacked:
             return None
         return f"{self.phrase} needs a creature that attacked this turn, and {target.name} did not"
+
+    def _rejects_put_there_from_battlefield(self, target: Any, game: Any) -> str | None:
+        """ "... in a graveyard that was put there from the battlefield this
+        turn" - the graveyard-arrival history on `Game`. No game to read it
+        from fails open, the way every other per-turn restriction here does."""
+        history = getattr(game, "cards_put_into_graveyard_from_battlefield_this_turn", None)
+        if not self.put_there_from_battlefield_this_turn or history is None:
+            return None
+        owner = getattr(target, "owner", None)
+        if owner is not None:
+            arrived = history(owner)
+            if any(card.id == target.id for card in arrived):
+                return None
+        return (
+            f"{self.phrase} needs a card that was put there from the battlefield "
+            f"this turn, and {target.name} was not"
+        )
 
     def _rejects_entered_this_turn(self, target: Any, game: Any) -> str | None:
         """ "target creature that entered this turn" - read off `CardState.
@@ -3109,6 +3136,13 @@ _ZONES = {
 #: text can only ever mean itself here (see `TargetRequirement.exiled_with_
 #: source`'s own docstring).
 _EXILED_WITH_RE = re.compile(r"^exiled with\b", re.IGNORECASE)
+
+#: "... card in a graveyard that was put there from the battlefield this
+#: turn" (Grim Return) - the tail right after the graveyard zone clause,
+#: enforced at `TargetRequirement._rejects_put_there_from_battlefield`.
+_PUT_THERE_FROM_BATTLEFIELD_RE = re.compile(
+    r"^that (?:was|were) put there from the battlefield this turn\b", re.IGNORECASE
+)
 
 #: "other than a/an <quality> card" - Surgical Extraction's own "other than a
 #: basic land card" on a bare "target card in a graveyard". `<quality>` is one
@@ -5002,6 +5036,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     extra_excluded_supertypes: frozenset[Supertype] = frozenset()
     extra_excluded_types: frozenset[Type] = frozenset()
     exiled_with_source = False
+    put_there_from_battlefield = False
     if rest.startswith("card") or bare_card:
         # "target creature card in your graveyard" is a card, not a permanent,
         # and so is a bare "target card". Either way the zone has to be stated:
@@ -5053,6 +5088,11 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             # only ever reads a leading adjective *before* the noun it
             # excludes ("target nonbasic land"); this "other than" tail comes
             # after the noun and the zone both.
+            put_there_from_battlefield = (
+                zones == {Zone.GRAVEYARD}
+                and _PUT_THERE_FROM_BATTLEFIELD_RE.match(rest[zone_match.end() :].strip())
+                is not None
+            )
             exclusion = _read_other_than_exclusion(rest[zone_match.end() :])
             if exclusion is None:
                 return None
@@ -5205,6 +5245,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         must_be_tapped=must_be_tapped,
         excludes_source=excludes_source or adjectives.excludes_source,
         exiled_with_source=exiled_with_source,
+        put_there_from_battlefield_this_turn=put_there_from_battlefield,
         must_be_token=adjectives.must_be_token,
         color_count=color_count,
         historic=adjectives.historic,

@@ -261,6 +261,10 @@ _THIS_WAY_VERB_KINDS = {
 #: Not a filtered count the way the two above are: CR 402.1 makes the hand a
 #: zone with no type restriction to read ("the hand is where a player holds
 #: cards that have been drawn"), so every card in it counts, whatever it is.
+#: CR 700.8's party, counted (Practiced Tactics, Allied Assault).
+_COUNT_CREATURES_IN_YOUR_PARTY_RE = re.compile(
+    r"^(?:the )?number of creatures in your party$", re.IGNORECASE
+)
 _COUNT_CARDS_IN_YOUR_HAND_RE = re.compile(r"^(?:the )?number of cards in your hand$", re.IGNORECASE)
 #: "the number of cards in your library" - Tamiyo, Seasoned Scholar's own -7
 #: count, halved by `_amount_term`'s "half ..., rounded up" term. Every card
@@ -379,6 +383,20 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
     if (history_count := counter_history_count(stripped)) is not None:
         return history_count
+    if stripped.lower() == "that number":
+        # The count channel (`Game.record_count`): the number an earlier
+        # instruction of the same resolving object recorded (CR 608.2c) - the
+        # "that number" `_amount_term` already reads, here for a "where X is"
+        # definition (the discarded card's mana value, below).
+        return lambda game, _controller: game.recorded_count() or 0
+    if _COUNT_CREATURES_IN_YOUR_PARTY_RE.fullmatch(stripped):
+        # CR 700.8a: "the number of creatures in a player's party ... is
+        # performed automatically by the game and results in a number between
+        # zero and four"; CR 700.8b's one-role-per-creature count, maximised,
+        # is `designations.party_size`'s own matching.
+        from ..designations import party_size
+
+        return lambda game, controller: party_size(game, controller)
     if _COUNT_BASIC_LAND_TYPES_RE.fullmatch(stripped):
         # Domain: Tribal Flames' own X definition. `BASIC_LAND_TYPES` names
         # CR 305.6's five; a land counts once per distinct basic type it
@@ -3973,6 +3991,111 @@ def _has_x_in_mana_cost(state: CardState) -> bool:
     return ManaCost.parse(state.mana_cost or "").x_count > 0
 
 
+# --------------------------------------------------------------------------
+# "the discarded card's mana value" - the card an earlier instruction of the
+# same spell or ability discarded (CR 608.2c: later text refers back to what
+# earlier text did). Blast of Genius's "Draw three cards, then discard a
+# card. Blast of Genius deals damage equal to the discarded card's mana value
+# to any target", Spellbound Dragon's "draw a card, then discard a card. This
+# creature gets +X/+0 until end of turn, where X is the discarded card's mana
+# value". The earlier instructions run through their own readers; the card
+# they discarded is the one that newly reached a graveyard or exile (madness,
+# CR 702.35a) marked as discarded, and its mana value (CR 202.3; a land's is
+# 0, CR 202.3a) is handed to the later sentence as "that number" - the count
+# channel (`Game.record_count`) every "that number" reader already reads.
+# --------------------------------------------------------------------------
+
+_DISCARDED_CARD_MANA_VALUE_RE = re.compile(r"\bthe discarded card's mana value\b", re.IGNORECASE)
+_DISCARDS_A_CARD_RE = re.compile(r"\bdiscards? a card\b", re.IGNORECASE)
+
+
+def _split_at_discarded_card_value(text: str) -> tuple[str, str] | None:
+    """(the instructions that discard, the rest with "that number" for the
+    discarded card's mana value), or `None` when `text` is not that shape."""
+    whole = " ".join(text.strip().split())
+    found = _DISCARDED_CARD_MANA_VALUE_RE.search(whole)
+    if found is None:
+        return None
+    cut = whole.rfind(".", 0, found.start())
+    if cut < 0:
+        return None
+    head, tail = whole[: cut + 1].strip(), whole[cut + 1 :].strip()
+    if _DISCARDS_A_CARD_RE.search(head) is None:
+        return None
+    return head, _DISCARDED_CARD_MANA_VALUE_RE.sub("that number", tail)
+
+
+def _cards_in_graveyards_and_exile(game: "Game") -> list[CardState]:
+    return [card for player in game.players for card in player.graveyard] + list(game.exile)
+
+
+def _then_with_discarded_card_value(
+    head: "Callable[..., None]", tail: "Callable[..., None]"
+) -> "Callable[[Game, StackObject], None]":
+    """Run `head`, record the mana value of the card it discarded, run `tail`."""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        before = {card.id for card in _cards_in_graveyards_and_exile(game)}
+        head(game, stack_object)
+        discarded = [
+            card
+            for card in _cards_in_graveyards_and_exile(game)
+            if card.id not in before and card.discarded_by is not None
+        ]
+        game.record_count(int(sum(card.mana_value for card in discarded)))
+        tail(game, stack_object)
+
+    return effect
+
+
+def _readable_effect(effect: object) -> bool:
+    return (
+        effect is not None
+        and not _is_notice_only(effect)
+        and getattr(effect, "unparsed_remainder", None) is None
+    )
+
+
+@SPELL_TEXT.rung("s21")
+def _parse_discarded_card_value_spell_text(text: str) -> Effect | None:
+    """The spell side of the banner above."""
+    split = _split_at_discarded_card_value(_strip_non_effect_preamble(text))
+    if split is None:
+        return None
+    head_effect = _spell_effect_or_notice(split[0])
+    tail_effect = _spell_effect_or_notice(split[1])
+    if not (_readable_effect(head_effect) and _readable_effect(tail_effect)):
+        return None
+    return _then_with_discarded_card_value(head_effect, tail_effect)
+
+
+@SPELL_TEXT.rung("s23")
+def _parse_where_x_is_pump_spell_text(text: str) -> Effect | None:
+    """A non-modal spell's "`<target>` gets +X/+X until end of turn, where X
+    is `<count>`" (Allied Assault's "Up to two target creatures each get
+    +X/+X until end of turn, where X is the number of creatures in your
+    party") read by `_parse_where_x_is_continuous_effect_for_spell`, the
+    reader a modal spell's own mode already goes through: X fixed once as
+    the spell resolves (CR 608.2h), ahead of the generic layer fallback
+    (`continuous._compose_layer_effect_with_remainder`), whose printed-text
+    builder has no number for a self-defined X."""
+    return _parse_where_x_is_continuous_effect_for_spell(_strip_non_effect_preamble(text))
+
+
+@ABILITY_TEXT.rung("s23")
+def _parse_discarded_card_value_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the banner above (a triggered or activated
+    ability's own effect)."""
+    split = _split_at_discarded_card_value(_strip_non_effect_preamble(text))
+    if split is None:
+        return None
+    head_effect = _ability_effect_or_notice(split[0])
+    tail_effect = _ability_effect_or_notice(split[1])
+    if not (_readable_effect(head_effect) and _readable_effect(tail_effect)):
+        return None
+    return _then_with_discarded_card_value(head_effect, tail_effect)
+
+
 from ._common import (  # noqa: E402
     _COLOR_WORD_TO_COLOR,
     _MANA_SYMBOL_RE,
@@ -4011,6 +4134,7 @@ from .damage import (  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
     _parse_mixed_clause,
+    _spell_effect_or_notice,
     parse_mixed_effect,
     parse_mixed_effect_for_spell,
 )
@@ -4025,4 +4149,8 @@ from .text import (  # noqa: E402
     _singular_subtype_for_count_expression,
     _strip_non_effect_preamble,
 )
-from .tokens import _parse_generic_token_descriptor, _parse_token_clause  # noqa: E402
+from .tokens import (  # noqa: E402
+    _is_notice_only,
+    _parse_generic_token_descriptor,
+    _parse_token_clause,
+)
