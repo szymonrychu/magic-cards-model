@@ -421,6 +421,14 @@ FOOD = TokenDefinition(
     rules_text="{2}, {T}, Sacrifice this token: You gain 3 life.",
 )
 
+#: CR 111.10e: "A Shard token is a colorless Shard enchantment token with
+#: '{2}, Sacrifice this token: Scry 1, then draw a card.'" - Niko Aris.
+SHARD = TokenDefinition(
+    types=(Type.ENCHANTMENT,),
+    subtypes=("Shard",),
+    rules_text="{2}, Sacrifice this token: Scry 1, then draw a card.",
+)
+
 #: CR 111.10f: "A Clue token is a colorless Clue artifact token with '{2},
 #: {T}, Sacrifice this token: Draw a card.'" - CR 701.16a's "investigate".
 CLUE = TokenDefinition(
@@ -628,6 +636,7 @@ PREDEFINED: dict[str, TokenDefinition] = {
     "Treasure": TREASURE,
     "Food": FOOD,
     "Clue": CLUE,
+    "Shard": SHARD,
     "Map": MAP,
     "Powerstone": POWERSTONE,
     "Mutagen": MUTAGEN,
