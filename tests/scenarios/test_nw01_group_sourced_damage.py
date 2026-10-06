@@ -534,19 +534,19 @@ def test_solar_blaze_each_creature_deals_damage_to_itself_equal_to_its_power():
             "Plains",
             "Plains",
         ],
-        bob_battlefield=["Colossal Dreadmaw", "Darksteel Colossus"],
+        bob_battlefield=["Colossal Dreadmaw", "Darksteel Gargoyle"],
     )
     bears = scenario.creature("Grizzly Bears", "alice")
     hada = scenario.creature("Hada Freeblade", "alice")
     dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
-    colossus = scenario.creature("Darksteel Colossus", "bob")
+    gargoyle = scenario.creature("Darksteel Gargoyle", "bob")
 
     scenario.cast_and_resolve("Solar Blaze", auto=True)
 
     assert bears.zone is Zone.GRAVEYARD
     assert dreadmaw.zone is Zone.GRAVEYARD
     assert hada.zone is Zone.BATTLEFIELD and hada.damage == 0, "a 0-power creature takes 0"
-    assert colossus.zone is Zone.BATTLEFIELD and colossus.damage == 11, "indestructible"
+    assert gargoyle.zone is Zone.BATTLEFIELD and gargoyle.damage == 3, "indestructible"
 
 
 def test_solar_blaze_reads_power_as_it_resolves():

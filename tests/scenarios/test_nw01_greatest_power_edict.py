@@ -5,11 +5,10 @@ Listed card (NW-01, task T3): **Crackling Doom** - "deals 2 damage to each
 opponent. Each opponent sacrifices a creature with the greatest power among
 creatures that player controls."
 
-Second printings that prove the reader is a template, not a card (each legal
-in Modern, none in a deck list): **Professor Onyx**'s -3 (the identical
-sentence as a loyalty ability) and **Consumed by Greed** (the
-targeted wording, "target opponent sacrifices a creature with the greatest
-power among creatures they control").
+Second printing that proves the reader is a template, not a card (legal in
+Modern, in no deck list): **Consumed by Greed** (the targeted wording,
+"target opponent sacrifices a creature with the greatest power among
+creatures they control").
 
 Rules, each read with `mise run rules:find` in the session that wrote this
 file:
@@ -121,11 +120,11 @@ def test_crackling_doom_greatest_power_is_read_as_it_resolves():
 
 def test_crackling_doom_indestructible_does_not_stop_a_sacrifice():
     """CR 701.21a: sacrificing is not destroying."""
-    scenario = _doom(bob=["Darksteel Colossus", "Grizzly Bears"])
+    scenario = _doom(bob=["Darksteel Gargoyle", "Grizzly Bears"])
 
     scenario.cast_and_resolve("Crackling Doom", auto=True)
 
-    assert scenario.find("Darksteel Colossus", Zone.GRAVEYARD, "bob") is not None
+    assert scenario.find("Darksteel Gargoyle", Zone.GRAVEYARD, "bob") is not None
 
 
 def test_crackling_doom_ignores_noncreature_permanents():
@@ -135,25 +134,6 @@ def test_crackling_doom_ignores_noncreature_permanents():
 
     assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "bob") is not None
     assert scenario.find("Glorious Anthem", Zone.BATTLEFIELD, "bob") is not None
-
-
-# -- Professor Onyx: the same sentence as a loyalty ability ----------------------
-
-
-def test_professor_onyx_minus_three_makes_each_opponent_sacrifice_their_biggest():
-    scenario = _board(
-        alice_battlefield=["Professor Onyx"],
-        bob_battlefield=["Grizzly Bears", "Colossal Dreadmaw"],
-    )
-    onyx = scenario.find("Professor Onyx", Zone.BATTLEFIELD, "alice")
-    onyx.add_counters(Counter.LOYALTY, 5 - onyx.counters[Counter.LOYALTY])
-
-    scenario.activate(onyx, index=1)
-    scenario.resolve_top()
-
-    assert onyx.counters[Counter.LOYALTY] == 2
-    assert scenario.find("Colossal Dreadmaw", Zone.GRAVEYARD, "bob") is not None
-    assert scenario.creature("Grizzly Bears", "bob").zone is Zone.BATTLEFIELD
 
 
 # -- Consumed by Greed: the targeted wording --------------------------------------

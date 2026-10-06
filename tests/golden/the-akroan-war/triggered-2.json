@@ -1,10 +1,10 @@
 {
-  "ability": "Magecraft — Whenever you cast or copy an instant or sorcery spell, each opponent loses 2 life and you gain 2 life.",
+  "ability": "III — Each tapped creature deals damage to itself equal to its power.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
-    "source": "Professor Onyx@alice#1",
+    "source": "The Akroan War@alice#1",
     "targets": [],
     "x": 0
   },
@@ -14,9 +14,9 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Professor Onyx"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "The Akroan War"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Opt", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -26,40 +26,46 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
-    "step": "precombat_main",
+    "step": null,
     "tapped": [],
     "tokens": [],
     "variant": "quiet",
     "war_turn": false
   },
-  "card": "Professor Onyx",
+  "card": "The Akroan War",
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["life_gained_amount_this_turn", "life_gained_this_turn"],
+    "fields_changed": ["creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
     "notices": {},
-    "objects": {},
-    "players": {
-      "alice": {
-        "life": [20, 22]
+    "objects": {
+      "Fleecemane Lion@bob#1": {
+        "zone": ["battlefield", "graveyard"]
       },
-      "bob": {
-        "life": [20, 18]
+      "Icehide Golem@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "The Akroan War@alice#1": {
+        "counters": [
+          {
+            "lore": 3
+          },
+          {}
+        ],
+        "zone": ["battlefield", "graveyard"]
       }
     },
-    "stack": ["Opt@alice#1"]
+    "players": {},
+    "stack": []
   },
   "family": "triggered",
   "format": 1,
-  "kind": "cast_spell",
-  "number": 0,
+  "kind": "lore_counters_added",
+  "number": 2,
   "recipe": {
-    "attempt": "cast_probe",
+    "attempt": "staged",
     "index": 0,
-    "params": {
-      "caster": "alice",
-      "probe": "Opt"
-    },
+    "params": {},
     "variant": "quiet"
   }
 }

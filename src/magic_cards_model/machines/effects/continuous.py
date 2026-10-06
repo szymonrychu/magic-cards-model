@@ -9347,6 +9347,40 @@ def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
     return effect
 
 
+_OPPONENTS_ATTACK_IF_ABLE_RE = re.compile(
+    r"^until your next turn, creatures your opponents control attack each combat if able\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s11")
+def _parse_opponents_creatures_attack_if_able_clause(text: str) -> AbilityEffect | None:
+    """ "Until your next turn, creatures your opponents control attack each
+    combat if able." (The Akroan War's chapter II): CR 508.1d's requirement
+    granted, as `_parse_target_attacks_if_able_clause` grants it, to each
+    creature the opponents control as the effect begins - CR 611.2c fixes the
+    set, so a creature that arrives later is not bound - for CR 611.2a's
+    stated duration."""
+    if _OPPONENTS_ATTACK_IF_ABLE_RE.fullmatch(" ".join(text.split())) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability).username
+        board = game.computed_board()
+        for permanent in list(game.battlefield):
+            if board.of(permanent).is_creature and board.of(permanent).controller != controller:
+                _grant_keywords_to(
+                    game,
+                    permanent,
+                    ["This creature attacks each combat if able."],
+                    "until your next turn",
+                    controller=controller,
+                    source_name=ability.source_name,
+                )
+
+    return effect
+
+
 # ---------------------------------------------------------------------------
 # C01-T3: zone play, graveyard casting and blink readers
 # ---------------------------------------------------------------------------

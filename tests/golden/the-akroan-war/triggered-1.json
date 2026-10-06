@@ -1,5 +1,5 @@
 {
-  "ability": "III — Each tapped creature deals damage to itself equal to its power.",
+  "ability": "II — Until your next turn, creatures your opponents control attack each combat if able.",
   "action": {
     "controller": "alice",
     "modes": [],
@@ -36,17 +36,20 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
+    "fields_changed": ["continuous_effects"],
     "notices": {},
     "objects": {
-      "The Akroan War@alice#1": {
-        "counters": [
-          {
-            "lore": 3
-          },
-          {}
-        ],
-        "zone": ["battlefield", "graveyard"]
+      "Fleecemane Lion@bob#1": {
+        "granted": [
+          [],
+          ["This creature attacks each combat if able."]
+        ]
+      },
+      "Icehide Golem@bob#1": {
+        "granted": [
+          [],
+          ["This creature attacks each combat if able."]
+        ]
       }
     },
     "players": {},
