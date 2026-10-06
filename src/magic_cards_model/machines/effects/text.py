@@ -189,7 +189,10 @@ def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
 
 
 #: "`<self>` is all colors." (Awaken the Maelstrom, Sphinx of the Guildpact's
-#: identical line on a permanent) is CR 604.3's characteristic-defining
+#: identical line on a permanent) and "`<self>` is colorless." (Ghostfire, CR
+#: 105.2c - the card's colour is already the printing's empty `colors`, never
+#: derived from its {2}{R} cost, CR 202.2's cost-derived colour being the
+#: default a CDA overrides) are CR 604.3's characteristic-defining
 #: ability: it functions in every zone, including on the stack, and - unlike
 #: everything else `effect_for` reads - it is not a CR 608.2c resolution
 #: instruction at all, so it never goes on the stack and never "runs".
@@ -202,12 +205,13 @@ def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
 #: `_spell_effect_or_notice` as though it were one of the spell's own
 #: instructions (CR 608.2c has no verb "is" among its resolution steps).
 def _strip_self_is_all_colors_sentence(card_name: str, text: str) -> str:
-    if " is all colors" not in text.lower():
+    lowered = text.lower()
+    if " is all colors" not in lowered and " is colorless" not in lowered:
         return text
     names = {card_name, card_name.split("//")[0].strip()}
     pattern = re.compile(
         r"^(?:" + "|".join(re.escape(name) for name in sorted(names, key=len, reverse=True)) + r") "
-        r"is all colors\.\s*",
+        r"is (?:all colors|colorless)\.\s*",
         re.IGNORECASE,
     )
     return pattern.sub("", text, count=1)
@@ -3845,6 +3849,79 @@ def _parse_choose_target_prelude_spell_text(text: str) -> Effect | None:
         if _readable(effect):
             return effect
     return None
+
+
+#: "that player" in a spell's later sentence or instruction is the player its
+#: one "target player"/"target opponent" named (CR 608.2c: later text on the
+#: card may modify the meaning of earlier text; CR 115.1a: the target was
+#: chosen as the spell was cast) - Aggressive Sabotage's "Target player
+#: discards two cards. If this spell was kicked, it deals 3 damage to that
+#: player.", Hidetsugu's Second Rite's "If target player has exactly 10 life,
+#: <self> deals 10 damage to that player.". The same normalisation as the
+#: "Choose <target>." opener's reading 1: the anaphor is written back as the
+#: target phrase, and every reader that acts on "target player" acts on the
+#: chosen one (`game.resolve_targets`, CR 608.2b's recheck included). Only
+#: when that is the one "target" in the whole text, so there is exactly one
+#: player the anaphor could mean.
+_TARGET_PLAYER_PHRASE_RE = re.compile(r"\btarget (?:player|opponent)\b", re.IGNORECASE)
+_THAT_PLAYER_RE = re.compile(r"\bthat player\b(?!\s+or\b)", re.IGNORECASE)
+
+
+@SPELL_TEXT.rung("s22")
+def _parse_that_player_anaphor_spell_text(text: str) -> Effect | None:
+    """`_THAT_PLAYER_RE`'s anaphor bound to the one targeted player; see the
+    banner above."""
+    lowered = text.lower()
+    if "that player" not in lowered or "target " not in lowered:
+        return None
+    if len(re.findall(r"\btargets?\b", text, re.IGNORECASE)) != 1:
+        return None
+    phrase = _TARGET_PLAYER_PHRASE_RE.search(text)
+    anaphor = _THAT_PLAYER_RE.search(text)
+    if phrase is None or anaphor is None or anaphor.start() < phrase.start():
+        return None
+    bound = phrase.group(0).lower()
+    rewritten = _THAT_PLAYER_RE.sub(
+        lambda found: bound[0].upper() + bound[1:] if found.group(0)[0].isupper() else bound, text
+    )
+    effect = _spell_effect_or_notice(rewritten)
+    return effect if _readable(effect) else None
+
+
+#: "Choose any target, then choose another target for each time this spell was
+#: kicked. <Source> deals X damage to each of them." (Comet Storm) and
+#: "Choose target creature, then choose another target creature for each time
+#: this spell was kicked. Put X +1/+1 counters on each of them." (Strength of
+#: the Tajuru): the opener names the targets, as many as the kicker allows
+#: (`machines/targeting.per_kick_target_text`, CR 601.2c, CR 702.33d), and
+#: "each of them" is every one of them. The same normalisation as the
+#: "Choose <target>." opener (`_prelude_readings`' reading 1): the anaphor is
+#: written back as the first target phrase, which every reader that acts on
+#: "any target"/"target creature" already applies to each target chosen
+#: (`game.resolve_targets`, so a target that is gone is skipped, CR 608.2b).
+_PER_KICK_CHOOSE_RE = re.compile(
+    r"^choose (?P<phrase>any target|target [^.,]+?), then choose another target[^.,]*? "
+    r"for each time this spell was kicked\.\s+(?P<rest>\S.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_EACH_OF_THEM_RE = re.compile(r"\beach of them\b", re.IGNORECASE)
+
+
+@SPELL_TEXT.rung("s21")
+def _parse_per_kick_choose_each_of_them_spell_text(text: str) -> Effect | None:
+    """`_PER_KICK_CHOOSE_RE`'s opener and the rest of the spell with its
+    "each of them" written as the opener's target phrase; see the banner."""
+    whole = _strip_non_effect_preamble(text)
+    if "for each time this spell was kicked" not in whole.lower():
+        return None
+    match = _PER_KICK_CHOOSE_RE.fullmatch(whole.strip())
+    if match is None:
+        return None
+    rest = match.group("rest").strip()
+    if len(_EACH_OF_THEM_RE.findall(rest)) != 1 or re.search(r"\btargets?\b", rest, re.IGNORECASE):
+        return None
+    effect = _spell_effect_or_notice(_EACH_OF_THEM_RE.sub(match.group("phrase"), rest))
+    return effect if _readable(effect) else None
 
 
 def _the_one_chosen_permanent(game: "Game", stack_object: "StackObject") -> CardState | None:

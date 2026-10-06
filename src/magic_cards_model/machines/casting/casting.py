@@ -66,6 +66,7 @@ from ..targeting import (
     TargetingProfile,
     face_spell_profile,
     kicked_instead_target_text,
+    per_kick_target_text,
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
@@ -1501,6 +1502,14 @@ class Casting(EngineModel):
                 return self._with_bestowed_target(
                     profile_for_text(substitute_x(self.spell.oracle_text, self.x_value or None))
                 )
+            per_kick = per_kick_target_text(self.spell.oracle_text or "", self.kicked)
+            if per_kick is not None:
+                # CR 601.2c: the kicker is paid first (CR 601.2b), so how many
+                # targets the spell takes is known - one, and one more for each
+                # time it was kicked (Comet Storm).
+                if "{X}" in (self.spell.mana_cost or ""):
+                    per_kick = substitute_x(per_kick, self.x_value)
+                return self._with_bestowed_target(spell_profile_for_text(per_kick, self.spell.card))
             # `self.modal is None` matters as much as the `{X}`: a MODAL card
             # with an X in its cost (Kozilek's Command, `{X}{C}{C}`) reaches
             # here whenever its modes have not been announced yet, and reading
@@ -4493,6 +4502,7 @@ class Casting(EngineModel):
                 enters_with_counters=list(self.keyword_enters_with_counters),
                 kicker_costs_paid=list(self.kicker_costs_paid),
                 controlled_subtypes_as_cast=self._controlled_subtypes(),
+                controlled_modified_creature_as_cast=self._controls_modified_creature(),
                 bargained=self.bargained,
                 evidence_collected=self.evidence_collected,
                 revealed_for_cost=self.revealed_for_cost,
@@ -4529,6 +4539,14 @@ class Casting(EngineModel):
             if self.permission_used is not None:
                 self.game.spend_play_permission_choice(self.permission_used)
         return self.spell
+
+    def _controls_modified_creature(self) -> bool:
+        """CR 601.2i / CR 700.9: whether the caster controls a modified creature
+        as the spell becomes cast - "If you controlled a modified creature as
+        you cast this spell"."""
+        from ..conditions.board import controls_modified_creature
+
+        return self.game is not None and controls_modified_creature(self.game, self.caster)
 
     def _controlled_subtypes(self) -> tuple[str, ...]:
         """CR 601.2i: every subtype among the permanents the caster controls as

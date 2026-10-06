@@ -85,6 +85,7 @@ from ...machines.targeting import (
     TargetRequirement,
     face_spell_profile,
     kicked_instead_target_text,
+    per_kick_target_text,
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
@@ -2699,6 +2700,15 @@ class StackPriorityMixin:
             # they were chosen under (CR 608.2b).
             kicked = record is not None and record.kicked > 0
             return profile_for_text(kicked_alternative[1 if kicked else 0])
+        per_kick = per_kick_target_text(
+            spell.oracle_text or "", record.kicked if record is not None else 0
+        )
+        if per_kick is not None:
+            # CR 608.2b's recheck of "choose another target for each time this
+            # spell was kicked": one requirement per kick, as announced.
+            if record is not None and "{X}" in (spell.mana_cost or ""):
+                per_kick = substitute_x(per_kick, record.x_value)
+            return spell_profile_for_text(per_kick, spell.card)
         teamwork_alternative = teamwork_instead_target_text(spell.oracle_text or "")
         if teamwork_alternative is not None:
             # The identical CR 601.2c/608.2b recheck for Teamwork's own

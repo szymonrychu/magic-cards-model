@@ -225,6 +225,7 @@ class CastingMixin:
         creature_mana_spent: int = 0,
         snow_mana_spent: dict[Color, int] | None = None,
         controlled_subtypes_as_cast: Sequence[str] = (),
+        controlled_modified_creature_as_cast: bool = False,
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
 
@@ -317,6 +318,9 @@ class CastingMixin:
             revealed_for_cost=revealed_for_cost,
             beheld_for_cost=beheld_for_cost,
             controlled_subtypes_as_cast=() if is_copy else tuple(controlled_subtypes_as_cast),
+            controlled_modified_creature_as_cast=(
+                False if is_copy else controlled_modified_creature_as_cast
+            ),
             creature_mana_spent=0 if is_copy else creature_mana_spent,
             snow_mana_spent={} if is_copy else dict(snow_mana_spent or {}),
         )

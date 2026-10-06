@@ -1622,6 +1622,14 @@ _TARGET_GAINS_KEYWORDS_RE = re.compile(
 )
 
 
+#: A clause that opens "If <condition>, ..." is a conditional instruction
+#: (CR 608.2c), read by `modal._parse_condition_clause`: `_DAMAGE_TARGET_RE`'s
+#: unquoted prefix would otherwise swallow the condition and run the damage
+#: unconditionally ("If target player has exactly 10 life, <self> deals 10
+#: damage to that player" dealt it at any life total).
+_LEADING_IF_CONDITION_RE = re.compile(r"if [^,]+, ", re.IGNORECASE)
+
+
 @MIXED_CLAUSE.rung("s1", for_spell=FORWARD)
 def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a targeted effect, or `None` if this wave does not cover
@@ -2127,7 +2135,9 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return deal_damage_equal_to_expression(reader)
         return damage_ability_targets_equal_to_expression(reader)
 
-    if match := _DAMAGE_TARGET_RE.fullmatch(clause):
+    if _LEADING_IF_CONDITION_RE.match(clause) is None and (
+        match := _DAMAGE_TARGET_RE.fullmatch(clause)
+    ):
         # CR 601.2d's division is triggered only by the card's own printed
         # word "divided" - `_DIVIDED_DAMAGE_RE` reads that shape, and this
         # regex never matches text carrying it (there is no literal "to"

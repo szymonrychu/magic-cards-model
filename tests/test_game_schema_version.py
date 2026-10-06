@@ -2009,3 +2009,31 @@ def test_a_snapshot_written_before_the_nw02_t2_shields_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW02_T2_SHIELDS}",
     ):
         Game.model_validate(dumped)
+
+
+
+#: The version stamped before NW02-T3: `CastRecord` gained
+#: `controlled_modified_creature_as_cast`, read back by Flame Discharge's "If
+#: you controlled a modified creature as you cast this spell" (CR 700.9, CR
+#: 601.2i). 116 is held by another NW-02 task, so the last shape without the
+#: field is 115.
+_SCHEMA_VERSION_BEFORE_NW02_T3_SHAPES = 115
+
+
+def test_a_snapshot_written_before_the_nw02_t3_shapes_is_refused() -> None:
+    """A version-115 dump's cast records carry no
+    `controlled_modified_creature_as_cast`: decoded as current, a Flame
+    Discharge on the stack would read "no modified creature" and deal X.
+    Refused instead."""
+    from magic_cards_model.models.game.records import CastRecord
+
+    assert "controlled_modified_creature_as_cast" in CastRecord.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW02_T3_SHAPES
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW02_T3_SHAPES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW02_T3_SHAPES}",
+    ):
+        Game.model_validate(dumped)

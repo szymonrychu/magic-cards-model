@@ -91,7 +91,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import AbilityEffect, ClauseEffect, Effect, TargetedClause, _SacrificeRestriction
 
 
@@ -5299,6 +5299,44 @@ _LEADING_IF_CLAUSE_RE = re.compile(r"^if (?P<condition>.+?), (?P<consequence>.+)
 _TRAILING_IF_CLAUSE_RE = re.compile(r"^(?P<consequence>.+?) if (?P<condition>.+)$", re.IGNORECASE)
 
 
+#: "If target player has exactly 10 life, ..." (Hidetsugu's Second Rite): a
+#: condition about the spell's own targeted player, checked as the spell
+#: resolves (CR 608.2c) against the player it chose (CR 115.1a), not against
+#: the caster. The shared condition readers answer "you ..." for a named
+#: controller, so the clause is read as the target's own "you have ..." and
+#: asked with the target as that controller.
+_TARGET_PLAYER_CONDITION_RE = re.compile(
+    r"^target (?:player|opponent) (?P<verb>has|have|controls?) (?P<rest>.+)$", re.IGNORECASE
+)
+
+
+def _target_player_condition(condition: str) -> str | None:
+    """`_TARGET_PLAYER_CONDITION_RE`'s condition rewritten as the targeted
+    player's own "you have ..."/"you control ...", or `None`."""
+    if not condition.lower().startswith("target "):
+        return None
+    match = _TARGET_PLAYER_CONDITION_RE.fullmatch(condition.strip())
+    if match is None:
+        return None
+    verb = "have" if match.group("verb").lower().startswith("ha") else "control"
+    return f"you {verb} {match.group('rest')}"
+
+
+def _target_players_hold(
+    game: "Game", spell: "StackObject", condition: str, source: "StackObject"
+) -> bool | None:
+    """`condition` (a `_target_player_condition` rewrite) for every player the
+    resolving spell still legally targets (CR 608.2b); `False` when it has
+    none, `None` when the shared reader cannot answer it."""
+    players = [target for target in game.resolve_targets(spell) if isinstance(target, Player)]
+    if not players:
+        return False
+    answers = [game.condition_holds(player.username, condition, source) for player in players]
+    if any(answer is None for answer in answers):
+        return None
+    return all(answers)
+
+
 @MIXED_CLAUSE.rung("s36", for_spell=FORWARD)
 def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_LEADING_IF_CLAUSE_RE`/`_TRAILING_IF_CLAUSE_RE`'s shape - see the
@@ -5330,7 +5368,11 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
             return None
         condition_text = trailing.group("condition").strip()
         consequence_text = trailing.group("consequence").strip()
-    if not _effect_condition_is_readable(condition_text, allow_anaphor=not for_spell):
+    about_target = _target_player_condition(condition_text) if for_spell else None
+    if not _effect_condition_is_readable(
+        about_target if about_target is not None else condition_text,
+        allow_anaphor=not for_spell,
+    ):
         return None
     consequence = (
         parse_mixed_effect_for_spell(consequence_text)
@@ -5343,7 +5385,9 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         source = stack_object.source(game) if is_ability(stack_object) else stack_object
-        if for_spell:
+        if for_spell and about_target is not None:
+            held = _target_players_hold(game, stack_object, about_target, source)
+        elif for_spell:
             held = game.condition_holds(controller.username, condition_text, source)
         else:
             # A triggered ability: thread its own trigger event through, the
@@ -5375,6 +5419,201 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
             consequence(game, stack_object)
 
     return effect
+
+
+#: Two independently gated instructions in one sentence, joined by "and":
+#: "`<A>` if `<C1>` and `<B>` if `<C2>`." - Firespout's "deals 3 damage to
+#: each creature without flying if {R} was spent to cast this spell and 3
+#: damage to each creature with flying if {G} was spent to cast this spell",
+#: Moonhold's, Repel Intruders'. The reminder "(Do both if {R}{G} was
+#: spent.)" is CR 608.2c restated (each instruction is checked on its own as
+#: it is followed; neither gate reads the other) and is already stripped as
+#: reminder text. The bare "and" is what `split_effect_clauses` would cut
+#: into two fragments, the second of which is no instruction at all once its
+#: subject and verb are elided.
+_GATED_PAIR_SENTENCE_RE = re.compile(r" if .+ and .+ if ", re.IGNORECASE)
+
+
+def _elided_head(first: str, second: str) -> str | None:
+    """The words `first` spends before the point where `second` begins -
+    "Firespout deals " for the "3 damage to each creature with flying" that
+    follows its own "3 damage to ..." - found as the first word of `second`
+    inside `first`, so the elided subject and verb are spliced back rather
+    than invented. `None` when `second`'s first word is not in `first`."""
+    word = second.split(" ", 1)[0]
+    index = first.lower().find(f" {word.lower()} ")
+    return first[: index + 1] if index > 0 else None
+
+
+def _split_gated_pair(sentence: str, *, for_spell: bool) -> list[TargetedClause] | None:
+    """`_GATED_PAIR_SENTENCE_RE`'s sentence read as two `_parse_condition_
+    clause` clauses (each half is a trailing-if instruction on its own, the
+    second with the first's subject and verb spliced back when it elides
+    them), or `None` when it is not that shape or either half does not read."""
+    stripped = sentence.strip().rstrip(".")
+    if _GATED_PAIR_SENTENCE_RE.search(stripped) is None:
+        return None
+    parts = stripped.split(" and ")
+    for cut in range(1, len(parts)):
+        left, right = " and ".join(parts[:cut]), " and ".join(parts[cut:])
+        if " if " not in left or " if " not in right or left.lower().startswith("if "):
+            continue
+        first = _parse_condition_clause(left, for_spell=for_spell)
+        if first is None:
+            continue
+        second = _parse_condition_clause(right, for_spell=for_spell)
+        if second is None:
+            head = _elided_head(left.split(" if ", 1)[0], right)
+            second = (
+                _parse_condition_clause(f"{head}{right}", for_spell=for_spell)
+                if head is not None
+                else None
+            )
+        if second is not None:
+            return [first, second]
+    return None
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_gated_pair_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
+    """Every sentence of `text`, those of `_GATED_PAIR_SENTENCE_RE`'s shape
+    through `_split_gated_pair`, the rest one by one through the ordinary
+    pipeline (the `_parse_shared_subject_clauses` pattern); `None` when no
+    sentence is such a pair or any sentence fails to read (CR 608.2c: no
+    half-run instruction)."""
+    lowered = text.lower()
+    if " if " not in lowered or " and " not in lowered:
+        return None
+    sentences = _plain_resolution_sentences(text)
+    pairs = [_split_gated_pair(sentence, for_spell=for_spell) for sentence in sentences]
+    if not any(pairs):
+        return None
+    effects: list[TargetedClause] = []
+    for sentence, pair in zip(sentences, pairs, strict=True):
+        if pair is not None:
+            effects.extend(pair)
+            continue
+        rest = _parse_mixed_clauses(sentence, for_spell=for_spell)
+        if rest is None:
+            return None
+        effects.extend(rest)
+    return effects
+
+
+#: "Choose up to X creatures and/or planeswalkers you control, where X is the
+#: number of times this spell was kicked. Those permanents phase out."
+#: (Temporal Firestorm; `_THOSE_PREDICATE_RE` is the one predicate this reads,
+#: phasing out, the only one a printing in the pool carries) - a choice made as the
+#: spell resolves (CR 608.2d), of permanents the controller controls, that the
+#: next sentence refers back to (CR 608.2c: later text may modify the meaning
+#: of earlier text). Nothing is *targeted* (CR 115.1): the chosen permanents
+#: are picked among those that exist as the spell resolves, so shroud or
+#: protection never stops the choice, and nothing is rechecked afterwards
+#: beyond the permanent still being on the battlefield.
+_CHOOSE_YOU_CONTROL_RE = re.compile(
+    rf"^choose (?:(?P<upto>up to) )?(?P<count>x|a|an|{COUNT}) (?P<group>[a-z, /]+?) you control"
+    r"(?P<kicks>, where x is the number of times this spell was kicked)?\.?$",
+    re.IGNORECASE,
+)
+_THOSE_PREDICATE_RE = re.compile(
+    r"^(?:those|each of those) (?:permanents|creatures|planeswalkers|artifacts|enchantments|"
+    r"lands) phase out\.?$",
+    re.IGNORECASE,
+)
+
+
+def _chosen_group_pair(first: str, second: str) -> "Callable[[Game, StackObject], None] | None":
+    """`_CHOOSE_YOU_CONTROL_RE`'s sentence and the `_THOSE_PREDICATE_RE`
+    sentence that follows it as one resolution step, or `None` when the pair
+    is not that shape or its predicate is not one this reads."""
+    lowered = first.lower()
+    if " you control" not in lowered or not lowered.startswith("choose "):
+        return None
+    chosen = _CHOOSE_YOU_CONTROL_RE.fullmatch(first.strip())
+    predicate = _THOSE_PREDICATE_RE.fullmatch(second.strip())
+    if chosen is None or predicate is None:
+        return None
+    group = _parse_mass_type_qualifier(chosen.group("group").replace("and/or", "or"))
+    if group is None:
+        return None
+    word = chosen.group("count").lower()
+    per_kick = word == "x"
+    if per_kick and chosen.group("kicks") is None:
+        return None  # an X the card does not define here
+    fixed = 1 if word in ("a", "an") else None if per_kick else parse_count(word)
+    if fixed is None and not per_kick:
+        return None
+    up_to = chosen.group("upto") is not None
+
+    def step(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        limit = game.cast_record(stack_object).kicked if per_kick else fixed
+        board = game.computed_board()
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(controller)
+            if group(board.of(permanent))
+        ]
+        assert limit is not None
+        limit = min(limit, len(candidates))
+        if limit <= 0:
+            return
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt=f"choose {'up to ' if up_to else ''}{limit} permanent(s) you control",
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                amount=limit,
+                exact=not up_to,
+                default_cards=() if up_to else tuple(c.id for c in candidates[:limit]),
+                cards=tuple(candidate.id for candidate in candidates),
+            )
+        )
+        by_id = {candidate.id: candidate for candidate in candidates}
+        picked = [by_id[card_id] for card_id in ids]
+        for permanent in picked:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.phase_out(permanent)  # CR 702.26a
+
+    return step
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_choose_then_those_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
+    """Every sentence of `text`, a `_CHOOSE_YOU_CONTROL_RE` sentence and the
+    `_THOSE_PREDICATE_RE` one after it read together by `_chosen_group_pair`,
+    the rest one by one through the ordinary pipeline; `None` when no
+    sentence pair is that shape or any other sentence fails to read (CR
+    608.2c: no half-run instruction)."""
+    lowered = text.lower()
+    if "choose " not in lowered or " you control" not in lowered or "those " not in lowered:
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    effects: list[TargetedClause] = []
+    found = False
+    index = 0
+    while index < len(sentences):
+        pair = (
+            _chosen_group_pair(sentences[index], sentences[index + 1])
+            if index + 1 < len(sentences)
+            else None
+        )
+        if pair is not None:
+            effects.append(pair)
+            found = True
+            index += 2
+            continue
+        rest = _parse_mixed_clauses(sentences[index], for_spell=for_spell)
+        if rest is None:
+            return None
+        effects.extend(rest)
+        index += 1
+    return effects if found else None
 
 
 def _parse_optional_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
