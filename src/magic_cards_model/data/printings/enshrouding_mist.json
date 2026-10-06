@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "b059bd3e-451c-445a-b299-544c82fc0eb9",
+  "oracle_id": "e513c05c-14c0-4d2e-a5b3-e4f29cb4c1a2",
+  "multiverse_ids": [
+    398654
+  ],
+  "mtgo_id": 57826,
+  "mtgo_foil_id": 57827,
+  "tcgplayer_id": 100031,
+  "cardmarket_id": 283369,
+  "name": "Enshrouding Mist",
+  "lang": "en",
+  "released_at": "2015-07-17",
+  "uri": "https://api.scryfall.com/cards/b059bd3e-451c-445a-b299-544c82fc0eb9",
+  "scryfall_uri": "https://scryfall.com/card/ori/13/enshrouding-mist?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:26:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.jpg?1783938362",
+    "normal": "https://cards.scryfall.io/normal/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.jpg?1783938362",
+    "large": "https://cards.scryfall.io/large/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.jpg?1783938362",
+    "png": "https://cards.scryfall.io/png/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.png?1783938362",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.jpg?1783938362",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.jpg?1783938362",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.webp?1783938362",
+    "grid": "https://cards.scryfall.io/grid/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.webp?1783938362",
+    "display": "https://cards.scryfall.io/display/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.webp?1783938362",
+    "art": "https://cards.scryfall.io/art/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.webp?1783938362",
+    "crop": "https://cards.scryfall.io/crop/front/b/0/b059bd3e-451c-445a-b299-544c82fc0eb9.webp?1783938362"
+  },
+  "mana_cost": "{W}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "Target creature gets +1/+1 until end of turn. Prevent all damage that would be dealt to it this turn. If it's renowned, untap it.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "0eeb9a9a-20ac-404d-b55f-aeb7a43a7f62",
+  "set": "ori",
+  "set_name": "Magic Origins",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/0eeb9a9a-20ac-404d-b55f-aeb7a43a7f62",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aori&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ori?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b059bd3e-451c-445a-b299-544c82fc0eb9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae513c05c-14c0-4d2e-a5b3-e4f29cb4c1a2&unique=prints",
+  "collector_number": "13",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "True faith is letting the blade fall without parry. True cunning is using that moment to strike a deadly blow.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Howard Lyon",
+  "artist_ids": [
+    "6dd06426-59fe-4b9c-aad5-6da8446a5c3d"
+  ],
+  "illustration_id": "20841c2d-721d-44ac-9ec7-e3ba01c4eb99",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 24619,
+  "penny_rank": 10554,
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "0.10",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.17",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=398654&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEnshrouding%2BMist",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEnshrouding%2BMist",
+    "edhrec": "https://edhrec.com/route/?cc=Enshrouding+Mist"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F100031%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=283369&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/57826?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "9fc65c3f-ad29-4368-bf45-8345a7ec6f31",
+  "oracle_id": "dfa459a1-b065-4488-88d3-4da388261b52",
+  "multiverse_ids": [
+    276224
+  ],
+  "mtgo_id": 45296,
+  "mtgo_foil_id": 45297,
+  "tcgplayer_id": 59926,
+  "cardmarket_id": 257020,
+  "name": "Safe Passage",
+  "lang": "en",
+  "released_at": "2012-07-13",
+  "uri": "https://api.scryfall.com/cards/9fc65c3f-ad29-4368-bf45-8345a7ec6f31",
+  "scryfall_uri": "https://scryfall.com/card/m13/30/safe-passage?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:01:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.jpg?1783940514",
+    "normal": "https://cards.scryfall.io/normal/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.jpg?1783940514",
+    "large": "https://cards.scryfall.io/large/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.jpg?1783940514",
+    "png": "https://cards.scryfall.io/png/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.png?1783940514",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.jpg?1783940514",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.jpg?1783940514",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.webp?1783940514",
+    "grid": "https://cards.scryfall.io/grid/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.webp?1783940514",
+    "display": "https://cards.scryfall.io/display/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.webp?1783940514",
+    "art": "https://cards.scryfall.io/art/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.webp?1783940514",
+    "crop": "https://cards.scryfall.io/crop/front/9/f/9fc65c3f-ad29-4368-bf45-8345a7ec6f31.webp?1783940514"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Instant",
+  "oracle_text": "Prevent all damage that would be dealt to you and creatures you control this turn.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set": "m13",
+  "set_name": "Magic 2013",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/f9b0c6f4-8a4f-4f36-ad3c-e1e16fb8535d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am13&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m13?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9fc65c3f-ad29-4368-bf45-8345a7ec6f31/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adfa459a1-b065-4488-88d3-4da388261b52&unique=prints",
+  "collector_number": "30",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "As she shepherds the faithful, the angel's radiance is a shield of salvation.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Christopher Moeller",
+  "artist_ids": [
+    "21e10012-06ae-44f2-b38d-3824dd2e73d4"
+  ],
+  "illustration_id": "19ac9bcb-9d0f-42ab-935f-a91f639c57f6",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10915,
+  "penny_rank": 8830,
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.41",
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": "0.40",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=276224&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSafe%2BPassage",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSafe%2BPassage",
+    "edhrec": "https://edhrec.com/route/?cc=Safe+Passage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F59926%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=257020&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/45296?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

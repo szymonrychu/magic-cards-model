@@ -607,9 +607,15 @@ class ShieldSourceFilter(EngineModel):
     source would deal damage, the "shield" rechecks the source's properties.
     If the properties no longer match, the damage isn't prevented." A
     creature that grows past the power limit, or gets a counter, after the
-    shield was made is no longer covered; one that arrives later is. Every
-    filter names creatures, so a source that is not a creature on the
-    battlefield as the damage is dealt never matches.
+    shield was made is no longer covered; one that arrives later is. A
+    filter that names creatures (`creatures`, the default) matches a creature
+    on the battlefield as the damage is dealt, or a source that has left the
+    battlefield and was a creature as it last existed there (CR 608.2h, its
+    last known information) - never a creature card that was not a
+    permanent, and "attacking" is read the same way (`last_known_attacking`:
+    CR 506.4 took it out of combat as it left); one that names sources ("by
+    colorless sources", "that black sources and red sources would deal", "by
+    sources you don't control") reads any source, on the battlefield or not.
     """
 
     attacking: bool = False
@@ -630,22 +636,61 @@ class ShieldSourceFilter(EngineModel):
     excluded_stamp: UUID | None = None
     """"other than target creature": that one object (CR 400.7: a new
     object after a zone change is covered again)."""
+    creatures: bool = True
+    """The filter names creatures: the source must be a creature on the
+    battlefield. False for a filter that names sources of any kind."""
+    colors_any: tuple[Color, ...] = ()
+    """"black sources and red sources", "black and/or red sources": the
+    source must have at least one of these colours."""
+    colorless: bool = False
+    """"colorless sources" (CR 105.2c: a colorless object has no color)."""
+    not_controlled_by: str | None = None
+    """"sources you don't control": a source this player does not control."""
 
     def matches(self, game: "Game", source: CardState) -> bool:
-        from ...machines.combat import has_keyword
+        from ...machines.combat import source_had_keyword
 
-        if source.zone is not Zone.BATTLEFIELD:
+        if source.zone is Zone.BATTLEFIELD:
+            chars = game.characteristics_of(source)
+            colors = set(chars.colors)
+            types = set(chars.types)
+            counters = chars.counters
+            attacking = game.is_attacking(source)
+        elif self.creatures and not source.last_left_the_battlefield:
+            return False  # a creature card never was a creature (CR 109.2)
+        else:
+            # CR 608.2h / 113.7a: a source gone from the battlefield is read
+            # off its last known information - a Walking Ballista that
+            # removed its last counter was a creature as it last existed.
+            colors = set(
+                source.last_known_colors if source.last_known_colors is not None else source.colors
+            )
+            types = set(
+                source.last_known_types if source.last_known_types is not None else source.types
+            )
+            counters = source.last_known_counters
+            attacking = source.last_known_attacking
+        if self.creatures and Type.CREATURE not in types:
             return False
-        chars = game.characteristics_of(source)
-        if Type.CREATURE not in chars.types:
+        if self.colors_any and not set(self.colors_any) & colors:
             return False
-        if self.attacking and not game.is_attacking(source):
+        if self.colorless and colors:
             return False
-        if set(self.excluded_colors) & set(chars.colors):
+        if self.not_controlled_by is not None and (
+            game.controller_of(source).username == self.not_controlled_by
+        ):
             return False
-        if self.without_counter is not None and chars.counters.get(self.without_counter, 0) > 0:
+        if not self.creatures:
+            return True
+        if self.attacking and not attacking:
             return False
-        if self.without_keyword is not None and has_keyword(source, self.without_keyword, game):
+        if set(self.excluded_colors) & colors:
+            return False
+        if self.without_counter is not None and counters.get(self.without_counter, 0) > 0:
+            return False
+        if self.without_keyword is not None and source_had_keyword(
+            source, self.without_keyword, game
+        ):
             return False
         if self.max_power is not None and (game.power_of(source) or 0) > self.max_power:
             return False
@@ -672,6 +717,10 @@ class ReflectedDamage(EngineModel):
     target_card_id: UUID | None = None
     target_stamp: UUID | None = None
     target_player: str | None = None
+    optional: bool = False
+    """"you may have `<spell>` deal that much damage" (Channel Harm): the
+    shield's controller chooses each time, as the damage is prevented (CR
+    608.2d, CR 615.5)."""
 
 
 class PreventionShield(EngineModel):
@@ -759,6 +808,16 @@ class PreventionShield(EngineModel):
     """"to you and/or permanents you control": this player, and any permanent
     this player controls as the damage would be dealt. Used with `player`
     left None."""
+
+    recipient_types: tuple[Type, ...] = ()
+    """"to creatures", "to artifact creatures", "to you and creatures you
+    control": a damaged permanent must have every one of these card types as
+    the damage would be dealt. No player is covered unless `and_permanents_of`
+    names them."""
+
+    recipient_controller: str | None = None
+    """"to creatures you control": a damaged permanent must be controlled by
+    this player as the damage would be dealt; no player is covered."""
 
     reflects: ReflectedDamage | None = None
     """CR 615.5's "deals that much damage to any target" rider."""

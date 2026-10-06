@@ -7454,3 +7454,19 @@ No new persisted field (schema stays 115).
 | "Each player shuffles the cards from their hand into their library, then draws that many cards." (each player's own count, APNAP) followed by "Metalcraft - If you control three or more artifacts, `<src>` deals damage to each opponent equal to the number of cards that player has drawn this turn." (per-opponent `Game.cards_drawn_this_turn`) | 701.24a, 121.2, 608.2c, 207.2c, 101.4, 120.3a | `draw_discard._parse_each_player_wheel_text`, `damage._parse_damage_each_opponent_equal_to_their_draws_clause` | Molten Psyche (sole printing) | `test_nw02_wheel_then_metalcraft_damage.py` |
 
 No new persisted field (schema stays 115 here; the reserved 121 is unused).
+
+## NW03-T1: prevent-all fog recipients, source filters, and the spell anaphor
+
+| Mechanic | Where |
+|---|---|
+| "to creatures" / "to artifact creatures" (no player covered), "to creatures you control", "to you and permanents you control", "to you and creatures you control" (a planeswalker you control is a permanent, not a creature; types and control read as the damage is dealt, CR 615.1a, 120.1) - Forfend, Blinding Fog, Ethersworn Shieldmage, Surge of Salvation, Endure, Safe Passage, Eerie Interference | `effects/damage._fog_recipient_spec`; `PreventionShield.recipient_types` / `recipient_controller` with `and_permanents_of` |
+| "to up to N target creatures" (CR 601.2c; a shield per target still legal, CR 608.2b) - Redeem; "to target `<qualified>` creature" (the restriction is the targeting rule's) - Godtoucher, Kitsune Healer | `_fog_recipient_spec`, `_create_fog_shield` |
+| "that `<sources>` would deal [to `<who>`] this turn" (CR 609.7b): "creatures ... to players" - Chameleon Blur; "other creatures" (the ability's own source spared) - Haze Frog; "black sources and red sources" / "black and/or red sources" - Luminesce, Surge of Salvation | `_FOG_WOULD_DEAL_RE`, `_fog_source_spec`; one-sentence "and" texts read whole by `_parse_whole_fog_sentence_with_and_clauses` (MIXED_CLAUSES.s1) before the clause splitter cuts them |
+| "by creatures" beside a recipient (Eerie Interference), "by colorless sources" (CR 105.2c - Lithomancer's Focus), "by non-`<creature type>` sources" (anonymous source stays covered - Repel the Abominable), "by sources you don't control" (Channel Harm) | `ShieldSourceFilter.creatures` / `colors_any` / `colorless` / `not_controlled_by`; `PreventionShield.excluded_source_subtypes` |
+| "Prevent all [combat] damage that would be dealt to it / that creature this turn [by `<sources>`]" on a spell: CR 608.2c's anaphor is the spell's own target (shield per legal target) - Leap of Faith, Lithomancer's Focus, Fleeting Flight, Djeru's Resolve; an ability's "it" is not read here | `_parse_prevent_all_damage_to_spell_anaphor_clause` (MIXED_CLAUSE.s7, spells only) |
+| "... to it this turn. If it's `<state>`, `<rider on it>`." - the condition is checked against the referent (CR 702.112b renowned) - Enshrouding Mist | `_parse_fog_on_spell_anaphor_then_state_rider_clauses` (MIXED_CLAUSES.s1) |
+| "If damage is prevented this way, you may have `<this spell>` deal that much damage to target creature." after a filtered fog (CR 615.5, 608.2d: asked each time) - Channel Harm | `_parse_fog_then_reflect_rider_text`; `ReflectedDamage.optional` |
+
+Not modelled: a "by creatures" shield against a source that has already left the battlefield (Walking Ballista removing its last counter): the filter reads the battlefield only, since `CardState` keeps no last-known types or colours (CR 608.2h).
+
+Schema 117 -> 118: `PreventionShield.recipient_types`/`recipient_controller`, `ShieldSourceFilter.creatures`/`colors_any`/`colorless`/`not_controlled_by`, `ReflectedDamage.optional`. Tests: `scenarios/test_nw03_fog_recipient_groups.py`, `test_nw03_fog_source_filters.py`, `test_nw03_fog_on_earlier_target_anaphor.py`.

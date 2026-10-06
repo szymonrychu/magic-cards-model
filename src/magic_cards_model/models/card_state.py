@@ -1359,6 +1359,14 @@ class CardState(EngineModel):
     """The subtypes this object had the last time it left the battlefield
     (CR 608.2h) - taken with `last_known_colors`."""
 
+    last_known_attacking: bool = False
+    """Whether this object was an attacking creature (CR 508.1k) the last
+    time it left the battlefield (CR 608.2h). CR 506.4 removes it from combat
+    as it goes, so "damage attacking creatures would deal" (Harmless
+    Assault's shield, CR 609.7b) asks this of a source sacrificed mid-combat
+    to its own ability. Stamped by `Game._note_left_battlefield`, reset by
+    `move_to` on any move that does not start there (CR 400.7)."""
+
     last_known_keywords: tuple[str, ...] | None = None
     """The keywords this object had, lowercased, the last time it left the
     battlefield (CR 702.90d, CR 702.80b). `last_known_power`'s sibling for
@@ -2912,6 +2920,17 @@ class CardState(EngineModel):
         return self._left_in_epoch is not None and self._left_in_epoch == epoch
 
     @property
+    def last_left_the_battlefield(self) -> bool:
+        """Whether this object's last zone change started on the battlefield,
+        so the `last_known_*` snapshot describes it as a permanent (CR
+        608.2h, CR 113.7a). `last_known_keywords` is that marker: always a
+        tuple once `Game._note_left_battlefield` stamps it, and cleared by
+        `move_to` on any move that does not start there (CR 400.7). False for
+        a card that never was a permanent - a creature card discarded to pay
+        its own cost was a creature card, never a creature (CR 109.2)."""
+        return self.zone is not Zone.BATTLEFIELD and self.last_known_keywords is not None
+
+    @property
     def abilities_as_it_left(self) -> tuple[str, ...] | None:
         """See `_abilities_as_it_left`."""
         return self._abilities_as_it_left
@@ -2957,6 +2976,7 @@ class CardState(EngineModel):
             self.last_known_types = None
             self.last_known_subtypes = None
             self.last_known_keywords = None
+            self.last_known_attacking = False
             self.last_known_attachments = ()
             self._abilities_as_it_left = None
         elif zone is not Zone.BATTLEFIELD:

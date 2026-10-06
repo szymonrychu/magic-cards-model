@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from ...data.creature_types import creature_types
 from ...data.subtypes import canonical_subtype, subtype_vocabulary
 from ...models.card import Color, Type
 from ...models.card_state import (
@@ -71,7 +72,7 @@ from ..triggers import (
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
 from ..conditions import claims
-from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import _OBJECT_ANAPHOR, AbilityEffect, Effect, GroupPredicate, TargetedClause
 
 
@@ -592,10 +593,18 @@ def _prevent_next_damage_from_target(*, gains_life: bool) -> TargetedClause:
 _FILTERED_FOG_RE = re.compile(
     r"^prevent all (?P<combat>combat )?damage that would be dealt"
     r"(?P<t1> this turn)?"
-    r"(?: to (?P<recipient>players|you|target creature))?"
+    r"(?: to (?P<recipient>[^.]+?))?"
     r"(?P<t2> this turn)?"
     r"(?: by (?P<sources>[^.]+?))?"
     r"(?P<t3> this turn)?\.?$",
+    re.IGNORECASE,
+)
+#: "Prevent all [combat] damage that `<sources>` would deal [to `<who>`] this
+#: turn." (Luminesce, Chameleon Blur, Haze Frog, Surge of Salvation) - the
+#: same shield, its source filter named as the subject.
+_FOG_WOULD_DEAL_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that (?!would )(?P<sources>[^.]+?) would deal"
+    r"(?: to (?P<recipient>[^.]+?))? this turn\.?$",
     re.IGNORECASE,
 )
 _FOG_COLOR_WORDS = {
@@ -626,18 +635,59 @@ class _FogSpec:
     opponents_of_you: bool = False
     source_target: str | None = None
     choose_source: bool = False
+    recipient_types: tuple[Type, ...] = ()
+    recipient_yours: bool = False
+    you_and_permanents: bool = False
+    recipient_count: int = 1
+    excluded_subtypes: tuple[str, ...] = ()
+    sources_not_yours: bool = False
+    other_than_self: bool = False
 
     @property
     def targets(self) -> int:
         """How many of the spell's targets this sentence names (CR 601.2c)."""
-        return int(self.recipient == "target creature") + int(self.source_target is not None)
+        named = {"target creature": 1, "targets": self.recipient_count}.get(self.recipient or "", 0)
+        return named + int(self.source_target is not None)
 
 
-def _fog_source_spec(phrase: str) -> dict[str, Any] | None:
-    """The `_FogSpec` fields a "by `<sources>`" phrase reads as, or None."""
+_FOG_SOURCE_COLORS_RE = re.compile(
+    r"^(?P<first>white|blue|black|red|green)(?: sources)? (?:and|and/or|or) "
+    r"(?P<second>white|blue|black|red|green) sources$"
+)
+_FOG_NON_SUBTYPE_SOURCES_RE = re.compile(r"^non-(?P<subtype>[a-z]+) sources$")
+
+
+def _fog_source_spec(phrase: str, *, bare: bool = False) -> dict[str, Any] | None:
+    """The `_FogSpec` fields a "by `<sources>`" (or "that `<sources>` would
+    deal") phrase reads as, or None. `bare`: the sentence names no recipient
+    and is in the "dealt by" form, where "by creatures" and "by `<quality>`
+    sources" stay `replacement.parse.read_turn_damage_spec`'s."""
     from ..combat import Keyword
 
     lowered = " ".join(phrase.lower().split())
+    if lowered == "creatures" and not bare:
+        return {"filter_fields": {"creatures": True}}
+    if lowered == "other creatures" and not bare:
+        return {"filter_fields": {"creatures": True}, "other_than_self": True}
+    if lowered == "colorless sources":
+        # CR 105.2c: "A colorless object has no color."
+        return {"filter_fields": {"creatures": False, "colorless": True}}
+    if lowered == "sources you don't control":
+        return {"filter_fields": {"creatures": False}, "sources_not_yours": True}
+    if match := _FOG_SOURCE_COLORS_RE.fullmatch(lowered):
+        colors = (_FOG_COLOR_WORDS[match.group("first")], _FOG_COLOR_WORDS[match.group("second")])
+        return {"filter_fields": {"creatures": False, "colors_any": colors}}
+    if not bare and (match := re.fullmatch(r"(?P<color>[a-z]+) sources", lowered)):
+        color = _FOG_COLOR_WORDS.get(match.group("color"))
+        if color is None:
+            return None
+        return {"filter_fields": {"creatures": False, "colors_any": (color,)}}
+    if match := _FOG_NON_SUBTYPE_SOURCES_RE.fullmatch(lowered):
+        wanted = match.group("subtype")
+        subtype = next((kind for kind in creature_types() if kind.lower() == wanted), None)
+        if subtype is None:
+            return None
+        return {"excluded_subtypes": (subtype,)}
     if lowered == "attacking creatures":
         return {"filter_fields": {"attacking": True}}
     if lowered == "creatures your opponents control":
@@ -663,35 +713,90 @@ def _fog_source_spec(phrase: str) -> dict[str, Any] | None:
     return None
 
 
-def _read_fog_sentence(sentence: str, *, allow_plain: bool = False) -> _FogSpec | None:
-    """`_FILTERED_FOG_RE`'s sentence, or None. A plain "Prevent all combat
-    damage that would be dealt this turn." (Fog) is left to its own reader
-    unless `allow_plain`, and "by creatures" / "by `<quality>` sources" alone
-    to `replacement.parse.read_turn_damage_spec`'s created replacement."""
+#: The card types a "to `<type>` creatures" recipient may add (Ethersworn
+#: Shieldmage's "artifact creatures").
+_FOG_RECIPIENT_TYPE_WORDS = {
+    "artifact": Type.ARTIFACT,
+    "enchantment": Type.ENCHANTMENT,
+    "land": Type.LAND,
+}
+_FOG_TARGETS_RE = re.compile(
+    rf"^(?P<upto>up to )?{count_pattern('n', article=False)} target creatures$"
+)
+#: "it" / "that creature" - CR 608.2c's anaphor back to a spell's own
+#: earlier target ("Target creature gains flying until end of turn. Prevent
+#: all damage that would be dealt to that creature this turn.").
+_FOG_ANAPHOR_RE = re.compile(r"^(?:it|that creature)$")
+
+
+def _fog_recipient_spec(phrase: str, *, for_spell: bool) -> dict[str, Any] | None:
+    """The `_FogSpec` fields a "to `<who>`" phrase reads as, or None."""
+    lowered = " ".join(phrase.lower().split())
+    if lowered in ("players", "you", "target creature"):
+        return {"recipient": lowered}
+    if lowered == "you and permanents you control":
+        return {"you_and_permanents": True}
+    if lowered == "you and creatures you control":
+        return {"you_and_permanents": True, "recipient_types": (Type.CREATURE,)}
+    if lowered == "creatures you control":
+        return {"recipient_types": (Type.CREATURE,), "recipient_yours": True}
+    *qualifiers, noun = lowered.split()
+    if noun == "creatures" and all(word in _FOG_RECIPIENT_TYPE_WORDS for word in qualifiers):
+        types = tuple(_FOG_RECIPIENT_TYPE_WORDS[word] for word in qualifiers)
+        return {"recipient_types": (*types, Type.CREATURE)}
+    if _FOG_ANAPHOR_RE.fullmatch(lowered):
+        # A spell's anaphor is its target (Djeru's Resolve); an ability's
+        # "it" may be its own source (Favored Hoplite), read elsewhere.
+        return {"recipient": "anaphor"} if for_spell else None
+    if match := _FOG_TARGETS_RE.fullmatch(lowered):
+        count = parse_count(match.group("n"), article=False)
+        if count is None or count < 1:
+            return None
+        return {"recipient": "targets", "recipient_count": count}
+    if lowered.startswith("target ") and "creature" in lowered and _targets_understood(phrase):
+        # "target creature with power 5 or greater" (Godtoucher), "target
+        # legendary creature" (Kitsune Healer): the restriction is the
+        # targeting rule's (CR 601.2c); the shield names the chosen object.
+        return {"recipient": "target creature"}
+    return None
+
+
+def _read_fog_sentence(
+    sentence: str, *, allow_plain: bool = False, for_spell: bool = False
+) -> _FogSpec | None:
+    """`_FILTERED_FOG_RE`'s (or `_FOG_WOULD_DEAL_RE`'s) sentence, or None. A
+    plain "Prevent all combat damage that would be dealt this turn." (Fog) is
+    left to its own reader unless `allow_plain`, and "by creatures" / "by
+    `<quality>` sources" alone to `replacement.parse.read_turn_damage_spec`'s
+    created replacement."""
     text = " ".join(sentence.strip().split())
     if not text.lower().startswith("prevent all "):
         return None
     match = _FILTERED_FOG_RE.fullmatch(text)
-    if match is None:
-        return None
-    if sum(match.group(name) is not None for name in ("t1", "t2", "t3")) != 1:
-        return None  # CR 611.2a: exactly one stated "this turn"
+    if match is not None:
+        if sum(match.group(name) is not None for name in ("t1", "t2", "t3")) != 1:
+            return None  # CR 611.2a: exactly one stated "this turn"
+    else:
+        match = _FOG_WOULD_DEAL_RE.fullmatch(text)
+        if match is None:
+            return None
     recipient = match.group("recipient")
     sources = match.group("sources")
     fields: dict[str, Any] = {}
+    if recipient is not None:
+        read = _fog_recipient_spec(recipient, for_spell=for_spell)
+        if read is None:
+            return None
+        fields.update(read)
     if sources is not None:
-        read = _fog_source_spec(sources)
+        bare = recipient is None and "would deal" not in text.lower()
+        read = _fog_source_spec(sources, bare=bare)
         if read is None:
             return None
         fields.update(read)
     elif recipient is None and not allow_plain:
         return None
-    return _FogSpec(
-        text=text.rstrip("."),
-        combat_only=match.group("combat") is not None,
-        recipient=None if recipient is None else recipient.lower(),
-        **fields,
-    )
+    return _FogSpec(text=text.rstrip("."), combat_only=match.group("combat") is not None, **fields)
 
 
 #: "Prevent all [combat] damage a source of your choice would deal this
@@ -785,6 +890,7 @@ def _create_fog_shield(
             return
         fields["source_id"] = dealer.id
         fields["source_stamp"] = dealer.zone_change_stamp
+    shielded_objects: list[CardState] | None = None
     if spec.recipient == "players":
         fields["players_only"] = True
     elif spec.recipient == "you":
@@ -794,6 +900,32 @@ def _create_fog_shield(
         if shielded is None:
             return
         fields["card_id"] = shielded.id
+    elif spec.recipient in ("targets", "anaphor"):
+        # "up to two target creatures" (CR 601.2c: any number up to two was
+        # chosen) or "it"/"that creature" back to the spell's own target: one
+        # shield per object still legal (CR 608.2b skips the rest).
+        shielded_objects = [
+            found
+            for found in (game.legal_target(stack_object, ref) for ref in refs)
+            if isinstance(found, CardState)
+        ]
+        if not shielded_objects:
+            return
+    if spec.you_and_permanents:
+        fields["and_permanents_of"] = controller
+    if spec.recipient_types:
+        fields["recipient_types"] = spec.recipient_types
+    if spec.recipient_yours:
+        fields["recipient_controller"] = controller
+    if spec.excluded_subtypes:
+        fields["excluded_source_subtypes"] = frozenset(spec.excluded_subtypes)
+    if spec.sources_not_yours:
+        filter_fields["not_controlled_by"] = controller
+    if spec.other_than_self:
+        source = stack_object.source(game) if isinstance(stack_object, AbilityOnStack) else None
+        if source is not None:
+            filter_fields["excluded_card_id"] = source.id
+            filter_fields["excluded_stamp"] = source.zone_change_stamp
     if spec.source_target == "opponent":
         opponent = next_target("player")
         if opponent is None:
@@ -821,7 +953,16 @@ def _create_fog_shield(
         )
     if filter_fields:
         fields["source_filter"] = ShieldSourceFilter(**filter_fields)
-    game.create_prevention_shield(PreventionShield(**fields))
+    if shielded_objects is None:
+        game.create_prevention_shield(PreventionShield(**fields))
+        return
+    for shielded in shielded_objects:
+        game.create_prevention_shield(
+            PreventionShield(
+                **fields
+                | {"card_id": shielded.id, "label": f"{spec.text.lower()} ({shielded.name})"}
+            )
+        )
 
 
 def _is_kind(found: Any, kind: str) -> bool:
@@ -847,9 +988,102 @@ def _parse_filtered_prevention_clause(clause: str) -> TargetedClause | None:
     if "prevent all " not in clause.lower():
         return None
     spec = _read_fog_sentence(clause) or _read_source_of_choice_sentence(clause)
-    if spec is None or spec.targets > 1:
+    if spec is None or (spec.targets > 1 and spec.recipient != "targets"):
+        return None
+    if spec.recipient == "targets" and spec.source_target is not None:
         return None
     return _fog_clause(spec)
+
+
+@MIXED_CLAUSE.rung("s7", for_spell=FORWARD)
+def _parse_prevent_all_damage_to_spell_anaphor_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """A fog sentence whose recipient is "it" / "that creature" on a spell
+    (Djeru's Resolve, Leap of Faith, Lithomancer's Focus, Fleeting Flight):
+    CR 608.2c's anaphor back to the spell's own target, one shield per
+    target still legal as it resolves (CR 608.2b). On an ability the same
+    word can name the ability's source, so it is not read here."""
+    if not for_spell or "prevent all " not in clause.lower():
+        return None
+    spec = _read_fog_sentence(clause, for_spell=True)
+    if spec is None or spec.recipient != "anaphor" or spec.source_target is not None:
+        return None
+    return _fog_clause(spec)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_whole_fog_sentence_with_and_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """One fog sentence whose own recipient or source list carries an "and"
+    ("to you and creatures you control", "that black sources and red sources
+    would deal", "black and/or red sources"), read whole before the clause
+    splitter cuts it at that "and" into two fragments neither reads alone."""
+    lowered = text.lower()
+    if " and" not in lowered or not lowered.lstrip().startswith("prevent all "):
+        return None
+    body = " ".join(text.strip().split())
+    if len(_SENTENCE_BREAK_RE.split(body)) != 1:
+        return None
+    spec = _read_fog_sentence(body, for_spell=for_spell)
+    if spec is None or spec.targets > 1:
+        return None
+    return [_fog_clause(spec)]
+
+
+#: "If it's `<state>`, `<rider on it>`." after a spell's anaphor fog
+#: (Enshrouding Mist's "If it's renowned, untap it."): CR 608.2c's anaphor
+#: in both the condition and the rider is the fog's own referent, the
+#: spell's target.
+_FOG_REFERENT_CONDITION_RE = re.compile(
+    r"^if (?:it's|it is|that creature is) (?P<state>[a-z ]+?), (?P<rider>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_fog_on_spell_anaphor_then_state_rider_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """A spell's anaphor fog sentence (`_parse_prevent_all_damage_to_spell_
+    anaphor_clause`'s) followed by `_FOG_REFERENT_CONDITION_RE`'s rider.
+
+    The referents are the spell's targets still legal as it resolves (CR
+    608.2b). Each gets the shield (CR 615.1a); then the condition is checked
+    against that object as it is now (CR 608.2c, CR 702.112b for "renowned")
+    and the rider runs on it only if the condition holds."""
+    if not for_spell or "prevent all " not in text.lower() or "if it" not in text.lower():
+        return None
+    sentences = _SENTENCE_BREAK_RE.split(" ".join(text.strip().split()))
+    if len(sentences) != 2:
+        return None
+    spec = _read_fog_sentence(sentences[0], for_spell=True)
+    rider_match = _FOG_REFERENT_CONDITION_RE.fullmatch(sentences[1])
+    if spec is None or spec.recipient != "anaphor" or rider_match is None:
+        return None
+    condition = f"this creature is {rider_match.group('state').strip()}"
+    if not claims(condition):
+        return None
+    rider = _parse_referent_object_clause(rider_match.group("rider"))
+    if rider is None:
+        return None
+
+    def clause(game: "Game", spell: "StackObject") -> None:
+        referents = [
+            found
+            for found in (game.legal_target(spell, ref) for ref in spell.targets)
+            if isinstance(found, CardState)
+        ]
+        _create_fog_shield(game, spell, spec, None)
+        controller = game.controller_of(spell).username
+        for referent in referents:
+            if referent.zone is not Zone.BATTLEFIELD:
+                continue
+            if game.condition_holds(controller, condition, referent):
+                rider(game, [referent], spell)
+
+    return [clause]
 
 
 _SENTENCE_BREAK_RE = re.compile(r"(?<=\.)\s+(?=[A-Z])")
@@ -906,7 +1140,7 @@ def _parse_prevention_sentences_text(text: str) -> Effect | None:
     if len(sentences) < 2:
         return None
     specs = [_read_prevention_sentence(sentence) for sentence in sentences]
-    if any(spec is None for spec in specs):
+    if any(spec is None or spec.recipient == "targets" for spec in specs):
         return None
     clauses: list[TargetedClause] = []
     offset = 0
@@ -920,6 +1154,62 @@ def _parse_prevention_sentences_text(text: str) -> Effect | None:
             clause(game, spell)
 
     return sequence
+
+
+#: CR 615.5's rider after a filtered fog: "If damage is prevented this way,
+#: you may have `<this spell>` deal that much damage to target creature."
+#: (Channel Harm). The prevention happens as the damage would be dealt; the
+#: rider's damage immediately afterward, each time.
+_FOG_REFLECT_RIDER_RE = re.compile(
+    r"^if damage is prevented this way, (?:(?P<may>you may have) )?(?P<name>[^.]+?) "
+    r"deals? that much damage to (?P<target>any target|target [^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s8")
+def _parse_fog_then_reflect_rider_text(text: str) -> Effect | None:
+    """A filtered-fog sentence followed by `_FOG_REFLECT_RIDER_RE`'s rider.
+
+    The fog names no target of its own, so the spell's one target is the
+    rider's (CR 601.2c), chosen as it is cast; a target no longer legal on
+    resolution leaves the spell nothing to do (CR 608.2b)."""
+    body = " ".join(text.strip().split())
+    if "prevented this way" not in body.lower() or not body.lower().startswith("prevent all "):
+        return None
+    sentences = _SENTENCE_BREAK_RE.split(body)
+    if len(sentences) != 2:
+        return None
+    spec = _read_fog_sentence(sentences[0])
+    rider = _FOG_REFLECT_RIDER_RE.fullmatch(sentences[1])
+    if spec is None or rider is None or spec.targets or spec.choose_source:
+        return None
+    if not _targets_understood(rider.group("target"), allow_player_targets=True):
+        return None
+    optional = rider.group("may") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ...models.game import ReflectedDamage
+
+        targets = game.resolve_targets(spell)
+        if not targets:
+            return  # CR 608.2b
+        target = targets[0]
+        reflects = ReflectedDamage(
+            source_id=spell.id,
+            target_card_id=target.id if isinstance(target, CardState) else None,
+            target_stamp=target.zone_change_stamp if isinstance(target, CardState) else None,
+            target_player=target.username if isinstance(target, Player) else None,
+            optional=optional,
+        )
+        before = len(game.prevention_shields)
+        _create_fog_shield(game, spell, spec, None)
+        for index in range(before, len(game.prevention_shields)):
+            game.prevention_shields[index] = game.prevention_shields[index].model_copy(
+                update={"reflects": reflects}
+            )
+
+    return effect
 
 
 # --------------------------------------------------------------------------
@@ -5318,6 +5608,7 @@ from .dispatch import (  # noqa: E402
     _spell_effect_or_notice,
 )
 from .text import (  # noqa: E402
+    _parse_referent_object_clause,
     _plain_resolution_sentences,
     _referent_reader,
     _singular_card_type,

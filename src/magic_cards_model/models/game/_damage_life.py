@@ -642,6 +642,25 @@ class DamageLifeMixin:
             )
         ):
             return False  # "you and/or permanents you control", read now
+        if shield.recipient_types or shield.recipient_controller is not None:
+            # "to creatures", "to creatures you control", "to you and
+            # creatures you control": the damaged permanent's types and
+            # controller as the damage would be dealt; a player only through
+            # `and_permanents_of`, checked above.
+            if event.card is None:
+                if shield.and_permanents_of is None or shield.recipient_controller is not None:
+                    return False
+            else:
+                if event.card.zone is not Zone.BATTLEFIELD:
+                    return False
+                types = self.characteristics_of(event.card).types
+                if any(wanted not in types for wanted in shield.recipient_types):
+                    return False
+                if (
+                    shield.recipient_controller is not None
+                    and self.controller_of(event.card).username != shield.recipient_controller
+                ):
+                    return False
         if shield.source_filter is not None and (
             event.source is None or not shield.source_filter.matches(self, event.source)
         ):
@@ -663,9 +682,14 @@ class DamageLifeMixin:
             # the same reason: a shield that *names* what it covers cannot
             # match an unknown source, and one that names what it does *not*
             # cover cannot rule an unknown source out.
-            subtypes = {
-                subtype.lower() for subtype in self.characteristics_of(event.source).subtypes
-            }
+            # A source gone from the battlefield is judged as it last existed
+            # there (CR 608.2h).
+            source = event.source
+            if source.last_left_the_battlefield and source.last_known_subtypes is not None:
+                source_subtypes = tuple(source.last_known_subtypes)
+            else:
+                source_subtypes = tuple(self.characteristics_of(source).subtypes)
+            subtypes = {subtype.lower() for subtype in source_subtypes}
             if subtypes & {excluded.lower() for excluded in shield.excluded_source_subtypes}:
                 return False
         return not (
@@ -722,16 +746,27 @@ class DamageLifeMixin:
         if prevented > 0 and shield.gains_life_when_prevented:
             self.gain_life(shield.controller, prevented)
         if prevented > 0 and shield.reflects is not None:
-            self._deal_reflected_damage(shield.reflects, prevented)
+            self._deal_reflected_damage(shield.reflects, prevented, shield.controller)
 
-    def _deal_reflected_damage(self: "Game", reflects: ReflectedDamage, amount: int) -> None:
+    def _deal_reflected_damage(
+        self: "Game", reflects: ReflectedDamage, amount: int, controller: str
+    ) -> None:
         """CR 615.5's "If damage is prevented this way, `<spell>` deals that
         much damage to any target": dealt immediately after the prevention, by
         the spell that made the shield (CR 120.1, by last known information
         once it has left the stack), to the target it was cast with. A
         permanent target that is gone, or a new object (CR 400.7), or a
-        player who has left, is dealt nothing."""
+        player who has left, is dealt nothing. "You may have `<spell>` deal
+        ..." (Channel Harm) is asked of the shield's controller each time
+        (CR 608.2d)."""
         source = self.find_by_id(reflects.source_id)
+        if reflects.optional and not self.may(
+            controller,
+            f"Have {getattr(source, 'name', 'the spell')} deal {amount} damage?",
+            source=getattr(source, "name", None),
+            source_id=None if source is None else str(source.id),
+        ):
+            return
         if reflects.target_player is not None:
             if not any(p.username == reflects.target_player for p in self.players):
                 return
