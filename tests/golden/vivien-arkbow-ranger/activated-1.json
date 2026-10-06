@@ -36,9 +36,13 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["damage_dealt_this_turn"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Icehide Golem@alice#1": {
+        "damage": [0, 1]
+      }
+    },
     "players": {},
     "stack": []
   },
