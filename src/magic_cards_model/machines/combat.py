@@ -1092,6 +1092,8 @@ def reads_self_attack_alone_line(line: str, name: str) -> bool:
     `self_attack_alone_only_sentence` finds and
     `Game._refuse_attack_alone_violations` enforces on every declaration;
     `support.py`'s credit for it."""
+    if "can only attack alone" not in line.lower():
+        return False
     subjects = "|".join(re.escape(subject) for subject in _self_reference_names(name))
     pattern = re.compile(rf"^(?:{subjects}) can only attack alone\.?$", re.IGNORECASE)
     sentences = [strip_ability_word(sentence) for sentence in layer_readable_sentences(line)]
@@ -2235,7 +2237,7 @@ def reads_self_combat_restriction_line(line: str, name: str) -> bool:
     ("this creature and other Zombies") or a condition in front of it is left
     to the reader that answers for those.
     """
-    if "can" not in line.lower():
+    if "can't" not in line.lower():
         return False
     own = _own_combat_restriction_re(name)
     sentences = [strip_ability_word(sentence) for sentence in layer_readable_sentences(line)]

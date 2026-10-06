@@ -139,11 +139,11 @@ def _parse_landfall_type_then_add_mana_clause_pair(
     """
     if for_spell:
         return None
-    antecedent = _parse_mixed_clause(first, for_spell=for_spell)
-    if antecedent is None:
-        return None
     match = _IF_THAT_LAND_IS_A_ADD_MANA_RE.fullmatch(second.strip().rstrip("."))
     if match is None:
+        return None
+    antecedent = _parse_mixed_clause(first, for_spell=for_spell)
+    if antecedent is None:
         return None
     land_type = match.group("type").strip().title()
     # CR 205.3i's basic land types, or any other printed land subtype -

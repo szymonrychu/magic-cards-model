@@ -3217,12 +3217,12 @@ def _merge_damage_target_then_reveal_choose_discard_clauses(
     each finds the same single player target this ability ever names, so no
     referent has to be threaded between them by hand.
     """
-    damage = _parse_targeted_clause(clauses[index], for_spell=for_spell)
-    if damage is None:
-        return None
     if not re.search(
         r"\bdeals? .+ damage to target (?:opponent|player)\b", clauses[index], re.IGNORECASE
     ):
+        return None
+    damage = _parse_targeted_clause(clauses[index], for_spell=for_spell)
+    if damage is None:
         return None
     rest = _merge_reveal_hand_choose_discard_clauses(
         clauses, index + 1, for_spell=for_spell, anaphoric_revealer=True

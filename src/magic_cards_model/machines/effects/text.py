@@ -439,6 +439,8 @@ def _strip_self_exile_sentence(card_name: str, text: str) -> str | None:
     # periods (Plot's own three-sentence parenthetical), which is what stops
     # `_is_keyword_ability_line` from recognising the line at all until that
     # parenthetical is gone.
+    if "exile" not in text.lower():
+        return None
     text = _strip_keyword_ability_lines(_INLINE_REMINDER_RE.sub("", text))
     names = {card_name, card_name.split("//")[0].strip()}
     pattern = re.compile(
@@ -469,6 +471,8 @@ def _strip_self_exile_with_time_counters_sentence(
     of these cards prints its "Suspend N-[cost]" keyword on the line after,
     which the rest of the dispatch already reads past.
     """
+    if "time counter" not in text.lower():
+        return None
     pattern = re.compile(
         r"(?:^|(?<=[.\s]))Exile (?:"
         + _self_names_pattern(card_name)
@@ -2857,11 +2861,10 @@ def _parse_controller_split_target_clause_pair(
     than one requirement in a clause) is left for the ordinary per-clause
     fallback exactly as before.
     """
-    first_effect = _parse_mixed_clause(first, for_spell=for_spell)
-    if first_effect is None:
-        return None
-    second_effect = _parse_mixed_clause(second, for_spell=for_spell)
-    if second_effect is None:
+    # Cheapest checks first: a target requirement is only ever named by the
+    # word "target" (CR 115.1), and the profiles are far cheaper than the two
+    # whole-clause parses, which run only once the controllers pair up.
+    if "target" not in first.lower() or "target" not in second.lower():
         return None
     profile_reader = spell_profile_for_text if for_spell else profile_for_text
     first_requirements = profile_reader(first).requirements
@@ -2875,6 +2878,12 @@ def _parse_controller_split_target_clause_pair(
     wants_you = ControllerRestriction.YOU in controllers
     wants_theirs = bool(controllers & theirs_restrictions)
     if not (wants_you and wants_theirs and len(controllers) == 2):
+        return None
+    first_effect = _parse_mixed_clause(first, for_spell=for_spell)
+    if first_effect is None:
+        return None
+    second_effect = _parse_mixed_clause(second, for_spell=for_spell)
+    if second_effect is None:
         return None
     first_wants_mine = first_controller is ControllerRestriction.YOU
 
