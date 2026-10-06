@@ -148,6 +148,7 @@ from magic_cards_model.machines.effects import (
     split_effect_clauses,
     trigger_effect_for,
 )
+from magic_cards_model.machines.effects.counters import _SUPPORT_RE
 from magic_cards_model.machines.keyword_counters import (
     conditional_group_keyword_grant_of_line,
     enters_with_counters_pronoun_fallback,
@@ -650,6 +651,19 @@ def executed_keywords(printing: Card) -> dict[str, str]:
                 continue
             if _parse_monstrosity_clause(substitute_x(effect_text, 1)) is not None:
                 found["monstrosity"] = "machines/effects.py (_parse_monstrosity_clause, CR 701.37a)"
+                break
+
+    # Support N (CR 701.41a) is a keyword action, like Monstrosity: the clause
+    # `counters._parse_support_clause` reads - the spell's own "Support N."
+    # line or an enters trigger's "support N." effect - is what executes it.
+    if any(k.lower() == "support" for k in printing.keywords):
+        for ability in parse_abilities(printing):
+            clause = getattr(ability, "effect", None) or ability.raw or ""
+            clause = re.sub(r"\s*\([^()]*\)\s*$", "", clause).strip()
+            if _SUPPORT_RE.fullmatch(clause) is not None:
+                found["support"] = (
+                    "machines/effects/counters.py (_parse_support_clause, CR 701.41a)"
+                )
                 break
 
     # Unearth (CR 702.84a) and transmute (CR 702.53a) are activated abilities
