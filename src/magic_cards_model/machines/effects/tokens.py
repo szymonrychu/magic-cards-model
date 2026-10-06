@@ -73,6 +73,7 @@ from ..replacement import (
 )
 from ..targeting import (
     profile_for_text,
+    spell_profile_for_text,
 )
 from ..triggers import (
     AbilityOnStack,
@@ -83,7 +84,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import _OBJECT_ANAPHOR, AbilityEffect, Effect, TargetedClause
 
 
@@ -1549,7 +1550,7 @@ def _parse_tokens_then_counter_if_not_cast_from_hand_clause(effect_text: str) ->
 #: already-built vocabularies, not new ones.
 _CREATE_ROLE_TOKEN_RE = re.compile(
     rf"create an? (?P<role>[A-Za-z][A-Za-z ]*?) role token attached to "
-    rf"(?P<phrase>{_OBJECT_ANAPHOR}|target .+)",
+    rf"(?P<phrase>{_OBJECT_ANAPHOR}|(?:up to one )?(?:other )?target .+)",
     re.IGNORECASE,
 )
 
@@ -1592,6 +1593,115 @@ def _parse_create_role_token_clause(clause: str, *, for_spell: bool) -> Targeted
                 create_tokens(game, definition, controller, attached_to=target)
 
     return effect
+
+
+#: "create a(n) `<Role>` Role token attached to up to one target `<...>`" as a
+#: whole sentence - the optional-target Role of Cut In, Shatter the Oath,
+#: Eriette's Whisper, Witch's Mark. `_CREATE_ROLE_TOKEN_RE` reads the clause;
+#: this only recognises that the sentence is one, so `_parse_sentence_then_role_
+#: on_up_to_one_target_clauses` can tell it apart from a sentence that merely
+#: mentions a Role.
+_ROLE_ON_UP_TO_ONE_TARGET_SENTENCE_RE = re.compile(
+    r"^create an? [A-Za-z][A-Za-z ]*? role token attached to up to one (?:other )?target .+$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_sentence_then_role_on_up_to_one_target_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """`<sentence with its own targets>. Create a `<Role>` Role token attached to
+    up to one target `<...>`." (CR 303.7, CR 111.10) - Cut In's "deals 4 damage
+    to target creature", Shatter the Oath's "Destroy target creature or
+    enchantment", Eriette's Whisper's "Target opponent discards two cards".
+
+    Both sentences use the word "target", so CR 601.2c puts every target on
+    the one stack object in the order the text names them, and
+    `Game.resolve_targets` hands each clause the *whole* list - the damage
+    would also land on the Role's creature and the Role would also attach to
+    the damaged one. The first sentence's requirements are all mandatory and
+    fixed-size (an "up to"/variable one would make the split ambiguous), so
+    its targets are exactly the first `n` of `stack_object.targets` and the
+    Role's are the rest. Splitting the *references* rather than the resolved
+    objects keeps CR 608.2b honest: a first target that has become illegal
+    stays in its own slot and is simply not affected, it does not shift the
+    Role's target into its place. Zero targets for the "up to one" half is a
+    legal announcement (CR 115.6) and then no Role is created.
+    """
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if len(sentences) != 2:
+        return None
+    first, second = sentences
+    second = second.strip().rstrip(".")
+    if _ROLE_ON_UP_TO_ONE_TARGET_SENTENCE_RE.fullmatch(second) is None:
+        return None
+    role_clause = _parse_create_role_token_clause(second, for_spell=for_spell)
+    first_clauses = _parse_mixed_clauses(first, for_spell=for_spell)
+    if role_clause is None or first_clauses is None:
+        return None
+    profile_reader = spell_profile_for_text if for_spell else profile_for_text
+    requirements = profile_reader(first).requirements
+    if any(r.unbounded or r.variable_count or r.minimum != r.count for r in requirements):
+        return None
+    first_target_count = sum(requirement.count for requirement in requirements)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targets = list(stack_object.targets)
+        first_object = stack_object.model_copy(update={"targets": targets[:first_target_count]})
+        role_object = stack_object.model_copy(update={"targets": targets[first_target_count:]})
+        for clause in first_clauses:
+            clause(game, first_object)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
+        role_clause(game, role_object)
+
+    return [effect]
+
+
+#: A token sentence whose "with" tail ends in `and "<quoted ability>"` - the
+#: keyword(s) and the quoted ability are one tail (CR 111.3), Awaken the Blood
+#: Avatar's "3/6 black and red Avatar creature token with haste and "Whenever
+#: this token attacks, ...", Into the Fae Court's "Faerie creature token with
+#: flying and "This token can block only creatures with flying."".
+_TOKEN_WITH_KEYWORDS_AND_QUOTED_ABILITY_RE = re.compile(
+    r"^(?:you )?create .*?\btokens?\b[^\"\u201c]*?\s+with\s+[^\"\u201c]*?\band\s+[\"\u201c]",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_token_with_keywords_and_quoted_ability_sentences(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """Every sentence of `text`, with each `_TOKEN_WITH_KEYWORDS_AND_QUOTED_
+    ABILITY_RE` sentence read whole and every other sentence through the
+    ordinary clause pipeline; `None` when no sentence has that shape, or any
+    sentence fails to read (CR 608.2c has no notion of running half an
+    instruction).
+
+    `split_effect_clauses` masks the quoted span but still cuts the sentence at
+    the bare " and " in front of it, so "... token with haste" and a lone
+    quotation came out as two clauses and neither read - every "token with
+    `<keyword>` and "`<ability>`"" card was silent. The token reader
+    (`_parse_token_clause`) already reads the whole sentence correctly, so this
+    only hands it the sentence the splitter should not have cut.
+    """
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if not any(_TOKEN_WITH_KEYWORDS_AND_QUOTED_ABILITY_RE.match(s) for s in sentences):
+        return None
+    clauses: list[TargetedClause] = []
+    for sentence in sentences:
+        if _TOKEN_WITH_KEYWORDS_AND_QUOTED_ABILITY_RE.match(sentence):
+            token_clause = _parse_token_clause(sentence.strip(), for_spell=for_spell)
+            if token_clause is None:
+                return None
+            clauses.append(token_clause)
+            continue
+        parsed = _parse_mixed_clauses(sentence, for_spell=for_spell)
+        if parsed is None:
+            return None
+        clauses.extend(parsed)
+    return clauses
 
 
 def _parse_token_then_object_anaphor_clause_pair(
@@ -4128,6 +4238,7 @@ from .control_copy import (  # noqa: E402
 from .counters import _counter_kind, _departed_stat_with_counters  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
+    _parse_mixed_clauses,
     _spell_effect_or_notice,
     parse_mixed_effect,
 )
@@ -4141,6 +4252,7 @@ from .text import (  # noqa: E402
     _has_period_outside_quotes,
     _normalize_keyword_list,
     _parse_referent_object_clause,
+    _plain_resolution_sentences,
     _singular_subtype_for_amass,
     _split_created_trigger_paragraph,
     _strip_non_effect_preamble,

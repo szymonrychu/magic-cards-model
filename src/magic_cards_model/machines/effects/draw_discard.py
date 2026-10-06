@@ -32,6 +32,7 @@ from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     DelayedTrigger,
     DiscardCardsAtRandomForController,
+    ReflexiveConsequence,
 )
 from ..designations import designation_holds, split_if
 from ..layers import (
@@ -2509,6 +2510,110 @@ def _parse_put_two_card_groups_and_or_from_hand_clause(text: str) -> AbilityEffe
     return effect
 
 
+#: "Discard a card, then draw a card." / "Draw a card, then [you may] discard a
+#: card." followed by CR 603.12's reflexive "When you discard [a|an `<quality>`]
+#: card this way, `<consequence>`." - Flamethrower Sonata, Glacial Dragonhunt,
+#: Narset of the Ancient Way's -2. "This way" is CR 608.2c anaphora onto the
+#: discard the first sentence performed, so the pair is read whole: the
+#: reflexive ability exists only if the card actually discarded has the
+#: quality (a land discarded to a "nonland" trigger creates nothing), and it
+#: is a new object that announces its own targets as it goes on the stack
+#: (CR 603.3d, `Game.create_reflexive_trigger`).
+_LOOT_THEN_REFLEXIVE_DISCARD_RE = re.compile(
+    r"^(?:(?P<discard_first>discard a card, then draw a card)"
+    r"|draw a card, then (?P<may>you may )?discard a card)"
+    r"\.\s*when you discard (?:a card|an? (?P<quality>[a-z, ]+?) card) this way,\s*"
+    r"(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "damage equal to that card's mana value" - the discarded card's mana value
+#: (CR 202.3), written into the reflexive ability's text as a number when it
+#: is created, the way a cast X is (CR 107.3a), because the reflexive ability
+#: is a new object and the discarded card is the only thing that remembers it.
+_DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE = re.compile(
+    r"\bdamage equal to (?:that card'?s|its) mana value\b", re.IGNORECASE
+)
+
+
+def _loot_then_reflexive_discard_effect(
+    text: str, *, for_spell: bool
+) -> "Callable[[Game, StackObject], None] | None":
+    """`_LOOT_THEN_REFLEXIVE_DISCARD_RE`'s shape for a spell or an ability."""
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _LOOT_THEN_REFLEXIVE_DISCARD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    quality = match.group("quality")
+    matches_quality = _nonland_or_typed_card_matcher(quality) if quality else None
+    if quality and matches_quality is None:
+        return None
+    discard_first = match.group("discard_first") is not None
+    optional = match.group("may") is not None
+    consequence = match.group("consequence").strip()
+    carries_mana_value = _DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE.search(consequence) is not None
+
+    def with_mana_value(value: int) -> str:
+        return _DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE.sub(f"{value} damage", consequence)
+
+    if re.search(r"\bthat card\b|\bits mana value\b", with_mana_value(2), re.IGNORECASE):
+        return None
+    if reflexive_consequence_effect(with_mana_value(2) + ".") is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
+        discarded: list[CardState] = []
+        if discard_first:
+            discarded = _discard_cards(
+                game, player, 1, source_name, source_id=str(source_id), exact=True
+            )
+            game.draw_cards(player, 1)
+        else:
+            game.draw_cards(player, 1)
+            if optional and not game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=player.username,
+                    prompt="discard a card",
+                    source=source_name,
+                    affirmative_is_legal=bool(player.hand),
+                    source_id=str(source_id),
+                )
+            ):
+                return
+            discarded = _discard_cards(
+                game, player, 1, source_name, source_id=str(source_id), exact=True
+            )
+        if not discarded or (matches_quality is not None and not matches_quality(discarded[0])):
+            return
+        value = int(discarded[0].mana_value)
+        if carries_mana_value and value == 0:
+            return  # zero damage changes nothing; nothing to announce a target for.
+        game.create_reflexive_trigger(
+            text=with_mana_value(value) + ".",
+            controller=player.username,
+            source_id=source_id,
+            source_name=source_name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
+@SPELL_TEXT.rung("s12")
+def _parse_loot_then_reflexive_discard_spell(text: str) -> Effect | None:
+    """`_LOOT_THEN_REFLEXIVE_DISCARD_RE` on a spell - Flamethrower Sonata."""
+    return _loot_then_reflexive_discard_effect(text, for_spell=True)  # type: ignore[return-value]
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_loot_then_reflexive_discard_ability(text: str) -> AbilityEffect | None:
+    """`_LOOT_THEN_REFLEXIVE_DISCARD_RE` on an ability - Narset's -2."""
+    return _loot_then_reflexive_discard_effect(text, for_spell=False)  # type: ignore[return-value]
+
+
 from ._common import (  # noqa: E402
     _DISCARD_A_CARD_RE,
     _DRAW_CARDS_EQUAL_TO_RE,
@@ -2540,6 +2645,7 @@ from .modal import (  # noqa: E402
     _choose_land_from_hand,
     _choose_lands_from_hand,
     _choose_permanents_to_sacrifice,
+    reflexive_consequence_effect,
 )
 from .removal import (  # noqa: E402
     _cost_sacrificed_stat_total,

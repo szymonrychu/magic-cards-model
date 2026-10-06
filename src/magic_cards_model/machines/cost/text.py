@@ -592,14 +592,17 @@ def _per_object_reduction(pattern: re.Pattern[str], text: str, *, whole: bool) -
     return None if match is None else ManaCost.try_parse(match.group("amount"))
 
 
-def per_object_sacrifice_cost_reduction(card: Card) -> ManaCost | None:
+def per_object_sacrifice_cost_reduction(card: Card, *, face: str | None = None) -> ManaCost | None:
     """The per-object amount `_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE` prints
-    on `card`, or `None` when it prints no such sentence at all - as opposed
-    to printing one this engine cannot read, which `Casting.
-    sacrifice_for_cost_reduction` tells apart by trying to parse the amount
-    and raising when that fails rather than silently reducing nothing."""
+    on `card` - or on `face` alone once one has been chosen (CR 712.11b/c: a
+    modal double-faced card's back face, Awaken the Blood Avatar, is the only
+    text evaluated while it is cast) - or `None` when it prints no such
+    sentence at all - as opposed to printing one this engine cannot read,
+    which `Casting.sacrifice_for_cost_reduction` tells apart by trying to
+    parse the amount and raising when that fails rather than silently
+    reducing nothing."""
     return _per_object_reduction(
-        _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE, card.oracle_text or "", whole=False
+        _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE, _oracle_text_for_face(card, face), whole=False
     )
 
 
@@ -609,11 +612,11 @@ def per_object_sacrifice_reduction_of_sentence(sentence: str) -> ManaCost | None
     return _per_object_reduction(_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE, sentence, whole=True)
 
 
-def per_object_exile_cost_reduction(card: Card) -> ManaCost | None:
+def per_object_exile_cost_reduction(card: Card, *, face: str | None = None) -> ManaCost | None:
     """`per_object_sacrifice_cost_reduction`'s exile twin: the per-card amount
     of "This spell costs {N} less to cast for each card exiled this way."."""
     return _per_object_reduction(
-        _PER_OBJECT_EXILE_COST_REDUCTION_RE, card.oracle_text or "", whole=False
+        _PER_OBJECT_EXILE_COST_REDUCTION_RE, _oracle_text_for_face(card, face), whole=False
     )
 
 
