@@ -1585,6 +1585,18 @@ _KEYWORD_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Target creature [with flying] loses flying until end of turn." (Crash
+#: Landing, Adarkar Windform) - CR 113.10's "loses", the layer 6 removal of
+#: CR 613.1f, until end of turn (CR 611.2a). A "with <keyword>" after the
+#: noun is a targeting restriction `machines/targeting.py` already enforced;
+#: it is only recognised here.
+_KEYWORD_LOSS_RE = re.compile(
+    rf"^(?:{_SUBJECT}(?: with [a-z]+)? loses|{_PLURAL_TARGET_SUBJECT}(?: with [a-z]+)? lose) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
+
 #: The qualifier words an anthem's subject may carry, ahead of the noun:
 #: "other" (the source itself excluded), a colour negation ("nonblack",
 #: CR 105.2) or "colorless" (CR 105.2c: no colour at all, Kozilek, the Broken
@@ -4022,6 +4034,34 @@ def _keyword_grant_builder(keywords: Sequence[str]) -> EffectBuilder:
                 duration=Duration.UNTIL_END_OF_TURN,
                 selector=only_this_incarnation(target, target.zone_change_stamp),
                 modification=grant_ability(keyword),
+            )
+            for target in targets
+            for keyword in keywords
+        ]
+
+    return builder
+
+
+def _keyword_loss_builder(keywords: Sequence[str]) -> EffectBuilder:
+    """ "[Subject] loses <keyword>[ and <keyword>] until end of turn." (CR
+    113.10, CR 613.1f) - one layer 6 removal per keyword, on exactly the
+    object targeted (CR 400.7), until end of turn (CR 611.2a). A later grant
+    with a later timestamp gives it back (CR 613.7)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {target.name} loses {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(target, target.zone_change_stamp),
+                modification=lose_keyword(keyword),
             )
             for target in targets
             for keyword in keywords
@@ -10194,6 +10234,11 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         if keywords is None:
             return None
         return _keyword_grant_builder(keywords)
+    if " lose" in sentence.lower() and (match := _KEYWORD_LOSS_RE.fullmatch(sentence)):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _keyword_loss_builder(keywords)
     if match := _ANTHEM_PER_COUNT_RE.fullmatch(sentence):
         count = _controlled_count_factory(match.group("each"))
         keywords = (
@@ -12099,6 +12144,7 @@ from .model import (  # noqa: E402
     grant_ability_instance,
     lands_controlled_by,
     lose_all_abilities,
+    lose_keyword,
     modify_power_toughness,
     modify_power_toughness_per,
     nonbasic_lands,

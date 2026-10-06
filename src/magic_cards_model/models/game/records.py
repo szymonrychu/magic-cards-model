@@ -721,6 +721,21 @@ class ReflectedDamage(EngineModel):
     """"you may have `<spell>` deal that much damage" (Channel Harm): the
     shield's controller chooses each time, as the damage is prevented (CR
     608.2d, CR 615.5)."""
+    to_source_controller: bool = False
+    """"deals that much damage to that source's controller" (Deflecting
+    Palm): no target - the recipient is the controller of the source whose
+    damage was prevented, read as it is prevented (CR 615.5)."""
+    source_quality: str | None = None
+    """"If damage from a red source is prevented this way" (Honorable
+    Passage): the payoff happens only when the prevented damage's source has
+    this quality as the damage would be dealt (CR 609.7b)."""
+    reflexive: bool = False
+    """"When damage is prevented this way, ..." (New Way Forward): CR
+    603.12's reflexive triggered ability, put on the stack rather than
+    performed immediately."""
+    draws: bool = False
+    """"... and you draw that many cards": the shield's controller draws the
+    prevented amount along with the damage."""
 
 
 class PreventionShield(EngineModel):

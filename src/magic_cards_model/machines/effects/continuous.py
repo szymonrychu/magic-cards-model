@@ -3245,7 +3245,9 @@ def _is_layer_effect_text(text: str) -> bool:
     return is_resolution_layer_effect_text(text)
 
 
-def _layer_remainder_or_composed(remainder_text: str, *, for_spell: bool) -> TargetedClause | None:
+def _layer_remainder_or_composed(
+    remainder_text: str, *, for_spell: bool, layer_text: str | None = None
+) -> TargetedClause | None:
     """Whatever `parse_mixed_effect_for_spell`/`parse_mixed_effect` reads out
     of `remainder_text`, or `None` when neither can - in which case the
     caller records a `LayerRemainderNotice` instead. Shared by every layer-
@@ -3268,11 +3270,19 @@ def _layer_remainder_or_composed(remainder_text: str, *, for_spell: bool) -> Tar
     turn_scoped = turn_scoped_rider(remainder_text, for_spell=for_spell)
     if turn_scoped is not None:
         return turn_scoped
-    return (
+    read = (
         parse_mixed_effect_for_spell(remainder_text)
         if for_spell
         else parse_mixed_effect(remainder_text)
     )
+    if read is not None or layer_text is None:
+        return read
+    # Crash Landing's "<self> deals damage to that creature equal to ..."
+    # after "Target creature with flying loses flying until end of turn.":
+    # CR 608.2c's "that creature" is the layer sentence's one target.
+    if len(re.findall(r"\btarget\b", layer_text, re.IGNORECASE)) != 1:
+        return None
+    return damage_to_layer_target_rider(remainder_text)
 
 
 #: CR 702.96a: overload is the keyword line printed beside a spell's own
@@ -3356,7 +3366,10 @@ def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
         # always has.
         return create_continuous_effect
     remainder_text = " ".join(remainder)
-    remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=True)
+    layer_text = " ".join(sentence for sentence in sentences if sentence not in remainder)
+    remainder_effect = _layer_remainder_or_composed(
+        remainder_text, for_spell=True, layer_text=layer_text
+    )
     if remainder_effect is not None:
 
         def layer_and_remainder_effect(game: "Game", spell: CardState) -> None:
@@ -11557,7 +11570,7 @@ from .amounts import (  # noqa: E402
 )
 from .control_copy import _mass_control_group  # noqa: E402
 from .counters import _counter_kind, _source_still_here  # noqa: E402
-from .damage import _fight, _resolve_bite_damage  # noqa: E402
+from .damage import _fight, _resolve_bite_damage, damage_to_layer_target_rider  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
     _parse_mixed_clauses,
