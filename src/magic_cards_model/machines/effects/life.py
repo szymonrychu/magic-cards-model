@@ -682,6 +682,54 @@ def _parse_they_gain_or_lose_life_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "Each player loses 1 life for each attacking creature they control." (Batwing
+#: Brume) - CR 119.3's life change, one per object of the named group *that
+#: player* controls (CR 102.1's "each player", CR 101.4's turn order), so the
+#: count is taken per player rather than once for the resolving spell's
+#: controller. "They control" is the printed word for what `count_expression`
+#: reads as "you control" with the counted player as "you".
+_EACH_PLAYER_LIFE_PER_THEY_CONTROL_RE = re.compile(
+    rf"^each (?P<who>player|opponent) (?P<verb>gains?|loses?) (?P<n>{COUNT}) life "
+    r"for each (?P<group>[^,.]+?) they control$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_each_player_life_per_group_they_control_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_PLAYER_LIFE_PER_THEY_CONTROL_RE`'s shape: every player (or every
+    opponent of the controller) gains or loses N life times the size of the
+    named group they themselves control."""
+    if " for each " not in clause.lower() or " they control" not in clause.lower():
+        return None
+    match = _EACH_PLAYER_LIFE_PER_THEY_CONTROL_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    unit = parse_count(match.group("n"))
+    counter = count_expression(f"{match.group('group')} you control")
+    if unit is None or counter is None:
+        return None
+    gains = match.group("verb").lower().startswith("gain")
+    opponents_only = match.group("who").lower() == "opponent"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        for player in list(game.players_in_game):
+            if opponents_only and player.username == controller.username:
+                continue
+            amount = unit * counter(game, player.username)
+            if amount <= 0:
+                continue
+            if gains:
+                game.gain_life(player, amount)
+            else:
+                game.lose_life(player, amount)
+
+    return effect
+
+
 #: Master of Cruelties' own attack trigger: "Whenever this creature attacks
 #: a player and isn't blocked, that player's life total becomes 1." CR
 #: 607.1's "that player" anaphora onto the very player the condition just

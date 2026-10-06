@@ -91,7 +91,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import AbilityEffect, ClauseEffect, Effect, TargetedClause, _SacrificeRestriction
 
 
@@ -5375,6 +5375,85 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
             consequence(game, stack_object)
 
     return effect
+
+
+#: Two independently gated instructions in one sentence, joined by "and":
+#: "`<A>` if `<C1>` and `<B>` if `<C2>`." - Firespout's "deals 3 damage to
+#: each creature without flying if {R} was spent to cast this spell and 3
+#: damage to each creature with flying if {G} was spent to cast this spell",
+#: Moonhold's, Repel Intruders'. The reminder "(Do both if {R}{G} was
+#: spent.)" is CR 608.2c restated (each instruction is checked on its own as
+#: it is followed; neither gate reads the other) and is already stripped as
+#: reminder text. The bare "and" is what `split_effect_clauses` would cut
+#: into two fragments, the second of which is no instruction at all once its
+#: subject and verb are elided.
+_GATED_PAIR_SENTENCE_RE = re.compile(r" if .+ and .+ if ", re.IGNORECASE)
+
+
+def _elided_head(first: str, second: str) -> str | None:
+    """The words `first` spends before the point where `second` begins -
+    "Firespout deals " for the "3 damage to each creature with flying" that
+    follows its own "3 damage to ..." - found as the first word of `second`
+    inside `first`, so the elided subject and verb are spliced back rather
+    than invented. `None` when `second`'s first word is not in `first`."""
+    word = second.split(" ", 1)[0]
+    index = first.lower().find(f" {word.lower()} ")
+    return first[: index + 1] if index > 0 else None
+
+
+def _split_gated_pair(sentence: str, *, for_spell: bool) -> list[TargetedClause] | None:
+    """`_GATED_PAIR_SENTENCE_RE`'s sentence read as two `_parse_condition_
+    clause` clauses (each half is a trailing-if instruction on its own, the
+    second with the first's subject and verb spliced back when it elides
+    them), or `None` when it is not that shape or either half does not read."""
+    stripped = sentence.strip().rstrip(".")
+    if _GATED_PAIR_SENTENCE_RE.search(stripped) is None:
+        return None
+    parts = stripped.split(" and ")
+    for cut in range(1, len(parts)):
+        left, right = " and ".join(parts[:cut]), " and ".join(parts[cut:])
+        if " if " not in left or " if " not in right or left.lower().startswith("if "):
+            continue
+        first = _parse_condition_clause(left, for_spell=for_spell)
+        if first is None:
+            continue
+        second = _parse_condition_clause(right, for_spell=for_spell)
+        if second is None:
+            head = _elided_head(left.split(" if ", 1)[0], right)
+            second = (
+                _parse_condition_clause(f"{head}{right}", for_spell=for_spell)
+                if head is not None
+                else None
+            )
+        if second is not None:
+            return [first, second]
+    return None
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_gated_pair_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
+    """Every sentence of `text`, those of `_GATED_PAIR_SENTENCE_RE`'s shape
+    through `_split_gated_pair`, the rest one by one through the ordinary
+    pipeline (the `_parse_shared_subject_clauses` pattern); `None` when no
+    sentence is such a pair or any sentence fails to read (CR 608.2c: no
+    half-run instruction)."""
+    lowered = text.lower()
+    if " if " not in lowered or " and " not in lowered:
+        return None
+    sentences = _plain_resolution_sentences(text)
+    pairs = [_split_gated_pair(sentence, for_spell=for_spell) for sentence in sentences]
+    if not any(pairs):
+        return None
+    effects: list[TargetedClause] = []
+    for sentence, pair in zip(sentences, pairs, strict=True):
+        if pair is not None:
+            effects.extend(pair)
+            continue
+        rest = _parse_mixed_clauses(sentence, for_spell=for_spell)
+        if rest is None:
+            return None
+        effects.extend(rest)
+    return effects
 
 
 def _parse_optional_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
