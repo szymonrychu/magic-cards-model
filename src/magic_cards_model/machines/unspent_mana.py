@@ -71,6 +71,34 @@ _DONT_LOSE_RE = re.compile(
 
 _EVERY_TYPE = frozenset(Color)
 
+#: "Until end of turn, you don't lose unspent [<colour>] mana as steps and
+#: phases end." (The Last Agni Kai) - the same replacement as `_DONT_LOSE_RE`
+#: for the rest of the turn, made by a resolving spell or ability instead of a
+#: permanent. CR 611.2a: a continuous effect from a resolving spell lasts as
+#: long as it states; CR 611.2c: it is not locked in to the mana already in the
+#: pool, so mana added later this turn is kept too. CR 514.2 ends it in the
+#: cleanup step (`Game.cleanup_step`), before that step's own emptying.
+_UNTIL_END_OF_TURN_DONT_LOSE_RE = re.compile(
+    rf"^until end of turn, you don['’]t lose unspent (?:(?P<color>{_COLOR_WORD}) )?mana "
+    r"as steps and phases end\.?$",
+    re.IGNORECASE,
+)
+
+#: A recorded turn-scoped keep effect is a `CastingRuleEffect` whose `kind` is
+#: this prefix plus the colour word it keeps, or `:all` for every type of mana.
+KEEP_UNSPENT_MANA_RULE = "keep_unspent_mana"
+
+
+def read_until_end_of_turn_dont_lose_unspent_mana(text: str) -> str | None:
+    """The `CastingRuleEffect.kind` that records the turn-scoped sentence
+    `_UNTIL_END_OF_TURN_DONT_LOSE_RE` reads (`KEEP_UNSPENT_MANA_RULE:<colour or
+    all>`), or `None` when `text` is not that sentence."""
+    match = _UNTIL_END_OF_TURN_DONT_LOSE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    color = match.group("color")
+    return f"{KEEP_UNSPENT_MANA_RULE}:{color.lower() if color else 'all'}"
+
 
 @dataclass(frozen=True)
 class ManaLossReplacement:
@@ -78,9 +106,11 @@ class ManaLossReplacement:
 
     `keep` is the mana it keeps as it is (every type for "unspent mana",
     one colour for "unspent red mana"), `becomes` the colour the mana it
-    replaces becomes instead. Exactly one of the two is set."""
+    replaces becomes instead. Exactly one of the two is set. `source` is the
+    permanent whose static ability this is, or `None` for a turn-scoped
+    effect a spell recorded (`KEEP_UNSPENT_MANA_RULE`), whose source is gone."""
 
-    source: CardState
+    source: CardState | None
     name: str
     keep: frozenset[Color] | None = None
     becomes: Color | None = None
@@ -132,6 +162,17 @@ def mana_loss_replacements(game: Game, username: str) -> list[ManaLossReplacemen
                     keep=frozenset({_COLOR_WORDS[color.lower()]}) if color else _EVERY_TYPE,
                 )
             )
+    for effect in game.casting_rule_effects:
+        prefix, _, scope = effect.kind.partition(":")
+        if prefix != KEEP_UNSPENT_MANA_RULE or effect.controller != username:
+            continue
+        found.append(
+            ManaLossReplacement(
+                source=None,
+                name=effect.source_name,
+                keep=_EVERY_TYPE if scope == "all" else frozenset({_COLOR_WORDS[scope]}),
+            )
+        )
     return found
 
 

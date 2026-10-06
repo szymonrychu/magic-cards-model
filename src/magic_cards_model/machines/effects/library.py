@@ -3816,6 +3816,39 @@ def _parse_target_player_shuffles_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "Target player shuffles their graveyard into their library." (Reminisce,
+#: Clear the Mind, Blessed Respite, Learn from the Past) - CR 701.24a's
+#: shuffle of a chosen player's library after every card of that player's own
+#: graveyard has been put into it. "Target opponent" reads the same way.
+#: Each card goes into its own owner's library (`put_cards_into_library`), and
+#: the shuffle happens even when the graveyard was empty (CR 701.24a asks only
+#: that the library be randomised).
+_TARGET_PLAYER_SHUFFLES_GRAVEYARD_RE = re.compile(
+    r"^target (?P<who>player|opponent) shuffles their graveyard into their library\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_target_player_shuffles_graveyard_into_library_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_SHUFFLES_GRAVEYARD_RE`'s shape, or `None`."""
+    match = _TARGET_PLAYER_SHUFFLES_GRAVEYARD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(f"target {match.group('who').lower()}", allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player):
+                game.put_cards_into_library(list(target.graveyard))
+                game.shuffle_library(target)
+
+    return effect
+
+
 #: Riddles in the Dark's own shape: "Look at the top four cards of your
 #: library and separate them into a face-down pile and a face-up pile. An
 #: opponent chooses one of the piles. Put that pile into your hand and the
