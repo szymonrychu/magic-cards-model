@@ -2011,7 +2011,6 @@ def test_a_snapshot_written_before_the_nw02_t2_shields_is_refused() -> None:
         Game.model_validate(dumped)
 
 
-
 #: The version stamped before NW02-T3: `CastRecord` gained
 #: `controlled_modified_creature_as_cast`, read back by Flame Discharge's "If
 #: you controlled a modified creature as you cast this spell" (CR 700.9, CR
