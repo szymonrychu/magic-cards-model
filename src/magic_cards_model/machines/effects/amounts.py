@@ -1836,20 +1836,18 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
 #: R0a-T7: Frontline Rush's own second mode, "Target creature gets +X/+X
 #: until end of turn, where X is the number of creatures you control." - the
 #: spell-side twin of `_parse_where_x_is_continuous_effect` immediately
-#: above, scoped to a *targeted* subject rather than the self/mass one that
-#: function's own `_mass_creature_group_targets`/`_source_characteristic_
-#: expr`/`_event_subject_characteristic_expr` branches read (all three are
-#: `AbilityOnStack`-only - an `AbilityOnStack`'s own `.source`/`.controller`/
-#: `.event`, none of which a resolving spell's `CardState` carries). Nothing
-#: in this pool prints a *mass*-subject "where X is ..." pump on a spell (or
-#: a modal spell's own mode - `resolve_modal_spell` swaps `spell.targets` to
-#: the chosen mode's own slice before running this, so `game.
-#: resolve_card_targets` already reads the right target), so this half only
-#: ever needs the single-target branch: `profile_for_text(literal)` reads
-#: whether the substituted sentence targets at all, and `game.
-#: resolve_card_targets(spell)` is the identical CR 608.2b recheck `create_
-#: continuous_effect`/`_create_continuous_effect_for_mode_text` already give
-#: every other spell-side layer effect.
+#: above, for a *targeted* subject (a modal spell's own mode -
+#: `resolve_modal_spell` swaps `spell.targets` to the chosen mode's own slice
+#: before running this, so `game.resolve_card_targets` already reads the right
+#: target) or a *mass* one (Roilmage's Trick's "Creatures your opponents control
+#: get -X/-0 ...", fixed by `_mass_creature_group_targets` as the spell
+#: resolves). The `_source_characteristic_expr`/`_event_subject_characteristic_
+#: expr` magnitudes stay `AbilityOnStack`-only - an `AbilityOnStack`'s own
+#: `.source`/`.event`, none of which a resolving spell's `CardState` carries.
+#: `profile_for_text(literal)` reads whether the substituted sentence targets
+#: at all, and `game.resolve_card_targets(spell)` is the identical CR 608.2b
+#: recheck `create_continuous_effect`/`_create_continuous_effect_for_mode_text`
+#: already give every other spell-side layer effect.
 def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | None:
     """The spell-side twin of `_parse_where_x_is_continuous_effect` - see the
     banner above."""
@@ -1891,9 +1889,17 @@ def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | 
                 LayerNotice(source_id=spell.id, source_name=spell.card.name, text=literal)
             )
             return
-        profile = profile_for_text(literal)
-        requires_target = profile.understood and bool(profile.requirements)
-        targets = game.resolve_card_targets(spell) if requires_target else [spell]
+        # A mass subject ("Creatures your opponents control get -X/-0 ...",
+        # Roilmage's Trick) names no target: its group is fixed here (CR 611.2c)
+        # by the same resolver the ability-side twin uses, tried first so a
+        # group is never mistaken for the spell itself.
+        group_targets = _mass_creature_group_targets(game, controller.username, spell.id, literal)
+        if group_targets is not None:
+            targets = group_targets
+        else:
+            profile = profile_for_text(literal)
+            requires_target = profile.understood and bool(profile.requirements)
+            targets = game.resolve_card_targets(spell) if requires_target else [spell]
         if not targets:
             # CR 115.6: "up to one target" legally choosing zero, or every
             # chosen target since gone illegal (CR 608.2b) - nothing to affect.

@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "e22dcb4e-ac39-4bee-b8d0-1b6ed038834e",
+  "oracle_id": "7596fe49-c9cf-4415-ac1b-156cbbf9604e",
+  "multiverse_ids": [
+    522146
+  ],
+  "mtgo_id": 90513,
+  "tcgplayer_id": 239703,
+  "cardmarket_id": 566262,
+  "name": "Sweep the Skies",
+  "lang": "en",
+  "released_at": "2021-06-18",
+  "uri": "https://api.scryfall.com/cards/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e",
+  "scryfall_uri": "https://scryfall.com/card/mh2/70/sweep-the-skies?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:14:28Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.jpg?1783926868",
+    "normal": "https://cards.scryfall.io/normal/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.jpg?1783926868",
+    "large": "https://cards.scryfall.io/large/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.jpg?1783926868",
+    "png": "https://cards.scryfall.io/png/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.png?1783926868",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.jpg?1783926868",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.jpg?1783926868",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.webp?1783926868",
+    "grid": "https://cards.scryfall.io/grid/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.webp?1783926868",
+    "display": "https://cards.scryfall.io/display/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.webp?1783926868",
+    "art": "https://cards.scryfall.io/art/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.webp?1783926868",
+    "crop": "https://cards.scryfall.io/crop/front/e/2/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e.webp?1783926868"
+  },
+  "mana_cost": "{X}{U}{U}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Converge \u2014 Create a 1/1 colorless Thopter artifact creature token with flying for each color of mana spent to cast this spell.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Converge"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "e22dcb4e-ac39-4bee-b8d0-1b6ed038834e",
+      "component": "combo_piece",
+      "name": "Sweep the Skies",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e"
+    },
+    {
+      "object": "related_card",
+      "id": "1e542094-8d95-463c-ae6c-8f2cd56434b2",
+      "component": "token",
+      "name": "Thopter",
+      "type_line": "Token Artifact Creature \u2014 Thopter",
+      "uri": "https://api.scryfall.com/cards/1e542094-8d95-463c-ae6c-8f2cd56434b2"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set": "mh2",
+  "set_name": "Modern Horizons 2",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e22dcb4e-ac39-4bee-b8d0-1b6ed038834e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7596fe49-c9cf-4415-ac1b-156cbbf9604e&unique=prints",
+  "collector_number": "70",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "A gleam of refracted light is often the only warning.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Alayna Danner",
+  "artist_ids": [
+    "bb677b1a-ce51-4888-83d6-5a94de461ff9"
+  ],
+  "illustration_id": "92de1912-bbdf-4078-82d9-20273ee4dc2b",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21831,
+  "penny_rank": 14406,
+  "preview": {
+    "source": "Zio Garbe",
+    "source_uri": "https://www.youtube.com/watch?v=Ze1nRgVFtTQ",
+    "previewed_at": "2021-05-26"
+  },
+  "prices": {
+    "usd": "0.16",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.11",
+    "eur_foil": "0.20",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=522146&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSweep%2Bthe%2BSkies",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSweep%2Bthe%2BSkies",
+    "edhrec": "https://edhrec.com/route/?cc=Sweep+the+Skies"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F239703%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=566262&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/90513?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
