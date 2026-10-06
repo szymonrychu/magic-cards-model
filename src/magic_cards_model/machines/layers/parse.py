@@ -11761,6 +11761,18 @@ def is_resolution_layer_effect_text(text: str | None) -> bool:
     return False
 
 
+#: A pump magnitude that is still a bare X - "gets -X/-X" (Faerie Fencing) -
+#: has no number until the spell is cast (CR 107.3a), which is what the
+#: resolving read substitutes; classification reads the printed text, so it
+#: probes the sentence's *shape* with a placeholder value, as `support.py`'s own
+#: mana-spent X probe does.
+_BARE_X_PUMP_RE = re.compile(r"(?<=[+-])X(?=/|\b)")
+
+
+def _x_probe(sentence: str) -> str:
+    return _BARE_X_PUMP_RE.sub("1", sentence)
+
+
 def _classify_resolution_layer_sentence(sentence: str) -> tuple[bool, bool]:
     """`(genuine, loose)` for one sentence alone - the shared classification
     both `is_resolution_layer_effect_text` and `genuine_resolution_layer_
@@ -11822,7 +11834,7 @@ def _classify_resolution_layer_sentence(sentence: str) -> tuple[bool, bool]:
         # that static ability remains on the battlefield", i.e. never
         # expires on its own - the two shapes excluded on purpose.
         return False, False
-    if _parse_layer_sentence(sentence) is not None:
+    if _parse_layer_sentence(sentence) is not None or _parse_layer_sentence(_x_probe(sentence)):
         return True, False
     if anthem_opening and has_duration:
         # An explicit duration is never CR 611.3's forever-lasting anthem -
