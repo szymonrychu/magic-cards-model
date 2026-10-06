@@ -163,14 +163,9 @@ def _keyword_line(phrase: str, allowed: dict[str, str]) -> tuple[str, str] | Non
 def _affinity_is_counted(what: str) -> bool:
     """Whether `Game._affinity_count` counts CR 702.41a's "[text]" - an
     affinity it would reduce nothing for is not a grant this reads."""
-    from ..data.subtypes import canonical_subtype
     from ..models.game import _AFFINITY_CARD_TYPES, _AFFINITY_SUBTYPES
 
-    return (
-        what in _AFFINITY_CARD_TYPES
-        or what in _AFFINITY_SUBTYPES
-        or canonical_subtype(what) is not None
-    )
+    return what in _AFFINITY_CARD_TYPES or what in _AFFINITY_SUBTYPES
 
 
 def _normalized_quality(raw: str | None) -> str:

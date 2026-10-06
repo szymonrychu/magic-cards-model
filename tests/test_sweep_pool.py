@@ -1594,7 +1594,10 @@ def test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list():
     702.25a), Forecast (CR 702.57a), Riot (CR 702.136a), Vanishing (CR
     702.63a) and Decayed (CR 702.147a) came in with the condition campaign's
     proof printings and were listed here as expected gaps until the
-    regression audit built them: the list is empty again."""
+    regression audit built them: the list is empty again. Support (CR 701.41a, Nissa's
+    Judgment from NW-01 T1) was reported here until `support.executed_keywords`
+    credited the keyword action `counters._parse_support_clause` reads - a
+    widening: the list stays empty, Support is never listed."""
     from magic_cards_model.support import in_target_formats
 
     names = [name for name in pool() if in_target_formats(card(name))]
