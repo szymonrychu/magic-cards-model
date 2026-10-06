@@ -348,7 +348,9 @@ _PUMP_RE = re.compile(
     # "an additional" names no new rule - sublayer 7c modifications simply add
     # (CR 613.4c): Faerie Fencing's "That creature gets an additional -3/-3".
     rf"gets? (?:an additional )?(?P<power>[+-](?:{COUNT}|x))/(?P<toughness>[+-](?:{COUNT}|x))"
-    rf"(?: and gains? (?P<keyword>[a-z ,]+?))?"
+    # "and gains flying and toxic 1" (Aspirant's Ascent): CR 702.164a's N
+    # rides in the keyword list, validated by `_split_and_validate_keywords`.
+    rf"(?: and gains? (?P<keyword>[a-z0-9 ,]+?))?"
     rf"|gains (?P<keyword2>[a-z ]+) and gets? "
     rf"(?P<power2>[+-](?:{COUNT}|x))/(?P<toughness2>[+-](?:{COUNT}|x))"
     # "until your next turn" is CR 611.2a's same "lasts as long as stated"
@@ -1575,7 +1577,10 @@ def _for_each_creature_may_assign_unblocked_builder(
 #: keywords`, not looked up as one compound string.
 _KEYWORD_GRANT_RE = re.compile(
     rf"^(?:{_SUBJECT} gains|{_PLURAL_TARGET_SUBJECT} gain) "
-    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) "
+    # NW-04 T2: an item's second word may be CR 702.164a's N ("gains toxic 2
+    # until end of turn"); `_split_and_validate_keywords` admits a numbered
+    # item only for a keyword some machine reads the N of.
+    r"(?P<keywords>[a-z]+(?: (?:[a-z]+|\d+))?(?:(?:,\s*| and )[a-z]+(?: (?:[a-z]+|\d+))?)*) "
     r"until end of turn\.?$",
     re.IGNORECASE,
 )
@@ -1747,7 +1752,7 @@ _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     # indestructible" - "also" only says it adds to what came before.
     r"(?:also )?"
     r"(?:"
-    r"gain (?P<keywords>[a-z][a-z,'\- ]*?)"
+    r"gain (?P<keywords>[a-z][a-z0-9,'\- ]*?)"
     r"(?: and get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+))?"
     # Aerie Mystics: "Creatures you control gain shroud until end of turn." -
     # the keyword-only shape, with no "get +N/+N" at all (CR 611.2's mass
@@ -1759,7 +1764,7 @@ _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     # (CR 613.4c) - and a keyword grant may follow the pump ("get an
     # additional +1/+1 and gain vigilance").
     r"|get (?:an additional )?(?P<power_only>[+-]\d+)/(?P<toughness_only>[+-]\d+)"
-    r"(?: and gain (?P<keywords_after>[a-z][a-z,'\- ]*?))?"
+    r"(?: and gain (?P<keywords_after>[a-z][a-z0-9,'\- ]*?))?"
     # Root Manipulation's "creatures you control get +2/+2 and gain menace
     # and "Whenever this creature attacks, you gain 1 life."" and Storm the
     # Citadel's "... get +2/+2 and gain "Whenever this creature deals combat
@@ -1767,8 +1772,15 @@ _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     # as the last granted item, added in layer 6 beside any keyword (CR
     # 113.10, CR 613.1f).
     r"|get (?P<power_quoted>[+-]\d+)/(?P<toughness_quoted>[+-]\d+) and gain "
-    r"(?:(?P<keywords_quoted>[a-z][a-z,'\- ]*?),? and )?"
+    r"(?:(?P<keywords_quoted>[a-z][a-z0-9,'\- ]*?),? and )?"
     r'"(?P<granted>[^"]+)"'
+    # NW-04 T2: the same quoted grant with no pump at all - Lightning
+    # Volley's "creatures you control gain "{T}: ..."", Flame Fusillade's
+    # "permanents you control gain ...", and Driven // Despair's keyword
+    # beside the quote ("gain trample and "Whenever ...""). Each keyword and
+    # the quoted ability are layer 6 grants (CR 613.1f, CR 113.10).
+    r"|gain (?:(?P<keywords_granted>[a-z][a-z0-9,'\- ]*?),? and )?"
+    r'"(?P<granted_only>[^"]+)"'
     r") until end of turn\.?$",
     re.IGNORECASE,
 )
@@ -10229,14 +10241,15 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             match.group("keywords")
             or match.group("keywords_after")
             or match.group("keywords_quoted")
+            or match.group("keywords_granted")
         )
         if keyword_text is not None:
             validated = _split_and_validate_keywords(keyword_text)
             if validated is None:
                 return None
             keywords = validated
-        if match.group("granted") is not None:
-            keywords = [*keywords, match.group("granted").strip()]
+        if (granted := match.group("granted") or match.group("granted_only")) is not None:
+            keywords = [*keywords, granted.strip()]
         power_text = (
             match.group("power") or match.group("power_only") or match.group("power_quoted")
         )

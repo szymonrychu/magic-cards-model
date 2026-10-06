@@ -41,7 +41,7 @@ from ..casting import (
     once_per_turn_key,
 )
 from ..casting_restrictions import create_targeted_cant_cast_restriction
-from ..combat import KEYWORDS_OUTSIDE_COMBAT, Keyword
+from ..combat import KEYWORDS_OUTSIDE_COMBAT, Keyword, has_keyword
 from ..converge import colors_of_mana_spent
 from ..cost import (
     cost_announces_x,
@@ -123,6 +123,7 @@ from ..turn_scoped_riders import (
 
 if TYPE_CHECKING:
     from ...models.game import CastRecord, Game, StackObject
+    from ..layers import Characteristics
 from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _OBJECT_ANAPHOR,
@@ -447,11 +448,21 @@ def _parse_self_keyword_grant_until_eot_clause(text: str) -> AbilityEffect | Non
 #: through `_targets_understood` the same as every other targeted clause;
 #: `_MOTHER_OF_RUNES_PROTECTION_RE` only reads past "target creature you
 #: control" to confirm the rest is this exact chosen-colour protection shape.
+#:
+#: Widened (NW-04 T2) to "protection from colorless or from the color of your
+#: choice" (Giver of Runes, Angelic Intervention): the choice made as it
+#: resolves (CR 608.2d) offers colorless (CR 105.2c) beside the five colours,
+#: and the grant is "Protection from colorless" or "Protection from <colour>"
+#: (CR 702.16a).
 _PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
-    r"^(?P<phrase>target .+) gains protection from the color of your choice "
+    r"^(?P<phrase>(?:another )?target .+) gains protection from "
+    r"(?P<colorless>colorless or from )?the color of your choice "
     r"until end of turn\.?$",
     re.IGNORECASE,
 )
+#: The choice `_grant_chosen_color_protection` offers when colorless is
+#: printed beside "the color of your choice".
+_COLORLESS_CHOICE = "colorless"
 
 
 @ABILITY_TEXT.rung("s36")
@@ -485,9 +496,47 @@ def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | Non
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
         ]
         if targets:
-            _grant_chosen_color_protection(game, ability, targets[0])
+            _grant_chosen_color_protection(
+                game, ability, targets[0], allow_colorless=allow_colorless
+            )
 
+    allow_colorless = match.group("colorless") is not None
     return effect
+
+
+#: "If it's a creature, put a +1/+1 counter on it." / "Put a +1/+1 counter
+#: on it." after a protection grant (Angelic Intervention) - "it" is the
+#: grant's own target (CR 608.2c), and the type condition is checked against
+#: that object as the spell resolves.
+_PROTECTION_COUNTER_RIDER_RE = re.compile(
+    r"^(?:if it'?s an? (?P<type>creature|planeswalker|artifact|enchantment|land), )?"
+    r"put (?P<amount>an?|one|two|three|\d+) (?P<kind>[+-]1/[+-]1|[a-z]+) counters? on it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _protection_counter_rider(
+    text: str,
+) -> "Callable[[Game, CardState], None] | None":
+    """`_PROTECTION_COUNTER_RIDER_RE`'s shape as an action on the grant's
+    target, or `None`."""
+    match = _PROTECTION_COUNTER_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    amount = parse_count(match.group("amount"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    required = Type(match.group("type").lower()) if match.group("type") else None
+
+    def rider(game: "Game", target: CardState) -> None:
+        if target.zone is not Zone.BATTLEFIELD:
+            return
+        if required is not None and required not in game.characteristics_of(target).types:
+            return
+        game.add_counters(target, kind, amount)
+
+    return rider
 
 
 @SPELL_TEXT.rung("s10")
@@ -497,7 +546,7 @@ def _parse_protection_from_chosen_color_spell(text: str) -> Effect | None:
     Willing's "Scry 1.") read as the ordinary instructions that follow it (CR
     608.2c). Without this the spell went to `create_continuous_effect`, which
     cannot name a colour chosen at resolution and recorded a `LayerNotice`."""
-    if "protection from the color of your choice" not in text.lower():
+    if "the color of your choice" not in text.lower() or "protection from" not in text.lower():
         return None
     sentences = _plain_resolution_sentences(" ".join(_strip_non_effect_preamble(text).split()))
     if not sentences:
@@ -507,6 +556,15 @@ def _parse_protection_from_chosen_color_spell(text: str) -> Effect | None:
         return None
     if len(sentences) == 1:
         return protection  # type: ignore[return-value]
+    if len(sentences) == 2 and (rider := _protection_counter_rider(sentences[1])) is not None:
+
+        def protection_then_counter(game: "Game", spell: CardState) -> None:
+            protection(game, spell)  # type: ignore[arg-type]
+            for target in game.resolve_targets(spell):
+                if isinstance(target, CardState):
+                    rider(game, target)
+
+        return protection_then_counter
     rest = _spell_effect_or_notice(" ".join(sentences[1:]))
     if rest is None or _is_notice_only(rest):
         return None
@@ -514,7 +572,7 @@ def _parse_protection_from_chosen_color_spell(text: str) -> Effect | None:
 
 
 def _grant_chosen_color_protection(
-    game: "Game", stack_object: "StackObject", target: CardState
+    game: "Game", stack_object: "StackObject", target: CardState, *, allow_colorless: bool = False
 ) -> None:
     """CR 608.2d: the resolving spell's or ability's controller names a colour,
     and `target` gains "Protection from <that colour>" (CR 702.16a) in layer 6
@@ -526,22 +584,37 @@ def _grant_chosen_color_protection(
     else:
         source = stack_object.source(game)
         source_name = source.name if source is not None else stack_object.source_name
-    color = _choose_a_color(
-        game,
-        game.controller_of(stack_object),
-        source_name,
-        f"choose a color for {source_name}'s protection",
-        source_id=source_id_of(stack_object),
-    )
+    if allow_colorless:
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=game.controller_of(stack_object).username,
+                prompt=f"choose colorless or a color for {source_name}'s protection",
+                source=source_name,
+                options=(_COLORLESS_CHOICE, *_COLOR_LETTERS),
+                source_id=source_id_of(stack_object),
+            )
+        )
+        assert isinstance(chosen, str)
+        quality = _COLORLESS_CHOICE if chosen == _COLORLESS_CHOICE else _COLOR_NAME[Color(chosen)]
+    else:
+        color = _choose_a_color(
+            game,
+            game.controller_of(stack_object),
+            source_name,
+            f"choose a color for {source_name}'s protection",
+            source_id=source_id_of(stack_object),
+        )
+        quality = _COLOR_NAME[color]
     store = continuous_effects(game)
     store.add(
         ContinuousEffect(
-            description=f"{source_name}: {target.name} has protection from {color.value}",
+            description=f"{source_name}: {target.name} has protection from {quality}",
             layer=Layer.ABILITY,
             timestamp=store.tick(),
             duration=Duration.UNTIL_END_OF_TURN,
             selector=_only(target.id),
-            modification=grant_ability(f"Protection from {_COLOR_NAME[color]}"),
+            modification=grant_ability(f"Protection from {quality}"),
         )
     )
 
@@ -748,6 +821,43 @@ _MASS_TYPE_FILTER_RE = re.compile(
     r"(?P<whose>you control|your opponents control)\b",
     re.IGNORECASE,
 )
+#: "Vampire creatures you control get +2/+0 and gain first strike until end
+#: of turn." (Vampiric Fury), "Elf creatures you control get +3/+3 ..."
+#: (Ezuri, Renegade Leader), "colorless creatures you control gain "..."" (Gruesome
+#: Slaughter) - one qualifying word in front of the ordinary "creatures [you
+#: control|your opponents control]" subject: a CR 205.3m creature type, a
+#: colour (CR 105.1) or "colorless" (CR 105.2c: an object with no colour).
+#: The word is validated by `_mass_word_filter`, so "Other"/"Attacking" and
+#: the CR 205.2a card types `_MASS_TYPE_FILTER_RE` reads never pass as one.
+_MASS_WORD_FILTER_SUBJECT_RE = re.compile(
+    r"^(?P<word>[A-Za-z][a-z-]*) creatures (?P<whose>you control|your opponents control)\b"
+)
+_MASS_FILTER_COLORS = ("white", "blue", "black", "red", "green")
+
+
+def _mass_word_filter(
+    text: str,
+) -> "tuple[re.Match[str], Callable[[Characteristics], bool]] | None":
+    """`_MASS_WORD_FILTER_SUBJECT_RE`'s subject and the predicate its word
+    names on a creature's computed characteristics, or `None` when the word
+    is no colour, not "colorless" and no creature type."""
+    match = _MASS_WORD_FILTER_SUBJECT_RE.match(text.strip())
+    if match is None:
+        return None
+    word = match.group("word").lower()
+    if word == "colorless":
+        return match, lambda chars: not chars.colors
+    if word in _MASS_FILTER_COLORS:
+        color = _TOKEN_COLOR_WORDS[word]
+        return match, lambda chars: color in chars.colors
+    if not match.group("word")[0].isupper():
+        return None
+    subtype = canonical_subtype(match.group("word"))
+    if subtype is None:
+        return None
+    return match, lambda chars: subtype.lower() in {name.lower() for name in chars.subtypes}
+
+
 #: The two whole-board subjects `_MASS_SUBJECT_RE` reads that also open
 #: sentences which are not a pump at all - see `_parse_mass_pump_clause`.
 _MASS_WHOLE_BOARD_SUBJECT_RE = re.compile(
@@ -775,9 +885,14 @@ _WHERE_X_IS_RE = re.compile(r",?\s*where x is (?P<expr>.+?)\.?$", re.IGNORECASE)
 #: (Wild Beastmaster) - the singular "each" subject of a one-shot group pump,
 #: a creature type (CR 205.3m) or plain "creature", fixed once as the effect
 #: begins (CR 611.2c).
+#: Widened (NW-04 T2) to a keyword qualifier and the "gains" verb - Plague
+#: Nurse's "Each other creature you control with toxic gains toxic 1 until
+#: end of turn." (CR 702.164a): only creatures that have the named keyword
+#: as the effect begins are in the group (CR 611.2c).
 _MASS_EACH_SUBJECT_RE = re.compile(
     r"^[Ee]ach (?P<other>other )?(?P<noun>creature|[A-Z][a-z]+) "
-    r"(?P<whose>you control|your opponents control) gets\b"
+    r"(?P<whose>you control|your opponents control)"
+    r"(?: with (?P<with_keyword>[a-z]+(?: [a-z]+)?))? (?P<verb>gets|gains)\b"
 )
 
 
@@ -820,12 +935,16 @@ def _mass_creature_group_targets(
             if each_match.group("whose") == "you control"
             else creatures_controlled_by_opponents_of(controller)
         )
+        with_keyword = each_match.group("with_keyword")
+        if with_keyword is not None and with_keyword.lower() not in {k.value for k in Keyword}:
+            return None
         board = game.computed_board()
         return [
             permanent
             for permanent in game.battlefield
             if base(board.of(permanent), board.characteristics)
             and not (each_match.group("other") and permanent.id == source_id)
+            and (with_keyword is None or has_keyword(permanent, with_keyword.lower(), game))
             and (
                 wanted_subtype is None
                 or wanted_subtype in {word.lower() for word in board.of(permanent).subtypes}
@@ -891,6 +1010,21 @@ def _mass_creature_group_targets(
             for permanent in game.battlefield
             if base_selector(board.of(permanent), board.characteristics)
             and wanted_type in board.of(permanent).types
+        ]
+    word_filter = _mass_word_filter(text)
+    if word_filter is not None:
+        word_match, matches = word_filter
+        base_selector = (
+            creatures_controlled_by(controller)
+            if word_match.group("whose") == "you control"
+            else creatures_controlled_by_opponents_of(controller)
+        )
+        board = game.computed_board()
+        return [
+            permanent
+            for permanent in game.battlefield
+            if base_selector(board.of(permanent), board.characteristics)
+            and matches(board.of(permanent))
         ]
     power_filter_match = _MASS_POWER_FILTER_RE.match(text.strip())
     if power_filter_match is not None:
@@ -1058,6 +1192,7 @@ def _parse_mass_pump_clause(
         and _MASS_SUBTYPE_SUBJECT_RE.match(text) is None
         and _MASS_EACH_SUBJECT_RE.match(text) is None
         and _MASS_TYPE_FILTER_RE.match(text) is None
+        and _mass_word_filter(text) is None
     ):
         return None
     if Duration.UNTIL_END_OF_TURN not in text.lower():
@@ -1128,7 +1263,8 @@ def _mass_pump_parseable(literal: str) -> str:
         # The group (and its "other") is already `targets`; the layer parser
         # only needs the plural group shape.
         parseable = (
-            f"creatures {each_match.group('whose')} get" + literal.strip()[each_match.end() :]
+            f"creatures {each_match.group('whose')} {each_match.group('verb')[:-1]}"
+            + literal.strip()[each_match.end() :]
         )
     elif color_filter_match is not None:
         # The colour filter, like the power filter below, is already applied
@@ -1154,6 +1290,11 @@ def _mass_pump_parseable(literal: str) -> str:
         # (`_mass_creature_group_targets`), so the filter word itself is
         # stripped before `machines/layers.py` ever sees the sentence.
         parseable = "creatures " + literal.strip()[type_filter_match.start("whose") :]
+    elif (word_filter := _mass_word_filter(literal)) is not None:
+        # The colour/colorless/creature-type word is already applied to
+        # `targets` (`_mass_creature_group_targets`), the same rewrite the
+        # card-type filter above needs.
+        parseable = "creatures " + literal.strip()[word_filter[0].start("whose") :]
     elif (token_match := _MASS_TOKEN_SUBJECT_RE.match(literal.strip())) is not None:
         # Ravenous Robots: "Creature tokens you control gain haste until end
         # of turn." - `targets` (`_mass_creature_group_targets`) already
@@ -2071,7 +2212,14 @@ def _player_gains_hexproof_clause(match: re.Match[str]) -> ClauseEffect | None:
 #: A line containing " —" is therefore never stripped: that covers CR 700.2's
 #: modal header (`Choose one —`) and every ability word, both of which do
 #: introduce real instructions.
-_KEYWORD_ABILITY_BARE_LINE_RE = re.compile(r"^[A-Za-z][^.:]*$")
+#:
+#: Nor is a line carrying a double quote: a keyword line never quotes
+#: anything, while a CR 113.10 grant sentence whose quoted ability holds its
+#: own full stop ("... gain menace and "Whenever ... discards a card."")
+#: carries no full stop *outside* the quote, and would otherwise pass for a
+#: bare keyword line once that quote is blanked (Driven // Despair's
+#: aftermath half, after its "Aftermath" line).
+_KEYWORD_ABILITY_BARE_LINE_RE = re.compile(r'^[A-Za-z][^.:"]*$')
 _KEYWORD_ABILITY_COST_LINE_RE = re.compile(r"^[A-Z][A-Za-z'’]*(?: [A-Za-z'’]+)*(?: \d+)?—\S[^:]*$")
 
 
@@ -2305,6 +2453,34 @@ def _parse_each_player_this_creature_attacked_loses_clause(
         attacked = game.attacked_players_this_turn.get(stack_object.source_id, ())
         for username in list(attacked):
             game.player_loses_the_game(username)
+
+    return effect
+
+
+#: "that player loses the game" - Vraska, Scheming Gorgon's -10 grants
+#: "Whenever this creature deals damage to an opponent, that player loses the
+#: game." CR 104.3e's effect-stated loss, applied to the player the
+#: triggering event names (the damaged opponent), the same `event.player`
+#: referent every other triggered "that player ..." clause reads.
+_THAT_PLAYER_LOSES_THE_GAME_RE = re.compile(r"^that player loses the game\.?$", re.IGNORECASE)
+
+
+@MIXED_CLAUSE.rung("s4", for_spell=FORWARD)
+def _parse_that_player_loses_the_game_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_THAT_PLAYER_LOSES_THE_GAME_RE`'s shape. Ability-only: a spell has no
+    triggering event to name "that player"."""
+    if for_spell or _THAT_PLAYER_LOSES_THE_GAME_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        event = stack_object.event
+        if event is None or event.player is None:
+            return
+        game.player_loses_the_game(event.player)
 
     return effect
 
@@ -6015,6 +6191,8 @@ def _parse_pump_then_fight_clause_pair(
 #: general object-anaphor rider, exactly `_parse_pump_then_fight_clause_
 #: pair`'s own reasoning just above: the rider's own target would otherwise
 #: be conflated with the antecedent's.
+#: A leading "Then " (CR 608.2c's ordering word) in front of a rider.
+_LEADING_THEN_WORD_RE = re.compile(r"^then\s+", re.IGNORECASE)
 _CONDITIONAL_PUMP_TARGET_YOU_CONTROL_RE = re.compile(
     r"^target creature you control gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
     r"until end of turn if (?P<condition>.+)$",
@@ -6053,14 +6231,29 @@ def _parse_conditional_pump_then_bite_clause_pair(
     if pump is None:
         return None
     rider = _CONDITIONAL_PUMP_BITE_RIDER_RE.fullmatch(stripped_second)
-    if rider is None:
+    # Savage Swipe (NW-04 T2): "... until end of turn if its power is 2. Then
+    # it fights target creature you don't control." - the fight (CR 701.14a)
+    # always happens, pumped or not.
+    fight = (
+        _RIDER_FIGHTS_TARGET_RE.fullmatch(_LEADING_THEN_WORD_RE.sub("", stripped_second))
+        if rider is None
+        else None
+    )
+    if rider is None and fight is None:
         return None
     condition_text = pump.group("condition").strip()
+    # "its power is 2": "its" is the pumped target itself (CR 608.2c), read as
+    # that object's own "this creature's" with the target as the condition's
+    # subject - never the spell, which has no power.
+    of_target = condition_text.lower().startswith("its ")
+    if of_target:
+        condition_text = "this creature's " + condition_text[len("its ") :]
     if not _effect_condition_is_readable(condition_text):
         return None
     if not _targets_understood("target creature you control", count_agnostic=True):
         return None
-    if not _targets_understood(rider.group("phrase"), count_agnostic=True):
+    victim_phrase = (rider if rider is not None else fight).group("phrase")  # type: ignore[union-attr]
+    if not _targets_understood(victim_phrase, count_agnostic=True):
         return None
     power, toughness = pump.group("power"), pump.group("toughness")
     builder = parsed_layer_effects(f"Target creature gets {power}/{toughness} until end of turn.")
@@ -6079,7 +6272,8 @@ def _parse_conditional_pump_then_bite_clause_pair(
             stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
         )
         if mine and source is not None:
-            held = game.condition_holds(controller.username, condition_text, source)
+            subject = mine[0] if of_target else source
+            held = game.condition_holds(controller.username, condition_text, subject)
             if held is None:
                 notice = ConditionalClauseNotice(
                     source_id=source_id_of(stack_object),
@@ -6098,7 +6292,18 @@ def _parse_conditional_pump_then_bite_clause_pair(
                     source, effects.tick(), mine[:1], layer_context_for(game, controller)
                 ):
                     effects.add(built, game)
-        _resolve_bite_damage(game, stack_object, "power")
+        if fight is None:
+            _resolve_bite_damage(game, stack_object, "power")
+            return
+        theirs = [t for t in targets if game.controller_of(t).username != controller.username]
+        if not mine or not theirs:
+            return  # CR 701.14b: a creature no longer there fights nobody.
+        fighter, opponent = mine[0], theirs[0]
+        if (
+            game.characteristics_of(fighter).is_creature
+            and game.characteristics_of(opponent).is_creature
+        ):
+            _fight(game, fighter, opponent)
 
     return effect
 
@@ -8397,6 +8602,95 @@ def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return ability_clause
 
 
+#: "`<target phrase>` gets +N/+N [and gains `<keywords>`] until end of
+#: turn." where the target phrase carries a qualifier after its noun that
+#: `machines/layers.py`'s narrow `_SUBJECT` never reads - Executioner's
+#: Swing's "Target creature that dealt damage this turn gets -5/-5 ...",
+#: Spire Mangler's "target creature you control with flying gets +2/+0
+#: ...", Slimy Dualleech's "target creature you control with power 2 or less
+#: gets +1/+0 and gains deathtouch ...". Who may be targeted is
+#: `machines/targeting.py`'s business (`_targets_understood`, checked at
+#: announcement, CR 601.2c); this only performs the pump (sublayer 7c, CR
+#: 613.4c) and each keyword (layer 6, CR 613.1f) on every target still legal
+#: as it resolves (CR 608.2b), each fixed to that object (CR 611.2c).
+_TARGET_PHRASE_PUMP_RE = re.compile(
+    r"^(?:until end of turn, )?(?P<phrase>(?:another |up to one )?target .+?) gets "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and gains (?P<keywords>[a-z][a-z0-9 ,]*?))?(?: until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
+def _parse_target_phrase_pump_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_TARGET_PHRASE_PUMP_RE`'s shape, for a target phrase the layer
+    parser's own subject grammar does not read (any phrase it does read stays
+    with `create_continuous_effect`)."""
+    text = " ".join(clause.strip().split())
+    if " gets " not in text.lower() or "until end of turn" not in text.lower():
+        return None
+    match = _TARGET_PHRASE_PUMP_RE.fullmatch(text)
+    if match is None:
+        return None
+    if parsed_layer_effects(text if text.endswith(".") else f"{text}.") is not None:
+        return None
+    phrase = match.group("phrase")
+    if not _targets_understood(phrase, count_agnostic=True, battlefield_only=True):
+        return None
+    keywords: list[str] = []
+    if match.group("keywords") is not None:
+        validated = _split_and_validate_keywords(match.group("keywords"))
+        if validated is None:
+            return None
+        keywords = validated
+    power, toughness = int(match.group("power")), int(match.group("toughness"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            selector = only_this_incarnation(target, target.zone_change_stamp)
+            store.add(
+                ContinuousEffect(
+                    description=f"{source_name}: {target.name} gets {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{source_name}: {target.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=selector,
+                        modification=grant_ability(keyword),
+                    )
+                )
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s41", for_spell=False)
+@SPELL_TEXT.rung("s25", for_spell=True)
+def _parse_target_phrase_pump_whole_text(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_parse_target_phrase_pump_clause` over the whole effect text - the
+    per-clause splitter cuts "gets +1/+0 and gains deathtouch" at its "and"
+    before any clause reader sees it (Slimy Dualleech)."""
+    whole = _strip_non_effect_preamble(text).strip()
+    if "\n" in whole:
+        return None
+    return _parse_target_phrase_pump_clause(whole, for_spell=for_spell)
+
+
 #: "Creatures target player controls get -1/-1 until end of turn." (Gnashing
 #: of Teeth's second mode), "Creatures target opponent controls get -1/-1
 #: until end of turn." (Wail of War, Neutralize the Guards) and the same
@@ -9170,6 +9464,67 @@ def _parse_attached_subject_gains_keywords_until_clause(text: str) -> AbilityEff
     return effect
 
 
+#: "Until end of turn, it gains haste and "Whenever this creature deals combat
+#: damage to a player or battle, create a Treasure token."" - Furnace Reins'
+#: third sentence, after "Gain control of target creature until end of turn.
+#: Untap that creature." The duration-first twin of the anaphoric grant every
+#: clause reader already reads with its duration printed last ("It gains
+#: haste and "..." until end of turn."): CR 611.2a's "until end of turn" is
+#: the same duration wherever it is printed. Each such sentence of the whole
+#: text is rewritten to the trailing-duration order and the text dispatched
+#: again (quoted abilities stashed first, so their own full stops never end
+#: a sentence).
+_LEADING_EOT_ANAPHOR_RE = re.compile(
+    r"^until end of turn, (?P<rest>(?:it|that creature|those creatures|they) "
+    r"(?:gains?|gets?|has|have) .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s1", for_spell=False)
+@SPELL_TEXT.rung("s1", for_spell=True)
+def _parse_leading_duration_anaphor_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_LEADING_EOT_ANAPHOR_RE` over every sentence after the first, then
+    the rewritten text read by the ordinary dispatcher - or `None` when no
+    sentence has the shape, or the rewritten text is not genuinely read."""
+    if "until end of turn, " not in text.lower():
+        return None
+    quoted: list[str] = []
+
+    def stash(match: re.Match[str]) -> str:
+        quoted.append(match.group(0))
+        return f"\x00{len(quoted) - 1}\x00"
+
+    normalized = " ".join(_strip_non_effect_preamble(text).split())
+    normalized = _QUOTED_ABILITY_RE.sub(stash, normalized)
+    if '"' in normalized:
+        return None
+    sentences = [part for part in _SIMPLE_SENTENCE_SPLIT_RE.split(normalized) if part]
+    if len(sentences) < 2:
+        return None
+    rewritten = False
+    for index in range(1, len(sentences)):
+        match = _LEADING_EOT_ANAPHOR_RE.fullmatch(sentences[index].strip())
+        if match is None:
+            continue
+        rest = match.group("rest")
+        sentences[index] = f"{rest[0].upper()}{rest[1:]} until end of turn."
+        rewritten = True
+    if not rewritten:
+        return None
+    restored = " ".join(
+        sentence if sentence.rstrip().endswith((".", "\x00")) else f"{sentence}."
+        for sentence in sentences
+    )
+    restored = re.sub(r"\x00(\d+)\x00", lambda m: quoted[int(m.group(1))], restored)
+    effect = _spell_effect_or_notice(restored) if for_spell else _ability_effect_or_notice(restored)
+    if not _is_readable_head(effect):
+        return None
+    return effect  # type: ignore[return-value]
+
+
 #: "If it would leave the battlefield, exile it instead of putting it
 #: anywhere else." as a sentence of its own after the clause that put the
 #: object onto the battlefield - Whip of Erebos, Kheru Lich Lord, and CR
@@ -9634,6 +9989,88 @@ def _double_power_and_toughness(game: "Game", target: CardState, source_name: st
 # unsplit text, ahead of `split_effect_clauses`: every one of them is a single
 # CR 608.2c instruction whose parts share a referent or an X that a clause-by-
 # clause read would cut apart.
+
+#: "X target creatures can't be blocked this turn." (Open into Wonder) / "Up
+#: to two target creatures can't be blocked this turn." (Ghostform) - CR
+#: 509.1b's evasion restriction on a counted plural target (CR 601.2c
+#: settled how many and which at announcement; `_targets_understood` reads
+#: the count), optionally followed by "Until end of turn, those creatures
+#: gain [<keywords> and] "<ability>"." - "those creatures" is exactly the
+#: resolved targets (CR 608.2c), each granted the quoted ability in layer 6
+#: (CR 613.1f, CR 113.10) until cleanup. The single "target creature" form
+#: stays with `dispatch.py`'s own `_TARGET_CANT_BE_BLOCKED_RE`.
+_COUNTED_TARGETS_CANT_BE_BLOCKED_RE = re.compile(
+    r"^(?P<phrase>(?:up to |one or )?(?:x|\w+) target .*?creatures) can'?t be blocked this turn"
+    r"(?:\.\s*until end of turn, those creatures gain "
+    r"(?:(?P<keywords>[a-z][a-z0-9 ,]*?),? and )?\"(?P<granted>[^\"]+)\")?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _counted_targets_cant_be_blocked(text: str) -> TargetedClause | None:
+    """`_COUNTED_TARGETS_CANT_BE_BLOCKED_RE`'s shape, or `None`."""
+    whole = " ".join(text.strip().split())
+    if "can't be blocked this turn" not in whole.lower() and "cant be blocked" not in whole.lower():
+        return None
+    match = _COUNTED_TARGETS_CANT_BE_BLOCKED_RE.fullmatch(whole)
+    if match is None:
+        return None
+    phrase = match.group("phrase")
+    if phrase.lower().startswith(("target ", "another target ")):
+        return None
+    if not _targets_understood(phrase, count_agnostic=True, battlefield_only=True):
+        return None
+    grants = ["This creature can't be blocked."]
+    if match.group("keywords") is not None:
+        keywords = split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        grants.extend(keywords)
+    if match.group("granted") is not None:
+        grants.append(match.group("granted").strip())
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        effects = game.continuous_effects
+        timestamp = effects.tick()
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            for granted in grants:
+                effects.add(
+                    ContinuousEffect(
+                        description=f"{target.name} gains {granted!r} this turn",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=grant_ability(granted),
+                    )
+                )
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
+def _parse_counted_targets_cant_be_blocked_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_counted_targets_cant_be_blocked` as one clause (Ghostform)."""
+    return _counted_targets_cant_be_blocked(clause)
+
+
+@ABILITY_TEXT.rung("s41", for_spell=False)
+@SPELL_TEXT.rung("s25", for_spell=True)
+def _parse_counted_targets_cant_be_blocked_whole_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_counted_targets_cant_be_blocked` over the whole text - the quoted
+    ability's own full stop would otherwise cut the grant sentence apart
+    (Open into Wonder)."""
+    whole = _strip_non_effect_preamble(text).strip()
+    if '"' not in whole:
+        return None
+    return _counted_targets_cant_be_blocked(whole)
+
 
 #: "`<target phrase>` gains `<keywords>` until end of turn and can't be
 #: blocked this turn[. `<rest>`]" - Pym Particles' "Target creature gains
@@ -11089,6 +11526,7 @@ def _parse_antecedent_then_referent_rider_ability(text: str) -> TargetedClause |
 
 from ._common import (  # noqa: E402
     _ANAPHOR_GAINS_KEYWORDS_RE,
+    _COLOR_LETTERS,
     _COST_INCREASE_PER_TARGET_LINE_RE,
     _DESTROY_TARGET_RE,
     _GET_AN_EMBLEM_RE,
