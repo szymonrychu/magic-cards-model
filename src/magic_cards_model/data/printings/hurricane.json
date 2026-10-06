@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "371d83e8-f514-433c-bc6a-e0eeef3fab2a",
+  "oracle_id": "9c021685-4017-49c7-9f58-2ae0243361a0",
+  "multiverse_ids": [
+    129885
+  ],
+  "mtgo_id": 27456,
+  "mtgo_foil_id": 27457,
+  "tcgplayer_id": 15170,
+  "cardmarket_id": 16434,
+  "name": "Hurricane",
+  "lang": "en",
+  "released_at": "2007-07-13",
+  "uri": "https://api.scryfall.com/cards/371d83e8-f514-433c-bc6a-e0eeef3fab2a",
+  "scryfall_uri": "https://scryfall.com/card/10e/270/hurricane?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:43:21Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.jpg?1783943001",
+    "normal": "https://cards.scryfall.io/normal/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.jpg?1783943001",
+    "large": "https://cards.scryfall.io/large/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.jpg?1783943001",
+    "png": "https://cards.scryfall.io/png/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.png?1783943001",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.jpg?1783943001",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.jpg?1783943001",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.webp?1783943001",
+    "grid": "https://cards.scryfall.io/grid/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.webp?1783943001",
+    "display": "https://cards.scryfall.io/display/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.webp?1783943001",
+    "art": "https://cards.scryfall.io/art/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.webp?1783943001",
+    "crop": "https://cards.scryfall.io/crop/front/3/7/371d83e8-f514-433c-bc6a-e0eeef3fab2a.webp?1783943001"
+  },
+  "mana_cost": "{X}{G}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Hurricane deals X damage to each creature with flying and each player.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a66a6124-0d81-488d-b080-91f5ba7fbad0",
+  "set": "10e",
+  "set_name": "Tenth Edition",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a66a6124-0d81-488d-b080-91f5ba7fbad0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A10e&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/10e?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/371d83e8-f514-433c-bc6a-e0eeef3fab2a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9c021685-4017-49c7-9f58-2ae0243361a0&unique=prints",
+  "collector_number": "270",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Don't envy the grandeur of drakes. Their impression of grace fades when the first gust sends them crashing into one another.\"\n\u2014Molimo, maro-sorcerer",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "John Howe",
+  "artist_ids": [
+    "040fab39-e3db-4d09-9b2d-214a4e40c6fa"
+  ],
+  "illustration_id": "3bc80d3e-237e-479b-a55c-a503529016ef",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8928,
+  "penny_rank": 4732,
+  "prices": {
+    "usd": "0.52",
+    "usd_foil": "17.50",
+    "usd_etched": null,
+    "eur": "0.29",
+    "eur_foil": "8.98",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=129885&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHurricane",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHurricane",
+    "edhrec": "https://edhrec.com/route/?cc=Hurricane"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F15170%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=16434&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/27456?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -273,6 +273,15 @@ _DECK_CONSTRUCTION_LINE_RE = re.compile(
 )
 
 
+#: "If this spell was kicked, it has split second." - CR 702.61a's keyword,
+#: granted conditionally to the spell on the stack (`machines/casting/
+#: permissions.py:split_second_restriction_source` reads it there); not an
+#: instruction of the resolution (CR 608.2c).
+_CONDITIONAL_SPLIT_SECOND_SENTENCE_RE = re.compile(
+    r"(?:^|(?<=[.)\n]))[ \t]*if [^.,\n]+, (?:it|this spell) has split second\.[ \t]*", re.IGNORECASE
+)
+
+
 def spell_resolution_text(card_name: str, effect_text: str) -> str:
     """A spell's printed text less every paragraph and sentence `effect_for`
     knows is not part of its own resolution: the self-shuffle a replacement
@@ -290,6 +299,8 @@ def spell_resolution_text(card_name: str, effect_text: str) -> str:
     effect_text = _strip_trailing_standalone_triggered_ability(effect_text)
     effect_text = _strip_trailing_standalone_activated_ability(effect_text)
     effect_text = _DECK_CONSTRUCTION_LINE_RE.sub("", effect_text)
+    if "has split second" in effect_text:
+        effect_text = _CONDITIONAL_SPLIT_SECOND_SENTENCE_RE.sub(" ", effect_text)
     effect_text = strip_x_restrictions(effect_text)
     return _CAST_TIMING_RESTRICTION_RE.sub(" ", effect_text).strip()
 

@@ -1811,14 +1811,17 @@ _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE = re.compile(
     rf"^(?P<subject>[^.]*?) deals? (?P<n>{COUNT}) damage to "
     r"(?P<phrase>[^.]*?target (?P<noun>creature|permanent|planeswalker|artifact|enchantment|land)"
     r"[^.]*?)"
-    r"(?:\.\s*if (?P<condition>[^,]+), (?:it|this spell|(?P=subject)) also deals|\s+and) "
-    rf"(?P<extra_n>{COUNT}) damage to that (?P=noun)'?s controller\.?$",
+    r"(?:\.\s*if (?P<condition>[^,]+), (?:it|this spell|(?P=subject)) also deals"
+    r"|\.\s*(?:it|this spell|(?P=subject)) also deals|\s+and) "
+    rf"{count_pattern('extra_n', x=True)} damage to that "
+    r"(?:creature|permanent|planeswalker|artifact|enchantment|land|battle)'?s controller"
+    rf"(?: if (?P<post_condition>[^.,]+?))?{where_x_pattern()}\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
 
 @ABILITY_TEXT.rung("s42")
-@SPELL_TEXT.rung("s18")
+@SPELL_TEXT.rung("s18", after=["merges._parse_damage_then_followup_spell"])
 def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Any:
     """`_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE`'s shape, on a spell or an
     activated or triggered ability, whose damage source is the ability's
@@ -1833,12 +1836,14 @@ def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Any
         return None
     if not _targets_understood(match.group("phrase")):
         return None
-    condition_text = (match.group("condition") or "").strip() or None
+    condition_text = (
+        match.group("condition") or match.group("post_condition") or ""
+    ).strip() or None
     if condition_text is not None and not _effect_condition_is_readable(condition_text):
         return None
     base_amount = parse_count(match.group("n"))
-    extra_amount = parse_count(match.group("extra_n"))
-    if base_amount is None or extra_amount is None:
+    extra_reader = _fixed_or_where_x_amount(match.group("extra_n"), match.group("where_x"))
+    if base_amount is None or extra_reader is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -1871,11 +1876,34 @@ def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Any
             controller_of_target = game.controller_of(target)
             game.deal_damage(target, base_amount, source=source)
             if held:
+                extra_amount = max(
+                    extra_reader(
+                        game,
+                        game.controller_of(stack_object).username,
+                        source,
+                        stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0,
+                    ),
+                    0,
+                )
                 game.deal_damage(
                     game.player(controller_of_target.username), extra_amount, source=source
                 )
 
     return effect
+
+
+@SPELL_TEXT.rung("s18", after=["merges._parse_damage_then_followup_spell"])
+def _parse_damage_target_and_each_other_group_text(effect_text: str) -> Effect | None:
+    """ "`<src>` deals N damage to target creature and each other creature
+    with the same name as that creature." on a spell (Homing Lightning) - the
+    group is read off the one target as the spell resolves (CR 608.2b: with
+    the target illegal nothing happens), by `damage_backrefs`' shared reader
+    that Izzet Staticaster's ability also uses."""
+    if " and each other creature " not in effect_text:
+        return None
+    from ..damage_backrefs import damage_backref_spell_effect
+
+    return damage_backref_spell_effect(effect_text)
 
 
 @SPELL_TEXT.rung("s18")
@@ -2471,7 +2499,11 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
         return None
     words = re.split(r"\s+and\s+each\s+", match.group("groups"))
     types: set[Type] = set()
+    players = False
     for word in words:
+        if word.lower() == "player":
+            players = True  # CR 102.1: "each creature and each player" (Inferno)
+            continue
         card_type = _singular_card_type(word)
         if card_type is None:
             return None
@@ -2487,9 +2519,16 @@ def _parse_damage_each_group_clause(clause: str) -> TargetedClause | None:
         x_value = stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0
         amount = reader(game, controller, source, x_value)
         board = game.computed_board()
-        for permanent in list(game.battlefield):
-            if types & set(board.of(permanent).types):
-                game.deal_damage(permanent, amount, source=source)
+        recipients = [
+            permanent
+            for permanent in list(game.battlefield)
+            if types & set(board.of(permanent).types)
+        ]
+        for permanent in recipients:
+            game.deal_damage(permanent, amount, source=source)
+        if players:
+            for player in game.players_in_game:
+                game.deal_damage(player, amount, source=source)
 
     return effect
 
@@ -2687,6 +2726,14 @@ _GROUP_CONTROLLER_RE = re.compile(
 #: CR 205.3m creature type negated, hyphenated the way Oracle text prints a
 #: subtype negation (a card-type negation is unhyphenated, "nonartifact", and
 #: is `_parse_mass_type_qualifier`'s own).
+_GROUP_NONTOKEN_RE = re.compile(r"^nontoken (?P<group>.+)$", re.IGNORECASE)
+
+#: "creature dealt damage this turn" - a turn-history qualifier (Inflame),
+#: answered off `Game.damage_dealt_this_turn` when the effect applies (CR 120.1).
+_GROUP_DEALT_DAMAGE_THIS_TURN_RE = re.compile(
+    r"^(?P<group>.+?) (?:that (?:was|were) )?dealt damage this turn$", re.IGNORECASE
+)
+
 _GROUP_NON_SUBTYPE_RE = re.compile(
     r"^non-(?P<subtype>[a-z]+(?:-[a-z]+)*) (?P<group>.+)$", re.IGNORECASE
 )
@@ -2784,6 +2831,23 @@ def _parse_damage_group_phrase(phrase: str) -> GroupPredicate | None:
         state = state_match.group("state").lower()
         text = state_match.group("group").strip()
 
+    nontoken = False
+    nontoken_match = _GROUP_NONTOKEN_RE.fullmatch(text)
+    if nontoken_match is not None:
+        nontoken = True  # CR 111.1: a token is a marker, not a card
+        text = nontoken_match.group("group").strip()
+
+    dealt_damage_this_turn: Callable[[Game, CardState], bool] | None = None
+    dealt_match = _GROUP_DEALT_DAMAGE_THIS_TURN_RE.fullmatch(text)
+    if dealt_match is not None:
+        dealt_test = object_dealt_damage_clause_test("was dealt damage this turn")
+        if dealt_test is None:
+            return None
+        text = dealt_match.group("group").strip()
+
+        def dealt_damage_this_turn(game: "Game", permanent: CardState) -> bool:
+            return dealt_test(game, permanent, None)
+
     excluded_subtype: str | None = None
     subtype_match = _GROUP_NON_SUBTYPE_RE.fullmatch(text)
     if subtype_match is not None:
@@ -2813,6 +2877,10 @@ def _parse_damage_group_phrase(phrase: str) -> GroupPredicate | None:
 
     def predicate(game: "Game", permanent: CardState, controller: str) -> bool:
         if not in_group(game, permanent):
+            return False
+        if nontoken and permanent.token:
+            return False
+        if dealt_damage_this_turn is not None and not dealt_damage_this_turn(game, permanent):
             return False
         if state is not None and not _in_group_state(game, permanent, state):
             return False
@@ -2851,6 +2919,9 @@ _DAMAGE_FILTER_KEYWORDS = frozenset(
         "shroud",
     }
 )
+
+
+_AND_EACH_PLAYER = " and each player"
 
 
 @MIXED_CLAUSE.rung("s35")
@@ -2944,6 +3015,12 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
 
         return controller_scoped_effect
 
+    # "each creature without flying and each player" (CR 102.1's players are
+    # a second recipient group of the one instruction, Earthquake).
+    players = False
+    if phrase.lower().endswith(_AND_EACH_PLAYER):
+        phrase = phrase[: -len(_AND_EACH_PLAYER)].strip()
+        players = True
     predicate = _parse_damage_group_phrase(phrase)
     if predicate is None:
         return None
@@ -2966,6 +3043,9 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
         for permanent in recipients:
             if permanent.zone is Zone.BATTLEFIELD:
                 game.deal_damage(permanent, amount, source=source)
+        if players:
+            for player in game.players_in_game:
+                game.deal_damage(player, amount, source=source)
 
     return effect
 
@@ -4784,6 +4864,10 @@ _THIS_WAY_CANT_BLOCK_RE = re.compile(
     rf"^{_THIS_WAY_CREATURES} dealt damage this way can(?:'|’)?t block this turn$",
     re.IGNORECASE,
 )
+_THIS_WAY_CANT_REGENERATE_RE = re.compile(
+    rf"^{_THIS_WAY_CREATURES} dealt damage this way can(?:'|’)?t be regenerated this turn$",
+    re.IGNORECASE,
+)
 _THIS_WAY_TAP_RE = re.compile(r"^tap each creature dealt damage this way$", re.IGNORECASE)
 _THIS_WAY_CANT_CAST_RE = re.compile(
     rf"^{_THIS_WAY_PLAYERS} dealt damage this way can(?:'|’)?t cast "
@@ -4851,6 +4935,19 @@ def _this_way_rider(sentence: str) -> _ThisWayRider | None:
             )
 
         return cant_block
+    if _THIS_WAY_CANT_REGENERATE_RE.fullmatch(text):
+
+        def cant_regenerate(
+            game: "Game",
+            stack_object: "StackObject",
+            creatures: list[CardState],
+            players: list[str],
+        ) -> None:
+            # CR 701.19c: regeneration shields are not applied (an unspent one
+            # stays) - `replacement._regeneration_effects` reads this line.
+            _grant_line_until_end_of_turn(game, stack_object, creatures, CANT_BE_REGENERATED_LINE)
+
+        return cant_regenerate
     if _THIS_WAY_TAP_RE.fullmatch(text):
 
         def tap(
@@ -4964,6 +5061,226 @@ def _parse_dealt_damage_this_way_riders_ability(text: str) -> AbilityEffect | No
     return _dealt_damage_this_way_effect(rest, split[1])
 
 
+# --------------------------------------------------------------------------
+# NW-02 T1: a target's controller as the second recipient, a spell's controller,
+# and "<n> damage to any target and <m> damage to you" in a sequence
+# --------------------------------------------------------------------------
+
+#: "`<src>` deals N damage to target creature an opponent controls. Then `<src>`
+#: deals M damage to each other creature that player controls if you control a
+#: creature with power 4 or greater." (Flames of the Raze-Boar) - CR 608.2c's
+#: order: the second instruction names "that player", the first target's
+#: controller (read from last known information, CR 608.2h), and its "if" is
+#: checked when that instruction is reached.
+_DAMAGE_TARGET_THEN_EACH_OTHER_OF_ITS_CONTROLLER_RE = re.compile(
+    rf"^(?P<subject>[^,.]+?) deals (?P<n>{COUNT}) damage to "
+    r"(?P<phrase>target [^.]*?)\.\s*then (?:(?P=subject)|it) deals "
+    rf"(?P<m>{COUNT}) damage to each other (?P<group>[a-z]+(?: [a-z]+)*?) "
+    r"that player controls(?: if (?P<condition>[^.]+))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s18")
+def _parse_damage_target_then_each_other_of_its_controller_text(
+    effect_text: str,
+) -> Effect | None:
+    """`_DAMAGE_TARGET_THEN_EACH_OTHER_OF_ITS_CONTROLLER_RE`'s shape on a spell."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    if ". then " not in whole.lower() or "that player controls" not in whole.lower():
+        return None
+    match = _DAMAGE_TARGET_THEN_EACH_OTHER_OF_ITS_CONTROLLER_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    first = parse_count(match.group("n"))
+    second = parse_count(match.group("m"))
+    group = _parse_damage_group_phrase(match.group("group"))
+    condition_text = (match.group("condition") or "").strip() or None
+    if first is None or second is None or group is None:
+        return None
+    if condition_text is not None and not _effect_condition_is_readable(condition_text):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        caster = game.controller_of(spell).username
+        targets = [
+            target
+            for target in game.resolve_targets(spell)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return  # CR 608.2b: the only target is illegal
+        target = targets[0]
+        owner_of_group = game.controller_of(target).username  # CR 608.2h, before damage
+        game.deal_damage(target, first, source=spell)
+        if (
+            condition_text is not None
+            and game.condition_holds(caster, condition_text, spell) is not True
+        ):
+            return
+        recipients = [
+            permanent
+            for permanent in list(game.battlefield)
+            if permanent is not target
+            and game.controller_of(permanent).username == owner_of_group
+            and group(game, permanent, caster)
+        ]
+        for permanent in recipients:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.deal_damage(permanent, second, source=spell)
+
+    return effect
+
+
+#: "`<src>` deals damage to target spell's controller equal to that spell's
+#: mana value." (Parallectric Feedback, Refuse) - the target is a spell on the
+#: stack (CR 115.1), the damage goes to its controller, and with the spell gone
+#: the target is illegal and nothing happens (CR 608.2b).
+_DAMAGE_TO_TARGET_SPELLS_CONTROLLER_EQUAL_TO_MV_RE = re.compile(
+    r"^(?P<subject>[^,.]+?) deals damage to target spell'?s controller equal to "
+    r"that spell'?s mana value\.?$",
+    re.IGNORECASE,
+)
+
+
+def _mana_value_on_the_stack(game: "Game", spell: CardState) -> int:
+    """A spell's mana value as it sits on the stack (CR 202.3): the printed
+    mana cost's value with each {X} counted as the value announced for it
+    (CR 107.3a)."""
+    from ...models.mana import ManaCost
+
+    value = int(spell.mana_value)
+    cost = spell.mana_cost
+    if cost:
+        x_count = ManaCost.parse(cost).x_count
+        if x_count:
+            value += x_count * game.cast_record(spell).x_value
+    return value
+
+
+@SPELL_TEXT.rung("s18")
+def _parse_damage_to_target_spells_controller_text(effect_text: str) -> Effect | None:
+    """`_DAMAGE_TO_TARGET_SPELLS_CONTROLLER_EQUAL_TO_MV_RE`'s shape."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    if "spell's controller" not in whole.lower() and "spell\u2019s controller" not in whole.lower():
+        return None
+    if _DAMAGE_TO_TARGET_SPELLS_CONTROLLER_EQUAL_TO_MV_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if not isinstance(target, CardState):
+                continue  # CR 608.2b: it left the stack; the target is illegal
+            amount = _mana_value_on_the_stack(game, target)
+            game.deal_damage(game.controller_of(target), amount, source=spell)
+
+    return effect
+
+
+#: "`<src>` deals damage to each opponent equal to the number of cards that
+#: player has drawn this turn." (Molten Psyche's metalcraft rider) - each
+#: opponent's own total, read off `Game.cards_drawn_this_turn` when the damage
+#: is dealt (CR 608.2h, CR 120.3a).
+_DAMAGE_EACH_OPPONENT_EQUAL_TO_THEIR_DRAWS_RE = re.compile(
+    r"^[^,.]+? deals damage to each opponent equal to the number of cards that player "
+    r"has drawn this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s35", for_spell=FORWARD)
+def _parse_damage_each_opponent_equal_to_their_draws_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_DAMAGE_EACH_OPPONENT_EQUAL_TO_THEIR_DRAWS_RE`'s shape, spell or ability."""
+    if "has drawn this turn" not in clause:
+        return None
+    if _DAMAGE_EACH_OPPONENT_EQUAL_TO_THEIR_DRAWS_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = _resolving_source(game, stack_object)
+        controller = game.controller_of(stack_object).username
+        for opponent in _opponents(game, controller):
+            amount = game.cards_drawn_this_turn.get(opponent.username, 0)
+            if amount > 0:
+                game.deal_damage(opponent, amount, source=source)
+
+    return effect
+
+
+def _damage_any_target_and_you_then(
+    effect_text: str, *, for_spell: bool, run_rest: Callable[[str], Any]
+) -> Any:
+    if "damage to any target and" not in effect_text.lower():
+        return None
+    head_and_rest = _split_first_sentence(effect_text)
+    if head_and_rest is None:
+        return None
+    head_text, rest_text = head_and_rest
+    if "damage to any target and" not in head_text.lower():
+        return None
+    head = _parse_etb_damage_any_target_and_self_clause(head_text, for_spell=for_spell)
+    if head is None:
+        return None
+    rest = run_rest(rest_text)
+    if rest is None or _is_notice_only(rest):
+        return None
+    return head, rest
+
+
+def _split_first_sentence(effect_text: str) -> tuple[str, str] | None:
+    sentences = _plain_resolution_sentences(
+        " ".join(_strip_non_effect_preamble(effect_text).split())
+    )
+    if len(sentences) < 2:
+        return None
+    return sentences[0], " ".join(sentences[1:])
+
+
+@SPELL_TEXT.rung("s18")
+def _parse_damage_any_target_and_you_then_spell(effect_text: str) -> Effect | None:
+    """ "`<src>` deals N damage to any target and M damage to you. `<rest>`"
+    (Orcish Cannonade's "Draw a card.") - CR 608.2c's order: the paired damage
+    first, then the following instructions, read by the ordinary dispatcher."""
+    parts = _damage_any_target_and_you_then(
+        effect_text, for_spell=True, run_rest=_spell_effect_or_notice
+    )
+    if parts is None:
+        return None
+    head, rest = parts
+
+    def effect(game: "Game", spell: CardState) -> None:
+        head(game, spell)
+        rest(game, spell)
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s42")
+def _parse_damage_any_target_and_you_then_ability(effect_text: str) -> AbilityEffect | None:
+    """`_parse_damage_any_target_and_you_then_spell` on a resolving ability."""
+    parts = _damage_any_target_and_you_then(
+        effect_text, for_spell=False, run_rest=_ability_effect_or_notice
+    )
+    if parts is None:
+        return None
+    head, rest = parts
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        head(game, ability)
+        rest(game, ability)
+
+    return effect
+
+
+from ..conditions.history import object_dealt_damage_clause_test  # noqa: E402
+from ..replacement.model import CANT_BE_REGENERATED_LINE  # noqa: E402
 from ._common import (  # noqa: E402
     _DAMAGE_EACH_FILTERED_RE,
     _DAMAGE_EACH_GROUP_RE,

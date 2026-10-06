@@ -2678,6 +2678,82 @@ def _parse_loot_then_reflexive_discard_ability(text: str) -> AbilityEffect | Non
     return _loot_then_reflexive_discard_effect(text, for_spell=False)  # type: ignore[return-value]
 
 
+# --------------------------------------------------------------------------
+# NW-02 T1: "Each player shuffles the cards from their hand into their library,
+# then draws that many cards." (the wheel), optionally followed by more text
+# --------------------------------------------------------------------------
+
+_EACH_PLAYER_SHUFFLES_HAND_DRAWS_THAT_MANY_RE = re.compile(
+    r"^each player shuffles (?:the cards from )?their hand into their library, "
+    r"then draws that many cards\.?$",
+    re.IGNORECASE,
+)
+
+
+def _each_player_wheel(game: "Game") -> None:
+    """CR 608.2c: each player, in APNAP order (CR 101.4), puts the cards of
+    their hand into their library, shuffles it (CR 701.24a) and draws exactly
+    as many cards (CR 121.2) - "that many" is that player's own count."""
+    for player in _players_in_apnap_order(game):
+        hand = list(player.hand)
+        if hand:
+            game.put_cards_into_library(hand)
+        game.shuffle_library(player)
+        if hand:
+            game.draw_cards(player.username, len(hand))
+
+
+def _wheel_then_rest(
+    text: str, run_rest: Callable[[str], object | None]
+) -> tuple[object, ...] | None:
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    if "shuffles" not in whole.lower() or "that many cards" not in whole.lower():
+        return None
+    sentences = _plain_resolution_sentences(whole)
+    if (
+        not sentences
+        or _EACH_PLAYER_SHUFFLES_HAND_DRAWS_THAT_MANY_RE.fullmatch(sentences[0]) is None
+    ):
+        return None
+    if len(sentences) == 1:
+        return ()
+    rest = run_rest(" ".join(sentences[1:]))
+    if rest is None or _is_notice_only(rest):
+        return None
+    return (rest,)
+
+
+@SPELL_TEXT.rung("s18")
+def _parse_each_player_wheel_text(text: str) -> Effect | None:
+    """The wheel sentence of a spell, then every following instruction read by
+    the ordinary dispatcher (Molten Psyche's metalcraft damage)."""
+    parts = _wheel_then_rest(text, _spell_effect_or_notice)
+    if parts is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        _each_player_wheel(game)
+        for rest in parts:
+            rest(game, spell)  # type: ignore[operator]
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s42")
+def _parse_each_player_wheel_ability_text(text: str) -> AbilityEffect | None:
+    """`_parse_each_player_wheel_text` on a resolving ability."""
+    parts = _wheel_then_rest(text, _ability_effect_or_notice)
+    if parts is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        _each_player_wheel(game)
+        for rest in parts:
+            rest(game, ability)  # type: ignore[operator]
+
+    return effect
+
+
 from ._common import (  # noqa: E402
     _DISCARD_A_CARD_RE,
     _DRAW_CARDS_EQUAL_TO_RE,
@@ -2700,8 +2776,10 @@ from ._common import (  # noqa: E402
 from .amounts import count_expression, player_counter_count  # noqa: E402
 from .continuous import _who_cant_discard_consequence  # noqa: E402
 from .dispatch import (  # noqa: E402
+    _ability_effect_or_notice,
     _parse_mixed_clause,
     _parse_mixed_clauses,
+    _spell_effect_or_notice,
     parse_clause_effect,
     parse_mixed_effect,
     parse_mixed_effect_for_spell,
@@ -2718,5 +2796,5 @@ from .removal import (  # noqa: E402
     _sacrifice_restriction,
 )
 from .search import _search_quality_is_readable  # noqa: E402
-from .text import _strip_non_effect_preamble  # noqa: E402
-from .tokens import _parse_generic_token_descriptor  # noqa: E402
+from .text import _plain_resolution_sentences, _strip_non_effect_preamble  # noqa: E402
+from .tokens import _is_notice_only, _parse_generic_token_descriptor  # noqa: E402
