@@ -2171,7 +2171,8 @@ class Game(
     #: `recipient_controller` ("to creatures", "to you and creatures you
     #: control"); `ShieldSourceFilter` gained `creatures`, `colors_any`,
     #: `colorless` and `not_controlled_by` (CR 609.7b, CR 105.2c);
-    #: `ReflectedDamage` gained `optional` (CR 608.2d, CR 615.5).
+    #: `ReflectedDamage` gained `optional` (CR 608.2d, CR 615.5); `CardState`
+    #: gained `last_known_attacking` (CR 608.2h, "by attacking creatures").
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

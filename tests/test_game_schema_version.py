@@ -2041,7 +2041,8 @@ def test_a_snapshot_written_before_the_nw02_t3_shapes_is_refused() -> None:
 #: The version stamped before NW03-T1: `PreventionShield` gained
 #: `recipient_types` and `recipient_controller`, `ShieldSourceFilter` gained
 #: `creatures`, `colors_any`, `colorless` and `not_controlled_by`, and
-#: `ReflectedDamage` gained `optional`.
+#: `ReflectedDamage` gained `optional`, and `CardState` gained
+#: `last_known_attacking`.
 _SCHEMA_VERSION_BEFORE_NW03_T1_SHIELDS = 117
 
 
@@ -2060,6 +2061,7 @@ def test_a_snapshot_written_before_the_nw03_t1_shields_is_refused() -> None:
     for name in ("creatures", "colors_any", "colorless", "not_controlled_by"):
         assert name in ShieldSourceFilter.model_fields
     assert "optional" in ReflectedDamage.model_fields
+    assert "last_known_attacking" in CardState.model_fields
     assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW03_T1_SHIELDS
     dumped = _a_played_game().model_dump(mode="json")
     dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW03_T1_SHIELDS

@@ -343,6 +343,9 @@ class ZonesMixin:
         # Fanatic's own sacrifice cost) asks whether it had infect or wither
         # as it last existed, grants included.
         permanent.last_known_keywords = keywords_as_it_exists(permanent, self)
+        # CR 506.4 removes it from combat as it goes; whether it was attacking
+        # as it last existed is what "by attacking creatures" asks (CR 608.2h).
+        permanent.last_known_attacking = self.is_attacking(permanent)
         # CR 400.7: whatever comes back is a new object, never goaded.
         permanent.goaded_by = []
         if permanent.prepared:

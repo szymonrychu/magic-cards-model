@@ -612,9 +612,10 @@ class ShieldSourceFilter(EngineModel):
     on the battlefield as the damage is dealt, or a source that has left the
     battlefield and was a creature as it last existed there (CR 608.2h, its
     last known information) - never a creature card that was not a
-    permanent; one that names sources ("by colorless sources", "that black sources and
-    red sources would deal", "by sources you don't control") reads any
-    source, on the battlefield or not.
+    permanent, and "attacking" is read the same way (`last_known_attacking`:
+    CR 506.4 took it out of combat as it left); one that names sources ("by
+    colorless sources", "that black sources and red sources would deal", "by
+    sources you don't control") reads any source, on the battlefield or not.
     """
 
     attacking: bool = False
@@ -654,6 +655,7 @@ class ShieldSourceFilter(EngineModel):
             colors = set(chars.colors)
             types = set(chars.types)
             counters = chars.counters
+            attacking = game.is_attacking(source)
         elif self.creatures and not source.last_left_the_battlefield:
             return False  # a creature card never was a creature (CR 109.2)
         else:
@@ -667,6 +669,7 @@ class ShieldSourceFilter(EngineModel):
                 source.last_known_types if source.last_known_types is not None else source.types
             )
             counters = source.last_known_counters
+            attacking = source.last_known_attacking
         if self.creatures and Type.CREATURE not in types:
             return False
         if self.colors_any and not set(self.colors_any) & colors:
@@ -679,7 +682,7 @@ class ShieldSourceFilter(EngineModel):
             return False
         if not self.creatures:
             return True
-        if self.attacking and not game.is_attacking(source):
+        if self.attacking and not attacking:
             return False
         if set(self.excluded_colors) & colors:
             return False

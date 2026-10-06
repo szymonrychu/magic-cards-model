@@ -422,3 +422,76 @@ def test_repel_the_abominable_reads_a_gone_sources_subtypes_as_it_last_existed()
 
     assert fanatic.zone is Zone.GRAVEYARD
     assert scenario.player("alice").life == 19
+
+
+# -- "by attacking creatures" and a source gone from combat (CR 608.2h) --------
+#
+# Harmless Assault's filter (`ShieldSourceFilter.attacking`) rechecks the
+# source as it would deal damage (CR 609.7b). A source that has left the
+# battlefield is read off its last known information (CR 608.2h, CR 113.7a):
+# an attacking Mogg Fanatic sacrificed to its own ability was an attacking
+# creature as it last existed, though CR 506.4 has since removed it from
+# combat. One that never attacked was not.
+
+
+def _attack_with_fanatic(*, attacks: bool):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Mogg Fanatic", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    fanatic, bears = scenario.creatures("Mogg Fanatic", "Grizzly Bears")
+    scenario.attack_with(bears, *((fanatic,) if attacks else ()))
+    return scenario, fanatic
+
+
+def _sacrifice_and_ping(scenario, fanatic):
+    scenario.activate(fanatic, sacrificing=[fanatic], targets=[scenario.player("bob")])
+    assert fanatic.zone is Zone.GRAVEYARD
+
+
+def test_attacking_filter_covers_an_attacker_sacrificed_to_its_own_ability():
+    from magic_cards_model.models.game.records import ShieldSourceFilter
+
+    scenario, fanatic = _attack_with_fanatic(attacks=True)
+    _sacrifice_and_ping(scenario, fanatic)
+
+    assert not scenario.game.is_attacking(fanatic)  # CR 506.4
+    assert ShieldSourceFilter(attacking=True).matches(scenario.game, fanatic)
+
+
+def test_attacking_filter_skips_a_sacrificed_creature_that_never_attacked():
+    from magic_cards_model.models.game.records import ShieldSourceFilter
+
+    scenario, fanatic = _attack_with_fanatic(attacks=False)
+    _sacrifice_and_ping(scenario, fanatic)
+
+    assert not ShieldSourceFilter(attacking=True).matches(scenario.game, fanatic)
+
+
+def test_the_last_known_attacking_stamp_survives_a_snapshot_round_trip():
+    from magic_cards_model.models import Game
+    from magic_cards_model.models.game.records import ShieldSourceFilter
+
+    scenario, fanatic = _attack_with_fanatic(attacks=True)
+    _sacrifice_and_ping(scenario, fanatic)
+
+    restored = Game.model_validate(scenario.game.model_dump(mode="json"))
+    gone = restored.find_by_id(fanatic.id)
+    assert gone is not None
+    assert ShieldSourceFilter(attacking=True).matches(restored, gone)
+
+
+def test_a_gone_attacker_moved_on_again_is_a_new_object_never_attacking():
+    """CR 400.7: exiled from the graveyard, it is a new object with no
+    memory of having attacked."""
+    from magic_cards_model.models.game.records import ShieldSourceFilter
+
+    scenario, fanatic = _attack_with_fanatic(attacks=True)
+    _sacrifice_and_ping(scenario, fanatic)
+    scenario.game.exile_cards([fanatic])
+
+    assert fanatic.zone is Zone.EXILE
+    assert not ShieldSourceFilter(attacking=True).matches(scenario.game, fanatic)
