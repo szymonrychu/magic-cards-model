@@ -18,7 +18,7 @@ spell, the creature you control gains indestructible until end of turn."
 - CR 601.2h / CR 207.2c: adamant is an ability word; the gate is the mana
   actually spent on the cast, read when the instruction is followed.
 
-Proof printings on the same readers: Sonic Assault (a tap clause, then the
+Proof printings on the same readers: Fodder Launch (a -5/-5 clause, then the
 controller line) and Draconic Roar (a gate whose condition is "you revealed
 a Dragon card or controlled a Dragon", then the controller line).
 """
@@ -175,16 +175,24 @@ def test_outmuscle_without_three_green_there_is_no_indestructible():
 # -- Proof printings -----------------------------------------------------------
 
 
-def test_sonic_assault_taps_then_damages_the_controller():
-    scenario = _board(["Sonic Assault"], ["Island", "Mountain", "Island"], ["Serra Angel"])
-    angel = scenario.creature("Serra Angel", "bob")
-    scenario.cast_and_resolve(
-        "Sonic Assault",
-        *scenario.untapped_sources("Island", "Island", "Mountain"),
-        targets=[angel],
+def test_fodder_launch_shrinks_then_damages_the_controller():
+    """A pump antecedent (-5/-5) and the additional cost the harness pays."""
+    scenario = _board(
+        ["Fodder Launch"],
+        ["Swamp"] * 4,
+        ["Serra Angel"],
+        alice_extra=["Goblin Guide"],
     )
-    assert angel.tapped
-    assert _life(scenario) == (20, 18)
+    angel = scenario.creature("Serra Angel", "bob")
+    goblin = scenario.creature("Goblin Guide", "alice")
+    scenario.cast_and_resolve(
+        "Fodder Launch",
+        *scenario.untapped_sources(*["Swamp"] * 4),
+        targets=[angel],
+        sacrificing=[goblin],
+    )
+    assert angel.zone is Zone.GRAVEYARD
+    assert _life(scenario) == (20, 15)
 
 
 def test_draconic_roar_revealing_a_dragon_also_damages_the_controller():
