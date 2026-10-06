@@ -22,16 +22,25 @@ from uuid import UUID
 
 from ..models.card_state import CardState
 from ..models.zone import Zone
-from ..numbers import parse_count
+from ..numbers import COUNT, parse_count
 from .decisions import Decision, DecisionKind, source_id_of
 
 if TYPE_CHECKING:
     from ..models.game import Game
 
 _THEN_WHEN_THAT_CREATURE_DIES_RE = re.compile(
-    r"^(?P<first>[^.]*\btarget creature\b[^.]*\.)\s*when that creature dies this turn, "
+    r"^(?P<first>[^.]*\btarget creature\b[^.]*\.)\s*when "
+    r"(?:that creature|(?P<dealt>a creature dealt damage this way)) dies this turn, "
     r"(?P<consequence>.+?)\.?$",
     re.IGNORECASE | re.DOTALL,
+)
+#: "`<source>` deals N damage to the creature's controller" - Searing Blood's
+#: consequence. The player is the dead creature's controller as it last
+#: existed (CR 603.10a, CR 608.2h), carried on the DIES event.
+_DEALS_DAMAGE_TO_ITS_CONTROLLER_RE = re.compile(
+    rf"^[^.,]+? deals (?P<n>{COUNT}) damage to "
+    r"(?:its controller|(?:the|that) creature'?s controller)\.?$",
+    re.IGNORECASE,
 )
 _EXILE_TOP_THEN_CHOOSE_ONE_TO_PLAY_RE = re.compile(
     r"^exile (?:a number of cards from the top of your library equal to (?P<its_power>its power)"
@@ -129,6 +138,21 @@ def dies_consequence_effect(text: str, *, source_stamp: UUID | None = None) -> A
             )
 
         return exile_and_play
+    if match := _DEALS_DAMAGE_TO_ITS_CONTROLLER_RE.fullmatch(cleaned):
+        damage = parse_count(match.group("n"))
+        if damage is None:
+            return None
+
+        def damage_its_controller(game: "Game", ability: Any) -> None:
+            event = getattr(ability, "event", None)
+            username = getattr(event, "subject_controller", None)
+            if username is None or not game.is_in_game(username):
+                return
+            game.deal_damage(
+                game.player(username), damage, source=ability.source_or_last_known(game)
+            )
+
+        return damage_its_controller
     if _EXILE_ITS_CONTROLLERS_GRAVEYARD_RE.fullmatch(cleaned):
 
         def exile_graveyard(game: "Game", ability: Any) -> None:
@@ -166,12 +190,25 @@ def parse_then_when_that_creature_dies_this_turn(text: str, *, for_spell: bool) 
     if first is None:
         return None
 
+    dealt_this_way = match.group("dealt") is not None
+    if dealt_this_way and " damage " not in match.group("first").lower():
+        return None
+
     def effect(game: "Game", stack_object: Any) -> None:
         targets = [
             target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
         ]
+        marked_before = {target.id: target.damage for target in targets}
         for clause in first:
             clause(game, stack_object)
+        if dealt_this_way:
+            # CR 615.6: prevented damage was never dealt, so a creature whose
+            # damage was all prevented was not "dealt damage this way".
+            targets = [
+                target
+                for target in targets
+                if target.zone is Zone.BATTLEFIELD and target.damage > marked_before[target.id]
+            ]
         controller = game.controller_of(stack_object).username
         source_name = (
             stack_object.card.name
