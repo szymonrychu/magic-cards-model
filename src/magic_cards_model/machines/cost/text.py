@@ -13,6 +13,7 @@ from ...numbers import (
     parse_amount,
     parse_count,
 )
+from ..modes import SPEND_ONLY_ON_X_RE
 from .components import (
     ActivatedAbilityGroupDiscount,
     AlternativeCostOffer,
@@ -1654,3 +1655,33 @@ from .components import (  # noqa: E402
     waterbend_mana_cost,
 )
 from .payment import pay_repeated_symbol_mana_cost  # noqa: E402
+
+_X_SPEND_COLOUR_WORDS = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+
+def x_spend_colours(text: str) -> tuple[Color, ...]:
+    """The colours "Spend only <colour> mana on X." allows for the X share of
+    a cost (Consume Spirit, Crypt Rats), or `()` when `text` prints no such
+    sentence.
+
+    CR 107.3a has the controller announce X as the spell is cast or the
+    ability activated; CR 601.2f/601.2h determine and pay the total cost. The
+    sentence narrows which mana may pay X's part of it - `CostPayment.
+    restrict_x_mana` is where that is enforced.
+    """
+    if "mana on x" not in text.lower():
+        return ()
+    match = SPEND_ONLY_ON_X_RE.search(text)
+    if match is None:
+        return ()
+    return tuple(
+        _X_SPEND_COLOUR_WORDS[word]
+        for word in match.group("colours").lower().split()
+        if word in _X_SPEND_COLOUR_WORDS
+    )

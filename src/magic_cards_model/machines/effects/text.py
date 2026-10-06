@@ -900,6 +900,16 @@ _CARD_TYPE_PAIR_AND_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "the number of Mounts and Vehicles you control" (Road Rage), "the number of
+#: Wolves and Werewolves you control" (Runebound Wolf) - one count over a list
+#: of types and subtypes (`amounts._COUNT_AND_OR_YOU_CONTROL_RE`), not two
+#: instructions. Bounded by "number of" in front and "you control" behind, so
+#: no other "and" is masked.
+_COUNT_TYPE_PAIR_AND_RE = re.compile(
+    r"\bnumber of [A-Za-z]+ and [A-Za-z]+(?= (?:you|your opponents|they) control\b)",
+    re.IGNORECASE,
+)
+
 
 #: A sentence that opens "[Then ]if `<condition>`," and whose consequence
 #: runs to the sentence's end with no further comma (a comma would mean a
@@ -982,6 +992,9 @@ def split_effect_clauses(text: str) -> list[str]:
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
     masked = _YOU_OWN_AND_CONTROL_AND_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
+    masked = _COUNT_TYPE_PAIR_AND_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
     masked = _LOSE_ALL_AND_BASE_PT_RE.sub(

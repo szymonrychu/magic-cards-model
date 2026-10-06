@@ -357,10 +357,25 @@ def substitute_x(text: str, x_value: int | None) -> str:
 _X_CANT_BE_ZERO = re.compile(r"(?<![\w])X can[\u2019']t be 0\.?[ \t]*", re.IGNORECASE)
 
 
+#: "Spend only black mana on X." (Consume Spirit; Crypt Rats on an activated
+#: ability) - a restriction on how the X share of the cost is paid (CR 107.3a
+#: announces X, CR 601.2h pays the total cost), not an instruction to carry out.
+#: Only a colour list is matched; any other quality is left in the text so the
+#: clause stays unread rather than being silently widened.
+_X_SPEND_COLOUR = r"(?:white|blue|black|red|green)"
+SPEND_ONLY_ON_X_RE = re.compile(
+    rf"(?<![\w])Spend only (?P<colours>{_X_SPEND_COLOUR}(?: or {_X_SPEND_COLOUR})*)"
+    r" mana on X\.?[ \t]*",
+    re.IGNORECASE,
+)
+
+
 def strip_x_restrictions(text: str) -> str:
-    """`text` without its "X can't be 0." sentence - read at the announcement
-    of X (`x_restriction_refusal`), never part of what resolves."""
-    return _X_CANT_BE_ZERO.sub("", text)
+    """`text` without its "X can't be 0." and "Spend only <colour> mana on X."
+    sentences - read at the announcement of X (`x_restriction_refusal`) and at
+    the payment of the cost (`machines/cost/text.x_spend_colours`), never part
+    of what resolves."""
+    return SPEND_ONLY_ON_X_RE.sub("", _X_CANT_BE_ZERO.sub("", text))
 
 
 def x_restriction_refusal(text: str, x_value: int) -> str | None:
