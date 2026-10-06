@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a",
+  "oracle_id": "c8df3d1f-130e-4391-9bec-3f2d345a13fb",
+  "multiverse_ids": [
+    571457
+  ],
+  "mtgo_id": 101732,
+  "tcgplayer_id": 277237,
+  "cardmarket_id": 665751,
+  "name": "Sparkmage's Gambit",
+  "lang": "en",
+  "released_at": "2022-07-08",
+  "uri": "https://api.scryfall.com/cards/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a",
+  "scryfall_uri": "https://scryfall.com/card/2x2/124/sparkmages-gambit?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:51:19Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.jpg?1783921879",
+    "normal": "https://cards.scryfall.io/normal/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.jpg?1783921879",
+    "large": "https://cards.scryfall.io/large/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.jpg?1783921879",
+    "png": "https://cards.scryfall.io/png/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.png?1783921879",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.jpg?1783921879",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.jpg?1783921879",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.webp?1783921879",
+    "grid": "https://cards.scryfall.io/grid/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.webp?1783921879",
+    "display": "https://cards.scryfall.io/display/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.webp?1783921879",
+    "art": "https://cards.scryfall.io/art/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.webp?1783921879",
+    "crop": "https://cards.scryfall.io/crop/front/f/1/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a.webp?1783921879"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Sparkmage's Gambit deals 1 damage to each of up to two target creatures. Those creatures can't block this turn.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set": "2x2",
+  "set_name": "Double Masters 2022",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A2x2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/2x2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f10b4edf-5f0e-4edd-88f9-2e3e7d9cad0a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac8df3d1f-130e-4391-9bec-3f2d345a13fb&unique=prints",
+  "collector_number": "124",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"A touch of lightning, and anyone can be taught to dance.\"\n\u2014Tobin, sparkmage",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mathias Kollros",
+  "artist_ids": [
+    "2ae0dd12-047c-4efb-80d7-bccc3bac5fba"
+  ],
+  "illustration_id": "097bf26d-c6a1-4211-bae9-4819b6771a84",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23888,
+  "penny_rank": 16218,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/feature/double-masters-2022-release-notes-2022-06-24",
+    "previewed_at": "2022-06-24"
+  },
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.04",
+    "eur_foil": "0.08",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=571457&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSparkmage%2527s%2BGambit",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSparkmage%2527s%2BGambit",
+    "edhrec": "https://edhrec.com/route/?cc=Sparkmage%27s+Gambit"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F277237%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=665751&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/101732?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
