@@ -34,7 +34,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES
 from ._common import AbilityEffect, TargetedClause
 
 #: "..., where X is the amount of mana spent to cast that spell." - Aberrant
@@ -483,6 +483,57 @@ def _parse_add_that_much_colored_mana_trigger(text: str) -> AbilityEffect | None
                 pool.add(color, retain_until=ManaRetentionScope.END_OF_TURN)
 
     return effect
+
+
+def _parse_until_end_of_turn_dont_lose_unspent_mana_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Until end of turn, you don't lose unspent [<colour>] mana as steps and
+    phases end." (`machines/unspent_mana.py`) as a recorded turn-scoped effect.
+
+    It lasts as long as it states (CR 611.2a) and is not tied to the mana in
+    the pool when it resolves (CR 611.2c): the `CastingRuleEffect` it records
+    is read by `settle_mana_loss` every time any step or phase ends, so mana
+    added later in the turn is kept too. CR 514.2 removes it in cleanup."""
+    from ..casting_restrictions import CastingRuleEffect
+    from ..unspent_mana import read_until_end_of_turn_dont_lose_unspent_mana
+
+    kind = read_until_end_of_turn_dont_lose_unspent_mana(clause)
+    if kind is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        game.casting_rule_effects.append(
+            CastingRuleEffect(
+                kind=kind,
+                controller=game.controller_of(stack_object).username,
+                source_name=source_name,
+            )
+        )
+
+    return effect
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_until_end_of_turn_dont_lose_unspent_mana_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """The sentence above among `text`'s sentences, read whole because the
+    clause split would cut it at its own leading "Until end of turn,"
+    (`_clauses_around_sentences`)."""
+    if "unspent" not in text.lower():
+        return None
+
+    def reader(sentences: list[str], index: int) -> tuple[int, TargetedClause] | None:
+        effect = _parse_until_end_of_turn_dont_lose_unspent_mana_clause(
+            sentences[index], for_spell=for_spell
+        )
+        return None if effect is None else (1, effect)
+
+    return _clauses_around_sentences(text, reader, for_spell=for_spell)
 
 
 def colored_mana_symbols(state: CardState) -> int:
@@ -963,6 +1014,7 @@ from ._common import (  # noqa: E402
 from .amounts import _that_many_or_notice, amount_expression, count_expression  # noqa: E402
 from .continuous import _cast_trigger_record  # noqa: E402
 from .dispatch import _parse_mixed_clause  # noqa: E402
+from .merges import _clauses_around_sentences  # noqa: E402
 from .modal import (  # noqa: E402
     _choose_a_color,
     _choose_mana_color,

@@ -5388,6 +5388,20 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
     )
     if consequence is None:
         return None
+    return _gated_effect(condition_text, about_target, consequence, stripped, for_spell=for_spell)
+
+
+def _gated_effect(
+    condition_text: str,
+    about_target: str | None,
+    consequence: TargetedClause,
+    printed: str,
+    *,
+    for_spell: bool,
+) -> TargetedClause:
+    """`consequence`, run only when `condition_text` holds as the spell or
+    ability resolves (CR 608.2c) - `_parse_condition_clause`'s resolution
+    half, shared with `_parse_gated_optional_cost_pair_clauses`."""
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -5417,7 +5431,7 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
                 source_name=(
                     stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
                 ),
-                text=stripped,
+                text=printed,
             )
             if notice not in game.conditional_clause_notices:
                 game.conditional_clause_notices.append(notice)
@@ -5426,6 +5440,64 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
             consequence(game, stack_object)
 
     return effect
+
+
+#: "If `<condition>`, you may `<optional cost>`. If you do, `<consequence>`." -
+#: Take Out the Trash's "If you control a Raccoon, you may discard a card. If
+#: you do, draw a card." The leading gate (CR 608.2c, checked as the spell or
+#: ability resolves) covers the whole optional-cost-then-"if you do" pair: with
+#: the condition false the player is never offered the cost, so nothing is
+#: discarded and nothing is drawn (CR 608.2d offers only choices that exist).
+#: The pair itself is whatever the ordinary clause pipeline already reads as
+#: "you may `<cost>`. If you do, `<consequence>`." (discard, sacrifice, pay), so
+#: the gate adds only the condition.
+_GATED_MAY_SENTENCE_RE = re.compile(
+    r"^if (?P<condition>[^,]+?), (?P<rest>you may .+?)\.?$", re.IGNORECASE
+)
+_IF_YOU_DO_SENTENCE_RE = re.compile(r"^if you do,", re.IGNORECASE)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_gated_optional_cost_pair_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """`_GATED_MAY_SENTENCE_RE`'s sentence plus the "If you do," sentence after
+    it, among `text`'s sentences; see the banner above. The pair is read before
+    the clause split because the split would cut the gate off its own "if you
+    do" (`_clauses_around_sentences`)."""
+    lowered = text.lower()
+    if ", you may " not in lowered or "if you do," not in lowered:
+        return None
+
+    def reader(sentences: list[str], index: int) -> tuple[int, TargetedClause] | None:
+        if index + 1 >= len(sentences):
+            return None
+        gate = _GATED_MAY_SENTENCE_RE.fullmatch(sentences[index].strip())
+        if gate is None or _IF_YOU_DO_SENTENCE_RE.match(sentences[index + 1].strip()) is None:
+            return None
+        condition_text = gate.group("condition").strip()
+        about_target = _target_player_condition(condition_text) if for_spell else None
+        if not _effect_condition_is_readable(
+            about_target if about_target is not None else condition_text,
+            allow_anaphor=not for_spell,
+        ):
+            return None
+        pair = _parse_mixed_clauses(
+            f"{gate.group('rest').strip()}. {sentences[index + 1].strip()}", for_spell=for_spell
+        )
+        if pair is None:
+            return None
+
+        def consequence(game: "Game", stack_object: "StackObject") -> None:
+            for clause in pair:
+                clause(game, stack_object)
+
+        printed = f"{sentences[index].strip()} {sentences[index + 1].strip()}"
+        return 2, _gated_effect(
+            condition_text, about_target, consequence, printed, for_spell=for_spell
+        )
+
+    return _clauses_around_sentences(text, reader, for_spell=for_spell)
 
 
 #: Two independently gated instructions in one sentence, joined by "and":
@@ -6390,7 +6462,10 @@ from .mana import (  # noqa: E402
     _parse_add_one_mana_of_any_color_trigger,
     _parse_add_one_of_listed_mana_clause,
 )
-from .merges import _merge_reveal_hand_choose_discard_clauses  # noqa: E402
+from .merges import (  # noqa: E402
+    _clauses_around_sentences,
+    _merge_reveal_hand_choose_discard_clauses,
+)
 from .removal import (  # noqa: E402
     _destroy_matching,
     _parse_conditional_sacrifice_clause,

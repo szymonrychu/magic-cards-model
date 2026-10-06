@@ -7,7 +7,7 @@ from uuid import UUID
 from magic_cards_model.phrases import with_indefinite_article
 
 from ...data.subtypes import creature_type_vocabulary, subtype_vocabulary
-from ...models.card import Type
+from ...models.card import Color, Type
 from ...models.card_state import (
     CardState,
     ExileAnnotation,
@@ -62,7 +62,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import SPELL_TEXT
+from ._chains import FORWARD, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _MANA_COST_LIST,
     _OWNER_PUTS_IT_INTO_LIBRARY_TAIL,
@@ -2044,6 +2044,13 @@ _SHUFFLE_HAND_AND_GRAVEYARD_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "shuffles their graveyard into their library" - Mnemonic Nexus's "Each
+#: player ..." step. CR 701.24a; each card goes into its owner's library.
+_SHUFFLE_GRAVEYARD_RE = re.compile(
+    r"^shuffles? (?:their|his or her) graveyard into (?:their|his or her) library$",
+    re.IGNORECASE,
+)
+
 #: "shuffles their hand, graveyard, and all permanents they own into their
 #: library" - Sway of the Stars. CR 701.24a's shuffle after CR 400.3's owner
 #: rule: each card goes to its owner's library, so "permanents they own" is
@@ -2159,6 +2166,16 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
             game.shuffle_library(player)
 
         return shuffle_hand_and_graveyard
+
+    if _SHUFFLE_GRAVEYARD_RE.fullmatch(clause):
+
+        def shuffle_graveyard(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            game.put_cards_into_library(list(player.graveyard))
+            game.shuffle_library(player)
+
+        return shuffle_graveyard
 
     if _SHUFFLE_HAND_GRAVEYARD_PERMANENTS_RE.fullmatch(clause):
 
@@ -3405,6 +3422,58 @@ def _parse_damage_then_followup_spell(effect_text: str) -> Effect | None:
     return damage_then_followup_spell_effect(effect_text)
 
 
+def _clauses_around_sentences(
+    text: str,
+    reader: Callable[[list[str], int], tuple[int, TargetedClause] | None],
+    *,
+    for_spell: bool,
+) -> list[TargetedClause] | None:
+    """`text`'s sentences with every run `reader` claims read as one clause and
+    every other run read through the ordinary clause pipeline - or `None`
+    when `reader` claims nothing, or any leftover run reads to nothing (CR
+    608.2c: no partial run of the instruction).
+
+    `reader(sentences, index)` returns how many sentences it consumed from
+    `index` and the clause that performs them, or `None`. This is for a shape
+    whose own sentences `split_effect_clauses` would cut apart (a bare "and"
+    inside one sentence, or a pair that must share a gate), so the clause
+    pipeline can never see it whole: the reader sees the sentences instead,
+    and what sits beside it (a leading damage sentence, a trailing rider) is
+    read exactly as it would be on a card without the shape.
+    """
+    sentences = _plain_resolution_sentences(text)
+    clauses: list[TargetedClause] = []
+    leftover: list[str] = []
+    claimed = False
+
+    def flush() -> bool:
+        if not leftover:
+            return True
+        parsed = _parse_mixed_clauses(" ".join(leftover), for_spell=for_spell)
+        leftover.clear()
+        if parsed is None:
+            return False
+        clauses.extend(parsed)
+        return True
+
+    index = 0
+    while index < len(sentences):
+        hit = reader(sentences, index)
+        if hit is None:
+            leftover.append(sentences[index])
+            index += 1
+            continue
+        if not flush():
+            return None
+        consumed, clause = hit
+        clauses.append(clause)
+        claimed = True
+        index += consumed
+    if not claimed or not flush():
+        return None
+    return clauses
+
+
 # --------------------------------------------------------------------------
 # Excess damage (CR 120.4a, CR 120.10): a damage spell whose next sentence
 # does something with the part of the damage above what is lethal.
@@ -3681,6 +3750,92 @@ def _merge_damage_then_life_per_excess_spell(effect_text: str) -> Effect | None:
             game.gain_life(game.controller_of(spell), excess)
 
     return effect
+
+
+#: "Target creature you control fights target creature an opponent controls. If
+#: the creature the opponent controls is dealt excess damage this way, add that
+#: much {R}." (The Last Agni Kai) - a fight (CR 701.14a) or a bite whose victim
+#: is told apart by who controls it, then a payoff for the part of the damage the
+#: victim could not use. The payoff sentence modifies the meaning of the first
+#: (CR 608.2c), so they are one instruction read together.
+_FIGHT_OR_BITE_RE = re.compile(
+    r"^target creature you control (?:(?P<fight>fights)|deals damage equal to its power to) "
+    r"target creature (?P<ctrl>an opponent controls|you don['’]t control)\.?$",
+    re.IGNORECASE,
+)
+_EXCESS_ADD_MANA_RE = re.compile(
+    r"^if the creature (?:the opponent controls|an opponent controls|you don['’]t control) "
+    r"is dealt excess damage this way, add that much (?P<mana>\{[wubrgc]\})\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_fight_or_bite_then_excess_mana_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """`_FIGHT_OR_BITE_RE`'s sentence plus `_EXCESS_ADD_MANA_RE`'s, among
+    `text`'s sentences.
+
+    CR 120.4a: the excess is the damage above what is lethal for the victim,
+    read before the damage lands (`_excess_threshold`, which also counts a
+    deathtouch source's lethal damage as 1), and CR 120.10's "dealt" is what
+    actually landed (`Game.deal_damage`'s return), so prevented damage makes no
+    excess. The mana goes to the spell's controller (CR 106.4). A fight needs
+    both creatures still on the battlefield and still creatures (CR 701.14b);
+    a bite needs only its biter and its victim, as `_resolve_bite_damage`."""
+    if "excess damage this way" not in text.lower() or not for_spell:
+        return None
+
+    def reader(sentences: list[str], index: int) -> tuple[int, TargetedClause] | None:
+        if index + 1 >= len(sentences):
+            return None
+        action = _FIGHT_OR_BITE_RE.fullmatch(sentences[index].strip())
+        payoff = _EXCESS_ADD_MANA_RE.fullmatch(sentences[index + 1].strip())
+        if action is None or payoff is None:
+            return None
+        if not _targets_understood("target creature you control", count_agnostic=False):
+            return None
+        if not _targets_understood(f"target creature {action.group('ctrl')}", count_agnostic=True):
+            return None
+        fights = action.group("fight") is not None
+        color = Color(payoff.group("mana").strip("{}").upper())
+
+        def effect(game: "Game", spell: "StackObject") -> None:
+            from ..conditions.history import record_fight
+
+            controller = game.controller_of(spell)
+            targets = [
+                target
+                for target in game.resolve_targets(spell)
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+            ]
+            mine = [t for t in targets if game.controller_of(t).username == controller.username]
+            theirs = [t for t in targets if game.controller_of(t).username != controller.username]
+            if not mine or not theirs:
+                return
+            biter, victim = mine[0], theirs[0]
+            if fights and not (
+                game.characteristics_of(biter).is_creature
+                and game.characteristics_of(victim).is_creature
+            ):
+                return  # CR 701.14b
+            threshold = _excess_threshold(game, victim, biter)
+            power = game.power_of(biter) or 0
+            counter_power = game.power_of(victim) or 0
+            dealt = game.deal_damage(victim, power, source=biter)
+            if fights:
+                game.deal_damage(biter, counter_power, source=victim)
+                record_fight(game, biter, victim)
+            excess = 0 if threshold is None else max(dealt - threshold, 0)
+            if excess > 0:
+                pool = game.mana_pool_receiving(controller.username)
+                for _ in range(excess):
+                    pool.add(color)
+
+        return 2, effect
+
+    return _clauses_around_sentences(text, reader, for_spell=for_spell)
 
 
 def _merge_each_player_may_discard_hand_and_draw_clauses(

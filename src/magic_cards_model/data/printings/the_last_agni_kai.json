@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "61eaebc6-7575-48ed-b212-ff8b0c7ae694",
+  "oracle_id": "fd1998c0-c18e-4310-82de-b6320be5fe10",
+  "multiverse_ids": [],
+  "resource_id": "D9C8CD8FEA2A6B4AAAD356AE9033DEB5B5004541A42E2173EC39F50ECC01B9D9",
+  "mtgo_id": 144770,
+  "arena_id": 97420,
+  "tcgplayer_id": 660545,
+  "cardmarket_id": 855714,
+  "name": "The Last Agni Kai",
+  "lang": "en",
+  "released_at": "2025-11-21",
+  "uri": "https://api.scryfall.com/cards/61eaebc6-7575-48ed-b212-ff8b0c7ae694",
+  "scryfall_uri": "https://scryfall.com/card/tla/144/the-last-agni-kai?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:09:15Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.jpg?1783904955",
+    "normal": "https://cards.scryfall.io/normal/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.jpg?1783904955",
+    "large": "https://cards.scryfall.io/large/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.jpg?1783904955",
+    "png": "https://cards.scryfall.io/png/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.png?1783904955",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.jpg?1783904955",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.jpg?1783904955",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.webp?1783904955",
+    "grid": "https://cards.scryfall.io/grid/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.webp?1783904955",
+    "display": "https://cards.scryfall.io/display/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.webp?1783904955",
+    "art": "https://cards.scryfall.io/art/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.webp?1783904955",
+    "crop": "https://cards.scryfall.io/crop/front/6/1/61eaebc6-7575-48ed-b212-ff8b0c7ae694.webp?1783904955"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Target creature you control fights target creature an opponent controls. If the creature the opponent controls is dealt excess damage this way, add that much {R}.\nUntil end of turn, you don't lose unspent red mana as steps and phases end.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Fight"
+  ],
+  "produced_mana": [
+    "R"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set": "tla",
+  "set_name": "Avatar: The Last Airbender",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atla&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tla?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/61eaebc6-7575-48ed-b212-ff8b0c7ae694/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afd1998c0-c18e-4310-82de-b6320be5fe10&unique=prints",
+  "collector_number": "144",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "firenation",
+  "flavor_text": "Zuko's journey began when he refused to duel his father, but it would end dueling his sister.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Pablo Rivera",
+  "artist_ids": [
+    "2418e991-3c35-4b68-8723-88952fec6e53"
+  ],
+  "illustration_id": "da1cd3d4-965c-41e5-9852-1d750cda7ec0",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 2024,
+  "prices": {
+    "usd": "2.29",
+    "usd_foil": "3.03",
+    "usd_etched": null,
+    "eur": "1.73",
+    "eur_foil": "2.23",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BLast%2BAgni%2BKai",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BLast%2BAgni%2BKai",
+    "edhrec": "https://edhrec.com/route/?cc=The+Last+Agni+Kai"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F660545%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=855714&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/144770?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

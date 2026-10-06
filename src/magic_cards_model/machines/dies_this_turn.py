@@ -30,7 +30,8 @@ if TYPE_CHECKING:
 
 _THEN_WHEN_THAT_CREATURE_DIES_RE = re.compile(
     r"^(?P<first>[^.]*\btarget creature\b[^.]*\.)\s*when "
-    r"(?:that creature|(?P<dealt>a creature dealt damage this way)) dies this turn, "
+    r"(?:that creature|(?P<dealt>a creature dealt damage this way)"
+    r"|the (?:permanent|creature|planeswalker) (?P<other>you don['’]t control)) dies this turn, "
     r"(?P<consequence>.+?)\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -190,6 +191,12 @@ def parse_then_when_that_creature_dies_this_turn(text: str, *, for_spell: bool) 
     if first is None:
         return None
 
+    # "the permanent you don't control" (Devouring Tendrils' bite): the one
+    # target the first sentence names that the spell's controller does not
+    # control - never the biter they do.
+    the_other = match.group("other") is not None
+    if the_other and "you don't control" not in match.group("first").lower().replace("’", "'"):
+        return None
     dealt_this_way = match.group("dealt") is not None
     if dealt_this_way and " damage " not in match.group("first").lower():
         return None
@@ -198,6 +205,12 @@ def parse_then_when_that_creature_dies_this_turn(text: str, *, for_spell: bool) 
         targets = [
             target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
         ]
+        if the_other:
+            targets = [
+                target
+                for target in targets
+                if game.controller_of(target).username != game.controller_of(stack_object).username
+            ]
         marked_before = {target.id: target.damage for target in targets}
         for clause in first:
             clause(game, stack_object)

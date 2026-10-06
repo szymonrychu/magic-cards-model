@@ -62,6 +62,7 @@ from ..linked_exile import (
     parse_return_other_linked_cards_to_hand_clause,
 )
 from ..targeting import (
+    TargetRequirement,
     permanent_description,
     profile_for_text,
 )
@@ -73,7 +74,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _SACRIFICED_MANA_VALUE_TERM,
     AbilityEffect,
@@ -7756,6 +7757,177 @@ def _parse_each_sacrifices_of_their_choice_clause(clause: str) -> TargetedClause
     return effect
 
 
+# --------------------------------------------------------------------------
+# "<Player> sacrifices an <type> and a <type> of their choice." (CR 701.21a)
+# --------------------------------------------------------------------------
+#
+# The multi-type edict: Structural Collapse's "Target player sacrifices an
+# artifact and a land of their choice.", To the Slaughter's "that player
+# sacrifices a creature and a planeswalker of their choice". One slot per
+# listed description; the sacrificing player chooses one permanent for each
+# slot from the permanents they control (CR 701.21a), a slot with nothing to
+# fill it is skipped (CR 608.2d: no impossible choice), and everything chosen
+# is sacrificed together once every choice is made.
+#
+# One permanent can fill only one slot - it is one object and can be
+# sacrificed once - so an artifact land is either the artifact or the land.
+# A player who can fill more slots with different permanents must: a slot is
+# only offered the permanents that still leave the most slots fillable
+# (`_one_of_each_choice`), so a lone artifact land is never spent on the land
+# slot while the artifact slot goes empty.
+
+_MULTI_SLOT_SPLIT_RE = re.compile(r"\s+and\s+(?=(?:an?|one)\s)", re.IGNORECASE)
+
+_PLAYER_SACRIFICES_ONE_OF_EACH_RE = re.compile(
+    r"^(?P<who>target (?:player|opponent)|each (?:opponent|player)) sacrifices "
+    r"(?P<slots>an? [^.]+? and an? [^.]+?) of their choice\.?$",
+    re.IGNORECASE,
+)
+
+
+def _one_of_each_slots(text: str) -> list[tuple[str, TargetRequirement]] | None:
+    """`text` ("an artifact and a land") as one `(description, requirement)`
+    per slot, or `None` when it is not two or more article-led descriptions
+    this engine reads whole."""
+    parts = _MULTI_SLOT_SPLIT_RE.split(text.strip())
+    if len(parts) < 2:
+        return None
+    slots: list[tuple[str, TargetRequirement]] = []
+    for part in parts:
+        description = re.sub(r"^(?:an?|one)\s+", "", part.strip(), flags=re.IGNORECASE)
+        requirement = permanent_description(description)
+        if requirement is None:
+            return None
+        slots.append((description, requirement))
+    return slots
+
+
+def _one_of_each_choice(
+    game: "Game",
+    player: Player,
+    slots: list[tuple[str, TargetRequirement]],
+    source: str,
+    source_id: str | None,
+) -> list[CardState]:
+    """The permanents `player` chooses to fill `slots`, in slot order, each
+    slot offered only the permanents that keep the greatest number of slots
+    fillable (see the banner above). A slot with a single such permanent is
+    not asked about."""
+    pool = list(game.permanents_controlled_by(player.username))
+    matching = [
+        [
+            permanent
+            for permanent in pool
+            if requirement.rejects(permanent, player.username, game) is None
+        ]
+        for _description, requirement in slots
+    ]
+
+    def fillable(index: int, used: frozenset[str]) -> int:
+        if index == len(slots):
+            return 0
+        best = fillable(index + 1, used)
+        for permanent in matching[index]:
+            if permanent.id not in used:
+                best = max(best, 1 + fillable(index + 1, used | {permanent.id}))
+        return best
+
+    chosen: list[CardState] = []
+    used: frozenset[str] = frozenset()
+    for index, (description, _requirement) in enumerate(slots):
+        target = fillable(index, used)
+        candidates = [
+            permanent
+            for permanent in matching[index]
+            if permanent.id not in used and 1 + fillable(index + 1, used | {permanent.id}) == target
+        ]
+        if not candidates:
+            continue
+        pick = candidates[0]
+        if len(candidates) > 1:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"sacrifice {with_indefinite_article(description)}",
+                    source=source,
+                    amount=1,
+                    cards=tuple(permanent.id for permanent in candidates),
+                    source_id=source_id,
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in candidates}
+            picked = [by_id[card_id] for card_id in answer if card_id in by_id]
+            if picked:
+                pick = picked[0]
+        chosen.append(pick)
+        used = used | {pick.id}
+    return chosen
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_player_sacrifices_one_of_each_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """`_PLAYER_SACRIFICES_ONE_OF_EACH_RE`'s sentence among `text`'s sentences.
+
+    Read before the clause split because that split cuts the sentence at its
+    own "and" (`_clauses_around_sentences`)."""
+    lowered = text.lower()
+    if " sacrifices " not in lowered or " of their choice" not in lowered:
+        return None
+
+    def reader(sentences: list[str], index: int) -> tuple[int, TargetedClause] | None:
+        effect = _parse_player_sacrifices_one_of_each_clause(sentences[index], for_spell=for_spell)
+        return None if effect is None else (1, effect)
+
+    return _clauses_around_sentences(text, reader, for_spell=for_spell)
+
+
+def _parse_player_sacrifices_one_of_each_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_PLAYER_SACRIFICES_ONE_OF_EACH_RE`'s shape; see the banner above.
+
+    "Target player/opponent" is the one targeted player (CR 115.1), "each
+    player/opponent" is every such player choosing in APNAP order (CR 101.4)
+    before anything is sacrificed."""
+    match = _PLAYER_SACRIFICES_ONE_OF_EACH_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    who = match.group("who").lower()
+    if who.startswith("target") and not _targets_understood(who, allow_player_targets=True):
+        return None
+    slots = _one_of_each_slots(match.group("slots"))
+    if slots is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        source_id = source_id_of(stack_object)
+        if who.startswith("target"):
+            players = [t for t in game.resolve_targets(stack_object) if isinstance(t, Player)]
+        else:
+            players = [
+                player
+                for player in _players_in_apnap_order(game)
+                if who == "each player" or player.username != controller
+            ]
+        chosen: list[CardState] = []
+        for player in players:
+            chosen.extend(_one_of_each_choice(game, player, slots, source, source_id))
+        for permanent in chosen:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.sacrifice(permanent)
+
+    return effect
+
+
 #: "Target opponent sacrifices/exiles a creature or planeswalker with the
 #: greatest mana value among creatures and planeswalkers they control." -
 #: a *targeted* edict (the opponent, not the permanent, CR 115.10a still
@@ -8789,7 +8961,7 @@ from .dispatch import (  # noqa: E402
 )
 from .draw_discard import _discard_at_random, _discard_cards  # noqa: E402
 from .library import _dead_self_found  # noqa: E402
-from .merges import _offer_free_casts_from_among  # noqa: E402
+from .merges import _clauses_around_sentences, _offer_free_casts_from_among  # noqa: E402
 from .modal import (  # noqa: E402
     _choose_an_opponent,
     _choose_permanents_to_sacrifice,
