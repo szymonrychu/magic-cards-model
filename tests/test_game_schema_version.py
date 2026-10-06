@@ -2071,3 +2071,28 @@ def test_a_snapshot_written_before_the_nw03_t1_shields_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW03_T1_SHIELDS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before NW03-T7: `PreventionShield` gained
+#: `counters_when_prevented` (CR 615.5's "For each 1 damage prevented this
+#: way, put a +1/+1 counter on that creature"). 119-123 are held by the other
+#: NW-03 tasks, so the last shape without the field is 118.
+_SCHEMA_VERSION_BEFORE_NW03_T7_SHIELDS = 118
+
+
+def test_a_snapshot_written_before_the_nw03_t7_shields_is_refused() -> None:
+    """A version-118 dump's shields carry no `counters_when_prevented`:
+    decoded as current, a Test of Faith shield would prevent the damage and
+    put no counters. Refused instead."""
+    from magic_cards_model.models.game.records import PreventionShield
+
+    assert "counters_when_prevented" in PreventionShield.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW03_T7_SHIELDS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW03_T7_SHIELDS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW03_T7_SHIELDS}",
+    ):
+        Game.model_validate(dumped)

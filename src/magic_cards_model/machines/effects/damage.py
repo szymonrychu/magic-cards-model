@@ -890,6 +890,13 @@ def _create_fog_shield(
             return
         fields["source_id"] = dealer.id
         fields["source_stamp"] = dealer.zone_change_stamp
+    elif spec.source_target == "spell":
+        # CR 609.7a / CR 400.7c: a spell named as the source also covers the
+        # permanent it becomes, so the shield holds no stamp.
+        spell = next_target("card")
+        if spell is None:
+            return
+        fields["source_id"] = spell.id
     shielded_objects: list[CardState] | None = None
     if spec.recipient == "players":
         fields["players_only"] = True
@@ -1295,6 +1302,316 @@ def _parse_prevent_next_damage_to_you_and_permanents_text(text: str) -> Effect |
         )
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Next-N shields and CR 615.5's "prevented this way" payoffs - NW03-T7
+# --------------------------------------------------------------------------
+#
+# "Prevent the next <N | X> damage that would be dealt to <you | any target |
+# target ...> this turn[, where X is <amount>][ by a source of your choice]."
+# (Festival of the Guildpact, Acolyte's Reward, Healing Grace, Reinforced
+# Bulwark), "Prevent all damage that would be dealt to target <...> this
+# turn." and "Prevent all damage target <...> spell would deal this turn."
+# (Brace for Impact, Hallow, Dromoka's Command) - each optionally followed by
+# one CR 615.5 payoff sentence that refers to the amount prevented:
+#
+# - "If damage is prevented this way, <self> deals that much damage to
+#   <target>." (Acolyte's Reward, Vengeful Archon) - `ReflectedDamage`;
+# - "For each 1 damage prevented this way, put a +1/+1 counter on that
+#   creature." (Test of Faith, Brace for Impact) - `counters_when_prevented`;
+# - "You gain life equal to the damage prevented this way." (Hallow,
+#   Candles' Glow) - `gains_life_when_prevented`.
+#
+# The payoff travels on the persisted `PreventionShield` and is performed by
+# `Game.apply_prevention_shield` "immediately afterward" (CR 615.5), each time
+# the shield prevents damage.
+
+_NEXT_N_SHIELD_RE = re.compile(
+    rf"^prevent the next (?:(?P<x>x)|{count_pattern('n', article=False)}) damage that would be "
+    r"dealt to (?P<recipient>you|any target|target [^.,]+?) this turn"
+    r"(?:, where x is (?P<where_x>[^.]+?))?"
+    r"(?P<choice> by a source of your choice)?\.?$",
+    re.IGNORECASE,
+)
+#: "Prevent all [combat] damage target <...> spell would deal this turn."
+#: (Hallow, Dromoka's Command): CR 609.7a's spell source, named by target.
+_TARGET_SPELL_WOULD_DEAL_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage (?P<phrase>target (?:[a-z]+ (?:or [a-z]+ )?)?spell) "
+    r"would deal this turn\.?$",
+    re.IGNORECASE,
+)
+_PAYOFF_COUNTERS_RE = re.compile(
+    r"^for each 1 damage prevented this way, put an? (?P<kind>[+-]\d+/[+-]\d+) counter on "
+    r"(?:that creature|it)\.?$",
+    re.IGNORECASE,
+)
+_PAYOFF_LIFE_RE = re.compile(
+    r"^you gain life equal to the damage prevented this way\.?$", re.IGNORECASE
+)
+#: The `<self>` of "<self> deals that much damage": the object whose text
+#: this is - "this creature", "this spell", or its own (capitalised) name.
+_PAYOFF_SELF_RE = re.compile(r"^(?:this [a-z]+|(?-i:[A-Z])[^.]*)$", re.IGNORECASE)
+_ANAPHOR_SUBJECT_RE = re.compile(r"^(?:that|those|it|they|each|target)\b", re.IGNORECASE)
+
+
+@dataclass(frozen=True)
+class _ShieldSentence:
+    """One read shield sentence: a CR 615.7 next-N shield (`fog` None) or a
+    prevent-all shield `_create_fog_shield` builds (`fog`). Parse-time only."""
+
+    text: str
+    targets: int
+    fixed: int | None = None
+    x_from_cost: bool = False
+    where_x: str | None = None
+    """"where X is `<amount>`": the amount phrase, read by
+    `amount_expression` as the clause is built."""
+    to_you: bool = False
+    choose_source: bool = False
+    fog: _FogSpec | None = None
+    names_a_creature: bool = False
+    """The shield protects a targeted creature - what "that creature" in a
+    counters payoff can refer to."""
+    read_elsewhere: bool = False
+    """The sentence alone is already read by an older reader (Bandage's
+    fixed next-N to a target, a plain fog to a target creature): claimed
+    here only together with a payoff."""
+
+
+@dataclass(frozen=True)
+class _ShieldPayoff:
+    reflect_target: str | None = None
+    reflect_optional: bool = False
+    counters: str | None = None
+    gains_life: bool = False
+
+    @property
+    def targets(self) -> int:
+        return int(self.reflect_target is not None)
+
+
+def _read_shield_sentence(sentence: str) -> _ShieldSentence | None:
+    text = " ".join(sentence.strip().split())
+    lowered = text.lower()
+    if lowered.startswith("prevent the next "):
+        match = _NEXT_N_SHIELD_RE.fullmatch(text)
+        if match is None:
+            return None
+        recipient = match.group("recipient")
+        where_phrase = match.group("where_x")
+        is_x = match.group("x") is not None
+        fixed = None if is_x else parse_count(match.group("n"), article=False)
+        if not is_x and (fixed is None or where_phrase is not None):
+            return None
+        if where_phrase is not None and amount_expression(where_phrase) is None:
+            return None
+        to_you = recipient.lower() == "you"
+        if not to_you and not _targets_understood(recipient, allow_player_targets=True):
+            return None
+        choose_source = match.group("choice") is not None
+        return _ShieldSentence(
+            text=text.rstrip("."),
+            targets=0 if to_you else 1,
+            fixed=fixed,
+            x_from_cost=is_x and where_phrase is None,
+            where_x=where_phrase,
+            to_you=to_you,
+            choose_source=choose_source,
+            names_a_creature=not to_you and "creature" in recipient.lower(),
+            read_elsewhere=not to_you and not is_x and not choose_source,
+        )
+    if not lowered.startswith("prevent all "):
+        return None
+    if match := _TARGET_SPELL_WOULD_DEAL_RE.fullmatch(text):
+        if not _targets_understood(match.group("phrase"), battlefield_only=False):
+            return None
+        spec = _FogSpec(
+            text=text.rstrip("."),
+            combat_only=match.group("combat") is not None,
+            source_target="spell",
+        )
+        return _ShieldSentence(text=spec.text, targets=1, fog=spec)
+    spec = _read_fog_sentence(text, for_spell=True)
+    if spec is None or spec.recipient != "target creature" or spec.source_target is not None:
+        return None
+    return _ShieldSentence(
+        text=spec.text, targets=1, fog=spec, names_a_creature=True, read_elsewhere=True
+    )
+
+
+def _read_shield_payoff(sentence: str, shield: _ShieldSentence) -> _ShieldPayoff | None:
+    text = " ".join(sentence.strip().split())
+    if "prevented this way" not in text.lower():
+        return None
+    if _PAYOFF_LIFE_RE.fullmatch(text):
+        return _ShieldPayoff(gains_life=True)
+    if match := _PAYOFF_COUNTERS_RE.fullmatch(text):
+        # "that creature" is the shielded creature - only a shield that
+        # protects one has a referent (CR 608.2c).
+        return _ShieldPayoff(counters=match.group("kind")) if shield.names_a_creature else None
+    if match := _FOG_REFLECT_RIDER_RE.fullmatch(text):
+        name = match.group("name").strip()
+        if _ANAPHOR_SUBJECT_RE.match(name) or not _PAYOFF_SELF_RE.fullmatch(name):
+            return None
+        target = match.group("target")
+        if not _targets_understood(target, allow_player_targets=True):
+            return None
+        return _ShieldPayoff(reflect_target=target, reflect_optional=match.group("may") is not None)
+    return None
+
+
+def _announced_x(game: "Game", stack_object: "StackObject") -> int:
+    """CR 107.3a: the X announced for this spell or activated ability."""
+    if isinstance(stack_object, AbilityOnStack):
+        return stack_object.x_value or 0
+    return game.cast_record(stack_object).x_value or 0
+
+
+def _reflected_damage(
+    game: "Game", stack_object: "StackObject", payoff: _ShieldPayoff, index: int
+) -> Any:
+    """The `ReflectedDamage` for a payoff whose target sits at `index` of the
+    object's targets, or None when that target is gone (CR 608.2b: the rest of
+    the effect still happens without it)."""
+    from ...models.game import ReflectedDamage
+
+    refs = list(getattr(stack_object, "targets", ()) or ())
+    if payoff.reflect_target is None or index >= len(refs):
+        return None
+    target = game.legal_target(stack_object, refs[index])
+    source = _resolving_source(game, stack_object)
+    if source is None or not isinstance(target, CardState | Player):
+        return None
+    return ReflectedDamage(
+        source_id=source.id,
+        target_card_id=target.id if isinstance(target, CardState) else None,
+        target_stamp=target.zone_change_stamp if isinstance(target, CardState) else None,
+        target_player=target.username if isinstance(target, Player) else None,
+        optional=payoff.reflect_optional,
+    )
+
+
+def _create_payoff_shield(
+    game: "Game",
+    stack_object: "StackObject",
+    shield: _ShieldSentence,
+    payoff: _ShieldPayoff | None,
+    where_x: "AmountReader | None",
+) -> None:
+    """Build `shield` as the spell or ability resolves, carrying `payoff`.
+
+    Targets are read in the order the text names them (CR 601.2c): the
+    shield's own first, then the payoff's. A shield whose own target is gone
+    is not created (CR 608.2b); a payoff whose target is gone leaves the
+    shield without that payoff."""
+    from ...models.game import PreventionShield, ShieldKind
+    from ..damage_modification import _choose_a_source
+
+    fields: dict[str, Any] = {}
+    if payoff is not None:
+        reflects = _reflected_damage(game, stack_object, payoff, shield.targets)
+        if reflects is not None:
+            fields["reflects"] = reflects
+        if payoff.counters is not None:
+            fields["counters_when_prevented"] = payoff.counters
+        if payoff.gains_life:
+            fields["gains_life_when_prevented"] = True
+    if shield.fog is not None:
+        before = len(game.prevention_shields)
+        _create_fog_shield(game, stack_object, shield.fog, 0)
+        for index in range(before, len(game.prevention_shields)):
+            game.prevention_shields[index] = game.prevention_shields[index].model_copy(
+                update=fields
+            )
+        return
+    controller = game.controller_of(stack_object).username
+    if where_x is not None:
+        source = _resolving_source(game, stack_object)
+        if source is None:
+            return
+        # CR 608.2h: X is read once, as the shield is created.
+        amount = where_x(game, controller, source, _announced_x(game, stack_object))
+    elif shield.x_from_cost:
+        amount = _announced_x(game, stack_object)
+    else:
+        amount = shield.fixed or 0
+    if amount <= 0:
+        return
+    if shield.to_you:
+        fields["player"] = controller
+        shielded_name = controller
+    else:
+        refs = list(getattr(stack_object, "targets", ()) or ())
+        target = game.legal_target(stack_object, refs[0]) if refs else None
+        if isinstance(target, CardState):
+            fields["card_id"] = target.id
+            shielded_name = target.name
+        elif isinstance(target, Player):
+            fields["player"] = target.username
+            shielded_name = target.username
+        else:
+            return  # CR 608.2b
+    if shield.choose_source:
+        chosen = _choose_a_source(game, controller, stack_object)
+        if chosen is None:
+            return
+        fields["source_id"] = chosen.id
+        # CR 609.7a: a permanent spell chosen on the stack also covers the
+        # permanent it becomes, so only a permanent is held to its stamp.
+        fields["source_stamp"] = (
+            chosen.zone_change_stamp if chosen.zone is Zone.BATTLEFIELD else None
+        )
+    game.create_prevention_shield(
+        PreventionShield(
+            kind=ShieldKind.AMOUNT,
+            label=f"prevent the next {amount} damage that would be dealt to {shielded_name} "
+            "this turn",
+            controller=controller,
+            amount=amount,
+            **fields,
+        )
+    )
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_prevention_shield_with_payoff_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """A shield sentence (`_read_shield_sentence`), an optional CR 615.5
+    payoff sentence right after it (`_read_shield_payoff`), and any further
+    independent sentences read as ordinary clauses ("Draw a card.", "You gain
+    3 life.") - see the banner above. A shield sentence an older reader
+    already reads alone is claimed only together with its payoff."""
+    if "prevent " not in text.lower():
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if not sentences:
+        return None
+    shield = _read_shield_sentence(sentences[0])
+    if shield is None:
+        return None
+    rest = sentences[1:]
+    payoff = _read_shield_payoff(rest[0], shield) if rest else None
+    if payoff is not None:
+        rest = rest[1:]
+    elif shield.read_elsewhere:
+        return None
+    elif rest and "prevented this way" in rest[0].lower():
+        return None  # an unread payoff: never dropped silently
+    tail: list[TargetedClause] = []
+    if rest:
+        read = _parse_mixed_clauses(" ".join(rest), for_spell=for_spell)
+        if read is None:
+            return None
+        tail = read
+
+    where_x = amount_expression(shield.where_x) if shield.where_x is not None else None
+
+    def clause(game: "Game", stack_object: "StackObject") -> None:
+        _create_payoff_shield(game, stack_object, shield, payoff, where_x)
+
+    return [clause, *tail]
 
 
 # --------------------------------------------------------------------------
@@ -5569,6 +5886,194 @@ def _parse_damage_any_target_and_you_then_ability(effect_text: str) -> AbilityEf
     return effect
 
 
+# --------------------------------------------------------------------------
+# Group damage "equal to" an amount - NW03-T7
+# --------------------------------------------------------------------------
+#
+# "<self> deals damage to each <group> equal to <amount>." (Skyreaping,
+# Structural Assault): one amount, read once as the effect is applied (CR
+# 608.2h), dealt by the one source to every member of the group (CR 120.1).
+# A per-recipient amount ("equal to the number of cards in that player's
+# hand") is a different shape and is not read here.
+
+_DAMAGE_EACH_EQUAL_TO_RE = re.compile(
+    r"^(?P<name>[^.]+?) deals? damage to each (?P<group>[^.]+?) equal to (?P<amount>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+_PER_RECIPIENT_AMOUNT_RE = re.compile(
+    r"\b(?:that player|that creature|its|their|them|it|those|each)\b", re.IGNORECASE
+)
+#: "the number of <type>s that were put into graveyards from the battlefield
+#: this turn" (Structural Assault): `GraveyardArrival`s off the battlefield
+#: this turn whose permanent had that card type (CR 400.6, CR 613.5).
+_PUT_INTO_GRAVEYARDS_FROM_BATTLEFIELD_RE = re.compile(
+    r"^the number of (?P<types>[a-z]+?)s? that were put into graveyards from the battlefield "
+    r"this turn$",
+    re.IGNORECASE,
+)
+
+
+def _put_into_graveyards_from_battlefield_count(
+    phrase: str,
+) -> "Callable[[Game, str], int] | None":
+    match = _PUT_INTO_GRAVEYARDS_FROM_BATTLEFIELD_RE.fullmatch(phrase.strip())
+    if match is None:
+        return None
+    card_type = _singular_card_type(match.group("types"))
+    if card_type is None:
+        return None
+
+    def count(game: "Game", _controller: str) -> int:
+        return sum(
+            1
+            for arrival in game.graveyard_arrivals_this_turn
+            if arrival.origin_zone is Zone.BATTLEFIELD
+            and card_type in (arrival.permanent_types or ())
+        )
+
+    return count
+
+
+def _group_damage_amount(phrase: str) -> "AmountReader | None":
+    """`amount_expression`'s reader for `phrase`, or the graveyard-history
+    count above as an `AmountReader`."""
+    reader = amount_expression(phrase)
+    if reader is not None:
+        return reader
+    count = _put_into_graveyards_from_battlefield_count(phrase)
+    if count is None:
+        return None
+    return lambda game, controller, _obj, _x: count(game, controller)
+
+
+@MIXED_CLAUSE.rung("s35", after=["damage._parse_damage_each_filtered_clause"])
+def _parse_damage_each_group_equal_to_clause(clause: str) -> TargetedClause | None:
+    """`_DAMAGE_EACH_EQUAL_TO_RE`'s shape - see the banner above."""
+    if " equal to " not in clause.lower() or "damage to each " not in clause.lower():
+        return None
+    match = _DAMAGE_EACH_EQUAL_TO_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    name = match.group("name").strip()
+    if not _PAYOFF_SELF_RE.fullmatch(name) or _ANAPHOR_SUBJECT_RE.match(name):
+        return None
+    phrase = match.group("amount").strip()
+    if _PER_RECIPIENT_AMOUNT_RE.search(phrase):
+        return None
+    amount_of = _group_damage_amount(phrase)
+    if amount_of is None:
+        return None
+    group = match.group("group").strip()
+    players: str | None = None
+    predicate: GroupPredicate | None = None
+    if group.lower() in ("opponent", "player"):
+        players = group.lower()
+    else:
+        predicate = _parse_damage_group_phrase(group)
+        if predicate is None:
+            return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = _resolving_source(game, stack_object)
+        if source is None:
+            return
+        controller = game.controller_of(stack_object).username
+        amount = amount_of(game, controller, source, _announced_x(game, stack_object))
+        if players == "opponent":
+            recipients: list[Any] = list(_opponents(game, controller))
+        elif players == "player":
+            recipients = list(game.players_in_game)
+        else:
+            assert predicate is not None
+            recipients = [
+                permanent
+                for permanent in list(game.battlefield)
+                if predicate(game, permanent, controller)
+            ]
+        _deal_all(game, [(source, recipient, amount) for recipient in recipients])
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Group bite: "[Put a +1/+1 counter on target creature you control, then]
+# each <group> you control deals damage equal to its power to <target>."
+# (Signature Slam, Bartz and Boko) - NW03-T7
+# --------------------------------------------------------------------------
+#
+# Each qualifying creature, read off the board as the damage is dealt, is its
+# own source (CR 120.1) dealing its own power (CR 608.2h: all powers read
+# before any lands). "modified" is CR 700.9's: a counter, an Equipment, or
+# an Aura its controller controls - the creature that just got the counter
+# included (CR 608.2c: in the order written). "other" leaves out the
+# object whose text this is.
+
+_GROUP_BITE_TARGET_RE = re.compile(
+    r"^(?:put an? \+1/\+1 counter on (?P<countered>target [^,]+?),? then )?"
+    r"each (?P<other>other )?(?P<modified>modified )?(?P<group>[^.]+?) you control deals "
+    r"damage equal to its power to (?P<victim>(?:another )?target [^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_group_bite_target_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
+    """`_GROUP_BITE_TARGET_RE`'s shape - see the banner above.
+
+    CR 608.2b: an illegal counter target gets no counter and the rest still
+    bites; an illegal victim takes nothing while the counter is still put."""
+    if "deals damage equal to its power to" not in text.lower():
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if len(sentences) != 1:
+        return None
+    match = _GROUP_BITE_TARGET_RE.fullmatch(sentences[0])
+    if match is None:
+        return None
+    countered = match.group("countered")
+    if countered is not None and not _targets_understood(countered):
+        return None
+    if not _targets_understood(match.group("victim")):
+        return None
+    group = match.group("group").strip()
+    member = _parse_damage_group_phrase(group)
+    if member is None:
+        return None
+    modified_only = match.group("modified") is not None
+    other = match.group("other") is not None
+
+    def clause(game: "Game", stack_object: "StackObject") -> None:
+        from ..conditions.board import permanent_is_modified
+
+        controller = game.controller_of(stack_object).username
+        refs = list(getattr(stack_object, "targets", ()) or ())
+        index = 0
+        if countered is not None:
+            index = 1
+            first = game.legal_target(stack_object, refs[0]) if refs else None
+            if isinstance(first, CardState) and first.zone is Zone.BATTLEFIELD:
+                game.add_counters(first, "+1/+1", 1, putter=controller)
+        victim = game.legal_target(stack_object, refs[index]) if len(refs) > index else None
+        if not isinstance(victim, CardState) or victim.zone is not Zone.BATTLEFIELD:
+            return
+        source = _resolving_source(game, stack_object)
+        biters = [
+            permanent
+            for permanent in list(game.battlefield)
+            if game.controller_of(permanent).username == controller
+            and game.characteristics_of(permanent).is_creature
+            and member(game, permanent, controller)
+            and not (other and source is not None and permanent.id == source.id)
+            and (
+                not modified_only
+                or permanent_is_modified(game, permanent, game.characteristics_of(permanent))
+            )
+        ]
+        _deal_all(game, [(biter, victim, game.power_of(biter) or 0) for biter in biters])
+
+    return [clause]
+
+
 from ..conditions.history import object_dealt_damage_clause_test  # noqa: E402
 from ..replacement.model import CANT_BE_REGENERATED_LINE  # noqa: E402
 from ._common import (  # noqa: E402
@@ -5604,6 +6109,7 @@ from .control_copy import _controlled_by_whose  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
     _parse_mixed_clause,
+    _parse_mixed_clauses,
     _parse_turn_rules_ban_clause,
     _spell_effect_or_notice,
 )

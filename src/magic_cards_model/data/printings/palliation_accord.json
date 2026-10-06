@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "cda10c3b-ee16-4de5-9e54-d0187cd5cc80",
+  "oracle_id": "b3eb4527-dd8b-4aff-922a-7a4bff72f6be",
+  "multiverse_ids": [
+    97118
+  ],
+  "mtgo_id": 24081,
+  "mtgo_foil_id": 24082,
+  "tcgplayer_id": 13909,
+  "cardmarket_id": 13045,
+  "name": "Palliation Accord",
+  "lang": "en",
+  "released_at": "2006-05-05",
+  "uri": "https://api.scryfall.com/cards/cda10c3b-ee16-4de5-9e54-d0187cd5cc80",
+  "scryfall_uri": "https://scryfall.com/card/dis/122/palliation-accord?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:49:58Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.jpg?1783943398",
+    "normal": "https://cards.scryfall.io/normal/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.jpg?1783943398",
+    "large": "https://cards.scryfall.io/large/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.jpg?1783943398",
+    "png": "https://cards.scryfall.io/png/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.png?1783943398",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.jpg?1783943398",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.jpg?1783943398",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.webp?1783943398",
+    "grid": "https://cards.scryfall.io/grid/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.webp?1783943398",
+    "display": "https://cards.scryfall.io/display/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.webp?1783943398",
+    "art": "https://cards.scryfall.io/art/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.webp?1783943398",
+    "crop": "https://cards.scryfall.io/crop/front/c/d/cda10c3b-ee16-4de5-9e54-d0187cd5cc80.webp?1783943398"
+  },
+  "mana_cost": "{3}{W}{U}",
+  "cmc": 5.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever a creature an opponent controls becomes tapped, put a palliation counter on this enchantment.\nRemove a palliation counter from this enchantment: Prevent the next 1 damage that would be dealt to you this turn.",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "fdebeda1-b95f-4343-8a94-d125821e6b5c",
+  "set": "dis",
+  "set_name": "Dissension",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/fdebeda1-b95f-4343-8a94-d125821e6b5c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adis&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dis?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/cda10c3b-ee16-4de5-9e54-d0187cd5cc80/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab3eb4527-dd8b-4aff-922a-7a4bff72f6be&unique=prints",
+  "collector_number": "122",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "azorius",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "William Simpson",
+  "artist_ids": [
+    "36636b9a-4dcb-4d69-9a43-c54c824911d5"
+  ],
+  "illustration_id": "e42fac7c-d5d3-4b9d-a7fe-f1c4e9f53444",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19622,
+  "prices": {
+    "usd": "0.38",
+    "usd_foil": "0.37",
+    "usd_etched": null,
+    "eur": "0.32",
+    "eur_foil": "0.82",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=97118&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPalliation%2BAccord",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPalliation%2BAccord",
+    "edhrec": "https://edhrec.com/route/?cc=Palliation+Accord"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F13909%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=13045&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/24081?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
