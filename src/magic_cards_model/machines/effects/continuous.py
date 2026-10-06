@@ -197,6 +197,9 @@ def layer_context_for(game: "Game", controller: Player) -> LayerContext:
     return LayerContext(
         graveyards=tuple(everyone),
         your_graveyard=tuple(controller.graveyard),
+        condition_holds=lambda condition, source: game.condition_holds(
+            controller.username, condition, source
+        ),
     )
 
 

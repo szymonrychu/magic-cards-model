@@ -622,3 +622,15 @@ READERS: tuple[ConditionReader, ...] = (
     ),
     _reader(r"tribute was(?P<negated>n't| not)? paid", _tribute_paid),
 )
+
+
+def reads_cast_record(text: str) -> bool:
+    """Whether `text` is one of this module's own clauses - a fact about how
+    the spell was cast and paid for, locked on its `CastRecord` (CR 601.2i) -
+    rather than a board or history question. A text-only check for a parser
+    (`machines/layers/parse`) deciding whether a continuous effect's trailing
+    "if <condition>" rider is answered from the record at creation."""
+    from . import _normalized
+
+    clause = _normalized(text)
+    return bool(clause) and any(reader.pattern.fullmatch(clause) for reader in READERS)
