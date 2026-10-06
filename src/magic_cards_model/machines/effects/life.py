@@ -642,6 +642,99 @@ def _parse_lose_the_game_prohibition_then_rest(effect_text: str) -> Effect | Non
     return effect
 
 
+#: "you lose the game." as a triggered ability's whole instruction - Lich's
+#: Mastery's "When Lich's Mastery leaves the battlefield, you lose the game."
+#: (CR 603.6c). CR 104.3e's stated loss, so `Game.player_loses_the_game` both
+#: honours a "can't lose the game" still in force (CR 101.2) and offers it to
+#: "if you would lose the game, instead" replacements (CR 614).
+_YOU_LOSE_THE_GAME_RE = re.compile(r"^you lose the game\.?$", re.IGNORECASE)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_you_lose_the_game_clause(text: str) -> AbilityEffect | None:
+    """`_YOU_LOSE_THE_GAME_RE`'s shape: the ability's controller loses."""
+    if "lose the game" not in text or _YOU_LOSE_THE_GAME_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.player_loses_the_game(ability.controller)
+
+    return effect
+
+
+#: "for each 1 life you lost, exile a permanent you control or a card from
+#: your hand or graveyard." - Lich's Mastery's "Whenever you lose life, ..."
+#: (CR 119.3). The count is the triggering life-loss event's own amount
+#: (`amounts.that_many`, CR 603.2c); the objects are the controller's choice
+#: as the ability resolves (CR 608.2d), any mix of the places the clause
+#: lists, and each is exiled (CR 701.13a). Fewer objects than the count
+#: exiles every one of them. The places read: "a permanent you control",
+#: "a card from your hand", "a card from your graveyard", and "a card from
+#: your hand or graveyard", joined by "or".
+_EXILE_PLACE = (
+    r"a permanent you control|a card from your (?:hand|graveyard)(?: or (?:hand|graveyard))?"
+)
+_EXILE_FOR_EACH_LIFE_LOST_RE = re.compile(
+    rf"^for each 1 life you lost, exile "
+    rf"(?P<places>(?:{_EXILE_PLACE})(?: or (?:{_EXILE_PLACE}))*)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_exile_for_each_life_lost_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_FOR_EACH_LIFE_LOST_RE`'s shape - see the banner above."""
+    if "life you lost" not in text:
+        return None
+    match = _EXILE_FOR_EACH_LIFE_LOST_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    places = match.group("places").lower()
+    from_battlefield = "a permanent you control" in places
+    from_hand = "hand" in places
+    from_graveyard = "graveyard" in places
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        count = _that_many_or_notice(
+            game,
+            text,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            stack_object=ability,
+        )
+        if not count:
+            return
+        player = game.player(ability.controller)
+        candidates: list[CardState] = []
+        if from_battlefield:
+            candidates.extend(game.permanents_controlled_by(player.username))
+        if from_hand:
+            candidates.extend(player.hand)
+        if from_graveyard:
+            candidates.extend(player.graveyard)
+        if not candidates:
+            return
+        amount = min(count, len(candidates))
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose {amount} to exile",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=amount,
+                exact=True,
+                default_cards=tuple(state.id for state in candidates[:amount]),
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        by_id = {state.id: state for state in candidates}
+        game.exile_cards([by_id[card_id] for card_id in chosen])
+
+    return effect
+
+
 #: "you may pay `<N>` life. If you do, `<consequence>`." - Voracious
 #: Tome-Skimmer's "Whenever you cast a spell during an opponent's turn, you
 #: may pay 1 life. If you do, draw a card." and Crossway Troublemakers'

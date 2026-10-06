@@ -486,3 +486,132 @@ def test_the_lone_cant_lose_half_reads_on_a_second_printing():
     scenario.state_based_actions()
 
     assert scenario.game.winner == "alice"
+
+
+# --- Lich's Mastery's own two triggers -------------------------------------
+#
+# The second printing above has to be fully handled, not only its static:
+# "Whenever you lose life, for each 1 life you lost, exile a permanent you
+# control or a card from your hand or graveyard." (CR 119.3 life loss, CR
+# 608.2d's choice made on resolution, CR 701.13a exile) and "When Lich's
+# Mastery leaves the battlefield, you lose the game." (CR 603.6c, CR 104.3e).
+
+
+def _mastery_board(**alice):
+    alice.setdefault("battlefield", ["Lich's Mastery", "Plains", "Grizzly Bears"])
+    alice.setdefault("hand", ["Opt"])
+    alice.setdefault("graveyard", ["Lightning Bolt"])
+    alice.setdefault("library", ["Plains"] * 5)
+    return _main_phase(alice, {"library": ["Mountain"] * 5})
+
+
+def test_mastery_exiles_one_chosen_object_for_each_life_lost():
+    """Three life lost: alice picks a permanent, a hand card and a graveyard
+    card, and exactly those three go to exile."""
+    scenario = _mastery_board()
+    plains = scenario.find("Plains", Zone.BATTLEFIELD, "alice")
+    opt = scenario.find("Opt", Zone.HAND, "alice")
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+
+    scenario.game.lose_life(scenario.player("alice"), 3)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Lich's Mastery's triggered ability"]
+    scenario.will_choose_cards(plains, opt, bolt, username="alice")
+    scenario.resolve_top()
+
+    assert {plains.zone, opt.zone, bolt.zone} == {Zone.EXILE}
+    assert scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice") is not None
+    assert scenario.find("Lich's Mastery", Zone.BATTLEFIELD, "alice") is not None
+    assert scenario.game.is_in_game("alice")
+
+
+def test_mastery_asks_for_exactly_the_life_lost():
+    """One life lost asks for exactly one object, offered from all three
+    places (the battlefield, the hand and the graveyard)."""
+    scenario = _mastery_board()
+    opt = scenario.find("Opt", Zone.HAND, "alice")
+
+    scenario.game.lose_life(scenario.player("alice"), 1)
+    scenario.game.put_triggers_on_stack()
+    scenario.will_choose_cards(opt, username="alice")
+    scenario.resolve_top()
+
+    (question,) = [q for q in scenario.questions_asked() if q.source == "Lich's Mastery"]
+    assert question.amount == 1
+    assert question.exact
+    names = {state.id: state.name for state in scenario.all_card_states()}
+    offered = {names[card_id] for card_id in question.cards}
+    assert offered == {"Lich's Mastery", "Plains", "Grizzly Bears", "Opt", "Lightning Bolt"}
+    assert opt.zone is Zone.EXILE
+
+
+def test_mastery_exiling_itself_then_loses_the_game():
+    """More life lost than objects: everything is exiled, Mastery with it
+    (it is a permanent alice controls) - and then its own leaves-the-battlefield
+    trigger makes her lose (CR 603.6c, CR 104.3e), nothing stopping it any more."""
+    scenario = _mastery_board(battlefield=["Lich's Mastery"], hand=[], graveyard=[])
+    mastery = scenario.find("Lich's Mastery", Zone.BATTLEFIELD, "alice")
+
+    scenario.game.lose_life(scenario.player("alice"), 4)
+    scenario.game.put_triggers_on_stack()
+    scenario.will_choose_cards(mastery, username="alice")
+    scenario.resolve_top()
+    assert mastery.zone is Zone.EXILE
+
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Lich's Mastery's triggered ability"]
+    scenario.resolve_top()
+
+    assert not scenario.game.is_in_game("alice")
+    assert scenario.game.winner == "bob"
+
+
+def test_mastery_leaving_is_a_loss_another_cant_lose_still_stops():
+    """The leaves trigger is CR 104.3e's stated loss: Platinum Angel's static
+    still says alice can't lose (CR 101.2)."""
+    scenario = _mastery_board(battlefield=["Lich's Mastery", "Platinum Angel"])
+    mastery = scenario.find("Lich's Mastery", Zone.BATTLEFIELD, "alice")
+
+    scenario.game.exile_permanent(mastery)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert scenario.game.is_in_game("alice")
+    assert scenario.game.winner is None
+
+
+def test_lich_s_mastery_is_fully_handled():
+    """Every clause of the second printing reads - none silent, none notice."""
+    assert card_support(card("Lich's Mastery")).status == "handled"
+
+
+def test_the_you_lose_the_game_reader_on_a_second_printing():
+    """Phage the Untouchable's "When Phage enters, if you didn't cast it from
+    your hand, you lose the game." - the same reader behind the intervening
+    if (CR 603.4): put onto the battlefield uncast, alice loses (CR 104.3e)."""
+    scenario = _main_phase({"hand": ["Phage the Untouchable"], "library": ["Swamp"] * 5})
+
+    scenario.put_onto_battlefield("Phage the Untouchable", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert scenario.game.winner == "bob"
+
+
+def test_the_you_lose_the_game_reader_respects_a_static_cant_lose():
+    """The same uncast Phage beside Platinum Angel: the stated loss can't
+    happen (CR 101.2 over CR 104.3e)."""
+    scenario = _main_phase(
+        {
+            "hand": ["Phage the Untouchable"],
+            "battlefield": ["Platinum Angel"],
+            "library": ["Swamp"] * 5,
+        }
+    )
+
+    scenario.put_onto_battlefield("Phage the Untouchable", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert scenario.game.is_in_game("alice")
+    assert scenario.game.winner is None
