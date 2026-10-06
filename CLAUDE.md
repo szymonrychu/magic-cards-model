@@ -78,19 +78,74 @@ The verified state of each tool, and its traps, are in `docs/mcp-tools.md`.
 
 - `src/magic_cards_model/models/` - data. `card.py` mirrors the gameplay subset
   of the Scryfall card object; `card_state.py` is one physical card in a game;
-  `player.py`, `game.py`, `match.py` are the containers; `mana.py` is costs and
+  `player.py`, `game/` (`Game` in `__init__.py`, its methods in mixin
+  modules), `match.py` are the containers; `mana.py` is costs and
   the pool; `zone.py` is the seven rules zones plus the sideboard.
 - `src/magic_cards_model/machines/` - state machines. `turn.py` is the turn
-  structure, `priority.py` is CR 117, `casting.py` is CR 601.2 announcement,
-  `cost.py` is paying, `abilities.py` parses mana abilities off oracle text,
-  `effects.py` is what a spell does when it resolves, `decisions.py` is CR
+  structure, `priority.py` is CR 117, `casting/` is CR 601.2 announcement,
+  `cost/` is paying, `abilities.py` parses mana abilities off oracle text,
+  `effects/` is what a spell does when it resolves, `decisions.py` is CR
   608.2d's mid-resolution questions plus the pause/replay tape, and
   `legal_actions.py` enumerates every action a player may legally take right
-  now.
+  now. `effects/`, `layers/`, `casting/`, `cost/`, `triggers/`,
+  `replacement/` and `models/game/` are packages; see "Where a parser goes".
 - `src/magic_cards_model/ids.py` - the one place every object id is minted,
   deterministically per game when a `Game` method opens
   `_id_allocator_scope()`.
 - `tests/scenarios/` - scenario tests. See below.
+
+## Where a parser goes
+
+The seven big modules are packages since the 2026-10 module split
+(`docs/engine-module-split-design.md`); each old import path still works
+through the package `__init__`, but new code goes in the family file.
+
+**Register in your family, never edit `dispatch.py` unless adding a guard.**
+An effect parser lives in the family module owning the first mechanic word of
+its name and joins a dispatch ladder with `@ABILITY_TEXT.rung("<segment>")`
+(or `SPELL_TEXT`, `MIXED_CLAUSE`, `MIXED_CLAUSES`; `machines/effects/_chains.py`).
+Order inside a segment is family order, then source order, then explicit
+`before=`/`after=` edges; `tests/test_dispatch_order.py` fails on two rungs
+that both match a corpus text with no edge ordering them, so add the edge in
+your `rung(...)` call. `dispatch.py` holds the ladders, the generic clause
+readers and the `_unreadable_*` refusal guards - only a new guard goes there.
+
+| Mechanic (first word of the parser's name) | Module |
+|---|---|
+| exile, destroy, sacrifice, regenerate, counter target spell | `machines/effects/removal.py` |
+| return, reanimate, blink/flicker | `machines/effects/returns.py` |
+| look, reveal, mill, surveil, scry, explore, manifest, shuffle, cascade, impulse | `machines/effects/library.py` |
+| gain/lose (abilities), becomes, gets, tap/untap, attach, goad, grant, transform, protection, phase, monarch | `machines/effects/continuous.py` |
+| +1/+1 and other counters, proliferate, adapt, bolster, loyalty | `machines/effects/counters.py` |
+| token, create, amass, investigate, populate, incubate | `machines/effects/tokens.py` |
+| damage, deals, prevent, fight | `machines/effects/damage.py` |
+| draw, discard, loot, wheel (and the weak word "hand") | `machines/effects/draw_discard.py` |
+| search, tutor, "outside the game" | `machines/effects/search.py` |
+| gain/lose life, drain | `machines/effects/life.py` |
+| copy, exchange, gain control | `machines/effects/control_copy.py` |
+| choose, mode, vote, gift, may/unless/if/instead/delayed/reflexive branches | `machines/effects/modal.py` |
+| add mana | `machines/effects/mana.py` |
+| counts: X, equal to, for each, devotion, converge, half, total | `machines/effects/amounts.py` |
+| splitters, normalisers, referents/antecedents | `machines/effects/text.py` |
+| `_merge_*` two-clause pair parsers | `machines/effects/merges.py` |
+| helpers used by 4+ families, the notice classes | `machines/effects/_common.py` |
+| `EFFECTS`/`TRIGGER_EFFECTS`/`ACTIVATED_EFFECTS`, `effect_for` and friends | `machines/effects/registries.py` |
+
+The exact word lists are the `[[rules]]` of
+`scripts/split/manifest/effects.toml`. The other packages:
+
+| Package | Module: what goes there |
+|---|---|
+| `machines/layers/` | `model.py`: persisted classes and the Count/Selector/Modification/Condition unions with their constructors; `parse.py`: static-ability readers; `apply.py`: layer application (`compute_board`); `registry.py`: `LAYER_EFFECTS`, `static_effects`, `effects_for` |
+| `machines/replacement/` | `model.py`: replacement data and its application; `parse.py`: replacement readers; `enters.py`: "enters the battlefield" replacements |
+| `machines/triggers/` | `events.py`: `GameEvent`, `AbilityOnStack`, event records; `conditions.py`: trigger-condition matching and intervening-if; `collect.py`: which abilities trigger, are granted or activated |
+| `machines/casting/` | `casting.py`: the `Casting` machine and casting-time refusals; `permissions.py`: where else a card may be cast or played from; `options.py`: optional, alternative and keyword costs |
+| `machines/cost/` | `components.py`: the cost model; `payment.py`: `CostPayment`, mana sources, spend restrictions, auto-tap; `text.py`: reading cost phrases |
+| `models/game/` | `class Game` and every field stay in `__init__.py` (a new field goes there); methods live in mixins `_zones`, `_activation`, `_stack_priority`, `_costs_mana`, `_casting`, `_turn_sba`, `_continuous`, `_conditions`, `_damage_life`, `_combat`, `_triggers_decisions`; other module-level classes in `records.py` |
+
+A name from a sibling module is imported at the bottom of the importing
+module, after every definition, as the generated files do: an import at the
+top can close an import-time cycle between siblings.
 
 ## What this library owes its consumers
 
@@ -99,7 +154,7 @@ This is a stateless library (`ROADMAP.md`), and it owes whatever holds a
 
 **Decode any game state.** Every persisted model is data: no callables survive
 on a model. A spell's or ability's stored behaviour - `ContinuousEffect`'s
-`condition`/`selector`/`modification` (`machines/layers.py`),
+`condition`/`selector`/`modification` (`machines/layers/`),
 `DelayedTrigger.effect` (`machines/delayed.py`), and `AbilityOnStack`'s
 `keyword_activation`/`unless_payment` - is a pydantic discriminated union on
 `kind`, which refuses an unknown tag at decode instead of silently resolving
@@ -138,7 +193,7 @@ current and future card that says the word gets it for free.
 
 - A card-name-to-behaviour dictionary. Rows keyed by card name in
   `EFFECTS` / `TRIGGER_EFFECTS` / `ACTIVATED_EFFECTS` - read each registry's own
-  docstring in `machines/effects.py`. Most of their old rows are **gone on
+  docstring in `machines/effects/registries.py`. Most of their old rows are **gone on
   purpose**, now read by a parser instead. Never push that count back up.
 - Any `if card.name == "..."` or name-set membership test that gates behaviour.
 - A regex written so tightly around one card's exact printed sentence that a
@@ -161,8 +216,9 @@ hardcode, and is always the better of the two.
 
 `machines/abilities.py` parses `{T}: Add ...` from oracle text, covering mana
 abilities only. Triggered, activated, and static abilities are read by the
-dispatchers in `machines/effects.py` (`effect_for`, `trigger_effect_for`,
-`activated_effect_for`) and their parsers.
+dispatchers in `machines/effects/registries.py` (`effect_for`,
+`trigger_effect_for`, `activated_effect_for`) and their parsers, which live
+in the family modules (see "Where a parser goes").
 
 **Parsed is not played.** `card_support`/`sweep_pool.py` say a dispatcher
 returned an effect for the text; `tests/test_behavioural_sweep.py` plays it.
