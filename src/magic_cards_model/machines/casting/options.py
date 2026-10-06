@@ -106,6 +106,13 @@ class KeywordCastOption(EngineModel):
     exile: "It can't be cast as an Adventure this way". A cast claiming this
     option with a face named is refused (`Casting._refuse_unless_allowed_
     from_its_zone`), and `legal_actions` offers it no face row at all."""
+    face_only: str | None = None
+    """The one split half this option may cast, when it covers a single half
+    rather than the whole card - CR 702.127a's aftermath: "You may cast this
+    half of this split card from your graveyard". A cast claiming the option
+    with another half named, or none, is refused (`Casting._refuse_unless_
+    allowed_from_its_zone`), and `legal_actions` offers no row for the other
+    half under it."""
     later_turn: bool = False
     """True when the card may only be cast on a turn after the one it was
     exiled on - plot (CR 702.170d), foretell, and warp all say so."""
@@ -821,6 +828,12 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
             options.append(_warp_from_exile(ability))
     options.extend(_printed_zone_permissions(card, options))
     options.extend(_printed_self_zone_cast_with_additional_cost(card))
+
+    aftermath = aftermath_cast_option(card)
+    if aftermath is not None:
+        # CR 702.127a: the aftermath half, from the graveyard (`machines/
+        # aftermath.py`).
+        options.append(aftermath)
 
     if adventure_face(card) is not None:
         # CR 715.3d: "Instead of putting a spell that was cast as an Adventure
@@ -1616,3 +1629,4 @@ from .permissions import (  # noqa: E402
     _printed_zone_permissions,
     adventure_face,
 )
+from ..aftermath import aftermath_cast_option  # noqa: E402

@@ -721,8 +721,11 @@ def _why_cannot_cast_face(
     adventurer card's own creature half, and every option that enumerates no
     faces at all - the same value `Action.spell_face` carries for those rows.
     """
-    return why_cannot_cast_now(card, player, game, face=face_name) or why_cannot_cast_restriction(
-        card, player, game, face=face_name
+    return (
+        why_cannot_cast_now(card, player, game, face=face_name)
+        or why_cannot_cast_restriction(card, player, game, face=face_name)
+        # CR 702.127a: an aftermath half is cast from a graveyard or not at all.
+        or aftermath_face_refusal(card.card, face_name, card.zone)
     )
 
 
@@ -1027,6 +1030,9 @@ def _cast_actions(
                 if option.normal_face_only and face_name is not None:
                     # CR 715.3d: "It can't be cast as an Adventure this way" -
                     # never an option here, so never a `blocked_casts` row.
+                    continue
+                if option.face_only is not None and face_name != option.face_only:
+                    # CR 702.127a: aftermath permits its own half only.
                     continue
                 refusal = _why_cannot_cast_face(game, player, card, face_name)
                 if refusal is not None:
@@ -2218,3 +2224,4 @@ def _blocked_casts(
 
 
 __all__: Iterable[str] = ["blocked_casts", "decision_answers", "legal_actions"]
+from .aftermath import aftermath_face_refusal  # noqa: E402

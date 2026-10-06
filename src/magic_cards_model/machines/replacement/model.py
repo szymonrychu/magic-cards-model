@@ -1119,6 +1119,20 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
+    from ..aftermath import exiles_on_leaving_the_stack
+
+    if exiles_on_leaving_the_stack(card, record.origin_zone, record.face):
+        # CR 702.127a's third static ability: "If this spell was cast from a
+        # graveyard, exile it instead of putting it anywhere else any time it
+        # would leave the stack." - resolved or countered alike.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:aftermath",
+                source=card,
+                label="aftermath: cast from a graveyard, exile it instead (CR 702.127a)",
+                apply=_exile_instead,
+            )
+        )
     from ..keywords import has_rebound_now  # imported here: casting imports this module's siblings
 
     if has_rebound_now(card) and record.origin_zone is Zone.HAND and event.resolving:
