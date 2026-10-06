@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "90fedf90-825c-4814-8f0d-170f537db44c",
+  "oracle_id": "f002be6a-e459-49c4-b765-062e30107439",
+  "multiverse_ids": [
+    74492
+  ],
+  "mtgo_id": 22088,
+  "mtgo_foil_id": 22089,
+  "tcgplayer_id": 12551,
+  "cardmarket_id": 12779,
+  "name": "Tomb of Urami",
+  "lang": "en",
+  "released_at": "2005-06-03",
+  "uri": "https://api.scryfall.com/cards/90fedf90-825c-4814-8f0d-170f537db44c",
+  "scryfall_uri": "https://scryfall.com/card/sok/165/tomb-of-urami?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:02:08Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.jpg?1783944128",
+    "normal": "https://cards.scryfall.io/normal/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.jpg?1783944128",
+    "large": "https://cards.scryfall.io/large/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.jpg?1783944128",
+    "png": "https://cards.scryfall.io/png/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.png?1783944128",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.jpg?1783944128",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.jpg?1783944128",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.webp?1783944128",
+    "grid": "https://cards.scryfall.io/grid/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.webp?1783944128",
+    "display": "https://cards.scryfall.io/display/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.webp?1783944128",
+    "art": "https://cards.scryfall.io/art/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.webp?1783944128",
+    "crop": "https://cards.scryfall.io/crop/front/9/0/90fedf90-825c-4814-8f0d-170f537db44c.webp?1783944128"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Legendary Land",
+  "oracle_text": "{T}: Add {B}. Tomb of Urami deals 1 damage to you if you don't control an Ogre.\n{2}{B}{B}, {T}, Sacrifice all lands you control: Create Urami, a legendary 5/5 black Demon Spirit creature token with flying.",
+  "colors": [],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "B"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4db16ad3-2b95-442f-bb6b-e9aa7fe7f769",
+  "set": "sok",
+  "set_name": "Saviors of Kamigawa",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4db16ad3-2b95-442f-bb6b-e9aa7fe7f769",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asok&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sok?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/90fedf90-825c-4814-8f0d-170f537db44c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af002be6a-e459-49c4-b765-062e30107439&unique=prints",
+  "collector_number": "165",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Alex Horley-Orlandelli",
+  "artist_ids": [
+    "1631a2ad-bf03-4ab9-b86c-60da982d58a1"
+  ],
+  "illustration_id": "9e4e1442-3a0d-4aaa-8811-f1f9c1799bb6",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17668,
+  "penny_rank": 2077,
+  "prices": {
+    "usd": "3.96",
+    "usd_foil": "14.73",
+    "usd_etched": null,
+    "eur": "1.38",
+    "eur_foil": "13.88",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=74492&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTomb%2Bof%2BUrami",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTomb%2Bof%2BUrami",
+    "edhrec": "https://edhrec.com/route/?cc=Tomb+of+Urami"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F12551%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12779&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/22088?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

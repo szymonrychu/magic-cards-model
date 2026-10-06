@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "fb22f79c-3075-439d-a072-ceaabe35d76f",
+  "oracle_id": "1322734c-3c3e-4885-a6d2-d6460a16fca2",
+  "multiverse_ids": [
+    629652
+  ],
+  "mtgo_id": 116630,
+  "arena_id": 86853,
+  "tcgplayer_id": 512570,
+  "cardmarket_id": 728410,
+  "name": "Stonesplitter Bolt",
+  "lang": "en",
+  "released_at": "2023-09-08",
+  "uri": "https://api.scryfall.com/cards/fb22f79c-3075-439d-a072-ceaabe35d76f",
+  "scryfall_uri": "https://scryfall.com/card/woe/151/stonesplitter-bolt?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:58:08Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.jpg?1783915088",
+    "normal": "https://cards.scryfall.io/normal/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.jpg?1783915088",
+    "large": "https://cards.scryfall.io/large/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.jpg?1783915088",
+    "png": "https://cards.scryfall.io/png/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.png?1783915088",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.jpg?1783915088",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.jpg?1783915088",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.webp?1783915088",
+    "grid": "https://cards.scryfall.io/grid/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.webp?1783915088",
+    "display": "https://cards.scryfall.io/display/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.webp?1783915088",
+    "art": "https://cards.scryfall.io/art/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.webp?1783915088",
+    "crop": "https://cards.scryfall.io/crop/front/f/b/fb22f79c-3075-439d-a072-ceaabe35d76f.webp?1783915088"
+  },
+  "mana_cost": "{X}{R}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.)\nStonesplitter Bolt deals X damage to target creature or planeswalker. If this spell was bargained, it deals twice X damage to that permanent instead.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Bargain"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set": "woe",
+  "set_name": "Wilds of Eldraine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/woe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fb22f79c-3075-439d-a072-ceaabe35d76f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1322734c-3c3e-4885-a6d2-d6460a16fca2&unique=prints",
+  "collector_number": "151",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Alexandr Leskinen",
+  "artist_ids": [
+    "f7341fb0-cf38-4391-af7e-fb3f024d4eef"
+  ],
+  "illustration_id": "0fea669c-62e8-45cd-b10f-b5630a521662",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": true,
+  "edhrec_rank": 12211,
+  "preview": {
+    "source": "Shivam Bhatt",
+    "source_uri": "https://twitter.com/ghirapurigears/status/1691863463843504214",
+    "previewed_at": "2023-08-16"
+  },
+  "prices": {
+    "usd": "0.25",
+    "usd_foil": "0.18",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.15",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629652&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStonesplitter%2BBolt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStonesplitter%2BBolt",
+    "edhrec": "https://edhrec.com/route/?cc=Stonesplitter+Bolt"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512570%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=728410&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/116630?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

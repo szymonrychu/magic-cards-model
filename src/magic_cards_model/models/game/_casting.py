@@ -212,6 +212,8 @@ class CastingMixin:
         chosen_creature_type: str | None = None,
         additional_cost_cards: list[UUID] | None = None,
         additional_cost_mana_values: list[float] | None = None,
+        additional_cost_kinds: list[str] | None = None,
+        additional_cost_powers: list[int] | None = None,
         is_copy: bool = False,
         sneak_defender: TargetRef | None = None,
         enters_with_counters: list[str] | None = None,
@@ -292,6 +294,15 @@ class CastingMixin:
                 if additional_cost_mana_values is not None
                 else [
                     self.last_known_mana_value(card_id) for card_id in additional_cost_cards or []
+                ]
+            ),
+            additional_cost_kinds=list(additional_cost_kinds or []),
+            additional_cost_powers=(
+                list(additional_cost_powers)
+                if additional_cost_powers is not None
+                else [
+                    self._last_known_stat(card_id, "power") or 0
+                    for card_id in additional_cost_cards or []
                 ]
             ),
             card_id=spell.id,

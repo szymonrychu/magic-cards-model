@@ -861,6 +861,15 @@ _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
 _PHRASE_SACRIFICE = re.compile(
     rf"^sacrifice (?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ,]+)$", re.IGNORECASE
 )
+#: "sacrifice all creatures you control" (Soulblast's additional cost),
+#: "Sacrifice all lands you control" (Tomb of Urami's activation cost) - no
+#: count and no choice: every permanent of the quality the payer controls
+#: when the cost is paid (CR 601.2h, CR 701.21a), `CostComponent.
+#: every_matching`. "You control" is optional in the reading because CR
+#: 701.21a already confines a sacrifice to the payer's own permanents.
+_PHRASE_SACRIFICE_ALL = re.compile(
+    r"^sacrifice all (?P<quality>[\w ,]+?)(?: you control)?$", re.IGNORECASE
+)
 #: `Discard a card`, `Discard a legendary card with the same name as a
 #: legendary permanent you control` (Key to the Side-Door). The same-name tail
 #: is a second demand on the *same* card - CR 201.2a's "at least one name in
@@ -1400,6 +1409,16 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         component = discard_cost(payer=payer, required=read[0], description=text)
         component.requirement = requirement
         component.variable_count = read[1]
+        return component
+
+    sacrifice_all = _PHRASE_SACRIFICE_ALL.match(text)
+    if sacrifice_all is not None:
+        requirement = _requirement(sacrifice_all.group("quality"))
+        if requirement is None:
+            return None
+        component = sacrifice_cost(payer=payer, required=0, description=text)
+        component.requirement = requirement
+        component.every_matching = True
         return component
 
     sacrifice = _PHRASE_SACRIFICE.match(text)

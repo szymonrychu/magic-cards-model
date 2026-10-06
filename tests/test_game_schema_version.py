@@ -1958,3 +1958,29 @@ def test_a_snapshot_written_before_the_293_fra_shapes_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_293_FRA_SHAPES}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before NW01-T2: `CastRecord` gained
+#: `additional_cost_kinds`/`additional_cost_powers` and `CostComponent`
+#: gained `every_matching`, read back by a resolving spell's "creatures tapped
+#: this way" and "the total power of the sacrificed creatures" (CR 608.2h).
+_SCHEMA_VERSION_BEFORE_NW01_T2_SHAPES = 113
+
+
+def test_a_snapshot_written_before_the_nw01_t2_shapes_is_refused() -> None:
+    """A version-113 dump's cast records carry no `additional_cost_kinds`:
+    decoded as current, a Burn at the Stake on the stack would count no
+    creature as tapped and deal 0. Refused instead."""
+    from magic_cards_model.models.game.records import CastRecord
+
+    assert "additional_cost_kinds" in CastRecord.model_fields
+    assert "additional_cost_powers" in CastRecord.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW01_T2_SHAPES
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW01_T2_SHAPES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW01_T2_SHAPES}",
+    ):
+        Game.model_validate(dumped)

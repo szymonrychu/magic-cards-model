@@ -1922,7 +1922,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 113
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 114
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2147,6 +2147,12 @@ class Game(
     #: have six or more unspent mana" grants apply, and Xenagos's `-6`,
     #: Tezzeret, Master of the Bridge's `-8`, Omnath, Locus of All's first-main
     #: trigger and Sorin the Mirthless's `+1` resolve where they did nothing.
+    #: 114 (NW01-T2): `CastRecord` gained `additional_cost_kinds` and
+    #: `additional_cost_powers` (which verb paid each additional-cost card, and
+    #: its power as the cost was paid, CR 608.2h), and `CostComponent` gained
+    #: `every_matching` ("sacrifice all creatures you control"); existing
+    #: boards resolve differently - Burn at the Stake, Soulblast, Nahiri's
+    #: Wrath and Corpse Cobble read back what their additional cost paid.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
