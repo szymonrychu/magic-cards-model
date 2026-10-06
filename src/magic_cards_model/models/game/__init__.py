@@ -1924,7 +1924,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 117
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 118
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2167,6 +2167,11 @@ class Game(
     #: creature as you cast this spell" is fixed at casting); an existing
     #: stack of that spell reads the base branch only. 116 is held by another
     #: NW-02 task.
+    #: 118 (NW03-T1): `PreventionShield` gained `recipient_types` and
+    #: `recipient_controller` ("to creatures", "to you and creatures you
+    #: control"); `ShieldSourceFilter` gained `creatures`, `colors_any`,
+    #: `colorless` and `not_controlled_by` (CR 609.7b, CR 105.2c);
+    #: `ReflectedDamage` gained `optional` (CR 608.2d, CR 615.5).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

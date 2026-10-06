@@ -2036,3 +2036,36 @@ def test_a_snapshot_written_before_the_nw02_t3_shapes_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW02_T3_SHAPES}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before NW03-T1: `PreventionShield` gained
+#: `recipient_types` and `recipient_controller`, `ShieldSourceFilter` gained
+#: `creatures`, `colors_any`, `colorless` and `not_controlled_by`, and
+#: `ReflectedDamage` gained `optional`.
+_SCHEMA_VERSION_BEFORE_NW03_T1_SHIELDS = 117
+
+
+def test_a_snapshot_written_before_the_nw03_t1_shields_is_refused() -> None:
+    """A version-117 dump's shields carry no `recipient_types`: decoded as
+    current, a Forfend shield would prevent damage to players too. Refused
+    instead."""
+    from magic_cards_model.models.game.records import (
+        PreventionShield,
+        ReflectedDamage,
+        ShieldSourceFilter,
+    )
+
+    for name in ("recipient_types", "recipient_controller"):
+        assert name in PreventionShield.model_fields
+    for name in ("creatures", "colors_any", "colorless", "not_controlled_by"):
+        assert name in ShieldSourceFilter.model_fields
+    assert "optional" in ReflectedDamage.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW03_T1_SHIELDS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW03_T1_SHIELDS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW03_T1_SHIELDS}",
+    ):
+        Game.model_validate(dumped)
