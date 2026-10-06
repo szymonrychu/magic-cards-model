@@ -4471,7 +4471,13 @@ def _read_division(text: str) -> Division | None:
             return Division(amount=None, what="damage", doubled_if_x_at_least=threshold)
         amount = parse_count(word)
         return None if amount is None else Division(amount=amount, what="damage")
-    amount = parse_count(match.group("counters").lower())
+    counters = match.group("counters").lower()
+    if counters == "x":
+        # CR 107.3c: "Distribute X +1/+1 counters among ..., where X is
+        # `<count>`" (Undercity Upheaval) - the total is the count the text
+        # defines, not a fixed word; `Casting` fixes it while casting.
+        return Division(amount=None, what=f"{match.group('kind')} counters")
+    amount = parse_count(counters)
     if amount is None:
         return None
     return Division(amount=amount, what=f"{match.group('kind')} counters")
@@ -5056,6 +5062,14 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     count = 0 if most is None else most
 
     noun_phrase = re.split(r"[.;]", suffix)[0]
+    # CR 107.3c: a bare "targets" followed by ", where X is `<expr>`" (Jaws of
+    # Stone's "among any number of targets, where X is the number of Mountains
+    # you control as you cast this spell") names no noun at all - the tail
+    # defines an amount. A tail after a real noun phrase is left whole: a
+    # comparison's own X definition reads it (Spellstutter Sprite).
+    bare, _, defined = noun_phrase.partition(", where X is")
+    if defined and not re.search(r"[a-z]", bare, re.IGNORECASE):
+        noun_phrase = bare
 
     # A bare `.match` (not `.fullmatch`) used to silently misread "triggered
     # ability or colorless spell" (Consign to Memory) as the whole target

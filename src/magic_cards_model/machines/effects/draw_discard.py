@@ -1357,6 +1357,29 @@ _FEWER_THAN_N_CARDS_IN_HAND_RE = re.compile(
 )
 
 
+#: "Discard all the cards in your hand" (Fateful Showdown, Shattered
+#: Perception, Heartwarming Redemption, Soratami Seer) - the same instruction
+#: as "Discard your hand" with the cards spelled out: CR 701.9a's discard of
+#: every card the hand holds as it resolves, and the count a later "that many"
+#: reads is what was actually discarded (CR 608.2c).
+_DISCARD_ALL_CARDS_IN_HAND_RE = re.compile(
+    r"^discard all (?:the )?cards in your hand\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s4", for_spell=FORWARD)
+def _parse_discard_all_cards_in_hand_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_DISCARD_ALL_CARDS_IN_HAND_RE`, read as the "Discard your hand" clause
+    `parse_clause_effect` already reads."""
+    if "cards in your hand" not in clause.lower():
+        return None
+    if _DISCARD_ALL_CARDS_IN_HAND_RE.fullmatch(" ".join(clause.strip().split())) is None:
+        return None
+    return _parse_mixed_clause("Discard your hand", for_spell=for_spell)
+
+
 @MIXED_CLAUSE.rung("s4", for_spell=FORWARD)
 def _parse_draw_the_difference_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_DRAW_THE_DIFFERENCE_RE`, on a triggered ability whose intervening if
@@ -2677,6 +2700,7 @@ from ._common import (  # noqa: E402
 from .amounts import count_expression, player_counter_count  # noqa: E402
 from .continuous import _who_cant_discard_consequence  # noqa: E402
 from .dispatch import (  # noqa: E402
+    _parse_mixed_clause,
     _parse_mixed_clauses,
     parse_clause_effect,
     parse_mixed_effect,
