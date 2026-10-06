@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73",
+  "oracle_id": "781162c4-9c0f-436c-b9a5-214e60e009e4",
+  "multiverse_ids": [
+    503841
+  ],
+  "mtgo_id": 87793,
+  "arena_id": 75272,
+  "tcgplayer_id": 230130,
+  "cardmarket_id": 529292,
+  "name": "Niko Aris",
+  "lang": "en",
+  "released_at": "2021-02-05",
+  "uri": "https://api.scryfall.com/cards/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73",
+  "scryfall_uri": "https://scryfall.com/card/khm/225/niko-aris?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:36:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.jpg?1783928191",
+    "normal": "https://cards.scryfall.io/normal/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.jpg?1783928191",
+    "large": "https://cards.scryfall.io/large/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.jpg?1783928191",
+    "png": "https://cards.scryfall.io/png/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.png?1783928191",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.jpg?1783928191",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.jpg?1783928191",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.webp?1783928191",
+    "grid": "https://cards.scryfall.io/grid/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.webp?1783928191",
+    "display": "https://cards.scryfall.io/display/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.webp?1783928191",
+    "art": "https://cards.scryfall.io/art/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.webp?1783928191",
+    "crop": "https://cards.scryfall.io/crop/front/6/c/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73.webp?1783928191"
+  },
+  "mana_cost": "{X}{W}{U}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Planeswalker \u2014 Niko",
+  "oracle_text": "When Niko Aris enters, create X Shard tokens. (They're enchantments with \"{2}, Sacrifice this token: Scry 1, then draw a card.\")\n+1: Up to one target creature you control can't be blocked this turn. Whenever that creature deals damage this turn, return it to its owner's hand.\n\u22121: Niko Aris deals 2 damage to target tapped creature for each card you've drawn this turn.\n\u22121: Create a Shard token.",
+  "loyalty": "3",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Scry"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "df826c7d-5508-4e21-848c-91bc3e3f447a",
+      "component": "token",
+      "name": "Shard",
+      "type_line": "Token Enchantment \u2014 Shard",
+      "uri": "https://api.scryfall.com/cards/df826c7d-5508-4e21-848c-91bc3e3f447a"
+    },
+    {
+      "object": "related_card",
+      "id": "974a54b8-4f76-45db-a2f3-b2ed28a16cac",
+      "component": "combo_piece",
+      "name": "Niko Aris",
+      "type_line": "Legendary Planeswalker \u2014 Niko",
+      "uri": "https://api.scryfall.com/cards/974a54b8-4f76-45db-a2f3-b2ed28a16cac"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "43057fad-b1c1-437f-bc48-0045bce6d8c9",
+  "set": "khm",
+  "set_name": "Kaldheim",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/43057fad-b1c1-437f-bc48-0045bce6d8c9",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Akhm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/khm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6c4e9cfe-e72e-46a1-a8d8-9fda5f2bae73/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A781162c4-9c0f-436c-b9a5-214e60e009e4&unique=prints",
+  "collector_number": "225",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Winona Nelson",
+  "artist_ids": [
+    "e45fe8d3-75d6-42c9-a2df-e945ad81ea27"
+  ],
+  "illustration_id": "44fa2e3d-a084-458b-82b3-af9815397d7e",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13522,
+  "penny_rank": 9493,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.twitch.tv/videos/864684586",
+    "previewed_at": "2021-01-07"
+  },
+  "prices": {
+    "usd": "0.51",
+    "usd_foil": "0.70",
+    "usd_etched": null,
+    "eur": "0.57",
+    "eur_foil": "0.83",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=503841&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNiko%2BAris",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNiko%2BAris",
+    "edhrec": "https://edhrec.com/route/?cc=Niko+Aris"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F230130%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=529292&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/87793?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

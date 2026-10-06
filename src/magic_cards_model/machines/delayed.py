@@ -2044,6 +2044,197 @@ class ThatCreatureDiesConsequence(DelayedEffectSpecBase):
             effect(game, ability)
 
 
+#: "that much" / "that many" in a created ability's effect: the triggering
+#: event's own amount (CR 603.2's event, `GameEvent.amount`), written in as a
+#: digit before the effect is read when no reader takes the anaphor itself -
+#: Arcbond's "it deals that much damage to each other creature and each
+#: player" reads as the fixed-amount group damage it then is.
+_THAT_MUCH_RE = re.compile(r"\bthat (?:much|many)\b", re.IGNORECASE)
+
+#: "Whenever that <noun> <condition> this turn, <effect>" - a delayed
+#: triggered ability (CR 603.7a) about one particular object (CR 603.7c), with
+#: CR 603.7b's stated duration. `noun` is what the earlier text chose.
+_THAT_OBJECT_TURN_TRIGGER_RE = re.compile(
+    r"^whenever that (?P<noun>creature|permanent|planeswalker|artifact|land) "
+    r"(?P<condition>[^,.]+?) this turn,\s*(?P<effect>[^\n]+?)\s*$",
+    re.IGNORECASE,
+)
+
+
+def _chosen_object_trigger_effect(
+    source_name: str, event: TriggerEvent, effect_text: str, amount: int | None
+) -> "Callable[[Game, AbilityOnStack], None] | None":
+    """The created ability's effect, read as a printed trigger's would be;
+    when only the event's own amount makes it readable, read with that amount
+    written in (`_THAT_MUCH_RE`). `amount` is `None` at parse time, where a
+    sample amount only proves the text is readable."""
+    from .effects import _is_notice_only, trigger_effect_for
+
+    effect = trigger_effect_for(source_name, event, effect_text)
+    if effect is not None and not _is_notice_only(effect):
+        return effect
+    if _THAT_MUCH_RE.search(effect_text) is None:
+        return None
+    carried = _THAT_MUCH_RE.sub(str(2 if amount is None else amount), effect_text)
+    effect = trigger_effect_for(source_name, event, carried)
+    if effect is None or _is_notice_only(effect):
+        return None
+    return effect
+
+
+class ChosenObjectTriggeredAbility(DelayedEffectSpecBase):
+    """ "Whenever that creature `<condition>` this turn, `<effect>`" - a
+    delayed triggered ability (CR 603.7a) about the one object an earlier
+    instruction chose (CR 603.7c): Hunter's Insight's "Choose target creature
+    you control. Whenever that creature deals combat damage to a player or
+    planeswalker this turn, draw that many cards", Arcbond's "... Whenever
+    that creature is dealt damage this turn, it deals that much damage to
+    each other creature and each player".
+
+    `ability_text` is the sentence as the chosen object's own printed trigger
+    ("Whenever this creature deals combat damage ..."), so the condition is
+    matched by `machines/triggers.condition_matches` with the chosen object
+    standing where "this creature" stands - not the creating spell, which is
+    in a graveyard by then - and the effect is read by `trigger_effect_for`.
+    `chosen_id`/`chosen_stamp` pin that object: one that left the battlefield
+    and came back is a new object the ability never refers to (CR 400.7).
+
+    The ability's source and controller stay the creating spell's (CR
+    603.7d/e: "draw that many cards" is its controller's draw), but its "it"
+    is the chosen object: the effect runs with that object as the acting
+    source, as it last existed if the damage that triggered the ability
+    killed it (CR 608.2h) - Arcbond's creature deals the damage, so its own
+    lifelink and deathtouch apply (CR 120.3).
+    """
+
+    kind: Literal["chosen_object_triggered_ability"] = "chosen_object_triggered_ability"
+
+    matches_against_the_game: ClassVar[bool] = True
+
+    ability_text: str
+    chosen_id: UUID
+    chosen_stamp: UUID | None = None
+    chosen_card: Card | None = None
+
+    def parsed(self) -> TriggeredAbility | None:
+        return _created_ability(self.ability_text)
+
+    def printed_ability(self, trigger: "DelayedTrigger") -> TriggeredAbility | None:
+        parsed = self.parsed()
+        if parsed is None:
+            return None
+        return parsed.model_copy(
+            update={"face": trigger.source_name, "text": trigger.text, "raw": trigger.text}
+        )
+
+    def _chosen_on_battlefield(self, game: "Game") -> CardState | None:
+        found = game.find_by_id(self.chosen_id)
+        if not isinstance(found, CardState) or found.zone is not Zone.BATTLEFIELD:
+            return None
+        if self.chosen_stamp is not None and found.zone_change_stamp != self.chosen_stamp:
+            return None
+        return found
+
+    def event_matches(self, game: "Game", trigger: "DelayedTrigger", event: GameEvent) -> bool:
+        from .triggers import condition_matches
+
+        parsed = self.parsed()
+        chosen = self._chosen_on_battlefield(game)
+        if parsed is None or chosen is None:
+            return False
+        return condition_matches(game, parsed, chosen, trigger.controller, event)
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        parsed = self.parsed()
+        if parsed is None or parsed.event is None:
+            return
+        amount = ability.event.amount if ability.event is not None else None
+        effect = _chosen_object_trigger_effect(
+            trigger.source_name, parsed.event, parsed.effect, amount
+        )
+        if effect is None:
+            return
+        found = game.find_by_id(self.chosen_id)
+        last_known = found if isinstance(found, CardState) else None
+        if last_known is None and self.chosen_card is not None:
+            last_known = CardState(
+                id=self.chosen_id,
+                card=self.chosen_card,
+                zone=Zone.GRAVEYARD,
+                controller=trigger.controller,
+                owner=trigger.controller,
+            )
+        acting = ability.model_copy(
+            update={
+                "source_id": self.chosen_id,
+                "source_name": last_known.name if last_known is not None else ability.source_name,
+                "source_last_known": last_known,
+            }
+        )
+        effect(game, acting)
+
+
+def chosen_object_turn_trigger_line(text: str) -> str | None:
+    """ "Whenever that creature `<condition>` this turn, `<effect>`" as the
+    chosen object's own printed trigger ("Whenever this creature
+    `<condition>`, `<effect>`"), or `None` when `text` is not that shape or
+    either half is not read: a condition `condition_matches` matches off a
+    plain event (no intervening "if", CR 603.4) and an effect
+    `trigger_effect_for` reads, directly or with the event's amount written
+    in for its "that much"."""
+    match = _THAT_OBJECT_TURN_TRIGGER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    effect_text = match.group("effect")
+    line = f"Whenever this {match.group('noun').lower()} {match.group('condition')}, {effect_text}"
+    parsed = _created_ability(line)
+    if (
+        parsed is None
+        or parsed.event is None
+        or parsed.intervening_if is not None
+        or parsed.once_per_turn
+    ):
+        return None
+    if _chosen_object_trigger_effect("", parsed.event, parsed.effect, None) is None:
+        return None
+    return line
+
+
+def create_chosen_object_turn_trigger(
+    game: "Game",
+    line: str,
+    chosen: CardState,
+    *,
+    text: str,
+    controller: str,
+    source_id: UUID | None,
+    source_name: str,
+) -> None:
+    """CR 603.7a: resolving the instruction creates the ability, watching
+    `chosen` for the rest of the turn (CR 603.7b: a stated duration fires on
+    every matching event, and CR 514.2's cleanup ends it)."""
+    parsed = _created_ability(line)
+    if parsed is None or parsed.event is None:
+        return
+    game.create_delayed_trigger(
+        DelayedTrigger(
+            text=text,
+            event=parsed.event,
+            controller=controller,
+            source_id=source_id,
+            source_name=source_name,
+            remaining=None,
+            expires_end_of_turn=True,
+            effect=ChosenObjectTriggeredAbility(
+                ability_text=line,
+                chosen_id=chosen.id,
+                chosen_stamp=chosen.zone_change_stamp,
+                chosen_card=chosen.card,
+            ),
+        )
+    )
+
+
 DelayedEffectSpec = Annotated[
     ExileWarped
     | GrantExtraTurn
@@ -2096,7 +2287,8 @@ DelayedEffectSpec = Annotated[
     | ReturnEachExiledToBattlefieldUnderOwner
     | PayOrElseReturnExiledCard
     | DiscardCardsAtRandomForController
-    | ThatCreatureDiesConsequence,
+    | ThatCreatureDiesConsequence
+    | ChosenObjectTriggeredAbility,
     Field(discriminator="kind"),
 ]
 

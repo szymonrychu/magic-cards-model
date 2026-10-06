@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "de7ec307-45e0-4853-85fe-9ce859b188c2",
+  "oracle_id": "198d31e4-1ae1-4bf9-a05a-7fa45c0aeddb",
+  "multiverse_ids": [
+    461009
+  ],
+  "mtgo_id": 71770,
+  "arena_id": 69533,
+  "tcgplayer_id": 188715,
+  "cardmarket_id": 372287,
+  "name": "Command the Dreadhorde",
+  "lang": "en",
+  "released_at": "2019-05-03",
+  "uri": "https://api.scryfall.com/cards/de7ec307-45e0-4853-85fe-9ce859b188c2",
+  "scryfall_uri": "https://scryfall.com/card/war/82/command-the-dreadhorde?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:04:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.jpg?1783933449",
+    "normal": "https://cards.scryfall.io/normal/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.jpg?1783933449",
+    "large": "https://cards.scryfall.io/large/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.jpg?1783933449",
+    "png": "https://cards.scryfall.io/png/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.png?1783933449",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.jpg?1783933449",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.jpg?1783933449",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.webp?1783933449",
+    "grid": "https://cards.scryfall.io/grid/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.webp?1783933449",
+    "display": "https://cards.scryfall.io/display/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.webp?1783933449",
+    "art": "https://cards.scryfall.io/art/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.webp?1783933449",
+    "crop": "https://cards.scryfall.io/crop/front/d/e/de7ec307-45e0-4853-85fe-9ce859b188c2.webp?1783933449"
+  },
+  "mana_cost": "{4}{B}{B}",
+  "cmc": 6.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Choose any number of target creature and/or planeswalker cards in graveyards. Command the Dreadhorde deals damage to you equal to the total mana value of those cards. Put them onto the battlefield under your control.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ee044f0b-e101-4ead-8d0e-aa510aad4277",
+  "set": "war",
+  "set_name": "War of the Spark",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ee044f0b-e101-4ead-8d0e-aa510aad4277",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awar&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/war?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/de7ec307-45e0-4853-85fe-9ce859b188c2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A198d31e4-1ae1-4bf9-a05a-7fa45c0aeddb&unique=prints",
+  "collector_number": "82",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Liliana seized the reins of Bolas's vast army, gritting her teeth behind the Chain Veil.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "3da11367-d303-468c-9c4c-f7ffb60523e9",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": true,
+  "edhrec_rank": 6584,
+  "penny_rank": 7324,
+  "preview": {
+    "source": "Carlos Rom\u00e3o",
+    "source_uri": "https://twitter.com/Jabsmtg/status/1118606270079143938",
+    "previewed_at": "2019-04-17"
+  },
+  "prices": {
+    "usd": "0.49",
+    "usd_foil": "1.51",
+    "usd_etched": null,
+    "eur": "0.47",
+    "eur_foil": "1.21",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=461009&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCommand%2Bthe%2BDreadhorde",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCommand%2Bthe%2BDreadhorde",
+    "edhrec": "https://edhrec.com/route/?cc=Command+the+Dreadhorde"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F188715%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=372287&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/71770?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
