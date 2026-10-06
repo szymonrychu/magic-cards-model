@@ -426,6 +426,25 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "awaken":
+        # CR 702.113a: "'Awaken N-[cost]' means 'You may pay [cost] rather
+        # than pay this spell's mana cost as you cast this spell' and 'If this
+        # spell's awaken cost was paid, put N +1/+1 counters on target land
+        # you control. That land becomes a 0/0 Elemental creature with haste.
+        # It's still a land.'" The first half is this alternative cost, cast
+        # from hand like the spell's mana cost would be; the target it adds is
+        # `with_keyword_spell_ability_target`'s, and the spell ability is
+        # `machines/keywords.awaken_as_the_spell_resolves`.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.113a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical == "flashback":
         # CR 702.34a: two static abilities, one functioning in the graveyard.
         # The graveyard half is what makes this permission and not a discount.
@@ -1147,6 +1166,59 @@ def conditional_alternative_cost_offers(text: str) -> list[ConditionalAlternativ
             ConditionalAlternativeCostOffer(phrase=match.group("what").strip(), condition=condition)
         )
     return offers
+
+
+#: CR 702.113b: the awaken spell ability's own target, required only when the
+#: awaken cost was chosen ("Otherwise the spell is cast as if it didn't have
+#: that target"). It follows every target the spell's own text names.
+_KEYWORD_SPELL_ABILITY_TARGETS = {"awaken": "target land you control"}
+
+
+def with_keyword_spell_ability_target(profile: Any, keyword_used: str | None) -> Any:
+    """`profile` with the target a keyword's spell ability adds, when that
+    keyword's cost was the one chosen (CR 601.2c: "A spell may require some
+    targets only if an alternative or additional cost ... was chosen for
+    it"). Awaken's "target land you control" (CR 702.113b) is the one."""
+    phrase = _KEYWORD_SPELL_ABILITY_TARGETS.get((keyword_used or "").lower())
+    if phrase is None:
+        return profile
+    from ..targeting import profile_for_text
+
+    extra = profile_for_text(phrase)
+    if not extra.understood or not extra.requirements:
+        return profile
+    return profile.model_copy(update={"requirements": (*profile.requirements, *extra.requirements)})
+
+
+def printed_condition_refusal(
+    game: Any, caster: str, spell: CardState, condition: str
+) -> str | None:
+    """Why a conditional CR 118.9 offer's printed condition does not hold
+    right now, or None if it does - for every condition other than "an
+    opponent cast N or more spells this turn", which `Casting._condition_
+    refusal` counts itself.
+
+    Read by the game's own condition reader (`machines/conditions`), as the
+    spell is being cast (CR 601.2b announces the alternative cost): Refraction
+    Trap's "an opponent cast a red instant or sorcery spell this turn" and
+    Ricochet Trap's "an opponent cast a blue spell this turn" are questions
+    about the turn's cast history (CR 601.2i), not about the spell. A
+    condition no reader claims refuses the offer: an alternative cost granted
+    by unread text would make a spell cheap for a reason nobody checked."""
+    from ..conditions import claims
+
+    unread = (
+        f"{spell.name}'s alternative cost is offered only 'if {condition}', which "
+        "this engine cannot read (CR 118.9)"
+    )
+    if game is None or not claims(condition):
+        return unread
+    holds = game.condition_holds(caster, condition, spell)
+    if holds is None:
+        return unread
+    if holds:
+        return None
+    return f"{spell.name}'s alternative cost is offered only if {condition}, and that is not so"
 
 
 def _printed_alternative_total_cost(phrase: str, payer: str | None) -> TotalCost | None:

@@ -1,5 +1,6 @@
 import re
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
@@ -69,6 +70,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ..conditions import claims
 from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import _OBJECT_ANAPHOR, AbilityEffect, Effect, GroupPredicate, TargetedClause
 
@@ -569,6 +571,500 @@ def _prevent_next_damage_from_target(*, gains_life: bool) -> TargetedClause:
                     controller=game.controller_of(stack_object).username,
                     source_id=target.id,
                     gains_life_when_prevented=gains_life,
+                )
+            )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# The filtered fog family (CR 615.1a, CR 609.7b) - NW02-T2
+# --------------------------------------------------------------------------
+#
+# "Prevent all [combat] damage that would be dealt [this turn] [to <who>]
+# [this turn] [by <which sources>] [this turn]." - one shield per sentence,
+# created as the spell resolves and ended by CR 514.2's cleanup. The
+# recipient and the source filter travel to the `PreventionShield` as data
+# (`players_only`, `player`, `card_id`, `ShieldSourceFilter`), never as a
+# frozen list of objects: CR 609.7b rechecks the source as the damage would
+# be dealt (the Moonmist precedent, `prevent_all_combat_damage_except`).
+
+_FILTERED_FOG_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that would be dealt"
+    r"(?P<t1> this turn)?"
+    r"(?: to (?P<recipient>players|you|target creature))?"
+    r"(?P<t2> this turn)?"
+    r"(?: by (?P<sources>[^.]+?))?"
+    r"(?P<t3> this turn)?\.?$",
+    re.IGNORECASE,
+)
+_FOG_COLOR_WORDS = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+_FOG_NONCOLOR_RE = re.compile(r"^non(?P<color>white|blue|black|red|green) creatures$")
+_FOG_NO_COUNTER_RE = re.compile(r"^creatures with no (?P<counter>\S+) counters on them$")
+_FOG_WITHOUT_KEYWORD_RE = re.compile(r"^creatures without (?P<keyword>[a-z]+(?: [a-z]+)?)$")
+_FOG_MAX_POWER_RE = re.compile(
+    rf"^creatures with power {count_pattern('n', article=False)} or less$"
+)
+
+
+@dataclass(frozen=True)
+class _FogSpec:
+    """One read "prevent all ..." sentence: what its shield protects, which
+    sources it covers, and which of the spell's targets it names. A parse-time
+    value only - the shield it builds is the persisted record."""
+
+    text: str
+    combat_only: bool
+    recipient: str | None = None
+    filter_fields: dict[str, Any] = field(default_factory=dict)
+    opponents_of_you: bool = False
+    source_target: str | None = None
+    choose_source: bool = False
+
+    @property
+    def targets(self) -> int:
+        """How many of the spell's targets this sentence names (CR 601.2c)."""
+        return int(self.recipient == "target creature") + int(self.source_target is not None)
+
+
+def _fog_source_spec(phrase: str) -> dict[str, Any] | None:
+    """The `_FogSpec` fields a "by `<sources>`" phrase reads as, or None."""
+    from ..combat import Keyword
+
+    lowered = " ".join(phrase.lower().split())
+    if lowered == "attacking creatures":
+        return {"filter_fields": {"attacking": True}}
+    if lowered == "creatures your opponents control":
+        return {"opponents_of_you": True}
+    if lowered == "creatures target opponent controls":
+        return {"source_target": "opponent"}
+    if lowered == "creatures other than target creature":
+        return {"source_target": "creature"}
+    if match := _FOG_NONCOLOR_RE.fullmatch(lowered):
+        return {"filter_fields": {"excluded_colors": (_FOG_COLOR_WORDS[match.group("color")],)}}
+    if match := _FOG_NO_COUNTER_RE.fullmatch(lowered):
+        return {"filter_fields": {"without_counter": match.group("counter")}}
+    if match := _FOG_WITHOUT_KEYWORD_RE.fullmatch(lowered):
+        keyword = match.group("keyword")
+        if keyword not in {member.value.lower() for member in Keyword}:
+            return None
+        return {"filter_fields": {"without_keyword": keyword}}
+    if match := _FOG_MAX_POWER_RE.fullmatch(lowered):
+        power = parse_count(match.group("n"), article=False)
+        if power is None:
+            return None
+        return {"filter_fields": {"max_power": power}}
+    return None
+
+
+def _read_fog_sentence(sentence: str, *, allow_plain: bool = False) -> _FogSpec | None:
+    """`_FILTERED_FOG_RE`'s sentence, or None. A plain "Prevent all combat
+    damage that would be dealt this turn." (Fog) is left to its own reader
+    unless `allow_plain`, and "by creatures" / "by `<quality>` sources" alone
+    to `replacement.parse.read_turn_damage_spec`'s created replacement."""
+    text = " ".join(sentence.strip().split())
+    if not text.lower().startswith("prevent all "):
+        return None
+    match = _FILTERED_FOG_RE.fullmatch(text)
+    if match is None:
+        return None
+    if sum(match.group(name) is not None for name in ("t1", "t2", "t3")) != 1:
+        return None  # CR 611.2a: exactly one stated "this turn"
+    recipient = match.group("recipient")
+    sources = match.group("sources")
+    fields: dict[str, Any] = {}
+    if sources is not None:
+        read = _fog_source_spec(sources)
+        if read is None:
+            return None
+        fields.update(read)
+    elif recipient is None and not allow_plain:
+        return None
+    return _FogSpec(
+        text=text.rstrip("."),
+        combat_only=match.group("combat") is not None,
+        recipient=None if recipient is None else recipient.lower(),
+        **fields,
+    )
+
+
+#: "Prevent all [combat] damage a source of your choice would deal this
+#: turn." (Pay No Heed, Prahv, Spires of Order) - CR 609.7a's source, chosen
+#: as the effect is created.
+_SOURCE_OF_CHOICE_WOULD_DEAL_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage a source of your choice would deal this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _read_source_of_choice_sentence(sentence: str) -> _FogSpec | None:
+    text = " ".join(sentence.strip().split())
+    match = _SOURCE_OF_CHOICE_WOULD_DEAL_RE.fullmatch(text)
+    if match is None:
+        return None
+    return _FogSpec(
+        text=text.rstrip("."),
+        combat_only=match.group("combat") is not None,
+        choose_source=True,
+    )
+
+
+#: "Prevent all [combat] damage target creature would deal this turn." - one
+#: sentence of a multi-sentence prevention spell (Azorius Ploy's first),
+#: naming one target by its place in the text (CR 601.2c).
+_TARGET_WOULD_DEAL_THIS_TURN_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage target (?:[a-z]+ )*?creature would deal "
+    r"this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _read_target_would_deal_sentence(sentence: str) -> _FogSpec | None:
+    text = " ".join(sentence.strip().split())
+    match = _TARGET_WOULD_DEAL_THIS_TURN_RE.fullmatch(text)
+    if match is None:
+        return None
+    phrase = text[text.lower().index("target ") : text.lower().index(" would deal")]
+    if not _targets_understood(phrase):
+        return None
+    return _FogSpec(
+        text=text.rstrip("."),
+        combat_only=match.group("combat") is not None,
+        source_target="dealer",
+    )
+
+
+def _create_fog_shield(
+    game: "Game", stack_object: "StackObject", spec: _FogSpec, offset: int | None
+) -> None:
+    """Build `spec`'s shield as the spell or ability resolves.
+
+    `offset` is the index of the sentence's first target among the creating
+    object's targets (several prevention sentences, each naming its own -
+    Azorius Ploy); None takes the first legal target of the right kind (a
+    single sentence). A named target that is no longer legal leaves that
+    shield uncreated (CR 608.2b)."""
+    from ...models.game import PreventionShield, ShieldKind, ShieldSourceFilter
+
+    controller = game.controller_of(stack_object).username
+    refs = list(getattr(stack_object, "targets", ()) or ())
+    position = offset
+
+    def next_target(kind: str) -> Any:
+        nonlocal position
+        if position is not None:
+            index = position
+            position += 1
+            if index >= len(refs):
+                return None
+            found = game.legal_target(stack_object, refs[index])
+            return found if _is_kind(found, kind) else None
+        for ref in refs:
+            found = game.legal_target(stack_object, ref)
+            if _is_kind(found, kind):
+                return found
+        return None
+
+    fields: dict[str, Any] = {
+        "kind": ShieldKind.ALL,
+        "label": spec.text.lower(),
+        "controller": controller,
+        "combat_only": spec.combat_only,
+    }
+    filter_fields = dict(spec.filter_fields)
+    # CR 601.2c: targets in the order the sentence names them.
+    if spec.source_target == "dealer":
+        dealer = next_target("creature")
+        if dealer is None:
+            return
+        fields["source_id"] = dealer.id
+        fields["source_stamp"] = dealer.zone_change_stamp
+    if spec.recipient == "players":
+        fields["players_only"] = True
+    elif spec.recipient == "you":
+        fields["player"] = controller
+    elif spec.recipient == "target creature":
+        shielded = next_target("creature")
+        if shielded is None:
+            return
+        fields["card_id"] = shielded.id
+    if spec.source_target == "opponent":
+        opponent = next_target("player")
+        if opponent is None:
+            return
+        filter_fields["controller"] = opponent.username
+    elif spec.source_target == "creature":
+        spared = next_target("creature")
+        if spared is None:
+            return
+        filter_fields["excluded_card_id"] = spared.id
+        filter_fields["excluded_stamp"] = spared.zone_change_stamp
+    if spec.opponents_of_you:
+        filter_fields["opponents_of"] = controller
+    if spec.choose_source:
+        from ..damage_modification import _choose_a_source
+
+        chosen = _choose_a_source(game, controller, stack_object)
+        if chosen is None:
+            return
+        fields["source_id"] = chosen.id
+        # CR 609.7a: a permanent spell chosen on the stack also covers the
+        # permanent it becomes, so only a permanent is held to its stamp.
+        fields["source_stamp"] = (
+            chosen.zone_change_stamp if chosen.zone is Zone.BATTLEFIELD else None
+        )
+    if filter_fields:
+        fields["source_filter"] = ShieldSourceFilter(**filter_fields)
+    game.create_prevention_shield(PreventionShield(**fields))
+
+
+def _is_kind(found: Any, kind: str) -> bool:
+    if found is None:
+        return False
+    if kind == "player":
+        return isinstance(found, Player)
+    return isinstance(found, CardState)
+
+
+def _fog_clause(spec: _FogSpec, offset: int | None = None) -> TargetedClause:
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        _create_fog_shield(game, stack_object, spec, offset)
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s6")
+def _parse_filtered_prevention_clause(clause: str) -> TargetedClause | None:
+    """One filtered-fog or source-of-your-choice sentence, on a spell or an
+    ability (Commencement of Festivities, Hunter's Ambush, Pay No Heed,
+    Prahv's activated ability)."""
+    if "prevent all " not in clause.lower():
+        return None
+    spec = _read_fog_sentence(clause) or _read_source_of_choice_sentence(clause)
+    if spec is None or spec.targets > 1:
+        return None
+    return _fog_clause(spec)
+
+
+_SENTENCE_BREAK_RE = re.compile(r"(?<=\.)\s+(?=[A-Z])")
+
+
+def _read_prevention_sentence(sentence: str, *, allow_plain: bool = False) -> _FogSpec | None:
+    return (
+        _read_fog_sentence(sentence, allow_plain=allow_plain)
+        or _read_target_would_deal_sentence(sentence)
+        or _read_source_of_choice_sentence(sentence)
+    )
+
+
+#: Winds of Qal Sisma: "Prevent all combat damage that would be dealt this
+#: turn. Ferocious - If you control a creature with power 4 or greater,
+#: instead prevent all combat damage that would be dealt this turn by
+#: creatures your opponents control." The ability word (CR 207.2c) carries
+#: no rules meaning; the condition is read as the spell resolves and picks
+#: one of the two shields - "instead" replaces the first instruction with the
+#: second (CR 614.1a's word, a choice made on resolution).
+_PREVENT_INSTEAD_IF_RE = re.compile(
+    r"^(?P<first>prevent all [^.]+\.)\s*(?:[a-z][a-z' ]*?\s*(?:—|-)\s*)?"
+    r"if (?P<condition>[^,]+), instead (?P<second>prevent all [^.]+\.?)$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s8")
+def _parse_prevention_sentences_text(text: str) -> Effect | None:
+    """A spell made only of prevention sentences, each read as its own
+    shield with its own targets (Azorius Ploy: "Prevent all combat damage
+    target creature would deal this turn. Prevent all combat damage that would
+    be dealt to target creature this turn."), or the ability-word "instead"
+    pair (Winds of Qal Sisma)."""
+    body = " ".join(text.strip().split())
+    if not body.lower().startswith("prevent all "):
+        return None
+    if match := _PREVENT_INSTEAD_IF_RE.fullmatch(body):
+        first = _read_prevention_sentence(match.group("first"), allow_plain=True)
+        second = _read_prevention_sentence(match.group("second"), allow_plain=True)
+        condition = match.group("condition").strip()
+        if first is None or second is None or first.targets or second.targets:
+            return None
+        if not claims(condition):
+            return None
+
+        def instead(game: "Game", spell: CardState) -> None:
+            controller = game.controller_of(spell).username
+            chosen = second if game.condition_holds(controller, condition, spell) else first
+            _create_fog_shield(game, spell, chosen, None)
+
+        return instead
+    sentences = _SENTENCE_BREAK_RE.split(body)
+    if len(sentences) < 2:
+        return None
+    specs = [_read_prevention_sentence(sentence) for sentence in sentences]
+    if any(spec is None for spec in specs):
+        return None
+    clauses: list[TargetedClause] = []
+    offset = 0
+    for spec in specs:
+        assert spec is not None
+        clauses.append(_fog_clause(spec, offset))
+        offset += spec.targets
+
+    def sequence(game: "Game", spell: CardState) -> None:
+        for clause in clauses:
+            clause(game, spell)
+
+    return sequence
+
+
+# --------------------------------------------------------------------------
+# "Prevent the next N damage that [a source of your choice] would deal to
+# you and/or permanents you control this turn. If damage is prevented this
+# way, <this spell> deals that much damage to any target." (Refraction Trap,
+# Divine Deflection) - CR 615.7's counting shield around a player and every
+# permanent they control, with CR 615.5's damage rider.
+# --------------------------------------------------------------------------
+
+_PREVENT_NEXT_TO_YOU_AND_PERMANENTS_RE = re.compile(
+    rf"^prevent the next (?:(?P<x>x)|{count_pattern('n', article=False)}) damage that "
+    r"(?:(?P<choice>a source of your choice) would deal to|would be dealt to) "
+    r"you and/or permanents you control this turn\."
+    r"(?:\s*if damage is prevented this way, (?P<name>[^.]+?) deals that much damage to "
+    r"(?P<target>any target)\.)?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s8")
+def _parse_prevent_next_damage_to_you_and_permanents_text(text: str) -> Effect | None:
+    """`_PREVENT_NEXT_TO_YOU_AND_PERMANENTS_RE`'s shape.
+
+    The shield is `and_permanents_of` its controller: CR 615.7's "shielded"
+    player and every permanent that player controls as the damage would be
+    dealt. The source (if the text asks for one) is chosen as the spell
+    resolves (CR 609.7a). The rider's target is chosen as the spell is cast,
+    like every target it requires (CR 601.2c), and is dealt the prevented
+    amount each time damage is prevented (CR 615.5)."""
+    body = " ".join(text.strip().split())
+    if "you and/or permanents you control" not in body.lower():
+        return None
+    match = _PREVENT_NEXT_TO_YOU_AND_PERMANENTS_RE.fullmatch(body)
+    if match is None:
+        return None
+    fixed = None if match.group("x") else parse_count(match.group("n"), article=False)
+    if match.group("x") is None and fixed is None:
+        return None
+    chooses = match.group("choice") is not None
+    reflects = match.group("target") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ...models.game import PreventionShield, ReflectedDamage, ShieldKind
+        from ..damage_modification import _choose_a_source
+
+        controller = game.controller_of(spell).username
+        amount = fixed if fixed is not None else (game.cast_record(spell).x_value or 0)
+        if amount <= 0:
+            return
+        fields: dict[str, Any] = {}
+        if reflects:
+            targets = game.resolve_targets(spell)
+            if not targets:
+                return  # CR 608.2b
+            target = targets[0]
+            fields["reflects"] = ReflectedDamage(
+                source_id=spell.id,
+                target_card_id=target.id if isinstance(target, CardState) else None,
+                target_stamp=target.zone_change_stamp if isinstance(target, CardState) else None,
+                target_player=target.username if isinstance(target, Player) else None,
+            )
+        if chooses:
+            chosen = _choose_a_source(game, controller, spell)
+            if chosen is None:
+                return
+            fields["source_id"] = chosen.id
+            fields["source_stamp"] = (
+                chosen.zone_change_stamp if chosen.zone is Zone.BATTLEFIELD else None
+            )
+        game.create_prevention_shield(
+            PreventionShield(
+                kind=ShieldKind.AMOUNT,
+                label=(
+                    f"prevent the next {amount} damage that would be dealt to {controller} "
+                    "and/or permanents they control this turn"
+                ),
+                controller=controller,
+                amount=amount,
+                and_permanents_of=controller,
+                **fields,
+            )
+        )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "<this spell> deals N damage to <target>. The damage can't be prevented.
+# [If that player or that planeswalker's controller would gain life this
+# turn, that player gains no life instead.]" (Flames of the Blood Hand,
+# Combust) - CR 615.12 for this one damage event, and a turn-long CR 614.1a
+# replacement of the damaged player's life gain.
+# --------------------------------------------------------------------------
+
+_UNPREVENTABLE_DAMAGE_RE = re.compile(
+    rf"^(?P<name>[^.]+?) deals {count_pattern('n', article=False)} damage to "
+    r"(?P<phrase>target [^.]+?)\. the damage can'?t be prevented\."
+    r"(?P<ban> if that player or that planeswalker'?s controller would gain life this turn, "
+    r"that player gains no life instead\.)?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s8")
+def _parse_unpreventable_damage_text(text: str) -> Effect | None:
+    """`_UNPREVENTABLE_DAMAGE_RE`'s shape. "The damage" is the sentence
+    before's own damage, so it is dealt `unpreventable` (CR 615.12) rather than
+    recorded as Skullcrack's turn-wide "Damage can't be prevented this turn.";
+    the no-life-gain rider is a `GainNoLifeReplacement` on the player hit, or
+    on the planeswalker's controller (CR 614.1a, CR 119.10), until cleanup."""
+    body = " ".join(text.strip().split())
+    if "the damage can" not in body.lower():
+        return None
+    match = _UNPREVENTABLE_DAMAGE_RE.fullmatch(body)
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"), article=False)
+    phrase = match.group("phrase")
+    if amount is None or not _targets_understood(phrase, allow_player_targets=True):
+        return None
+    bans_life_gain = match.group("ban") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ..replacement import CreatedReplacement, GainNoLifeReplacement
+
+        controller = game.controller_of(spell).username
+        for target in game.resolve_targets(spell):
+            if isinstance(target, CardState) and target.zone is not Zone.BATTLEFIELD:
+                continue
+            game.deal_damage(target, amount, source=spell, unpreventable=True)
+            if not bans_life_gain:
+                continue
+            player = (
+                target.username
+                if isinstance(target, Player)
+                else game.controller_of(target).username
+            )
+            game.created_replacements.append(
+                CreatedReplacement(
+                    spec=GainNoLifeReplacement(player=player),
+                    label=f"if {player} would gain life this turn, {player} gains no life instead",
+                    controller=controller,
+                    source_id=spell.id,
+                    source_name=spell.name,
                 )
             )
 
@@ -1678,7 +2174,8 @@ def _damage_each_creature_for_expression(
 _PREVENT_DAMAGE_DEALT_BY_TARGET_RE = re.compile(
     r"^(?P<next_turn>until your next turn, )?prevent all (?P<combat>combat )?damage "
     r"(?:that would be dealt by (?P<phrase>(?:up to one )?target [a-z ]*?(?:creature|permanent))"
-    r"|(?P<subject>(?:up to one )?target [a-z ]*?(?:creature|permanent)) would deal)"
+    r"|(?P<subject>(?:up to one |one or two )?target [a-z ]*?(?:creatures?|permanents?))"
+    r" would deal)"
     r"(?: (?P<this_turn>this turn)| for as long as (?P<remains>this (?:saga|creature|enchantment|"
     r"artifact|permanent|land)) remains on the battlefield)?\."
     r"(?:\s*if \{(?P<color>[wubrg])\} was spent to cast this spell, (?:this spell|[^,.]+?) "

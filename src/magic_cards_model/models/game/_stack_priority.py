@@ -18,6 +18,7 @@ from ...machines.casting import (
     has_quality,
     hexproof_abilities_in,
     or_additional_cost_alternatives,
+    with_keyword_spell_ability_target,
 )
 from ...machines.casting_restrictions import (
     cannot_be_copied,
@@ -56,6 +57,8 @@ from ...machines.effects import (
 )
 from ...machines.keywords import (
     ascend_as_a_spell_resolves,
+    awaken_as_the_spell_resolves,
+    awaken_target_held_apart,
     keyword_effect_for,
     keyword_triggered_abilities,
 )
@@ -577,8 +580,12 @@ class StackPriorityMixin:
                     unread_faces.append((face_name, face_text))
         if effects:
             try:
-                for effect in effects:
-                    effect(self, spell)
+                # CR 702.113a/b: an awakened spell's own text resolves without
+                # the awaken target; its spell ability follows, printed last.
+                with awaken_target_held_apart(self, spell) as awaken_target:
+                    for effect in effects:
+                        effect(self, spell)
+                awaken_as_the_spell_resolves(self, spell, awaken_target)
             except Exception:
                 # CR 400.1: "a zone is a place where objects can be during a
                 # game" and every object not outside the game is in exactly
@@ -2503,7 +2510,12 @@ class StackPriorityMixin:
                 return thing
             return None
 
-        profile = self._resolution_profile(spell)
+        record = self.cast_record_of(spell)
+        # CR 702.113b: an awakened spell also targets "target land you control".
+        profile = with_keyword_spell_ability_target(
+            self._resolution_profile(spell),
+            record.keyword if record is not None and record.keyword_cost_paid else None,
+        )
         if not profile.understood or not profile.requirements:
             return thing
         caster = spell.controller or self.active_player.username

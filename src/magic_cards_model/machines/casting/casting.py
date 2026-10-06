@@ -1585,6 +1585,7 @@ class Casting(EngineModel):
         (`targeting._with_aura_target`): the enchant target comes first, and
         anything the card's own text targets follows it.
         """
+        profile = with_keyword_spell_ability_target(profile, self.keyword_used)
         if not self.spell.bestowed:
             return profile
         enchant = profile_for_text("target creature")
@@ -2586,10 +2587,7 @@ class Casting(EngineModel):
         """
         match = _OPPONENT_SPELL_COUNT_CONDITION.match(condition.strip())
         if match is None:
-            return (
-                f"{self.spell.name}'s alternative cost is offered only 'if "
-                f"{condition}', which this engine cannot read (CR 118.9)"
-            )
+            return printed_condition_refusal(self.game, self.caster, self.spell, condition)
         needed = parse_count(match.group("count"), article=False)
         if needed is None:
             return (
@@ -5191,6 +5189,8 @@ from .options import (  # noqa: E402
     mandatory_additional_costs,
     marker_cast_options,
     or_additional_cost_halves,
+    printed_condition_refusal,
+    with_keyword_spell_ability_target,
 )
 from .permissions import (  # noqa: E402
     adventure_face,

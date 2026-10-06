@@ -1984,3 +1984,28 @@ def test_a_snapshot_written_before_the_nw01_t2_shapes_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW01_T2_SHAPES}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before NW02-T2: `PreventionShield` gained
+#: `source_filter`, `players_only`, `and_permanents_of` and `reflects` (CR
+#: 609.7b's rechecked source filter, CR 615.5's damage rider).
+_SCHEMA_VERSION_BEFORE_NW02_T2_SHIELDS = 115
+
+
+def test_a_snapshot_written_before_the_nw02_t2_shields_is_refused() -> None:
+    """A version-115 dump's shields carry no `source_filter`: decoded as
+    current, a Hunter's Ambush shield would prevent every creature's combat
+    damage, green or not. Refused instead."""
+    from magic_cards_model.models.game.records import PreventionShield
+
+    for name in ("source_filter", "players_only", "and_permanents_of", "reflects"):
+        assert name in PreventionShield.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW02_T2_SHIELDS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW02_T2_SHIELDS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW02_T2_SHIELDS}",
+    ):
+        Game.model_validate(dumped)

@@ -38,7 +38,7 @@ from ..card_state import (
 from ..player import Player
 from ..zone import Zone
 from ._common import Targetable
-from .records import PreventionShield
+from .records import PreventionShield, ReflectedDamage
 
 if TYPE_CHECKING:
     from . import Game
@@ -309,6 +309,9 @@ class DamageLifeMixin:
         """
         if event.kind is not EventKind.DAMAGE:
             return None
+        if event.unpreventable:
+            source = event.source.name if event.source is not None else "this damage"
+            return f"{source}: the damage can't be prevented (CR 615.12)"
         for effect in self.casting_rule_effects:
             if effect.kind == CastingRuleKind.DAMAGE_CANT_BE_PREVENTED:
                 return f"{effect.source_name}: damage can't be prevented this turn (CR 615.12)"
@@ -408,7 +411,12 @@ class DamageLifeMixin:
                 permanent.mark_damage(amount)
 
     def deal_damage(
-        self: "Game", target: Targetable, amount: int, *, source: "CardState | None" = None
+        self: "Game",
+        target: Targetable,
+        amount: int,
+        *,
+        source: "CardState | None" = None,
+        unpreventable: bool = False,
     ) -> int:
         """Deal damage to a permanent or a player, and say how much landed.
 
@@ -448,6 +456,9 @@ class DamageLifeMixin:
 
         Returns the damage actually dealt, which is what CR 702.2b's deathtouch
         and CR 702.15b's lifelink both key off: zero damage is not damage dealt.
+
+        `unpreventable` is a spell's own "The damage can't be prevented."
+        (CR 615.12) for this one damage event - not every damage this turn.
         """
         with self._id_allocator_scope():
             if amount is None and source is not None:
@@ -464,6 +475,7 @@ class DamageLifeMixin:
                 amount=amount,
                 combat=self._dealing_combat_damage,
                 source=source,
+                unpreventable=unpreventable,
             )
             apply_replacements(self, event)
             if event.happens and event.amount > 0 and event.card is not None:
@@ -619,6 +631,21 @@ class DamageLifeMixin:
             event.player is None or event.player.username != shield.player
         ):
             return False
+        if shield.players_only and event.player is None:
+            return False
+        if shield.and_permanents_of is not None and not (
+            (event.player is not None and event.player.username == shield.and_permanents_of)
+            or (
+                event.card is not None
+                and event.card.zone is Zone.BATTLEFIELD
+                and self.controller_of(event.card).username == shield.and_permanents_of
+            )
+        ):
+            return False  # "you and/or permanents you control", read now
+        if shield.source_filter is not None and (
+            event.source is None or not shield.source_filter.matches(self, event.source)
+        ):
+            return False  # CR 609.7b: the source's properties, rechecked now
         if shield.source_id is not None and (
             event.source is None or event.source.id != shield.source_id
         ):
@@ -694,6 +721,34 @@ class DamageLifeMixin:
         # happens").
         if prevented > 0 and shield.gains_life_when_prevented:
             self.gain_life(shield.controller, prevented)
+        if prevented > 0 and shield.reflects is not None:
+            self._deal_reflected_damage(shield.reflects, prevented)
+
+    def _deal_reflected_damage(self: "Game", reflects: ReflectedDamage, amount: int) -> None:
+        """CR 615.5's "If damage is prevented this way, `<spell>` deals that
+        much damage to any target": dealt immediately after the prevention, by
+        the spell that made the shield (CR 120.1, by last known information
+        once it has left the stack), to the target it was cast with. A
+        permanent target that is gone, or a new object (CR 400.7), or a
+        player who has left, is dealt nothing."""
+        source = self.find_by_id(reflects.source_id)
+        if reflects.target_player is not None:
+            if not any(p.username == reflects.target_player for p in self.players):
+                return
+            self.deal_damage(self.player(reflects.target_player), amount, source=source)
+            return
+        if reflects.target_card_id is None:
+            return
+        target = self.find_by_id(reflects.target_card_id)
+        if (
+            target is None
+            or target.zone is not Zone.BATTLEFIELD
+            or target.zone_change_stamp != reflects.target_stamp
+        ):
+            return
+        dealt = self.deal_damage(target, amount, source=source)
+        if source is not None and dealt > 0:
+            self._noncombat_deathtouch_and_lifelink(source, target, dealt)
 
     def _announced_x_of_spell(self: "Game", source: "CardState") -> int | None:
         """CR 107.3a's announced X of `source` while it is a spell on the stack

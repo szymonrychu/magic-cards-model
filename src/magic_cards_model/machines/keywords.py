@@ -30,7 +30,8 @@ session that wrote it. What is *not* here is listed in
 
 import random
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from enum import StrEnum
 from typing import Any, NamedTuple
 from uuid import UUID
@@ -3941,6 +3942,98 @@ def ascend_as_a_spell_resolves(game: Any, spell: CardState) -> bool:
     if len(game.permanents_controlled_by(controller.username)) < 10:
         return False
     controller.has_citys_blessing = True
+    return True
+
+
+#: "Awaken N—[cost]" as printed on the keyword line (CR 702.113a); the cost
+#: itself is `KeywordAbility.cost`, read by `casting.options`.
+_AWAKEN_LINE_RE = re.compile(r"^awaken (?P<n>\d+)\s*(?:—|-)", re.IGNORECASE | re.MULTILINE)
+
+
+def awaken_count(card: Card) -> int | None:
+    """The N of a printed "Awaken N—[cost]", or None."""
+    match = _AWAKEN_LINE_RE.search(card.oracle_text or "")
+    return None if match is None else int(match.group("n"))
+
+
+def awakened(game: Any, spell: CardState) -> bool:
+    """CR 702.113a's "If this spell's awaken cost was paid"."""
+    if spell.is_permanent or awaken_count(spell.card) is None:
+        return False
+    record = game.cast_record(spell)
+    return (record.keyword or "").lower() == "awaken" and record.keyword_cost_paid
+
+
+@contextmanager
+def awaken_target_held_apart(game: Any, spell: CardState) -> Iterator[TargetRef | None]:
+    """While the spell's own text resolves, its targets are only the ones that
+    text names: the awaken target (CR 702.113b, chosen last - `casting.
+    options.with_keyword_spell_ability_target`) belongs to the awaken spell
+    ability alone, so Clutch of Currents' "Return target creature" never
+    sees the land. Yields that target, or None when awaken was not paid."""
+    if not awakened(game, spell) or not spell.targets:
+        yield None
+        return
+    held = spell.targets[-1]
+    spell.targets = list(spell.targets[:-1])
+    try:
+        yield held
+    finally:
+        spell.targets = [*spell.targets, held]
+
+
+def awaken_as_the_spell_resolves(game: Any, spell: CardState, held: TargetRef | None) -> bool:
+    """CR 702.113a's spell ability: "put N +1/+1 counters on target land you
+    control. That land becomes a 0/0 Elemental creature with haste. It's
+    still a land." Followed after the rest of the text (it is printed last,
+    CR 608.2c). A target that is no longer legal - gone, a new object, no
+    longer a land, or no longer the caster's - is skipped (CR 608.2b).
+
+    The animation states no duration, so it lasts indefinitely (CR 611.2a),
+    scoped to this incarnation of the land (CR 400.7): the creature type and
+    the Elemental subtype are added in layer 4 ("It's still a land"), power
+    and toughness set to 0/0 in sublayer 7b, haste granted in layer 6; the
+    counters are real counters, sublayer 7c (CR 613.4)."""
+    if held is None:
+        return False
+    count = awaken_count(spell.card)
+    land = game.legal_target(spell, held)
+    if count is None or not isinstance(land, CardState) or land.zone is not Zone.BATTLEFIELD:
+        return False
+    if held.zone_change_stamp is not None and land.zone_change_stamp != held.zone_change_stamp:
+        return False
+    controller = game.controller_of(spell).username
+    if game.controller_of(land).username != controller:
+        return False
+    if Type.LAND not in game.characteristics_of(land).types:
+        return False
+    from .layers import add_subtype, set_power_toughness
+
+    stamp = land.zone_change_stamp
+    effects = game.continuous_effects
+    for description, layer, sublayer, modification in (
+        (f"awaken: {land.name} becomes a creature", Layer.TYPE, None, add_type(Type.CREATURE)),
+        (f"awaken: {land.name} is an Elemental", Layer.TYPE, None, add_subtype("Elemental")),
+        (
+            f"awaken: {land.name} is 0/0",
+            Layer.POWER_TOUGHNESS,
+            Sublayer.SET,
+            set_power_toughness(0, 0),
+        ),
+        (f"awaken: {land.name} has haste", Layer.ABILITY, None, grant_ability("Haste")),
+    ):
+        effects.add(
+            ContinuousEffect(
+                description=description,
+                layer=layer,
+                sublayer=sublayer,
+                timestamp=effects.tick(),
+                duration=Duration.INDEFINITE,
+                selector=only_this_incarnation(land, stamp),
+                modification=modification,
+            )
+        )
+    game.add_counters(land, Counter.PLUS_ONE, count)
     return True
 
 

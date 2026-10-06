@@ -160,6 +160,7 @@
     "_create_rebound_delayed_trigger",
     "_create_resolution_delayed_triggers",
     "_day_night_untap_check",
+    "_deal_reflected_damage",
     "_defeated_battles_to_put_into_graveyard",
     "_defending_player_of",
     "_destroy_impl",

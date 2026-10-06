@@ -495,6 +495,9 @@ class ReplaceableEvent:
     #: place any. `Game.enter_the_battlefield` applies it, clamped to what
     #: CR 306.5b actually put there, after `counters` above.
     loyalty_reduction: int = 0
+    #: A spell's own "The damage can't be prevented." (CR 615.12) for this one
+    #: damage event - `Game.damage_cant_be_prevented` reads it first.
+    unpreventable: bool = False
     #: Whether the permanent arrives tapped (CR 614.1c).
     tapped: bool = False
     #: Whether the permanent arrives with the prepared designation (CR 722.3a).
@@ -1651,6 +1654,33 @@ class DieToExileReplacement(EngineModel):
         event.destination = Zone.EXILE
 
 
+class GainNoLifeReplacement(EngineModel):
+    """ "If that player [or that planeswalker's controller] would gain life
+    this turn, that player gains no life instead." (Flames of the Blood Hand)
+    - a resolving spell's own turn-long replacement (CR 614.1a, CR 611.2a),
+    on the one player it named as it resolved. CR 119.10: it is a life-gain
+    event that would happen which is replaced, so a gain of 0 never reaches
+    it; the gain becomes none, and with it CR 603.2g's trigger never fires.
+    Unlike CR 119.7's "can't gain life", it is a replacement: CR 616.1 orders
+    it with the player's other life-gain replacements."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["gain_no_life"] = "gain_no_life"
+    player: str
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        return (
+            event.kind is EventKind.GAIN_LIFE
+            and event.amount > 0
+            and event.player is not None
+            and event.player.username == self.player
+        )
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        event.amount = 0
+
+
 #: What a `CreatedReplacement` does - a `kind`-tagged union, refused at decode
 #: for an unknown tag rather than silently doing nothing.
 CreatedReplacementSpec = Annotated[
@@ -1661,6 +1691,7 @@ CreatedReplacementSpec = Annotated[
     | LeaveBattlefieldExile
     | DamageLifeFloorReplacement
     | DieToExileReplacement
+    | GainNoLifeReplacement
     | DamageModifierReplacement
     | PreventDamageByReplacement
     | DamageCantBePreventedReplacement

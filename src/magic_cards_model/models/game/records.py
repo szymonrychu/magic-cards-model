@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
@@ -25,6 +25,9 @@ from ..card_state import (
     TargetRef,
 )
 from ..zone import Zone
+
+if TYPE_CHECKING:
+    from . import Game
 
 
 @dataclass(frozen=True)
@@ -587,6 +590,84 @@ class ShieldKind(StrEnum):
     ALL = "all"
 
 
+class ShieldSourceFilter(EngineModel):
+    """Which sources a filtered fog covers: "by attacking creatures", "by
+    nongreen creatures", "by creatures with no +1/+1 counters on them", "by
+    creatures without trample", "by creatures with power 4 or less", "by
+    creatures `<player>` controls", "by creatures other than target creature".
+
+    Data, never a callable (a persisted shield must decode), and read against
+    the source as it is when the damage would be dealt - CR 609.7b: "When the
+    source would deal damage, the "shield" rechecks the source's properties.
+    If the properties no longer match, the damage isn't prevented." A
+    creature that grows past the power limit, or gets a counter, after the
+    shield was made is no longer covered; one that arrives later is. Every
+    filter names creatures, so a source that is not a creature on the
+    battlefield as the damage is dealt never matches.
+    """
+
+    attacking: bool = False
+    excluded_colors: tuple[Color, ...] = ()
+    """"nongreen": the source must have none of these colours."""
+    without_counter: str | None = None
+    """"with no +1/+1 counters on them": the counter kind it must not carry."""
+    without_keyword: str | None = None
+    """"without trample"."""
+    max_power: int | None = None
+    """"with power N or less"."""
+    controller: str | None = None
+    """"creatures target opponent controls": the player chosen as the
+    spell resolved; control is still read as the damage is dealt."""
+    opponents_of: str | None = None
+    """"creatures your opponents control": an opponent of this player."""
+    excluded_card_id: UUID | None = None
+    excluded_stamp: UUID | None = None
+    """"other than target creature": that one object (CR 400.7: a new
+    object after a zone change is covered again)."""
+
+    def matches(self, game: "Game", source: CardState) -> bool:
+        from ...machines.combat import has_keyword
+
+        if source.zone is not Zone.BATTLEFIELD:
+            return False
+        chars = game.characteristics_of(source)
+        if Type.CREATURE not in chars.types:
+            return False
+        if self.attacking and not game.is_attacking(source):
+            return False
+        if set(self.excluded_colors) & set(chars.colors):
+            return False
+        if self.without_counter is not None and chars.counters.get(self.without_counter, 0) > 0:
+            return False
+        if self.without_keyword is not None and has_keyword(source, self.without_keyword, game):
+            return False
+        if self.max_power is not None and (game.power_of(source) or 0) > self.max_power:
+            return False
+        controller = game.controller_of(source).username
+        if self.controller is not None and controller != self.controller:
+            return False
+        if self.opponents_of is not None and controller == self.opponents_of:
+            return False
+        return not (
+            self.excluded_card_id is not None
+            and source.id == self.excluded_card_id
+            and source.zone_change_stamp == self.excluded_stamp
+        )
+
+
+class ReflectedDamage(EngineModel):
+    """CR 615.5's "If damage is prevented this way, `<spell>` deals that much
+    damage to any target." (Refraction Trap, Divine Deflection): who deals it
+    and to what. The target was chosen as the spell was cast (CR 601.2c) and
+    is held as the object it was on resolution - a permanent that has since
+    changed zones is a new object (CR 400.7) and is dealt nothing."""
+
+    source_id: UUID
+    target_card_id: UUID | None = None
+    target_stamp: UUID | None = None
+    target_player: str | None = None
+
+
 class PreventionShield(EngineModel):
     """One prevention effect waiting for a damage event (CR 615.1).
 
@@ -660,6 +741,21 @@ class PreventionShield(EngineModel):
     about it. Resolving this to a set of objects at resolution would fail
     open on both counts.
     """
+
+    source_filter: ShieldSourceFilter | None = None
+    """The filtered fog's "by `<sources>`" (CR 609.7b, rechecked as the
+    damage would be dealt). An anonymous source never matches a filter."""
+
+    players_only: bool = False
+    """"damage that would be dealt to players": every player, no permanent."""
+
+    and_permanents_of: str | None = None
+    """"to you and/or permanents you control": this player, and any permanent
+    this player controls as the damage would be dealt. Used with `player`
+    left None."""
+
+    reflects: ReflectedDamage | None = None
+    """CR 615.5's "deals that much damage to any target" rider."""
 
     combat_only: bool = False
     """CR 510.2: "prevent all *combat* damage"."""
