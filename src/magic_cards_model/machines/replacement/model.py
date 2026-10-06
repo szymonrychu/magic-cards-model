@@ -14,6 +14,13 @@ from ...models.token import TokenDefinition, is_token
 from ...models.zone import Zone
 from ...snapshot import EngineModel
 from ..casting import PlayAction
+from ..damage_modification import (
+    DamageCantBePreventedReplacement,
+    DamageModifierReplacement,
+    DamageRedirectReplacement,
+    PreventDamageByReplacement,
+    TurnDamageGroup,
+)
 from ..decisions import Decision, DecisionKind, source_id_of
 
 if TYPE_CHECKING:
@@ -1119,6 +1126,20 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
+    from ..aftermath import exiles_on_leaving_the_stack
+
+    if exiles_on_leaving_the_stack(card, record.origin_zone, record.face):
+        # CR 702.127a's third static ability: "If this spell was cast from a
+        # graveyard, exile it instead of putting it anywhere else any time it
+        # would leave the stack." - resolved or countered alike.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:aftermath",
+                source=card,
+                label="aftermath: cast from a graveyard, exile it instead (CR 702.127a)",
+                apply=_exile_instead,
+            )
+        )
     from ..keywords import has_rebound_now  # imported here: casting imports this module's siblings
 
     if has_rebound_now(card) and record.origin_zone is Zone.HAND and event.resolving:
@@ -1639,7 +1660,12 @@ CreatedReplacementSpec = Annotated[
     | EnterUncastExile
     | LeaveBattlefieldExile
     | DamageLifeFloorReplacement
-    | DieToExileReplacement,
+    | DieToExileReplacement
+    | DamageModifierReplacement
+    | PreventDamageByReplacement
+    | DamageCantBePreventedReplacement
+    | DamageRedirectReplacement
+    | TurnDamageGroup,
     Field(discriminator="kind"),
 ]
 
@@ -1665,27 +1691,37 @@ def _created_replacement_effects(game: "Game", event: ReplaceableEvent) -> list[
     creation is who CR 616.1 treats as the effect's controller."""
     found: list[ApplicableEffect] = []
     for record in game.created_replacements:
-        if not record.spec.applies(game, record.controller, event):
-            continue
-
-        def apply(
-            game: "Game",
-            source: CardState | None,
-            event: ReplaceableEvent,
-            record: CreatedReplacement = record,
-        ) -> None:
-            record.spec.apply(game, record.controller, event)
-
-        found.append(
-            ApplicableEffect(
-                key=f"created:{record.id}",
-                source=None,
-                label=record.label,
-                apply=apply,
-                controller_username=record.controller,
-                controls_entry=isinstance(record.spec, EnterUnderYourControl),
-            )
+        # A `TurnDamageGroup` is several effects of one spell (CR 608.2c),
+        # each applying on its own and keyed apart (CR 614.5).
+        parts = (
+            list(enumerate(record.spec.parts))
+            if isinstance(record.spec, TurnDamageGroup)
+            else [(None, record.spec)]
         )
+        for index, spec in parts:
+            if not spec.applies(game, record.controller, event):
+                continue
+
+            def apply(
+                game: "Game",
+                source: CardState | None,
+                event: ReplaceableEvent,
+                record: CreatedReplacement = record,
+                spec: object = spec,
+            ) -> None:
+                spec.apply(game, record.controller, event)  # type: ignore[attr-defined]
+
+            found.append(
+                ApplicableEffect(
+                    key=f"created:{record.id}" + ("" if index is None else f":{index}"),
+                    source=None,
+                    label=record.label,
+                    apply=apply,
+                    controller_username=record.controller,
+                    controls_entry=isinstance(spec, EnterUnderYourControl),
+                    prevention=bool(getattr(spec, "prevention", False)),
+                )
+            )
     return found
 
 

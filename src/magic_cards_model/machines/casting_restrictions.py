@@ -818,7 +818,7 @@ _CANT_BE_COUNTERED_RE = re.compile(r"^this spell can't be countered\.?$", re.IGN
 #: countered."
 _CONDITIONAL_CANT_BE_COUNTERED_RE = re.compile(
     r"^(?:[A-Z][A-Za-z' -]{2,30}? \u2014 )?if (?P<condition>[^,]+), "
-    r"this spell can't be countered\.?$",
+    r"this spell can't be countered(?: and the damage can't be prevented)?\.?$",
     re.IGNORECASE,
 )
 

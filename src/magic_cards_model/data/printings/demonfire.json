@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "f39020e2-86cf-4b7c-bcb8-23207291f9ee",
+  "oracle_id": "314a5c76-1a68-433b-a383-1834400254a8",
+  "multiverse_ids": [
+    643114
+  ],
+  "mtgo_id": 120741,
+  "tcgplayer_id": 531133,
+  "cardmarket_id": 748455,
+  "name": "Demonfire",
+  "lang": "en",
+  "released_at": "2024-01-12",
+  "uri": "https://api.scryfall.com/cards/f39020e2-86cf-4b7c-bcb8-23207291f9ee",
+  "scryfall_uri": "https://scryfall.com/card/rvr/107/demonfire?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:28:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.jpg?1783913315",
+    "normal": "https://cards.scryfall.io/normal/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.jpg?1783913315",
+    "large": "https://cards.scryfall.io/large/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.jpg?1783913315",
+    "png": "https://cards.scryfall.io/png/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.png?1783913315",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.jpg?1783913315",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.jpg?1783913315",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.webp?1783913315",
+    "grid": "https://cards.scryfall.io/grid/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.webp?1783913315",
+    "display": "https://cards.scryfall.io/display/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.webp?1783913315",
+    "art": "https://cards.scryfall.io/art/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.webp?1783913315",
+    "crop": "https://cards.scryfall.io/crop/front/f/3/f39020e2-86cf-4b7c-bcb8-23207291f9ee.webp?1783913315"
+  },
+  "mana_cost": "{X}{R}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Demonfire deals X damage to any target. If a creature dealt damage this way would die this turn, exile it instead.\nHellbent \u2014 If you have no cards in hand, this spell can't be countered and the damage can't be prevented.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Hellbent"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "fed2c8cd-ab92-44f6-808a-41e7809bcfe2",
+  "set": "rvr",
+  "set_name": "Ravnica Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/fed2c8cd-ab92-44f6-808a-41e7809bcfe2",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Arvr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rvr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f39020e2-86cf-4b7c-bcb8-23207291f9ee/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A314a5c76-1a68-433b-a383-1834400254a8&unique=prints",
+  "collector_number": "107",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "rakdos",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Greg Staples",
+  "artist_ids": [
+    "93d65564-bf00-447b-8406-e2031f03b6b1"
+  ],
+  "illustration_id": "15adadb2-29ff-4393-b647-ee234697e94b",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16050,
+  "penny_rank": 4888,
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": "0.22",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=643114&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDemonfire",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDemonfire",
+    "edhrec": "https://edhrec.com/route/?cc=Demonfire"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F531133%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=748455&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/120741?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

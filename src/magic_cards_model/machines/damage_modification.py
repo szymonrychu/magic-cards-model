@@ -27,10 +27,14 @@ loading.
 """
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal
+from uuid import UUID
+
+from pydantic import Field
 
 from ..models.card_state import CardState
 from ..models.zone import Zone
+from ..snapshot import EngineModel
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -74,6 +78,8 @@ def compile_damage_plus_source_characteristic(
         return None
     event_match = _SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE.fullmatch((effect.event or "").strip())
     if event_match is None:
+        return None
+    if event_match.group("subject").lower() != "source" or event_match.group("recipient") is None:
         return None
     recipient = _DAMAGE_RECIPIENTS.get(event_match.group("recipient").strip().lower())
     if recipient is None:
@@ -148,3 +154,388 @@ def compile_heal_other_damage(effect: "ReplacementEffect") -> "CardReplacement |
         source.damage = min(source.damage, simultaneous)
 
     return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
+# --------------------------------------------------------------------------
+# Turn-long damage replacement and prevention a resolving spell creates
+# --------------------------------------------------------------------------
+#
+# CR 614.1a / CR 615.1a with CR 611.2a's stated duration: "If a source you
+# control would deal damage this turn, it deals double that damage instead."
+# (Insult), "Prevent all damage that would be dealt by creatures this turn.
+# You gain life equal to the damage prevented this way." (Chant of
+# Vitu-Ghazi, Ethereal Haze), "Damage can't be prevented this turn." beside
+# one of them (Insult, CR 615.12), and the redirection effects (CR 614.9):
+# "All damage that would be dealt this turn to target creature you control by
+# a source of your choice is dealt to another target creature instead." (Kor
+# Dirge), "All combat damage that would be dealt to you this turn is dealt to
+# target attacking creature instead." (Turn the Tables), "The next N damage
+# that would be dealt to target creature this turn is dealt to another target
+# creature instead." (Carom, Razia, Boros Archangel).
+#
+# Each is a `CreatedReplacementSpec` (`machines/replacement/model.py`) held on
+# `Game.created_replacements` until CR 514.2's cleanup. `machines/replacement/
+# parse.read_turn_damage_spec` reads the sentence; a spec naming the creating
+# spell's targets or a source of the caster's choice is completed by `bind`
+# when the record is created, as the spell resolves (CR 608.2b, CR 609.7a).
+
+
+def _is_damage(event: "ReplaceableEvent") -> bool:
+    from .replacement import EventKind
+
+    return event.kind is EventKind.DAMAGE and event.amount > 0
+
+
+def _source_is_creature(game: "Game", source: CardState) -> bool:
+    return game.source_has_quality(source, "creature")
+
+
+class DamageModifierReplacement(EngineModel):
+    """ "If a [`<quality>`] source/creature you control would deal [noncombat]
+    damage [to `<recipients>`], it deals double/triple that damage / that much
+    damage plus N instead." (CR 614.1a, CR 701.10g; CR 609.7b rechecks the
+    source as the damage would be dealt). "You" is the effect's controller.
+    The static twin (`replacement._compile_damage_plus_amount`) reads the same
+    shape off a permanent and asks this model the same questions."""
+
+    kind: Literal["damage_modifier"] = "damage_modifier"
+    #: "source" or "creature": what the dealing object has to be.
+    subject: Literal["source", "creature"] = "source"
+    quality: str | None = None
+    noncombat: bool = False
+    #: A `replacement._DAMAGE_RECIPIENTS` phrase; None is any recipient.
+    recipient: str | None = None
+    factor: int = 1
+    addend: int = 0
+
+    prevention: ClassVar[bool] = False
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        from .replacement import _DAMAGE_RECIPIENTS
+
+        if controller is None or not _is_damage(event) or event.source is None:
+            return False
+        if self.noncombat and event.combat:
+            return False  # "noncombat damage" (CR 510.2 marks combat damage).
+        if game.controller_of(event.source).username != controller:
+            return False  # "a source *you* control", checked now (CR 609.7b).
+        if self.subject == "creature" and not _source_is_creature(game, event.source):
+            return False
+        if self.quality is not None and not game.source_has_quality(event.source, self.quality):
+            return False
+        if self.recipient is None:
+            return True
+        recipient = _DAMAGE_RECIPIENTS.get(self.recipient)
+        return recipient is not None and recipient(game, controller, event)
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        event.amount = event.amount * self.factor + self.addend
+
+
+class PreventDamageByReplacement(EngineModel):
+    """ "Prevent all [combat] damage that would be dealt by `<quality>`
+    [sources] this turn." with, optionally, CR 615.5's "You gain life equal to
+    the damage prevented this way." (CR 615.1a). CR 609.7b: the source's
+    quality is rechecked each time it would deal damage, so a creature that
+    stops being one deals its damage, and one animated later is covered. Each
+    prevented event gains its own life (CR 615.5: "immediately afterward").
+    Against damage that can't be prevented (CR 615.12) it still applies,
+    prevents nothing, and so gains nothing."""
+
+    kind: Literal["prevent_damage_by"] = "prevent_damage_by"
+    source_quality: str
+    combat_only: bool = False
+    gains_life: bool = False
+
+    prevention: ClassVar[bool] = True
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        if not _is_damage(event) or event.source is None:
+            return False
+        if self.combat_only and not event.combat:
+            return False
+        return game.source_has_quality(event.source, self.source_quality)
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        if game.damage_cant_be_prevented(event) is not None:
+            return  # CR 615.12: nothing is prevented, so nothing is gained.
+        prevented = event.amount
+        event.amount = 0
+        if self.gains_life and prevented > 0 and controller is not None:
+            game.gain_life(controller, prevented)
+
+
+class DamageCantBePreventedReplacement(EngineModel):
+    """ "[Combat] damage can't be prevented this turn." carried beside another
+    turn-long damage effect of the same spell (Insult) - CR 615.12. It replaces
+    nothing itself: `Game.damage_cant_be_prevented` asks `makes_unpreventable`
+    of every created record, the same question it asks Skullcrack's recorded
+    rule (`CastingRuleKind.DAMAGE_CANT_BE_PREVENTED`)."""
+
+    kind: Literal["damage_cant_be_prevented"] = "damage_cant_be_prevented"
+    combat_only: bool = False
+
+    prevention: ClassVar[bool] = False
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        return False
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        return None
+
+    def makes_unpreventable(self, event: "ReplaceableEvent") -> bool:
+        from .replacement import EventKind
+
+        return event.kind is EventKind.DAMAGE and (event.combat or not self.combat_only)
+
+
+class DamageRedirectReplacement(EngineModel):
+    """A redirection effect (CR 614.9) created by a resolving spell or ability:
+    damage that would be dealt to the protected creature or player is dealt to
+    the redirect target instead.
+
+    Read from the sentence (`replacement.parse.read_turn_damage_spec`) with
+    the targets as indexes into the creating object's targets
+    (`protected_target`, `redirect_target`); `bind` fixes them to the objects
+    chosen, once they are rechecked on resolution (CR 608.2b), and asks the
+    controller for "a source of your choice" when the text names one (CR
+    609.7a: "The source is chosen when the effect is created").
+
+    CR 614.9: "If one of those permanents is no longer on the battlefield when
+    the damage would be redirected, or is no longer a battle, creature, or
+    planeswalker when the damage would be redirected, the effect does
+    nothing." - so the redirect target is rechecked as the damage would be
+    dealt, and the damage then goes where it was going (Turn the Tables'
+    attacker gone: the damage is dealt to you).
+
+    `amount` is "the next N damage" (CR 615.7's twin for a redirection): N is
+    what is left to redirect, spent as damage is redirected; None is "all".
+    """
+
+    kind: Literal["damage_redirect"] = "damage_redirect"
+    combat_only: bool = False
+    protected_target: int | None = None
+    """Which of the creating object's targets is protected; None for "you"."""
+    redirect_target: int = 0
+    choose_source: bool = False
+    amount: int | None = None
+
+    bound: bool = False
+    protected_id: UUID | None = None
+    protected_stamp: UUID | None = None
+    protected_player: str | None = None
+    redirect_id: UUID | None = None
+    redirect_stamp: UUID | None = None
+    source_id: UUID | None = None
+    source_stamp: UUID | None = None
+
+    prevention: ClassVar[bool] = False
+
+    def bind(self, game: "Game", stack_object: Any) -> "DamageRedirectReplacement | None":
+        targets = list(getattr(stack_object, "targets", ()) or ())
+
+        def legal(index: int | None) -> CardState | None:
+            if index is None or index >= len(targets):
+                return None
+            found = game.legal_target(stack_object, targets[index])
+            return found if isinstance(found, CardState) else None
+
+        redirect = legal(self.redirect_target)
+        if redirect is None:
+            return None  # CR 608.2b: no legal target left to redirect to.
+        controller = game.controller_of(stack_object).username
+        update: dict[str, Any] = {
+            "bound": True,
+            "redirect_id": redirect.id,
+            "redirect_stamp": redirect.zone_change_stamp,
+        }
+        if self.protected_target is None:
+            update["protected_player"] = controller
+        else:
+            protected = legal(self.protected_target)
+            if protected is None:
+                return None
+            update["protected_id"] = protected.id
+            update["protected_stamp"] = protected.zone_change_stamp
+        if self.choose_source:
+            chosen = _choose_a_source(game, controller, stack_object)
+            if chosen is None:
+                return None
+            update["source_id"] = chosen.id
+            # CR 609.7a: a permanent spell chosen on the stack also covers the
+            # permanent it becomes, so only a permanent is held to its stamp.
+            update["source_stamp"] = (
+                chosen.zone_change_stamp if chosen.zone is Zone.BATTLEFIELD else None
+            )
+        return self.model_copy(update=update)
+
+    def _redirect_to(self, game: "Game") -> CardState | None:
+        from ..models.card import Type
+
+        if self.redirect_id is None:
+            return None
+        found = game.find_by_id(self.redirect_id)
+        if found is None or found.zone is not Zone.BATTLEFIELD:
+            return None
+        if found.zone_change_stamp != self.redirect_stamp:
+            return None  # CR 400.7: a new object the effect never named.
+        types = game.characteristics_of(found).types
+        if not ({Type.CREATURE, Type.PLANESWALKER, Type.BATTLE} & set(types)):
+            return None
+        return found
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        if not self.bound or not _is_damage(event):
+            return False
+        if self.amount is not None and self.amount <= 0:
+            return False
+        if self.combat_only and not event.combat:
+            return False
+        if self.protected_player is not None:
+            if event.player is None or event.player.username != self.protected_player:
+                return False
+        elif (
+            event.card is None
+            or event.card.id != self.protected_id
+            or event.card.zone_change_stamp != self.protected_stamp
+        ):
+            return False
+        if self.source_id is not None:
+            source = event.source
+            if source is None or source.id != self.source_id:
+                return False
+            if self.source_stamp is not None and source.zone_change_stamp != self.source_stamp:
+                return False
+        return self._redirect_to(game) is not None
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        """The same stand-in `replacement._redirect_damage_to_the_source` uses:
+        the original event loses the redirected damage (CR 614.6) and the
+        redirect target is dealt it as its own event, which keeps it subject
+        to that creature's own prevention and replacement effects. Deathtouch
+        and lifelink key off damage dealt (CR 702.2b, 702.15b), so they are
+        applied to the damage that actually reached the new recipient."""
+        target = self._redirect_to(game)
+        if target is None:
+            return
+        moved = event.amount if self.amount is None else min(self.amount, event.amount)
+        if self.amount is not None:
+            self.amount -= moved
+        event.amount -= moved
+        source = event.source
+        dealt = game.deal_damage(target, moved, source=source)
+        if source is not None and dealt > 0:
+            game._noncombat_deathtouch_and_lifelink(source, target, dealt)
+            if event.combat:
+                game.combat_damage_dealt_this_turn_by.add(source.id)
+
+
+def _choose_a_source(game: "Game", controller: str, stack_object: Any) -> CardState | None:
+    """CR 609.7a's "a source of your choice": a permanent or a spell on the
+    stack (the objects this engine can name as a damage source), chosen by
+    the controller as the effect is created."""
+    from .decisions import Decision, DecisionKind, source_id_of
+
+    candidates = [state for state in game.battlefield if isinstance(state, CardState)]
+    candidates.extend(state for state in game.stack if isinstance(state, CardState))
+    if not candidates:
+        return None
+    answer = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller,
+            prompt="choose a source (CR 609.7a)",
+            source=getattr(stack_object, "name", None),
+            source_id=source_id_of(stack_object),
+            amount=1,
+            cards=tuple(candidate.id for candidate in candidates),
+        )
+    )
+    chosen = tuple(answer) if isinstance(answer, (tuple, list)) else ()
+    by_id = {candidate.id: candidate for candidate in candidates}
+    return by_id.get(chosen[0]) if chosen else None
+
+
+#: The turn-long specs a group can hold (one spell, several sentences).
+TurnDamageSpec = Annotated[
+    DamageModifierReplacement
+    | PreventDamageByReplacement
+    | DamageCantBePreventedReplacement
+    | DamageRedirectReplacement,
+    Field(discriminator="kind"),
+]
+
+
+class TurnDamageGroup(EngineModel):
+    """Several turn-long damage effects one resolving spell creates at once,
+    in printed order (CR 608.2c) - Insult's "Damage can't be prevented this
+    turn. If a source you control would deal damage this turn, it deals
+    double that damage instead." Each part applies as its own effect
+    (`replacement._created_replacement_effects` expands the group)."""
+
+    kind: Literal["turn_damage_group"] = "turn_damage_group"
+    parts: list[TurnDamageSpec]
+
+    prevention: ClassVar[bool] = False
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        return False
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        return None
+
+    def bind(self, game: "Game", stack_object: Any) -> "TurnDamageGroup | None":
+        parts: list[Any] = []
+        for part in self.parts:
+            bind = getattr(part, "bind", None)
+            bound = part if bind is None else bind(game, stack_object)
+            if bound is not None:
+                parts.append(bound)
+        return self.model_copy(update={"parts": parts}) if parts else None
+
+
+def created_damage_unpreventable(game: "Game", event: "ReplaceableEvent") -> str | None:
+    """Why a created record makes this damage unpreventable (CR 615.12)."""
+    for record in game.created_replacements:
+        spec = record.spec
+        parts = spec.parts if isinstance(spec, TurnDamageGroup) else [spec]
+        for part in parts:
+            if isinstance(part, DamageCantBePreventedReplacement) and part.makes_unpreventable(
+                event
+            ):
+                return f"{record.source_name}: damage can't be prevented this turn (CR 615.12)"
+    return None
+
+
+#: A spell's own "If `<condition>`, this spell can't be countered and the
+#: damage can't be prevented." (Banefire's "If X is 5 or more", Demonfire's
+#: hellbent "If you have no cards in hand") - CR 113.6g's half is read by
+#: `casting_restrictions.conditionally_cannot_be_countered`; this is the CR
+#: 615.12 half, for damage the spell itself deals while it is on the stack.
+_SPELL_OWN_UNPREVENTABLE_RE = re.compile(
+    r"^(?:[A-Z][A-Za-z' -]{2,30}? — )?if (?P<condition>[^,]+), "
+    r"this spell can't be countered and the damage can't be prevented\.?$",
+    re.IGNORECASE,
+)
+
+
+def spell_damage_unpreventable(game: "Game", event: "ReplaceableEvent") -> str | None:
+    """Why damage the resolving spell deals can't be prevented, from its own
+    conditional static (CR 604.5: it functions while the spell is on the
+    stack), or None. The condition is read now, for the spell's controller,
+    by `Game.condition_holds` - an unread condition protects nothing."""
+    from .abilities import AbilityKind, parse_abilities
+
+    source = event.source
+    if source is None or source.zone is not Zone.STACK:
+        return None
+    controller = game.controller_of(source).username
+    for line in parse_abilities(source.card):
+        if line.kind is not AbilityKind.STATIC:
+            continue
+        match = _SPELL_OWN_UNPREVENTABLE_RE.match((line.text or "").strip())
+        if match is None:
+            continue
+        if game.condition_holds(controller, match.group("condition"), source) is True:
+            return f"{source.name}: the damage can't be prevented (CR 615.12)"
+    return None

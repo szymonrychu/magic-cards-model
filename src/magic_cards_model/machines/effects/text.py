@@ -1036,7 +1036,7 @@ _CANT_BE_COUNTERED_LINE_RE = re.compile(
 #: condition stays in the text and leaves the spell unread.
 _CONDITIONAL_CANT_BE_COUNTERED_LINE_RE = re.compile(
     r"^(?:[A-Z][A-Za-z' -]{2,30}? \u2014 )?if (?P<condition>[^,\n]+), "
-    r"this spell can't be countered\.[ \t]*\n?",
+    r"this spell can't be countered(?: and the damage can't be prevented)?\.[ \t]*\n?",
     re.IGNORECASE | re.MULTILINE,
 )
 

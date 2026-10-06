@@ -323,7 +323,15 @@ class DamageLifeMixin:
                 if not self._still_has_static_line(source, text):
                     continue
                 return f"{source.name}: damage can't be prevented (CR 615.12)"
-        return None
+        # A resolved spell's own turn-long "Damage can't be prevented this
+        # turn." held beside another effect it created (Insult) - recorded on
+        # `created_replacements` rather than `casting_rule_effects`.
+        from ...machines.damage_modification import (
+            created_damage_unpreventable,
+            spell_damage_unpreventable,
+        )
+
+        return created_damage_unpreventable(self, event) or spell_damage_unpreventable(self, event)
 
     # -- damage and life ---------------------------------------------------
 
@@ -442,6 +450,13 @@ class DamageLifeMixin:
         and CR 702.15b's lifelink both key off: zero damage is not damage dealt.
         """
         with self._id_allocator_scope():
+            if amount is None and source is not None:
+                # "deals X damage" read with no number (the clause reader's
+                # `parse_count("X")`): CR 107.3a - "While a spell is on the
+                # stack, any X in its mana cost ... equals the announced
+                # value" - for a spell with {X} in its own mana cost (Banefire,
+                # Demonfire). Anything else is left as it was.
+                amount = self._announced_x_of_spell(source)
             event = ReplaceableEvent(
                 kind=EventKind.DAMAGE,
                 card=None if isinstance(target, Player) else target,
@@ -679,6 +694,14 @@ class DamageLifeMixin:
         # happens").
         if prevented > 0 and shield.gains_life_when_prevented:
             self.gain_life(shield.controller, prevented)
+
+    def _announced_x_of_spell(self: "Game", source: "CardState") -> int | None:
+        """CR 107.3a's announced X of `source` while it is a spell on the stack
+        whose own mana cost has {X}, or None."""
+        if source.zone is not Zone.STACK or "{X}" not in (source.mana_cost or "").upper():
+            return None
+        record = self.cast_record_of(source)
+        return record.x_value if record is not None else None
 
     def _noncombat_deathtouch_and_lifelink(
         self: "Game", source: "CardState", target: Targetable, dealt: int

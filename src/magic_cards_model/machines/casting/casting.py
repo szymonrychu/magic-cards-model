@@ -755,6 +755,9 @@ class Casting(EngineModel):
     keyword_normal_face_only: bool = False
     """The claimed option's `KeywordCastOption.normal_face_only` (CR 715.3d),
     set by `use_keyword` alongside `keyword_used`."""
+    keyword_face_only: str | None = None
+    """The claimed option's `KeywordCastOption.face_only` (CR 702.127a's
+    aftermath half), set by `use_keyword` alongside `keyword_used`."""
     keyword_used: str | None = None
     """The keyword this spell is being cast with, if any (CR 601.2b).
 
@@ -1046,6 +1049,7 @@ class Casting(EngineModel):
                 timing
                 or why_cannot_cast_restriction(self.spell, self.caster, self.game, face=evaluated)
                 or why_cannot_cast_self_restriction(self.spell, self.caster, self.game)
+                or aftermath_face_refusal(self.spell.card, evaluated, self.origin_zone)
             )
             if reason is not None:
                 refusals[option or ""] = reason
@@ -1368,6 +1372,10 @@ class Casting(EngineModel):
         for face in faces:
             if face.name == face_name:
                 refusal = self.face_cast_refusals.get(face_name)
+                if refusal is None and self.keyword_face_only not in (None, face_name):
+                    refusal = aftermath_face_only_refusal(
+                        self.spell.name, self.keyword_face_only, face_name
+                    )
                 if refusal is not None:
                     raise ValueError(refusal)
                 self.face = face_name
@@ -1945,6 +1953,7 @@ class Casting(EngineModel):
         self._enter_modes()
         self.keyword_used = option.keyword
         self.keyword_normal_face_only = option.normal_face_only
+        self.keyword_face_only = option.face_only
         self.keyword_exiles_instead = option.exile_instead_of_graveyard
         self.keyword_enters_with_counters = option.enters_with_counters
         self.keyword_once_per_turn_key = option.once_per_turn_key
@@ -4229,6 +4238,10 @@ class Casting(EngineModel):
             refusal = self._normal_face_only_refusal(self.face)
             if refusal is not None:
                 raise ValueError(refusal)
+            if self.keyword_face_only is not None and self.face != self.keyword_face_only:
+                raise ValueError(
+                    aftermath_face_only_refusal(self.spell.name, self.keyword_face_only, self.face)
+                )
             if self.keyword_used is not None or self.permission_used is not None:
                 return
             if usable_play_permission(self.game, self._as_announced, self.caster) is not None:
@@ -5148,6 +5161,7 @@ def exile_adventured(game: Any, spell: CardState, owner: str | None = None) -> C
         return annotate_exile(spell, ExileMarker.ADVENTURED, player.username, game)
 
 
+from ..aftermath import aftermath_face_only_refusal, aftermath_face_refusal  # noqa: E402
 from ._common import (  # noqa: E402
     _BLIGHT_PHRASE,
     _OPTIONAL_BEHOLD,

@@ -2175,10 +2175,20 @@ def _created_replacement_record(
     source_id: UUID | None,
     source_name: str,
     target_player: str | None,
+    game: "Game | None" = None,
+    stack_object: object = None,
 ) -> CreatedReplacement | None:
     spec = created_replacement_spec(text)
     if spec is None:
         return None
+    bind = getattr(spec, "bind", None)
+    if bind is not None and game is not None:
+        # A spec naming the creating object's targets or a source of its
+        # controller's choice (`damage_modification.DamageRedirectReplacement`)
+        # is completed now, as it resolves (CR 608.2b, CR 609.7a).
+        spec = bind(game, stack_object)
+        if spec is None:
+            return None
     if isinstance(spec, DrawSkipReplacement) and spec.affected == "player":
         # CR 115.1: "target player" was chosen on announcement and rechecked
         # at CR 608.2b; no legal one left means nothing to replace.
@@ -2215,6 +2225,8 @@ def _parse_created_replacement_spell_text(text: str) -> Effect | None:
             source_id=spell.id,
             source_name=spell.name,
             target_player=target,
+            game=game,
+            stack_object=spell,
         )
         if record is not None:
             game.created_replacements.append(record)
@@ -2274,6 +2286,8 @@ def _parse_created_replacement_ability_text(text: str) -> AbilityEffect | None:
             source_id=ability.source_id,
             source_name=ability.source_name,
             target_player=target,
+            game=game,
+            stack_object=ability,
         )
         if record is not None:
             game.created_replacements.append(record)

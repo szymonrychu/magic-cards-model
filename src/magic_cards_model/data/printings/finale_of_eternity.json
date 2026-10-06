@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "85c60177-8b71-4e24-87e7-395d5e4f93ff",
+  "oracle_id": "3113afec-d4ae-46b5-9952-89e2e2c9ae7b",
+  "multiverse_ids": [
+    461018
+  ],
+  "mtgo_id": 71788,
+  "arena_id": 69542,
+  "tcgplayer_id": 188702,
+  "cardmarket_id": 372267,
+  "name": "Finale of Eternity",
+  "lang": "en",
+  "released_at": "2019-05-03",
+  "uri": "https://api.scryfall.com/cards/85c60177-8b71-4e24-87e7-395d5e4f93ff",
+  "scryfall_uri": "https://scryfall.com/card/war/91/finale-of-eternity?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:04:04Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.jpg?1783933444",
+    "normal": "https://cards.scryfall.io/normal/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.jpg?1783933444",
+    "large": "https://cards.scryfall.io/large/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.jpg?1783933444",
+    "png": "https://cards.scryfall.io/png/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.png?1783933444",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.jpg?1783933444",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.jpg?1783933444",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.webp?1783933444",
+    "grid": "https://cards.scryfall.io/grid/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.webp?1783933444",
+    "display": "https://cards.scryfall.io/display/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.webp?1783933444",
+    "art": "https://cards.scryfall.io/art/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.webp?1783933444",
+    "crop": "https://cards.scryfall.io/crop/front/8/5/85c60177-8b71-4e24-87e7-395d5e4f93ff.webp?1783933444"
+  },
+  "mana_cost": "{X}{B}{B}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Destroy up to three target creatures with toughness X or less. If X is 10 or more, return all creature cards from your graveyard to the battlefield.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ee044f0b-e101-4ead-8d0e-aa510aad4277",
+  "set": "war",
+  "set_name": "War of the Spark",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ee044f0b-e101-4ead-8d0e-aa510aad4277",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awar&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/war?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/85c60177-8b71-4e24-87e7-395d5e4f93ff/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3113afec-d4ae-46b5-9952-89e2e2c9ae7b&unique=prints",
+  "collector_number": "91",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "When you rule by fear, your greatest weakness is one who's no longer afraid.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "f0368ced-da03-4ea0-b3c9-4706ff7bd2cb",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 9789,
+  "penny_rank": 8884,
+  "preview": {
+    "source": "Jimmy Wong",
+    "source_uri": "https://twitter.com/jfwong/status/1118337887034961920",
+    "previewed_at": "2019-04-16"
+  },
+  "prices": {
+    "usd": "0.94",
+    "usd_foil": "2.16",
+    "usd_etched": null,
+    "eur": "0.67",
+    "eur_foil": "2.17",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=461018&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFinale%2Bof%2BEternity",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFinale%2Bof%2BEternity",
+    "edhrec": "https://edhrec.com/route/?cc=Finale+of+Eternity"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F188702%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=372267&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/71788?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
