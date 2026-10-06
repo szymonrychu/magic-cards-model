@@ -7539,3 +7539,9 @@ No new persisted field (schema unchanged). The restrictions are layer-6 grants o
 Not modelled here: the static "If `<damage>` would be dealt to `<...>`, prevent that damage. Put a counter on `<it>` for each 1 damage prevented this way." (Stormwild Capridor, Vigor - NW-52's replacement statics, `machines/replacement/`), and Mourner's Shield's "by a source of your choice that shares a color with the exiled card" (an imprint-linked source choice).
 
 Schema 118 -> 124 (NW-03's reserved number for T7): `PreventionShield.counters_when_prevented`.
+
+## NW03-F1: cast-time "as you cast this spell" conditions on single-target layer riders
+
+| Mechanic | CR | Where | Tests |
+|---|---|---|---|
+| "`<that creature / it / target ...>` gets [an additional] `<+N/+N>` until end of turn if `<cast-record condition>`." - a layer sentence's trailing "if" rider whose condition is one of `machines/conditions/cast_record.py`'s own (`reads_cast_record`: "you controlled a `<subtype>` as you cast this spell", "was kicked", ...) is asked once as the effect is created, against the spell's `CastRecord` (locked at cast, CR 601.2i), never the board on resolution; an unreadable condition still fails closed (Faerie Fencing). A bare "-X/-X" layer sentence is classified by shape (`is_x_substituted_layer_sentence`) so the composer does not count it as an unread remainder | CR 601.2i, 608.2c, 613.4c, 107.3a | `machines/layers/parse._parse_if_gated_layer_sentence` / `_if_gated_builder`; `LayerContext.condition_holds` (wired to `Game.condition_holds` in `machines/effects/continuous.py`) | `scenarios/test_nw03_cast_time_condition_on_continuous_rider.py` |
