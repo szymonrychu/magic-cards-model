@@ -4495,6 +4495,7 @@ class Casting(EngineModel):
                 enters_with_counters=list(self.keyword_enters_with_counters),
                 kicker_costs_paid=list(self.kicker_costs_paid),
                 controlled_subtypes_as_cast=self._controlled_subtypes(),
+                controlled_modified_creature_as_cast=self._controls_modified_creature(),
                 bargained=self.bargained,
                 evidence_collected=self.evidence_collected,
                 revealed_for_cost=self.revealed_for_cost,
@@ -4531,6 +4532,14 @@ class Casting(EngineModel):
             if self.permission_used is not None:
                 self.game.spend_play_permission_choice(self.permission_used)
         return self.spell
+
+    def _controls_modified_creature(self) -> bool:
+        """CR 601.2i / CR 700.9: whether the caster controls a modified creature
+        as the spell becomes cast - "If you controlled a modified creature as
+        you cast this spell"."""
+        from ..conditions.board import controls_modified_creature
+
+        return self.game is not None and controls_modified_creature(self.game, self.caster)
 
     def _controlled_subtypes(self) -> tuple[str, ...]:
         """CR 601.2i: every subtype among the permanents the caster controls as

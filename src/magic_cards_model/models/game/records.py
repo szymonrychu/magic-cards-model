@@ -546,6 +546,12 @@ class CastRecord(EngineModel):
     """Every subtype among the permanents the caster controlled as the spell
     became cast (CR 601.2i), lowercased - "or controlled a Dragon as you cast
     this spell". Empty for a copy, which was never cast (CR 707.10)."""
+    controlled_modified_creature_as_cast: bool = False
+    """Whether the caster controlled a modified creature (CR 700.9) as the
+    spell became cast (CR 601.2i) - Flame Discharge's "If you controlled a
+    modified creature as you cast this spell". Fixed at casting, so a counter
+    put on or taken off afterwards changes nothing. False for a copy (CR
+    707.10)."""
     creature_mana_spent: int = 0
     """How much of `mana_spent` came from creatures (CR 106.3), from
     `ManaPayment.creature_spent` - "three or more mana from creatures was

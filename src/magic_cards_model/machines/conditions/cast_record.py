@@ -330,6 +330,14 @@ def _at_least_color_mana_spent(context: "ConditionContext", match: re.Match[str]
     return record.mana_of_color_spent(Color(_COLOR_WORDS[match.group("color")])) >= needed
 
 
+def _modified_creature_as_cast(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "you controlled a modified creature as you cast this spell" (CR 700.9,
+    CR 601.2i) - the fact `Casting` recorded as the spell became cast, not the
+    board as it resolves."""
+    record = _record(context)
+    return record is not None and record.controlled_modified_creature_as_cast
+
+
 def _from_creatures(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "three or more mana from creatures was spent to cast it" (CR 106.3)."""
     needed = parse_count(match.group("count") or match.group("count2"))
@@ -549,6 +557,10 @@ READERS: tuple[ConditionReader, ...] = (
         rf"(?:at least (?P<count>{COUNT})|(?P<count2>{COUNT}) or more) mana from creatures "
         rf"was spent to cast {_IT}",
         _from_creatures,
+    ),
+    _reader(
+        rf"you controlled an? modified creature as you cast {_IT}",
+        _modified_creature_as_cast,
     ),
     _reader(
         rf"\{{s\}} of any of (?:that spell's|its) colors was spent to cast {_IT}",

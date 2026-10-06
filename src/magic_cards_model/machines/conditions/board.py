@@ -52,11 +52,13 @@ from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING, cast
 
+from ...models.card import Type
 from ...numbers import COUNT, parse_count
 from . import ConditionReader
 
 if TYPE_CHECKING:
     from ...models.card_state import CardState
+    from ...models.game import Game
     from ..layers import Characteristics
     from . import ConditionContext
 
@@ -107,18 +109,41 @@ def _attached(context: "ConditionContext", state: "CardState", subtype: str) -> 
     ]
 
 
-def _is_modified(context: "ConditionContext", state: "CardState", chars: "Characteristics") -> bool:
-    """CR 700.9's three ways, the Aura's controller compared to the
-    permanent's."""
+def permanent_is_modified(game: "Game", state: "CardState", chars: "Characteristics") -> bool:
+    """CR 700.9's three ways - a counter, an Equipment attached, or an Aura
+    attached that the permanent's own controller controls - read off the
+    computed board (CR 613.5)."""
     if any(amount > 0 for amount in chars.counters.values()):
         return True
-    if _attached(context, state, "Equipment"):
+    board = game.computed_board()
+
+    def attached(subtype: str) -> list["CardState"]:
+        return [
+            other
+            for other in game.battlefield
+            if other.attached_to == state.id and subtype in board.of(other).subtypes
+        ]
+
+    if attached("Equipment"):
         return True
-    controller = chars.controller
-    board = context.game.computed_board()
-    return any(
-        board.of(aura).controller == controller for aura in _attached(context, state, "Aura")
-    )
+    return any(board.of(aura).controller == chars.controller for aura in attached("Aura"))
+
+
+def controls_modified_creature(game: "Game", username: str) -> bool:
+    """Whether `username` controls a modified creature right now (CR 700.9) -
+    the fact "if you controlled a modified creature as you cast this spell"
+    asks of the moment a spell becomes cast (CR 601.2i), recorded by
+    `Casting` on `CastRecord.controlled_modified_creature_as_cast`."""
+    board = game.computed_board()
+    for state in game.permanents_controlled_by(username):
+        chars = board.of(state)
+        if Type.CREATURE in chars.types and permanent_is_modified(game, state, chars):
+            return True
+    return False
+
+
+def _is_modified(context: "ConditionContext", state: "CardState", chars: "Characteristics") -> bool:
+    return permanent_is_modified(context.game, state, chars)
 
 
 def _colors(chars: "Characteristics") -> set:
