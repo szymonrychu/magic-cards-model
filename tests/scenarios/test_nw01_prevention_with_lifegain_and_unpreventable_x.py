@@ -340,9 +340,7 @@ def test_demonfire_with_a_card_in_hand_is_prevented():
 
 
 def test_demonfire_hellbent_cannot_be_countered():
-    scenario = _demonfire_board(
-        bob_battlefield=["Island", "Island"], bob_hand=["Counterspell"]
-    )
+    scenario = _demonfire_board(bob_battlefield=["Island", "Island"], bob_hand=["Counterspell"])
     spell = _cast_demonfire(scenario, 2, "bob")
     _counter(scenario, spell)
 
@@ -358,3 +356,46 @@ def test_demonfire_exiles_a_creature_it_kills():
     scenario.state_based_actions()
 
     assert bears.zone is Zone.EXILE
+
+
+# -- Finale of Eternity: "If X is 10 or more" read by the same condition reader --
+
+
+def _finale(x):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Finale of Eternity"],
+            graveyard=["Serra Angel"],
+            battlefield=["Swamp"] * (x + 2),
+            library=["Swamp"] * 5,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    casting = scenario.cast("Finale of Eternity")
+    casting.x_value = x  # CR 601.2b: X is announced before targets (CR 601.2c)
+    casting.choose_targets([bears])
+    payment = casting.determine_cost(x_value=x)
+    scenario.pay_with(payment, *scenario.untapped_sources(*["Swamp"] * (x + 2)))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    scenario.state_based_actions()
+    return scenario, bears
+
+
+def test_finale_of_eternity_x_below_ten_only_destroys():
+    scenario, bears = _finale(2)
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert scenario.find("Serra Angel", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+
+
+def test_finale_of_eternity_x_ten_also_returns_creature_cards():
+    scenario, bears = _finale(10)
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert scenario.creature("Serra Angel", "alice").zone is Zone.BATTLEFIELD

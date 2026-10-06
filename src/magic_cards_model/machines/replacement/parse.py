@@ -4094,7 +4094,7 @@ _REDIRECT_NEXT_RE = re.compile(
     re.IGNORECASE,
 )
 #: A targeted damage recipient: a creature, planeswalker or battle (CR 614.9's
-#: own list), "another" one included (CR 115.3: a different object).
+#: own list), "another" one included.
 _REDIRECT_TARGET_PHRASE_RE = re.compile(
     r"^(?:another )?target (?:[a-z]+ )*?(?:creature|planeswalker|battle)(?: you control)?$",
     re.IGNORECASE,

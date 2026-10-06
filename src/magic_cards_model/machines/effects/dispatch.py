@@ -2147,11 +2147,6 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         where_x = match.group("where_x")
         if each is None and where_x is None:
             amount = parse_count(match.group("n"))
-            if amount is None:
-                # Guard: an amount `parse_count` cannot read (a bare CR
-                # 107.3a "X") is not a number of damage - refused here so
-                # `effect_for`'s X substitution reads the announced value.
-                return None
             return deal_damage(amount) if for_spell else damage_ability_targets(amount)
         amount_fn = _resolve_multiplied_amount(match.group("n"), each, where_x)
         if amount_fn is None:

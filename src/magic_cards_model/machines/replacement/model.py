@@ -14,7 +14,6 @@ from ...models.token import TokenDefinition, is_token
 from ...models.zone import Zone
 from ...snapshot import EngineModel
 from ..casting import PlayAction
-from ..decisions import Decision, DecisionKind, source_id_of
 from ..damage_modification import (
     DamageCantBePreventedReplacement,
     DamageModifierReplacement,
@@ -22,6 +21,7 @@ from ..damage_modification import (
     PreventDamageByReplacement,
     TurnDamageGroup,
 )
+from ..decisions import Decision, DecisionKind, source_id_of
 
 if TYPE_CHECKING:
     from ...models.game import Game

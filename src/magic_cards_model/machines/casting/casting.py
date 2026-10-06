@@ -5138,6 +5138,7 @@ def exile_adventured(game: Any, spell: CardState, owner: str | None = None) -> C
         return annotate_exile(spell, ExileMarker.ADVENTURED, player.username, game)
 
 
+from ..aftermath import aftermath_face_only_refusal, aftermath_face_refusal  # noqa: E402
 from ._common import (  # noqa: E402
     _BLIGHT_PHRASE,
     _OPTIONAL_BEHOLD,
@@ -5182,4 +5183,3 @@ from .permissions import (  # noqa: E402
     split_second_restriction_source,
     usable_play_permission,
 )
-from ..aftermath import aftermath_face_only_refusal, aftermath_face_refusal  # noqa: E402

@@ -1612,6 +1612,7 @@ def reads_optional_exile_reduction_line(text: str) -> bool:
     return amount is not None and amount == ManaCost(generic=amount.generic)
 
 
+from ..aftermath import aftermath_cast_option  # noqa: E402
 from ._common import (  # noqa: E402
     _BLIGHT_PHRASE,
     _OPTIONAL_BEHOLD,
@@ -1629,4 +1630,3 @@ from .permissions import (  # noqa: E402
     _printed_zone_permissions,
     adventure_face,
 )
-from ..aftermath import aftermath_cast_option  # noqa: E402
