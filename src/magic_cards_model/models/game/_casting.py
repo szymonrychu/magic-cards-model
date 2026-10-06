@@ -1977,6 +1977,11 @@ class CastingMixin:
                 casting.use_permission()
             if modes:
                 casting.choose_modes(modes, x_value=x_value)
+            elif x_value is not None:
+                # CR 601.2b announces X before CR 601.2c's targets, so a target
+                # restriction that reads X ("toughness X or less") is checked
+                # against the announced value, not X of 0.
+                casting.x_value = x_value
             # CR 601.2b: casualty's sacrifice is announced with the modes,
             # before CR 601.2c's targets.
             for creature in casualty or ():

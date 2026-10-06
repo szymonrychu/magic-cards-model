@@ -31,6 +31,8 @@ damage can't be prevented."), Demonfire (proof: the same line behind a
 hellbent condition, CR 207.2c's ability word).
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.objects_as_costs import convoke
 from magic_cards_model.models import Zone
@@ -361,7 +363,7 @@ def test_demonfire_exiles_a_creature_it_kills():
 # -- Finale of Eternity: "If X is 10 or more" read by the same condition reader --
 
 
-def _finale(x):
+def _finale_board(x, bob_battlefield=("Grizzly Bears",)):
     scenario = (
         Scenario()
         .player(
@@ -371,17 +373,30 @@ def _finale(x):
             battlefield=["Swamp"] * (x + 2),
             library=["Swamp"] * 5,
         )
-        .player("bob", battlefield=["Grizzly Bears"], library=["Island"] * 5)
+        .player("bob", battlefield=list(bob_battlefield), library=["Island"] * 5)
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _cast_finale(scenario, x, *targets):
+    # The real cast path: `Game.cast` announces X (CR 601.2b) before it
+    # announces targets (CR 601.2c), so "toughness X or less" is checked
+    # against the announced X, not X of 0.
+    return scenario.game.cast(
+        scenario.find("Finale of Eternity", Zone.HAND, "alice"),
+        "alice",
+        x_value=x,
+        targets=list(targets),
+        mana_sources=scenario.untapped_sources(*["Swamp"] * (x + 2)),
+    )
+
+
+def _finale(x):
+    scenario = _finale_board(x)
     bears = scenario.creature("Grizzly Bears", "bob")
-    casting = scenario.cast("Finale of Eternity")
-    casting.x_value = x  # CR 601.2b: X is announced before targets (CR 601.2c)
-    casting.choose_targets([bears])
-    payment = casting.determine_cost(x_value=x)
-    scenario.pay_with(payment, *scenario.untapped_sources(*["Swamp"] * (x + 2)))
-    scenario.put_on_stack(casting)
+    _cast_finale(scenario, x, bears)
     scenario.resolve_top()
     scenario.state_based_actions()
     return scenario, bears
@@ -399,3 +414,13 @@ def test_finale_of_eternity_x_ten_also_returns_creature_cards():
 
     assert bears.zone is Zone.GRAVEYARD
     assert scenario.creature("Serra Angel", "alice").zone is Zone.BATTLEFIELD
+
+
+def test_finale_of_eternity_refuses_a_target_tougher_than_the_announced_x():
+    scenario = _finale_board(2, bob_battlefield=["Grizzly Bears", "Serra Angel"])
+    angel = scenario.creature("Serra Angel", "bob")
+
+    with pytest.raises(ValueError):
+        _cast_finale(scenario, 2, angel)
+
+    assert scenario.find("Finale of Eternity", Zone.HAND, "alice").zone is Zone.HAND
