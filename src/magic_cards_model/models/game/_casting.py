@@ -2016,6 +2016,10 @@ class CastingMixin:
                 casting.collect_evidence()
             if reveal_for_cost is not None:
                 casting.reveal_for_cost(reveal_for_cost)
+            # CR 601.2b's gift promise precedes CR 601.2c's targets: CR 702.174m
+            # has the gift decide whether a promised-only target is chosen.
+            if gift is not None:
+                casting.pay_gift(gift)
             if targets:
                 casting.choose_targets(list(targets))
             for card_id in splice or ():
@@ -2031,8 +2035,6 @@ class CastingMixin:
                 casting.pay_offspring()
             if blight is not None:
                 casting.pay_blight(blight)
-            if gift is not None:
-                casting.pay_gift(gift)
             if (keyword or "").lower() == "harmonize":
                 casting.pay_harmonize(harmonize_creature)
             if pay_life_for_additional_cost:

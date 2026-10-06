@@ -1434,6 +1434,12 @@ class Casting(EngineModel):
 
     @property
     def targeting(self) -> TargetingProfile:
+        """What this spell must target given whether its gift was promised
+        (CR 702.174m): `_printed_targeting` with the gift-conditional
+        requirements resolved."""
+        return self._printed_targeting().for_gift_promise(self.gift_promised)
+
+    def _printed_targeting(self) -> TargetingProfile:
         """What this spell is allowed to target, read off its oracle text.
 
         For a modal spell this is the profile of the *chosen* modes (CR 700.2c),

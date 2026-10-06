@@ -826,6 +826,12 @@ class TargetRequirement(EngineModel):
     vocabulary stays narrow, so a target with no counter on it at all was
     silently accepted as legal."""
 
+    only_if_gift_promised: bool = False
+    """CR 702.174m: a requirement that exists only inside an "If the gift was
+    promised, instead ..." clause with no un-promised counterpart (Wildfire
+    Howl's "1 damage to any target"). `TargetingProfile.for_gift_promise`
+    drops it when the gift was not promised."""
+
     if_gift_promised: "TargetRequirement | None" = None
     """CR 702.174m: "If part of a spell's ability has its effect only if its
     gift was promised, and that part of the ability includes any targets, the
@@ -2107,7 +2113,17 @@ class TargetingProfile(EngineModel):
         promise at all.
         """
         if not promised:
-            return self
+            if not any(requirement.only_if_gift_promised for requirement in self.requirements):
+                return self
+            return self.model_copy(
+                update={
+                    "requirements": tuple(
+                        requirement
+                        for requirement in self.requirements
+                        if not requirement.only_if_gift_promised
+                    )
+                }
+            )
         return self.model_copy(
             update={
                 "requirements": tuple(
@@ -4343,13 +4359,28 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     division = _read_division(text)
     requirements: list[TargetRequirement] = []
     any_targets = len(_ANY_TARGET.findall(text))
+    # CR 702.174m: with no other "target" outside the "If the gift was
+    # promised, instead ..." clause, an "any target" inside it is chosen only
+    # when the gift was promised (Wildfire Howl).
+    gift_only_spans = [match.span() for match in _GIFT_PROMISED_INSTEAD_CLAUSE.finditer(text)]
+    outside_gift_text = _GIFT_PROMISED_INSTEAD_CLAUSE.sub("", text)
+    gift_only_any = (
+        sum(
+            1
+            for match in _ANY_TARGET.finditer(text)
+            if any(start <= match.start() < end for start, end in gift_only_spans)
+        )
+        if gift_only_spans and not _TARGET_WORD.search(outside_gift_text)
+        else 0
+    )
     requirements.extend(
         TargetRequirement(
             phrase="any target",
             card_types=ANY_TARGET_TYPES,
             allows_players=True,
+            only_if_gift_promised=index >= any_targets - gift_only_any,
         )
-        for _ in range(any_targets)
+        for index in range(any_targets)
     )
     text = _ANY_TARGET.sub(_PLACEHOLDER, text)
     if any_targets:
