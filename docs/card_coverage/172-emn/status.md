@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 14.6% |
-| Works (untested) | 110 | 55.3% |
+| Tested | 31 | 15.6% |
+| Works (untested) | 109 | 54.8% |
 | Partial (unaudited) | 9 | 4.5% |
-| Not working | 51 | 25.6% |
+| Not working | 50 | 25.1% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Mind's Dilation | silent | Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirrorwing Dragon | silent | Whenever a player casts an instant or sorcery spell that targets only this creature, that player copies that spell for each other creature they control that the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mournwillow | silent | Delirium — When this creature enters, if there are four or more card types among cards in your graveyard, creatures with power 2 or less can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nahiri's Wrath | silent | As an additional cost to cast this spell, discard X cards. Nahiri's Wrath deals damage equal to the total mana value of the discarded cards to each of up to X t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Noosegraf Mob | silent | Whenever a player casts a spell, remove a +1/+1 counter from this creature. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Permeating Mass | silent | Whenever this creature deals combat damage to a creature, that creature becomes a copy of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Prying Questions | silent | Target opponent loses 3 life and puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -176,7 +175,6 @@
 | Springsage Ritual | handled | Destroy target artifact or enchantment. You gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Steadfast Cathar | handled | Whenever this creature attacks, it gets +0/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stensia Banquet | handled | Stensia Banquet deals damage to target opponent or planeswalker equal to the number of Vampires you control. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Stensia Innkeeper | handled | When this creature enters, tap target land an opponent controls. That land doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stromkirk Condemned | handled | Discard a card: Vampires you control get +1/+1 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stromkirk Occultist | handled | Whenever this creature deals combat damage to a player, exile the top card of your library. Until end of turn, you may play that card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Succumb to Temptation | handled | You draw two cards and you lose 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -200,7 +198,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>31 cards</summary>
 
 - Blessed Alliance
 - Cemetery Recruitment
@@ -222,8 +220,10 @@
 - Lashweed Lurker
 - Liliana, the Last Hope
 - Midnight Scavengers
+- Nahiri's Wrath
 - Providence
 - Savage Alliance
+- Stensia Innkeeper
 - Subjugator Angel
 - Summary Dismissal
 - Thirsting Axe
@@ -240,7 +240,6 @@
 |---|---|---|---|
 | Delirium | 9 | Backwoods Survivalists, Crop Sigil, Desperate Sentry, Geist of the Lonely Vigil, Gnarlwood Dryad | emn |
 | +N: choose up to two target creatures. until your next turn, whenever either of those creatures deals combat damage, you draw a card. | 1 | Tamiyo, Field Researcher | emn |
-| as an additional cost to cast ~, discard N cards. ~ deals damage equal to the total mana value of the discarded cards to each of up to N target creatures and/or | 1 | Nahiri's Wrath | emn |
 | at the beginning of your end step, if you both own and control gisela and a creature named bruna, the fading light, exile them, then meld them into brisela, voi | 1 | Gisela, the Broken Blade | emn |
 | creature spells you cast cost {M} more to cast. | 1 | Geist-Fueled Scarecrow | emn |
 | creatures with power less than ~ power can't block it. | 1 | Shrill Howler // Howling Chorus | emn |

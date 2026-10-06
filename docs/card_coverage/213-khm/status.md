@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 9.4% |
-| Works (untested) | 134 | 46.7% |
+| Tested | 31 | 10.8% |
+| Works (untested) | 133 | 46.3% |
 | Partial (unaudited) | 15 | 5.2% |
-| Not working | 111 | 38.7% |
+| Not working | 108 | 37.6% |
 
 ## Cards needing work
 
@@ -35,11 +35,9 @@
 | Avalanche Caller | silent | {2}: Target snow land you control becomes a 4/4 Elemental creature with hexproof and haste until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Basalt Ravager | silent | When this creature enters, it deals X damage to any target, where X is the greatest number of creatures you control that have a creature type in common. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battle for Bretagard | silent | III — Choose any number of artifact tokens and/or creature tokens you control with different names. For each of them, create a token that's a copy of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Battle of Frost and Fire | silent | I — This Saga deals 4 damage to each non-Giant creature and each planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bearded Axe | silent | Equipped creature gets +1/+1 for each Dwarf, Equipment, and/or Vehicle you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Birgi, God of Storytelling // Harnfel, Horn of Bounty | silent | Whenever you cast a spell, add {R}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blessing of Frost | silent | Distribute X +1/+1 counters among any number of creatures you control, where X is the amount of {S} spent to cast this spell. Then draw a card for each creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blizzard Brawl | silent | Choose target creature you control and target creature you don't control. If you control three or more snow permanents, the creature you control gets +1/+0 and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boreal Outrider | silent | Whenever you cast a creature spell, if {S} of any of that spell's colors was spent to cast it, that creature enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Burning-Rune Demon | silent | When this creature enters, you may search your library for exactly two cards not named Burning-Rune Demon that have different names. If you do, reveal those car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cinderheart Giant | silent | When this creature dies, it deals 7 damage to a creature an opponent controls chosen at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -77,7 +75,6 @@
 | Littjara Mirrorlake | silent | {2}{G}{G}{U}, {T}, Sacrifice this land: Create a token that's a copy of target creature you control, except it enters with an additional +1/+1 counter on it. Ac | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mystic Reflection | silent | Choose target nonlegendary creature. The next time one or more creatures or planeswalkers enter this turn, they enter as copies of the chosen creature. Foretell | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Narfi, Betrayer King | silent | Other snow and Zombie creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Niko Aris | silent | When Niko Aris enters, create X Shard tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Niko Defies Destiny | silent | I — You gain 2 life for each foretold card you own in exile. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Old-Growth Troll | silent | When Old-Growth Troll dies, if it was a creature, return it to the battlefield. It's an Aura enchantment with enchant Forest you control and "Enchanted Forest h | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Orvar, the All-Form | silent | Whenever you cast an instant or sorcery spell, if it targets one or more other permanents you control, create a token that's a copy of one of those permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -246,7 +243,6 @@
 | Pilfering Hawk | handled | {S}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Port of Karfell | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raiders' Karve | handled | Whenever this Vehicle attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Raise the Draugr | handled | Choose one — • Return target creature card from your graveyard to your hand. • Return two target creature cards that share a creature type from your graveyard t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rally the Ranks | handled | As this enchantment enters, choose a creature type. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ravenform | handled | Exile target artifact or creature. Its controller creates a 1/1 blue Bird creature token with flying. Foretell {U} (During your turn, you may pay {2} and exile  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ravenous Lindwurm | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -290,11 +286,13 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>31 cards</summary>
 
 - Armed and Armored
 - Axgard Braggart
 - Battle Mammoth
+- Battle of Frost and Fire
+- Blizzard Brawl
 - Cleaving Reaper
 - Codespell Cleric
 - Cosmos Elixir
@@ -309,6 +307,8 @@
 - Littjara Kinseekers
 - Magda, Brazen Outlaw
 - Moritte of the Frost
+- Niko Aris
+- Raise the Draugr
 - Raven Wings
 - Righteous Valkyrie
 - Saw It Coming
@@ -350,7 +350,6 @@
 | choose a creature type. return up to two creature cards of that type from your graveyard to the battlefield. if ~ was foretold, return all creature cards of tha | 1 | Haunting Voyage | khm |
 | choose a creature you control. until your next turn, all damage that would be dealt to creatures you control is dealt to that creature instead. | 1 | Ascent of the Worthy | khm |
 | choose any number of artifact tokens and/or creature tokens you control with different names. for each of them, create a token that's a copy of it. | 1 | Battle for Bretagard | khm |
-| choose target creature you control and target creature you don't control. if you control three or more snow permanents, the creature you control gets +N/+N and  | 1 | Blizzard Brawl | khm |
 | choose target nonlegendary creature. the next time one or more creatures or planeswalkers enter ~, they enter as copies of the chosen creature. foretell {M} (du | 1 | Mystic Reflection | khm |
 | choose target opponent. if they control fewer lands than you, create a number of N/N green troll warrior creature tokens with trample equal to the difference. | 1 | Waking the Trolls | khm |
 | choose three cards in each graveyard. their owners shuffle those cards into their libraries. | 1 | The Three Seasons | khm |
@@ -402,7 +401,6 @@
 | when ~ enters, artifacts and creatures target opponent controls don"..."s next untap step. | 1 | Icebreaker Kraken | khm |
 | when ~ enters, choose one — • each opponent loses N life, where N is the greatest number of creatures you control that have a creature type in common. • you gai | 1 | Skemfar Shadowsage | khm |
 | when ~ enters, choose one — • remove N counters from target permanent, where N is the number of elves you control. • target creature an opponent controls gets - | 1 | Thornmantle Striker | khm |
-| when ~ enters, create N shard tokens. | 1 | Niko Aris | khm |
 | when ~ enters, if you cast it from your hand, return all permanents to their owners' hands except for giants, wizards, and lands. | 1 | Cyclone Summoner | khm |
 | when ~ enters, it deals N damage to any target, where N is the greatest number of creatures you control that have a creature type in common. | 1 | Basalt Ravager | khm |
 | when ~ enters, look at the top card of target player's library. you may put that card into their graveyard. | 1 | Draugr Thought-Thief | khm |
@@ -447,7 +445,6 @@
 | {M}{M}{M}{M}, {M}, sacrifice ~: up to one target creature you don't control gets -N/-N until end of turn. create two N/N green elf warrior creature tokens. acti | 1 | Skemfar Elderhall | khm |
 | ~ crews vehicles using its toughness rather than its power. | 1 | Giant Ox | khm |
 | ~ deals N damage to any target. if a creature is dealt damage ~, it gets +N/+N until end of turn. | 1 | Provoke the Trolls | khm |
-| ~ deals N damage to each non-giant creature and each planeswalker. | 1 | Battle of Frost and Fire | khm |
 | ~ deals N damage to target creature or planeswalker. add {M} for each {M} spent to cast ~. until end of turn, you don't lose ~ as steps and phases end. ({M} is  | 1 | Tundra Fumarole | khm |
 | ~ gets +N/+N for each other snow permanent you control. | 1 | Spirit of the Aldergard | khm |
 

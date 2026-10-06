@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 144 | 57.1% |
-| Works (untested) | 107 | 42.5% |
+| Tested | 145 | 57.5% |
+| Works (untested) | 106 | 42.1% |
 | Partial (unaudited) | 1 | 0.4% |
 | Not working | 0 | 0.0% |
 
@@ -124,7 +124,6 @@
 | Trystan's Command | handled | Choose two — • Create a token that's a copy of target Elf you control. • Return one or two target permanent cards from your graveyard to your hand. • Destroy ta | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tweeze | handled | Tweeze deals 3 damage to any target. You may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Twinflame Travelers | handled | If a triggered ability of another Elemental you control triggers, it triggers an additional time. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Unbury | handled | Choose one — • Return target creature card from your graveyard to your hand. • Return two target creature cards that share a creature type from your graveyard t | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unexpected Assistance | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Draw three  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unforgiving Aim | handled | Choose one — • Destroy target creature with flying. • Destroy target enchantment. • Create a 2/2 black and green Elf creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unwelcome Sprite | handled | Whenever you cast a spell during an opponent's turn, surveil 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -138,7 +137,7 @@
 ## Fully supported
 
 <details>
-<summary>144 cards</summary>
+<summary>145 cards</summary>
 
 - Abigale, Eloquent First-Year
 - Adept Watershaper
@@ -277,6 +276,7 @@
 - Tributary Vaulter
 - Trystan, Callous Cultivator // Trystan, Penitent Culler
 - Twilight Diviner
+- Unbury
 - Vinebred Brawler
 - Voracious Tome-Skimmer
 - Wanderwine Farewell

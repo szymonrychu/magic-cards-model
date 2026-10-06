@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 14.3% |
-| Works (untested) | 62 | 59.0% |
+| Works (untested) | 63 | 60.0% |
 | Partial (unaudited) | 6 | 5.7% |
-| Not working | 22 | 21.0% |
+| Not working | 21 | 20.0% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Mass Polymorph | silent | Exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. Put all creature cards revealed this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merfolk Spy | silent | Whenever this creature deals combat damage to a player, that player reveals a card at random from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necrotic Plague | silent | When enchanted creature dies, its controller chooses target creature one of their opponents controls. Return this card from its owner's graveyard to the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Overwhelming Stampede | silent | Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phylactery Lich | silent | When you control no permanents with phylactery counters on them, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Primal Cocoon | silent | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Redirect | silent | You may choose new targets for target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -95,6 +94,7 @@
 | Mystifying Maze | handled | {4}, {T}: Exile target attacking creature an opponent controls. At the beginning of the next end step, return it to the battlefield tapped under its owner's con | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nether Horror | handled |  |  | Y/-/- | not_tested |
 | Nightwing Shade | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Overwhelming Stampede | handled | Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phantom Beast | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quag Sickness | handled | Enchanted creature gets -1/-1 for each Swamp you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roc Egg | handled | When this creature dies, create a 3/3 white Bird creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -156,7 +156,6 @@
 | other knight creatures you control get +N/+N and have indestructible. | 1 | Knight Exemplar | m11 |
 | spells you control can"..."t be the targets of blue or black spells ~. | 1 | Autumn's Veil | m11 |
 | target creature becomes red until end of turn and attacks ~ if able. | 1 | Incite | m11 |
-| until end of turn, creatures you control gain trample and get +N/+N, where N is the greatest power among creatures you control. | 1 | Overwhelming Stampede | m11 |
 | when enchanted creature dies, its controller chooses target creature one of their opponents controls. return ~ from its owner's graveyard to the battlefield att | 1 | Necrotic Plague | m11 |
 | when you control no permanents with phylactery counters on them, sacrifice ~. | 1 | Phylactery Lich | m11 |
 | when ~ enters, you may search your library for up to three cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Squadron Hawk | m11 |

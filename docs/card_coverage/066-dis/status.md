@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 11.8% |
+| Tested | 22 | 13.0% |
 | Works (untested) | 57 | 33.7% |
 | Partial (unaudited) | 4 | 2.4% |
-| Not working | 88 | 52.1% |
+| Not working | 86 | 50.9% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Brace for Impact | silent | Prevent all damage that would be dealt to target multicolored creature this turn. For each 1 damage prevented this way, put a +1/+1 counter on that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brain Pry | silent | Choose a nonland card name. Target player reveals their hand. That player discards a card with that name. If they can't, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bronze Bombshell | silent | When a player other than this creature's owner controls it, that player sacrifices it. If the player does, this creature deals 7 damage to the player. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Carom | silent | The next 1 damage that would be dealt to target creature this turn is dealt to another target creature instead. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Condemn | silent | Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Court Hussar | silent | When this creature enters, sacrifice it unless {W} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crypt Champion | silent | When this creature enters, each player puts a creature card with mana value 3 or less from their graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -106,7 +105,6 @@
 | War's Toll | silent | Whenever an opponent taps a land for mana, tap all lands that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Weight of Spires | silent | Weight of Spires deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Windreaver | silent | {U}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Demonfire | notice | Demonfire deals X damage to any target. If a creature dealt damage this way would die this turn, exile it instead. Hellbent — If you have no cards in hand, this | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dread Slag | notice | This creature gets -4/-4 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Experiment Kraj | notice | Experiment Kraj has all activated abilities of each other creature with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flame-Kin War Scout | notice | When another creature enters, sacrifice this creature. If you do, this creature deals 4 damage to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -179,14 +177,16 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>22 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
 - Blood Crypt
 - Bound // Determined
 - Breeding Pool
+- Carom
 - Coiling Oracle
+- Demonfire
 - Enemy of the Guildpact
 - Ghost Quarter
 - Grand Arbiter Augustin IV
@@ -245,7 +245,6 @@
 | shuffle up to four cards you own from outside the game into your library. | 1 | Research // Development | dis |
 | target creature can block any number of creatures ~. | 1 | Valor Made Real | dis |
 | target creature gets +N/+N until end of turn for each of its colors. | 1 | Might of the Nephilim | dis |
-| the next N damage that would be dealt to target creature ~ is dealt to another target creature instead. draw a card. | 1 | Carom | dis |
 | until end of turn, all creatures become black and all lands become swamps. | 1 | Nightcreep | dis |
 | when a player other than ~ owner controls it, that player sacrifices it. if the player does, ~ deals N damage to the player. | 1 | Bronze Bombshell | dis |
 | when another creature enters, sacrifice ~. if you do, ~ deals N damage to that creature. | 1 | Flame-Kin War Scout | dis |
@@ -279,7 +278,6 @@
 | {M}{M}: move a +N/+N counter from target creature onto another target creature with the same controller. | 1 | Simic Guildmage | dis |
 | {M}{M}: until end of turn, target creature with a +N/+N counter on it gains "..." | 1 | Simic Basilisk | dis |
 | {M}{M}{M}, {M}: prevent all damage a source of your choice would deal ~. | 1 | Prahv, Spires of Order | dis |
-| ~ deals N damage to any target. if a creature dealt damage ~ would die ~, exile it instead. hellbent — if you have no cards in hand, ~ can"..."t be prevented. | 1 | Demonfire | dis |
 | ~ deals N damage to each of two target creatures. hellbent — destroy those creatures instead if you have no cards in hand. | 1 | Twinstrike | dis |
 | ~ deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | 1 | Weight of Spires | dis |
 | ~ gets -N/-N for each card in your hand. | 1 | Dread Slag | dis |

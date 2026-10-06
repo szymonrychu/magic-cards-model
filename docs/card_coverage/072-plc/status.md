@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 10.5% |
+| Tested | 18 | 11.1% |
 | Works (untested) | 64 | 39.5% |
 | Partial (unaudited) | 12 | 7.4% |
-| Not working | 69 | 42.6% |
+| Not working | 68 | 42.0% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | Imp's Mischief | silent | Change the target of target spell with a single target. You lose life equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Intet, the Dreamer | silent | Whenever Intet deals combat damage to a player, you may pay {2}{U}. If you do, exile the top card of your library face down. You may look at that card for as lo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jodah's Avenger | silent | {0}: Until end of turn, this creature gets -1/-1 and gains your choice of double strike, protection from red, vigilance, or shadow. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kor Dirge | silent | All damage that would be dealt this turn to target creature you control by a source of your choice is dealt to another target creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Life and Limb | silent | All Forests and all Saprolings are 1/1 green Saproling creatures and Forest lands in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mantle of Leadership | silent | Whenever a creature enters, enchanted creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Melancholy | silent | At the beginning of your upkeep, sacrifice this Aura unless you pay {B}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -175,7 +174,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Aether Membrane
 - Ana Battlemage
@@ -186,6 +185,7 @@
 - Deadly Grub
 - Dunerider Outlaw
 - Harmonize
+- Kor Dirge
 - Magus of the Library
 - Mana Tithe
 - Phantasmagorian
@@ -205,7 +205,6 @@
 | echo | 3 | Hammerheim Deadeye, Stingscourger, Uktabi Drake | plc |
 | Choose one | 2 | Fury Charm, Timecrafting | plc |
 | all creatures have "..." | 1 | Magus of the Tabernacle | plc |
-| all damage that would be dealt ~ to target creature you control by a source of your choice is dealt to another target creature instead. | 1 | Kor Dirge | plc |
 | all forests and all saprolings are N/N green saproling creatures and forest lands in addition to their other types. | 1 | Life and Limb | plc |
 | all sliver creatures get +N/+N. | 1 | Sinew Sliver | plc |
 | all sliver creatures have defender. | 1 | Dormant Sliver | plc |

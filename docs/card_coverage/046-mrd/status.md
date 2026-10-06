@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 8.6% |
-| Works (untested) | 154 | 57.2% |
+| Tested | 25 | 9.3% |
+| Works (untested) | 155 | 57.6% |
 | Partial (unaudited) | 9 | 3.3% |
-| Not working | 83 | 30.9% |
+| Not working | 80 | 29.7% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Golem-Skin Gauntlets | silent | Equipped creature gets +1/+0 for each Equipment attached to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grim Reminder | silent | Search your library for a nonland card and reveal it. Each opponent who cast a spell this turn with the same name as that card loses 6 life. Then shuffle. {B}{B | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jinxed Choker | silent | At the beginning of your end step, target opponent gains control of this artifact and puts a charge counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Leonin Bladetrap | silent | {2}, Sacrifice this artifact: It deals 2 damage to each attacking creature without flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leonin Den-Guard | silent | As long as this creature is equipped, it gets +1/+1 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leveler | silent | When this creature enters, exile all cards from your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liar's Pendulum | silent | {2}, {T}: Choose a card name. Target opponent guesses whether a card with that name is in your hand. You may reveal your hand. If you do and your opponent guess | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -97,12 +96,10 @@
 | Clockwork Dragon | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Clockwork Vorrac | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Copperhoof Vorrac | notice | This creature gets +1/+1 for each untapped permanent your opponents control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Electrostatic Bolt | notice | Electrostatic Bolt deals 2 damage to target creature. If it's an artifact creature, Electrostatic Bolt deals 4 damage to it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Forge Armor | notice | As an additional cost to cast this spell, sacrifice an artifact. Put X +1/+1 counters on target creature, where X is the sacrificed artifact's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Grab the Reins | notice | Choose one — • Until end of turn, you gain control of target creature and it gains haste. • Sacrifice a creature. Grab the Reins deals damage equal to that crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hum of the Radix | notice | Each artifact spell costs {1} more to cast for each artifact its controller controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Incite War | notice | Choose one — • Creatures target player controls attack this turn if able. • Creatures you control gain first strike until end of turn. Entwine {2} (Choose both  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Irradiate | notice | Target creature gets -1/-1 until end of turn for each artifact you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Journey of Discovery | notice | Choose one — • Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. • You may play up to two additional lands | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mirror Golem | notice | This creature has protection from each of the exiled card's card types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Molten Rain | notice | Destroy target land. If that land was nonbasic, Molten Rain deals 2 damage to the land's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -155,14 +152,15 @@
 | Goblin War Wagon | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gold Myr | handled |  |  | Y/-/- | not_tested |
 | Granite Shard | handled | {3}, {T} or {R}, {T}: This artifact deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Groffskithur | handled | Whenever this creature becomes blocked, you may return target card named Groffskithur from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heartwood Shard | handled | {3}, {T} or {G}, {T}: Target creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hematite Golem | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inertia Bubble | handled | Enchanted artifact doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Iron Myr | handled |  |  | Y/-/- | not_tested |
+| Irradiate | handled | Target creature gets -1/-1 until end of turn for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krark-Clan Grunt | handled | Sacrifice an artifact: This creature gets +1/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krark-Clan Shaman | handled | Sacrifice an artifact: This creature deals 1 damage to each creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leaden Myr | handled |  |  | Y/-/- | not_tested |
+| Leonin Bladetrap | handled | {2}, Sacrifice this artifact: It deals 2 damage to each attacking creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leonin Elder | handled | Whenever an artifact enters, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leonin Scimitar | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leonin Skyhunter | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
@@ -276,17 +274,19 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>25 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
 - Bonesplitter
 - Chalice of the Void
 - Damping Matrix
+- Electrostatic Bolt
 - Frogmite
 - Glimmervoid
 - Goblin Charbelcher
 - Great Furnace
+- Groffskithur
 - Isochron Scepter
 - Lightning Coils
 - Lightning Greaves
@@ -345,7 +345,6 @@
 | if you would flip a coin, instead flip two coins and ignore one. | 1 | Krark's Thumb | mrd |
 | search your library for a nonland card and reveal it. each opponent who cast a spell ~ with the same name as that card loses N life. then shuffle. {M}{M}: retur | 1 | Grim Reminder | mrd |
 | spend only black mana on N. ~ deals N damage to any target and you gain N life. | 1 | Consume Spirit | mrd |
-| target creature gets -N/-N until end of turn for each artifact you control. | 1 | Irradiate | mrd |
 | target permanent you control gains protection from artifacts or from the color of your choice until end of turn. | 1 | Razor Barrier | mrd |
 | target player discards two cards unless they discard an artifact card. | 1 | Wrench Mind | mrd |
 | unattach all equipment from target creature. | 1 | Disarm | mrd |
@@ -374,7 +373,6 @@
 | you can't cast creature spells. | 1 | Grid Monitor | mrd |
 | you control enchanted artifact creature. | 1 | Domineer | mrd |
 | {M}, sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Wizard Replica | mrd |
-| {M}, sacrifice ~: it deals N damage to each attacking creature without flying. | 1 | Leonin Bladetrap | mrd |
 | {M}, sacrifice ~: return all cards exiled with ~ to the battlefield under your control. | 1 | Synod Sanctum | mrd |
 | {M}, {M} or {M}, {M}: return target creature to its owner's hand unless its controller pays {M}. | 1 | Crystal Shard | mrd |
 | {M}, {M}, sacrifice ~: search your library for any number of artifact cards, exile them, then create that many N/N colorless myr artifact creature tokens. then  | 1 | Myr Incubator | mrd |
@@ -390,7 +388,6 @@
 | {M}{M}, {M}: put target creature on the bottom of its owner"..."s controller reveals cards from the top of their library until they reveal a creature card. the  | 1 | Proteus Staff | mrd |
 | {M}{M}: return ~ from your graveyard to the battlefield, then sacrifice a creature. activate only during your upkeep. | 1 | Nim Devourer | mrd |
 | ~ can't attack or block unless you pay {M} for each +N/+N counter on it. | 1 | Myr Prototype | mrd |
-| ~ deals N damage to target creature. if it's an artifact creature, ~ deals N damage to it instead. | 1 | Electrostatic Bolt | mrd |
 | ~ gets +N/+N for each untapped permanent your opponents control. | 1 | Copperhoof Vorrac | mrd |
 | ~ has protection from each of the exiled card's card types. | 1 | Mirror Golem | mrd |
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 12.5% |
+| Tested | 36 | 12.9% |
 | Works (untested) | 135 | 48.2% |
 | Partial (unaudited) | 16 | 5.7% |
-| Not working | 94 | 33.6% |
+| Not working | 93 | 33.2% |
 
 ## Cards needing work
 
@@ -112,7 +112,6 @@
 | Blades of Velis Vel | notice | Changeling (This card is every creature type.) Up to two target creatures each get +2/+0 and gain all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Brion Stoutarm | notice | {R}, {T}, Sacrifice another creature: Brion Stoutarm deals damage equal to the sacrificed creature's power to target player or planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Faerie Trickery | notice | Counter target non-Faerie spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Fodder Launch | notice | As an additional cost to cast this spell, sacrifice a Goblin. Target creature gets -5/-5 until end of turn. Fodder Launch deals 5 damage to that creature's cont | unparsed remainder: As an additional cost to cast this spell, sacrifice a Goblin. Fodder Launch deals 5 damage to that creature's controller. | Y/-/- | not_working |
 | Goatnapper | notice | When this creature enters, untap target Goat and gain control of it until end of turn. It gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Heal the Scars | notice | Regenerate target creature. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Lowland Oaf | notice | {T}: Target Goblin creature you control gets +1/+0 and gains flying until end of turn. Sacrifice that creature at the beginning of the next end step. | unparsed remainder: Sacrifice that creature at the beginning of the next end step. | Y/-/- | not_working |
@@ -275,7 +274,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>36 cards</summary>
 
 - Amoeboid Changeling
 - Aquitect's Will
@@ -287,6 +286,7 @@
 - Crush Underfoot
 - Cryptic Command
 - Fire-Belly Changeling
+- Fodder Launch
 - Giant's Ire
 - Gilt-Leaf Palace
 - Goldmeadow Dodger
@@ -324,7 +324,6 @@
 | ~ enters tapped with two charge counters on it. | 5 | Vivid Crag, Vivid Creek, Vivid Grove, Vivid Marsh, Vivid Meadow | lrw |
 | clash | 2 | Fistful of Force, Whirlpool Whelm | lrw |
 | Choose two | 1 | Primal Command | lrw |
-| as an additional cost to cast ~, sacrifice a goblin. target creature gets -N/-N until end of turn. ~ deals N damage to that creature's controller. | 1 | Fodder Launch | lrw |
 | as long as a creature card with flying is in a graveyard, ~ has flying. the same is true for fear, first strike, double strike, deathtouch, haste, landwalk, lif | 1 | Cairn Wanderer | lrw |
 | as long as you control a faerie, ~ gets +N/+N and has flying. | 1 | Boggart Sprite-Chaser | lrw |
 | as long as you control a giant, ~ gets +N/+N and has first strike. | 1 | Kithkin Greatheart | lrw |

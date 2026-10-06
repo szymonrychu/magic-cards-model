@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 11.0% |
+| Tested | 21 | 11.5% |
 | Works (untested) | 97 | 53.3% |
 | Partial (unaudited) | 10 | 5.5% |
-| Not working | 55 | 30.2% |
+| Not working | 54 | 29.7% |
 
 ## Cards needing work
 
@@ -78,7 +78,6 @@
 | Predatory Wurm | notice | This creature gets +2/+2 as long as you control a Garruk planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rookie Mistake | notice | Until end of turn, target creature gets +0/+2 and another target creature gets -2/-0. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sigiled Contender | notice | This creature has lifelink as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Soul Sear | notice | Soul Sear deals 5 damage to target creature or planeswalker. That permanent loses indestructible until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Traitorous Greed | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Add two mana of any one color. (The creature can attac | unparsed remainder: Untap that creature. It gains haste until end of turn. Add two mana of any one color. | Y/Y/- | not_working |
 | Transmogrify | notice | Exile target creature. That creature's controller reveals cards from the top of their library until they reveal a creature card. That player puts that card onto | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chromatic Orrery | unaudited | You may spend mana as though it were mana of any color. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -192,7 +191,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -209,6 +208,7 @@
 - Pursued Whale
 - Sanctum of Fruitful Harvest
 - Sanctum of Tranquil Light
+- Soul Sear
 - Speaker of the Heavens
 - Teferi, Master of Time
 - Track Down
@@ -276,7 +276,6 @@
 | {M}, sacrifice ~: it deals damage equal to its power to target creature or planeswalker. | 1 | Heartfire Immolator | m21 |
 | ~ can block only creatures with flying. | 1 | Shacklegeist | m21 |
 | ~ costs {M}{M} less to cast if you've cast an instant or sorcery spell ~. | 1 | Stormwing Entity | m21 |
-| ~ deals N damage to target creature or planeswalker. that permanent loses indestructible until end of turn. | 1 | Soul Sear | m21 |
 | ~ gets +N/+N as long as you control a garruk planeswalker. | 1 | Predatory Wurm | m21 |
 | ~ gets +N/+N, where N is the greatest power among creature cards in your graveyard. | 1 | Carrion Grub | m21 |
 | ~ has lifelink as long as it has a +N/+N counter on it. | 1 | Sigiled Contender | m21 |

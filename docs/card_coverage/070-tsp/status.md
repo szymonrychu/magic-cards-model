@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 28 | 10.4% |
-| Works (untested) | 103 | 38.4% |
+| Works (untested) | 105 | 39.2% |
 | Partial (unaudited) | 27 | 10.1% |
-| Not working | 110 | 41.0% |
+| Not working | 108 | 40.3% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Curse of the Cabal | silent | Target player sacrifices half the permanents they control of their choice, rounded down. Suspend 2—{2}{B}{B} (Rather than cast this card from your hand, you may | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cyclopean Giant | silent | When this creature dies, target land becomes a Swamp. Exile this card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Demonic Collusion | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Divine Congregation | silent | You gain 2 life for each creature target player controls. Suspend 5—{1}{W} (Rather than cast this card from your hand, you may pay {1}{W} and exile it with five | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dream Stalker | silent | When this creature enters, return a permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drifter il-Dal | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {U}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Durkwood Tracker | silent | {1}{G}, {T}: If this creature is on the battlefield, it deals damage equal to its power to target attacking creature. That creature deals damage equal to its po | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -126,7 +125,6 @@
 | Yavimaya Dryad | silent | When this creature enters, you may search your library for a Forest card, put it onto the battlefield tapped under target player's control, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zealot il-Vec | silent | Whenever this creature attacks and isn't blocked, you may have it deal 1 damage to target creature. If you do, prevent all combat damage this creature would dea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chronatog Totem | notice | {0}: This creature gets +3/+3 until end of turn. You skip your next turn. Activate only once each turn and only if this permanent is a creature. | unparsed remainder: You skip your next turn. | Y/-/- | not_working |
-| Goblin Skycutter | notice | Sacrifice this creature: It deals 2 damage to target creature with flying. That creature loses flying until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gorgon Recluse | notice | Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gustcloak Cavalier | notice | Whenever this creature becomes blocked, you may untap this creature and remove it from combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Locket of Yesterdays | notice | Spells you cast cost {1} less to cast for each card with the same name as that spell in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -187,6 +185,7 @@
 | Dark Withering | handled | Destroy target nonblack creature. Madness {B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your gr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deathspore Thallid | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deep-Sea Kraken | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Divine Congregation | handled | You gain 2 life for each creature target player controls. Suspend 5—{1}{W} (Rather than cast this card from your hand, you may pay {1}{W} and exile it with five | the engine reads this text and performs it | Y/-/- | not_tested |
 | Draining Whelk | handled | When this creature enters, counter target spell. Put X +1/+1 counters on this creature, where X is that spell's mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dread Return | handled | Return target creature card from your graveyard to the battlefield. Flashback—Sacrifice three creatures. (You may cast this card from your graveyard for its fla | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drudge Reavers | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -205,6 +204,7 @@
 | Fortify | handled | Choose one — • Creatures you control get +2/+0 until end of turn. • Creatures you control get +0/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fortune Thief | handled | Damage that would reduce your life total to less than 1 reduces it to 1 instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gaze of Justice | handled | As an additional cost to cast this spell, tap three untapped white creatures you control. Exile target creature. Flashback {5}{W} (You may cast this card from y | the engine reads this text and performs it | Y/-/- | not_tested |
+| Goblin Skycutter | handled | Sacrifice this creature: It deals 2 damage to target creature with flying. That creature loses flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greenseeker | handled | {G}, {T}, Discard a card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Guide | handled | Enchanted creature gets +2/+2 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ground Rift | handled | Target creature without flying can't block this turn. Storm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targe | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -350,7 +350,6 @@
 | put target face-up exiled card into its owner's graveyard. | 1 | Pull from Eternity | tsp |
 | reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put a card from the chosen pile into your ha | 1 | Truth or Tale | tsp |
 | sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Spiketail Drakeling | tsp |
-| sacrifice ~: it deals N damage to target creature with flying. that creature loses flying until end of turn. | 1 | Goblin Skycutter | tsp |
 | sacrifice ~: when target creature is put into your graveyard ~, return that card to the battlefield. | 1 | Saffi Eriksdotter | tsp |
 | spells you cast cost {M} less to cast for each card with the same name as that spell in your graveyard. | 1 | Locket of Yesterdays | tsp |
 | split second (as long as ~ is on the stack, players can"..."t mana abilities.) counter target activated or triggered ability. if a permanent"..."t be activated  | 1 | Trickbind | tsp |
@@ -391,7 +390,6 @@
 | whenever ~ is dealt damage, if it's a creature, sacrifice that many permanents. | 1 | Phyrexian Totem | tsp |
 | whenever ~ is dealt damage, it deals that much damage to the chosen player. | 1 | Stuffy Doll | tsp |
 | you can't cast ~ during your first, second, or third turns of the game. | 1 | Serra Avenger | tsp |
-| you gain N life for each creature target player controls. suspend N—{M}{M} (rather than cast ~ from your hand, you may pay {M}{M} and exile it with five time co | 1 | Divine Congregation | tsp |
 | {M}, remove a +N/+N counter from ~: target land becomes a N/N creature that's still a land. put a +N/+N counter on it. | 1 | Spike Tiller | tsp |
 | {M}, sacrifice ~: each player exiles all cards from their hand face down and draws seven cards. at the beginning of the next end step, each player discards thei | 1 | Magus of the Jar | tsp |
 | {M}, {M}: choose a card name, then reveal a card at random from your hand. if that card has the chosen name, ~ deals N damage to any target. | 1 | Magus of the Scroll | tsp |

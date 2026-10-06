@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 13.3% |
+| Tested | 30 | 14.3% |
 | Works (untested) | 97 | 46.2% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 70 | 33.3% |
+| Not working | 68 | 32.4% |
 
 ## Cards needing work
 
@@ -80,10 +80,8 @@
 | Winds of Abandon | silent | Exile target creature you don't control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Archmage's Charm | notice | Choose one — • Counter target spell. • Target player draws two cards. • Gain control of target nonland permanent with mana value 1 or less. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cabal Therapist | notice | At the beginning of your first main phase, you may sacrifice a creature. When you do, choose a nonland card name, then target player reveals their hand and disc | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Defile | notice | Target creature gets -1/-1 until end of turn for each Swamp you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eyekite | notice | This creature gets +2/+0 as long as you've drawn two or more cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fallen Shinobi | notice | Whenever this creature deals combat damage to a player, that player exiles the top two cards of their library. Until end of turn, you may play those cards witho | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Fists of Flame | notice | Draw a card. Until end of turn, target creature gains trample and gets +1/+0 for each card you've drawn this turn. (A creature with trample can deal excess comb | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Force of Rage | notice | If it's not your turn, you may exile a red card from your hand rather than pay this spell's mana cost. Create two 3/1 red Elemental creature tokens with trample | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Goatnap | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until e | unparsed remainder: Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until end of turn. | Y/Y/Y | not_working |
 | Ice-Fang Coatl | notice | This creature has deathtouch as long as you control at least three other snow permanents. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -125,6 +123,7 @@
 | Cordial Vampire | handled | Whenever this creature or another creature dies, put a +1/+1 counter on each Vampire you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crashing Footfalls | handled | Suspend 4—{G} (Rather than cast this card from your hand, pay {G} and exile it with four time counters on it. At the beginning of your upkeep, remove a time cou | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deep Forest Hermit | handled | When this creature enters, create four 1/1 green Squirrel creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Defile | handled | Target creature gets -1/-1 until end of turn for each Swamp you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Echo of Eons | handled | Each player shuffles their hand and graveyard into their library, then draws seven cards. Flashback {2}{U} (You may cast this card from your graveyard for its f | the engine reads this text and performs it | Y/-/- | not_tested |
 | Endling | handled | {B}: This creature gains menace until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Etchings of the Chosen | handled | As this enchantment enters, choose a creature type. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -171,7 +170,6 @@
 | Ransack the Lab | handled | Look at the top three cards of your library. Put one of them into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ravenous Giant | handled | At the beginning of your upkeep, this creature deals 1 damage to you. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Reprobation | handled | Enchanted creature loses all abilities and is a Coward creature with base power and toughness 0/1. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Return from Extinction | handled | Choose one — • Return target creature card from your graveyard to your hand. • Return two target creature cards that share a creature type from your graveyard t | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rhox Veteran | handled | Whenever this creature attacks, tap target creature an opponent controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rime Tender | handled | {T}: Untap another target snow permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ruination Rioter | handled | When this creature dies, you may have it deal damage to any target equal to the number of land cards in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -212,13 +210,14 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>30 cards</summary>
 
 - Changeling Outcast
 - Collector Ouphe
 - Ephemerate
 - Everdream
 - Fiery Islet
+- Fists of Flame
 - Force of Despair
 - Force of Negation
 - Force of Vigor
@@ -230,6 +229,7 @@
 - Nurturing Peatland
 - Pondering Mage
 - Ranger-Captain of Eos
+- Return from Extinction
 - Seasoned Pyromancer
 - Silent Clearing
 - Sisay, Weatherlight Captain
@@ -266,7 +266,6 @@
 | buyback | 1 | Recruit the Worthy | mh1 |
 | choose creature or land. reveal the top four cards of your library. put all cards of the chosen type revealed ~ into your hand and the rest into your graveyard. | 1 | Winding Way | mh1 |
 | creatures of the chosen type your opponents control get -N/-N. | 1 | Plague Engineer | mh1 |
-| draw a card. until end of turn, target creature gains trample and gets +N/+N for each card you"..."s attacking.) | 1 | Fists of Flame | mh1 |
 | each land card in your hand has cycling {M}. | 1 | Tectonic Reformation | mh1 |
 | each sliver creature card in your graveyard has unearth {M}. | 1 | Dregscape Sliver | mh1 |
 | echo | 1 | Orcish Hellraiser | mh1 |
@@ -290,7 +289,6 @@
 | sliver creatures you control have exalted. | 1 | First Sliver's Chosen | mh1 |
 | sliver creatures you control have first strike. | 1 | Lancer Sliver | mh1 |
 | sliver creatures you control have flying and haste. | 1 | Cloudshredder Sliver | mh1 |
-| target creature gets -N/-N until end of turn for each swamp you control. | 1 | Defile | mh1 |
 | target creature you control gets +N/+N until end of turn if its power is N. then it fights target creature you don't control. (each deals damage equal to its po | 1 | Savage Swipe | mh1 |
 | target player mills four cards. you shuffle up to four cards from your graveyard into your library. replicate {M}{M}{M} (when you cast ~, copy it for each time  | 1 | Stream of Thought | mh1 |
 | unblocked attacking ninjas you control have lifelink. | 1 | Throatseeker | mh1 |

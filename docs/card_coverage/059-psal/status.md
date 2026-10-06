@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 3 | 3.8% |
-| Works (untested) | 49 | 62.0% |
+| Works (untested) | 50 | 63.3% |
 | Partial (unaudited) | 4 | 5.1% |
-| Not working | 23 | 29.1% |
+| Not working | 22 | 27.8% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Whitemane Lion | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wojek Apothecary | silent | Radiance — {T}: Prevent the next 1 damage that would be dealt to target creature and each other creature that shares a color with it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skyrider Trainee | notice | This creature has flying as long as it's enchanted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Strength in Numbers | notice | Until end of turn, target creature gains trample and gets +X/+X, where X is the number of attacking creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Detainment Spell | unaudited | Enchanted creature's activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Freewind Equenaut | unaudited | As long as this creature is enchanted, it has "{T}: This creature deals 2 damage to target attacking or blocking creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Grifter's Blade | unaudited | As this Equipment enters, choose a creature you control it could be attached to. If you do, it enters attached to that creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -90,6 +89,7 @@
 | Soulsworn Jury | handled | {1}{U}, Sacrifice this creature: Counter target creature spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sporesower Thallid | handled | At the beginning of your upkeep, put a spore counter on each Fungus you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sprout | handled | Create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Strength in Numbers | handled | Until end of turn, target creature gains trample and gets +X/+X, where X is the number of attacking creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Supply // Demand | handled | Create X 1/1 green Saproling creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Terramorphic Expanse | handled | {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Terrarion | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -132,7 +132,6 @@
 | enchanted creature"..."t be activated. | 1 | Detainment Spell | psal |
 | other green creatures you control get +N/+N. | 1 | Tolsimir Wolfblood | psal |
 | return target permanent to its owner's hand. its controller loses N life. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the sam | 1 | Clutch of the Undercity | psal |
-| until end of turn, target creature gains trample and gets +N/+N, where N is the number of attacking creatures. | 1 | Strength in Numbers | psal |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Whitemane Lion | psal |
 | when ~ enters, search your library for an aura card that could enchant it. if ~ is still on the battlefield, put that aura card onto the battlefield attached to | 1 | Auratouched Mage | psal |
 | when ~ enters, you gain protection from the color of your choice until end of turn. | 1 | Seht's Tiger | psal |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 8.9% |
-| Works (untested) | 119 | 48.2% |
+| Tested | 27 | 10.9% |
+| Works (untested) | 118 | 47.8% |
 | Partial (unaudited) | 17 | 6.9% |
-| Not working | 89 | 36.0% |
+| Not working | 85 | 34.4% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Bloodbond March | silent | Whenever a player casts a creature spell, each player returns all cards with the same name as that spell from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bottled Cloister | silent | At the beginning of each opponent's upkeep, exile all cards from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Breath of Fury | silent | When enchanted creature deals combat damage to a player, sacrifice it and attach this Aura to a creature you control. If you do, untap all creatures you control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Chant of Vitu-Ghazi | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Prevent all | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudstone Curio | silent | Whenever a nonartifact permanent you control enters, you may return another permanent you control that shares a permanent type with it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Coalhauler Swine | silent | Whenever this creature is dealt damage, it deals that much damage to each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Compulsive Research | silent | Target player draws three cards. Then that player discards two cards unless they discard a land card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -71,7 +70,6 @@
 | Quickchange | silent | Target creature becomes the color or colors of your choice until end of turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rain of Embers | silent | Rain of Embers deals 1 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Razia's Purification | silent | Each player chooses three permanents they control, then sacrifices the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Razia, Boros Archangel | silent | {T}: The next 3 damage that would be dealt to target creature you control this turn is dealt to another target creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ribbons of Night | silent | Ribbons of Night deals 4 damage to target creature and you gain 4 life. If {U} was spent to cast this spell, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rolling Spoil | silent | Destroy target land. If {B} was spent to cast this spell, all creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sabertooth Alley Cat | silent | {1}{R}: Creatures without defender can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -100,8 +98,6 @@
 | Woebringer Demon | silent | At the beginning of each player's upkeep, that player sacrifices a creature of their choice. If the player can't, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wojek Siren | silent | Radiance — Target creature and each other creature that shares a color with it get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woodwraith Corrupter | silent | {1}{B}{G}, {T}: Target Forest becomes a 4/4 black and green Elemental Horror creature. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Brightflame | notice | Radiance — Brightflame deals X damage to target creature and each other creature that shares a color with it. You gain life equal to the damage dealt this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Cleansing Beam | notice | Radiance — Cleansing Beam deals 2 damage to target creature and each other creature that shares a color with it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dimir Doppelganger | notice | {1}{U}{B}: Exile target creature card from a graveyard. This creature becomes a copy of that card, except it has this ability. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flash Conscription | notice | Untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. If {W} was spent to cast this spell, the creature g | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flickerform | notice | {2}{W}{W}: Exile enchanted creature and all Auras attached to it. At the beginning of the next end step, return that card to the battlefield under its owner's c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -205,7 +201,6 @@
 | Last Gasp | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leashling | handled | Put a card from your hand on top of your library: Return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lore Broker | handled | {T}: Each player draws a card, then discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Mausoleum Turnkey | handled | When this creature enters, return target creature card of an opponent's choice from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moldervine Cloak | handled | Enchanted creature gets +3/+3. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moroii | handled | At the beginning of your upkeep, you lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightmare Void | handled | Target player reveals their hand. You choose a card from it. That player discards that card. Dredge 2 (If you would draw a card, you may mill two cards instead. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -255,12 +250,15 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>27 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
+- Brightflame
 - Cerulean Sphinx
+- Chant of Vitu-Ghazi
 - Char
+- Cleansing Beam
 - Concerted Effort
 - Dark Confidant
 - Doubling Season
@@ -271,8 +269,10 @@
 - Instill Furor
 - Life from the Loam
 - Lightning Helix
+- Mausoleum Turnkey
 - Muddle the Mixture
 - Overgrown Tomb
+- Razia, Boros Archangel
 - Sacred Foundry
 - Sisters of Stone Death
 - Temple Garden
@@ -286,7 +286,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Radiance | 8 | Bathe in Light, Brightflame, Cleansing Beam, Incite Hysteria, Leave No Trace | rav |
+| Radiance | 6 | Bathe in Light, Incite Hysteria, Leave No Trace, Rally the Righteous, Surge of Zeal | rav |
 | ({M} can be paid with either {M} or {M}.) players can't search libraries ~. draw a card. | 1 | Shadow of Doubt | rav |
 | ({M} can be paid with either {M} or {M}.) regenerate target creature. at ~ next end of combat, destroy all creatures that blocked or were blocked by it ~. | 1 | Gaze of the Gorgon | rav |
 | activated abilities cost {M} more to activate unless they're mana abilities. | 1 | Suppression Field | rav |
@@ -303,7 +303,6 @@
 | at the beginning of your upkeep, return enchanted creature and all auras attached to that creature to their owners' hands. | 1 | Mark of Eviction | rav |
 | cast ~ only before attackers are declared. you choose which creatures attack ~. you choose which creatures block ~ and how those creatures block. | 1 | Master Warcraft | rav |
 | choose a card name. target player reveals cards from the top of their library until a card with that name is revealed. if it is, that player puts the rest of th | 1 | Tunnel Vision | rav |
-| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) prevent all damage that would | 1 | Chant of Vitu-Ghazi | rav |
 | counter target spell unless its controller discards their hand. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the same mana val | 1 | Perplex | rav |
 | counter target spell. if that spell is countered ~, put it into its owner"..."s graveyard. draw a card. | 1 | Remand | rav |
 | counter target spell. if {M} was spent to cast ~, that spell"..."s mana value. | 1 | Induce Paranoia | rav |
@@ -369,7 +368,6 @@
 | {M}: prevent the next N damage that would be dealt to ~ ~. | 1 | Ordruun Commando | rav |
 | {M}: regenerate enchanted creature. | 1 | Strands of Undeath | rav |
 | {M}: target creature can't block ~ ~. | 1 | Screeching Griffin | rav |
-| {M}: the next N damage that would be dealt to target creature you control ~ is dealt to another target creature instead. | 1 | Razia, Boros Archangel | rav |
 | {M}: ~ deals N damage to each creature without flying and each player. | 1 | Hammerfist Giant | rav |
 | {M}: ~ loses defender until end of turn. | 1 | Tidewater Minion | rav |
 | {M}{M}, sacrifice ~: it deals N damage to each tapped creature and each player. | 1 | Blockbuster | rav |

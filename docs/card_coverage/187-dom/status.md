@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 10.0% |
-| Works (untested) | 127 | 55.2% |
+| Tested | 24 | 10.4% |
+| Works (untested) | 128 | 55.7% |
 | Partial (unaudited) | 20 | 8.7% |
-| Not working | 60 | 26.1% |
+| Not working | 58 | 25.2% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | On Serra's Wings | silent | Enchanted creature is legendary, gets +1/+1, and has flying, vigilance, and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phyrexian Scriptures | silent | III — Exile all opponents' graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Primevals' Glorious Rebirth | silent | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Return all legendary permanent cards from your graveyard to the bat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Radiating Lightning | silent | Radiating Lightning deals 3 damage to target player and 1 damage to each creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Saproling Migration | silent | Kicker {4} (You may pay an additional {4} as you cast this spell.) Create two 1/1 green Saproling creature tokens. If this spell was kicked, create four of thos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seismic Shift | silent | Destroy target land. Up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Settle the Score | silent | Exile target creature. Put two loyalty counters on a planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -63,7 +62,6 @@
 | Teferi's Sentinel | silent | As long as you control a Teferi planeswalker, this creature gets +4/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi, Hero of Dominaria | silent | −3: Put target nonland permanent into its owner's library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The First Eruption | silent | III — Sacrifice a Mountain. If you do, this Saga deals 3 damage to each creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Flame of Keld | silent | III — If a red source you control would deal damage to a permanent or player this turn, it deals that much damage plus 2 to that permanent or player instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Mending of Dominaria | silent | III — Return all land cards from your graveyard to the battlefield, then shuffle your graveyard into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thran Temporal Gateway | silent | {4}, {T}: You may put a historic permanent card from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Time of Ice | silent | III — Return all tapped creatures to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -214,6 +212,7 @@
 | Thallid Soothsayer | handled | {2}, Sacrifice a creature: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Antiquities War | handled | I, II — Look at the top five cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of you | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Eldest Reborn | handled | I — Each opponent sacrifices a creature or planeswalker of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| The Flame of Keld | handled | I — Discard your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Mirari Conjecture | handled | I — Return target instant card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tiana, Ship's Caretaker | handled | Whenever an Aura or Equipment you control is put into a graveyard from the battlefield, you may return that card to its owner's hand at the beginning of the nex | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tolarian Scholar | handled |  |  | Y/Y/- | not_tested |
@@ -237,7 +236,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Adamant Will
 - Adventurous Impulse
@@ -257,6 +256,7 @@
 - Mox Amber
 - Naban, Dean of Iteration
 - Powerstone Shard
+- Radiating Lightning
 - Rona, Disciple of Gix
 - Sentinel of the Pearl Trident
 - Teferi, Timebender
@@ -297,7 +297,6 @@
 | exile all opponents' graveyards. | 1 | Phyrexian Scriptures | dom |
 | exile target creature. put two loyalty counters on a planeswalker you control. | 1 | Settle the Score | dom |
 | historic spells you cast cost {M} less to cast. | 1 | Jhoira's Familiar | dom |
-| if a red source you control would deal damage to a permanent or player ~, it deals that much damage plus N to that permanent or player instead. | 1 | The Flame of Keld | dom |
 | if a source would deal damage to equipped creature, prevent N of that damage. | 1 | Shield of the Realm | dom |
 | if grunn was kicked, it enters with five +N/+N counters on it. | 1 | Grunn, the Lonely King | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
@@ -340,7 +339,6 @@
 | {M}: exchange your life total with evra's power. | 1 | Evra, Halcyon Witness | dom |
 | {M}: tap ~. it gains indestructible until end of turn. | 1 | Drudge Sentinel | dom |
 | {M}: until end of turn, target land you control becomes the basic land type of your choice in addition to its other types. | 1 | Navigator's Compass | dom |
-| ~ deals N damage to target player and N damage to each creature that player controls. | 1 | Radiating Lightning | dom |
 | ~ deals N damage to target player or planeswalker. search your library and/or graveyard for a card named chandra, bold pyromancer, reveal it, and put it into yo | 1 | Chandra's Outburst | dom |
 | ~ gets +N/+N for each aura and equipment attached to it. | 1 | Champion of the Flame | dom |
 | ~ gets +N/+N for each basic island you control. | 1 | Tempest Djinn | dom |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 9.4% |
-| Works (untested) | 100 | 44.6% |
+| Tested | 22 | 9.8% |
+| Works (untested) | 101 | 45.1% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 93 | 41.5% |
+| Not working | 91 | 40.6% |
 
 ## Cards needing work
 
@@ -84,7 +84,6 @@
 | Racecourse Fury | silent | Enchanted land has "{T}: Target creature gains haste until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakdos Cackler | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rakdos Ringleader | silent | Whenever this creature deals combat damage to a player, that player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rakdos's Return | silent | Rakdos's Return deals X damage to target opponent or planeswalker. That player or that planeswalker's controller discards X cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Righteous Authority | silent | Enchanted creature gets +1/+1 for each card in its controller's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rix Maadi Guildmage | silent | {B}{R}: Target player who lost life this turn loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rootborn Defenses | silent | Populate | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -114,7 +113,6 @@
 | Wayfaring Temple | silent | Whenever this creature deals combat damage to a player, populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zanikev Locust | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Assassin's Strike | notice | Destroy target creature. Its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Chorus of Might | notice | Until end of turn, target creature gets +1/+1 for each creature you control and gains trample. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Destroy the Evidence | notice | Destroy target land. Its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Golgari Charm | notice | Choose one — • All creatures get -1/-1 until end of turn. • Destroy target enchantment. • Regenerate each creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grave Betrayal | notice | Whenever a creature you don't control dies, return it to the battlefield under your control with an additional +1/+1 counter on it at the beginning of the next  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -150,6 +148,7 @@
 | Catacomb Slug | handled |  |  | Y/Y/- | not_tested |
 | Centaur Healer | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Centaur's Herald | handled | {2}{G}, Sacrifice this creature: Create a 3/3 green Centaur creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chorus of Might | handled | Until end of turn, target creature gets +1/+1 for each creature you control and gains trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cobblebrute | handled |  |  | Y/Y/- | not_tested |
 | Codex Shredder | handled | {T}: Target player mills a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Collective Blessing | handled | Creatures you control get +3/+3. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -233,7 +232,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Abrupt Decay
 - Axebane Guardian
@@ -251,6 +250,7 @@
 - Nivix Guildmage
 - Precinct Captain
 - Rakdos Guildgate
+- Rakdos's Return
 - Rest in Peace
 - Selesnya Guildgate
 - Shrieking Affliction
@@ -304,7 +304,6 @@
 | target creature you don't control gets -N/-N until end of turn and attacks ~ if able. overload {M}{M}{M} (you may cast ~ for its overload cost. if you do, chang | 1 | Chemister's Trick | rtr |
 | target creature you don't control gets -N/-N until end of turn. overload {M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its text to ". | 1 | Downsize | rtr |
 | target player reveals their hand. you gain life equal to the number of cards in that player's hand. | 1 | Search Warrant | rtr |
-| until end of turn, target creature gets +N/+N for each creature you control and gains trample. | 1 | Chorus of Might | rtr |
 | when ~ enters, detain target nonland permanent an opponent controls. | 1 | Lyev Skyknight | rtr |
 | when ~ enters, detain up to two target creatures your opponents control. | 1 | Azorius Justiciar | rtr |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Transguild Promenade | rtr |
@@ -334,7 +333,6 @@
 | ~ can attack as though it didn't have defender as long as you control a gate. | 1 | Ogre Jailbreaker | rtr |
 | ~ can"..."s graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles. | 1 | Slaughter Games | rtr |
 | ~ deals N damage to each opponent. those players each discard two cards at random. | 1 | Skull Rend | rtr |
-| ~ deals N damage to target opponent or planeswalker. that player or that planeswalker's controller discards N cards. | 1 | Rakdos's Return | rtr |
 
 ## Notes
 

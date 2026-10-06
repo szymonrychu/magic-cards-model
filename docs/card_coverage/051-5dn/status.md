@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 8.0% |
+| Tested | 14 | 8.6% |
 | Works (untested) | 97 | 59.9% |
 | Partial (unaudited) | 12 | 7.4% |
-| Not working | 40 | 24.7% |
+| Not working | 39 | 24.1% |
 
 ## Cards needing work
 
@@ -65,7 +65,6 @@
 | Rude Awakening | notice | Choose one — • Untap all lands you control. • Until end of turn, lands you control become 2/2 creatures that are still lands. Entwine {2}{G} (Choose both if you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tangle Asp | notice | Whenever this creature blocks or becomes blocked by a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Vicious Betrayal | notice | As an additional cost to cast this spell, sacrifice any number of creatures. Target creature gets +2/+2 until end of turn for each creature sacrificed this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Disruption Aura | unaudited | Enchanted artifact has "At the beginning of your upkeep, sacrifice this artifact unless you pay its mana cost." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Endless Whispers | unaudited | Each creature has "When this creature dies, choose target opponent. That player puts this card from its owner's graveyard onto the battlefield under their contr | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Eon Hub | unaudited | Players skip their upkeep steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -179,7 +178,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Beacon of Unrest
 - Cranial Plating
@@ -193,6 +192,7 @@
 - Rite of Passage
 - Solarion
 - Trinket Mage
+- Vicious Betrayal
 - Viridian Lorebearers
 
 </details>
@@ -207,7 +207,6 @@
 | add {M} for each tapped land your opponents control. | 1 | Mana Geyser | 5dn |
 | affinity for artifacts (~ costs {M} less to cast for each artifact you control.) untap all artifacts. | 1 | Blinkmoth Infusion | 5dn |
 | artifact creature spells you cast have affinity for artifacts. | 1 | Mycosynth Golem | 5dn |
-| as an additional cost to cast ~, sacrifice any number of creatures. target creature gets +N/+N until end of turn for each creature sacrificed ~. | 1 | Vicious Betrayal | 5dn |
 | as long as ~ is equipped, cat creatures you control get +N/+N and have double strike. | 1 | Raksha Golden Cub | 5dn |
 | at the beginning of each end step, each player sacrifices a permanent of their choice unless they discard a card. | 1 | Possessed Portal | 5dn |
 | at the beginning of each opponent's upkeep, ~ deals N damage to that player unless they have exactly three or exactly four cards in hand. | 1 | Skullcage | 5dn |

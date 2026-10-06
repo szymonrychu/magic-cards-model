@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 6.0% |
-| Works (untested) | 116 | 50.0% |
+| Tested | 15 | 6.5% |
+| Works (untested) | 117 | 50.4% |
 | Partial (unaudited) | 8 | 3.4% |
-| Not working | 94 | 40.5% |
+| Not working | 92 | 39.7% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Alms Beast | silent | Creatures blocking or blocked by this creature have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angelic Skirmisher | silent | At the beginning of each combat, choose first strike, vigilance, or lifelink. Creatures you control gain that ability until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Assemble the Legion | silent | At the beginning of your upkeep, put a muster counter on this enchantment. Then create a 1/1 red and white Soldier creature token with haste for each muster cou | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aurelia's Fury | silent | Aurelia's Fury deals X damage divided as you choose among any number of targets. Tap each creature dealt damage this way. Players dealt damage this way can't ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Balustrade Spy | silent | When this creature enters, target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bane Alley Broker | silent | {T}: Draw a card, then exile a card from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bioshift | silent | Move any number of +1/+1 counters from target creature onto another target creature with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -57,7 +56,6 @@
 | Forced Adaptation | silent | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frontline Medic | silent | Sacrifice this creature: Counter target spell with {X} in its mana cost unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon, Champion of Justice | silent | +1: Put a loyalty counter on Gideon for each creature target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gruul Ragebeast | silent | Whenever this creature or another creature you control enters, that creature fights target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guardian of the Gateless | silent | Whenever this creature blocks, it gets +1/+1 until end of turn for each creature it's blocking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gyre Sage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hands of Binding | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -171,6 +169,7 @@
 | Gridlock | handled | Tap X target nonland permanents. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ground Assault | handled | Ground Assault deals damage to target creature equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gruul Keyrune | handled | {R}{G}: This artifact becomes a 3/2 red and green Beast artifact creature with trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gruul Ragebeast | handled | Whenever this creature or another creature you control enters, that creature fights target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guildscorn Ward | handled | Enchanted creature has protection from multicolored. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gutter Skulk | handled |  |  | Y/Y/- | not_tested |
 | High Priest of Penance | handled | Whenever this creature is dealt damage, you may destroy target nonland permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -248,9 +247,10 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Aerial Maneuver
+- Aurelia's Fury
 - Biovisionary
 - Boros Guildgate
 - Boros Reckoner
@@ -336,7 +336,6 @@
 | whenever ~ deals combat damage to a player, exile the top seven cards of that player's library, then put a creature card from among them onto the battlefield un | 1 | Lord of the Void | gtc |
 | whenever ~ deals combat damage to a player, gain control of all artifacts that player controls. | 1 | Hellkite Tyrant | gtc |
 | whenever ~ deals combat damage to a player, that player exiles the top card of their library. | 1 | Nightveil Specter | gtc |
-| whenever ~ or another creature you control enters, that creature fights target creature an opponent controls. | 1 | Gruul Ragebeast | gtc |
 | {M}, pay N life: remove a counter from target nonland permanent. | 1 | Thrull Parasite | gtc |
 | {M}, remove one or more +N/+N counters from ~: gain control of target creature with power less than or equal to the number of +N/+N counters removed ~. | 1 | Simic Manipulator | gtc |
 | {M}, sacrifice a creature: target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Undercity Informer | gtc |
@@ -350,7 +349,6 @@
 | {M}{M}{M}: whenever you gain life ~, each opponent loses that much life. | 1 | Vizkopa Guildmage | gtc |
 | ~ can't be blocked except by creatures with flying or reach. | 1 | Spire Tracer | gtc |
 | ~ can't be blocked except by rogues. | 1 | Deathcult Rogue | gtc |
-| ~ deals N damage divided as you choose among any number of targets. tap each creature dealt damage ~. players dealt damage ~ can't cast noncreature spells ~. | 1 | Aurelia's Fury | gtc |
 | ~ deals N damage to target creature and each other creature with the same name as that creature. | 1 | Homing Lightning | gtc |
 | ~ gets +N/+N for each creature card in your opponents' graveyards. | 1 | Wight of Precinct Six | gtc |
 | ~"..." graveyards. | 1 | Consuming Aberration | gtc |

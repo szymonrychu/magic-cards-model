@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 10.2% |
+| Tested | 26 | 10.6% |
 | Works (untested) | 149 | 60.6% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 65 | 26.4% |
+| Not working | 64 | 26.0% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | Glint-Sleeve Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Gonti, Lord of Luxury | silent | When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a ra | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guardian of the Great Conduit | silent | As long as you control a Nissa planeswalker, this creature gets +2/+0 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Harnessed Lightning | silent | Choose target creature. You get {E}{E}{E} (three energy counters), then you may pay any amount of {E}. Harnessed Lightning deals that much damage to that creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hazardous Conditions | silent | Creatures with no counters on them get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Highspire Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hightide Hermit | silent | Pay {E}{E}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -251,7 +250,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Aetherstorm Roc
 - Armorcraft Judge
@@ -266,6 +265,7 @@
 - Eddytrail Hawk
 - Fabrication Module
 - Fairgrounds Trumpeter
+- Harnessed Lightning
 - Hijack
 - Inspiring Vantage
 - Maulfist Doorbuster
@@ -299,7 +299,6 @@
 | choose target artifact or creature. you get {M}{M}{M}{M} (four energy counters), then you may pay an amount of {M} equal to that permanent's mana value. if you  | 1 | Confiscation Coup | kld |
 | choose target creature. exile the top card of your library. you may have ~ deal damage to that creature equal to the exiled card"..."t, you may play that card u | 1 | Spark of Creativity | kld |
 | choose target creature. you get {M}{M} (two energy counters), then you may pay any amount of {M}. the creature gets -N/-N until end of turn for each {M} paid ~. | 1 | Die Young | kld |
-| choose target creature. you get {M}{M}{M} (three energy counters), then you may pay any amount of {M}. ~ deals that much damage to that creature. | 1 | Harnessed Lightning | kld |
 | creatures with no counters on them get -N/-N until end of turn. | 1 | Hazardous Conditions | kld |
 | destroy all creatures. you gain N life for each creature destroyed ~. | 1 | Fumigate | kld |
 | each player may play an additional land on each of their turns. | 1 | Ghirapur Orrery | kld |

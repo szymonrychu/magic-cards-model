@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 18.7% |
+| Tested | 48 | 19.0% |
 | Works (untested) | 136 | 54.0% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 62 | 24.6% |
+| Not working | 61 | 24.2% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | Kav Landseeker | silent | When this creature enters, create a Lander token. At the beginning of the end step on your next turn, sacrifice that token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kavaron, Memorial World | silent | {1}{R}, {T}, Sacrifice a land: Create a 2/2 colorless Robot artifact creature token, then creatures you control get +1/+0 and gain haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lightstall Inquisitor | silent | When this creature enters, each opponent exiles a card from their hand and may play that card for as long as it remains exiled. Each spell cast this way costs { | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Lithobraking | silent | Create a Lander token. Then you may sacrifice an artifact. When you do, Lithobraking deals 2 damage to each creature. (A Lander token is an artifact with "{2},  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mechan Shieldmate | silent | As long as an artifact entered the battlefield under your control this turn, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Memorial Team Leader | silent | During your turn, other creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Monoist Circuit-Feeder | silent | When this creature enters, until end of turn, target creature you control gets +X/+0 and target creature an opponent controls gets -0/-X, where X is the number  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -235,7 +234,7 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>48 cards</summary>
 
 - Archenemy's Charm
 - Biotech Specialist
@@ -258,6 +257,7 @@
 - Interceptor Mechan
 - Kavaron Harrier
 - Kavaron Skywarden
+- Lithobraking
 - Meltstrider's Resolve
 - Mightform Harmonizer
 - Moonlit Meditation
@@ -302,7 +302,6 @@
 | at the beginning of your end step, if you control two or more tapped creatures, put a +N/+N counter on each creature you control other than ~. | 1 | Dawnstrike Vanguard | eoe |
 | choose odd or even. destroy each creature with mana value of the chosen quality. then gain control of all creatures until end of turn. untap them. they gain has | 1 | Mutinous Massacre | eoe |
 | counter target spell unless its controller pays {M}. if they do, you create a lander token. (it's an artifact with "...") | 1 | Divert Disaster | eoe |
-| create a lander token. then you may sacrifice an artifact. when you do, ~ deals N damage to each creature. (a lander token is an artifact with "...") | 1 | Lithobraking | eoe |
 | destroy all creatures with toughness N or less. you lose N life. if N is N or more, return a creature card put into a graveyard ~ to the battlefield under your  | 1 | Zero Point Ballad | eoe |
 | destroy all creatures, then any number of target players each mill half their library, rounded down. | 1 | Singularity Rupture | eoe |
 | during your turn, other creatures you control get +N/+N. | 1 | Memorial Team Leader | eoe |

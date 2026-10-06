@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 11.7% |
-| Works (untested) | 144 | 60.3% |
+| Tested | 29 | 12.1% |
+| Works (untested) | 143 | 59.8% |
 | Partial (unaudited) | 14 | 5.9% |
 | Not working | 53 | 22.2% |
 
@@ -225,7 +225,6 @@
 | Traitorous Blood | handled | Gain control of target creature until end of turn. Untap it. It gains trample and haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Travel Preparations | handled | Put a +1/+1 counter on each of up to two target creatures. Flashback {1}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Traveler's Amulet | handled | {1}, Sacrifice this artifact: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Typhoid Rats | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Ulvenwald Mystics // Ulvenwald Primordials | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unburial Rites | handled | Return target creature card from your graveyard to the battlefield. Flashback {3}{W} (You may cast this card from your graveyard for its flashback cost. Then ex | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unruly Mob | handled | Whenever another creature you control dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -241,7 +240,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -270,6 +269,7 @@
 - Slayer of the Wicked
 - Snapcaster Mage
 - Stony Silence
+- Typhoid Rats
 - Walking Corpse
 
 </details>

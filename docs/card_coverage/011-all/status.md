@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 0 | 0.0% |
+| Tested | 1 | 11.1% |
 | Works (untested) | 6 | 66.7% |
 | Partial (unaudited) | 1 | 11.1% |
-| Not working | 2 | 22.2% |
+| Not working | 1 | 11.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Hail Storm | silent | Hail Storm deals 2 damage to each attacking creature and 1 damage to you and each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Swamp Mosquito | silent | Whenever this creature attacks and isn't blocked, defending player gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elvish Bard | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aesthir Glider | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -39,8 +38,9 @@
 ## Fully supported
 
 <details>
-<summary>0 cards</summary>
+<summary>1 cards</summary>
 
+- Hail Storm
 
 </details>
 
@@ -50,7 +50,6 @@
 |---|---|---|---|
 | all creatures able to block ~ do so. | 1 | Elvish Bard | all |
 | whenever ~ attacks and isn't blocked, defending player gets a poison counter. | 1 | Swamp Mosquito | all |
-| ~ deals N damage to each attacking creature and N damage to you and each creature you control. | 1 | Hail Storm | all |
 
 ## Notes
 

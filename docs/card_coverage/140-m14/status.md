@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 4.4% |
+| Tested | 6 | 5.3% |
 | Works (untested) | 64 | 56.6% |
 | Partial (unaudited) | 8 | 7.1% |
-| Not working | 36 | 31.9% |
+| Not working | 35 | 31.0% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Elite Arcanist | silent | {X}, {T}: Copy the exiled card. You may cast the copy without paying its mana cost. X is the mana value of the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Galerider Sliver | silent | Sliver creatures you control have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Diplomats | silent | {T}: Each creature attacks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Grim Return | silent | Choose target creature card in a graveyard that was put there from the battlefield this turn. Put that card onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Groundshaker Sliver | silent | Sliver creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guardian of the Ages | silent | When a creature attacks you or a planeswalker you control, if this creature has defender, it loses defender and gains trample. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Haunted Plate Mail | silent | {0}: Until end of turn, this permanent becomes a 4/4 Spirit artifact creature that's no longer an Equipment. Activate only if you control no creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -138,10 +137,11 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
 - Angelic Accord
 - Elvish Mystic
+- Grim Return
 - Kalonian Hydra
 - Path of Bravery
 - Sliver Construct
@@ -157,7 +157,6 @@
 | as long as you control eight or more lands, ~ gets +N/+N and has trample. | 1 | Woodborn Behemoth | m14 |
 | at the beginning of your upkeep, if enchanted equipment is attached to a creature, destroy that creature. | 1 | Artificer's Hex | m14 |
 | at the beginning of your upkeep, if there are fewer than six creature cards in your graveyard, sacrifice a creature. | 1 | Shadowborn Demon | m14 |
-| choose target creature card in a graveyard that was put there from the battlefield ~. put that card onto the battlefield under your control. | 1 | Grim Return | m14 |
 | create two N/N red elemental creature tokens, then flip a coin. if you win the flip, return ~ to its owner's hand. | 1 | Molten Birth | m14 |
 | creature spells with flying you cast cost {M} less to cast. | 1 | Warden of Evos Isle | m14 |
 | creatures without flying can't block ~. | 1 | Seismic Stomp | m14 |

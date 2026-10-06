@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 9.2% |
-| Works (untested) | 61 | 43.0% |
+| Tested | 15 | 10.6% |
+| Works (untested) | 60 | 42.3% |
 | Partial (unaudited) | 15 | 10.6% |
-| Not working | 53 | 37.3% |
+| Not working | 52 | 36.6% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Brink of Disaster | silent | When enchanted permanent becomes tapped, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Calcite Snapper | silent | Landfall — Whenever a land you control enters, you may switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Caustic Crawler | silent | Landfall — Whenever a land you control enters, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Chain Reaction | silent | Chain Reaction deals X damage to each creature, where X is the number of creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Claws of Valakut | silent | Enchanted creature gets +1/+0 for each Mountain you control and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Comet Storm | silent | Multikicker {1} (You may pay an additional {1} any number of times as you cast this spell.) Choose any target, then choose another target for each time this spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deathforge Shaman | silent | When this creature enters, it deals damage to target player or planeswalker equal to twice the number of times it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -113,7 +112,6 @@
 | Graypelt Hunter | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grotag Thrasher | handled | Whenever this creature attacks, target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Groundswell | handled | Target creature gets +2/+2 until end of turn. Landfall — If you had a land enter the battlefield under your control this turn, that creature gets +4/+4 until en | the engine reads this text and performs it | Y/-/- | not_tested |
-| Hada Freeblade | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Halimar Depths | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hammer of Ruin | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Harabaz Druid | handled |  |  | Y/-/- | not_tested |
@@ -159,14 +157,16 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>15 cards</summary>
 
 - Amulet of Vigor
 - Basilisk Collar
 - Bestial Menace
 - Bojuka Bog
 - Celestial Colonnade
+- Chain Reaction
 - Explore
+- Hada Freeblade
 - Lodestone Golem
 - Nature's Claim
 - Omnath, Locus of Mana
@@ -239,7 +239,6 @@
 | {M}: target land you control becomes an N/N elemental creature until end of turn, where N is the number of allies you control. it's still a land. | 1 | Vastwood Animist | wwk |
 | {M}: target player gains control of target artifact, creature, or land you control. | 1 | Bazaar Trader | wwk |
 | ~ costs {M} less to cast for each attacking creature. create a N/N colorless construct artifact creature token with trample. exile it at the beginning of your n | 1 | Stone Idol Trap | wwk |
-| ~ deals N damage to each creature, where N is the number of creatures on the battlefield. | 1 | Chain Reaction | wwk |
 | ~ enters with a charge counter on it for each time it was kicked. | 1 | Everflowing Chalice | wwk |
 | ~ gets +N/+N as long as you control a forest. | 1 | Loam Lion | wwk |
 | ~ gets -N/-N, where N is your life total. | 1 | Death's Shadow | wwk |

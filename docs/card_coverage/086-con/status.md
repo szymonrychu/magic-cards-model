@@ -17,23 +17,21 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 8.5% |
-| Works (untested) | 75 | 53.2% |
+| Tested | 14 | 9.9% |
+| Works (untested) | 76 | 53.9% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 49 | 34.8% |
+| Not working | 46 | 32.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Aven Squire | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Banefire | silent | Banefire deals X damage to any target. If X is 5 or more, this spell can't be countered and the damage can't be prevented. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Tyrant | silent | At the beginning of your upkeep, each player loses 1 life. Put a +1/+1 counter on this creature for each 1 life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Child of Alara | silent | When Child of Alara dies, destroy all nonland permanents. They can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Conflux | silent | Search your library for a white card, a blue card, a black card, a red card, and a green card. Reveal those cards, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Corrupted Roots | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cylian Sunsinger | silent | {R}{G}{W}: This creature and each other creature with the same name as it get +3/+3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Drag Down | silent | Domain — Target creature gets -1/-1 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragonsoul Knight | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes a Dragon, gets +5/+3, and gains flying and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ember Weaver | silent | As long as you control a red permanent, this creature gets +1/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Esperzoa | silent | At the beginning of your upkeep, return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -48,7 +46,6 @@
 | Manaforce Mace | silent | Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Martial Coup | silent | Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Meglonoth | silent | Whenever this creature blocks a creature, this creature deals damage to that creature's controller equal to this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Might of Alara | silent | Domain — Target creature gets +1/+1 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nicol Bolas, Planeswalker | silent | −9: Nicol Bolas deals 7 damage to target player or planeswalker. That player or that planeswalker's controller discards seven cards, then sacrifices seven perma | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noble Hierarch | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Paragon of the Amesha | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes an Angel, gets +3/+3, and gains flying and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -81,7 +78,6 @@
 | Progenitus | unaudited | If Progenitus would be put into a graveyard from anywhere, reveal Progenitus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Worldheart Phoenix | unaudited | You may cast this card from your graveyard by paying {W}{U}{B}{R}{G} rather than paying its mana cost. If you do, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Absorb Vis | handled | Target player loses 4 life and you gain 4 life. Basic landcycling {1}{B} ({1}{B}, Discard this card: Search your library for a basic land card, reveal it, put i | the engine reads this text and performs it | Y/-/- | not_tested |
-| Ancient Ziggurat | handled |  |  | Y/-/- | not_tested |
 | Armillary Sphere | handled | {2}, {T}, Sacrifice this artifact: Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Asha's Favor | handled | Enchanted creature has flying, first strike, and vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Beacon Behemoth | handled | {1}: Target creature with power 5 or greater gains vigilance until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -94,6 +90,7 @@
 | Cumber Stone | handled | Creatures your opponents control get -1/-0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dark Temper | handled | Dark Temper deals 2 damage to target creature. If you control a black permanent, destroy the creature instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darklit Gargoyle | handled | {B}: This creature gets +2/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Drag Down | handled | Domain — Target creature gets -1/-1 until end of turn for each basic land type among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreadwing | handled | {1}{U}{R}: This creature gets +3/+0 and gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elder Mastery | handled | Enchanted creature gets +3/+3 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Esper Cormorants | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -120,6 +117,7 @@
 | Lapse of Certainty | handled | Counter target spell. If that spell is countered this way, put it on top of its owner's library instead of into that player's graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Master Transmuter | handled | {U}, {T}, Return an artifact you control to its owner's hand: You may put an artifact card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Matca Rioters | handled | Domain — Matca Rioters's power and toughness are each equal to the number of basic land types among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Might of Alara | handled | Domain — Target creature gets +1/+1 until end of turn for each basic land type among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mirror-Sigil Sergeant | handled | At the beginning of your upkeep, if you control a blue permanent, you may create a token that's a copy of this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molten Frame | handled | Destroy target artifact creature. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nacatl Hunt-Pride | handled | {R}, {T}: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -159,9 +157,11 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>14 cards</summary>
 
 - Aerie Mystics
+- Ancient Ziggurat
+- Banefire
 - Canyon Minotaur
 - Celestial Purge
 - Exotic Orchard
@@ -180,8 +180,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Domain | 6 | Aven Trailblazer, Drag Down, Manaforce Mace, Might of Alara, Voices from the Void | con |
 | exalted | 5 | Aven Squire, Frontline Sage, Giltspire Avenger, Noble Hierarch, Rhox Bodyguard | con |
+| Domain | 4 | Aven Trailblazer, Manaforce Mace, Voices from the Void, Wandering Goblins | con |
 | {M}: target land you control becomes the basic land type of your choice until end of turn. | 2 | Grixis Illusionist, Unstable Frontier | con |
 | as long as you control a red permanent, ~ gets +N/+N and has first strike. | 1 | Ember Weaver | con |
 | as ~ enters, choose an opponent. | 1 | Nyxathid | con |
@@ -216,7 +216,6 @@
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes an angel, gets +N/+N, and gains flying and lifelink. | 1 | Paragon of the Amesha | con |
 | ~ can't be countered. ~ deals N damage to each creature and each player. | 1 | Volcanic Fallout | con |
 | ~ deals N damage divided as you choose among one, two, or three target white and/or blue creatures. | 1 | Ignite Disorder | con |
-| ~ deals N damage to any target. if N is N or more, ~ can"..."t be prevented. | 1 | Banefire | con |
 | ~ deals N damage to target player or planeswalker. it deals an additional N damage to that player or planeswalker at the beginning of your next upkeep step unle | 1 | Quenchable Fire | con |
 | ~ enters with N +N/+N counters on it. if N is N or more, it enters with an additional N +N/+N counters on it. | 1 | Apocalypse Hydra | con |
 | ~ gets +N/+N as long as you control another artifact. | 1 | Court Homunculus | con |

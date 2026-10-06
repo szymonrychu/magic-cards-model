@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.2% |
+| Tested | 22 | 8.6% |
 | Works (untested) | 119 | 46.3% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 100 | 38.9% |
+| Not working | 99 | 38.5% |
 
 ## Cards needing work
 
@@ -105,7 +105,6 @@
 | Wizard's Spellbook | silent | {T}: Exile target instant or sorcery card from a graveyard. Roll a d20. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Xanathar, Guild Kingpin | silent | At the beginning of your upkeep, choose target opponent. Until end of turn, that player can't cast spells, you may look at the top card of their library any tim | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bruenor Battlehammer | notice | Each creature you control gets +2/+0 for each Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Burning Hands | notice | Burning Hands deals 2 damage to target creature or planeswalker. If that permanent is green, Burning Hands deals 6 damage instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cleric Class | notice | When this Class becomes level 3, return target creature card from your graveyard to the battlefield. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Compelled Duel | notice | Target creature gets +3/+3 until end of turn and must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Devour Intellect | notice | Target opponent discards a card. If mana from a Treasure was spent to cast this spell, instead that player reveals their hand, you choose a nonland card from it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -266,10 +265,11 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Bar the Gate
 - Boots of Speed
+- Burning Hands
 - Choose Your Weapon
 - Den of the Bugbear
 - Drizzt Do'Urden
@@ -401,7 +401,6 @@
 | ~ attacks or blocks each combat if able. | 1 | Iron Golem | afr |
 | ~ can"..."s attacking alone. | 1 | Yuan-Ti Malison | afr |
 | ~ costs {M} less to cast for each instant and sorcery spell you've cast ~. | 1 | Demilich | afr |
-| ~ deals N damage to target creature or planeswalker. if that permanent is green, ~ deals N damage instead. | 1 | Burning Hands | afr |
 | ~ deals N damage to target creature or planeswalker. roll a dN. N—N \| ~ deals N damage to each player. N—N \| ~ deals N damage to each opponent. | 1 | Farideh's Fireball | afr |
 | ~ has haste and ward {M} as long as it was cast. | 1 | The Tarrasque | afr |
 | −N: exchange your hand and library, then shuffle. you get an emblem with "..." | 1 | Mordenkainen | afr |

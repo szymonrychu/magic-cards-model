@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 11.7% |
-| Works (untested) | 67 | 60.4% |
+| Tested | 14 | 12.6% |
+| Works (untested) | 66 | 59.5% |
 | Partial (unaudited) | 8 | 7.2% |
 | Not working | 23 | 20.7% |
 
@@ -68,7 +68,6 @@
 | Burst of Speed | handled | Creatures you control gain haste until end of turn. (They can attack and {T} even if they just came under your control.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cemetery Reaper | handled | Other Zombie creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Centaur Courser | handled |  |  | Y/Y/- | not_tested |
-| Child of Night | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Cudgel Troll | handled | {G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deadly Recluse | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Disentomb | handled | Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -128,12 +127,13 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Acidic Slime
 - Act of Treason
 - Baneslayer Angel
 - Burning Inquiry
+- Child of Night
 - Divination
 - Elite Vanguard
 - Essence Scatter

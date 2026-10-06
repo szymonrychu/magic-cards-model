@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 10.5% |
+| Tested | 24 | 10.9% |
 | Works (untested) | 105 | 47.7% |
 | Partial (unaudited) | 8 | 3.6% |
-| Not working | 84 | 38.2% |
+| Not working | 83 | 37.7% |
 
 ## Cards needing work
 
@@ -108,7 +108,6 @@
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Emerge Unscathed | notice | Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Induce Despair | notice | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Might of the Masses | notice | Target creature gets +1/+1 until end of turn for each creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Traitorous Instinct | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | unparsed remainder: Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | Y/Y/- | not_working |
 | Aura Gnarlid | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cast Through Time | unaudited | Instant and sorcery spells you control have rebound. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -227,7 +226,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -240,6 +239,7 @@
 - Inquisition of Kozilek
 - Living Destiny
 - Merfolk Observer
+- Might of the Masses
 - Momentous Fall
 - Near-Death Experience
 - Nirkana Revenant
@@ -307,7 +307,6 @@
 | search your library for up to four land cards with different names and reveal them. an opponent chooses two of those cards. put the chosen cards into your grave | 1 | Realms Uncharted | roe |
 | spells and abilities your opponents control can't cause you to sacrifice permanents. | 1 | Tajuru Preserver | roe |
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Distortion Strike | roe |
-| target creature gets +N/+N until end of turn for each creature you control. | 1 | Might of the Masses | roe |
 | target creature must be blocked ~ if able. draw a card. | 1 | Irresistible Prey | roe |
 | target creature you control gains protection from the color of your choice until end of turn. rebound (if you cast ~ from your hand, exile it as it resolves. at | 1 | Emerge Unscathed | roe |
 | target opponent reveals their hand. you choose a card from it. that player shuffles that card into their library. | 1 | Perish the Thought | roe |

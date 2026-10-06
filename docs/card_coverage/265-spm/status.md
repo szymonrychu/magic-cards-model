@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 16.0% |
-| Works (untested) | 100 | 53.5% |
+| Tested | 32 | 17.1% |
+| Works (untested) | 99 | 52.9% |
 | Partial (unaudited) | 12 | 6.4% |
-| Not working | 45 | 24.1% |
+| Not working | 44 | 23.5% |
 
 ## Cards needing work
 
@@ -69,7 +69,6 @@
 | Kraven's Last Hunt | notice | I — Mill five cards. When you do, this Saga deals damage equal to the greatest power among creature cards in your graveyard to target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Origin of Spider-Man | notice | II — Put a +1/+1 counter on target creature you control. It becomes a legendary Spider Hero in addition to its other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Skyward Spider | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Terrific Team-Up | notice | This spell costs {2} less to cast if you control a permanent with mana value 4 or greater. One or two target creatures you control each get +1/+0 until end of t | unparsed remainder: This spell costs {2} less to cast if you control a permanent with mana value 4 or greater. They each deal damage equal to their power to target creature an opponent controls. | Y/Y/Y | not_working |
 | Thwip! | notice | Target creature gets +2/+2 and gains flying until end of turn. If it's a Spider, you gain 2 life. | unparsed remainder: If it's a Spider, you gain 2 life. | Y/Y/Y | not_working |
 | Alien Symbiosis | unaudited | You may cast this card from your graveyard by discarding a card in addition to paying its other costs. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Anti-Venom, Horrifying Healer | unaudited | If damage would be dealt to Anti-Venom, prevent that damage and put that many +1/+1 counters on him. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -89,7 +88,6 @@
 | Araña, Heart of the Spider | handled | Whenever you attack, put a +1/+1 counter on target attacking creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bagel and Schmear | handled | Share — {W}, {T}, Sacrifice this artifact: Put a +1/+1 counter on up to one target creature. Draw a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Beetle, Legacy Criminal | handled | {1}{U}, Exile this card from your graveyard: Put a +1/+1 counter on target creature. It gains flying until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Behold the Sinister Six! | handled | Return up to six target creature cards with different names from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Biorganic Carapace | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Chameleon, Master of Disguise | handled | You may have Chameleon enter as a copy of a creature you control, except his name is Chameleon, Master of Disguise. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | City Pigeon | handled | When this creature leaves the battlefield, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -187,9 +185,10 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>32 cards</summary>
 
 - Aunt May
+- Behold the Sinister Six!
 - Doc Ock's Henchmen
 - Doc Ock's Tentacles
 - Doctor Octopus, Master Planner
@@ -216,6 +215,7 @@
 - Spiders-Man, Heroic Horde
 - Superior Spider-Man
 - Swarm, Being of Bees
+- Terrific Team-Up
 - The Soul Stone
 - Unstable Experiment
 - Villainous Wrath
@@ -281,7 +281,6 @@
 | {M}: put a +N/+N counter on each artifact creature and/or vehicle you control. | 1 | Iron Spider, Stark Upgrade | spm |
 | {M}{M}{M}: return ~ and target land card from your graveyard to the battlefield tapped. | 1 | Sandman, Shifting Scoundrel | spm |
 | ~ can't be blocked. | 1 | Norman Osborn // Green Goblin | spm |
-| ~ costs {M} less to cast if you control a permanent with mana value N or greater. one or two target creatures you control each get +N/+N until end of turn. they | 1 | Terrific Team-Up | spm |
 | ~ has flying as long as it's modified. | 1 | Skyward Spider | spm |
 
 ## Notes

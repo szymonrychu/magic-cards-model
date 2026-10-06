@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 10.9% |
+| Tested | 32 | 11.7% |
 | Works (untested) | 124 | 45.3% |
 | Partial (unaudited) | 12 | 4.4% |
-| Not working | 108 | 39.4% |
+| Not working | 106 | 38.7% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | Dream Salvage | silent | Draw cards equal to the number of cards target opponent discarded this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drove of Elves | silent | Drove of Elves's power and toughness are each equal to the number of green permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elsewhere Flask | silent | Sacrifice this artifact: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ember Gale | silent | Creatures target player controls can't block this turn. Ember Gale deals 1 damage to each white and/or blue creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Enchanted Evening | silent | All permanents are enchantments in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faerie Swarm | silent | Faerie Swarm's power and toughness are each equal to the number of blue permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fate Transfer | silent | Move all counters from target creature onto another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -129,7 +128,6 @@
 | Mudbrawler Cohort | notice | This creature gets +1/+1 as long as you control another red creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Puppeteer Clique | notice | When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rattleblaze Scarecrow | notice | This creature has persist as long as you control a black creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Rite of Consumption | notice | As an additional cost to cast this spell, sacrifice a creature. Rite of Consumption deals damage equal to the sacrificed creature's power to target player or pl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thornwatch Scarecrow | notice | This creature has wither as long as you control a green creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Watchwing Scarecrow | notice | This creature has vigilance as long as you control a white creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wicker Warcrawler | notice | Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -274,7 +272,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>32 cards</summary>
 
 - Beseech the Queen
 - Blowfly Infestation
@@ -285,6 +283,7 @@
 - Deepchannel Mentor
 - Demigod of Revenge
 - Devoted Druid
+- Ember Gale
 - Faerie Macabre
 - Hollowborn Barghest
 - Illuminated Folio
@@ -293,6 +292,7 @@
 - Mirrorweave
 - Mistveil Plains
 - Mystic Gate
+- Rite of Consumption
 - Rosheen Meanderer
 - Savor the Moment
 - Scrapbasket
@@ -317,7 +317,6 @@
 | all cards that aren't on the battlefield, spells, and permanents are the chosen color in addition to their other colors. | 1 | Painter's Servant | shm |
 | all damage is dealt as though its source had wither. | 1 | Everlasting Torment | shm |
 | all permanents are enchantments in addition to their other types. | 1 | Enchanted Evening | shm |
-| as an additional cost to cast ~, sacrifice a creature. ~ deals damage equal to the sacrificed creature's power to target player or planeswalker. you gain life e | 1 | Rite of Consumption | shm |
 | as long as enchanted creature is black, it gets +N/+N and has wither. | 1 | Fists of the Demigod | shm |
 | as long as enchanted creature is blue, it gets +N/+N and has "..." | 1 | Helm of the Ghastlord | shm |
 | as long as enchanted creature is green, it gets +N/+N and has indestructible. | 1 | Shield of the Oversoul | shm |
@@ -334,7 +333,6 @@
 | counter target spell. search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. then that player shuff | 1 | Counterbore | shm |
 | create a N/N black and red elemental creature token. target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | 1 | Din of the Fireherd | shm |
 | create two N/N white kithkin soldier creature tokens if {M} was spent to cast ~. counter up to one target creature spell if {M} was spent to cast ~. (do both if | 1 | Repel Intruders | shm |
-| creatures target player controls can't block ~. ~ deals N damage to each white and/or blue creature that player controls. | 1 | Ember Gale | shm |
 | creatures your opponents control with counters on them can't attack or block. | 1 | Kulrath Knight | shm |
 | destroy all artifacts and enchantments. you gain N life for each permanent destroyed ~. | 1 | Fracturing Gust | shm |
 | destroy all auras and equipment attached to target creature. | 1 | Strip Bare | shm |

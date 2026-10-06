@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 12.1% |
+| Tested | 30 | 12.6% |
 | Works (untested) | 137 | 57.3% |
 | Partial (unaudited) | 9 | 3.8% |
-| Not working | 64 | 26.8% |
+| Not working | 63 | 26.4% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Amplifire | silent | At the beginning of your upkeep, reveal cards from the top of your library until you reveal a creature card. Until your next turn, this creature's base power be | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Biogenic Upgrade | silent | Distribute three +1/+1 counters among one, two, or three target creatures, then double the number of +1/+1 counters on each of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Biomancer's Familiar | silent | {T}: The next time target creature adapts this turn, it adapts as though it had no +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Carnival // Carnage | silent | Carnage deals 3 damage to target opponent. That player discards two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cavalcade of Calamity | silent | Whenever a creature you control with power 1 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Charging War Boar | silent | As long as you control a Domri planeswalker, this creature gets +1/+1 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Clan Guildmage | silent | {2}{G}, {T}: Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -240,11 +239,12 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Angel of Grace
 - Awaken the Erstwhile
 - Captive Audience
+- Carnival // Carnage
 - Consign to the Pit
 - Cry of the Carnarium
 - Dovin, Grand Arbiter
@@ -286,7 +286,6 @@
 | as long as you control two or more gates, ~ has vigilance and trample. | 1 | Gatebreaker Ram | rna |
 | as long as ~ has a +N/+N counter on it, it can attack as though it didn't have defender. | 1 | Scuttlegator | rna |
 | at the beginning of your upkeep, reveal cards from the top of your library until you reveal a creature card. until your next turn, ~ base power becomes twice th | 1 | Amplifire | rna |
-| carnage deals N damage to target opponent. that player discards two cards. | 1 | Carnival // Carnage | rna |
 | counter target spell. its controller mills three cards. | 1 | Thought Collapse | rna |
 | create a N/N white and blue sphinx creature token with flying and vigilance. | 1 | Warrant // Warden | rna |
 | create a number of N/N red goblin creature tokens equal to two plus the number of cards named ~ in your graveyard. | 1 | Goblin Gathering | rna |

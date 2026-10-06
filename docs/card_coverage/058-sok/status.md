@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 6.1% |
-| Works (untested) | 57 | 34.5% |
+| Tested | 11 | 6.7% |
+| Works (untested) | 60 | 36.4% |
 | Partial (unaudited) | 11 | 6.7% |
-| Not working | 87 | 52.7% |
+| Not working | 83 | 50.3% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Choice of Damnations | silent | Target opponent chooses a number. You may have that player lose that much life. If you don't, that player sacrifices all but that many permanents of their choic | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudhoof Kirin | silent | Whenever you cast a Spirit or Arcane spell, you may have target player mill X cards, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curtain of Light | silent | Cast this spell only during combat after blockers are declared. Target unblocked attacking creature becomes blocked. (This spell works on creatures that can't b | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cut the Earthly Bond | silent | Return target enchanted permanent to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deathknell Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Deathmask Nezumi | silent | As long as you have seven or more cards in hand, this creature gets +2/+1 and has fear. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Descendant of Kiyomaro | silent | As long as you have more cards in hand than each opponent, this creature gets +1/+2 and has "Whenever this creature deals combat damage, you gain 3 life." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -51,7 +50,6 @@
 | Erayo, Soratami Ascendant // Erayo's Essence | silent | Whenever the fourth spell of a turn is cast, flip Erayo. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eternal Dominion | silent | Search target opponent's library for an artifact, creature, enchantment, or land card. Put that card onto the battlefield under your control. Then that player s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Freed from the Real | silent | {U}: Untap enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gaze of Adamaro | silent | Gaze of Adamaro deals damage to target player equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghost-Lit Warder | silent | {3}{U}, {T}: Counter target spell unless its controller pays {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hand of Cruelty | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hand of Honor | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -65,7 +63,6 @@
 | Kami of Empty Graves | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kami of the Tended Garden | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kashi-Tribe Elite | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kiku's Shadow | silent | Target creature deals damage to itself equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kitsune Dawnblade | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kiyomaro, First to Stand | silent | Kiyomaro's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kuon, Ogre Ascendant // Kuon's Essence | silent | At the beginning of the end step, if three or more creatures died this turn, flip Kuon. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -111,7 +108,6 @@
 | Akuta, Born of Ash | notice | At the beginning of your upkeep, if you have more cards in hand than each opponent, you may sacrifice a Swamp. If you do, return Akuta from your graveyard to th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Charge Across the Araba | notice | Sweep — Return any number of Plains you control to their owner's hand. Creatures you control get +1/+1 until end of turn for each Plains returned this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ideas Unbound | notice | Draw three cards. Discard three cards at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Inner Calm, Outer Strength | notice | Target creature gets +X/+X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Plow Through Reito | notice | Sweep — Return any number of Plains you control to their owner's hand. Target creature gets +1/+1 until end of turn for each Plains returned this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cowed by Wisdom | unaudited | Enchanted creature can't attack or block unless its controller pays {1} for each card in your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dense Canopy | unaudited | Creatures with flying can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -128,6 +124,7 @@
 | Arashi, the Sky Asunder | handled | {X}{G}, {T}: Arashi deals X damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Briarknit Kami | handled | Whenever you cast a Spirit or Arcane spell, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Captive Flame | handled | {R}: Target creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cut the Earthly Bond | handled | Return target enchanted permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Death Denied | handled | Return X target creature cards from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Death of a Thousand Stings | handled | Target player loses 1 life and you gain 1 life. At the beginning of your upkeep, if you have more cards in hand than each opponent, you may return this card fro | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dosan's Oldest Chant | handled | You gain 6 life. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -136,6 +133,7 @@
 | Exile into Darkness | handled | Target player sacrifices a creature of their choice with mana value 3 or less. At the beginning of your upkeep, if you have more cards in hand than each opponen | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fiddlehead Kami | handled | Whenever you cast a Spirit or Arcane spell, regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Footsteps of the Goryo | handled | Return target creature card from your graveyard to the battlefield. Sacrifice that creature at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gaze of Adamaro | handled | Gaze of Adamaro deals damage to target player equal to the number of cards in that player's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghost-Lit Nourisher | handled | {2}{G}, {T}: Target creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghost-Lit Raider | handled | {2}{R}, {T}: This creature deals 2 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghost-Lit Redeemer | handled | {W}, {T}: You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -145,11 +143,13 @@
 | Hail of Arrows | handled | Hail of Arrows deals X damage divided as you choose among any number of target attacking creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Haru-Onna | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Iname as One | handled | When Iname as One enters, if you cast it from your hand, you may search your library for a Spirit permanent card, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Inner Calm, Outer Strength | handled | Target creature gets +X/+X until end of turn, where X is the number of cards in your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Into the Fray | handled | Target creature attacks this turn if able. Splice onto Arcane {R} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ivory Crane Netsuke | handled | At the beginning of your upkeep, if you have seven or more cards in hand, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jiwari, the Earth Aflame | handled | {X}{R}, {T}: Jiwari deals X damage to target creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kami of the Crescent Moon | handled | At the beginning of each player's draw step, that player draws an additional card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kemuri-Onna | handled | When this creature enters, target player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kiku's Shadow | handled | Target creature deals damage to itself equal to its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kiri-Onna | handled | When this creature enters, return target creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kitsune Loreweaver | handled | {1}{W}: This creature gets +0/+X until end of turn, where X is the number of cards in your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Maga, Traitor to Mortals | handled | Maga enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -178,14 +178,13 @@
 | Spiraling Embers | handled | Spiraling Embers deals damage to any target equal to the number of cards in your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spiritual Visit | handled | Create a 1/1 colorless Spirit creature token. Splice onto Arcane {W} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice co | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sunder from Within | handled | Destroy target artifact or land. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Tomb of Urami | handled | {2}{B}{B}, {T}, Sacrifice all lands you control: Create Urami, a legendary 5/5 black Demon Spirit creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Twincast | handled | Copy target instant or sorcery spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Yuki-Onna | handled | When this creature enters, destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Burning-Eye Zubera
 - Evermind
@@ -197,6 +196,7 @@
 - Reverence
 - Rushing-Tide Zubera
 - Sakura-Tribe Scout
+- Tomb of Urami
 
 </details>
 
@@ -254,14 +254,11 @@
 | kiyomaro's power and toughness are each equal to the number of cards in your hand. | 1 | Kiyomaro, First to Stand | sok |
 | legendary landwalk | 1 | Ayumi, the Last Visitor | sok |
 | masumaro's power and toughness are each equal to twice the number of cards in your hand. | 1 | Masumaro, First to Live | sok |
-| return target enchanted permanent to its owner's hand. | 1 | Cut the Earthly Bond | sok |
 | reveal the top three cards of your library. an opponent chooses one of them. put that card into your graveyard and the rest into your hand. | 1 | Murmurs from Beyond | sok |
 | reveal your hand: if you have seven or more land cards in your hand, flip sasaya. | 1 | Sasaya, Orochi Ascendant // Sasaya's Essence | sok |
 | search target opponent"..."t cast spells. at the beginning of each of your upkeeps, copy ~ except for its epic ability. you may choose a new target for the copy | 1 | Eternal Dominion | sok |
 | search target player"..."t cast spells. at the beginning of each of your upkeeps, copy ~ except for its epic ability. you may choose a new target for the copy.) | 1 | Neverending Torment | sok |
 | soramaro's power and toughness are each equal to the number of cards in your hand. | 1 | Soramaro, First to Dream | sok |
-| target creature deals damage to itself equal to its power. | 1 | Kiku's Shadow | sok |
-| target creature gets +N/+N until end of turn, where N is the number of cards in your hand. | 1 | Inner Calm, Outer Strength | sok |
 | target opponent chooses a number. you may have that player lose that much life. if you don't, that player sacrifices all but that many permanents of their choic | 1 | Choice of Damnations | sok |
 | when a creature you control dies, sacrifice ~. if you do, create four N/N colorless spirit creature tokens. | 1 | Promise of Bunrei | sok |
 | when homura dies, return it to the battlefield flipped. | 1 | Homura, Human Ascendant // Homura's Essence | sok |
@@ -285,7 +282,6 @@
 | {M}{M}, {M}: counter target spell unless its controller pays {M}. | 1 | Ghost-Lit Warder | sok |
 | {M}{M}: look at the top N cards of your library, where N is the number of cards in your hand, then put them back in any order. | 1 | Descendant of Soramaro | sok |
 | ~ can be attached only to a creature with power N or greater. | 1 | O-Naginata | sok |
-| ~ deals damage to target player equal to the number of cards in that player's hand. | 1 | Gaze of Adamaro | sok |
 
 ## Notes
 

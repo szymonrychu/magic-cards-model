@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 8.0% |
+| Tested | 22 | 9.8% |
 | Works (untested) | 161 | 71.6% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 37 | 16.4% |
+| Not working | 33 | 14.7% |
 
 ## Cards needing work
 
@@ -29,11 +29,8 @@
 | Altar of the Brood | silent | Whenever another permanent you control enters, each opponent mills a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashcloud Phoenix | silent | When this creature dies, return it to the battlefield face down under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Avalanche Tusker | silent | Whenever this creature attacks, target creature defending player controls blocks it this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Barrage of Boulders | silent | Barrage of Boulders deals 1 damage to each creature you don't control. Ferocious — If you control a creature with power 4 or greater, creatures can't block this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bellowing Saddlebrute | silent | Raid — When this creature enters, you lose 4 life unless you attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Crackling Doom | silent | Crackling Doom deals 2 damage to each opponent. Each opponent sacrifices a creature with the greatest power among creatures that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cranial Archive | silent | {2}, Exile this artifact: Target player shuffles their graveyard into their library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Crater's Claws | silent | Crater's Claws deals X damage to any target. Ferocious — Crater's Claws deals X plus 2 damage instead if you control a creature with power 4 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deflecting Palm | silent | The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragon's Eye Savants | silent | When this creature is turned face up, look at target opponent's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Duneblast | silent | Choose up to one creature. Destroy the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -54,7 +51,6 @@
 | See the Unwritten | silent | Reveal the top eight cards of your library. You may put a creature card from among them onto the battlefield. Put the rest into your graveyard. Ferocious — If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smoke Teller | silent | {1}{U}: Look at target face-down creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Solemn Visitor | silent | +1: Until your next turn, creatures you control get +1/+0 and gain lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bring Low | notice | Bring Low deals 3 damage to target creature. If that creature has a +1/+1 counter on it, Bring Low deals 5 damage to it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feat of Resistance | notice | Put a +1/+1 counter on target creature you control. It gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | High Sentinels of Arashin | notice | This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mardu Charm | notice | Choose one — • Mardu Charm deals 4 damage to target creature. • Create two 1/1 white Warrior creature tokens. They gain first strike until end of turn. • Target | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -237,13 +233,17 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>22 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
 - Ainok Bond-Kin
+- Barrage of Boulders
+- Bring Low
 - Burn Away
 - Clever Impersonator
+- Crackling Doom
+- Crater's Claws
 - Death Frenzy
 - Hardened Scales
 - Hooting Mandrills
@@ -302,10 +302,6 @@
 | you may look at the top card of your library and at face-down creatures you don't control any time. | 1 | Lens of Clarity | ktk |
 | {M}, exile ~: target player shuffles their graveyard into their library. draw a card. | 1 | Cranial Archive | ktk |
 | {M}{M}: look at target face-down creature. | 1 | Smoke Teller | ktk |
-| ~ deals N damage to any target. ferocious — ~ deals N plus N damage instead if you control a creature with power N or greater. | 1 | Crater's Claws | ktk |
-| ~ deals N damage to each creature you don"..."t block ~. | 1 | Barrage of Boulders | ktk |
-| ~ deals N damage to each opponent. each opponent sacrifices a creature with the greatest power among creatures that player controls. | 1 | Crackling Doom | ktk |
-| ~ deals N damage to target creature. if that creature has a +N/+N counter on it, ~ deals N damage to it instead. | 1 | Bring Low | ktk |
 | ~ equip ability costs {M} less to activate if it targets a colorless creature. | 1 | Ghostfire Blade | ktk |
 | ~ gets +N/+N for each other creature you control with a +N/+N counter on it. | 1 | High Sentinels of Arashin | ktk |
 

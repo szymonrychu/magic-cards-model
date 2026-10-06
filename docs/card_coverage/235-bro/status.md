@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 11.7% |
-| Works (untested) | 134 | 52.3% |
+| Works (untested) | 135 | 52.7% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 81 | 31.6% |
+| Not working | 80 | 31.2% |
 
 ## Cards needing work
 
@@ -67,7 +67,7 @@
 | Queen Kayla bin-Kroog | silent | {4}, {T}: Discard all the cards in your hand, then draw that many cards. You may choose an artifact or creature card with mana value 1 you discarded this way, t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Raze to the Ground | silent | This spell can't be countered. Destroy target artifact. If its mana value was 1 or less, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Razorlash Transmogrant | silent | {4}{B}{B}: Return this card from your graveyard to the battlefield with a +1/+1 counter on it. This ability costs {4} less to activate if an opponent controls f | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rootwire Amalgam | silent | {3}{G}{G}, Sacrifice this creature: Create an X/X colorless Golem artifact creature token, where X is three times this creature's power. It gains haste until en | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Rootwire Amalgam | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rust Goliath | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Saheeli, Filigree Master | silent | +1: Scry 1. You may tap an untapped artifact you control. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarinth Steelseeker | silent | Whenever an artifact you control enters, look at the top card of your library. If it's a land card, you may reveal it and put it into your hand. If you don't pu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -105,7 +105,6 @@
 | Mishra, Lost to Phyrexia | notice | Whenever Mishra enters or attacks, choose three — • Target opponent discards two cards. • Mishra deals 3 damage to any target. • Destroy target artifact or plan | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Portal to Phyrexia | notice | At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. It's a Phyrexian in addition to its other ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Recommission | notice | Return target artifact or creature card with mana value 3 or less from your graveyard to the battlefield. If a creature enters this way, it enters with an addit | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Unleash Shell | notice | Unleash Shell deals 5 damage to target creature or planeswalker and 2 damage to that permanent's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urza's Command | notice | Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Argoth, Sanctum of Nature | unaudited | This land enters tapped unless you control a legendary green creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Fortified Beachhead | unaudited | As this land enters, you may reveal a Soldier card from your hand. This land enters tapped unless you revealed a Soldier card this way or you control a Soldier. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -240,6 +239,7 @@
 | Transmogrant's Crown | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tyrant of Kher Ridges | handled | When this creature enters, it deals 4 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Union of the Third Path | handled | Draw a card, then you gain life equal to the number of cards in your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Unleash Shell | handled | Unleash Shell deals 5 damage to target creature or planeswalker and 2 damage to that permanent's controller. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Urza's Rebuff | handled | Choose one — • Counter target spell. • Tap up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Urza, Lord Protector | handled | Artifact, instant, and sorcery spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Urza, Prince of Kroog | handled | Artifact creatures you control get +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -295,7 +295,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| prototype | 13 | Autonomous Assembler, Blitz Automaton, Combat Thresher, Cradle Clearcutter, Depth Charge Colossus | bro |
+| prototype | 14 | Autonomous Assembler, Blitz Automaton, Combat Thresher, Cradle Clearcutter, Depth Charge Colossus | bro |
 | Choose two | 4 | Gix's Command, Kayla's Command, Mishra's Command, Urza's Command | bro |
 | +N: artifact, instant, and sorcery spells you cast ~ cost {M} less to cast. you gain N life. | 1 | Urza, Planeswalker | bro |
 | +N: scry N. you may tap an untapped artifact you control. if you do, draw a card. | 1 | Saheeli, Filigree Master | bro |
@@ -363,11 +363,9 @@
 | {M}: ~ loses defender and gains "..." | 1 | Surge Engine | bro |
 | {M}{M}: return target permanent you control to its owner"..."s hand. activate only during your turn. | 1 | Meticulous Excavation | bro |
 | {M}{M}: you may put an artifact card from your hand onto the battlefield. that artifact gains haste. sacrifice it at the beginning of the next end step. | 1 | Arms Race | bro |
-| {M}{M}{M}, sacrifice ~: create an N/N colorless golem artifact creature token, where N is three times ~ power. it gains haste until end of turn. activate only a | 1 | Rootwire Amalgam | bro |
 | {M}{M}{M}, {M}, exile ~: each player chooses six lands they control. destroy all other permanents. activate only as a sorcery. | 1 | Urza's Sylex | bro |
 | {M}{M}{M}: return ~ from your graveyard to the battlefield with a +N/+N counter on it. ~ costs {M} less to activate if an opponent controls four or more nonbasi | 1 | Razorlash Transmogrant | bro |
 | ~ can't be countered. destroy target artifact. if its mana value was N or less, draw a card. | 1 | Raze to the Ground | bro |
-| ~ deals N damage to target creature or planeswalker and N damage to that permanent's controller. | 1 | Unleash Shell | bro |
 | ~ enters tapped unless you control a legendary green creature. | 1 | Argoth, Sanctum of Nature | bro |
 | ~ enters with two +N/+N counters on it unless two or more colors of mana were spent to cast it. | 1 | Steel Exemplar | bro |
 | ~ gets +N/+N as long as you control an island. | 1 | Coastal Bulwark | bro |

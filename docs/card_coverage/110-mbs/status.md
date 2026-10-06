@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 7.7% |
+| Tested | 13 | 9.2% |
 | Works (untested) | 91 | 64.1% |
 | Partial (unaudited) | 7 | 4.9% |
-| Not working | 33 | 23.2% |
+| Not working | 31 | 21.8% |
 
 ## Cards needing work
 
@@ -54,8 +54,6 @@
 | Strandwalker | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Tezzeret, Agent of Bolas | silent | −1: Target artifact becomes an artifact creature with base power and toughness 5/5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victory's Herald | silent | Whenever this creature attacks, attacking creatures gain flying and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Burn the Impure | notice | Burn the Impure deals 3 damage to target creature. If that creature has infect, Burn the Impure deals 3 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Concussive Bolt | notice | Concussive Bolt deals 4 damage to target player or planeswalker. Metalcraft — If you control three or more artifacts, creatures controlled by that player or by  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gore Vassal | notice | Sacrifice this creature: Put a -1/-1 counter on target creature. Then if that creature's toughness is 1 or greater, regenerate it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pistus Strike | notice | Destroy target creature with flying. Its controller gets a poison counter. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vedalken Anatomist | notice | {2}{U}, {T}: Put a -1/-1 counter on target creature. You may tap or untap that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -161,9 +159,11 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>13 cards</summary>
 
 - Accorder Paladin
+- Burn the Impure
+- Concussive Bolt
 - Fuel for the Cause
 - Green Sun's Zenith
 - Ichor Wellspring
@@ -210,8 +210,6 @@
 | ~ can block an additional creature each combat for each equipment attached to ~. | 1 | Kemba's Legion | mbs |
 | ~ can"..."s equipped. | 1 | Training Drone | mbs |
 | ~ can't be blocked except by creatures with flying or reach. | 1 | Signal Pest | mbs |
-| ~ deals N damage to target creature. if that creature has infect, ~ deals N damage to that creature's controller. | 1 | Burn the Impure | mbs |
-| ~ deals N damage to target player or planeswalker. metalcraft — if you control three or more artifacts, creatures controlled by that player or by that planeswal | 1 | Concussive Bolt | mbs |
 | ~ enters tapped and with three charge counters on it. | 1 | Sphere of the Suns | mbs |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Psychosis Crawler | mbs |
 | −N: target artifact becomes an artifact creature with base power and toughness N/N. | 1 | Tezzeret, Agent of Bolas | mbs |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 50 | 19.8% |
-| Works (untested) | 129 | 51.2% |
+| Tested | 52 | 20.6% |
+| Works (untested) | 128 | 50.8% |
 | Partial (unaudited) | 12 | 4.8% |
-| Not working | 61 | 24.2% |
+| Not working | 60 | 23.8% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Descendant of Storms | silent | Whenever this creature attacks, you may pay {1}{W}. If you do, it endures 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dragon's Prey | silent | This spell costs {2} more to cast if it targets a Dragon. Destroy target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dragonbroods' Relic | silent | {3}{W}{U}{B}{R}{G}, Sacrifice this artifact: Create a 4/4 Dragon creature token named Reliquary Dragon that's all colors. It has flying, lifelink, and "When thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Dragonclaw Strike | silent | Double the power and toughness of target creature you control until end of turn. Then it fights up to one target creature an opponent controls. (Each deals dama | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dragonstorm Forecaster | silent | {2}, {T}: Search your library for a card named Dragonstorm Globe or Boulderborn Dragon, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Embermouth Sentinel | silent | When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. If you control a Dragon, put tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Formation Breaker | silent | As long as you control a creature with a counter on it, this creature gets +1/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -140,7 +139,6 @@
 | Fleeting Effigy | handled | At the beginning of your end step, return this creature to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Focus the Mind | handled | This spell costs {2} less to cast if you've cast another spell this turn. Draw three cards, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Furious Forebear | handled | Whenever a creature you control dies while this card is in your graveyard, you may pay {1}{W}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Glacial Dragonhunt | handled | Draw a card, then you may discard a card. When you discard a nonland card this way, Glacial Dragonhunt deals 3 damage to target creature. Harmonize {4}{U}{R} (Y | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Great Arashin City | handled | This land enters tapped unless you control a Forest or a Plains. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gurmag Nightwatch | handled | When this creature enters, look at the top three cards of your library. You may put one of those cards back on top of your library. Put the rest into your grave | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Host of the Hereafter | handled | This creature enters with two +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -232,7 +230,7 @@
 ## Fully supported
 
 <details>
-<summary>50 cards</summary>
+<summary>52 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
@@ -247,12 +245,14 @@
 - Delta Bloodflies
 - Dispelling Exhale
 - Dragonback Lancer
+- Dragonclaw Strike
 - Dragonfire Blade
 - Eshki Dragonclaw
 - Essence Anchor
 - Flamehold Grappler
 - Fortress Kin-Guard
 - Frontline Rush
+- Glacial Dragonhunt
 - Hardened Tactician
 - Heritage Reclamation
 - Inevitable Defeat
@@ -306,7 +306,6 @@
 | destroy all creatures and enchantments. draw a card for each permanent destroyed ~. | 1 | Death Begets Life | tdm |
 | distribute two +N/+N counters among one or two target creatures you control. creatures you control with counters on them gain vigilance and trample until end of | 1 | Synchronized Charge | tdm |
 | double the power and toughness of each creature you control until end of turn. | 1 | Roar of Endless Song | tdm |
-| double the power and toughness of target creature you control until end of turn. then it fights up to one target creature an opponent controls. (each deals dama | 1 | Dragonclaw Strike | tdm |
 | during your end step, warrior tokens you control have "..." | 1 | Zurgo, Thunder's Decree | tdm |
 | during your turn, spells you cast cost {M} less to cast for each creature you control with power N or greater. | 1 | Temur Battlecrier | tdm |
 | during your turn, ~ has base power and toughness N/N. | 1 | Snowmelt Stag | tdm |

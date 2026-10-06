@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.4% |
-| Works (untested) | 131 | 56.2% |
+| Tested | 17 | 7.3% |
+| Works (untested) | 133 | 57.1% |
 | Partial (unaudited) | 5 | 2.1% |
-| Not working | 82 | 35.2% |
+| Not working | 78 | 33.5% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Charnel Troll | silent | At the beginning of your upkeep, exile a creature card from your graveyard. If you do, put a +1/+1 counter on this creature. Otherwise, sacrifice it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chemister's Insight | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Connive // Concoct | silent | Gain control of target creature with power 2 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cosmotronic Wave | silent | Cosmotronic Wave deals 1 damage to each creature your opponents control. Creatures your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Creeping Chill | silent | Creeping Chill deals 3 damage to each opponent and you gain 3 life. When Creeping Chill is put into your graveyard from your library, you may exile it. If you d | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Darkblade Agent | silent | As long as you've surveilled this turn, this creature has deathtouch and "Whenever this creature deals combat damage to a player, you draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Direct Current | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -60,7 +59,6 @@
 | House Guildmage | silent | {1}{U}, {T}: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invert // Invent | silent | Switch the power and toughness of each of up to two target creatures until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ionize | silent | Counter target spell. Ionize deals 2 damage to that spell's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Justice Strike | silent | Target creature deals damage to itself equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | League Guildmage | silent | {X}{R}, {T}: Copy target instant or sorcery spell you control with mana value X. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ledev Champion | silent | Whenever this creature attacks, you may tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Legion Warboss | silent | At the beginning of combat on your turn, create a 1/1 red Goblin creature token. That token gains haste until end of turn and attacks this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -69,7 +67,6 @@
 | Maximize Altitude | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Maximize Velocity | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Mission Briefing | silent | Surveil 2, then choose an instant or sorcery card in your graveyard. You may cast it this turn. If that spell would be put into your graveyard, exile it instead | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Necrotic Wound | silent | Undergrowth — Target creature gets -X/-X until end of turn, where X is the number of creature cards in your graveyard. If that creature would die this turn, exi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Never Happened | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Notion Rain | silent | Surveil 2, then draw two cards. Notion Rain deals 2 damage to you. (To surveil 2, look at the top two cards of your library, then put any number of them into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nullhide Ferox | silent | {2}: This creature loses all abilities until end of turn. Any player may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -100,7 +97,6 @@
 | Vraska's Stoneglare | silent | Destroy target creature. You gain life equal to its toughness. You may search your library and/or graveyard for a card named Vraska, Regal Gorgon, reveal it, an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vraska, Regal Gorgon | silent | −10: For each creature card in your graveyard, put a +1/+1 counter on each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wojek Bodyguard | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Camaraderie | notice | You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn. | unparsed remainder: You gain X life and draw X cards, where X is the number of creatures you control. | Y/Y/- | not_working |
 | Circuitous Route | notice | Search your library for up to two basic land cards and/or Gate cards, put them onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | District Guide | notice | When this creature enters, you may search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dream Eater | notice | When this creature enters, surveil 4. When you do, you may return target nonland permanent an opponent controls to its owner's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -124,6 +120,7 @@
 | Bounty Agent | handled | {T}, Sacrifice this creature: Destroy target legendary permanent that's an artifact, creature, or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bounty of Might | handled | Target creature gets +3/+3 until end of turn. Target creature gets +3/+3 until end of turn. Target creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burglar Rat | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Camaraderie | handled | You gain X life and draw X cards, where X is the number of creatures you control. Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Candlelight Vigil | handled | Enchanted creature gets +3/+2 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Capture Sphere | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Centaur Peacemaker | handled | When this creature enters, each player gains 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -191,6 +188,7 @@
 | Moodmark Painter | handled | Undergrowth — When this creature enters, target creature gains menace and gets +X/+0 until end of turn, where X is the number of creature cards in your graveyar | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murmuring Mystic | handled | Whenever you cast an instant or sorcery spell, create a 1/1 blue Bird Illusion creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Muse Drake | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Necrotic Wound | handled | Undergrowth — Target creature gets -X/-X until end of turn, where X is the number of creature cards in your graveyard. If that creature would die this turn, exi | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nightveil Predator | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Nightveil Sprite | handled | Whenever this creature attacks, surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Niv-Mizzet, Parun | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -248,17 +246,19 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>17 cards</summary>
 
 - Arclight Phoenix
 - Assassin's Trophy
 - Chamber Sentry
 - Conclave Tribunal
+- Cosmotronic Wave
 - Deafening Clarion
 - Divine Visitation
 - Hatchery Spider
 - Hellkite Whelp
 - Hired Poisoner
+- Justice Strike
 - Kraul Harpooner
 - Lazav, the Multifarious
 - Lotleth Giant
@@ -274,7 +274,7 @@
 |---|---|---|---|
 | mentor | 11 | Barging Sergeant, Blade Instructor, Boros Challenger, Goblin Banneret, Hammer Dropper | grn |
 | jump | 7 | Chemister's Insight, Direct Current, Maximize Altitude, Maximize Velocity, Quasiduplicate | grn |
-| Undergrowth | 2 | Mausoleum Secrets, Necrotic Wound | grn |
+| Undergrowth | 1 | Mausoleum Secrets | grn |
 | all creatures able to block ~ do so. | 1 | Ochran Assassin | grn |
 | as long as you"..."t have defender. | 1 | Piston-Fist Cyclops | grn |
 | as long as you've surveilled ~, ~ has deathtouch and "..." | 1 | Darkblade Agent | grn |
@@ -304,7 +304,6 @@
 | surveil N, then choose an instant or sorcery card in your graveyard. you may cast it ~. if that spell would be put into your graveyard, exile it instead. (to su | 1 | Mission Briefing | grn |
 | surveil N, then draw two cards. ~ deals N damage to you. (to surveil N, look at the top two cards of your library, then put any number of them into your graveya | 1 | Notion Rain | grn |
 | switch the power and toughness of each of up to two target creatures until end of turn. | 1 | Invert // Invent | grn |
-| target creature deals damage to itself equal to its power. | 1 | Justice Strike | grn |
 | target creature you control deals damage equal to its power to target player. jump-start (you may cast ~ from your graveyard by discarding a card in addition to | 1 | Gravitic Punch | grn |
 | target opponent may have ~ deal N damage to them. if that player doesn't, you draw three cards. jump-start (you may cast ~ from your graveyard by discarding a c | 1 | Risk Factor | grn |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. | 1 | Never Happened | grn |
@@ -328,14 +327,12 @@
 | whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Ornery Goblin | grn |
 | whenever ~ deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest into their grav | 1 | Thief of Sanity | grn |
 | whenever ~ deals combat damage to a player, you may discard all the cards in your hand. if you do, draw that many cards. | 1 | Book Devourer | grn |
-| you gain N life and draw N cards, where N is the number of creatures you control. creatures you control get +N/+N until end of turn. | 1 | Camaraderie | grn |
 | you may put two +N/+N counters on a creature you control. then all creatures get -N/-N until end of turn. | 1 | Find // Finality | grn |
 | {M}: ~ loses all abilities until end of turn. any player may activate ~. | 1 | Nullhide Ferox | grn |
 | {M}{M}, {M}: copy target instant or sorcery spell you control with mana value N. you may choose new targets for the copy. | 1 | League Guildmage | grn |
 | {M}{M}, {M}: target creature doesn"..."s next untap step. | 1 | House Guildmage | grn |
 | {M}{M}, {M}: you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Omnispell Adept | grn |
 | {M}{M}: destroy ~. | 1 | Experimental Frenzy | grn |
-| ~ deals N damage to each creature your opponents control. creatures your opponents control can't block ~. | 1 | Cosmotronic Wave | grn |
 | ~ deals N damage to each opponent and you gain N life. when ~ is put into your graveyard from your library, you may exile it. if you do, ~ deals N damage to eac | 1 | Creeping Chill | grn |
 | ~ deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. jump-start (you may cast ~ from | 1 | Beacon Bolt | grn |
 | ~ has flying as long as you've cast an instant or sorcery spell ~. | 1 | Leapfrog | grn |

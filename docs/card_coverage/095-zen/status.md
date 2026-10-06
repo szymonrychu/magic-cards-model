@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 31 | 14.1% |
-| Works (untested) | 116 | 52.7% |
+| Works (untested) | 118 | 53.6% |
 | Partial (unaudited) | 7 | 3.2% |
-| Not working | 66 | 30.0% |
+| Not working | 64 | 29.1% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Rite of Replication | silent | Kicker {5} (You may pay an additional {5} as you cast this spell.) Create a token that's a copy of target creature. If this spell was kicked, create five of tho | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roil Elemental | silent | Landfall — Whenever a land you control enters, you may gain control of target creature for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ruinous Minotaur | silent | Whenever this creature deals damage to an opponent, sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Runeflare Trap | silent | If an opponent drew three or more cards this turn, you may pay {R} rather than pay this spell's mana cost. Runeflare Trap deals damage to target player equal to | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sadistic Sacrament | silent | Kicker {7} (You may pay an additional {7} as you cast this spell.) Search target player's library for up to three cards, exile them, then that player shuffles.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scythe Tiger | silent | When this creature enters, sacrifice it unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seascape Aerialist | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,7 +90,6 @@
 | Guul Draz Specter | notice | This creature gets +3/+3 as long as an opponent has no cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kalitas, Bloodchief of Ghet | notice | {B}{B}{B}, {T}: Destroy target creature. If that creature dies this way, create a black Vampire creature token. Its power is equal to that creature's power and  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Obsidian Fireheart | notice | {1}{R}{R}: Put a blaze counter on target land without a blaze counter on it. For as long as that land has a blaze counter on it, it has "At the beginning of you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Primal Bellow | notice | Target creature gets +1/+1 until end of turn for each Forest you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aether Figment | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Archmage Ascension | unaudited | As long as this enchantment has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into y | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Iona, Shield of Emeria | unaudited | Your opponents can't cast spells of the chosen color. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -168,6 +166,7 @@
 | Pitfall Trap | handled | If exactly one creature is attacking, you may pay {W} rather than pay this spell's mana cost. Destroy target attacking creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Plated Geopede | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Predatory Urge | handled | Enchanted creature has "{T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Primal Bellow | handled | Target creature gets +1/+1 until end of turn for each Forest you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Punishing Fire | handled | Punishing Fire deals 2 damage to any target. Whenever an opponent gains life, you may pay {R}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pyromancer Ascension | handled | Whenever you cast an instant or sorcery spell that has the same name as a card in your graveyard, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quest for the Gemblades | handled | Whenever a creature you control deals combat damage to a creature, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -175,6 +174,7 @@
 | Rampaging Baloths | handled | Landfall — Whenever a land you control enters, create a 4/4 green Beast creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ravenous Trap | handled | If an opponent had three or more cards put into their graveyard from anywhere this turn, you may pay {0} rather than pay this spell's mana cost. Exile target pl | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reckless Scholar | handled | {T}: Target player draws a card, then discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Runeflare Trap | handled | If an opponent drew three or more cards this turn, you may pay {R} rather than pay this spell's mana cost. Runeflare Trap deals damage to target player equal to | the engine reads this text and performs it | Y/-/- | not_tested |
 | Savage Silhouette | handled | Enchanted creature gets +2/+2 and has "{1}{G}: Regenerate this creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scute Mob | handled | At the beginning of your upkeep, if you control five or more lands, put four +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sea Gate Loremaster | handled | {T}: Draw a card for each Ally you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -274,7 +274,6 @@
 | enchanted creature has base power and toughness N/N and has trample. | 1 | Gigantiform | zen |
 | enchanted land is an island. | 1 | Spreading Seas | zen |
 | equipped creature has nonbasic landwalk. | 1 | Trailblazer's Boots | zen |
-| if an opponent drew three or more cards ~, you may pay {M} rather than pay ~ mana cost. ~ deals damage to target player equal to the number of cards in that pla | 1 | Runeflare Trap | zen |
 | if three or more creatures are attacking, you may pay {M} rather than pay ~ mana cost. attacking creatures get -N/-N until end of turn. | 1 | Lethargy Trap | zen |
 | if ~ was kicked, it enters with two +N/+N counters on it. | 1 | Aether Figment | zen |
 | if ~ would die, put it on the bottom of its owner's library instead. | 1 | Nissa's Chosen | zen |
@@ -290,7 +289,6 @@
 | prevent all combat damage that would be dealt ~ by creatures without trample. | 1 | Tanglesap | zen |
 | remove five quest counters from ~ and sacrifice it: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, | 1 | Quest for the Holy Relic | zen |
 | remove four quest counters from ~ and sacrifice it: if any source you control would deal damage to a permanent or player ~, it deals double that damage to that  | 1 | Quest for Pure Flame | zen |
-| target creature gets +N/+N until end of turn for each forest you control. | 1 | Primal Bellow | zen |
 | target player reveals their hand and discards all trap cards. | 1 | Trapfinder's Trick | zen |
 | when enchanted creature is dealt damage, destroy it. | 1 | Mire Blight | zen |
 | when ~ enters, each opponent loses life equal to the number of vampires you control. you gain life equal to the life lost ~. | 1 | Malakir Bloodwitch | zen |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 6.2% |
-| Works (untested) | 94 | 58.4% |
+| Works (untested) | 97 | 60.2% |
 | Partial (unaudited) | 6 | 3.7% |
-| Not working | 51 | 31.7% |
+| Not working | 48 | 29.8% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Daring Thief | silent | Inspired — Whenever this creature becomes untapped, you may exchange control of target nonland permanent you control and target permanent an opponent controls t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deicide | silent | Exile target enchantment. If the exiled card is a God card, search its controller's graveyard, hand, and library for any number of cards with the same name as t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Disciple of Deceit | silent | Inspired — Whenever this creature becomes untapped, you may discard a nonland card. If you do, search your library for a card with the same mana value as that c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Feast of Dreams | silent | Destroy target enchanted creature or enchantment creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Felhide Petrifier | silent | Other Minotaur creatures you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gnarled Scarhide | silent | Enchanted creature gets +2/+1 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Godsend | silent | Whenever equipped creature blocks or becomes blocked by one or more creatures, you may exile one of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,9 +71,7 @@
 | Swarmborn Giant | silent | When you're dealt combat damage, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Bearer of the Heavens | notice | When this creature dies, destroy all permanents at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Colossal Heroics | notice | Strive — This spell costs {1}{G} more to cast for each target beyond the first. Any number of target creatures each get +2/+2 until end of turn. Untap those cre | unparsed remainder: Untap those creatures. | Y/Y/- | not_working |
-| Nightmarish End | notice | Target creature gets -X/-X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Silence the Believers | notice | Strive — This spell costs {2}{B} more to cast for each target beyond the first. Exile any number of target creatures and all Auras attached to them. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Starfall | notice | Starfall deals 3 damage to target creature. If that creature is an enchantment, Starfall deals 3 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tormented Thoughts | notice | As an additional cost to cast this spell, sacrifice a creature. Target player discards a number of cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Twinflame | notice | Strive — This spell costs {2}{R} more to cast for each target beyond the first. Choose any number of target creatures you control. For each of them, create a to | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Battlefield Thaumaturge | unaudited | Each instant and sorcery spell you cast costs {1} less to cast for each creature it targets. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -113,6 +110,7 @@
 | Eidolon of Rhetoric | handled | Each player can't cast more than one spell each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eidolon of the Great Revel | handled | Whenever a player casts a spell with mana value 3 or less, this creature deals 2 damage to that player. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Extinguish All Hope | handled | Destroy all nonenchantment creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Feast of Dreams | handled | Destroy target enchanted creature or enchantment creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flamespeaker's Will | handled | Enchanted creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fleetfeather Cockatrice | handled | {5}{G}{U}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flurry of Horns | handled | Create two 2/3 red Minotaur creature tokens with haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -135,6 +133,7 @@
 | Lightning Diadem | handled | When this Aura enters, it deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Market Festival | handled | Whenever enchanted land is tapped for mana, its controller adds an additional two mana in any combination of colors. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mortal Obstinacy | handled | Enchanted creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Nightmarish End | handled | Target creature gets -X/-X until end of turn, where X is the number of cards in your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nyx Weaver | handled | At the beginning of your upkeep, mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nyx-Fleece Ram | handled | At the beginning of your upkeep, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oakheart Dryads | handled | Constellation — Whenever this creature or another enchantment you control enters, target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -162,6 +161,7 @@
 | Spite of Mogis | handled | Spite of Mogis deals damage to target creature equal to the number of instant and sorcery cards in your graveyard. Scry 1. (Look at the top card of your library | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spiteful Blow | handled | Destroy target creature and target land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Squelching Leeches | handled | Squelching Leeches's power and toughness are each equal to the number of Swamps you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Starfall | handled | Starfall deals 3 damage to target creature. If that creature is an enchantment, Starfall deals 3 damage to that creature's controller. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strength from the Fallen | handled | Constellation — Whenever this enchantment or another enchantment you control enters, target creature gets +X/+X until end of turn, where X is the number of crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Supply-Line Cranes | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Temple of Epiphany | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -207,7 +207,6 @@
 | at the beginning of your upkeep, return an enchantment you control to its owner's hand. | 1 | Riptide Chimera | jou |
 | counter target spell. its controller mills four cards. | 1 | Countermand | jou |
 | create two N/N blue bird enchantment creature tokens with flying. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rise of Eagles | jou |
-| destroy target enchanted creature or enchantment creature. | 1 | Feast of Dreams | jou |
 | each instant and sorcery spell you cast costs {M} less to cast for each creature it targets. | 1 | Battlefield Thaumaturge | jou |
 | enchanted creature can't attack or block unless its controller pays {M}. | 1 | Oppressive Rays | jou |
 | enchanted creature gets +N/+N and attacks each combat if able. | 1 | Mogis's Warhound | jou |
@@ -228,7 +227,6 @@
 | reveal the first card you draw on each of your turns. whenever you reveal a land card ~, draw a card. whenever you reveal a nonland card ~, keranos deals N dama | 1 | Keranos, God of Storms | jou |
 | reveal the top six cards of your library. put up to three enchantment cards from among them into your hand and the rest of the revealed cards into your graveyar | 1 | Kruphix's Insight | jou |
 | scry N, then reveal the top card of your library. draw cards equal to that card's mana value. (to scry N, look at the top three cards of your library, then put  | 1 | Interpret the Signs | jou |
-| target creature gets -N/-N until end of turn, where N is the number of cards in your hand. | 1 | Nightmarish End | jou |
 | when you're dealt combat damage, sacrifice ~. | 1 | Swarmborn Giant | jou |
 | when ~ becomes monstrous, create N N/N green hydra creature tokens. | 1 | Hydra Broodmaster | jou |
 | when ~ dies, destroy all permanents at the beginning of the next end step. | 1 | Bearer of the Heavens | jou |
@@ -246,7 +244,6 @@
 | {M}{M}: prevent all damage that would be dealt to ~ by target creature ~. | 1 | Stonewise Fortifier | jou |
 | {M}{M}{M}: scry N, then reveal the top card of your library. ~ gets +N/+N until end of turn, where N is that card's mana value. | 1 | Stormchaser Chimera | jou |
 | ~ can't attack unless defending player controls an enchantment or an enchanted permanent. | 1 | Godhunter Octopus | jou |
-| ~ deals N damage to target creature. if that creature is an enchantment, ~ deals N damage to that creature's controller. | 1 | Starfall | jou |
 
 ## Notes
 

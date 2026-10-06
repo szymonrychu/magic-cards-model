@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 15.1% |
-| Works (untested) | 118 | 45.7% |
+| Tested | 42 | 16.3% |
+| Works (untested) | 117 | 45.3% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 94 | 36.4% |
+| Not working | 92 | 35.7% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Byway Barterer | silent | Whenever you expend 4, you may discard your hand. If you do, draw two cards. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Camellia, the Seedmiser | silent | Forage | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Coiling Rebirth | silent | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Return target creature card from  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Consumed by Greed | silent | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Target opponent sacrifices a crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Corpseberry Cultivator | silent | At the beginning of combat on your turn, you may forage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cruelclaw's Heist | silent | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Target opponent reveals their han | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Curious Forager | silent | Forage | no machine in the engine executes this keyword | Y/Y/Y | not_working |
@@ -58,7 +57,6 @@
 | Honored Dreyleader | silent | When this creature enters, put a +1/+1 counter on it for each other Squirrel and/or Food you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jolly Gerbils | silent | Whenever you give a gift, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Junkblade Bruiser | silent | Whenever you expend 4, this creature gets +2/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Longstalk Brawl | silent | Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other eff | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mabel, Heir to Cragflame | silent | When Mabel enters, create Cragflame, a legendary colorless Equipment artifact token with "Equipped creature gets +1/+1 and has vigilance, trample, and haste" an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Manifold Mouse | silent | At the beginning of combat on your turn, target Mouse you control gains your choice of double strike or trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mindwhisker | silent | Threshold — As long as there are seven or more cards in your graveyard, creatures your opponents control get -1/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -172,7 +170,6 @@
 | Hunter's Talent | handled | When this Class enters, target creature you control deals damage equal to its power to target creature you don't control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Intrepid Rabbit | handled | When this creature enters, target creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Iridescent Vinelasher | handled | Landfall — Whenever a land you control enters, this creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Jackdaw Savior | handled | Whenever this creature or another creature you control with flying dies, return another target creature card with lesser mana value from your graveyard to the b | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kindlespark Duo | handled | {T}: This creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Knightfisher | handled | Whenever another nontoken Bird you control enters, create a 1/1 blue Fish creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lifecreed Duo | handled | Whenever another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -249,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>42 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
@@ -258,6 +255,7 @@
 - Brambleguard Captain
 - Cache Grab
 - Caretaker's Talent
+- Consumed by Greed
 - Crumb and Get It
 - Darkstar Augur
 - Dawn's Truce
@@ -272,8 +270,10 @@
 - Hop to It
 - Innkeeper's Talent
 - Into the Flood Maw
+- Jackdaw Savior
 - Keen-Eyed Curator
 - Kitsa, Otterball Elite
+- Longstalk Brawl
 - Lunar Convocation
 - Mind Drill Assailant
 - Mockingbird
@@ -328,10 +328,8 @@
 | gift a card (you may promise an opponent a gift as you cast ~. if you do, they draw a card before its other effects.) destroy all creatures. if the gift was pro | 1 | Starfall Invocation | blb |
 | gift a card (you may promise an opponent a gift as you cast ~. if you do, they draw a card before its other effects.) return target creature card from your grav | 1 | Coiling Rebirth | blb |
 | gift a card (you may promise an opponent a gift as you cast ~. if you do, they draw a card before its other effects.) target opponent reveals their hand. you ch | 1 | Cruelclaw's Heist | blb |
-| gift a card (you may promise an opponent a gift as you cast ~. if you do, they draw a card before its other effects.) target opponent sacrifices a creature with | 1 | Consumed by Greed | blb |
 | gift a food (you may promise an opponent a gift as you cast ~. if you do, they create a food token before its other effects. it"..."t promised, you lose N life. | 1 | Nocturnal Hunger | blb |
 | gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) as | 1 | Sazacap's Brew | blb |
-| gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) ch | 1 | Longstalk Brawl | blb |
 | gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) ex | 1 | Parting Gust | blb |
 | if a lizard, mouse, otter, or raccoon you control would deal damage to a permanent or player, it deals that much damage plus N instead. | 1 | Valley Flamecaller | blb |
 | look at twice N cards from the top of your library. put N cards from among them into your hand and the rest into your graveyard. you lose N life. | 1 | Stargaze | blb |

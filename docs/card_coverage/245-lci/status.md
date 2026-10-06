@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 62 | 22.5% |
+| Tested | 63 | 22.9% |
 | Works (untested) | 136 | 49.5% |
 | Partial (unaudited) | 13 | 4.7% |
-| Not working | 64 | 23.3% |
+| Not working | 63 | 22.9% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Kellan, Daring Traveler // Journey On | silent | Create X Map tokens, where X is one plus the number of opponents who control an artifact. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kitesail Larcenist | silent | When this creature enters, for each player, choose up to one other target artifact or creature that player controls. For as long as this creature remains on the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Magmatic Galleon | silent | Whenever one or more creatures your opponents control are dealt excess noncombat damage, create a Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Malamet Battle Glyph | silent | Choose target creature you control and target creature you don't control. If the creature you control entered this turn, put a +1/+1 counter on it. Then those c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Malcolm, Alluring Scoundrel | silent | Whenever Malcolm deals combat damage to a player, put a chorus counter on it. Draw a card, then discard a card. If there are four or more chorus counters on Mal | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Merfolk Cave-Diver | silent | Whenever a creature you control explores, this creature gets +1/+0 until end of turn and can't be blocked this turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Nicanzil, Current Conductor | silent | Whenever a creature you control explores a land card, you may put a land card from your hand onto the battlefield tapped. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -243,7 +242,7 @@
 ## Fully supported
 
 <details>
-<summary>62 cards</summary>
+<summary>63 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
@@ -274,6 +273,7 @@
 - Ghalta, Stampede Tyrant
 - Glimpse the Core
 - Greedy Freebooter
+- Malamet Battle Glyph
 - Malicious Eclipse
 - Market Gnome
 - Master's Guide-Mural // Master's Manufactory
@@ -324,7 +324,6 @@
 | at the beginning of combat on your turn, if you control one or more eggs, sacrifice an egg, then create a N/N green dinosaur creature token. | 1 | Palani's Hatcher | lci |
 | at the beginning of your end step, if you descended ~, each opponent may discard a card or sacrifice a permanent of their choice. zoyowa deals N damage to each  | 1 | Zoyowa Lava-Tongue | lci |
 | at the beginning of your upkeep, exile the top two cards of your library. you may play them ~. if you exiled a land card ~, create a N/N red dinosaur creature t | 1 | Bonehoard Dracosaur | lci |
-| choose target creature you control and target creature you don't control. if the creature you control entered ~, put a +N/+N counter on it. then those creatures | 1 | Malamet Battle Glyph | lci |
 | counter target artifact or creature spell. discover N, where N is that spell's mana value. (exile cards from the top of your library until you exile a nonland c | 1 | Hurl into History | lci |
 | create N map tokens, where N is one plus the number of opponents who control an artifact. (then exile ~. you may cast the creature later from exile.) | 1 | Kellan, Daring Traveler // Journey On | lci |
 | descend N — choose one. if there are eight or more permanent cards in your graveyard as you cast ~, choose one or more instead. • return target nonland permanen | 1 | Wail of the Forgotten | lci |

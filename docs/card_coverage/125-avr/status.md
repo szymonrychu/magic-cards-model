@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 6.5% |
-| Works (untested) | 106 | 48.8% |
+| Tested | 16 | 7.4% |
+| Works (untested) | 107 | 49.3% |
 | Partial (unaudited) | 16 | 7.4% |
-| Not working | 81 | 37.3% |
+| Not working | 78 | 35.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aggravate | silent | Aggravate deals 1 damage to each creature target player controls. Each creature dealt damage this way attacks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Alchemist's Refuge | silent | {G}{U}, {T}: You may cast spells this turn as though they had flash. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angel of Glory's Rise | silent | When this creature enters, exile all Zombies, then return all Human creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angel's Tomb | silent | Whenever a creature you control enters, you may have this artifact become a 3/3 white Angel artifact creature with flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -37,7 +36,6 @@
 | Bladed Bracers | silent | As long as equipped creature is a Human or an Angel, it has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bruna, Light of Alabaster | silent | Whenever Bruna attacks or blocks, you may attach to it any number of Auras on the battlefield and you may put onto the battlefield attached to it any number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Builder's Blessing | silent | Untapped creatures you control get +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Burn at the Stake | silent | As an additional cost to cast this spell, tap any number of untapped creatures you control. Burn at the Stake deals damage to any target equal to three times th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Butcher Ghoul | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Deadeye Navigator | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Demonic Taskmaster | silent | At the beginning of your upkeep, sacrifice a creature other than this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -83,7 +81,6 @@
 | Spectral Gateguards | silent | As long as this creature is paired with another creature, both creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stern Mentor | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Stonewright | silent | As long as Stonewright is paired with another creature, each of those creatures has "{R}: This creature gets +1/+0 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Tamiyo, the Moon Sage | silent | −2: Draw a card for each tapped creature target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tandem Lookout | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Terrifying Presence | silent | Prevent all combat damage that would be dealt by creatures other than target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tibalt, the Fiend-Blooded | silent | +1: Draw a card, then discard a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -211,6 +208,7 @@
 | Soulcage Fiend | handled | When this creature dies, each player loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spectral Prison | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spirit Away | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Tamiyo, the Moon Sage | handled | +1: Tap target permanent. It doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Temporal Mastery | handled | Take an extra turn after this one. Exile Temporal Mastery. Miracle {1}{U} (You may cast this card for its miracle cost when you draw it if it's the first card y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thatcher Revolt | handled | Create three 1/1 red Human creature tokens with haste. Sacrifice those tokens at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thraben Valiant | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
@@ -233,9 +231,11 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>16 cards</summary>
 
+- Aggravate
 - Blood Artist
+- Burn at the Stake
 - Cavern of Souls
 - Craterhoof Behemoth
 - Demonic Rising
@@ -262,7 +262,6 @@
 | +N: draw a card, then discard a card at random. | 1 | Tibalt, the Fiend-Blooded | avr |
 | add {M} for each creature you control. | 1 | Battle Hymn | avr |
 | angel spells and human spells you cast cost {M} less to cast for each +N/+N counter on ~. | 1 | Herald of War | avr |
-| as an additional cost to cast ~, tap any number of untapped creatures you control. ~ deals damage to any target equal to three times the number of creatures tap | 1 | Burn at the Stake | avr |
 | as long as equipped creature is a human or an angel, it has vigilance. | 1 | Bladed Bracers | avr |
 | as long as you control exactly one creature, that creature gets +N/+N and has lifelink. | 1 | Homicidal Seclusion | avr |
 | as long as ~ is paired with another creature, both creatures have deathtouch. | 1 | Nightshade Peddler | avr |
@@ -340,9 +339,7 @@
 | {M}{M}: prevent all combat damage that would be dealt to and dealt by ~ ~. | 1 | Moonlight Geist | avr |
 | ~ can block only creatures with flying. | 1 | Scrapskin Drake | avr |
 | ~ can"..."s paired with a creature with soulbond. | 1 | Flowering Lumberknot | avr |
-| ~ deals N damage to each creature target player controls. each creature dealt damage ~ attacks ~ if able. | 1 | Aggravate | avr |
 | ~'s power and toughness are each equal to half the highest life total among your opponents, rounded up. | 1 | Malignus | avr |
-| −N: draw a card for each tapped creature target player controls. | 1 | Tamiyo, the Moon Sage | avr |
 
 ## Notes
 

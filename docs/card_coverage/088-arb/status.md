@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 7.0% |
+| Tested | 11 | 7.7% |
 | Works (untested) | 74 | 51.7% |
 | Partial (unaudited) | 9 | 6.3% |
-| Not working | 50 | 35.0% |
+| Not working | 49 | 34.3% |
 
 ## Cards needing work
 
@@ -66,7 +66,6 @@
 | Skyclaw Thrash | silent | Whenever this creature attacks, flip a coin. If you win the flip, this creature gets +1/+1 and gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soulquake | silent | Return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sovereigns of Lost Alara | silent | Whenever a creature you control attacks alone, you may search your library for an Aura card that could enchant that creature, put it onto the battlefield attach | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spellbound Dragon | silent | Whenever this creature attacks, draw a card, then discard a card. This creature gets +X/+0 until end of turn, where X is the discarded card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tainted Sigil | silent | {T}, Sacrifice this artifact: You gain life equal to the total life lost by all players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Hemorrhage | silent | Choose a nonland card name. Target player reveals their hand. Thought Hemorrhage deals 3 damage to that player for each card with the chosen name revealed this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thraximundar | silent | Whenever Thraximundar attacks, defending player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -163,7 +162,7 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Architects of Will
 - Bloodbraid Elf
@@ -174,6 +173,7 @@
 - Predatory Advantage
 - Putrid Leech
 - Sigil Captain
+- Spellbound Dragon
 - Violent Outburst
 
 </details>
@@ -226,7 +226,6 @@
 | whenever equipped creature attacks, it deals damage equal to its power to the player or planeswalker it's attacking. | 1 | Mage Slayer | arb |
 | whenever ~ attacks, defending player mills ten cards. | 1 | Nemesis of Reason | arb |
 | whenever ~ attacks, defending player sacrifices a creature of their choice. | 1 | Thraximundar | arb |
-| whenever ~ attacks, draw a card, then discard a card. ~ gets +N/+N until end of turn, where N is the discarded card's mana value. | 1 | Spellbound Dragon | arb |
 | whenever ~ attacks, flip a coin. if you win the flip, ~ gets +N/+N and gains flying until end of turn. | 1 | Skyclaw Thrash | arb |
 | whenever ~ becomes blocked, defending player loses N life. | 1 | Vedalken Ghoul | arb |
 | {M}, sacrifice ~: you gain life equal to the total life lost by all players ~. | 1 | Tainted Sigil | arb |

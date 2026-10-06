@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 9.3% |
-| Works (untested) | 57 | 53.3% |
+| Tested | 11 | 10.3% |
+| Works (untested) | 58 | 54.2% |
 | Partial (unaudited) | 2 | 1.9% |
-| Not working | 38 | 35.5% |
+| Not working | 36 | 33.6% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Knight of Glory | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Knight of Infamy | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Liliana of the Dark Realms | silent | −3: Target creature gets +X/+X or -X/-X until end of turn, where X is the number of Swamps you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Magmaquake | silent | Magmaquake deals X damage to each creature without flying and each planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Master of the Pearl Trident | silent | Other Merfolk creatures you control get +1/+1 and have islandwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindclaw Shaman | silent | When this creature enters, target opponent reveals their hand. You may cast an instant or sorcery spell from among those cards without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mwonvuli Beast Tracker | silent | When this creature enters, search your library for a creature card with deathtouch, hexproof, reach, or trample and reveal it. Shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -57,7 +56,6 @@
 | Tricks of the Trade | silent | Enchanted creature gets +2/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Void Stalker | silent | {2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arctic Aven | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Chandra's Fury | notice | Chandra's Fury deals 4 damage to target player or planeswalker and 1 damage to each creature that player or that planeswalker's controller controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crimson Muckwader | notice | This creature gets +1/+1 as long as you control a Swamp. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flinthoof Boar | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Harbor Bandit | notice | This creature gets +1/+1 as long as you control an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -97,6 +95,7 @@
 | Krenko's Command | handled | Create two 1/1 red Goblin creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krenko, Mob Boss | handled | {T}: Create X 1/1 red Goblin creature tokens, where X is the number of Goblins you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Liliana's Shade | handled | When this creature enters, you may search your library for a Swamp card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Magmaquake | handled | Magmaquake deals X damage to each creature without flying and each planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mark of the Vampire | handled | Enchanted creature gets +2/+2 and has lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murder | handled | Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Primal Huntbeast | handled | Hexproof | machines/casting.py (target legality) | Y/-/- | not_tested |
@@ -127,9 +126,10 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Augur of Bolas
+- Chandra's Fury
 - Elderscale Wurm
 - Faith's Reward
 - Jace's Phantasm
@@ -171,8 +171,6 @@
 | {M}: regenerate equipped creature. | 1 | Ring of Xathrid | m13 |
 | {M}{M}, {M}: put a petrification counter on target creature. it gains defender and becomes a colorless artifact in addition to its other types. its activated ab | 1 | Xathrid Gorgon | m13 |
 | {M}{M}, {M}: put ~ and target creature on top of their owners' libraries, then those players shuffle their libraries. | 1 | Void Stalker | m13 |
-| ~ deals N damage to each creature without flying and each planeswalker. | 1 | Magmaquake | m13 |
-| ~ deals N damage to target player or planeswalker and N damage to each creature that player or that planeswalker's controller controls. | 1 | Chandra's Fury | m13 |
 | ~ gets +N/+N as long as you control a forest. | 1 | Prized Elephant | m13 |
 | ~ gets +N/+N as long as you control a mountain. | 1 | Flinthoof Boar | m13 |
 | ~ gets +N/+N as long as you control a plains. | 1 | Arctic Aven | m13 |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 9.9% |
+| Tested | 27 | 10.7% |
 | Works (untested) | 81 | 32.0% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 137 | 54.2% |
+| Not working | 135 | 53.4% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Alluring Suitor // Deadly Dancer | silent | When this creature transforms into Deadly Dancer, add {R}{R}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Apprentice Sharpshooter | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Archghoul of Thraben | silent | Whenever this creature or another Zombie you control dies, look at the top card of your library. If it's a Zombie card, you may reveal it and put it into your h | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ballista Watcher // Ballista Wielder | silent | {2}{R}: This creature deals 1 damage to any target. A creature dealt damage this way can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Binding Geist // Spectral Binding | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Bloodtithe Harvester | silent | {T}, Sacrifice this creature: Target creature gets -X/-X until end of turn, where X is twice the number of Blood tokens you control. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodvial Purveyor | silent | Whenever an opponent casts a spell, that player creates a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -158,7 +157,6 @@
 | Markov Retribution | notice | Choose one or both — • Creatures you control get +1/+0 until end of turn. • Target Vampire you control deals damage equal to its power to another target creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oakshade Stalker // Moonlit Ambusher | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reclusive Taxidermist | notice | This creature gets +3/+2 as long as there are four or more creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rending Flame | notice | Rending Flame deals 5 damage to target creature or planeswalker. If that permanent is a Spirit, Rending Flame also deals 2 damage to that permanent's controller | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spiked Ripsaw | notice | Whenever equipped creature attacks, you may sacrifice a Forest. If you do, that creature gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Undying Malice | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Wedding Invitation | notice | {T}, Sacrifice this artifact: Target creature can't be blocked this turn. If it's a Vampire, it also gains lifelink until end of turn. | unparsed remainder: If it's a Vampire, it also gains lifelink until end of turn. | Y/Y/- | not_working |
@@ -258,10 +256,11 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>27 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
+- Ballista Watcher // Ballista Wielder
 - Bleed Dry
 - Cartographer's Survey
 - Catapult Fodder // Catapult Captain
@@ -277,6 +276,7 @@
 - Infestation Expert // Infested Werewolf
 - Patchwork Crawler
 - Reckless Impulse
+- Rending Flame
 - Sawblade Slinger
 - Screaming Swarm
 - Serpentine Ambush
@@ -402,13 +402,11 @@
 | {M}{M}, {M}: look at the top two cards of your library. put one of them into your graveyard. | 1 | Soulcipher Board // Cipherbound Spirit | vow |
 | {M}{M}, {M}: ~ deals damage equal to the number of wolves and werewolves you control to target opponent. | 1 | Runebound Wolf | vow |
 | {M}{M}: exile enchanted creature. create a blood token. | 1 | Sigarda's Imprisonment | vow |
-| {M}{M}: ~ deals N damage to any target. a creature dealt damage ~ can't block ~. | 1 | Ballista Watcher // Ballista Wielder | vow |
 | {M}{M}{M}: each creature you control with flying, deathtouch, and/or lifelink gets +N/+N until end of turn. | 1 | Henrika Domnathi // Henrika, Infernal Seer | vow |
 | ~ can block only creatures with flying. | 1 | Wanderlight Spirit | vow |
 | ~ can't attack alone. | 1 | Militia Rallier | vow |
 | ~ costs {M} less to cast if you control a spirit. it also costs {M} less to cast if you control an enchantment. counter target spell unless its controller pays  | 1 | Geistlight Snare | vow |
 | ~ deals N damage to each non-vampire creature. create a blood token. (it's an artifact with "...") | 1 | Vampires' Vengeance | vow |
-| ~ deals N damage to target creature or planeswalker. if that permanent is a spirit, ~ also deals N damage to that permanent's controller. | 1 | Rending Flame | vow |
 | ~ deals N damage to target creature. create a number of blood tokens equal to the amount of excess damage dealt to that creature ~. (they're artifacts with "... | 1 | Lacerate Flesh | vow |
 | ~ enters with a +N/+N counter on it if you control a permanent with mana value N or greater. | 1 | Ascendant Packleader | vow |
 | ~ enters with a number of suspect counters on it equal to the greatest number of creatures a player controls. | 1 | Investigator's Journal | vow |

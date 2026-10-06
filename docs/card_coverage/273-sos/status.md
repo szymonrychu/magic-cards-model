@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 120 | 47.1% |
-| Works (untested) | 135 | 52.9% |
+| Tested | 121 | 47.5% |
+| Works (untested) | 134 | 52.5% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 0 | 0.0% |
 
@@ -42,7 +42,6 @@
 | Charging Strifeknight | handled | {T}, Discard a card: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Chase Inspiration | handled | Target creature you control gets +0/+3 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cheerful Osteomancer // Raise Dead | handled | Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Chelonian Tackle | handled | Target creature you control gets +0/+10 until end of turn. Then it fights up to one target creature an opponent controls. (Each deals damage equal to its power  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Colorstorm Stallion | handled | Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, create a to | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Colossus of the Blood Age | handled | When this creature enters, it deals 3 damage to each opponent and you gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Conciliator's Duelist | handled | When this creature enters, draw a card. Each player loses 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -165,7 +164,7 @@
 ## Fully supported
 
 <details>
-<summary>120 cards</summary>
+<summary>121 cards</summary>
 
 - Aberrant Manawurm
 - Ajani's Response
@@ -182,6 +181,7 @@
 - Brush Off
 - Burrog Barrage
 - Cauldron of Essence
+- Chelonian Tackle
 - Choreographed Sparks
 - Comforting Counsel
 - Daydream

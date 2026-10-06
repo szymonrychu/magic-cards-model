@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 11.7% |
-| Works (untested) | 73 | 47.4% |
+| Works (untested) | 74 | 48.1% |
 | Partial (unaudited) | 5 | 3.2% |
-| Not working | 58 | 37.7% |
+| Not working | 57 | 37.0% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Vengeful Vampire | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Village Survivors | silent | Fateful hour — As long as you have 5 or less life, other creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vorapede | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Wrack with Madness | silent | Target creature deals damage to itself equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Young Wolf | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Zombie Apocalypse | silent | Return all Zombie creature cards from your graveyard to the battlefield tapped, then destroy all Humans. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Afflicted Deserter // Werewolf Ransacker | notice | Whenever this creature transforms into Werewolf Ransacker, you may destroy target artifact. If that artifact is put into a graveyard this way, this creature dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -162,6 +161,7 @@
 | Wild Hunger | handled | Target creature gets +3/+1 and gains trample until end of turn. Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost. Then exile  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wolfbitten Captive // Krallenhorde Killer | handled | {1}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wolfhunter's Quiver | handled | Equipped creature has "{T}: This creature deals 1 damage to any target" and "{T}: This creature deals 3 damage to target Werewolf creature." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wrack with Madness | handled | Target creature deals damage to itself equal to its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
@@ -219,7 +219,6 @@
 | reveal the top four cards of your library. put a creature card from among them into your hand and the rest into your graveyard. flashback {M}{M} (you may cast ~ | 1 | Tracker's Instincts | dka |
 | search your library for a card and put that card into your hand. if ~ was cast from a graveyard, instead search your library for two cards and put those cards i | 1 | Increasing Ambition | dka |
 | target creature an opponent controls deals damage equal to its power to each other creature that player controls, then each of those creatures deals damage equa | 1 | Alpha Brawl | dka |
-| target creature deals damage to itself equal to its power. | 1 | Wrack with Madness | dka |
 | target creature gains deathtouch until end of turn and must be blocked ~ if able. flashback {M} (you may cast ~ from your graveyard for its flashback cost. then | 1 | Deadly Allure | dka |
 | target permanent you control gains protection from the color of your choice until end of turn. fateful hour — if you have N or less life, instead you and each p | 1 | Faith's Shield | dka |
 | target player mills N cards. if ~ was cast from a graveyard, that player mills twice that many cards instead. flashback {M}{M} (you may cast ~ from your graveya | 1 | Increasing Confusion | dka |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 37.5% |
+| Tested | 10 | 41.7% |
 | Works (untested) | 10 | 41.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 5 | 20.8% |
+| Not working | 4 | 16.7% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Decree of Justice | silent | When you cycle this card, you may pay {X}. If you do, create X 1/1 white Soldier creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Final Punishment | silent | Target player loses life equal to the damage already dealt to that player this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frozen Solid | silent | When enchanted creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rain of Blades | silent | Rain of Blades deals 1 damage to each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zealous Inquisitor | silent | {1}{W}: The next 1 damage that would be dealt to this creature this turn is dealt to target creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragon Mage | handled | Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dragonstorm | handled | Search your library for a Dragon permanent card, put it onto the battlefield, then shuffle. Storm (When you cast this spell, copy it for each spell cast before  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -45,7 +44,7 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Call to the Grave
 - Carrion Feeder
@@ -54,6 +53,7 @@
 - Form of the Dragon
 - Goblin Brigand
 - Goblin Warchief
+- Rain of Blades
 - Twisted Abomination
 - Upwelling
 
@@ -67,7 +67,6 @@
 | when enchanted creature is dealt damage, destroy it. | 1 | Frozen Solid | scg |
 | when you cycle ~, you may pay {M}. if you do, create N N/N white soldier creature tokens. | 1 | Decree of Justice | scg |
 | {M}{M}: the next N damage that would be dealt to ~ ~ is dealt to target creature instead. | 1 | Zealous Inquisitor | scg |
-| ~ deals N damage to each attacking creature. | 1 | Rain of Blades | scg |
 
 ## Notes
 

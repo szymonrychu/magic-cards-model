@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 8.8% |
+| Tested | 21 | 9.3% |
 | Works (untested) | 145 | 64.2% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 55 | 24.3% |
+| Not working | 54 | 23.9% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Rush of Ice | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Salvage Drone | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Scatter to the Winds | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Serpentine Spike | silent | Devoid (This card has no color.) Serpentine Spike deals 2 damage to target creature, 3 damage to another target creature, and 4 damage to a third target creatur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silent Skimmer | silent | Whenever this creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sire of Stagnation | silent | Whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyline Cascade | silent | When this land enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -236,7 +235,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Akoum Hellkite
 - Aligned Hedron Network
@@ -250,6 +249,7 @@
 - Murk Strider
 - Painful Truths
 - Sanctum of Ugin
+- Serpentine Spike
 - Shrine of the Forsaken Gods
 - Skyrider Elf
 - Sunken Hollow
@@ -281,7 +281,6 @@
 | devoid (~ has no color.) exile target nonbasic land. search its controller's graveyard, hand, and library for any number of cards with the same name as that lan | 1 | Crumble to Dust | bfz |
 | devoid (~ has no color.) target creature you control fights target creature an opponent controls. if the creature an opponent controls would die ~, exile it ins | 1 | Unnatural Aggression | bfz |
 | devoid (~ has no color.) target player reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Transgress the Mind | bfz |
-| devoid (~ has no color.) ~ deals N damage to target creature, N damage to another target creature, and N damage to a third target creature. if a creature dealt  | 1 | Serpentine Spike | bfz |
 | enchanted creature gets -N/-N and loses flying. | 1 | Tightening Coils | bfz |
 | if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove a +N/+N counter from ~. | 1 | Undergrowth Champion | bfz |
 | prevent all combat damage that would be dealt ~ by creatures target opponent controls. awaken N—{M}{M} (if you cast ~ for {M}{M}, also put two +N/+N counters on | 1 | Encircling Fissure | bfz |

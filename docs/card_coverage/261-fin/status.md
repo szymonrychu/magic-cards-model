@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 11.5% |
-| Works (untested) | 128 | 42.1% |
+| Tested | 36 | 11.8% |
+| Works (untested) | 127 | 41.8% |
 | Partial (unaudited) | 15 | 4.9% |
 | Not working | 126 | 41.4% |
 
@@ -266,7 +266,6 @@
 | Sidequest: Raise a Chocobo // Black Chocobo | handled | When this enchantment enters, create a 2/2 green Bird creature token with "Whenever a land you control enters, this token gets +1/+0 until end of turn." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Slash of Light | handled | Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sleep Magic | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Sorceress's Schemes | handled | Return target instant or sorcery card from your graveyard or exiled card with flashback you own to your hand. Add {R}. Flashback {4}{R} (You may cast this card  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Squall, SeeD Mercenary | handled | Rough Divide — Whenever a creature you control attacks alone, it gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Anima | handled | I, II, III — Pain — You draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Choco/Mog | handled | I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -299,7 +298,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>36 cards</summary>
 
 - Blitzball
 - Cactuar
@@ -327,6 +326,7 @@
 - Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark
 - Sidequest: Play Blitzball // World Champion, Celestial Weapon
 - Snow Villiers
+- Sorceress's Schemes
 - Starting Town
 - Summon: Fat Chocobo
 - Summon: Knights of Round

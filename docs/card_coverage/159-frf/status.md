@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 9.3% |
-| Works (untested) | 76 | 47.2% |
+| Tested | 17 | 10.6% |
+| Works (untested) | 77 | 47.8% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 59 | 36.6% |
+| Not working | 56 | 34.8% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Abzan Skycaptain | silent | When this creature dies, bolster 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alesha, Who Smiles at Death | silent | Whenever Alesha attacks, you may pay {W/B}{W/B}. If you do, return target creature card with power 2 or less from your graveyard to the battlefield tapped and a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ambush Krotiq | silent | When this creature enters, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Arcbond | silent | Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archfiend of Depravity | silent | At the beginning of each opponent's end step, that player chooses up to two creatures they control, then sacrifices the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battle Brawler | silent | As long as you control a red or white permanent, this creature gets +1/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brutal Hordechief | silent | Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -48,8 +47,6 @@
 | Friendly Fire | silent | Target creature's controller reveals a card at random from their hand. Friendly Fire deals damage to that creature and that player equal to the revealed card's  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fruit of the First Tree | silent | When enchanted creature dies, you gain X life and draw X cards, where X is its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ghastly Conscription | silent | Exile all creature cards from target player's graveyard in a face-down pile, shuffle that pile, then manifest those cards. (To manifest a card, put it onto the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Grave Strength | silent | Choose target creature. Mill three cards, then put a +1/+1 counter on that creature for each creature card in your graveyard. (To mill three cards, put the top  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Grim Contest | silent | Choose target creature you control and target creature an opponent controls. Each of those creatures deals damage equal to its toughness to the other. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Honor's Reward | silent | You gain 4 life. Bolster 2. (Choose a creature with the least toughness among creatures you control and put two +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Humble Defector | silent | {T}: Draw two cards. Target opponent gains control of this creature. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jeskai Infiltrator | silent | When this creature deals combat damage to a player, exile it and the top card of your library in a face-down pile, shuffle that pile, then manifest those cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -120,6 +117,7 @@
 | Goblin Boom Keg | handled | At the beginning of your upkeep, sacrifice this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Heelcutter | handled | Whenever this creature attacks, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gore Swine | handled |  |  | Y/Y/- | not_tested |
+| Grave Strength | handled | Choose target creature. Mill three cards, then put a +1/+1 counter on that creature for each creature card in your graveyard. (To mill three cards, put the top  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Great-Horn Krushok | handled |  |  | Y/Y/- | not_tested |
 | Gurmag Angler | handled | Delve | machines/keywords.py | Y/Y/- | not_tested |
 | Harsh Sustenance | handled | Harsh Sustenance deals X damage to any target and you gain X life, where X is the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -176,14 +174,16 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>17 cards</summary>
 
 - Ainok Guide
+- Arcbond
 - Break Through the Line
 - Crucible of the Spirit Dragon
 - Dark Deal
 - Ethereal Ambush
 - Flamerush Rider
+- Grim Contest
 - Mardu Woe-Reaper
 - Mastery of the Unseen
 - Mob Rule
@@ -214,9 +214,6 @@
 | at the beginning of your end step, bolster N, where N is the number of tapped creatures you control. | 1 | Dragonscale General | frf |
 | bolster N. (choose a creature with the least toughness among creatures you control and put three +N/+N counters on it.) | 1 | Cached Defenses | frf |
 | cast ~ only if you've cast another spell ~. | 1 | Hewed Stone Retainers | frf |
-| choose target creature you control and target creature an opponent controls. each of those creatures deals damage equal to its toughness to the other. | 1 | Grim Contest | frf |
-| choose target creature. mill three cards, then put a +N/+N counter on that creature for each creature card in your graveyard. (to mill three cards, put the top  | 1 | Grave Strength | frf |
-| choose target creature. whenever that creature is dealt damage ~, it deals that much damage to each other creature and each player. | 1 | Arcbond | frf |
 | counter target spell unless its controller pays {M} for each card in your graveyard. | 1 | Rakshasa's Disdain | frf |
 | delve (each card you exile from your graveyard while casting ~ pays for {M}.) return target nonland permanent you control and target nonland permanent you don". | 1 | Rite of Undoing | frf |
 | each creature you control with a +N/+N counter on it can't be blocked by more than one creature. | 1 | Battlefront Krushok | frf |

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.7% |
-| Works (untested) | 135 | 53.4% |
+| Tested | 28 | 11.1% |
+| Works (untested) | 134 | 53.0% |
 | Partial (unaudited) | 10 | 4.0% |
 | Not working | 81 | 32.0% |
 
@@ -125,7 +125,6 @@
 | Backup Agent | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Big Score | handled | As an additional cost to cast this spell, discard a card. Draw two cards and create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Body Dropper | handled | Whenever you sacrifice another creature, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Body Launderer | handled | Whenever another nontoken creature you control dies, this creature connives. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boon of Safety | handled | Put a shield counter on target creature. (If it would be dealt damage or destroyed, remove a shield counter from it instead.) Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bootleggers' Stash | handled | Lands you control have "{T}: Create a Treasure token." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Botanical Plaza | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -256,10 +255,11 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
+- Body Launderer
 - Bouncer's Beatdown
 - Brass Knuckles
 - Dusk Mangler

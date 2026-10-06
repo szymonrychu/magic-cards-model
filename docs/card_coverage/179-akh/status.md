@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 7.1% |
-| Works (untested) | 131 | 54.4% |
+| Tested | 20 | 8.3% |
+| Works (untested) | 136 | 56.4% |
 | Partial (unaudited) | 19 | 7.9% |
-| Not working | 74 | 30.7% |
+| Not working | 66 | 27.4% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Cartouche of Strength | silent | When this Aura enters, you may have enchanted creature fight target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Commit // Memory | silent | Put target spell or nonland permanent into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cruel Reality | silent | At the beginning of enchanted player's upkeep, that player sacrifices a creature or planeswalker of their choice. If the player can't, they lose 5 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cut // Ribbons | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Decimator Beetle | silent | Whenever this creature attacks, remove a -1/-1 counter from target creature you control and put a -1/-1 counter on up to one target creature defending player co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Defiant Greatmaw | silent | Whenever you put one or more -1/-1 counters on this creature, remove a -1/-1 counter from another target creature you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Destined // Lead | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) All creatures able to block target creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -55,26 +54,20 @@
 | Glyph Keeper | silent | Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gust Walker | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 and gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heart-Piercer Manticore | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Heaven // Earth | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Honored Crop-Captain | silent | Whenever this creature attacks, other attacking creatures get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Honored Hydra | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hooded Brawler | silent | You may exert this creature as it attacks. When you do, it gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Insult // Injury | silent | Damage can't be prevented this turn. If a source you control would deal damage this turn, it deals double that damage instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kefnet the Mindful | silent | {3}{U}: Draw a card, then you may return a land you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kefnet's Monument | silent | Whenever you cast a creature spell, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Labyrinth Guardian | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Liliana's Influence | silent | Put a -1/-1 counter on each creature you don't control. You may search your library and/or graveyard for a card named Liliana, Death Wielder, reveal it, and put | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, Death's Majesty | silent | −7: Destroy all non-Zombie creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lord of the Accursed | silent | {1}{B}, {T}: All Zombies gain menace until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mouth // Feed | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Nef-Crop Entangler | silent | You may exert this creature as it attacks. When you do, it gets +1/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Neheb, the Worthy | silent | As long as you have one or fewer cards in hand, Minotaurs you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Never // Return | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Nissa, Steward of Elements | silent | 0: Look at the top card of your library. If it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on Nissa, y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oketra's Attendant | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Onward // Victory | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Open into Wonder | silent | X target creatures can't be blocked this turn. Until end of turn, those creatures gain "Whenever this creature deals combat damage to a player, draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Prepare // Fight | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pursue Glory | silent | Attacking creatures get +2/+0 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quarry Hauler | silent | When this creature enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rags // Riches | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Each opponent chooses a creature they control. You gain control of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -83,8 +76,6 @@
 | Sacred Cat | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shadow of the Grave | silent | Return to your hand all cards in your graveyard that you cycled or discarded this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulstinger | silent | When this creature dies, you may put a -1/-1 counter on target creature for each -1/-1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spring // Mind | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Start // Finish | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Synchronized Strike | silent | Untap up to two target creatures. They each get +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tah-Crop Elite | silent | You may exert this creature as it attacks. When you do, creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tah-Crop Skirmisher | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -97,6 +88,7 @@
 | Djeru's Resolve | notice | Untap target creature. Prevent all damage that would be dealt to it this turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grim Strider | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hazoret's Favor | notice | At the beginning of combat on your turn, you may have target creature you control get +2/+0 and gain haste until end of turn. If you do, sacrifice it at the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Onward // Victory | notice | Target creature gets +X/+0 until end of turn, where X is its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Shed Weakness | notice | Target creature gets +2/+2 until end of turn. You may remove a -1/-1 counter from it. | unparsed remainder: You may remove a -1/-1 counter from it. | Y/Y/- | not_working |
 | Thresher Lizard | notice | This creature gets +1/+2 as long as you have one or fewer cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vizier of Deferment | notice | When this creature enters, you may exile target creature if it attacked or blocked this turn. Return that card to the battlefield under its owner's control at t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -146,6 +138,7 @@
 | Crocodile of the Crossing | handled | When this creature enters, put a -1/-1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cryptic Serpent | handled | This spell costs {1} less to cast for each instant and sorcery card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cursed Minotaur | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
+| Cut // Ribbons | handled | Cut deals 4 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Decision Paralysis | handled | Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deem Worthy | handled | Deem Worthy deals 7 damage to target creature. Cycling {3}{R} ({3}{R}, Discard this card: Draw a card.) When you cycle this card, you may have it deal 2 damage  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Desert Cerodon | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
@@ -172,6 +165,7 @@
 | Hapatra, Vizier of Poisons | handled | Whenever Hapatra deals combat damage to a player, you may put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haze of Pollen | handled | Prevent all combat damage that would be dealt this turn. Cycling {3} ({3}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hazoret's Monument | handled | Red creature spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Heaven // Earth | handled | Heaven deals X damage to each creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hekma Sentinels | handled | Whenever you cycle or discard a card, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hieroglyphic Illumination | handled | Draw two cards. Cycling {U} ({U}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Honed Khopesh | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -192,9 +186,11 @@
 | Merciless Javelineer | handled | {2}, Discard a card: Put a -1/-1 counter on target creature. That creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Miasmic Mummy | handled | When this creature enters, each player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Minotaur Sureshot | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mouth // Feed | handled | Create a 3/3 green Hippo creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Naga Oracle | handled | When this creature enters, surveil 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Naga Vitalist | handled |  |  | Y/Y/- | not_tested |
 | Nest of Scarabs | handled | Whenever you put one or more -1/-1 counters on a creature, create that many 1/1 black Insect creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Never // Return | handled | Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nimble-Blade Khenra | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
 | Oashra Cultivator | handled | {2}{G}, {T}, Sacrifice this creature: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oketra's Monument | handled | White creature spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -205,6 +201,7 @@
 | Pitiless Vizier | handled | Whenever you cycle or discard a card, this creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Plague Belcher | handled | When this creature enters, put two -1/-1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pouncing Cheetah | handled | Flash | machines/casting.py (timing) | Y/Y/- | not_tested |
+| Prepare // Fight | handled | Untap target creature. It gets +2/+2 and gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prowling Serpopard | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pull from Tomorrow | handled | Draw X cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyramid of the Pantheon | handled |  |  | Y/Y/- | not_tested |
@@ -212,7 +209,6 @@
 | Rhonas's Monument | handled | Green creature spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | River Serpent | handled | This creature can't attack unless there are five or more cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruthless Sniper | handled | Whenever you cycle or discard a card, you may pay {1}. If you do, put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Sacred Excavation | handled | Return up to two target cards with cycling from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Samut, Voice of Dissent | handled | Other creatures you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scaled Behemoth | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | Scarab Feast | handled | Exile up to three target cards from a single graveyard. Cycling {B} ({B}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -228,6 +224,7 @@
 | Slither Blade | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sparring Mummy | handled | When this creature enters, untap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Splendid Agony | handled | Distribute two -1/-1 counters among one or two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Spring // Mind | handled | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stinging Shot | handled | Put three -1/-1 counters on target creature with flying. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stir the Sands | handled | Create three 2/2 black Zombie creature tokens. Cycling {3}{B} ({3}{B}, Discard this card: Draw a card.) When you cycle this card, create a 2/2 black Zombie crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Supernatural Stamina | handled | Until end of turn, target creature gets +2/+0 and gains "When this creature dies, return it to the battlefield tapped under its owner's control." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,7 +251,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>20 cards</summary>
 
 - Angler Drake
 - Archfiend of Ifnir
@@ -264,10 +261,13 @@
 - Gideon of the Trials
 - Harsh Mentor
 - Harvest Season
+- Insult // Injury
 - Luxa River Shrine
 - Oracle's Vault
+- Sacred Excavation
 - Sandwurm Convergence
 - Soul-Scar Mage
+- Start // Finish
 - Sunscorched Desert
 - Supply Caravan
 - Throne of the God-Pharaoh
@@ -281,7 +281,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | embalm | 13 | Angel of Sanctions, Anointer Priest, Aven Initiate, Aven Wind Guide, Heart-Piercer Manticore | akh |
-| aftermath | 8 | Cut // Ribbons, Heaven // Earth, Mouth // Feed, Never // Return, Onward // Victory | akh |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 2 | Hooded Brawler, Nef-Crop Entangler | akh |
 | +N: untap all creatures you control. those creatures get +N/+N until end of turn. | 1 | Gideon, Martial Paragon | akh |
 | N target creatures can't be blocked ~. until end of turn, those creatures gain "..." | 1 | Open into Wonder | akh |
@@ -301,7 +300,6 @@
 | attacking creatures get +N/+N until end of turn. cycling {M} ({M}, discard ~: draw a card.) | 1 | Pursue Glory | akh |
 | bontu can't attack or block unless a creature died under your control ~. | 1 | Bontu the Glorified | akh |
 | choose an artifact card name. search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. then that playe | 1 | Dispossess | akh |
-| damage can't be prevented ~. if a source you control would deal damage ~, it deals double that damage instead. | 1 | Insult // Injury | akh |
 | enchanted land has "..." | 1 | Gift of Paradise | akh |
 | end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to their maximum hand size. damage wears of | 1 | Glorious End | akh |
 | exile ~: each opponent chooses two cards in their graveyard and exiles the rest. | 1 | Watchers of the Dead | akh |
@@ -315,6 +313,7 @@
 | put target spell or nonland permanent into its owner's library second from the top. | 1 | Commit // Memory | akh |
 | return to your hand all cards in your graveyard that you cycled or discarded ~. | 1 | Shadow of the Grave | akh |
 | rhonas can't attack or block unless you control another creature with power N or greater. | 1 | Rhonas the Indomitable | akh |
+| target creature gets +N/+N until end of turn, where N is its power. | 1 | Onward // Victory | akh |
 | target creature gets +N/+N until end of turn. you may remove a -N/-N counter from it. | 1 | Shed Weakness | akh |
 | untap target creature. prevent all damage that would be dealt to it ~. cycling {M} ({M}, discard ~: draw a card.) | 1 | Djeru's Resolve | akh |
 | untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Synchronized Strike | akh |

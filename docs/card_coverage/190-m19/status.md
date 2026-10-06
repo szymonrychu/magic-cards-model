@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 7.8% |
-| Works (untested) | 128 | 71.1% |
+| Works (untested) | 129 | 71.7% |
 | Partial (unaudited) | 2 | 1.1% |
-| Not working | 36 | 20.0% |
+| Not working | 35 | 19.4% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Cleansing Nova | notice | Choose one — • Destroy all creatures. • Destroy all artifacts and enchantments. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Court Cleric | notice | This creature gets +1/+1 as long as you control an Ajani planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Declare Dominance | notice | Target creature gets +3/+3 until end of turn. All creatures able to block it this turn do so. | unparsed remainder: All creatures able to block it this turn do so. | Y/Y/- | not_working |
-| Nightmare's Thirst | notice | You gain 1 life. Target creature gets -X/-X until end of turn, where X is the amount of life you gained this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Palladia-Mors, the Ruiner | notice | Palladia-Mors has hexproof as long as it hasn't dealt damage yet. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vaevictis Asmadi, the Dire | notice | Whenever Vaevictis Asmadi attacks, for each player, choose target permanent that player controls. Those players sacrifice those permanents. Each player who sacr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ghastbark Twins | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -134,6 +133,7 @@
 | Meteor Golem | handled | When this creature enters, destroy target nonland permanent an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mirror Image | handled | You may have this creature enter as a copy of a creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mystic Archaeologist | handled | {3}{U}{U}: Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Nightmare's Thirst | handled | You gain 1 life. Target creature gets -X/-X until end of turn, where X is the amount of life you gained this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Onakke Ogre | handled |  |  | Y/Y/- | not_tested |
 | Open the Graves | handled | Whenever a nontoken creature you control dies, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Plague Mare | handled | This creature can't be blocked by white creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,7 +246,6 @@
 | whenever you activate an ability of a sarkhan planeswalker, ~ deals N damage to any target. | 1 | Sarkhan's Whelp | m19 |
 | whenever you become the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {M}. | 1 | Amulet of Safekeeping | m19 |
 | whenever you draw a card, each opponent mills two cards. | 1 | Psychic Corrosion | m19 |
-| you gain N life. target creature gets -N/-N until end of turn, where N is the amount of life you gained ~. | 1 | Nightmare's Thirst | m19 |
 | {M}, {M}: target opponent exiles cards from the top of their library until they exile an instant or sorcery card. you may cast that card without paying its mana | 1 | Chaos Wand | m19 |
 | {M}, {M}: until end of turn, your opponents and creatures your opponents control with hexproof can be the targets of spells and abilities you control as though  | 1 | Detection Tower | m19 |
 | {M}: look at the top card of your library. if it's a land card, you may reveal it and put it into your hand. | 1 | Dryad Greenseeker | m19 |

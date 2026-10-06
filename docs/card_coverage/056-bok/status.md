@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 4.4% |
+| Tested | 8 | 5.0% |
 | Works (untested) | 73 | 45.9% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 69 | 43.4% |
+| Not working | 68 | 42.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aura Barbs | silent | Each enchantment deals 2 damage to its controller, then each Aura attached to a creature deals 2 damage to the creature it's attached to. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blademane Baku | silent | {1}, Remove X ki counters from this creature: For each counter removed, this creature gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blessing of Leeches | silent | {0}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Body of Jukai | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -182,8 +181,9 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
+- Aura Barbs
 - Bile Urchin
 - Disrupting Shoal
 - Goryo's Vengeance
@@ -211,7 +211,6 @@
 | at the beginning of your upkeep, sacrifice chisei unless you remove a counter from a permanent you control. | 1 | Chisei, Heart of Oceans | bok |
 | counter target spell. that spell's controller reveals their hand, then discards each card with the same name as a card spliced onto that spell. | 1 | Minamo's Meddling | bok |
 | creatures your opponents control attack each combat if able. | 1 | Fumiko the Lowblood | bok |
-| each enchantment deals N damage to its controller, then each aura attached to a creature deals N damage to the creature it's attached to. | 1 | Aura Barbs | bok |
 | each permanent with a divinity counter on it has indestructible. | 1 | That Which Was Taken | bok |
 | each time target permanent would deal damage to a permanent or player ~, it deals double that damage to that permanent or player instead. splice onto arcane {M} | 1 | Overblaze | bok |
 | if a creature dealt damage by enchanted creature ~ would die, exile it instead. | 1 | Kumano's Blessing | bok |

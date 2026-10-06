@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 5.8% |
-| Works (untested) | 140 | 62.8% |
+| Tested | 14 | 6.3% |
+| Works (untested) | 141 | 63.2% |
 | Partial (unaudited) | 7 | 3.1% |
-| Not working | 63 | 28.3% |
+| Not working | 61 | 27.4% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Banewasp Affliction | silent | When enchanted creature dies, that creature's controller loses life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Battlegrace Angel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Behemoth's Herald | silent | {2}{G}, {T}, Sacrifice a red creature, a green creature, and a white creature: Search your library for a card named Godsire, put it onto the battlefield, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blightning | silent | Blightning deals 3 damage to target player or planeswalker. That player or that planeswalker's controller discards two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brilliant Ultimatum | silent | Exile the top five cards of your library. An opponent separates those cards into two piles. You may play lands and cast spells from one of those piles. If you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Call to Heel | silent | Return target creature to its owner's hand. Its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clarion Ultimatum | silent | Choose five permanents you control. For each of those permanents, you may search your library for a card with the same name as that permanent. Put those cards o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -82,7 +81,6 @@
 | Sphinx's Herald | silent | {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tar Fiend | silent | When this creature enters, target player discards a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughtcutter Agent | silent | {U}{B}, {T}: Target player loses 1 life and reveals their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vicious Shadows | silent | Whenever a creature dies, you may have this enchantment deal damage to target player equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Waveskimmer Aven | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bant Charm | notice | Choose one — • Destroy target artifact. • Put target creature on the bottom of its owner's library. • Counter target instant spell. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ooze Garden | notice | {1}{G}, Sacrifice a non-Ooze creature: Create an X/X green Ooze creature token, where X is the sacrificed creature's power. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -228,6 +226,7 @@
 | Undead Leotau | handled | {R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vectis Silencers | handled | {2}{B}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viashino Skeleton | handled | {1}{B}, Discard a card: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Vicious Shadows | handled | Whenever a creature dies, you may have this enchantment deal damage to target player equal to the number of cards in that player's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Violent Ultimatum | handled | Destroy three target permanents. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viscera Dragger | handled | Unearth | machines/keywords.py (off_zone_abilities: unearth) | Y/-/- | not_tested |
 | Vithian Stinger | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -240,9 +239,10 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Angelsong
+- Blightning
 - Bone Splinters
 - Deft Duelist
 - Fatestitcher
@@ -296,7 +296,6 @@
 | when ~ enters, return all other nonland permanents to their owners' hands. | 1 | Kederekt Leviathan | ala |
 | when ~ enters, target player discards a card for each creature it devoured. | 1 | Tar Fiend | ala |
 | when ~ leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | 1 | Realm Razer | ala |
-| whenever a creature dies, you may have ~ deal damage to target player equal to the number of cards in that player's hand. | 1 | Vicious Shadows | ala |
 | whenever a nontoken creature you control enters, you may pay {M}. if you do, create a token that's a copy of that creature, except it has haste and "..." | 1 | Minion Reflector | ala |
 | whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays N life. | 1 | Prince of Thralls | ala |
 | whenever a player taps a mountain, forest, or plains for mana, that player adds one mana of any type that land produced. | 1 | Keeper of Progenitus | ala |
@@ -318,7 +317,6 @@
 | {M}{M}: ~ deals N damage to each creature with flying and each player. | 1 | Rockcaster Platoon | ala |
 | {M}{M}{M}{M}, {M}: look at the top five cards of your library. you may put a creature card with power N or greater from among them onto the battlefield. put the | 1 | Mayael the Anima | ala |
 | ~ deals N damage to target creature. when a creature dealt damage ~ dies ~, create a N/N black skeleton creature token with "..." | 1 | Skeletonize | ala |
-| ~ deals N damage to target player or planeswalker. that player or that planeswalker's controller discards two cards. | 1 | Blightning | ala |
 | ~ gets +N/+N as long as you control a mountain. | 1 | Wild Nacatl | ala |
 | ~ has flying as long as an artifact card is in your graveyard. | 1 | Windwright Mage | ala |
 

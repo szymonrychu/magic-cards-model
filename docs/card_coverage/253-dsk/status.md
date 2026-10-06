@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 15.5% |
+| Tested | 43 | 16.2% |
 | Works (untested) | 108 | 40.8% |
 | Partial (unaudited) | 14 | 5.3% |
-| Not working | 102 | 38.5% |
+| Not working | 100 | 37.7% |
 
 ## Cards needing work
 
@@ -29,11 +29,9 @@
 | Acrobatic Cheerleader | silent | Survival — At the beginning of your second main phase, if this creature is tapped, put a flying counter on it. This ability triggers only once. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Arabella, Abandoned Doll | silent | Whenever Arabella attacks, it deals X damage to each opponent and you gain X life, where X is the number of creatures you control with power 2 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Balemurk Leech | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, each opponent loses 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Beastie Beatdown | silent | Choose target creature you control and target creature an opponent controls. Delirium — If there are four or more card types among cards in your graveyard, put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Broodspinner | silent | {4}{B}{G}, {T}, Sacrifice this creature: Create a number of 1/1 black and green Insect creature tokens with flying equal to the number of card types among cards | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cathartic Parting | silent | The owner of target artifact or enchantment an opponent controls shuffles it into their library. You may shuffle up to four target cards from your graveyard int | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Conductive Machete | silent | When this Equipment enters, manifest dread, then attach this Equipment to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Coordinated Clobbering | silent | Tap one or two target untapped creatures you control. They each deal damage equal to their power to target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cracked Skull | silent | When enchanted creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cult Healer | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, this creature gains lifelink until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Cursed Windbreaker | silent | When this Equipment enters, manifest dread, then attach this Equipment to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -72,7 +70,6 @@
 | Meathook Massacre II | silent | Whenever a creature you control dies, you may pay 3 life. If you do, return that card under your control with a finality counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Midnight Mayhem | silent | Create three 1/1 red Gremlin creature tokens. Gremlins you control gain menace, lifelink, and haste until end of turn. (A creature with menace can't be blocked  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Monstrous Emergence | silent | As an additional cost to cast this spell, choose a creature you control or reveal a creature card from your hand. Monstrous Emergence deals damage equal to the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Niko, Light of Hope | silent | When Niko enters, create two Shard tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Norin, Swift Survivalist | silent | Whenever a creature you control becomes blocked, you may exile it. You may play that card from exile this turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
 | Oblivious Bookworm | silent | At the beginning of your end step, you may draw a card. If you do, discard a card unless a permanent entered the battlefield face down under your control this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Omnivorous Flytrap | silent | Delirium — Whenever this creature enters or attacks, if there are four or more card types among cards in your graveyard, distribute two +1/+1 counters among one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -117,6 +114,7 @@
 | Haunted Screen | notice | {7}: Put seven +1/+1 counters on this artifact. It becomes a 0/0 Spirit creature in addition to its other types. Activate only once. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Jump Scare | notice | Until end of turn, target creature gets +2/+2, gains flying, and becomes a Horror enchantment creature in addition to its other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Marvin, Murderous Mimic | notice | Marvin has all activated abilities of creatures you control that don't have the same name as this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Niko, Light of Hope | notice | {2}, {T}: Exile target nonlegendary creature you control. Shards you control become copies of it until the next end step. Return it to the battlefield under its | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Possessed Goat | notice | {3}, Discard a card: Put three +1/+1 counters on this creature and it becomes a black Demon in addition to its other colors and types. Activate only once. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Rampaging Soulrager | notice | This creature gets +3/+0 as long as there are two or more unlocked doors among Rooms you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Razorkin Needlehead | notice | This creature has first strike during your turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -254,15 +252,17 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>43 cards</summary>
 
 - Abhorrent Oculus
 - Balustrade Wurm
 - Bashful Beastie
+- Beastie Beatdown
 - Blazemire Verge
 - Cautious Survivor
 - Central Elevator // Promising Stairs
 - Chainsaw
+- Coordinated Clobbering
 - Derelict Attic // Widow's Walk
 - Doomsday Excruciator
 - Drag to the Roots
@@ -317,7 +317,6 @@
 | as long as ~ entered ~, enchanted creature has hexproof. | 1 | Shardmage's Rescue | dsk |
 | at the beginning of your end step, if a land entered the battlefield under your control ~ and you control a prime number of lands, create primo, the indivisible | 1 | Zimone, All-Questioning | dsk |
 | at the beginning of your end step, you may draw a card. if you do, discard a card unless a permanent entered the battlefield face down under your control ~ or y | 1 | Oblivious Bookworm | dsk |
-| choose target creature you control and target creature an opponent controls. delirium — if there are four or more card types among cards in your graveyard, put  | 1 | Beastie Beatdown | dsk |
 | choose two target creatures controlled by the same opponent. that player chooses one of those creatures. ~ deals N damage to that creature, and the other can't  | 1 | Trial of Agony | dsk |
 | counter target spell unless its controller pays {M}. if they do, surveil N. (look at the top two cards of your library, then put any number of them into your gr | 1 | Don't Make a Sound | dsk |
 | create three N/N red gremlin creature tokens. gremlins you control gain menace, lifelink, and haste until end of turn. (a creature with menace can't be blocked  | 1 | Midnight Mayhem | dsk |
@@ -336,7 +335,6 @@
 | once each turn, you may pay {M} rather than pay the mana cost for a spell you cast from exile. | 1 | Charred Foyer // Warped Space | dsk |
 | other permanents you control have hexproof. | 1 | Restricted Office // Lecture Hall | dsk |
 | search your library for a demon card, reveal it, put it into your hand, then shuffle. delirium — if there are four or more card types among cards in your gravey | 1 | Demonic Counsel | dsk |
-| tap one or two target untapped creatures you control. they each deal damage equal to their power to target creature an opponent controls. | 1 | Coordinated Clobbering | dsk |
 | target creature gets +N/+N until end of turn. when it dies ~, manifest dread. (look at the top two cards of your library. put one onto the battlefield face down | 1 | Turn Inside Out | dsk |
 | target creature you control deals damage equal to its power to each other creature. until end of turn, whenever a creature you control dies, exile the top card  | 1 | Waltz of Rage | dsk |
 | the owner of target artifact or enchantment an opponent controls shuffles it into their library. you may shuffle up to four target cards from your graveyard int | 1 | Cathartic Parting | dsk |
@@ -344,7 +342,6 @@
 | untap each creature you control during each other player's untap step. | 1 | Dazzling Theater // Prop Room | dsk |
 | until end of turn, target creature gets +N/+N, gains flying, and becomes a horror enchantment creature in addition to its other types. | 1 | Jump Scare | dsk |
 | when enchanted creature is dealt damage, destroy it. | 1 | Cracked Skull | dsk |
-| when niko enters, create two shard tokens. | 1 | Niko, Light of Hope | dsk |
 | when you unlock ~, create a N/N white glimmer enchantment creature token. | 1 | Grand Entryway // Elegant Rotunda | dsk |
 | when you unlock ~, create an N/N blue spirit creature token with flying, where N is the number of unlocked doors among rooms you control. | 1 | Smoky Lounge // Misty Salon | dsk |
 | when you unlock ~, you may cast spells from your graveyard ~, and if a card would be put into your graveyard from anywhere ~, exile it instead. | 1 | Walk-In Closet // Forgotten Cellar | dsk |
@@ -382,6 +379,7 @@
 | {M}, {M}, sacrifice ~: lock or unlock a door of target room you control. activate only as a sorcery. | 1 | Keys to the House | dsk |
 | {M}, {M}, sacrifice ~: put each creature card exiled with ~ onto the battlefield under your control with a flying counter on it. each of them is a N/N spirit in | 1 | Ghost Vacuum | dsk |
 | {M}, {M}: create a token that"..."s a N/N red balloon creature in addition to its other colors and types and it has flying and haste. sacrifice it at the beginn | 1 | The Jolly Balloon Man | dsk |
+| {M}, {M}: exile target nonlegendary creature you control. shards you control become copies of it until the next end step. return it to the battlefield under its | 1 | Niko, Light of Hope | dsk |
 | {M}: put seven +N/+N counters on ~. it becomes a N/N spirit creature in addition to its other types. activate only once. | 1 | Haunted Screen | dsk |
 | {M}{M}: reveal target face-down permanent. if it's a creature card, you may turn it face up. | 1 | Hauntwoods Shrieker | dsk |
 | {M}{M}{M}, {M}, sacrifice ~: create a number of N/N black and green insect creature tokens with flying equal to the number of card types among cards in your gra | 1 | Broodspinner | dsk |

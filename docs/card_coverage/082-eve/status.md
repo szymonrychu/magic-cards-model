@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 6.1% |
+| Tested | 13 | 7.3% |
 | Works (untested) | 91 | 50.8% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 73 | 40.8% |
+| Not working | 71 | 39.7% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Cankerous Thirst | silent | If {B} was spent to cast this spell, you may have target creature get -3/-3 until end of turn. If {G} was spent to cast this spell, you may have target creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cauldron Haze | silent | Choose any number of target creatures. Each of those creatures gains persist until end of turn. (When it dies, if it had no -1/-1 counters on it, return it to t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cenn's Enlistment | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Chaotic Backlash | silent | Chaotic Backlash deals damage to target player equal to twice the number of white and/or blue permanents they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clout of the Dominus | silent | As long as enchanted creature is blue, it gets +1/+1 and has shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crag Puca | silent | {U/R}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Creakwood Liege | silent | Other black creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,7 +58,6 @@
 | Impelled Giant | silent | Tap an untapped red creature you control other than this creature: This creature gets +X/+0 until end of turn, where X is the power of the creature tapped this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Indigo Faerie | silent | {U}: Target permanent becomes blue in addition to its other colors until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inundate | silent | Return all nonblue creatures to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kithkin Zealot | silent | When this creature enters, you gain 1 life for each black and/or red permanent target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leering Emblem | silent | Whenever you cast a spell, equipped creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Light from Within | silent | Chroma — Each creature you control gets +1/+1 for each white mana symbol in its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loyal Gyrfalcon | silent | Whenever you cast a white spell, this creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -198,16 +196,18 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>13 cards</summary>
 
 - Antler Skulkin
 - Belligerent Hatchling
+- Chaotic Backlash
 - Divinity of Pride
 - Duergar Hedge-Mage
 - Figure of Destiny
 - Flickerwisp
 - Flooded Grove
 - Helix Pinnacle
+- Kithkin Zealot
 - Merrow Bonegnawer
 - Shorecrasher Mimic
 - Soul Snuffers
@@ -257,7 +257,6 @@
 | when ~ enters, if you control two or more swamps, you may have target player discard a card. | 1 | Hag Hedge-Mage | eve |
 | when ~ enters, return to your hand the creature card in your graveyard with the greatest power. if two or more cards are tied for greatest power, you choose one | 1 | Desecrator Hag | eve |
 | when ~ enters, search your library for any number of plains cards, exile them, then shuffle. | 1 | Endless Horizons | eve |
-| when ~ enters, you gain N life for each black and/or red permanent target opponent controls. | 1 | Kithkin Zealot | eve |
 | when ~ enters, you may pay {M}. if you do, create N N/N red and white goblin soldier creature tokens. | 1 | Rise of the Hobgoblins | eve |
 | whenever ashling deals combat damage to a player, choose target creature that player controls. the player sacrifices that creature. | 1 | Ashling, the Extinguisher | eve |
 | whenever you cast a spell that"..."t be blocked ~. | 1 | Riverfall Mimic | eve |
@@ -274,7 +273,6 @@
 | {M}{M}: target creature you control becomes the color or colors of your choice until end of turn. | 1 | Swirling Spriggan | eve |
 | {M}{M}{M}: copy target instant or sorcery spell that targets you. you may choose new targets for the copy. | 1 | Mirror Sheen | eve |
 | {M}{M}{M}: return ~ from your graveyard to the battlefield. you may put an aura card with mana value N or less from your hand onto the battlefield attached to i | 1 | Evershrike | eve |
-| ~ deals damage to target player equal to twice the number of white and/or blue permanents they control. | 1 | Chaotic Backlash | eve |
 | ~ enters with two -N/-N counters on it unless you've cast another red spell ~. | 1 | Hotheaded Giant | eve |
 | ~ has trample as long as it has a -N/-N counter on it. | 1 | Thunderblust | eve |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Overbeing of Myth | eve |

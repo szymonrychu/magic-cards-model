@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 13.8% |
+| Tested | 39 | 14.5% |
 | Works (untested) | 135 | 50.2% |
 | Partial (unaudited) | 24 | 8.9% |
-| Not working | 73 | 27.1% |
+| Not working | 71 | 26.4% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Gingerbrute | silent | {1}: This creature can't be blocked this turn except by creatures with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gluttonous Troll | silent | When this creature enters, create a number of Food tokens equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Irencrag Feat | silent | Add seven {R}. You can cast only one more spell this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Joust | silent | Choose target creature you control and target creature you don't control. The creature you control gets +2/+1 until end of turn if it's a Knight. Then those cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Knights' Charge | silent | {6}{W}{B}, Sacrifice this enchantment: Return all Knight creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Korvold, Fae-Cursed King | silent | Whenever Korvold enters or attacks, sacrifice another permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mace of the Valiant | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,7 +86,6 @@
 | Workshop Elders | silent | At the beginning of combat on your turn, you may have target noncreature artifact you control become a 0/0 artifact creature. If you do, put four +1/+1 counters | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barge In | notice | Target attacking creature gets +2/+2 until end of turn. Each attacking non-Human creature gains trample until end of turn. | unparsed remainder: Each attacking non-Human creature gains trample until end of turn. | Y/Y/- | not_working |
 | Charming Prince | notice | When this creature enters, choose one — • Scry 2. • You gain 3 life. • Exile another target creature you own. Return it to the battlefield under your control at | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Festive Funeral | notice | Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flaxen Intruder // Welcome Home | notice | Whenever this creature deals combat damage to a player, you may sacrifice it. When you do, destroy target artifact or enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Giant Opportunity | notice | You may sacrifice two Foods. If you do, create a 7/7 green Giant creature token. Otherwise, create three Food tokens. (They're artifacts with "{2}, {T}, Sacrifi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Insatiable Appetite | notice | You may sacrifice a Food. If you do, target creature gets +5/+5 until end of turn. Otherwise, that creature gets +3/+3 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -157,6 +155,7 @@
 | Faerie Guidemother // Gift of the Fae | handled | Target creature gets +2/+1 and gains flying until end of turn. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Feasting Troll King | handled | When this creature enters, if you cast it from your hand, create three Food tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fell the Pheasant | handled | Fell the Pheasant deals 5 damage to target creature with flying. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.") | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Festive Funeral | handled | Target creature gets -X/-X until end of turn, where X is the number of cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fierce Witchstalker | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fireborn Knight | handled | {R/W}{R/W}{R/W}{R/W}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forever Young | handled | Put any number of target creature cards from your graveyard on top of your library. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -244,7 +243,6 @@
 | Thunderous Snapper | handled | Whenever you cast a spell with mana value 5 or greater, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tome Raider | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tome of Legends | handled | This artifact enters with a page counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Tournament Grounds | handled |  |  | Y/Y/- | not_tested |
 | Trail of Crumbs | handled | When this enchantment enters, create a Food token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | True Love's Kiss | handled | Exile target artifact or enchantment. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tuinvale Treefolk // Oaken Boon | handled | Put two +1/+1 counters on target creature. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -262,7 +260,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>39 cards</summary>
 
 - Banish into Fable
 - Bartered Cow
@@ -287,6 +285,7 @@
 - Happily Ever After
 - Heraldic Banner
 - Idyllic Grange
+- Joust
 - Kenrith's Transformation
 - Moonlit Scavengers
 - Murderous Rider // Swift End
@@ -300,6 +299,7 @@
 - Steelclaw Lance
 - Tall as a Beanstalk
 - Torbran, Thane of Red Fell
+- Tournament Grounds
 - Witch's Oven
 
 </details>
@@ -320,7 +320,6 @@
 | at the beginning of each player"..."t, they discard a card, they lose N life, you draw a card, you gain N life, you create a N/N white knight creature token wit | 1 | Doom Foretold | eld |
 | at the beginning of your upkeep, choose one at random. create a red and white creature token with those characteristics. | 1 | Outlaws' Merriment | eld |
 | attacking non-human creatures you control get +N/+N and have trample. | 1 | Ferocity of the Wilds | eld |
-| choose target creature you control and target creature you don"..."s a knight. then those creatures fight each other. (each deals damage equal to its power to t | 1 | Joust | eld |
 | combat damage that would be dealt by creatures you control can't be prevented. | 1 | Questing Beast | eld |
 | counter target spell. its controller mills three cards. | 1 | Didn't Say Please | eld |
 | create two N/N white human creature tokens. adamant — if at least three white mana was spent to cast ~, you gain N life for each creature you control. | 1 | Rally for the Throne | eld |
@@ -347,7 +346,6 @@
 | return up to N target artifact and/or non-aura enchantment cards each with mana value N or less from your graveyard to the battlefield. if N is N or more, those | 1 | Dance of the Manse | eld |
 | spells your opponents cast that target syr elenora cost {M} more to cast. | 1 | Syr Elenora, the Discerning | eld |
 | target attacking creature gets +N/+N until end of turn. each attacking non-human creature gains trample until end of turn. | 1 | Barge In | eld |
-| target creature gets -N/-N until end of turn, where N is the number of cards in your graveyard. | 1 | Festive Funeral | eld |
 | target noncreature artifact you control becomes a N/N artifact creature. put four +N/+N counters on it. | 1 | Animating Faerie // Bring to Life | eld |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. you may put a card that has an adventure that player owns | 1 | Memory Theft | eld |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. you may cast that card for as long as it remain | 1 | Covetous Urge | eld |

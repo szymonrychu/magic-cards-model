@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 9.4% |
+| Tested | 24 | 9.8% |
 | Works (untested) | 118 | 48.4% |
 | Partial (unaudited) | 18 | 7.4% |
-| Not working | 85 | 34.8% |
+| Not working | 84 | 34.4% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Stall for Time | silent | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Tap up to two target creatures. If this spell was kicked, put a stun counter on each of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stronghold Arena | silent | When this enchantment enters, you gain 3 life for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunbathing Rootwalla | silent | Domain — {3}{G}: Until end of turn, this creature gets +1/+1 for each basic land type among lands you control. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tail Swipe | silent | Choose target creature you control and target creature you don't control. If you cast this spell during your main phase, the creature you control gets +1/+1 unt | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temporal Firestorm | silent | Kicker {1}{W} and/or {1}{U} (You may pay an additional {1}{W} and/or {1}{U} as you cast this spell.) Choose up to X creatures and/or planeswalkers you control,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temporary Lockdown | silent | When this enchantment enters, exile each nonland permanent with mana value 2 or less until this enchantment leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Territorial Maro | silent | Domain — Territorial Maro's power and toughness are each equal to twice the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -251,7 +250,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Ajani, Sleeper Agent
 - Archangel of Wrath
@@ -273,6 +272,7 @@
 - Rith, Liberated Primeval
 - Rivaz of the Claw
 - Sheoldred, the Apocalypse
+- Tail Swipe
 - The Raven Man
 - Vohar, Vodalian Desecrator
 - Warhost's Frenzy
@@ -302,7 +302,6 @@
 | at the beginning of your end step, choose one that hasn"..."kanar deals N damage to up to one other target creature or planeswalker. • exile sol"..."s control. | 1 | Sol'Kanar the Tainted | dmu |
 | at the beginning of your end step, you may pay {M}. if you do, draw N cards. N can't be greater than the amount of life you gained ~. | 1 | Shanna, Purifying Blade | dmu |
 | at the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. if you do, each opponent may sacrifice a permane | 1 | Braids, Arisen Nightmare | dmu |
-| choose target creature you control and target creature you don't control. if you cast ~ during your main phase, the creature you control gets +N/+N until end of | 1 | Tail Swipe | dmu |
 | destroy all creatures. for each creature destroyed ~, its controller creates a N/N black phyrexian creature token. | 1 | The Phasing of Zhalfir | dmu |
 | destroy target creature with total power and toughness N or less. | 1 | Cut Down | dmu |
 | enchantment creatures you control have deathtouch, lifelink, and hexproof. | 1 | Zur, Eternal Schemer | dmu |

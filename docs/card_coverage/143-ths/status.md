@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 10.0% |
+| Tested | 22 | 10.4% |
 | Works (untested) | 131 | 62.1% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 51 | 24.2% |
+| Not working | 50 | 23.7% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Steam Augury | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stoneshock Giant | silent | When this creature becomes monstrous, creatures without flying your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stormbreath Dragon | silent | When this creature becomes monstrous, it deals damage to each opponent equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Time to Feed | silent | Choose target creature an opponent controls. When that creature dies this turn, you gain 3 life. Target creature you control fights that creature. (Each deals d | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tormented Hero | silent | Heroic — Whenever you cast a spell that targets this creature, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Triton Tactics | silent | Up to two target creatures each get +0/+3 until end of turn. Untap those creatures. At this turn's next end of combat, tap each creature that was blocked by one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Underworld Cerberus | silent | When this creature dies, exile it and each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -220,7 +219,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
@@ -240,6 +239,7 @@
 - Pyxis of Pandemonium
 - Reverent Hunter
 - Swan Song
+- Time to Feed
 - Warriors' Lesson
 - Whip of Erebos
 - Xenagos, the Reveler
@@ -254,7 +254,6 @@
 | as an additional cost to cast ~, sacrifice a creature. choose target creature card in your graveyard. return that card and the sacrificed card to the battlefiel | 1 | Rescue from the Underworld | ths |
 | as long as ~ is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | 1 | Hundred-Handed One | ths |
 | as long as ~ is monstrous, it has trample and can attack as though it didn't have defender. | 1 | Colossus of Akros | ths |
-| choose target creature an opponent controls. when that creature dies ~, you gain N life. target creature you control fights that creature. (each deals damage eq | 1 | Time to Feed | ths |
 | discard a creature card: ~ gets +N/+N until end of turn. if ~ is an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Erebos's Emissary | ths |
 | each human creature you control has "..." | 1 | Titan of Eternal Fire | ths |
 | enchanted creature gets -N/-N, and its activated abilities can't be activated. | 1 | Viper's Kiss | ths |

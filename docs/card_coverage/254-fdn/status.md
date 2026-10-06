@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 11.1% |
-| Works (untested) | 88 | 61.1% |
+| Tested | 17 | 11.8% |
+| Works (untested) | 87 | 60.4% |
 | Partial (unaudited) | 3 | 2.1% |
 | Not working | 37 | 25.7% |
 
@@ -147,7 +147,6 @@
 | Sylvan Scavenging | handled | At the beginning of your end step, choose one — • Put a +1/+1 counter on target creature you control. • Create a 3/3 green Raccoon creature token if you control | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Treetop Snarespinner | handled | {2}{G}: Put a +1/+1 counter on target creature you control. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Twinblade Blessing | handled | Enchanted creature has double strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Twinflame Tyrant | handled | If a source you control would deal damage to an opponent or a permanent an opponent controls, it deals double that damage instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Uncharted Voyage | handled | Target creature's owner puts it on their choice of the top or bottom of their library. Surveil 1. (Look at the top card of your library. You may put it into you | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vampire Soulcaller | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vanguard Seraph | handled | Whenever you gain life for the first time each turn, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -158,7 +157,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Arbiter of Woe
 - Crossway Troublemakers
@@ -176,6 +175,7 @@
 - Sire of Seven Deaths
 - Soul-Shackled Zombie
 - Soulstone Sanctuary
+- Twinflame Tyrant
 
 </details>
 

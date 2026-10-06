@@ -17,31 +17,27 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 7.8% |
+| Tested | 24 | 9.8% |
 | Works (untested) | 143 | 58.6% |
 | Partial (unaudited) | 16 | 6.6% |
-| Not working | 66 | 27.0% |
+| Not working | 61 | 25.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ajani, the Greathearted | silent | −2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Band Together | silent | Up to two target creatures you control each deal damage equal to their power to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bond of Insight | silent | Each player mills four cards. Return up to two instant and/or sorcery cards from your graveyard to your hand. Exile Bond of Insight. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Fire Artisan | silent | Whenever one or more loyalty counters are removed from Chandra, she deals that much damage to target opponent or planeswalker. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Command the Dreadhorde | silent | Choose any number of target creature and/or planeswalker cards in graveyards. Command the Dreadhorde deals damage to you equal to the total mana value of those  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deliver Unto Evil | silent | Choose up to four target cards in your graveyard. If you control a Bolas planeswalker, return those cards to your hand. Otherwise, an opponent chooses two of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Domri, Anarch of Bolas | silent | +1: Add {R} or {G}. Creature spells you cast this turn can't be countered. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin, Hand of Control | silent | −1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dreadhorde Arcanist | silent | Whenever this creature attacks, you may cast target instant or sorcery card with mana value less than or equal to this creature's power from your graveyard with | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dreadhorde Twins | silent | Zombie tokens you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emergence Zone | silent | {1}, {T}, Sacrifice this land: You may cast spells this turn as though they had flash. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Enter the God-Eternals | silent | Enter the God-Eternals deals 4 damage to target creature and you gain life equal to the damage dealt this way. Target player mills four cards. Amass Zombies 4.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eternal Skylord | silent | Zombie tokens you control have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fblthp, the Lost | silent | When Fblthp enters, draw a card. If it entered from your library or was cast from your library, draw two cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Devastation | silent | Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Finale of Eternity | silent | Destroy up to three target creatures with toughness X or less. If X is 10 or more, return all creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Glory | silent | Create X 2/2 white Soldier creature tokens with vigilance. If X is 10 or more, also create X 4/4 white Angel creature tokens with flying and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Promise | silent | You may cast up to one target instant card and/or up to one target sorcery card from your graveyard each with mana value X or less without paying their mana cos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Revelation | silent | Draw X cards. If X is 10 or more, instead shuffle your graveyard into your library, draw X cards, untap up to five lands, and you have no maximum hand size for  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -75,7 +71,6 @@
 | Saheeli's Silverwing | silent | When this creature enters, look at the top card of target opponent's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan the Masterless | silent | Whenever a creature attacks you or a planeswalker you control, each Dragon you control deals 1 damage to that creature. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Single Combat | silent | Each player chooses a creature or planeswalker they control, then sacrifices the rest. Players can't cast creature or planeswalker spells until the end of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Solar Blaze | silent | Each creature deals damage to itself equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Storrev, Devkarin Lich | silent | Whenever Storrev deals combat damage to a player or planeswalker, return to your hand target creature or planeswalker card in your graveyard that wasn't put the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tamiyo, Collector of Tales | silent | +1: Choose a nonland card name, then reveal the top four cards of your library. Put all cards with the chosen name from among them into your hand and the rest i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Elderspell | silent | Destroy any number of target planeswalkers. Choose a planeswalker you control. Put two loyalty counters on it for each planeswalker destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -255,14 +250,18 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>24 cards</summary>
 
 - Arboreal Grazer
 - Ashiok, Dream Render
+- Band Together
 - Bolt Bend
+- Command the Dreadhorde
 - Commence the Endgame
 - Devouring Hellion
+- Enter the God-Eternals
 - Feather, the Redeemed
+- Finale of Eternity
 - Ilharg, the Raze-Boar
 - Karn, the Great Creator
 - Kronch Wrangler
@@ -272,6 +271,7 @@
 - Nissa, Who Shakes the World
 - Parhelion II
 - Saheeli, Sublime Artificer
+- Solar Blaze
 - Sorin, Vengeful Bloodlord
 - Storm the Citadel
 - Teferi, Time Raveler
@@ -290,17 +290,14 @@
 | amass zombies N, then the army you amassed deals damage equal to its power to each non-army creature. (to amass zombies N, put two +N/+N counters on an army you | 1 | Widespread Brutality | war |
 | as ~ enters, you may return a nonland permanent you control to its owner's hand. if you do, ~ enters with a +N/+N counter on it. | 1 | Rescuer Sphinx | war |
 | choose a creature or planeswalker you control. all damage that would be dealt ~ to you and permanents you control is dealt to the chosen permanent instead (if i | 1 | Gideon's Sacrifice | war |
-| choose any number of target creature and/or planeswalker cards in graveyards. ~ deals damage to you equal to the total mana value of those cards. put them onto  | 1 | Command the Dreadhorde | war |
 | choose four. you may choose the same mode more than once. • create a N/N citizen creature token that's all colors. • return target permanent card from your grav | 1 | Planewide Celebration | war |
 | choose up to four target cards in your graveyard. if you control a bolas planeswalker, return those cards to your hand. otherwise, an opponent chooses two of th | 1 | Deliver Unto Evil | war |
 | copy target instant or sorcery spell, then return it to its owner's hand. you may choose new targets for the copy. | 1 | Narset's Reversal | war |
 | create N N/N white soldier creature tokens with vigilance. if N is N or more, also create N N/N white angel creature tokens with flying and vigilance. | 1 | Finale of Glory | war |
 | destroy any number of target planeswalkers. choose a planeswalker you control. put two loyalty counters on it for each planeswalker destroyed ~. | 1 | The Elderspell | war |
-| destroy up to three target creatures with toughness N or less. if N is N or more, return all creature cards from your graveyard to the battlefield. | 1 | Finale of Eternity | war |
 | discard all the cards in your hand, then draw that many cards plus one. you gain life equal to the number of cards in your hand. | 1 | Heartwarming Redemption | war |
 | draw N cards. if N is N or more, instead shuffle your graveyard into your library, draw N cards, untap up to five lands, and you have no maximum hand size for t | 1 | Finale of Revelation | war |
 | during your turn, creatures you control have first strike and equip abilities you activate cost {M} less to activate. | 1 | Nahiri, Storm of Stone | war |
-| each creature deals damage to itself equal to its power. | 1 | Solar Blaze | war |
 | each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Huatli, the Sun's Heart | war |
 | each creature you control that's a wolf or a werewolf enters with an additional +N/+N counter on it. | 1 | Arlinn, Voice of the Pack | war |
 | each creature you control with a +N/+N counter on it has "..." | 1 | Jiang Yanggu, Wildcrafter | war |
@@ -325,7 +322,6 @@
 | spells your opponents cast that target a creature or planeswalker you control cost {M} more to cast. | 1 | Kasmina, Enigmatic Mentor | war |
 | tap target permanent. if it's an artifact, destroy it. draw a card. | 1 | Topple the Statue | war |
 | target opponent sacrifices a creature of their choice that attacked or blocked ~. if you control a gideon planeswalker, that player sacrifices two of those crea | 1 | Gideon's Triumph | war |
-| up to two target creatures you control each deal damage equal to their power to another target creature. | 1 | Band Together | war |
 | when fblthp enters, draw a card. if it entered from your library or was cast from your library, draw two cards instead. | 1 | Fblthp, the Lost | war |
 | when niv-mizzet enters, reveal the top ten cards of your library. for each color pair, choose a card that's exactly those colors from among them. put the chosen | 1 | Niv-Mizzet Reborn | war |
 | when roalesk dies, proliferate, then proliferate again. | 1 | Roalesk, Apex Hybrid | war |
@@ -359,7 +355,6 @@
 | {M}: return a tapped land you control to its owner's hand. | 1 | Living Twister | war |
 | {M}{M}: look at the top card of your library. if it"..."t put the card into your hand, put it on the bottom of your library. | 1 | Vivien's Grizzly | war |
 | ~ can't attack alone. | 1 | Raging Kronch | war |
-| ~ deals N damage to target creature and you gain life equal to the damage dealt ~. target player mills four cards. amass zombies N. (put four +N/+N counters on  | 1 | Enter the God-Eternals | war |
 | ~ enters with a +N/+N counter on it for each loyalty counter on planeswalkers you control. | 1 | Bioessence Hydra | war |
 | −N: creatures you control can't be blocked ~. | 1 | Jace, Arcane Strategist | war |
 | −N: each opponent chooses a permanent they control of each permanent type and sacrifices the rest. | 1 | Liliana, Dreadhorde General | war |

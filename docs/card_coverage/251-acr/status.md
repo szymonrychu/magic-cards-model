@@ -68,7 +68,7 @@
 | Roshan, Hidden Magister | silent | Other creatures you control are Assassins in addition to their other types. The same is true for creature spells you control and creature cards you own that are | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Senu, Keen-Eyed Protector | silent | When a legendary creature you control attacks and isn't blocked, if this card is exiled, put it onto the battlefield attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shaun & Rebecca, Agents | silent | When Shaun & Rebecca enters, search your graveyard, hand, and library for a card named The Animus and put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Staff of Eden, Vault's Key | silent | {T}: Draw a card for each permanent you control but don't own. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Staff of Eden, Vault's Key | silent | When Staff of Eden enters, put target legendary permanent card not named Staff of Eden, Vault's Key from a graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tax Collector | silent | Detain | no machine in the engine executes this keyword | Y/-/- | not_working |
 | The Aesir Escape Valhalla | silent | I — Exile a permanent card from your graveyard. You gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viewpoint Synchronization | silent | Freerunning {2}{G} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Search you | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -179,6 +179,7 @@
 | when adéwalé enters, reveal the top six cards of your library. put an assassin, pirate, or vehicle card from among them into your hand and the rest on the botto | 1 | Adéwalé, Breaker of Chains | acr |
 | when kassandra enters, search your graveyard, hand, and library for a card named the spear of leonidas, put it onto the battlefield, then shuffle. | 1 | Kassandra, Eagle Bearer | acr |
 | when shaun & rebecca enters, search your graveyard, hand, and library for a card named the animus and put it onto the battlefield, then shuffle. | 1 | Shaun & Rebecca, Agents | acr |
+| when staff of eden enters, put target legendary permanent card not named ~ from a graveyard onto the battlefield under your control. | 1 | Staff of Eden, Vault's Key | acr |
 | when yggdrasil enters, exile all creature cards from your graveyard. | 1 | Yggdrasil, Rebirth Engine | acr |
 | when ~ enters, attach it to target creature you control. that creature deals damage equal to its power to up to one target creature you don't control. | 1 | Hunter's Bow | acr |
 | when ~ enters, attach it to up to one target creature you control. destroy up to one other target creature. | 1 | Phantom Blade | acr |
@@ -195,7 +196,6 @@
 | you may play historic lands and cast historic spells from the top of your library. | 1 | Crystal Skull, Isu Spyglass | acr |
 | {M}, pay N life, sacrifice apple of eden: look at target opponent"..."s hand. activate only as a sorcery. | 1 | Apple of Eden, Isu Relic | acr |
 | {M}, {M}, sacrifice ~: each equipped creature and equipment you control gains deathtouch until end of turn. | 1 | Hemlock Vial | acr |
-| {M}: draw a card for each permanent you control but don't own. | 1 | Staff of Eden, Vault's Key | acr |
 | {M}{M}{M}: until end of turn, thopters you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Leonardo da Vinci | acr |
 | ~ costs {M} less to cast, where N is the total mana value of historic permanents you control. | 1 | Excalibur, Sword of Eden | acr |
 

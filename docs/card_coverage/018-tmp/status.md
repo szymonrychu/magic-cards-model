@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 14.0% |
+| Tested | 9 | 15.8% |
 | Works (untested) | 32 | 56.1% |
 | Partial (unaudited) | 4 | 7.0% |
-| Not working | 13 | 22.8% |
+| Not working | 12 | 21.1% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Rathi Dragon | silent | When this creature enters, sacrifice it unless you sacrifice two Mountains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rootwater Matriarch | silent | {T}: Gain control of target creature for as long as that creature is enchanted. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimmering Wings | silent | {U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sudden Impact | silent | Sudden Impact deals damage to target player equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Time Warp | silent | Target player takes an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vhati il-Dal | silent | {T}: Until end of turn, target creature has base power 1 or base toughness 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whispers of the Muse | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -79,7 +78,7 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Dauthi Slayer
 - Diabolic Edict
@@ -89,6 +88,7 @@
 - Reflecting Pool
 - Ruby Medallion
 - Stalking Stones
+- Sudden Impact
 
 </details>
 
@@ -111,7 +111,6 @@
 | {M}: return ~ to its owner's hand. | 1 | Shimmering Wings | tmp |
 | {M}: until end of turn, target creature has base power N or base toughness N. | 1 | Vhati il-Dal | tmp |
 | ~ can't attack unless defending player controls an island. | 1 | Sea Monster | tmp |
-| ~ deals damage to target player equal to the number of cards in that player's hand. | 1 | Sudden Impact | tmp |
 
 ## Notes
 

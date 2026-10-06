@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 58 | 20.9% |
+| Tested | 61 | 22.0% |
 | Works (untested) | 124 | 44.8% |
 | Partial (unaudited) | 12 | 4.3% |
-| Not working | 83 | 30.0% |
+| Not working | 80 | 28.9% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Aang's Journey | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Search your library for a basic land card. If this spell was kicked, instead search your libr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Accumulate Wisdom | silent | Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. Put each of those ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Air Nomad Legacy | silent | Creatures you control with flying get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Allies at Last | silent | Affinity for Allies (This spell costs {1} less to cast for each Ally you control.) Up to two target creatures you control each deal damage equal to their power  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Avatar Destiny | silent | Enchanted creature gets +1/+1 for each creature card in your graveyard and is an Avatar in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Avatar's Wrath | silent | Choose up to one target creature, then airbend all other creatures. (Exile them. While each one is exiled, its owner may cast it for {2} rather than its mana co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Azula, Cunning Usurper | silent | When Azula enters, target opponent exiles a nontoken creature they control, then they exile a nonland card from their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -50,7 +49,6 @@
 | Earth Rumble | silent | Earthbend 2. When you do, up to one target creature you control fights target creature an opponent controls. (To earthbend 2, target land you control becomes a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Elemental Teachings | silent | Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fancy Footwork | silent | Untap one or two target creatures. They each get +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fatal Fissure | silent | Choose target creature. When that creature dies this turn, you earthbend 4. (Target land you control becomes a 0/0 creature with haste that's still a land. Put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fire Nation Palace | silent | {1}{R}, {T}: Target creature you control gains firebending 4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Firebender Ascension | silent | Whenever a creature you control attacking causes a triggered ability of that creature to trigger, put a quest counter on this enchantment. Then if it has four o | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Foggy Swamp Hunters | silent | As long as you've drawn two or more cards this turn, this creature has lifelink and menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -65,7 +63,6 @@
 | Master Pakku | silent | Whenever Master Pakku becomes tapped, target player mills X cards, where X is the number of Lesson cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | North Pole Patrol | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Otter-Penguin | silent | Whenever you draw your second card each turn, this creature gets +1/+2 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ozai's Cruelty | silent | Ozai's Cruelty deals 2 damage to target player. That player discards two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Platypus-Bear | silent | As long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rabaroo Troop | silent | Landfall — Whenever a land you control enters, this creature gains flying until end of turn and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ran and Shaw | silent | When Ran and Shaw enter, if you cast them and there are three or more Dragon and/or Lesson cards in your graveyard, create a token that's a copy of Ran and Shaw | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -249,13 +246,14 @@
 ## Fully supported
 
 <details>
-<summary>58 cards</summary>
+<summary>61 cards</summary>
 
 - Aang, Swift Savior // Aang and La, Ocean's Fury
 - Aang, at the Crossroads // Aang, Destined Savior
 - Abandon Attachments
 - Agna Qel'a
 - Airbending Lesson
+- Allies at Last
 - Appa, Steadfast Guardian
 - Avatar Aang // Aang, Master of Elements
 - Ba Sing Se
@@ -272,6 +270,7 @@
 - Earthen Ally
 - Ember Island Production
 - Enter the Avatar State
+- Fatal Fissure
 - Fire Lord Azula
 - Fire Navy Trebuchet
 - Firebending Lesson
@@ -291,6 +290,7 @@
 - Obsessive Pursuit
 - Origin of Metalbending
 - Ostrich-Horse
+- Ozai's Cruelty
 - Ozai, the Phoenix King
 - Phoenix Fleet Airship
 - Price of Freedom
@@ -320,7 +320,6 @@
 | Exhaust | 2 | Jeong Jeong, the Deserter, Mai, Jaded Edge | tla |
 | Landfall | 1 | Rabaroo Troop | tla |
 | Raid | 1 | Cruel Administrator | tla |
-| affinity for allies (~ costs {M} less to cast for each ally you control.) up to two target creatures you control each deal damage equal to their power to target | 1 | Allies at Last | tla |
 | as an additional cost to cast ~, waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays for {M}.) tap up | 1 | Crashing Wave | tla |
 | as an additional cost to cast ~, you may waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays for {M}. | 1 | Spirit Water Revival | tla |
 | as an additional cost to cast ~, you may waterbend {M}. you control target opponent during their next combat phase. if ~ additional cost was paid, you control t | 1 | Secret of Bloodbending | tla |
@@ -331,7 +330,6 @@
 | at the beginning of your first main phase, choose one that hasn"..."s control. | 1 | Zuko, Conflicted | tla |
 | at the beginning of your upkeep, tap ~. | 1 | Tiger-Seal | tla |
 | choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. then that player shuffles. | 1 | The Rise of Sozin // Fire Lord Sozin | tla |
-| choose target creature. when that creature dies ~, you earthbend N. (target land you control becomes a N/N creature with haste that's still a land. put four +N/ | 1 | Fatal Fissure | tla |
 | choose up to one target creature, then airbend all other creatures. (exile them. while each one is exiled, its owner may cast it for {M} rather than its mana co | 1 | Avatar's Wrath | tla |
 | creatures you control with flying get +N/+N. | 1 | Air Nomad Legacy | tla |
 | draw a card if there's a creature or lesson card in your graveyard. | 1 | Leaves from the Vine | tla |
@@ -401,7 +399,6 @@
 | ~ can't attack or block unless you control another creature with power N or greater. | 1 | Tiger-Dillo | tla |
 | ~ costs {M} less to cast if it targets a creature with flying. | 1 | Swampsnare Trap | tla |
 | ~ deals N damage to target attacking or blocking creature. you gain life equal to the excess damage dealt ~. | 1 | Razor Rings | tla |
-| ~ deals N damage to target player. that player discards two cards. | 1 | Ozai's Cruelty | tla |
 | ~ gets +N/+N and has trample as long as you control a land creature or a land entered the battlefield under your control ~. | 1 | Earth Rumble Wrestlers | tla |
 | ~ gets +N/+N as long as there's a lesson card in your graveyard. | 1 | First-Time Flyer | tla |
 | ~ gets +N/+N as long as you've drawn two or more cards ~. | 1 | Messenger Hawk | tla |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 11.2% |
+| Tested | 12 | 12.2% |
 | Works (untested) | 57 | 58.2% |
 | Partial (unaudited) | 4 | 4.1% |
-| Not working | 26 | 26.5% |
+| Not working | 25 | 25.5% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Goblin Bangchuckers | silent | {T}: Flip a coin. If you win the flip, this creature deals 2 damage to any target. If you lose the flip, this creature deals 2 damage to itself. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Griffin Rider | silent | As long as you control a Griffin creature, this creature gets +3/+3 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guardians' Pledge | silent | White creatures you control get +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hunter's Insight | silent | Choose target creature you control. Whenever that creature deals combat damage to a player or planeswalker this turn, draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jace's Archivist | silent | {U}, {T}: Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jace, Memory Adept | silent | −7: Any number of target players each draw twenty cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lord of the Unreal | silent | Illusion creatures you control get +1/+1 and have hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,7 +116,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Aegis Angel
 - Crown of Empires
@@ -125,6 +124,7 @@
 - Frost Breath
 - Gladecover Scout
 - Gorehorn Minotaurs
+- Hunter's Insight
 - Phantasmal Image
 - Scepter of Empires
 - Sundial of the Infinite
@@ -139,7 +139,6 @@
 |---|---|---|---|
 | as long as you control a griffin creature, ~ gets +N/+N and has flying. | 1 | Griffin Rider | m12 |
 | at the beginning of the end step, if enchanted creature's power is N or greater, destroy ~. | 1 | Arachnus Web | m12 |
-| choose target creature you control. whenever that creature deals combat damage to a player or planeswalker ~, draw that many cards. | 1 | Hunter's Insight | m12 |
 | destroy target land. creatures without flying can't block ~. | 1 | Tectonic Rift | m12 |
 | draw a card. if a graveyard has twenty or more cards in it, draw three cards instead. | 1 | Visions of Beyond | m12 |
 | during your turn, prevent all damage that would be dealt to you. | 1 | Personal Sanctuary | m12 |

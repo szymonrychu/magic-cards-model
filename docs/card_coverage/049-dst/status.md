@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 4.3% |
+| Tested | 9 | 5.6% |
 | Works (untested) | 79 | 48.8% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 66 | 40.7% |
+| Not working | 64 | 39.5% |
 
 ## Cards needing work
 
@@ -73,7 +73,6 @@
 | Sundering Titan | silent | When this creature enters or leaves the battlefield, choose a land of each basic land type, then destroy those lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Dissector | silent | {X}, {T}: Target opponent reveals cards from the top of their library until an artifact card or X cards are revealed, whichever comes first. If an artifact card | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thunderstaff | silent | {2}, {T}: Attacking creatures get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Turn the Tables | silent | All combat damage that would be dealt to you this turn is dealt to target attacking creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vex | silent | Counter target spell. That spell's controller may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vulshok War Boar | silent | When this creature enters, sacrifice it unless you sacrifice an artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Well of Lost Dreams | silent | Whenever you gain life, you may pay {X}, where X is less than or equal to the amount of life you gained. If you do, draw X cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -83,7 +82,6 @@
 | Echoing Calm | notice | Destroy target enchantment and all other enchantments with the same name as that enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Echoing Ruin | notice | Destroy target artifact and all other artifacts with the same name as that artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gemini Engine | notice | Whenever this creature attacks, create a colorless Construct artifact creature token named Twin that's attacking. Its power is equal to this creature's power an | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Hunger of the Nim | notice | Target creature gets +1/+0 until end of turn for each artifact you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Murderous Spoils | notice | Destroy target nonblack creature. It can't be regenerated. You gain control of all Equipment that were attached to it. (This effect lasts indefinitely.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pulse of the Forge | notice | Pulse of the Forge deals 4 damage to target player or planeswalker. Then if that player or that planeswalker's controller has more life than you, return Pulse o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Second Sight | notice | Choose one — • Look at the top five cards of target opponent's library, then put them back in any order. • Look at the top five cards of your library, then put  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -114,7 +112,6 @@
 | Crazed Goblin | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Brute | handled | {3}: This artifact becomes a 2/2 Beast artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Citadel | handled | Indestructible | machines/keywords.py | Y/Y/- | not_tested |
-| Darksteel Gargoyle | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Darksteel Ingot | handled | Indestructible | machines/keywords.py | Y/Y/- | not_tested |
 | Darksteel Pendant | handled | {1}, {T}: Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Demon's Horn | handled | Whenever a player casts a black spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -126,6 +123,7 @@
 | Geth's Grimoire | handled | Whenever an opponent discards a card, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grimclaw Bats | handled | {B}, Pay 1 life: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heartseeker | handled | Equipped creature gets +2/+1 and has "{T}, Unattach Heartseeker: Destroy target creature." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hunger of the Nim | handled | Target creature gets +1/+0 until end of turn for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Infested Roothold | handled | Whenever an opponent casts an artifact spell, you may create a 1/1 green Insect creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Karstoderm | handled | This creature enters with five +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kraken's Eye | handled | Whenever a player casts a blue spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -185,15 +183,17 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>9 cards</summary>
 
 - Aether Snap
+- Darksteel Gargoyle
 - Echoing Courage
 - Echoing Truth
 - Furnace Dragon
 - Sword of Fire and Ice
 - Tanglewalker
 - Trinisphere
+- Turn the Tables
 
 </details>
 
@@ -204,7 +204,6 @@
 | modular | 9 | Arcbound Bruiser, Arcbound Crusher, Arcbound Hybrid, Arcbound Lancer, Arcbound Ravager | dst |
 | Choose one | 3 | Second Sight, Shriveling Rot, Stir the Pride | dst |
 | Imprint | 1 | Panoptic Mirror | dst |
-| all combat damage that would be dealt to you ~ is dealt to target attacking creature instead. | 1 | Turn the Tables | dst |
 | all creatures able to block equipped creature do so. | 1 | Nemesis Mask | dst |
 | all permanents are artifacts in addition to their other types. | 1 | Mycosynth Lattice | dst |
 | any time you could mulligan and ~ is in your hand, you may exile all the cards from your hand, then draw that many cards. | 1 | Serum Powder | dst |
@@ -235,7 +234,6 @@
 | put two +N/+N counters on target creature and two +N/+N counters on another target creature. | 1 | Stand Together | dst |
 | put two target artifacts on top of their owners' libraries. | 1 | Rebuking Ceremony | dst |
 | return all artifacts you control to their owner's hand. | 1 | Retract | dst |
-| target creature gets +N/+N until end of turn for each artifact you control. | 1 | Hunger of the Nim | dst |
 | target opponent chooses an artifact card in their graveyard. put that card onto the battlefield under your control. | 1 | Scrounge | dst |
 | target player reveals three cards from their hand and you choose one of them. that player discards that card. then if that player has more cards in hand than yo | 1 | Pulse of the Dross | dst |
 | when ~ enters or leaves the battlefield, choose a land of each basic land type, then destroy those lands. | 1 | Sundering Titan | dst |

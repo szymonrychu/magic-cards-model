@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 17.2% |
-| Works (untested) | 110 | 41.0% |
+| Tested | 48 | 17.9% |
+| Works (untested) | 111 | 41.4% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 102 | 38.1% |
+| Not working | 99 | 36.9% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Evidence Examiner | silent | At the beginning of combat on your turn, you may collect evidence 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Expedited Inheritance | silent | Whenever a creature is dealt damage, its controller may exile that many cards from the top of their library. They may play those cards until the end of their ne | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Expose the Culprit | silent | Cloak | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Extract a Confession | silent | As an additional cost to cast this spell, you may collect evidence 6. (Exile cards with total mana value 6 or greater from your graveyard.) Each opponent sacrif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Felonious Rage | silent | Target creature you control gets +2/+0 and gains haste until end of turn. When that creature dies this turn, create a 2/2 white and blue Detective creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Flotsam // Jetsam | silent | Each opponent mills three cards, then you may cast a spell from each opponent's graveyard without paying its mana cost. If a spell cast this way would be put in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Flourishing Bloom-Kin | silent | When this creature is turned face up, search your library for up to two Forest cards and reveal them. Put one of them onto the battlefield tapped and the other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -64,7 +63,6 @@
 | Hedge Whisperer | silent | {3}{G}, {T}, Collect evidence 4: Target land you control becomes a 5/5 green Plant Boar creature with haste for as long as this creature remains tapped. It's st | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hide in Plain Sight | silent | Look at the top five cards of your library, cloak two of them, and put the rest on the bottom of your library in a random order. (To cloak a card, put it onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hustle // Bustle | silent | Target creature attacks or blocks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ill-Timed Explosion | silent | Draw two cards. Then you may discard two cards. When you do, Ill-Timed Explosion deals X damage to each creature, where X is the greatest mana value among cards | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Innocent Bystander | silent | Whenever this creature is dealt 3 or more damage, investigate. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Insidious Roots | silent | Whenever one or more creature cards leave your graveyard, create a 0/1 green Plant creature token, then put a +1/+1 counter on each Plant you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Intrude on the Mind | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -102,7 +100,6 @@
 | The Pride of Hull Clade | silent | {2}{U}{U}: Until end of turn, target creature you control gets +1/+0, gains "Whenever this creature deals combat damage to a player, draw cards equal to its tou | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tolsimir, Midnight's Light | silent | Whenever a Wolf you control attacks, if Tolsimir attacked this combat, target creature an opponent controls blocks that Wolf this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tomik, Wielder of Law | silent | Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Torch the Witness | silent | Torch the Witness deals twice X damage to target creature. If excess damage was dealt to that creature this way, investigate. (Create a Clue token. It's an arti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Urgent Necropsy | silent | As an additional cost to cast this spell, collect evidence X, where X is the total mana value of the permanents this spell targets. Destroy up to one target art | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vannifar, Evolved Enigma | silent | Cloak | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Wojek Investigator | silent | At the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -118,7 +115,6 @@
 | Deadly Complication | notice | Choose one or both — • Destroy target creature. • Put a +1/+1 counter on target suspected creature you control. You may have it become no longer suspected. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Eliminate the Impossible | notice | Investigate. Creatures your opponents control get -2/-0 until end of turn. If any of them are suspected, they're no longer suspected. (To investigate, create a  | unparsed remainder: Investigate. If any of them are suspected, they're no longer suspected. | Y/Y/Y | not_working |
 | Gearbane Orangutan | notice | When this creature enters, choose one — • Destroy up to one target artifact. • Sacrifice an artifact. If you do, put two +1/+1 counters on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Get a Leg Up | notice | Until end of turn, target creature gets +1/+1 for each creature you control and gains reach. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Hotshot Investigators | notice | When this creature enters, return up to one other target creature to its owner's hand. If you controlled it, investigate. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Incinerator of the Guilty | notice | Whenever this creature deals combat damage to a player, you may collect evidence X. When you do, this creature deals X damage to each creature and planeswalker  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | It Doesn't Add Up | notice | Return target creature card from your graveyard to the battlefield. Suspect it. (It has menace and can't block.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -127,6 +123,7 @@
 | Reenact the Crime | notice | Exile target nonland card in a graveyard that was put there from anywhere this turn. Copy it. You may cast the copy without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sample Collector | notice | Whenever this creature attacks, you may collect evidence 3. When you do, put a +1/+1 counter on target creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sanctuary Wall | notice | {2}{W}, {T}: Tap target creature. You may put a stun counter on it. If you do, put a stun counter on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Torch the Witness | notice | Torch the Witness deals twice X damage to target creature. If excess damage was dealt to that creature this way, investigate. (Create a Clue token. It's an arti | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Unyielding Gatekeeper | notice | When this creature is turned face up, exile another target nonland permanent. If you controlled it, return it to the battlefield tapped. Otherwise, its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Assemble the Players | unaudited | Once each turn, you may cast a creature spell with power 2 or less from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Bubble Smuggler | unaudited | As this creature is turned face up, put four +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -168,6 +165,7 @@
 | Drag the Canal | handled | Create a 2/2 white and blue Detective creature token. If a creature died this turn, you gain 2 life, surveil 2, then investigate. (Create a Clue token. It's an  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Due Diligence | handled | When this Aura enters, target creature you control other than enchanted creature gets +2/+2 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Exit Specialist | handled | This creature can't be blocked by creatures with power 3 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Extract a Confession | handled | As an additional cost to cast this spell, you may collect evidence 6. (Exile cards with total mana value 6 or greater from your graveyard.) Each opponent sacrif | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ezrim, Agency Chief | handled | When Ezrim enters, investigate twice. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fae Flight | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Faerie Snoop | handled | When this creature is turned face up, look at the top two cards of your library. Put one into your hand and the other into your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -252,7 +250,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>48 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
@@ -273,7 +271,9 @@
 - Essence of Antiquity
 - Forensic Gadgeteer
 - Forensic Researcher
+- Get a Leg Up
 - Hedge Maze
+- Ill-Timed Explosion
 - Judith, Carnage Connoisseur
 - Karlov Watchdog
 - Leyline of the Guildpact
@@ -313,7 +313,6 @@
 | Choose one | 1 | Archdruid's Charm | mkm |
 | Choose one or both | 1 | Deadly Complication | mkm |
 | as an additional cost to cast ~, collect evidence N, where N is the total mana value of the permanents ~ targets. destroy up to one target artifact, up to one t | 1 | Urgent Necropsy | mkm |
-| as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) each opponent sacrifices a cr | 1 | Extract a Confession | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) search your library for a bas | 1 | Analyze the Pollen | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) until end of turn, target art | 1 | Behind the Mask | mkm |
 | as long as there are no cards in your library, ~ has base power and toughness N/N and has flying and vigilance. | 1 | Living Conundrum | mkm |
@@ -329,7 +328,6 @@
 | creatures you control with power N or less can't be blocked by creatures with power N or greater. | 1 | Delney, Streetwise Lookout | mkm |
 | destroy all artifacts you don't control, then exile the top N cards of your library, where N is the number of artifacts that were put into graveyards from the b | 1 | Anzrag's Rampage | mkm |
 | disguise | 1 | Fugitive Codebreaker | mkm |
-| draw two cards. then you may discard two cards. when you do, ~ deals N damage to each creature, where N is the greatest mana value among cards discarded ~. | 1 | Ill-Timed Explosion | mkm |
 | during your turn, equipped creature gets +N/+N and has first strike. | 1 | Knife | mkm |
 | each opponent mills three cards, then you may cast a spell from each opponent's graveyard without paying its mana cost. if a spell cast ~ would be put into a gr | 1 | Flotsam // Jetsam | mkm |
 | each player who controls the most creatures investigates. then destroy all creatures. (to investigate, create a clue token. it's an artifact with "...") | 1 | No Witnesses | mkm |
@@ -351,7 +349,6 @@
 | target creature you control gets +N/+N and gains haste until end of turn. when that creature dies ~, create a N/N white and blue detective creature token. | 1 | Felonious Rage | mkm |
 | target opponent exiles the top N cards of their library face down. you may look at and play those cards for as long as they remain exiled. if you cast a spell ~ | 1 | Outrageous Robbery | mkm |
 | target opponent reveals their hand. you choose a nonland card from it. exile that card. if the card's mana value is N or less, create a N/N white and black spir | 1 | Soul Search | mkm |
-| until end of turn, target creature gets +N/+N for each creature you control and gains reach. | 1 | Get a Leg Up | mkm |
 | when ~ dies, you may exile it and collect evidence N. if you do, return ~ to the battlefield tapped. | 1 | Lamplight Phoenix | mkm |
 | when ~ enters and whenever you solve a case, look at the top six cards of your library. you may reveal an enchantment card from among them and put it into your  | 1 | Case File Auditor | mkm |
 | when ~ enters, choose one — • destroy up to one target artifact. • sacrifice an artifact. if you do, put two +N/+N counters on ~. | 1 | Gearbane Orangutan | mkm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 11.2% |
+| Tested | 26 | 12.1% |
 | Works (untested) | 126 | 58.6% |
 | Partial (unaudited) | 8 | 3.7% |
-| Not working | 57 | 26.5% |
+| Not working | 55 | 25.6% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Bellowing Tanglewurm | silent | Other green creatures you control have intimidate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carapace Forger | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carnifex Demon | silent | {B}, Remove a -1/-1 counter from this creature: Put a -1/-1 counter on each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Carrion Call | silent | Create two 1/1 green Phyrexian Insect creature tokens with infect. (They deal damage to creatures in the form of -1/-1 counters and to players in the form of po | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cerebral Eruption | silent | Target opponent reveals the top card of their library. Cerebral Eruption deals damage equal to the revealed card's mana value to that player and each creature t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chimeric Mass | silent | {1}: Until end of turn, this artifact becomes a Construct artifact creature with "This creature's power and toughness are each equal to the number of charge cou | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chrome Steed | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -74,7 +73,6 @@
 | Strata Scythe | silent | Equipped creature gets +1/+1 for each land on the battlefield with the same name as the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunblast Angel | silent | When this creature enters, destroy all tapped creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunspear Shikari | silent | As long as this creature is equipped, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Trigon of Infestation | silent | {2}, {T}, Remove a charge counter from this artifact: Create a 1/1 green Phyrexian Insect creature token with infect. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Turn Aside | silent | Counter target spell that targets a permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Venser's Journal | silent | At the beginning of your upkeep, you gain 1 life for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Venser, the Sojourner | silent | −1: Creatures can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -221,12 +219,13 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>26 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
 - Asceticism
 - Assault Strobe
+- Carrion Call
 - Darkslick Shores
 - Galvanic Blast
 - Koth of the Hammer
@@ -243,6 +242,7 @@
 - Steel Hellkite
 - Tainted Strike
 - Tangle Angler
+- Trigon of Infestation
 - True Conviction
 - Tunnel Ignus
 - Twisted Image
@@ -263,7 +263,6 @@
 | choose a nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles | 1 | Memoricide | som |
 | choose two target creatures. tap those creatures, then unattach all equipment from them. | 1 | Fulgent Distraction | som |
 | counter target spell that targets a permanent you control. | 1 | Turn Aside | som |
-| create two N/N green phyrexian insect creature tokens with infect. (they deal damage to creatures in the form of -N/-N counters and to players in the form of po | 1 | Carrion Call | som |
 | each opponent loses N life. you gain life equal to the life lost ~. | 1 | Exsanguinate | som |
 | each player shuffles the cards from their hand into their library, then draws that many cards. metalcraft — if you control three or more artifacts, ~ deals dama | 1 | Molten Psyche | som |
 | equipped creature can block an additional creature each combat. | 1 | Echo Circlet | som |
@@ -300,7 +299,6 @@
 | your life total can't change. | 1 | Platinum Emperion | som |
 | {M}, remove a -N/-N counter from ~: put a -N/-N counter on each other creature. | 1 | Carnifex Demon | som |
 | {M}, sacrifice ~: prevent all damage a source of your choice would deal to you ~. | 1 | Auriok Replica | som |
-| {M}, {M}, remove a charge counter from ~: create a N/N green phyrexian insect creature token with infect. | 1 | Trigon of Infestation | som |
 | {M}, {M}: create a token that's a copy of the exiled card. N is the mana value of that card. | 1 | Prototype Portal | som |
 | {M}, {M}: proliferate twice. | 1 | Contagion Engine | som |
 | {M}, {M}: untap each other myr you control. | 1 | Myr Galvanizer | som |

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 29.3% |
+| Tested | 18 | 31.0% |
 | Works (untested) | 32 | 55.2% |
-| Partial (unaudited) | 3 | 5.2% |
+| Partial (unaudited) | 2 | 3.4% |
 | Not working | 6 | 10.3% |
 
 ## Cards needing work
@@ -34,7 +34,6 @@
 | Sea's Claim | silent | Enchanted land is an Island. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cover of Darkness | unaudited | Creatures of the chosen type have fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Future Sight | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Gratuitous Violence | unaudited | If a creature you control would deal damage to a permanent or player, it deals double that damage instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Arcanis the Omnipotent | handled | {T}: Draw three cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Barren Moor | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crafty Pathmage | handled | {T}: Target creature with power 2 or less can't be blocked this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -71,7 +70,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Annex
 - Biorhythm
@@ -81,6 +80,7 @@
 - Elvish Warrior
 - Flooded Strand
 - Goblin Piledriver
+- Gratuitous Violence
 - Krosan Tusker
 - Polluted Delta
 - Severed Legion
@@ -100,7 +100,6 @@
 | creatures of the chosen type have fear. | 1 | Cover of Darkness | ons |
 | each player chooses a creature type. each player returns all creature cards of a type chosen ~ from their graveyard to the battlefield. | 1 | Patriarch's Bidding | ons |
 | enchanted land is an island. | 1 | Sea's Claim | ons |
-| if a creature you control would deal damage to a permanent or player, it deals double that damage instead. | 1 | Gratuitous Violence | ons |
 | play with the top card of your library revealed. | 1 | Future Sight | ons |
 | soldier creatures have vigilance. | 1 | Mobilization | ons |
 | target opponent puts the cards from their hand on top of their library. search that player's library for that many cards. the player puts those cards into their | 1 | Head Games | ons |

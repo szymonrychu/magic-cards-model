@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 7.4% |
-| Works (untested) | 128 | 45.2% |
+| Tested | 23 | 8.1% |
+| Works (untested) | 130 | 45.9% |
 | Partial (unaudited) | 14 | 4.9% |
-| Not working | 120 | 42.4% |
+| Not working | 116 | 41.0% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Devouring Greed | silent | As an additional cost to cast this spell, you may sacrifice any number of Spirits. Target player loses 2 life plus 2 life for each Spirit sacrificed this way. Y | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dripping-Tongue Zubera | silent | When this creature dies, create a 1/1 colorless Spirit creature token for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ember-Fist Zubera | silent | When this creature dies, it deals damage to any target equal to the number of Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ethereal Haze | silent | Prevent all damage that would be dealt by creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Feral Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +2/+2 and gains trample until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Field of Reality | silent | {1}{U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Floating-Dream Zubera | silent | When this creature dies, draw a card for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -70,7 +69,6 @@
 | Kami of the Palace Fields | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kashi-Tribe Reaver | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kashi-Tribe Warriors | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kiku, Night's Flower | silent | {2}{B}{B}, {T}: Target creature deals damage to itself equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kitsune Blademaster | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kitsune Healer | silent | {T}: Prevent all damage that would be dealt to target legendary creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kitsune Mystic // Autumn-Tail, Kitsune Sage | silent | At the beginning of the end step, if this creature is enchanted by two or more Auras, flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -119,7 +117,6 @@
 | Silent-Chant Zubera | silent | When this creature dies, you gain 2 life for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soratami Savant | silent | {3}, Return a land you control to its owner's hand: Counter target spell unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soratami Seer | silent | {4}, Return two lands you control to their owner's hand: Discard all the cards in your hand, then draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soulblast | silent | As an additional cost to cast this spell, sacrifice all creatures you control. Soulblast deals damage to any target equal to the total power of the sacrificed c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strange Inversion | silent | Switch target creature's power and toughness until end of turn. Splice onto Arcane {1}{R} (As you cast an Arcane spell, you may reveal this card from your hand  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Struggle for Sanity | silent | Target opponent reveals their hand. That player exiles a card from it, then you exile a card from it. Repeat this process until all cards in that hand have been | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Student of Elements // Tobita, Master of Winds | silent | When this creature has flying, flip it. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -144,7 +141,6 @@
 | Junkyo Bell | notice | At the beginning of your upkeep, you may have target creature you control get +X/+X until end of turn, where X is the number of creatures you control. If you do | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Otherworldly Journey | notice | Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sosuke, Son of Seshiro | notice | Whenever a Warrior you control deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Strength of Cedars | notice | Target creature gets +X/+X until end of turn, where X is the number of lands you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Yosei, the Morning Star | notice | When Yosei dies, target player skips their next untap step. Tap up to five target permanents that player controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dosan the Falling Leaf | unaudited | Players can cast spells only during their own turns. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Frostwielder | unaudited | If a creature dealt damage by this creature this turn would die, exile it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -216,6 +212,7 @@
 | Kami of Twisted Reflection | handled | Sacrifice this creature: Return target creature you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kami of the Hunt | handled | Whenever you cast a Spirit or Arcane spell, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kami of the Waning Moon | handled | Whenever you cast a Spirit or Arcane spell, target creature gains fear until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kiku, Night's Flower | handled | {2}{B}{B}, {T}: Target creature deals damage to itself equal to its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kitsune Diviner | handled | {T}: Tap target Spirit. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kodama of the North Tree | handled | Shroud | models/game.py (Game.shroud_refusal), machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a) | Y/-/- | not_tested |
 | Kodama of the South Tree | handled | Whenever you cast a Spirit or Arcane spell, each other creature you control gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -271,6 +268,7 @@
 | Soul of Magma | handled | Whenever you cast a Spirit or Arcane spell, this creature deals 1 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soulless Revival | handled | Return target creature card from your graveyard to your hand. Splice onto Arcane {1}{B} (As you cast an Arcane spell, you may reveal this card from your hand an | the engine reads this text and performs it | Y/-/- | not_tested |
 | Squelch | handled | Counter target activated ability. (Mana abilities can't be targeted.) Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Strength of Cedars | handled | Target creature gets +X/+X until end of turn, where X is the number of lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Swallowing Plague | handled | Swallowing Plague deals X damage to target creature and you gain X life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Teller of Tales | handled | Whenever you cast a Spirit or Arcane spell, you may tap or untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tenza, Godo's Maul | handled | Equipped creature gets +1/+1. As long as it's legendary, it gets an additional +2/+2. As long as it's red, it has trample. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -292,13 +290,14 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>23 cards</summary>
 
 - Azusa, Lost but Seeking
 - Ben-Ben, Akki Hermit
 - Commune with Nature
 - Desperate Ritual
 - Distress
+- Ethereal Haze
 - Ghostly Prison
 - Glacial Ray
 - Honden of Cleansing Fire
@@ -312,6 +311,7 @@
 - Lava Spike
 - Minamo, School at Water's Edge
 - Shimatsu the Bloodcloaked
+- Soulblast
 - Through the Breach
 - Time Stop
 - Vigilance
@@ -330,7 +330,6 @@
 | {M}{M}: return ~ to its owner's hand. | 2 | Cage of Hands, Field of Reality | chk |
 | all creatures get -N/-N. | 1 | Night of Souls' Betrayal | chk |
 | all rats have fear. | 1 | Marrow-Gnawer | chk |
-| as an additional cost to cast ~, sacrifice all creatures you control. ~ deals damage to any target equal to the total power of the sacrificed creatures. | 1 | Soulblast | chk |
 | as an additional cost to cast ~, you may sacrifice any number of spirits. target creature gets +N/+N until end of turn. for each spirit sacrificed ~, that creat | 1 | Devouring Rage | chk |
 | as an additional cost to cast ~, you may sacrifice any number of spirits. target player loses N life plus N life for each spirit sacrificed ~. you gain that muc | 1 | Devouring Greed | chk |
 | as long as you control a demon, ~ has "..." | 1 | Villainous Ogre | chk |
@@ -361,7 +360,6 @@
 | look at the top three cards of your library. you may put those cards on the bottom of your library in any order. if you do, return ~ to its owner's hand. otherw | 1 | Petals of Insight | chk |
 | players can cast spells only during their own turns. | 1 | Dosan the Falling Leaf | chk |
 | players can't untap more than one artifact during their untap steps. | 1 | Imi Statue | chk |
-| prevent all damage that would be dealt by creatures ~. | 1 | Ethereal Haze | chk |
 | prevent the next N damage that would be dealt to any target ~. you gain life equal to the damage prevented ~. splice onto arcane {M}{M} (as you cast an arcane s | 1 | Candles' Glow | chk |
 | redistribute any number of players' life totals. (each of those players gets one life total back.) | 1 | Reverse the Sands | chk |
 | remove a divinity counter from ~: destroy all other creatures. | 1 | Myojin of Cleansing Fire | chk |
@@ -372,7 +370,6 @@
 | shamans you control have "..." | 1 | Sachi, Daughter of Seshiro | chk |
 | switch target creature's power and toughness until end of turn. splice onto arcane {M}{M} (as you cast an arcane spell, you may reveal ~ from your hand and pay  | 1 | Strange Inversion | chk |
 | tapped creatures you control can block as though they were untapped. | 1 | Masako the Humorless | chk |
-| target creature gets +N/+N until end of turn, where N is the number of lands you control. | 1 | Strength of Cedars | chk |
 | target creature you control gains protection from the color of your choice until end of turn. splice onto arcane {M} (as you cast an arcane spell, you may revea | 1 | Blessed Breath | chk |
 | target opponent reveals their hand. that player exiles a card from it, then you exile a card from it. repeat ~ until all cards in that hand have been exiled. th | 1 | Struggle for Sanity | chk |
 | target permanent's controller sacrifices it. if the player does, they reveal cards from the top of their library until they reveal a permanent card that shares  | 1 | Reweave | chk |
@@ -425,7 +422,6 @@
 | {M}{M}, {M}: target opponent discards a card. then if that player has no cards in hand, flip ~. | 1 | Nezumi Shortfang // Stabwhisker the Odious | chk |
 | {M}{M}: exile target card from an opponent's graveyard. if no cards are in that graveyard, flip ~. | 1 | Nezumi Graverobber // Nighteyes the Desecrator | chk |
 | {M}{M}{M}, remove N theft counters from ~: search your library for a nonland card with mana value N, reveal it, put it into your hand, then shuffle. | 1 | Night Dealings | chk |
-| {M}{M}{M}, {M}: target creature deals damage to itself equal to its power. | 1 | Kiku, Night's Flower | chk |
 | ~ deals N damage to any target. return ~ to its owner's hand, then discard a card at random. | 1 | Hanabi Blast | chk |
 
 ## Notes

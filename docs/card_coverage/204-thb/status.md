@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 7.7% |
-| Works (untested) | 135 | 54.9% |
+| Tested | 21 | 8.5% |
+| Works (untested) | 134 | 54.5% |
 | Partial (unaudited) | 27 | 11.0% |
-| Not working | 65 | 26.4% |
+| Not working | 64 | 26.0% |
 
 ## Cards needing work
 
@@ -71,7 +71,6 @@
 | Sphinx Mindbreaker | silent | When this creature enters, each opponent mills ten cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Storm Herald | silent | When this creature enters, return any number of Aura cards from your graveyard to the battlefield attached to creatures you control. Exile those Auras at the be | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thassa's Oracle | silent | When this creature enters, look at the top X cards of your library, where X is your devotion to blue. Put up to one of them on top of your library and the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Akroan War | silent | II — Until your next turn, creatures your opponents control attack each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Triumph of Anax | silent | I, II, III — Until end of turn, target creature gains trample and gets +X/+0, where X is the number of lore counters on this Saga. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Threnody Singer | silent | When this creature enters, target creature an opponent controls gets -X/-0 until end of turn, where X is your devotion to blue. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tymaret Calls the Dead | silent | I, II — Mill three cards. Then you may exile a creature or enchantment card from your graveyard. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -232,7 +231,6 @@
 | Starlit Mantle | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stern Dismissal | handled | Return target creature or enchantment an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stinging Lionfish | handled | Whenever you cast your first spell during each opponent's turn, you may tap or untap target nonland permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Storm's Wrath | handled | Storm's Wrath deals 4 damage to each creature and each planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunmane Pegasus | handled | {1}{W}: This creature gains vigilance and lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sweet Oblivion | handled | Target player mills four cards. Escape—{3}{U}, Exile four other cards from your graveyard. (You may cast this card from your graveyard for its escape cost.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Terror of Mount Velus | handled | When this creature enters, creatures you control gain double strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -257,7 +255,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>21 cards</summary>
 
 - Cling to Dust
 - Dawn Evangel
@@ -274,7 +272,9 @@
 - Nyxbloom Ancient
 - Shadowspear
 - Soul-Guide Lantern
+- Storm's Wrath
 - Thassa, Deep-Dwelling
+- The Akroan War
 - Underworld Fires
 - Uro, Titan of Nature's Wrath
 - Warbriar Blessing
@@ -326,7 +326,6 @@
 | target opponent reveals their hand. you choose a nonland card from it or a card from their graveyard. exile that card. you lose N life. | 1 | Agonizing Remorse | thb |
 | tymaret's toughness is equal to your devotion to black. | 1 | Tymaret, Chosen from Death | thb |
 | until end of turn, target creature gains trample and gets +N/+N, where N is the number of lore counters on ~. | 1 | The Triumph of Anax | thb |
-| until your next turn, creatures your opponents control attack each combat if able. | 1 | The Akroan War | thb |
 | when atris enters, target opponent looks at the top three cards of your library and separates them into a face-down pile and a face-up pile. put one pile into y | 1 | Atris, Oracle of Half-Truths | thb |
 | when you cast a spell with the chosen name for the first time ~, draw two cards. | 1 | Medomai's Prophecy | thb |
 | when ~ dies, put all cards exiled with it onto the battlefield. | 1 | Underworld Sentinel | thb |

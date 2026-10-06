@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 9.4% |
+| Tested | 24 | 9.8% |
 | Works (untested) | 158 | 64.5% |
 | Partial (unaudited) | 14 | 5.7% |
-| Not working | 50 | 20.4% |
+| Not working | 49 | 20.0% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Grasping Current | silent | Return up to two target creatures to their owner's hand. Search your library and/or graveyard for a card named Jace, Ingenious Mind-Mage, reveal it, and put it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grim Captain's Call | silent | Return a Pirate card from your graveyard to your hand, then do the same for Vampire, Dinosaur, and Merfolk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Huatli, Dinosaur Knight | silent | −3: Target Dinosaur you control deals damage equal to its power to target creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Huatli, Warrior Poet | silent | −X: Huatli deals X damage divided as you choose among any number of target creatures. Creatures dealt damage this way can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace's Sentinel | silent | As long as you control a Jace planeswalker, this creature gets +1/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, Cunning Castaway | silent | +1: Whenever one or more creatures you control deal combat damage to a player this turn, draw a card, then discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Legion Conquistador | silent | When this creature enters, you may search your library for any number of cards named Legion Conquistador, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -252,7 +251,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Admiral Beckett Brass
 - Arguel's Blood Fast // Temple of Aclazotz
@@ -263,6 +262,7 @@
 - Field of Ruin
 - Fiery Cannonade
 - Hostage Taker
+- Huatli, Warrior Poet
 - Kinjalli's Sunwing
 - Kitesail Freebooter
 - Merfolk Branchwalker
@@ -344,7 +344,6 @@
 | ~ enters with a +N/+N counter on it for each creature that died ~. | 1 | Bloodcrazed Paladin | xln |
 | ~ gets +N/+N as long as you control a dinosaur. | 1 | Drover of the Mighty | xln |
 | ~ gets +N/+N as long as you control another merfolk or an island. | 1 | Kumena's Speaker | xln |
-| −N: huatli deals N damage divided as you choose among any number of target creatures. creatures dealt damage ~ can't block ~. | 1 | Huatli, Warrior Poet | xln |
 | −N: target dinosaur you control deals damage equal to its power to target creature you don't control. | 1 | Huatli, Dinosaur Knight | xln |
 
 ## Notes

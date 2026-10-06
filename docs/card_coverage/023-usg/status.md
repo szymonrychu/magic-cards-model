@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 18.2% |
+| Tested | 13 | 19.7% |
 | Works (untested) | 34 | 51.5% |
 | Partial (unaudited) | 7 | 10.6% |
-| Not working | 13 | 19.7% |
+| Not working | 12 | 18.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Academy Researchers | silent | When this creature enters, you may put an Aura card from your hand onto the battlefield attached to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Corrupt | silent | Corrupt deals damage to any target equal to the number of Swamps you control. You gain life equal to the damage dealt this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fecundity | silent | Whenever a creature dies, that creature's controller may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hibernation | silent | Return all green permanents to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | No Rest for the Wicked | silent | Sacrifice this enchantment: Return to your hand all creature cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -84,10 +83,11 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Arc Lightning
 - Claws of Gix
+- Corrupt
 - Duress
 - Fertile Ground
 - Fog Bank
@@ -124,7 +124,6 @@
 | {M}: enchanted creature gets +N/+N until end of turn. | 1 | Shiv's Embrace | usg |
 | ~ can't attack unless a creature with greater power also attacks. | 1 | Okk | usg |
 | ~ can't be blocked except by three or more creatures. | 1 | Phyrexian Colossus | usg |
-| ~ deals damage to any target equal to the number of swamps you control. you gain life equal to the damage dealt ~. | 1 | Corrupt | usg |
 
 ## Notes
 

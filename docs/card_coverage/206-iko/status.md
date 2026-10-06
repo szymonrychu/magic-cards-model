@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 7.9% |
+| Tested | 20 | 8.8% |
 | Works (untested) | 99 | 43.4% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 89 | 39.0% |
+| Not working | 87 | 38.2% |
 
 ## Cards needing work
 
@@ -73,7 +73,6 @@
 | Mythos of Nethroi | silent | Destroy target nonland permanent if it's a creature or if {G}{W} was spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mythos of Snapdax | silent | Each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest. If {B} | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mythos of Vadrok | silent | Mythos of Vadrok deals 5 damage divided as you choose among any number of target creatures and/or planeswalkers. If {W}{U} was spent to cast this spell, until y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Narset of the Ancient Way | silent | +1: You gain 2 life. Add {U}, {R}, or {W}. Spend this mana only to cast a noncreature spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necropanther | silent | Whenever this creature mutates, return target creature card with mana value 3 or less from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Nethroi, Apex of Death | silent | Whenever this creature mutates, return any number of target creature cards with total power 10 or less from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Parcelbeast | silent | Mutate | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -102,7 +101,6 @@
 | Yidaro, Wandering Monster | silent | When you cycle this card, shuffle it into your library from your graveyard. If you've cycled a card named Yidaro, Wandering Monster four or more times this game | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zagoth Mamba | silent | Whenever this creature mutates, target creature an opponent controls gets -2/-2 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Zenith Flare | silent | Zenith Flare deals X damage to any target and you gain X life, where X is the number of cards with a cycling ability in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Back for More | notice | Return target creature card from your graveyard to the battlefield. When you do, it fights up to one target creature you don't control. (Each deals damage equal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bushmeat Poacher | notice | {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Call of the Death-Dweller | notice | Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire Tactics | notice | Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -240,8 +238,9 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>20 cards</summary>
 
+- Back for More
 - Blade Banish
 - Blitz Leech
 - Chevill, Bane of Monsters
@@ -254,6 +253,7 @@
 - Kaheera, the Orphanguard
 - Keruga, the Macrosage
 - Kinnan, Bonder Prodigy
+- Narset of the Ancient Way
 - Offspring's Revenge
 - Raugrin Triome
 - Startling Development
@@ -272,7 +272,6 @@
 | whenever ~ mutates, put a +N/+N counter on it. | 2 | Mysterious Egg, Vulpikeet | iko |
 | +N: create a N/N green beast creature token. put your choice of a reach counter, a vigilance counter, or a trample counter on it. | 1 | Vivien, Monsters' Advocate | iko |
 | +N: exile the top three cards of your library. creature cards exiled ~ gain "..." | 1 | Lukka, Coppercoat Outcast | iko |
-| +N: you gain N life. add {M}, {M}, or {M}. spend ~ only to cast a noncreature spell. | 1 | Narset of the Ancient Way | iko |
 | as an additional cost to cast ~, reveal a creature card from your hand. ~ deals damage to target creature or planeswalker equal to the revealed card's power. | 1 | Charge of the Forever-Beast | iko |
 | as long as enchanted creature has vigilance, it assigns combat damage equal to its toughness rather than its power. | 1 | Solid Footing | iko |
 | at the beginning of combat on your turn, choose a kind of counter at random that ~ doesn't have on it from among flying, first strike, deathtouch, hexproof, lif | 1 | Crystalline Giant | iko |
@@ -300,7 +299,6 @@
 | once during each of your turns, you may cast a permanent spell with mana value N or less from your graveyard. | 1 | Lurrus of the Dream-Den | iko |
 | prevent all damage that would be dealt ~ by creatures your opponents control. | 1 | Thwart the Enemy | iko |
 | return any number of permanent cards with different names from your graveyard to the battlefield. | 1 | Eerie Ultimatum | iko |
-| return target creature card from your graveyard to the battlefield. when you do, it fights up to one target creature you don't control. (each deals damage equal | 1 | Back for More | iko |
 | return up to two target creature cards with total mana value N or less from your graveyard to the battlefield. put a deathtouch counter on either of them. then  | 1 | Call of the Death-Dweller | iko |
 | search your library for up to three monocolored cards with different names and exile them. an opponent chooses one of those cards. shuffle that card into your l | 1 | Emergent Ultimatum | iko |
 | spells with flash you cast cost {M} less to cast and can't be countered. | 1 | Cunning Nightbonder | iko |

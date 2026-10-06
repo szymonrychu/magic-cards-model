@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 6.4% |
-| Works (untested) | 127 | 54.5% |
+| Works (untested) | 128 | 54.9% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 80 | 34.3% |
+| Not working | 79 | 33.9% |
 
 ## Cards needing work
 
@@ -96,7 +96,6 @@
 | Display of Dominance | notice | Choose one — • Destroy target blue or black noncreature permanent. • Permanents you control can't be the targets of blue or black spells your opponents control  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Draconic Roar | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. Draconic Roar deals 3 damage to target creature. If you revealed a Dragon | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dromoka's Command | notice | Choose two — • Prevent all damage target instant or sorcery spell would deal this turn. • Target player sacrifices an enchantment of their choice. • Put a +1/+1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Foul Renewal | notice | Return target creature card from your graveyard to your hand. Target creature gets -X/-X until end of turn, where X is the toughness of the card returned this w | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lightwalker | notice | This creature has flying as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror Mockery | notice | Whenever enchanted creature attacks, you may create a token that's a copy of that creature. Exile that token at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ojutai Exemplars | notice | Whenever you cast a noncreature spell, choose one — • Tap target creature. • This creature gains first strike and lifelink until end of turn. • Exile this creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -159,6 +158,7 @@
 | Epic Confrontation | handled | Target creature you control gets +1/+2 until end of turn. It fights target creature you don't control. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fate Forgotten | handled | Exile target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flatten | handled | Target creature gets -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Foul Renewal | handled | Return target creature card from your graveyard to your hand. Target creature gets -X/-X until end of turn, where X is the toughness of the card returned this w | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foul-Tongue Invocation | handled | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. Target player sacrifices a creature of their choice. If you revealed a Dr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glaring Aegis | handled | When this Aura enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glint | handled | Target creature you control gets +0/+3 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -300,7 +300,6 @@
 | exile target creature an opponent controls. that player reveals cards from the top of their library until a creature card is revealed. the player puts that card | 1 | Blessed Reincarnation | dtk |
 | other warrior creatures you control have vigilance. | 1 | Herald of Dromoka | dtk |
 | prevent all combat damage that would be dealt ~. you may look at each face-down creature that's attacking or blocking. | 1 | Revealing Wind | dtk |
-| return target creature card from your graveyard to your hand. target creature gets -N/-N until end of turn, where N is the toughness of the card returned ~. | 1 | Foul Renewal | dtk |
 | return target instant or sorcery card from your graveyard to your hand. ~ deals damage equal to that card's mana value to each creature your opponents control.  | 1 | Volcanic Vision | dtk |
 | target creature gets +N/+N and gains lifelink until end of turn. regenerate it. (damage dealt by a creature with lifelink also causes its controller to gain tha | 1 | Butcher's Glee | dtk |
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Taigam's Strike | dtk |

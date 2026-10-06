@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 13.1% |
+| Tested | 36 | 14.3% |
 | Works (untested) | 105 | 41.7% |
 | Partial (unaudited) | 9 | 3.6% |
-| Not working | 105 | 41.7% |
+| Not working | 102 | 40.5% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Goldwarden's Helm | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Goliath Hatchery | silent | When this enchantment enters, create two 3/3 green Phyrexian Beast creature tokens with toxic 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Green Sun's Twilight | silent | Reveal the top X plus one cards of your library. Choose a creature card and/or a land card from among them. Put those cards into your hand and the rest on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hazardous Blast | silent | Hazardous Blast deals 1 damage to each creature your opponents control. Creatures your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hexgold Halberd | silent | During your turn, equipped creature has first strike and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hexgold Hoverwings | silent | Creatures you control that are equipped get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ichor Synthesizer | silent | As long as this creature has four or more oil counters on it, it gets +2/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -122,11 +121,9 @@
 | Evolved Spinoderm | notice | This creature has trample as long as it has two or fewer oil counters on it. Otherwise, it has hexproof. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Forgehammer Centurion | notice | Whenever this creature attacks, you may remove two oil counters from it. When you do, target creature can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gleeful Demolition | notice | Destroy target artifact. If you controlled that artifact, create three 1/1 red Phyrexian Goblin creature tokens. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Hexgold Slash | notice | Hexgold Slash deals 2 damage to target creature. If that creature has toxic, Hexgold Slash deals 4 damage to that creature instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kethek, Crucible Goliath | notice | At the beginning of your end step, you may sacrifice another creature. If you do, reveal cards from the top of your library until you reveal a nonlegendary crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Orthodoxy Enforcer | notice | This creature gets +2/+0 as long as you control two or more artifacts. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Porcelain Zealot | notice | At the beginning of combat on your turn, target creature you control gets +1/+1 until end of turn. If that creature has toxic, instead it gets +2/+2 until end o | unparsed remainder: If that creature has toxic, instead it gets +2/+2 until end of turn. | Y/Y/- | not_working |
-| Rebel Salvo | notice | Affinity for Equipment (This spell costs {1} less to cast for each Equipment you control.) Rebel Salvo deals 5 damage to target creature or planeswalker. That p | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Red Sun's Twilight | notice | Destroy up to X target artifacts. If X is 5 or more, for each artifact destroyed this way, create a token that's a copy of it. Those tokens gain haste. Exile th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Resistance Reunited | notice | Target creature gets +2/+2 until end of turn. Equipped creatures you control gain indestructible until end of turn. (Damage and effects that say "destroy" don't | unparsed remainder: Equipped creatures you control gain indestructible until end of turn. | Y/Y/- | not_working |
 | Serum Snare | notice | Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate. (Choose any number of permanents and/or players, t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -249,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>36 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
@@ -263,6 +260,8 @@
 - Evolving Adaptive
 - Exuberant Fuseling
 - Geth, Thane of Contracts
+- Hazardous Blast
+- Hexgold Slash
 - Koth, Fire of Resistance
 - Malcator, Purity Overseer
 - Mindsplice Apparatus
@@ -271,6 +270,7 @@
 - Nissa, Ascended Animist
 - Noxious Assault
 - Prosthetic Injector
+- Rebel Salvo
 - Sheoldred's Edict
 - Skyscythe Engulfer
 - Slobad, Iron Goblin
@@ -298,7 +298,6 @@
 | +N: until your next turn, up to one target creature gets -N/-N. | 1 | Jace, the Perfected Mind | one |
 | N: you draw two cards. then each opponent may scry N. | 1 | Kaya, Intangible Slayer | one |
 | activated abilities of equipment you control that target ~ cost {M} less to activate. | 1 | Bladegraft Aspirant | one |
-| affinity for equipment (~ costs {M} less to cast for each equipment you control.) ~ deals N damage to target creature or planeswalker. that permanent loses inde | 1 | Rebel Salvo | one |
 | as long as ~ has four or more oil counters on it, it gets +N/+N and can't be blocked. | 1 | Ichor Synthesizer | one |
 | as long as ~ is equipped, it gets +N/+N. | 1 | Leonin Lightbringer | one |
 | at the beginning of combat on your turn, put an oil counter on ~, then create an N/N red phyrexian horror creature token with trample and haste, where N is the  | 1 | Urabrask's Forge | one |
@@ -387,8 +386,6 @@
 | {M}{M}: each other creature you control with toxic gains toxic N until end of turn. activate only once each turn. | 1 | Plague Nurse | one |
 | ~ costs {M} less to cast for each permanent you control with oil counters on it. | 1 | Cinderslash Ravager | one |
 | ~ costs {M} more to cast if it targets a creature. exile target nonland permanent. | 1 | Vanish into Eternity | one |
-| ~ deals N damage to each creature your opponents control. creatures your opponents control can't block ~. | 1 | Hazardous Blast | one |
-| ~ deals N damage to target creature. if that creature has toxic, ~ deals N damage to that creature instead. | 1 | Hexgold Slash | one |
 | ~ gets +N/+N as long as it has three or more oil counters on it. | 1 | Armored Scrapgorger | one |
 | ~ gets +N/+N as long as you control two or more artifacts. | 1 | Orthodoxy Enforcer | one |
 | ~ has trample as long as it has two or fewer oil counters on it. otherwise, it has hexproof. | 1 | Evolved Spinoderm | one |

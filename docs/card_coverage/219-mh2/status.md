@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 39 | 15.1% |
-| Works (untested) | 120 | 46.5% |
+| Works (untested) | 122 | 47.3% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 87 | 33.7% |
+| Not working | 85 | 32.9% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Break Ties | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Break the Ice | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Calibrated Blast | silent | Reveal cards from the top of your library until you reveal a nonland card. Put the revealed cards on the bottom of your library in a random order. When you reve | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Captured by Lagacs | silent | When this Aura enters, support 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chainer, Nightmare Adept | silent | Discard a card: You may cast a creature spell from your graveyard this turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chef's Kiss | silent | Gain control of target spell that targets only a single permanent or player. Copy it, then reselect the targets at random for the spell and the copy. The new ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chitterspitter | silent | Squirrels you control get +1/+1 for each acorn counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -85,7 +84,6 @@
 | Radiant Epicure | silent | Converge — When this creature enters, each opponent loses X life and you gain X life, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Headliner | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rise and Shine | silent | Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on each artifact that became a creature this way. Overload {4}{ | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Road // Ruin | silent | Aftermath | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Scour the Desert | silent | Exile target creature card from your graveyard. Create X 1/1 white Bird creature tokens with flying, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scurry Oak | silent | Evolve | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Scuttletide | silent | Delirium — Crabs you control get +1/+1 as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -135,6 +133,7 @@
 | Cabal Initiate | handled | Discard a card: This creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Caprichrome | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Captain Ripley Vance | handled | Whenever you cast your third spell each turn, put a +1/+1 counter on Captain Ripley Vance, then it deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Captured by Lagacs | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chatterstorm | handled | Create a 1/1 green Squirrel creature token. Storm (When you cast this spell, copy it for each spell cast before it this turn.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Clattering Augur | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Combine Chrysalis | handled | Creature tokens you control have flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -206,6 +205,7 @@
 | Revolutionist | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rift Sower | handled | Suspend | machines/casting.py (MarkedExile.suspend, finish_suspend) | Y/-/- | not_tested |
 | Rishadan Dockhand | handled | {1}, {T}: Tap target land. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Road // Ruin | handled | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Said // Done | handled | Return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sanctuary Raptor | handled | Whenever this creature attacks, if you control three or more tokens, this creature gets +2/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sanctum Weaver | handled |  |  | Y/-/- | not_tested |
@@ -306,7 +306,6 @@
 | Metalcraft | 1 | Vedalken Infiltrator | mh2 |
 | aeve isn"..."s a token. | 1 | Aeve, Progenitor Ooze | mh2 |
 | affinity for artifacts artifact landcycling {M} ({M}, discard ~: search your library for an artifact land card, reveal it, put it into your hand, then shuffle.) | 1 | Sojourner's Companion | mh2 |
-| aftermath | 1 | Road // Ruin | mh2 |
 | as ~ enters, choose a card type. | 1 | Serra's Emissary | mh2 |
 | at the beginning of combat on your turn, you may discard a card. when you do, ~ deals N damage to any target, where N is the number of card types the discarded  | 1 | Mount Velus Manticore | mh2 |
 | at the beginning of your upkeep, if ~ is in your graveyard, you may pay N life. if you do, return it to your hand. | 1 | Master of Death | mh2 |
@@ -357,7 +356,6 @@
 | when ~ enters, put a +N/+N counter on each other artifact creature you control. | 1 | Arcbound Shikari | mh2 |
 | when ~ enters, put target card from an opponent's graveyard on the bottom of their library. | 1 | Landscaper Colos | mh2 |
 | when ~ enters, reveal the top two cards of your library. put one of them into your hand and the other into your graveyard. if you put an artifact card into your | 1 | Chrome Courier | mh2 |
-| when ~ enters, support N. | 1 | Captured by Lagacs | mh2 |
 | when ~ enters, untap all creatures, then those creatures phase out until ~ leaves the battlefield. put a time counter on ~ for each creature that phased out ~. | 1 | Out of Time | mh2 |
 | when ~ enters, you may exile two cards from your graveyard. when you do, return target creature card from your graveyard to the battlefield. | 1 | Young Necromancer | mh2 |
 | when ~ enters, you may search your library for a card named the underworld cookbook, reveal it, put it into your hand, then shuffle. | 1 | Asmoranomardicadaistinaculdacar | mh2 |

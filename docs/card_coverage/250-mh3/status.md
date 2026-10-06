@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 71 | 27.1% |
-| Works (untested) | 91 | 34.7% |
+| Works (untested) | 92 | 35.1% |
 | Partial (unaudited) | 18 | 6.9% |
-| Not working | 82 | 31.3% |
+| Not working | 81 | 30.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aerie Auxiliary | silent | When this creature enters, support 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aether Spike | silent | Choose target spell. You get {E}{E} (two energy counters), then you may pay any amount of {E}. Counter that spell unless its controller pays {1} for each {E} pa | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ajani Fells the Godsire | silent | II — Create a 2/1 white Cat Warrior creature token, then put a vigilance counter on a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Amped Raptor | silent | When this creature enters, you get {E}{E} . Then if you cast it from your hand, exile cards from the top of your library until you exile a nonland card. You may | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -127,6 +126,7 @@
 | Voidpouncer | unaudited | If this creature was kicked, it enters with two +1/+1 counters and a trample counter on it and with haste. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Winter Moon | unaudited | Players can't untap more than one nonbasic land during their untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Accursed Marauder | handled | When this creature enters, each player sacrifices a nontoken creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Aerie Auxiliary | handled | When this creature enters, support 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amphibian Downpour | handled | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Argent Dais | handled | This artifact enters with two oil counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashling, Flame Dancer | handled | You don't lose unspent red mana as steps and phases end. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -363,7 +363,6 @@
 | when ~ enters, exchange control of ~ and target creature an opponent controls. if you do, you get {M}{M}{M}{M}, then sacrifice that creature unless you pay an a | 1 | Volatile Stormdrake | mh3 |
 | when ~ enters, look at the top six cards of your library. you may reveal an artifact or enchantment card from among them and put it into your hand. put the rest | 1 | Rosecot Knight | mh3 |
 | when ~ enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then shuffle. you  | 1 | Grim Servant | mh3 |
-| when ~ enters, support N. | 1 | Aerie Auxiliary | mh3 |
 | when ~ enters, target opponent exiles the top card of their library, a card at random from their graveyard, and a card at random from their hand. you may cast a | 1 | Crabomination | mh3 |
 | when ~ enters, you get {M}{M} . then if you cast it from your hand, exile cards from the top of your library until you exile a nonland card. you may cast that c | 1 | Amped Raptor | mh3 |
 | when ~ exploits a creature, gain control of target artifact or creature until end of turn. untap that permanent. it gains haste until end of turn. | 1 | Infernal Captor | mh3 |

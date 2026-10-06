@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 12.0% |
+| Tested | 32 | 12.9% |
 | Works (untested) | 125 | 50.2% |
 | Partial (unaudited) | 15 | 6.0% |
-| Not working | 79 | 31.7% |
+| Not working | 77 | 30.9% |
 
 ## Cards needing work
 
@@ -37,14 +37,12 @@
 | Briarbridge Tracker | silent | As long as you control a token, this creature gets +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Celestus Sanctifier | silent | Whenever day becomes night or night becomes day, look at the top two cards of your library. Put one of them into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chaplain of Alms // Chapel Shieldgeist | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Corpse Cobble | silent | As an additional cost to cast this spell, sacrifice any number of creatures. Create an X/X blue and black Zombie creature token with menace, where X is the tota | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Covert Cutpurse // Covetous Geist | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Covetous Castaway // Ghostly Castigator | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Curse of Surveillance | silent | At the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of Curses attached to tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deathbonnet Sprout // Deathbonnet Hulk | silent | At the beginning of your upkeep, you may exile a card from a graveyard. If a creature card was exiled this way, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dennick, Pious Apprentice // Dennick, Pious Apparition | silent | Whenever one or more creature cards are put into graveyards from anywhere, investigate. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Devoted Grafkeeper // Departed Soulkeeper | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Duel for Dominance | silent | Coven — Choose target creature you control and target creature you don't control. If you control three or more creatures with different powers, put a +1/+1 coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fading Hope | silent | Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Falkenrath Perforator | silent | Whenever this creature attacks, it deals 1 damage to defending player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Florian, Voldaren Scion | silent | At the beginning of each of your postcombat main phases, look at the top X cards of your library, where X is the total amount of life your opponents lost this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -68,7 +66,7 @@
 | Path to the Festival | silent | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Then if there are three or more basic land types among lands | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Play with Fire | silent | Play with Fire deals 2 damage to any target. If a player is dealt damage this way, scry 1. (Look at the top card of your library. You may put that card on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Primal Adversary | silent | When this creature enters, you may pay {1}{G} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Seize the Storm | silent | Create a red Elemental creature token with trample and "This token's power and toughness are each equal to the number of instant and sorcery cards in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Seize the Storm | silent | Create a red Elemental creature token with trample and "This token's power and toughness are each equal to the number of instant and sorcery cards in your grave | the engine's reading came from quoted text, not this clause's own words | Y/Y/- | not_working |
 | Sigarda's Splendor | silent | At the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for this enchantment. Then note your life  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siphon Insight | silent | Look at the top two cards of target opponent's library. Exile one of them face down and put the other on the bottom of that library. You may play the exiled car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slogurk, the Overslime | silent | Whenever a land card is put into your graveyard from anywhere, put a +1/+1 counter on Slogurk. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -249,16 +247,18 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>32 cards</summary>
 
 - Blood Pact
 - Bounding Wolf
 - Brimstone Vandal
 - Brutal Cathar // Moonrage Brute
 - Candlelit Cavalry
+- Corpse Cobble
 - Croaking Counterpart
 - Dawnhart Wardens
 - Deserted Beach
+- Duel for Dominance
 - Enduring Angel // Angelic Enforcer
 - Faithful Mending
 - Falkenrath Pit Fighter
@@ -289,11 +289,10 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | disturb | 10 | Baithook Angler // Hook-Haunt Drifter, Beloved Beggar // Generous Soul, Chaplain of Alms // Chapel Shieldgeist, Covert Cutpurse // Covetous Geist, Covetous Castaway // Ghostly Castigator | mid |
-| Coven | 4 | Augur of Autumn, Duel for Dominance, Harvesttide Sentry, Sungold Sentinel | mid |
+| Coven | 3 | Augur of Autumn, Harvesttide Sentry, Sungold Sentinel | mid |
 | Choose one | 2 | Bloodline Culling, Burn Down the House | mid |
 | +N: choose up to one target artifact, up to one target creature, and up to one target land. untap the chosen permanents you control. tap the chosen permanents y | 1 | Teferi, Who Slows the Sunset | mid |
 | +N: until your next turn, you may cast creature spells as though they had flash, and each creature you control enters with an additional +N/+N counter on it. | 1 | Arlinn, the Pack's Hope // Arlinn, the Moon's Fury | mid |
-| as an additional cost to cast ~, sacrifice any number of creatures. create an N/N blue and black zombie creature token with menace, where N is the total power o | 1 | Corpse Cobble | mid |
 | as long as an opponent lost life ~, each other vampire you control enters with an additional +N/+N counter on it. | 1 | Vampire Socialite | mid |
 | as long as you control a token, ~ gets +N/+N. | 1 | Briarbridge Tracker | mid |
 | as ~ transforms into olag, ludevic"..."s hubris, it"..."s a legendary blue and black zombie in addition to its other colors and types. put a number of +N/+N cou | 1 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | mid |

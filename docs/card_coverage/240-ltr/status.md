@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 10.7% |
+| Tested | 33 | 11.7% |
 | Works (untested) | 132 | 47.0% |
 | Partial (unaudited) | 20 | 7.1% |
-| Not working | 99 | 35.2% |
+| Not working | 96 | 34.2% |
 
 ## Cards needing work
 
@@ -47,10 +47,8 @@
 | Fall of Gil-galad | silent | III — Until end of turn, target creature you control gains "When this creature dies, draw two cards." Then that creature fights up to one other target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fangorn, Tree Shepherd | silent | Whenever one or more Treefolk you control attack, add twice that much {G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faramir, Prince of Ithilien | silent | At the beginning of your end step, choose an opponent. At the beginning of that player's next end step, you draw a card if they didn't attack you that turn. Oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fear, Fire, Foes! | silent | Damage can't be prevented this turn. Fear, Fire, Foes! deals X damage to target creature and 1 damage to each other creature with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fire of Orthanc | silent | Destroy target artifact or land. Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Foray of Orcs | silent | Amass Orcs 2. When you do, Foray of Orcs deals X damage to target creature an opponent controls, where X is the amassed Army's power. (To amass Orcs 2, put two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Friendly Rivalry | silent | Target creature you control and up to one other target legendary creature you control each deal damage equal to their power to target creature you don't control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frodo, Determined Hero | silent | Whenever Frodo enters or attacks, you may attach target Equipment you control with mana value 2 or 3 to Frodo. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frodo, Sauron's Bane | silent | {B}{B}{B}: If Frodo is a Scout, it becomes a Halfling Rogue with "Whenever this creature deals combat damage to a player, that player loses the game if the Ring | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Galadriel of Lothlórien | silent | Whenever you scry, you may reveal the top card of your library. If a land card is revealed this way, put it onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -121,7 +119,6 @@
 | Ringwraiths | notice | When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. If that creature is legendary, its controller loses 3 life. | unparsed remainder: If that creature is legendary, its controller loses 3 life. | Y/-/- | not_working |
 | Rush the Room | notice | Target creature gets +1/+0 and gains first strike until end of turn. If it's a Goblin or Orc, it also gains haste until end of turn. | unparsed remainder: If it's a Goblin or Orc, it also gains haste until end of turn. | Y/-/- | not_working |
 | Sauron, the Necromancer | notice | Whenever Sauron attacks, exile target creature card from your graveyard. Create a tapped and attacking token that's a copy of that card, except it's a 3/3 black | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Smite the Deathless | notice | Smite the Deathless deals 3 damage to target creature. That creature loses indestructible until end of turn. If that creature would die this turn, exile it inst | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Strider, Ranger of the North | notice | Landfall — Whenever a land you control enters, target creature gets +1/+1 until end of turn. Then if that creature has power 4 or greater, it gains first strike | unparsed remainder: Then if that creature has power 4 or greater, it gains first strike until end of turn. | Y/-/- | not_working |
 | Uglúk of the White Hand | notice | Whenever another creature you control dies, put a +1/+1 counter on Uglúk. If that creature was a Goblin or Orc, put two +1/+1 counters on Uglúk instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Éowyn, Fearless Knight | notice | When Éowyn enters, exile target creature an opponent controls with greater power. Legendary creatures you control gain protection from each of that creature's c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -281,7 +278,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>33 cards</summary>
 
 - Arwen, Mortal Queen
 - Bill the Pony
@@ -292,7 +289,9 @@
 - Elanor Gardner
 - Elven Chorus
 - Esquire of the King
+- Fear, Fire, Foes!
 - Flame of Anor
+- Friendly Rivalry
 - Galadhrim Bow
 - Generous Ent
 - Gimli, Counter of Kills
@@ -307,6 +306,7 @@
 - Riders of the Mark
 - Rise of the Witch-king
 - Shagrat, Loot Bearer
+- Smite the Deathless
 - Stern Scolding
 - The Battle of Bywater
 - Took Reaper
@@ -338,7 +338,6 @@
 | at the beginning of your end step, remove a hope counter from ~. if you do, draw a card. then if ~ has no hope counters on it, sacrifice it and you gain N life. | 1 | Dawn of a New Age | ltr |
 | choose an opponent. they look at the top four cards of your library and separate them into a face-down pile and a face-up pile. put one pile into your hand and  | 1 | Sauron's Ransom | ltr |
 | counter target creature spell. if it was a legendary spell, the ring tempts you. | 1 | Glorious Gale | ltr |
-| damage can't be prevented ~. ~ deals N damage to target creature and N damage to each other creature with the same controller. | 1 | Fear, Fire, Foes! | ltr |
 | destroy target artifact or land. creatures without flying can't block ~. | 1 | Fire of Orthanc | ltr |
 | draw a card. whenever you scry, if you control an island, you may exile ~ from your graveyard. if you do, draw a card. | 1 | Council's Deliberation | ltr |
 | during your turn, equipped creature has hexproof and can't be blocked. | 1 | Bilbo's Ring | ltr |
@@ -365,7 +364,6 @@
 | target creature an opponent controls deals damage equal to its power to another target creature that player controls. the ring tempts you. | 1 | Breaking of the Fellowship | ltr |
 | target creature gets +N/+N and gains first strike until end of turn. if it's a goblin or orc, it also gains haste until end of turn. | 1 | Rush the Room | ltr |
 | target creature gets +N/+N until end of turn. if it's legendary, it also gains trample until end of turn. | 1 | Gimli's Fury | ltr |
-| target creature you control and up to one other target legendary creature you control each deal damage equal to their power to target creature you don't control | 1 | Friendly Rivalry | ltr |
 | the ring tempts you, then each player mills cards equal to your ring-bearer's power. | 1 | One Ring to Rule Them All | ltr |
 | the ring tempts you. search your library for a card that shares a color with a legendary creature you control, reveal it, put it into your hand, then shuffle. | 1 | Ringsight | ltr |
 | the ring tempts you. then reveal cards from the top of your library until you reveal N land cards, where N is the number of legendary creatures you control. put | 1 | The Ring Goes South | ltr |
@@ -433,7 +431,6 @@
 | ~ can't be copied. copy any number of target instant and/or sorcery spells. you may choose new targets for the copies. | 1 | Display of Power | ltr |
 | ~ costs {M} less to cast for each permanent sacrificed ~. | 1 | The Balrog, Durin's Bane | ltr |
 | ~ deals N damage to target creature, where N is the number of instant and sorcery cards in your graveyard. excess damage is dealt to that creature's controller  | 1 | Gandalf's Sanction | ltr |
-| ~ deals N damage to target creature. that creature loses indestructible until end of turn. if that creature would die ~, exile it instead. | 1 | Smite the Deathless | ltr |
 | ~ enters tapped with nine stun counters on it. | 1 | The Watcher in the Water | ltr |
 
 ## Notes

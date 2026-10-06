@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 4.0% |
+| Tested | 2 | 8.0% |
 | Works (untested) | 16 | 64.0% |
 | Partial (unaudited) | 1 | 4.0% |
-| Not working | 7 | 28.0% |
+| Not working | 6 | 24.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Cone of Flame | silent | Cone of Flame deals 1 damage to any target, 2 damage to another target, and 3 damage to a third target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gaea's Blessing | silent | Target player shuffles up to three target cards from their graveyard into their library. Draw a card. When this card is put into your graveyard from your librar | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hidden Horror | silent | When this creature enters, sacrifice it unless you discard a creature card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Llanowar Sentinel | silent | When this creature enters, you may pay {1}{G}. If you do, search your library for a card named Llanowar Sentinel, put that card onto the battlefield, then shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -54,8 +53,9 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
+- Cone of Flame
 - Mind Stone
 
 </details>
@@ -71,7 +71,6 @@
 | when ~ enters, sacrifice it unless you discard a creature card. | 1 | Hidden Horror | wth |
 | when ~ enters, you may pay {M}{M}. if you do, search your library for a card named ~, put that card onto the battlefield, then shuffle. | 1 | Llanowar Sentinel | wth |
 | you can't cast creature spells. | 1 | Steel Golem | wth |
-| ~ deals N damage to any target, N damage to another target, and N damage to a third target. | 1 | Cone of Flame | wth |
 
 ## Notes
 

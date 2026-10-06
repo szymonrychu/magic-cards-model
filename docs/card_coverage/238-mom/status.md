@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 59 | 21.7% |
+| Tested | 61 | 22.4% |
 | Works (untested) | 98 | 36.0% |
 | Partial (unaudited) | 6 | 2.2% |
-| Not working | 109 | 40.1% |
+| Not working | 107 | 39.3% |
 
 ## Cards needing work
 
@@ -124,14 +124,12 @@
 | Into the Fire | notice | Choose one — • Into the Fire deals 2 damage to each creature, planeswalker, and battle. • Put any number of cards from your hand on the bottom of your library,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Joyful Stormsculptor | notice | Whenever you cast a spell that has convoke, this creature deals 1 damage to each opponent and each battle they protect. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kroxa and Kunoros | notice | Whenever Kroxa and Kunoros enters or attacks, you may exile five cards from your graveyard. When you do, return target creature card from your graveyard to the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Lithomantic Barrage | notice | This spell can't be countered. Lithomantic Barrage deals 1 damage to target creature or planeswalker. It deals 5 damage instead if that target is white and/or b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mutagen Connoisseur | notice | This creature gets +1/+0 for each transformed permanent you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oracle of Tragedy | notice | When this creature enters or dies, choose one — • Draw a card, then discard a card. • Shuffle up to four target cards with mana value 3 or greater from your gra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rampaging Raptor | notice | Whenever this creature deals combat damage to an opponent, it deals that much damage to target planeswalker that player controls or battle that player protects. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Seedpod Caretaker | notice | When this creature enters, choose one — • Put a +1/+1 counter on target artifact or creature you control. • Transform target Incubator token you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | notice | Whenever this creature attacks, create a tapped and attacking token that's a copy of it. Put a +1/+1 counter on that token for each +1/+1 counter on this creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swordsworn Cavalier | notice | This creature has first strike as long as another Knight entered the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Tandem Takedown | notice | Up to two target creatures you control each get +1/+0 until end of turn. They each deal damage equal to their power to another target creature, planeswalker, or | unparsed remainder: They each deal damage equal to their power to another target creature, planeswalker, or battle. | Y/Y/- | not_working |
 | Terror of Towashi | notice | Whenever this creature attacks, you may pay {3}{B}. When you do, return target creature card from your graveyard to the battlefield. It's a Phyrexian in additio | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | War Historian | notice | This creature has indestructible as long as it attacked a battle this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wicked Slumber | notice | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Tap up to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -243,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>59 cards</summary>
+<summary>61 cards</summary>
 
 - Archangel Elspeth
 - Borborygmos and Fblthp
@@ -292,12 +290,14 @@
 - Invasion of Xerex // Vertex Paladin
 - Invasion of Zendikar // Awakened Skyclave
 - Kami of Whispered Hopes
+- Lithomantic Barrage
 - Omnath, Locus of All
 - Orthion, Hero of Lavabrink
 - Rampaging Geoderm
 - Sandstalker Moloch
 - See Double
 - Seed of Hope
+- Tandem Takedown
 - Temporal Cleansing
 - Tribute to the World Tree
 - Urabrask // The Great Work
@@ -346,7 +346,6 @@
 | target opponent reveals their hand. you may choose a creature or battle card from it. if you do, that player discards that card. if you don't, incubate N. (crea | 1 | Traumatic Revelation | mom |
 | target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. put two +N/+N counters on up to one target artif | 1 | Fertilid's Favor | mom |
 | triple | 1 | City on Fire | mom |
-| up to two target creatures you control each get +N/+N until end of turn. they each deal damage equal to their power to another target creature, planeswalker, or | 1 | Tandem Takedown | mom |
 | when ~ dies, each player mills two cards. then you may exile ~. when you do, put target creature or battle card from your graveyard on top of your library. | 1 | Flitting Guerrilla | mom |
 | when ~ dies, exile the top card of your library. target opponent loses life equal to its mana value. if it's an instant or sorcery card, you may cast it without | 1 | Hidetsugu and Kairi | mom |
 | when ~ enters or dies, choose one — • draw a card, then discard a card. • shuffle up to four target cards with mana value N or greater from your graveyard into  | 1 | Oracle of Tragedy | mom |
@@ -390,7 +389,6 @@
 | {M}: choose target battle. if an opponent protects it, remove a defense counter from it. otherwise, put a defense counter on it. activate only as a sorcery. | 1 | Portent Tracker | mom |
 | {M}{M}{M}, discard ~: destroy up to one target artifact or enchantment. shuffle ~ into your library from your graveyard, then draw a card. | 1 | Kogla and Yidaro | mom |
 | {M}{M}{M}, {M}, sacrifice a spirit: choose target card exiled with quintorius. you may cast that card ~ without paying its mana cost. if that spell would be put | 1 | Quintorius, Loremaster | mom |
-| ~ can't be countered. ~ deals N damage to target creature or planeswalker. it deals N damage instead if that target is white and/or blue. | 1 | Lithomantic Barrage | mom |
 | ~ deals N damage to target creature, planeswalker, or battle. look at the top N cards of your library, where N is the excess damage dealt ~. you may exile one o | 1 | Nahiri's Warcrafting | mom |
 | ~ enters with two +N/+N counters on it for each creature that convoked it. | 1 | Ancient Imperiosaur | mom |
 | ~ gets +N/+N for each transformed permanent you control. | 1 | Mutagen Connoisseur | mom |

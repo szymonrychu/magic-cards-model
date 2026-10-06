@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 11.9% |
-| Works (untested) | 108 | 61.4% |
+| Tested | 24 | 13.6% |
+| Works (untested) | 114 | 64.8% |
 | Partial (unaudited) | 4 | 2.3% |
-| Not working | 43 | 24.4% |
+| Not working | 34 | 19.3% |
 
 ## Cards needing work
 
@@ -33,27 +33,18 @@
 | Elemental Uprising | silent | Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. It must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Embodiment of Fury | silent | Landfall — Whenever a land you control enters, you may have target land you control become a 3/3 Elemental creature with haste until end of turn. It's still a l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Embodiment of Insight | silent | Landfall — Whenever a land you control enters, you may have target land you control become a 3/3 Elemental creature with haste until end of turn. It's still a l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Expedition Raptor | silent | When this creature enters, support 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | General Tazri | silent | {W}{U}{B}{R}{G}: Ally creatures you control get +X/+X until end of turn, where X is the number of colors among those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gladehart Cavalry | silent | When this creature enters, support 6. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Dark-Dwellers | silent | When this creature enters, you may cast target instant or sorcery card with mana value 3 or less from your graveyard without paying its mana cost. If that spell | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hedron Alignment | silent | At the beginning of your upkeep, you may reveal your hand. If you do, you win the game if you own a card named Hedron Alignment in exile, in your hand, in your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Immobilizer Eldrazi | silent | {2}{C}: Each creature with toughness greater than its power can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inverter of Truth | silent | When this creature enters, exile all cards from your library face down, then shuffle all cards from your graveyard into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Iona's Blessing | silent | Enchanted creature gets +2/+2, has vigilance, and can block an additional creature each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Joraga Auxiliary | silent | {4}{G}{W}: Support 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kozilek's Pathfinder | silent | {C}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kozilek's Return | silent | Devoid (This card has no color.) Kozilek's Return deals 2 damage to each creature. Whenever you cast an Eldrazi creature spell with mana value 7 or greater, you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lead by Example | silent | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nissa's Judgment | silent | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) Choose up to one target creature an opponent controls. Each creature you control with a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Voice of Zendikar | silent | −7: You gain X life and draw X cards, where X is the number of lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Press into Service | silent | Support | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Reaver Drone | silent | At the beginning of your upkeep, you lose 1 life unless you control another colorless creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Relief Captain | silent | When this creature enters, support 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Remorseless Punishment | silent | Target opponent loses 5 life unless that player discards two cards or sacrifices a creature or planeswalker of their choice. Repeat this process once. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ruin in Their Wake | silent | Devoid (This card has no color.) Search your library for a basic land card and reveal it. You may put that card onto the battlefield tapped if you control a lan | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Saddleback Lagac | silent | When this creature enters, support 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shoulder to Shoulder | silent | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sparkmage's Gambit | silent | Sparkmage's Gambit deals 1 damage to each of up to two target creatures. Those creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steppe Glider | silent | {1}{W}: Target creature with a +1/+1 counter on it gains flying and vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stone Haven Outfitter | silent | Equipped creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -110,6 +101,7 @@
 | Fall of the Titans | handled | Surge {X}{R} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.) Fall of the Titans deals X damage to each of up | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flayer Drone | handled | Whenever another colorless creature you control enters, target opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gift of Tusks | handled | Until end of turn, target creature loses all abilities and becomes a green Elephant with base power and toughness 3/3. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gladehart Cavalry | handled | When this creature enters, support 6. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Freerunner | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
 | Gravity Negator | handled | Whenever this creature attacks, you may pay {C}. If you do, another target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grip of the Roil | handled | Surge {1}{U} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.) Tap target creature. It doesn't untap during it | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -120,12 +112,14 @@
 | Holdout Settlement | handled |  |  | Y/Y/- | not_tested |
 | Immolating Glare | handled | Destroy target attacking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Isolation Zone | handled | When this enchantment enters, exile target creature or enchantment an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Joraga Auxiliary | handled | {4}{G}{W}: Support 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jori En, Ruin Diver | handled | Whenever you cast your second spell each turn, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jwar Isle Avenger | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Kazuul's Toll Collector | handled | {0}: Attach target Equipment you control to this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kor Sky Climber | handled | {1}{W}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kozilek's Shrieker | handled | {C}: This creature gets +1/+0 and gains menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kozilek's Translator | handled | Devoid | no code needed | Y/Y/- | not_tested |
+| Lead by Example | handled | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Linvala, the Preserver | handled | When Linvala enters, if an opponent has more life than you, you gain 5 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loam Larva | handled | When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Make a Stand | handled | Creatures you control get +1/+0 and gain indestructible until end of turn. (Damage and effects that say "destroy" don't destroy them.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -143,12 +137,15 @@
 | Oblivion Strike | handled | Devoid (This card has no color.) Exile target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ondu War Cleric | handled | Cohort — {T}, Tap an untapped Ally you control: You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Overwhelming Denial | handled | Surge {U}{U} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.) This spell can't be countered. Counter target s | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Press into Service | handled | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) Gain control of target creature until end of turn. Untap that creature. It gains haste u | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prophet of Distortion | handled | {3}{C}: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pulse of Murasa | handled | Return target creature or land card from a graveyard to its owner's hand. You gain 6 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyromancer's Assault | handled | Whenever you cast your second spell each turn, this enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reality Hemorrhage | handled | Devoid (This card has no color.) Reality Hemorrhage deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relentless Hunter | handled | {1}{R}{G}: This creature gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Relief Captain | handled | When this creature enters, support 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roiling Waters | handled | Return up to two target creatures your opponents control to their owners' hands. Target player draws two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Saddleback Lagac | handled | When this creature enters, support 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scion Summoner | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sea Gate Wreckage | handled | {2}{C}, {T}: Draw a card. Activate only if you have no cards in hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Searing Light | handled | Destroy target attacking or blocking creature with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -185,20 +182,23 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>24 cards</summary>
 
 - Ayli, Eternal Pilgrim
 - Crumbling Vestige
 - Eldrazi Mimic
 - Eldrazi Obligator
+- Expedition Raptor
 - Flaying Tendrils
 - Kozilek, the Great Distortion
 - Matter Reshaper
 - Mirrorpool
+- Nissa's Judgment
 - Oath of Jace
 - Reality Smasher
 - Reckless Bushwhacker
 - Ruins of Oran-Rief
+- Shoulder to Shoulder
 - Spatial Contortion
 - Thought-Knot Seer
 - Tyrant of Valakut
@@ -215,7 +215,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| when ~ enters, support N. | 4 | Expedition Raptor, Gladehart Cavalry, Relief Captain, Saddleback Lagac | ogw |
 | Landfall | 2 | Embodiment of Fury, Embodiment of Insight | ogw |
 | N: discard all the cards in your hand, then draw that many cards plus one. | 1 | Chandra, Flamecaller | ogw |
 | as long as you control six or more lands, ~ and land creatures you control get +N/+N. | 1 | Sylvan Advocate | ogw |
@@ -232,10 +231,6 @@
 | if a nontoken creature an opponent controls would die, instead exile that card and create a N/N black zombie creature token. | 1 | Kalitas, Traitor of Ghet | ogw |
 | other creatures you control get +N/+N as long as you control an equipment. | 1 | Weapons Trainer | ogw |
 | return target creature to its owner"..."s library instead. | 1 | Sweep Away | ogw |
-| support | 1 | Press into Service | ogw |
-| support N. (put a +N/+N counter on each of up to two target creatures.) | 1 | Lead by Example | ogw |
-| support N. (put a +N/+N counter on each of up to two target creatures.) choose up to one target creature an opponent controls. each creature you control with a  | 1 | Nissa's Judgment | ogw |
-| support N. (put a +N/+N counter on each of up to two target creatures.) draw a card. | 1 | Shoulder to Shoulder | ogw |
 | support N. (put a +N/+N counter on each of up to two target creatures.) untap each creature you control with a +N/+N counter on it. | 1 | Unity of Purpose | ogw |
 | target land you control becomes a N/N elemental creature with haste until end of turn. it's still a land. it must be blocked ~ if able. | 1 | Elemental Uprising | ogw |
 | target opponent loses N life unless that player discards two cards or sacrifices a creature or planeswalker of their choice. repeat ~ once. | 1 | Remorseless Punishment | ogw |
@@ -250,7 +245,6 @@
 | {M}{M}, exile a creature card from your graveyard: target opponent loses life equal to the exiled card's power. | 1 | Dread Defiler | ogw |
 | {M}{M}: each creature with toughness greater than its power can't block ~. | 1 | Immobilizer Eldrazi | ogw |
 | {M}{M}: target creature with a +N/+N counter on it gains flying and vigilance until end of turn. | 1 | Steppe Glider | ogw |
-| {M}{M}{M}: support N. | 1 | Joraga Auxiliary | ogw |
 | {M}{M}{M}{M}{M}: ally creatures you control get +N/+N until end of turn, where N is the number of colors among those creatures. | 1 | General Tazri | ogw |
 | ~ deals N damage to each of up to two target creatures. those creatures can't block ~. | 1 | Sparkmage's Gambit | ogw |
 | ~ gets +N/+N for each land you control named wastes. | 1 | Walker of the Wastes | ogw |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 10.5% |
-| Works (untested) | 71 | 49.7% |
+| Tested | 17 | 11.9% |
+| Works (untested) | 73 | 51.0% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 52 | 36.4% |
+| Not working | 48 | 33.6% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Armed // Dangerous | silent | All creatures able to block target creature this turn do so. Fuse (You may cast one or both halves of this card from your hand.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awe for the Guilds | silent | Monocolored creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battering Krasis | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Blast of Genius | silent | Choose any target. Draw three cards, then discard a card. Blast of Genius deals damage equal to the discarded card's mana value to that permanent or player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boros Battleshaper | silent | At the beginning of each combat, up to one target creature attacks or blocks this combat if able and up to one target creature can't attack or block this combat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Breaking // Entering | silent | Put a creature card from a graveyard onto the battlefield under your control. It gains haste until end of turn. Fuse (You may cast one or both halves of this ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Carnage Gladiator | silent | Whenever a creature blocks, that creature's controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -37,7 +36,6 @@
 | Deadbridge Chant | silent | At the beginning of your upkeep, choose a card at random in your graveyard. If it's a creature card, put it onto the battlefield. Otherwise, put it into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Debt to the Deathless | silent | Each opponent loses two times X life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragonshift | silent | Until end of turn, target creature you control becomes a blue and red Dragon with base power and toughness 4/4, loses all abilities, and gains flying. Overload  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Drown in Filth | silent | Choose target creature. Mill four cards, then that creature gets -1/-1 until end of turn for each land card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exava, Rakdos Blood Witch | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Flesh // Blood | silent | Exile target creature card from a graveyard. Put X +1/+1 counters on target creature, where X is the power of the card you exiled. Fuse (You may cast one or bot | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fluxcharger | silent | Whenever you cast an instant or sorcery spell, you may switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -71,13 +69,11 @@
 | Species Gorger | silent | At the beginning of your upkeep, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teysa, Envoy of Ghosts | silent | Whenever a creature deals combat damage to you, destroy that creature. Create a 1/1 white and black Spirit creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thrashing Mossdog | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Toil // Trouble | silent | Trouble deals damage to target player equal to the number of cards in that player's hand. Fuse (You may cast one or both halves of this card from your hand.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trait Doctoring | silent | Change the text of target permanent by replacing all instances of one color word with another or one basic land type with another until end of turn. Cipher (The | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vorel of the Hull Clade | silent | {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wake the Reflections | silent | Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Weapon Surge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pontiff of Blight | notice | Other creatures you control have extort. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Warped Physique | notice | Target creature gets +X/-X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Scrivener | unaudited | If you would draw a card while you have no cards in hand, instead you draw two cards and you lose 1 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Council of the Absolute | unaudited | As this creature enters, choose a noncreature, nonland card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Emmara Tandris | unaudited | Prevent all damage that would be dealt to creature tokens you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -145,12 +141,14 @@
 | Sunspire Gatekeepers | handled | When this creature enters, if you control two or more Gates, create a 2/2 white Knight creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tajic, Blade of the Legion | handled | Battalion — Whenever Tajic and at least two other creatures attack, Tajic gets +5/+5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tithe Drinker | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
+| Toil // Trouble | handled | Target player draws two cards and loses 2 life. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Turn // Burn | handled | Until end of turn, target creature loses all abilities and becomes a red Weird with base power and toughness 0/1. Fuse (You may cast one or both halves of this  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ubul Sar Gatekeepers | handled | When this creature enters, if you control two or more Gates, target creature an opponent controls gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Uncovered Clues | handled | Look at the top four cards of your library. You may reveal up to two instant and/or sorcery cards from among them and put the revealed cards into your hand. Put | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unflinching Courage | handled | Enchanted creature gets +2/+2 and has trample and lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Viashino Firstblade | handled | When this creature enters, it gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warleader's Helix | handled | Warleader's Helix deals 4 damage to any target and you gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Warped Physique | handled | Target creature gets +X/-X until end of turn, where X is the number of cards in your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Woodlot Crawler | handled | Landwalk | no code needed | Y/Y/- | not_tested |
 | Zhur-Taa Ancient | handled | Whenever a player taps a land for mana, that player adds one mana of any type that land produced. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zhur-Taa Druid | handled | Whenever you tap this creature for mana, it deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -158,11 +156,13 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>17 cards</summary>
 
 - Aetherling
 - Beck // Call
+- Blast of Genius
 - Blood Baron of Vizkopa
+- Drown in Filth
 - Gleam of Battle
 - Korozda Gorgon
 - Master of Cruelties
@@ -190,8 +190,6 @@
 | at the beginning of your upkeep, return a creature you control to its owner's hand. | 1 | Species Gorger | dgm |
 | attacking creatures you control get +N/+N and have menace. | 1 | Gruul War Chant | dgm |
 | change the text of target permanent by replacing all instances of one color word with another or one basic land type with another until end of turn. cipher (the | 1 | Trait Doctoring | dgm |
-| choose any target. draw three cards, then discard a card. ~ deals damage equal to the discarded card's mana value to that permanent or player. | 1 | Blast of Genius | dgm |
-| choose target creature. mill four cards, then that creature gets -N/-N until end of turn for each land card in your graveyard. | 1 | Drown in Filth | dgm |
 | cipher | 1 | Hidden Strings | dgm |
 | counter target spell. its controller can't cast spells ~. | 1 | Render Silent | dgm |
 | detain up to two target creatures your opponents control. (until your next turn, those creatures can"..."t be activated.) | 1 | Lyev Decree | dgm |
@@ -217,9 +215,7 @@
 | return each creature that dealt damage ~ to its owner's hand. | 1 | Restore the Peace | dgm |
 | return target creature card from your graveyard to your hand. ~ deals damage to any target equal to the power of the card returned ~. | 1 | Morgue Burst | dgm |
 | scavenge | 1 | Thrashing Mossdog | dgm |
-| target creature gets +N/-N until end of turn, where N is the number of cards in your hand. | 1 | Warped Physique | dgm |
 | target opponent reveals their hand. you choose up to N nonland cards from it and exile them. for each card exiled ~, search that player's graveyard, hand, and l | 1 | Reap Intellect | dgm |
-| trouble deals damage to target player equal to the number of cards in that player's hand. fuse (you may cast one or both halves of ~ from your hand.) | 1 | Toil // Trouble | dgm |
 | until end of turn, creatures you control gain "..." | 1 | Showstopper | dgm |
 | until end of turn, target creature you control becomes a blue and red dragon with base power and toughness N/N, loses all abilities, and gains flying. overload  | 1 | Dragonshift | dgm |
 | when lavinia enters, detain each nonland permanent your opponents control with mana value N or less. | 1 | Lavinia of the Tenth | dgm |
