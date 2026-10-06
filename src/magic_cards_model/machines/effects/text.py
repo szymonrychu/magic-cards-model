@@ -3888,6 +3888,42 @@ def _parse_that_player_anaphor_spell_text(text: str) -> Effect | None:
     return effect if _readable(effect) else None
 
 
+#: "Choose any target, then choose another target for each time this spell was
+#: kicked. <Source> deals X damage to each of them." (Comet Storm) and
+#: "Choose target creature, then choose another target creature for each time
+#: this spell was kicked. Put X +1/+1 counters on each of them." (Strength of
+#: the Tajuru): the opener names the targets, as many as the kicker allows
+#: (`machines/targeting.per_kick_target_text`, CR 601.2c, CR 702.33d), and
+#: "each of them" is every one of them. The same normalisation as the
+#: "Choose <target>." opener (`_prelude_readings`' reading 1): the anaphor is
+#: written back as the first target phrase, which every reader that acts on
+#: "any target"/"target creature" already applies to each target chosen
+#: (`game.resolve_targets`, so a target that is gone is skipped, CR 608.2b).
+_PER_KICK_CHOOSE_RE = re.compile(
+    r"^choose (?P<phrase>any target|target [^.,]+?), then choose another target[^.,]*? "
+    r"for each time this spell was kicked\.\s+(?P<rest>\S.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_EACH_OF_THEM_RE = re.compile(r"\beach of them\b", re.IGNORECASE)
+
+
+@SPELL_TEXT.rung("s21")
+def _parse_per_kick_choose_each_of_them_spell_text(text: str) -> Effect | None:
+    """`_PER_KICK_CHOOSE_RE`'s opener and the rest of the spell with its
+    "each of them" written as the opener's target phrase; see the banner."""
+    whole = _strip_non_effect_preamble(text)
+    if "for each time this spell was kicked" not in whole.lower():
+        return None
+    match = _PER_KICK_CHOOSE_RE.fullmatch(whole.strip())
+    if match is None:
+        return None
+    rest = match.group("rest").strip()
+    if len(_EACH_OF_THEM_RE.findall(rest)) != 1 or re.search(r"\btargets?\b", rest, re.IGNORECASE):
+        return None
+    effect = _spell_effect_or_notice(_EACH_OF_THEM_RE.sub(match.group("phrase"), rest))
+    return effect if _readable(effect) else None
+
+
 def _the_one_chosen_permanent(game: "Game", stack_object: "StackObject") -> CardState | None:
     """The one permanent the resolving object targets and still may affect
     (CR 608.2b), the referent of its later "that creature"; `None` when it

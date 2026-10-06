@@ -3667,6 +3667,10 @@ def targeting_profile(card: Card) -> TargetingProfile:
             # unkicked here; `Casting.targeting` and `Game._resolution_profile`
             # read the kicked alternative once a kicker is paid (CR 601.2c).
             profile = _parse(kicked_alternative[0])
+        elif (per_kick := per_kick_target_text(text or "", 0)) is not None:
+            # Read unkicked here (one target); `Casting.targeting` and
+            # `Game._resolution_profile` write out one more per kick.
+            profile = _parse(per_kick)
         else:
             profile = _parse(text)
             profile = _with_aura_target(card, profile)
@@ -3688,6 +3692,37 @@ _KICKED_INSTEAD_TARGETS_RE = re.compile(
     r"if this spell was kicked, instead choose (?P<kicked>[^.\n]*\btargets?\b[^.\n]*)\.",
     re.IGNORECASE,
 )
+
+
+#: "Choose any target, then choose another target for each time this spell was
+#: kicked." (Comet Storm) and "Choose target creature, then choose another
+#: target creature for each time this spell was kicked." (Strength of the
+#: Tajuru): CR 601.2c's targets are chosen as the spell is cast, after the
+#: kicker is paid (CR 601.2b), so the number of "another target" requirements
+#: is the number of times it was kicked (CR 702.33d), each a different object
+#: (CR 115.3: "another" - a run of them differs from every earlier one, see
+#: `TargetingProfile._check_distinct_from_prior`).
+_PER_KICK_TARGETS_RE = re.compile(
+    r"(?P<lead>choose (?:any target|target [^.,]+?)), then choose "
+    r"(?P<more>another target[^.,]*?) for each time this spell was kicked",
+    re.IGNORECASE,
+)
+
+
+def per_kick_target_text(text: str, kicks: int) -> str | None:
+    """`text` with `_PER_KICK_TARGETS_RE`'s clause written out for `kicks`
+    kicks - "Choose any target, then choose another target, then choose another
+    target." for two - ready for `profile_for_text`/`spell_profile_for_text`,
+    or `None` when the text has no such clause."""
+    if "for each time this spell was kicked" not in text.lower():
+        return None
+    match = _PER_KICK_TARGETS_RE.search(text)
+    if match is None:
+        return None
+    expanded = match.group("lead") + "".join(
+        f", then choose {match.group('more')}" for _ in range(kicks)
+    )
+    return text[: match.start()] + expanded + text[match.end() :]
 
 
 def kicked_instead_target_text(text: str) -> tuple[str, str] | None:
@@ -5995,6 +6030,17 @@ def _read_adjectives(raw_words: list[str], words: list[str]) -> tuple[_Adjective
             and _is_adjective(words[joined])
         ):
             index += 1
+        elif (
+            joined + 1 < len(words)
+            and words[index] == "and"
+            and words[joined] == "or"
+            and _is_adjective(words[joined + 1])
+        ):
+            # "and/or" tokenizes as the two words "and", "or": Ignite
+            # Disorder's "white and/or blue creatures" (CR 105.2: a creature
+            # of either colour, or both, qualifies - the same any-one-of
+            # membership test the plain "white or blue" already is).
+            index += 2
         elif (
             joined + 1 < len(words)
             and words[index] == ","
