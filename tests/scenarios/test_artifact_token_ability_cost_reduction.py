@@ -78,7 +78,7 @@ def test_mutagen_mans_static_also_discounts_a_food_tokens_ability() -> None:
 
 
 def test_mutagen_mans_static_discounts_a_clue_tokens_ability_and_pays_it() -> None:
-    """Clue's printed "{2}, {T}, Sacrifice this token: Draw a card." - {1}
+    """Clue's printed "{2}, Sacrifice this token: Draw a card." (CR 111.10f) - {1}
     off leaves a payable {1}, provable end to end with exactly one mana
     source."""
     scenario = (
