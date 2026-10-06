@@ -2985,7 +2985,7 @@ def targeting_profile(card: Card) -> TargetingProfile:
     if profile is None:
         if modal_profile(card):
             profile = TargetingProfile(understood=False)
-        elif text and _EARTHBEND.search(_spell_text(text)):
+        elif text and _earthbend_is_the_spells_own_target(_spell_text(text)):
             # Rockalanche prints "Earthbend X, ..." directly as a sorcery's
             # own effect, not as a permanent's triggered ability - the same
             # CR 701.66a keyword `profile_for_text` already special-cases for
@@ -3160,6 +3160,18 @@ def profile_for_modes_with_owners(
 #: from the stack (CR 603.3d) whenever its controller had no land.
 _EARTHBEND = re.compile(r"\bearthbend (?:\d+|x)\b", re.IGNORECASE)
 _EARTHBEND_TARGET_TEXT = "target land you control"
+
+
+def _earthbend_is_the_spells_own_target(text: str) -> bool:
+    """True when "earthbend N" is the instruction whose target is being
+    announced. A "target" printed *before* the instruction means the earthbend
+    sits in a later, delayed ability (Fatal Fissure's "Choose target creature.
+    When that creature dies this turn, you earthbend 4."): CR 603.3d chooses
+    that land when the delayed ability triggers, and the spell itself targets
+    only the creature the ordinary scan reads."""
+    found = _EARTHBEND.search(text)
+    return found is not None and "target" not in text[: found.start()].lower()
+
 
 #: "up to one target nonland card of each card type from your graveyard" -
 #: Uldaros Theorix's own ETB. CR 601.2c's "an appropriate object ... for each
@@ -3355,7 +3367,7 @@ def profile_for_text(text: str) -> TargetingProfile:
     even be reached.
     """
     text = _REFLEXIVE_CLAUSE_TAIL.sub("", text)
-    if _EARTHBEND.search(text):
+    if _earthbend_is_the_spells_own_target(text):
         return _parse(_EARTHBEND_TARGET_TEXT, spell_only=False)
     if _UP_TO_ONE_OF_EACH_CARD_TYPE_RE.search(text):
         return _up_to_one_of_each_card_type_profile()
@@ -3587,10 +3599,34 @@ _GIFT_PROMISED_INSTEAD_CLAUSE = re.compile(
 )
 
 
+#: CR 701.41a: "Support N" on an instant or sorcery spell means "Put a +1/+1
+#: counter on each of up to N target creatures"; on a permanent (its ETB
+#: "When this creature enters, support N") the creatures are "other". Like
+#: Earthbend, the word "target" is in the keyword's meaning, not the card.
+_SUPPORT_KEYWORD_RE = re.compile(r"\bsupport (?P<n>[1-9]\d*)\b", re.IGNORECASE)
+_NUMBER_WORDS = ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
+
+
+def _expand_support_keyword(text: str) -> str:
+    """Spell "Support N" out into the targets CR 701.41a says it means, so the
+    ordinary scan reads them: `other` only when the keyword is inside an
+    ability's sentence rather than starting a spell's own line."""
+
+    def expand(match: re.Match[str]) -> str:
+        n = int(match.group("n"))
+        count = _NUMBER_WORDS[n] if n < len(_NUMBER_WORDS) else str(n)
+        line_start = match.start() == 0 or text[match.start() - 1] == "\n"
+        others = "" if line_start else "other "
+        return f"put a +1/+1 counter on each of up to {count} {others}target creatures"
+
+    return _SUPPORT_KEYWORD_RE.sub(expand, text)
+
+
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
     text = _QUOTED_SPAN.sub("", text)
     text = _RETARGETING.sub("", text)
+    text = _expand_support_keyword(text)
     text = _THAT_TARGETS_VERB_RE.sub(f"that {_THAT_TARGETS_MARKER}", text)
     text = _SELF_COST_REDUCTION_LINE.sub("", text)
     text = _COST_INCREASE_PER_TARGET_LINE.sub("", text)
