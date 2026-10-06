@@ -424,3 +424,48 @@ def test_radiating_lightning_with_no_creatures_still_hits_the_player():
     scenario.cast_and_resolve("Radiating Lightning", auto=True, targets=[scenario.player("bob")])
 
     assert scenario.player("bob").life == 17
+
+
+# -- Hail Storm ---------------------------------------------------------------
+#
+# "Hail Storm deals 2 damage to each attacking creature and 1 damage to you and
+# each creature you control." - two recipient sets and the caster (CR 120.4).
+
+
+def _hail_storm_board():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Hail Storm"],
+            battlefield=["Forest", "Forest", "Forest", "Grizzly Bears", "Hill Giant"],
+        )
+        .player("bob", battlefield=["Colossal Dreadmaw", "Runeclaw Bear"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    return scenario
+
+
+def test_hail_storm_hits_attackers_then_you_and_your_creatures():
+    scenario = _hail_storm_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    scenario.attack_with(bears)
+
+    scenario.cast_and_resolve("Hail Storm", auto=True)
+
+    assert bears.zone is Zone.GRAVEYARD, "2 as an attacker plus 1 as the caster's creature"
+    assert giant.damage == 1, "not attacking, but the caster controls it"
+    assert scenario.player("alice").life == 19
+    assert scenario.player("bob").life == 20
+    assert scenario.creature("Runeclaw Bear", "bob").damage == 0
+
+
+def test_hail_storm_with_no_attackers_still_hurts_you_and_your_creatures():
+    scenario = _hail_storm_board()
+    scenario.cast_and_resolve("Hail Storm", auto=True)
+
+    assert scenario.creature("Grizzly Bears", "alice").damage == 1
+    assert scenario.creature("Hill Giant", "alice").damage == 1
+    assert scenario.player("alice").life == 19

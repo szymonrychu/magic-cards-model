@@ -655,3 +655,109 @@ def test_the_akroan_war_chapter_three_each_tapped_creature_hurts_itself():
     assert bears.zone is Zone.GRAVEYARD, "tapped: took its own 2 power"
     assert runeclaw.zone is Zone.GRAVEYARD
     assert giant.zone is Zone.BATTLEFIELD and giant.damage == 0, "untapped creatures are not hit"
+
+
+# -- "Tap/pump <sources>. They each deal damage equal to their power to ..." --
+#
+# Coordinated Clobbering, Tandem Takedown, Terrific Team-Up: the first
+# sentence acts on the same targets "They" names (CR 608.2c, in order), so the
+# power each deals is read after the pump (CR 608.2h).
+
+
+def _two_sentence_board(name, *, extra=()):
+    return _board(
+        hand=[name],
+        alice_battlefield=["Grizzly Bears", "Hill Giant", "Forest", "Forest", "Forest", *extra],
+        bob_battlefield=["Colossal Dreadmaw"],
+    )
+
+
+def test_tandem_takedown_pumps_each_source_then_each_deals_its_new_power():
+    scenario = _two_sentence_board("Tandem Takedown")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+
+    scenario.cast_and_resolve("Tandem Takedown", auto=True, targets=[bears, giant, dreadmaw])
+
+    assert dreadmaw.zone is Zone.GRAVEYARD, "(2+1) plus (3+1) is 7 damage to a 6/6"
+    assert scenario.game.power_of(bears) == 3 and scenario.game.power_of(giant) == 4
+
+
+def test_tandem_takedown_one_source_is_enough():
+    scenario = _two_sentence_board("Tandem Takedown")
+    giant = scenario.creature("Hill Giant", "alice")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+
+    scenario.cast_and_resolve("Tandem Takedown", auto=True, targets=[giant, dreadmaw])
+
+    assert dreadmaw.damage == 4
+
+
+def test_tandem_takedown_victim_gone_still_pumps_the_sources():
+    scenario = _two_sentence_board("Tandem Takedown")
+    giant = scenario.creature("Hill Giant", "alice")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    scenario.cast_onto_stack("Tandem Takedown", auto=True, targets=[giant, dreadmaw])
+    scenario.game.deal_damage(dreadmaw, 6, source=giant)
+    scenario.game.check_state_based_actions()
+    scenario.resolve_top()
+
+    assert dreadmaw.zone is Zone.GRAVEYARD
+    assert scenario.game.power_of(giant) == 4, "CR 608.2b: one legal target left, still resolves"
+
+
+def test_coordinated_clobbering_taps_the_sources_which_then_deal_damage():
+    scenario = _two_sentence_board("Coordinated Clobbering")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+
+    scenario.cast_and_resolve("Coordinated Clobbering", auto=True, targets=[bears, giant, dreadmaw])
+
+    assert bears.tapped and giant.tapped
+    assert dreadmaw.damage == 5
+
+
+def test_coordinated_clobbering_an_already_tapped_creature_is_not_a_legal_source():
+    scenario = _two_sentence_board("Coordinated Clobbering")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.tap()
+    giant = scenario.creature("Hill Giant", "alice")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+
+    with pytest.raises(ValueError):
+        scenario.cast("Coordinated Clobbering", targets=[bears, dreadmaw])
+    scenario.cast_and_resolve("Coordinated Clobbering", auto=True, targets=[giant, dreadmaw])
+
+    assert dreadmaw.damage == 3
+
+
+def test_coordinated_clobbering_victim_must_be_an_opponents_creature():
+    scenario = _two_sentence_board("Coordinated Clobbering")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+
+    with pytest.raises(ValueError):
+        scenario.cast("Coordinated Clobbering", targets=[bears, giant])
+
+
+def test_terrific_team_up_one_source_pumped_then_deals_damage():
+    scenario = _two_sentence_board("Terrific Team-Up")
+    giant = scenario.creature("Hill Giant", "alice")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+
+    scenario.cast_and_resolve("Terrific Team-Up", auto=True, targets=[giant, dreadmaw])
+
+    assert dreadmaw.damage == 4
+
+
+def test_terrific_team_up_is_two_cheaper_with_a_big_permanent():
+    scenario = _two_sentence_board("Terrific Team-Up", extra=("Colossal Dreadmaw",))
+    giant = scenario.creature("Hill Giant", "alice")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+
+    forests = scenario.untapped_sources("Forest", "Forest")
+    scenario.cast_and_resolve("Terrific Team-Up", *forests, targets=[giant, dreadmaw])
+
+    assert dreadmaw.damage == 4, "{3}{G} less {2} is payable with two Forests"

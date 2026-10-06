@@ -53,6 +53,7 @@ from ..layers import (
     creatures_controlled_by,
     grant_ability,
     only_this_incarnation,
+    parsed_layer_effects,
     set_power_toughness,
 )
 from ..targeting import (
@@ -2949,7 +2950,26 @@ def _parse_damage_group_sources_deal_power_text(text: str) -> TargetedClause | N
         return None
     if not _targets_understood(match.group("victim").strip(), count_agnostic=False):
         return None
-    slot_profile = profile_for_text(f"{match.group('sources')}, {match.group('victim')}")
+    return _group_sources_deal_power_effect(
+        f"{match.group('sources')}, {match.group('victim')}", before=None
+    )
+
+
+def _group_sources_deal_power_effect(
+    slot_text: str,
+    *,
+    before: Callable[["Game", "StackObject", list[CardState]], None] | None,
+) -> TargetedClause | None:
+    """The shared resolution of "<sources> each deal damage equal to their
+    power to <victim>": `slot_text` is the sources' targets then the victim's,
+    whose last requirement is the victim. `before` is an earlier sentence of
+    the same instruction that acts on the sources still legal for the
+    requirement they were announced under (CR 608.2b) - the pump or tap of
+    "Tap one or two target untapped creatures you control. They each deal ..."
+    (CR 608.2c: in order) - and runs ahead of the damage whether or not the
+    victim is still legal.
+    """
+    slot_profile = profile_for_text(slot_text)
     if not slot_profile.understood or len(slot_profile.requirements) < 2:
         return None
     victim_slot = len(slot_profile.requirements) - 1
@@ -2965,8 +2985,6 @@ def _parse_damage_group_sources_deal_power_text(text: str) -> TargetedClause | N
         if all(ref.slot is not None for ref in refs):
             slots = [ref.slot for ref in refs]
         else:
-            # An ability's targets carry no recorded slot: read it back the
-            # way the announcement filled it.
             slots = slot_profile.assign_slots(
                 things, game.controller_of(stack_object).username, game, source_id_of(stack_object)
             )
@@ -2991,9 +3009,121 @@ def _parse_damage_group_sources_deal_power_text(text: str) -> TargetedClause | N
                 victim = legal
             elif slot is not None:
                 sources.append(legal)
+        if before is not None:
+            before(game, stack_object, sources)
         if victim is None:
             return
         _deal_all(game, [(source, victim, game.power_of(source) or 0) for source in sources])
+
+    return effect
+
+
+#: "<sources> each get +N/+M until end of turn. They each deal damage equal to
+#: their power to <victim>." (Tandem Takedown, Terrific Team-Up) and "Tap
+#: <sources>. They each deal damage equal to their power to <victim>."
+#: (Coordinated Clobbering): the first sentence acts on the same targets the
+#: second one names with "They".
+_SOURCES_ACT_THEN_DEAL_POWER_RE = re.compile(
+    r"^(?:(?P<pumped>[^.]+?) each get (?P<pump>[+-]\d+/[+-]\d+) until end of turn"
+    r"|tap (?P<tapped>[^.]+?))\.\s+"
+    r"they each deal damage equal to their power to (?P<victim>(?:another )?target [^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_damage_sources_act_then_deal_power_text(text: str) -> TargetedClause | None:
+    """`_SOURCES_ACT_THEN_DEAL_POWER_RE`'s shape.
+
+    CR 608.2c: the pump or tap happens first, so the power each source deals
+    is read after it (CR 608.2h); CR 608.2b: an illegal source is neither
+    pumped nor tapped nor deals damage, and an illegal victim leaves the
+    sources' first sentence still done.
+    """
+    match = _SOURCES_ACT_THEN_DEAL_POWER_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    sources = match.group("pumped") or match.group("tapped")
+    profile = profile_for_text(sources)
+    if not profile.understood or not profile.requirements:
+        return None
+    if any(not r.allows_cards or r.allows_players for r in profile.requirements):
+        return None
+    if not _targets_understood(match.group("victim").strip(), count_agnostic=False):
+        return None
+    pump = match.group("pump")
+    if pump is not None:
+        sentence = f"Target creature gets {pump} until end of turn."
+        if not _is_layer_effect_text(sentence) or parsed_layer_effects(sentence) is None:
+            return None
+
+        def act(game: "Game", stack_object: "StackObject", sources: list[CardState]) -> None:
+            if not sources:
+                return
+            source = _resolving_source(game, stack_object)
+            if source is None:
+                return
+            continuous_effects(game).create(
+                source,
+                targets=sources,
+                context=layer_context_for(game, game.controller_of(stack_object)),
+                ability_text=sentence,
+                game=game,
+            )
+
+    else:
+
+        def act(game: "Game", stack_object: "StackObject", sources: list[CardState]) -> None:
+            for source in sources:
+                game.tap_permanent(source)
+
+    return _group_sources_deal_power_effect(f"{sources}, {match.group('victim')}", before=act)
+
+
+#: "<Name> deals N damage to each <group> and M damage to you and each <group>
+#: you control." (Hail Storm): two recipient sets read off the board as it
+#: stands, plus the controller.
+_DAMAGE_GROUP_AND_YOU_AND_GROUP_RE = re.compile(
+    rf"^.*?\bdeals? (?P<n>{COUNT}) damage to each (?P<first>[^.]+?) and "
+    rf"(?P<m>{COUNT}) damage to you and each (?P<second>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_damage_group_and_you_and_group_text(text: str) -> TargetedClause | None:
+    """`_DAMAGE_GROUP_AND_YOU_AND_GROUP_RE`'s shape.
+
+    CR 608.2h: both amounts are fixed once; CR 120.2b: one source; CR 120.4:
+    every recipient is set before any damage lands, so a creature in both
+    groups takes both amounts.
+    """
+    match = _DAMAGE_GROUP_AND_YOU_AND_GROUP_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    first = parse_count(match.group("n"))
+    second = parse_count(match.group("m"))
+    first_group = _parse_damage_group_phrase(match.group("first"))
+    second_group = _parse_damage_group_phrase(match.group("second"))
+    if first is None or second is None or first_group is None or second_group is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = _resolving_source(game, stack_object)
+        controller = game.controller_of(stack_object)
+        board = list(game.battlefield)
+        deals: list[tuple[CardState | None, Any, int]] = [
+            (source, permanent, first)
+            for permanent in board
+            if first_group(game, permanent, controller.username)
+        ]
+        deals.append((source, controller, second))
+        deals.extend(
+            (source, permanent, second)
+            for permanent in board
+            if second_group(game, permanent, controller.username)
+        )
+        _deal_all(game, deals)
 
     return effect
 
@@ -4028,7 +4158,12 @@ from .amounts import (  # noqa: E402
     amount_expression,
     count_expression,
 )
-from .continuous import _layer_antecedent_clause  # noqa: E402
+from .continuous import (  # noqa: E402
+    _is_layer_effect_text,
+    _layer_antecedent_clause,
+    continuous_effects,
+    layer_context_for,
+)
 from .control_copy import _controlled_by_whose  # noqa: E402
 from .dispatch import (  # noqa: E402
     _parse_mixed_clause,
