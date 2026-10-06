@@ -179,6 +179,30 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
     r"in your graveyard$",
     re.IGNORECASE,
 )
+_COUNT_NUMBER_PLUS_RE = re.compile(r"^(?P<n>\d+|[a-z]+) plus (?P<rest>.+)$", re.IGNORECASE)
+#: "the number of creatures and/or Spacecraft you control" (Focus Fire) and
+#: "the number of permanents you control that are creatures and/or Vehicles"
+#: (Collision Course): a count of the permanents that are *any* item of an
+#: "and/or" (or "or") list of card types and subtypes - a permanent that is
+#: two of them (a crewed Vehicle) is still one permanent and counts once.
+_COUNT_TYPE_LIST_WORD = r"[A-Za-z]+"
+_COUNT_TYPE_LIST = rf"{_COUNT_TYPE_LIST_WORD}(?:,? (?:and/or|or) {_COUNT_TYPE_LIST_WORD})+"
+_COUNT_AND_OR_YOU_CONTROL_RE = re.compile(
+    rf"^(?:the )?number of (?P<list>{_COUNT_TYPE_LIST}) "
+    r"(?P<whose>you control|your opponents control)$"
+    rf"|^(?:the )?number of permanents (?P<whose2>you control|your opponents control) "
+    rf"that are (?P<list2>{_COUNT_TYPE_LIST})$",
+    re.IGNORECASE,
+)
+#: "the number of cards named `<Name>` in your graveyard / in all graveyards"
+#: (Galvanic Bombardment, Feast of Flesh, Kjeldoran War Cry, Take Inventory).
+#: CR 201.2: objects have the same name when they share a name; the name is
+#: read straight off the phrase, so it is whatever the printing names (usually
+#: itself), never a literal fitted to one card.
+_COUNT_CARDS_NAMED_IN_GRAVEYARDS_RE = re.compile(
+    r"^(?:the )?number of cards named (?P<name>.+?) in (?P<whose>your graveyard|all graveyards)$",
+    re.IGNORECASE,
+)
 #: Hearth Elemental's own "the number of cards in your graveyard that are
 #: instant cards, sorcery cards, and/or have an Adventure." - the "that are
 #: `<list>`" twin of `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`'s own leading-
@@ -448,6 +472,73 @@ def player_counter_count(
     return lambda game, _controller: sum(player.counters[kind] for player in game.players_in_game)
 
 
+_AS_YOU_CAST_SUFFIX = " as you cast this spell"
+_WHERE_X_AS_YOU_CAST_RE = re.compile(
+    r",?\s*where X is (?P<expr>[^.]+? as you cast this spell)\s*\.", re.IGNORECASE
+)
+
+
+def _locked_or_live(game: "Game", controller: str, live: Callable[["Game", str], int]) -> int:
+    """The X `Casting` recorded for the spell now resolving, else the live count."""
+    record = game.cast_record_of(game.resolving)
+    return live(game, controller) if record is None else record.x_value
+
+
+def locked_amount_as_cast(game: "Game", text: str, caster: str) -> int | None:
+    """The count `text` defines with "where X is `<count>` as you cast this
+    spell", evaluated now for `caster` - `None` when the text prints no such
+    definition or the count is one `count_expression` cannot read. Called by
+    `Casting` while the spell is being cast (CR 601.2d: the division needs the
+    total), the one moment the count is fixed."""
+    if "as you cast this spell" not in text:
+        return None
+    defined = _WHERE_X_AS_YOU_CAST_RE.search(text)
+    if defined is None:
+        return None
+    reader = count_expression(defined.group("expr"))
+    return None if reader is None else reader(game, caster)
+
+
+def _count_permanents_matching_any(
+    listed: str, *, opponents: bool
+) -> Callable[["Game", str], int] | None:
+    """`_COUNT_AND_OR_YOU_CONTROL_RE`'s count: every item must be a card type
+    (CR 205.2a) or a printed subtype, else the whole count is left unread
+    rather than counting only the half it knew."""
+    words = [
+        word
+        for word in re.split(r",?\s*(?:and/or|or)\s+|,\s*", listed, flags=re.IGNORECASE)
+        if word
+    ]
+    wanted_types = frozenset(
+        card_type for word in words if (card_type := _singular_card_type(word)) is not None
+    )
+    wanted_subtypes = frozenset(
+        subtype
+        for word in words
+        if _singular_card_type(word) is None
+        and (subtype := _singular_subtype_for_count_expression(word)) is not None
+    )
+    if len(wanted_types) + len(wanted_subtypes) != len(words):
+        return None
+
+    def count_matching_any(game: "Game", controller: str) -> int:
+        board = game.computed_board()
+        found = 0
+        for permanent in game.battlefield:
+            computed = board.of(permanent)
+            owner = computed.controller
+            if owner is None or (owner != controller) != opponents:
+                continue
+            if wanted_types & set(computed.types) or any(
+                word.lower() in wanted_subtypes for word in computed.subtypes
+            ):
+                found += 1
+        return found
+
+    return count_matching_any
+
+
 def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     """Parse "the number of <type>[s] you control" or "... card(s) in your
     graveyard" into `(game, controller) -> int`, or `None` if `phrase` is not
@@ -467,6 +558,26 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     the function itself.
     """
     stripped = phrase.strip().rstrip(".")
+    if stripped.lower().endswith(_AS_YOU_CAST_SUFFIX):
+        # "... as you cast this spell" (Jaws of Stone, Monstrous Onslaught):
+        # the count was fixed while the spell was being cast (CR 601.2d needs it
+        # to announce the division) and `Casting` recorded it as the cast's X,
+        # so resolution reads that back instead of recounting a board a
+        # response may have changed. A spell with no cast record (never cast
+        # through a `Casting`) has nothing locked and counts live.
+        live = count_expression(stripped[: -len(_AS_YOU_CAST_SUFFIX)])
+        if live is None:
+            return None
+        return lambda game, controller: _locked_or_live(game, controller, live)
+    if " plus " in stripped and (offset := _COUNT_NUMBER_PLUS_RE.fullmatch(stripped)) is not None:
+        # "1 plus the number of cards named ... in all graveyards" (Kjeldoran
+        # War Cry's mass pump, which reads its X through this function alone):
+        # a fixed number added to one count, evaluated together (CR 608.2c).
+        fixed = parse_count(offset.group("n"))
+        counted_rest = count_expression(offset.group("rest"))
+        if fixed is None or counted_rest is None:
+            return None
+        return lambda game, controller: fixed + counted_rest(game, controller)
     from ..counter_effects import counter_history_count
 
     if (history_count := counter_history_count(stripped)) is not None:
@@ -522,6 +633,16 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return len(found)
 
         return count_planeswalker_types
+
+    if (
+        "and/or" in stripped
+        and (listed := _COUNT_AND_OR_YOU_CONTROL_RE.fullmatch(stripped)) is not None
+    ):
+        return _count_permanents_matching_any(
+            listed.group("list") or listed.group("list2"),
+            opponents=(listed.group("whose") or listed.group("whose2")).lower()
+            == "your opponents control",
+        )
 
     if match := _COUNT_YOU_CONTROL_RE.fullmatch(stripped):
         # CR 110.5: status (tapped/untapped) is a permanent's physical state,
@@ -624,6 +745,22 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             )
 
         return count_on_board
+
+    if "cards named " in stripped and (
+        named := _COUNT_CARDS_NAMED_IN_GRAVEYARDS_RE.fullmatch(stripped)
+    ):
+        wanted_name = named.group("name").strip()
+        in_all_graveyards = named.group("whose").lower() == "all graveyards"
+
+        def count_named_in_graveyards(game: "Game", controller: str) -> int:
+            # The resolving spell is on the stack, not in a graveyard, so it
+            # never counts itself while its own instructions run (CR 608.2n).
+            owners = game.players if in_all_graveyards else [game.player(controller)]
+            return sum(
+                1 for owner in owners for state in owner.graveyard if state.name == wanted_name
+            )
+
+        return count_named_in_graveyards
 
     if match := _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped):
         qualifier = match.group("qualifier")
@@ -1582,6 +1719,12 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
     if pump_index is None:
         return None
     pump_sentence = sentences[pump_index]
+    if re.search(r"\bcounters?\b", pump_sentence, re.IGNORECASE):
+        # "Distribute X +1/+1 counters among ..." (Undercity Upheaval) names an
+        # X but modifies no power or toughness: placing counters is not a layer
+        # pump, and `parsed_layer_effects` would skip the sentence it cannot
+        # read and claim the rest.
+        return None
     remainder_sentences = [s for i, s in enumerate(sentences) if i != pump_index]
     pump_first = pump_index == 0 or not remainder_sentences
     remainder_text = " ".join(remainder_sentences)
@@ -1689,6 +1832,12 @@ def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | 
     if pump_index is None:
         return None
     pump_sentence = sentences[pump_index]
+    if re.search(r"\bcounters?\b", pump_sentence, re.IGNORECASE):
+        # "Distribute X +1/+1 counters among ..." (Undercity Upheaval) names an
+        # X but modifies no power or toughness: placing counters is not a layer
+        # pump, and `parsed_layer_effects` would skip the sentence it cannot
+        # read and claim the rest.
+        return None
     remainder_sentences = [s for i, s in enumerate(sentences) if i != pump_index]
     pump_first = pump_index == 0 or not remainder_sentences
     remainder_text = " ".join(remainder_sentences)
@@ -2972,10 +3121,28 @@ _VARIABLE_COUNT_TOKEN_RE = re.compile(
 )
 
 
+#: "Create a number of `<descriptor>` tokens equal to `<expr>`" (Goblin
+#: Gathering) - the same variable-count token clause, with the count worded as
+#: an "equal to" amount rather than "X ... where X is".
+_NUMBER_OF_TOKENS_EQUAL_TO_RE = re.compile(
+    r"^(?P<you>you )?(?P<verb>create )a number of (?P<rest>.+? \btokens?\b.*?) equal to "
+    r"(?P<expr>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
 @MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
 def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_VARIABLE_COUNT_TOKEN_RE`'s shape, or `None` if this is not it."""
-    match = _VARIABLE_COUNT_TOKEN_RE.fullmatch(clause.strip())
+    stripped = clause.strip()
+    if "a number of" in stripped.lower() and (
+        counted := _NUMBER_OF_TOKENS_EQUAL_TO_RE.fullmatch(stripped)
+    ):
+        stripped = (
+            f"{counted.group('you') or ''}{counted.group('verb')}x {counted.group('rest')}, "
+            f"where X is {counted.group('expr')}"
+        )
+    match = _VARIABLE_COUNT_TOKEN_RE.fullmatch(stripped)
     if match is None:
         return None
     if "copy of" in clause.lower():
@@ -3926,6 +4093,43 @@ _IF_GRAVEYARD_COUNT_RE = re.compile(
 )
 
 
+#: "Distribute X `<kind>` counters among `<targets>`, where X is `<count>`"
+#: (Undercity Upheaval, with its ability-word prefix): the total is the count
+#: the text defines, read through `count_expression` - for an "as you cast this
+#: spell" count that is the X `Casting` locked while the division was announced
+#: (CR 601.2d) - and paid out by the same `_distribute_counters_shares` the
+#: fixed-number "Distribute N counters among" clause uses.
+_DISTRIBUTE_X_COUNTERS_AMONG_TARGETS_RE = re.compile(
+    r"^(?:[^—]+ — )?distributes? x (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? among "
+    r"(?P<phrase>.+?),\s*where X is (?P<expr>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_distribute_x_counters_among_targets_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_DISTRIBUTE_X_COUNTERS_AMONG_TARGETS_RE`'s shape, or `None`."""
+    if "distribute" not in clause.lower():
+        return None
+    match = _DISTRIBUTE_X_COUNTERS_AMONG_TARGETS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    reader = count_expression(match.group("expr"))
+    if reader is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        _distribute_counters_shares(game, stack_object, kind, reader(game, controller))
+
+    return effect
+
+
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_if_graveyard_count_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_IF_GRAVEYARD_COUNT_RE`'s shape: the controller's own graveyard is
@@ -4162,7 +4366,7 @@ def _parse_discarded_card_value_spell_text(text: str) -> Effect | None:
     return _then_with_discarded_card_value(head_effect, tail_effect)
 
 
-@SPELL_TEXT.rung("s23")
+@SPELL_TEXT.rung("s23", after=("parse_mixed_effect_for_spell",))
 def _parse_where_x_is_pump_spell_text(text: str) -> Effect | None:
     """A non-modal spell's "`<target>` gets +X/+X until end of turn, where X
     is `<count>`" (Allied Assault's "Up to two target creatures each get
@@ -4173,6 +4377,36 @@ def _parse_where_x_is_pump_spell_text(text: str) -> Effect | None:
     (`continuous._compose_layer_effect_with_remainder`), whose printed-text
     builder has no number for a self-defined X."""
     return _parse_where_x_is_continuous_effect_for_spell(_strip_non_effect_preamble(text))
+
+
+#: "`<clause using X>` and `<clause using X>`, where X is `<expr>`." - one
+#: sentence whose single "where X is" closes the *second* of two "and"-joined
+#: instructions (Feast of Flesh's "deals X damage to target creature and you
+#: gain X life, where X is 1 plus ..."). CR 107.3c: the definition gives X that
+#: value everywhere on the object, but `split_effect_clauses` cuts at the
+#: "and" and leaves the first clause with no definition at all (X would read
+#: as an undefined 0), so each instruction is handed its own copy.
+_WHERE_X_CLOSING_TWO_AND_CLAUSES_RE = re.compile(
+    r"^(?P<head>[^.]*?\bX\b[^.]*?)\s+and\s+(?P<tail>(?:you|that player|it)\b[^.]*?\bX\b[^.]*?)"
+    r",\s*where X is (?P<expr>[^.]+)\.$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
+def _parse_where_x_shared_by_two_and_clauses_spell_text(text: str) -> Effect | None:
+    """The sentence above, rewritten as one "where X is" sentence per
+    instruction and read by `parse_mixed_effect_for_spell` like any other."""
+    if "where X is" not in text:
+        return None
+    body = _strip_non_effect_preamble(text)
+    if (match := _WHERE_X_CLOSING_TWO_AND_CLAUSES_RE.fullmatch(body.strip())) is None:
+        return None
+    expr = match.group("expr")
+    tail = match.group("tail")
+    tail = tail[:1].upper() + tail[1:]
+    rewritten = f"{match.group('head')}, where X is {expr}. {tail}, where X is {expr}."
+    return parse_mixed_effect_for_spell(rewritten)
 
 
 @ABILITY_TEXT.rung("s23")
@@ -4218,7 +4452,7 @@ from .continuous import (  # noqa: E402
     continuous_effects,
     layer_context_for,
 )
-from .counters import _counter_kind  # noqa: E402
+from .counters import _counter_kind, _distribute_counters_shares  # noqa: E402
 from .damage import (  # noqa: E402
     _deal_divided_damage_shares,
     _lethal_amount_before_damage,

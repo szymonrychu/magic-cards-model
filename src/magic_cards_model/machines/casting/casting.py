@@ -669,6 +669,13 @@ class Casting(EngineModel):
     when targets were chosen, not the X the spell actually resolves with.
     `cast()` compares this against the final `x_value` and refuses loudly
     rather than let that mismatch through silently."""
+    locked_amount: int | None = None
+    """The count a "where X is `<count>` as you cast this spell" definition
+    fixed while this spell was being cast (Jaws of Stone, Monstrous Onslaught),
+    or None when its text prints no such definition. CR 601.2d needs the total
+    to announce a division, so it is read once, at the first CR 601.2 choice
+    that wants it (`_lock_cast_amount`), kept here, and recorded as the cast's
+    X (`CastRecord.x_value`) for resolution to read back rather than recount."""
     face: str | None = None
     """The name of the face being cast, for a card with more than one (CR 715.3)."""
     face_cast_refusals: dict[str, str] = Field(default_factory=dict)
@@ -3379,6 +3386,17 @@ class Casting(EngineModel):
 
     # -- CR 601.2c: targets ------------------------------------------------
 
+    def _lock_cast_amount(self) -> int | None:
+        """Fix, once, the count this spell's text defines "as you cast this
+        spell" (see `locked_amount`)."""
+        if self.locked_amount is None and self.game is not None:
+            from ..effects.amounts import locked_amount_as_cast
+
+            self.locked_amount = locked_amount_as_cast(
+                self.game, self.spell.oracle_text or "", self.caster
+            )
+        return self.locked_amount
+
     def choose_targets(self, targets: Iterable[Any]) -> CastingStep:
         """CR 601.2c: announce a legal object or player for each target.
 
@@ -3408,6 +3426,7 @@ class Casting(EngineModel):
                 f"targets (CR 601.2b, CR 700.2c)"
             )
 
+        self._lock_cast_amount()  # "as you cast this spell" counts, before any division
         chosen = list(targets)
         try:
             placement = self._check_targets(chosen)
@@ -3565,10 +3584,11 @@ class Casting(EngineModel):
         resolved_shares = [int(share) for share in shares]
         amount = profile.division.amount
         if amount is None:
-            amount = self.x_value
+            locked = self._lock_cast_amount()
+            amount = self.x_value if locked is None else locked
             threshold = profile.division.doubled_if_x_at_least
-            if threshold is not None and self.x_value >= threshold:
-                amount = 2 * self.x_value
+            if threshold is not None and amount >= threshold:
+                amount = 2 * amount
         profile.check_division(resolved_shares, self.targets, amount=amount)
         self.division = resolved_shares
 
@@ -4441,7 +4461,7 @@ class Casting(EngineModel):
                 face=self.face,
                 modes=list(self.chosen_mode_numbers),
                 mode_targets=[list(slice_) for slice_ in self.mode_target_slices],
-                x_value=self.x_value,
+                x_value=self.x_value if self._lock_cast_amount() is None else self.locked_amount,
                 mana_spent=(
                     dict(self.payment.mana_payment.spend)
                     if self.payment is not None and self.payment.mana_payment is not None
