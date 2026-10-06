@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 6.7% |
+| Tested | 12 | 7.3% |
 | Works (untested) | 60 | 36.4% |
 | Partial (unaudited) | 11 | 6.7% |
-| Not working | 83 | 50.3% |
+| Not working | 82 | 49.7% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Ghost-Lit Warder | silent | {3}{U}, {T}: Counter target spell unless its controller pays {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hand of Cruelty | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hand of Honor | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Hidetsugu's Second Rite | silent | If target player has exactly 10 life, Hidetsugu's Second Rite deals 10 damage to that player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Homura, Human Ascendant // Homura's Essence | silent | When Homura dies, return it to the battlefield flipped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Iizuka the Ruthless | silent | {2}{R}, Sacrifice a Samurai: Samurai creatures you control gain double strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infernal Kirin | silent | Whenever you cast a Spirit or Arcane spell, target player reveals their hand and discards all cards with that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -184,11 +183,12 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Burning-Eye Zubera
 - Evermind
 - Feral Lightning
+- Hidetsugu's Second Rite
 - Kaho, Minamo Historian
 - Kitsune Bonesetter
 - Miren, the Moaning Well
@@ -249,7 +249,6 @@
 | exile cards from the top of your library until you exile a nonland card. ~ deals damage to any target equal to that card"..."t cast spells. at the beginning of  | 1 | Undying Flames | sok |
 | exile the top card of your library. exile the top card of your library. exile the top card of your library. if the last card exiled isn't a land card, repeat ~. | 1 | Rally the Horde | sok |
 | if damage would be dealt to sekki, prevent that damage, remove that many +N/+N counters from sekki, and create that many N/N colorless spirit creature tokens. | 1 | Sekki, Seasons' Guide | sok |
-| if target player has exactly N life, ~ deals N damage to that player. | 1 | Hidetsugu's Second Rite | sok |
 | kagemaro's power and toughness are each equal to the number of cards in your hand. | 1 | Kagemaro, First to Suffer | sok |
 | kiyomaro's power and toughness are each equal to the number of cards in your hand. | 1 | Kiyomaro, First to Stand | sok |
 | legendary landwalk | 1 | Ayumi, the Last Visitor | sok |

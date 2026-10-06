@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 13.0% |
-| Works (untested) | 57 | 33.7% |
+| Tested | 24 | 14.2% |
+| Works (untested) | 61 | 36.1% |
 | Partial (unaudited) | 4 | 2.4% |
-| Not working | 86 | 50.9% |
+| Not working | 80 | 47.3% |
 
 ## Cards needing work
 
@@ -30,8 +30,6 @@
 | Anthem of Rakdos | silent | Whenever a creature you control attacks, it gets +2/+0 until end of turn and this enchantment deals 1 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aquastrand Spider | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Avatar of Discord | silent | When this creature enters, sacrifice it unless you discard two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Azorius Herald | silent | When this creature enters, sacrifice it unless {U} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Azorius Ploy | silent | Prevent all combat damage target creature would deal this turn. Prevent all combat damage that would be dealt to target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Biomantic Mastery | silent | Draw a card for each creature target player controls, then draw a card for each creature another target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blessing of the Nephilim | silent | Enchanted creature gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bond of Agony | silent | As an additional cost to cast this spell, pay X life. Each other player loses X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -39,7 +37,6 @@
 | Brain Pry | silent | Choose a nonland card name. Target player reveals their hand. That player discards a card with that name. If they can't, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bronze Bombshell | silent | When a player other than this creature's owner controls it, that player sacrifices it. If the player does, this creature deals 7 damage to the player. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Condemn | silent | Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Court Hussar | silent | When this creature enters, sacrifice it unless {W} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crypt Champion | silent | When this creature enters, each player puts a creature card with mana value 3 or less from their graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytoplast Manipulator | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cytoplast Root-Kin | silent | When this creature enters, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -73,10 +70,7 @@
 | Pain Magnification | silent | Whenever an opponent is dealt 3 or more damage by a single source, that player discards a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Paladin of Prahv | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Palliation Accord | silent | Remove a palliation counter from this enchantment: Prevent the next 1 damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Patagia Viper | silent | When this creature enters, sacrifice it unless {U} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Plaxcaster Frogling | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Plaxmanta | silent | When this creature enters, sacrifice it unless {G} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Prahv, Spires of Order | silent | {4}{W}{U}, {T}: Prevent all damage a source of your choice would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Protean Hulk | silent | When this creature dies, search your library for any number of creature cards with total mana value 6 or less, put them onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pure // Simple | silent | Destroy all Auras and Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Augermage | silent | {T}: Reveal your hand and discard a card of target opponent's choice. Then that player reveals their hand and discards a card of your choice. Activate only as a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -120,10 +114,12 @@
 | Aurora Eidolon | handled | {W}, Sacrifice this creature: Prevent the next 3 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Azorius Chancery | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Azorius First-Wing | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Azorius Herald | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Azorius Signet | handled |  |  | Y/-/- | not_tested |
 | Beacon Hawk | handled | Whenever this creature deals combat damage to a player, you may untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cackling Flames | handled | Cackling Flames deals 3 damage to any target. Hellbent — Cackling Flames deals 5 damage instead if you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Celestial Ancient | handled | Whenever you cast an enchantment spell, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Court Hussar | handled | When this creature enters, look at the top three cards of your library, then put one of them into your hand and the rest on the bottom of your library in any or | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crime // Punishment | handled | Put target creature or enchantment card from an opponent's graveyard onto the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Delirium Skeins | handled | Each player discards three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enigma Eidolon | handled | {U}, Sacrifice this creature: Target player mills three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -140,7 +136,9 @@
 | Ogre Gatecrasher | handled | When this creature enters, destroy target creature with defender. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Omnibian | handled | {T}: Target creature becomes a Frog with base power and toughness 3/3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Overrule | handled | Counter target spell unless its controller pays {X}. You gain X life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Patagia Viper | handled | When this creature enters, create two 1/1 green and blue Snake creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pillar of the Paruns | handled |  |  | Y/-/- | not_tested |
+| Plaxmanta | handled | When this creature enters, creatures you control gain shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Proclamation of Rebirth | handled | Return up to three target creature cards with mana value 1 or less from your graveyard to the battlefield. Forecast — {5}{W}, Reveal this card from your hand: R | the engine reads this text and performs it | Y/-/- | not_tested |
 | Proper Burial | handled | Whenever a creature you control dies, you gain life equal to that creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Carnarium | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -177,10 +175,11 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
+- Azorius Ploy
 - Blood Crypt
 - Bound // Determined
 - Breeding Pool
@@ -192,6 +191,7 @@
 - Grand Arbiter Augustin IV
 - Guardian of the Guildpact
 - Hallowed Fountain
+- Prahv, Spires of Order
 - Pride of the Clouds
 - Psychic Possession
 - Psychotic Fury
@@ -210,7 +210,6 @@
 |---|---|---|---|
 | graft | 10 | Aquastrand Spider, Cytoplast Manipulator, Cytospawn Shambler, Helium Squirter, Novijen Sages | dis |
 | Hellbent | 5 | Demon's Jester, Gobhobbler Rats, Rakdos Pit Dragon, Slithering Shade, Taste for Mayhem | dis |
-| when ~ enters, sacrifice it unless {M} was spent to cast it. | 4 | Azorius Herald, Court Hussar, Patagia Viper, Plaxmanta | dis |
 | as an additional cost to cast ~, pay N life. each other player loses N life. | 1 | Bond of Agony | dis |
 | as long as ~ is enchanted, it gets +N/+N, has trample, and has "..." | 1 | Flaring Flame-Kin | dis |
 | at the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | 1 | Elemental Resonance | dis |
@@ -233,7 +232,6 @@
 | flip a coin. if it comes up heads, counter target instant or sorcery spell. if it comes up tails, copy that spell and you may choose new targets for the copy. | 1 | Odds // Ends | dis |
 | gain control of target monocolored creature. forecast — {M}{M}, reveal ~ from your hand: target creature becomes the color or colors of your choice until end of | 1 | Govern the Guildless | dis |
 | if a spell or ability would cause its controller to gain life, that player loses that much life instead. | 1 | Rain of Gore | dis |
-| prevent all combat damage target creature would deal ~. prevent all combat damage that would be dealt to target creature ~. | 1 | Azorius Ploy | dis |
 | prevent all damage that would be dealt to target multicolored creature ~. for each N damage prevented ~, put a +N/+N counter on that creature. | 1 | Brace for Impact | dis |
 | put target artifact or enchantment on the bottom of its owner's library. | 1 | Hide // Seek | dis |
 | put target attacking creature on the bottom of its owner's library. its controller gains life equal to its toughness. | 1 | Condemn | dis |
@@ -277,7 +275,6 @@
 | {M}{M}: creatures you control with defender can attack ~ as though they didn't have defender. | 1 | Wakestone Gargoyle | dis |
 | {M}{M}: move a +N/+N counter from target creature onto another target creature with the same controller. | 1 | Simic Guildmage | dis |
 | {M}{M}: until end of turn, target creature with a +N/+N counter on it gains "..." | 1 | Simic Basilisk | dis |
-| {M}{M}{M}, {M}: prevent all damage a source of your choice would deal ~. | 1 | Prahv, Spires of Order | dis |
 | ~ deals N damage to each of two target creatures. hellbent — destroy those creatures instead if you have no cards in hand. | 1 | Twinstrike | dis |
 | ~ deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | 1 | Weight of Spires | dis |
 | ~ gets -N/-N for each card in your hand. | 1 | Dread Slag | dis |

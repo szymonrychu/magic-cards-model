@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.4% |
-| Works (untested) | 128 | 54.9% |
+| Tested | 16 | 6.9% |
+| Works (untested) | 127 | 54.5% |
 | Partial (unaudited) | 11 | 4.7% |
 | Not working | 79 | 33.9% |
 
@@ -155,7 +155,6 @@
 | Dutiful Attendant | handled | When this creature dies, return another target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Encase in Ice | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Enduring Scalelord | handled | Whenever one or more +1/+1 counters are put on another creature you control, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Epic Confrontation | handled | Target creature you control gets +1/+2 until end of turn. It fights target creature you don't control. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fate Forgotten | handled | Exile target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flatten | handled | Target creature gets -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foul Renewal | handled | Return target creature card from your graveyard to your hand. Target creature gets -X/-X until end of turn, where X is the toughness of the card returned this w | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -248,7 +247,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Ambuscade Shaman
 - Anticipate
@@ -258,6 +257,7 @@
 - Collected Company
 - Corpseweft
 - Dragon-Scarred Bear
+- Epic Confrontation
 - Impact Tremors
 - Kolaghan's Command
 - Marang River Skeleton

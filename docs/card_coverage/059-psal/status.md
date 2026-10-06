@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 3 | 3.8% |
-| Works (untested) | 50 | 63.3% |
+| Works (untested) | 51 | 64.6% |
 | Partial (unaudited) | 4 | 5.1% |
-| Not working | 22 | 27.8% |
+| Not working | 21 | 26.6% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Lovisa Coldeyes | silent | Each creature that's a Barbarian, a Warrior, or a Berserker gets +2/+2 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Martyr of Frost | silent | {2}, Reveal X blue cards from your hand, Sacrifice this creature: Counter target spell unless its controller pays {X}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sanguine Praetor | silent | {B}, Sacrifice a creature: Destroy each creature with the same mana value as the sacrificed creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Seed Spark | silent | Destroy target artifact or enchantment. If {G} was spent to cast this spell, create two 1/1 green Saproling creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seht's Tiger | silent | When this creature enters, you gain protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stalking Vengeance | silent | Whenever another creature you control dies, it deals damage equal to its power to target player or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thelonite Hermit | silent | All Saprolings get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -81,6 +80,7 @@
 | Savage Thallid | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scab-Clan Mauler | handled | Bloodthirst | machines/keywords.py | Y/-/- | not_tested |
 | Scatter the Seeds | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Create thre | the engine reads this text and performs it | Y/-/- | not_tested |
+| Seed Spark | handled | Destroy target artifact or enchantment. If {G} was spent to cast this spell, create two 1/1 green Saproling creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Selesnya Evangel | handled | {1}, {T}, Tap an untapped creature you control: Create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Selesnya Guildmage | handled | {3}{G}: Create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Selesnya Signet | handled |  |  | Y/-/- | not_tested |
@@ -126,7 +126,6 @@
 | creature tokens get +N/+N. | 1 | Leyline of the Meek | psal |
 | creatures you control that are enchanted get +N/+N and can't be blocked except by creatures with defender. | 1 | Infiltrator's Magemark | psal |
 | creatures you control that are enchanted get +N/+N. | 1 | Guardian's Magemark | psal |
-| destroy target artifact or enchantment. if {M} was spent to cast ~, create two N/N green saproling creature tokens. | 1 | Seed Spark | psal |
 | each creature that's a barbarian, a warrior, or a berserker gets +N/+N and has haste. | 1 | Lovisa Coldeyes | psal |
 | enchanted creature gets +N/+N and can't block. | 1 | Undying Rage | psal |
 | enchanted creature"..."t be activated. | 1 | Detainment Spell | psal |

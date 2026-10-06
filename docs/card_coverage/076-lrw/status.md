@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 12.9% |
-| Works (untested) | 135 | 48.2% |
+| Tested | 37 | 13.2% |
+| Works (untested) | 136 | 48.6% |
 | Partial (unaudited) | 16 | 5.7% |
-| Not working | 93 | 33.2% |
+| Not working | 91 | 32.5% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Changeling Berserker | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Changeling Hero | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Changeling Titan | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Cloudthresher | silent | When this creature enters, it deals 2 damage to each creature with flying and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Colfenor's Plans | silent | When this enchantment enters, exile the top seven cards of your library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Colfenor's Urn | silent | Whenever a creature with toughness 4 or greater is put into your graveyard from the battlefield, you may exile it. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Dauntless Dourbark | silent | Dauntless Dourbark's power and toughness are each equal to the number of Forests you control plus the number of Treefolk you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -86,7 +85,6 @@
 | Sentry Oak | silent | At the beginning of combat on your turn, you may clash with an opponent. If you win, this creature gets +2/+0 and loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shelldock Isle | silent | {U}, {T}: You may play the exiled card without paying its mana cost if a library has twenty or fewer cards in it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shields of Velis Vel | silent | Changeling (This card is every creature type.) Creatures target player controls get +0/+1 and gain all creature types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Silvergill Douser | silent | {T}: Target creature gets -X/-0 until end of turn, where X is the number of Merfolk and/or Faeries you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soaring Hope | silent | {W}: Put this Aura on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spinerock Knoll | silent | {R}, {T}: You may play the exiled card without paying its mana cost if an opponent was dealt 7 or more damage this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spring Cleaning | silent | Destroy target enchantment. Clash with an opponent. If you win, destroy all enchantments your opponents control. (Each clashing player reveals the top card of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -245,6 +243,7 @@
 | Shimmering Grotto | handled |  |  | Y/Y/- | not_tested |
 | Shriekmaw | handled | When this creature enters, destroy target nonartifact, nonblack creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Silvergill Adept | handled | As an additional cost to cast this spell, reveal a Merfolk card from your hand or pay {3}. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Silvergill Douser | handled | {T}: Target creature gets -X/-0 until end of turn, where X is the number of Merfolk and/or Faeries you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skeletal Changeling | handled | {1}{B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soulbright Flamekin | handled | {2}: Target creature gains trample until end of turn. If this is the third time this ability has resolved this turn, you may add {R}{R}{R}{R}{R}{R}{R}{R}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sower of Temptation | handled | When this creature enters, gain control of target creature for as long as this creature remains on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -274,7 +273,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Amoeboid Changeling
 - Aquitect's Will
@@ -282,6 +281,7 @@
 - Battle Mastery
 - Ceaseless Searblades
 - Cenn's Heir
+- Cloudthresher
 - Crib Swap
 - Crush Underfoot
 - Cryptic Command
@@ -365,7 +365,6 @@
 | when a faerie is championed with ~, tap all lands target player controls. | 1 | Mistbind Clique | lrw |
 | when ~ dies, clash with an opponent. if you win, return ~ to its owner's hand. | 1 | Ringskipper | lrw |
 | when ~ enters, exile the top seven cards of your library face down. | 1 | Colfenor's Plans | lrw |
-| when ~ enters, it deals N damage to each creature with flying and each player. | 1 | Cloudthresher | lrw |
 | when ~ enters, it deals damage equal to the number of giants you control to each non-giant creature. | 1 | Thundercloud Shaman | lrw |
 | when ~ enters, return target creature card from your graveyard to your hand. if that card is a goblin card, ~ gains haste until end of turn. | 1 | Warren Pilferers | lrw |
 | when ~ enters, untap enchanted creature. | 1 | Triclopean Sight | lrw |
@@ -396,7 +395,6 @@
 | {M}, {M}: you may play the exiled card without paying its mana cost if each player has no cards in hand. | 1 | Howltooth Hollow | lrw |
 | {M}, {M}: you may play the exiled card without paying its mana cost if you attacked with three or more creatures ~. | 1 | Windbrisk Heights | lrw |
 | {M}: put ~ on top of its owner's library. | 1 | Soaring Hope | lrw |
-| {M}: target creature gets -N/-N until end of turn, where N is the number of merfolk and/or faeries you control. | 1 | Silvergill Douser | lrw |
 | {M}: target goblin creature you control gets +N/+N and gains flying until end of turn. sacrifice that creature at the beginning of the next end step. | 1 | Lowland Oaf | lrw |
 | {M}: target land becomes an island until end of turn. | 1 | Streambed Aquitects | lrw |
 | {M}: target land becomes the basic land type of your choice until end of turn. activate only during your turn. | 1 | Tideshaper Mystic | lrw |

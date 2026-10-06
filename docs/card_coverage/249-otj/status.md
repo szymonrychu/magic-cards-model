@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 11.2% |
+| Tested | 30 | 11.6% |
 | Works (untested) | 129 | 49.8% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 94 | 36.3% |
+| Not working | 93 | 35.9% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Ghired, Mirror of the Wilds | notice | Nontoken creatures you control have "{T}: Create a token that's a copy of target token you control that entered this turn." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Gold Rush | notice | Create a Treasure token. Until end of turn, up to one target creature gets +2/+2 for each Treasure you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Great Train Heist | notice | Spree (Choose one or more additional costs.) + {2}{R} — Untap all creatures you control. If it's your combat phase, there is an additional combat phase after th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Hell to Pay | notice | Hell to Pay deals X damage to target creature. Create a number of tapped Treasure tokens equal to the amount of excess damage dealt to that creature this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kaervek, the Punisher | notice | Whenever you commit a crime, exile up to one target black card from your graveyard and copy it. You may cast the copy. If you do, you lose 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kellan Joins Up | notice | When Kellan Joins Up enters, you may exile a nonland card with mana value 3 or less from your hand. If you do, it becomes plotted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Map the Frontier | notice | Search your library for up to two basic land cards and/or Desert cards, put them onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -260,7 +259,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Armored Armadillo
 - Drover Grizzly
@@ -268,6 +267,7 @@
 - Forsaken Miner
 - Gisa, the Hellraiser
 - Goldvein Hydra
+- Hell to Pay
 - High Noon
 - Highway Robbery
 - Insatiable Avarice
@@ -389,7 +389,6 @@
 | {M}{M}, sacrifice another creature: put a +N/+N counter on ~. if an outlaw was sacrificed ~, create a treasure token. | 1 | Boneyard Desecrator | otj |
 | ~ deals N damage to target attacking or blocking creature. ~ deals N damage to that creature instead if you controlled a mount as you cast ~. | 1 | Steer Clear | otj |
 | ~ deals N damage to target creature, where N is N plus the number of other spells you've cast ~. | 1 | Thunder Salvo | otj |
-| ~ deals N damage to target creature. create a number of tapped treasure tokens equal to the amount of excess damage dealt to that creature ~. | 1 | Hell to Pay | otj |
 | ~ enters with a +N/+N counter on it plus an additional +N/+N counter on it for each other creature you control. | 1 | Sheriff of Safe Passage | otj |
 | ~ enters with two +N/+N counters on it if it wasn't cast or no mana was spent to cast it. | 1 | Freestrider Commando | otj |
 | ~ gets -N/-N for each card in your hand. | 1 | Stingerback Terror | otj |

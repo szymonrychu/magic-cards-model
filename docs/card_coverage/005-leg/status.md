@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 17.2% |
-| Works (untested) | 18 | 62.1% |
+| Tested | 6 | 20.7% |
+| Works (untested) | 17 | 58.6% |
 | Partial (unaudited) | 2 | 6.9% |
 | Not working | 4 | 13.8% |
 
@@ -34,7 +34,6 @@
 | Evil Eye of Orms-by-Gore | unaudited | Non-Eye creatures you control can't attack. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Avoid Fate | handled | Counter target instant or Aura spell that targets a permanent you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Azure Drake | handled | Flying | machines/combat.py | Y/-/- | not_tested |
-| Boomerang | handled | Return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darkness | handled | Prevent all combat damage that would be dealt this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fallen Angel | handled | Sacrifice a creature: This creature gets +2/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flash Counter | handled | Counter target instant spell. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -54,8 +53,9 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
+- Boomerang
 - Divine Offering
 - Hell's Caretaker
 - Pyrotechnics

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 16.3% |
-| Works (untested) | 117 | 45.3% |
+| Tested | 43 | 16.7% |
+| Works (untested) | 116 | 45.0% |
 | Partial (unaudited) | 7 | 2.7% |
 | Not working | 92 | 35.7% |
 
@@ -241,12 +241,11 @@
 | Waterspout Warden | handled | Whenever this creature attacks, if another creature entered the battlefield under your control this turn, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wear Down | handled | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Destroy target artifact or enchan | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Whiskerquill Scribe | handled | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, you may discard a card. If you do, draw a ca | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Wildfire Howl | handled | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Wildfire Howl deals 2 damage to e | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>43 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
@@ -288,6 +287,7 @@
 - Stormchaser's Talent
 - Thundertrap Trainer
 - Vinereap Mentor
+- Wildfire Howl
 - Ygra, Eater of All
 - Zoraline, Cosmos Caller
 

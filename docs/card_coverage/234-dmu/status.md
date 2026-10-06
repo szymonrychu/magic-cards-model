@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.8% |
+| Tested | 26 | 10.7% |
 | Works (untested) | 118 | 48.4% |
 | Partial (unaudited) | 18 | 7.4% |
-| Not working | 84 | 34.4% |
+| Not working | 82 | 33.6% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Stall for Time | silent | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Tap up to two target creatures. If this spell was kicked, put a stun counter on each of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stronghold Arena | silent | When this enchantment enters, you gain 3 life for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunbathing Rootwalla | silent | Domain — {3}{G}: Until end of turn, this creature gets +1/+1 for each basic land type among lands you control. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Temporal Firestorm | silent | Kicker {1}{W} and/or {1}{U} (You may pay an additional {1}{W} and/or {1}{U} as you cast this spell.) Choose up to X creatures and/or planeswalkers you control,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temporary Lockdown | silent | When this enchantment enters, exile each nonland permanent with mana value 2 or less until this enchantment leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Territorial Maro | silent | Domain — Territorial Maro's power and toughness are each equal to twice the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Cruelty of Gix | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -92,7 +91,6 @@
 | Yotia Declares War | silent | III — Up to one target artifact you control becomes an artifact creature with base power and toughness 4/4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zar Ojanen, Scion of Efrava | silent | Domain — Whenever Zar Ojanen becomes tapped, put a +1/+1 counter on each creature you control with toughness less than the number of basic land types among land | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zur, Eternal Schemer | silent | Enchantment creatures you control have deathtouch, lifelink, and hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aggressive Sabotage | notice | Kicker {R} (You may pay an additional {R} as you cast this spell.) Target player discards two cards. If this spell was kicked, it deals 3 damage to that player. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Braids, Arisen Nightmare | notice | At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permane | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Choking Miasma | notice | Kicker {G} (You may pay an additional {G} as you cast this spell.) If this spell was kicked, put a +1/+1 counter on a creature you control. All creatures get -2 | unparsed remainder: If this spell was kicked, put a +1/+1 counter on a creature you control. | Y/Y/- | not_working |
 | Djinn of the Fountain | notice | Whenever you cast an instant or sorcery spell, choose one — • This creature gets +1/+1 until end of turn. • Exile this creature. Return it to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -250,8 +248,9 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>26 cards</summary>
 
+- Aggressive Sabotage
 - Ajani, Sleeper Agent
 - Archangel of Wrath
 - Argivian Cavalier
@@ -273,6 +272,7 @@
 - Rivaz of the Claw
 - Sheoldred, the Apocalypse
 - Tail Swipe
+- Temporal Firestorm
 - The Raven Man
 - Vohar, Vodalian Desecrator
 - Warhost's Frenzy
@@ -309,14 +309,12 @@
 | exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and/or up to one target land. for each  | 1 | Chaotic Transformation | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, create a N/N white soldier creature token. counter target spell unless its controller | 1 | Protect the Negotiators | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, put a +N/+N counter on a creature you control. all creatures get -N/-N until end of t | 1 | Choking Miasma | dmu |
-| kicker {M} (you may pay an additional {M} as you cast ~.) target player discards two cards. if ~ was kicked, it deals N damage to that player. | 1 | Aggressive Sabotage | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) gain control of target creature until end of turn. untap that creature. it gains haste until end | 1 | In Thrall to the Pit | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) return target creature card from your graveyard to the battlefield. if ~ was kicked, you gain li | 1 | Sheoldred's Restoration | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) return target creature or planeswalker you don"..."s hand. if ~ was kicked, put that permanent o | 1 | Rona's Vortex | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) tap up to two target creatures. if ~ was kicked, put a stun counter on each of those creatures.  | 1 | Stall for Time | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature gets -N/-N until end of turn. if ~ was kicked, that creature blocks ~ if able. d | 1 | Timely Interference | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature gets -N/-N until end of turn. if ~ was kicked, that creature gets an additional  | 1 | Tribute to Urborg | dmu |
-| kicker {M}{M} and/or {M}{M} (you may pay an additional {M}{M} and/or {M}{M} as you cast ~.) choose up to N creatures and/or planeswalkers you control, where N i | 1 | Temporal Firestorm | dmu |
 | legendary creatures you control get +N/+N, where N is the number of legendary creatures you control. | 1 | Jodah, the Unifier | dmu |
 | once during each of your turns, you may play a land from your graveyard or cast a permanent spell with mana value N or less from your graveyard. if you do, it g | 1 | Serra Paragon | dmu |
 | players can"..."t mana abilities. | 1 | Karn's Sylex | dmu |

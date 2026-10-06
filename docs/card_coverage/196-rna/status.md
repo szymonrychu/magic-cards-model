@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 12.6% |
+| Tested | 32 | 13.4% |
 | Works (untested) | 137 | 57.3% |
 | Partial (unaudited) | 9 | 3.8% |
-| Not working | 63 | 26.4% |
+| Not working | 61 | 25.5% |
 
 ## Cards needing work
 
@@ -43,13 +43,11 @@
 | Dovin, Architect of Law | silent | −9: Tap all permanents target opponent controls. That player skips their next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emergency Powers | silent | Each player shuffles their hand and graveyard into their library, then draws seven cards. Exile Emergency Powers. Addendum — If you cast this spell during your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eyes Everywhere | silent | {5}{U}: Exchange control of this enchantment and target nonland permanent. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Flames of the Raze-Boar | silent | Flames of the Raze-Boar deals 4 damage to target creature an opponent controls. Then Flames of the Raze-Boar deals 2 damage to each other creature that player c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Font of Agonies | silent | Whenever you pay life, put that many blood counters on this enchantment. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Forbidding Spirit | silent | When this creature enters, until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays {2} for each of those crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Galloping Lizrog | silent | When this creature enters, you may remove any number of +1/+1 counters from among creatures you control. If you do, put twice that many +1/+1 counters on this c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gatebreaker Ram | silent | As long as you control two or more Gates, this creature has vigilance and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glass of the Guildpact | silent | Multicolored creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Goblin Gathering | silent | Create a number of 1/1 red Goblin creature tokens equal to two plus the number of cards named Goblin Gathering in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Growth-Chamber Guardian | silent | Whenever one or more +1/+1 counters are put on this creature, you may search your library for a card named Growth-Chamber Guardian, reveal it, put it into your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Imperious Oligarch | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Kaya's Wrath | silent | Destroy all creatures. You gain life equal to the number of creatures you controlled that were destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -239,7 +237,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>32 cards</summary>
 
 - Angel of Grace
 - Awaken the Erstwhile
@@ -248,8 +246,10 @@
 - Consign to the Pit
 - Cry of the Carnarium
 - Dovin, Grand Arbiter
+- Flames of the Raze-Boar
 - Footlight Fiend
 - Gates Ablaze
+- Goblin Gathering
 - Guardian Project
 - Gutterbones
 - Hydroid Krasis
@@ -288,7 +288,6 @@
 | at the beginning of your upkeep, reveal cards from the top of your library until you reveal a creature card. until your next turn, ~ base power becomes twice th | 1 | Amplifire | rna |
 | counter target spell. its controller mills three cards. | 1 | Thought Collapse | rna |
 | create a N/N white and blue sphinx creature token with flying and vigilance. | 1 | Warrant // Warden | rna |
-| create a number of N/N red goblin creature tokens equal to two plus the number of cards named ~ in your graveyard. | 1 | Goblin Gathering | rna |
 | destroy all artifacts and enchantments. for each permanent destroyed ~, its controller creates a N/N green centaur creature token. | 1 | Rampage of the Clans | rna |
 | destroy all creatures. you gain life equal to the number of creatures you controlled that were destroyed ~. | 1 | Kaya's Wrath | rna |
 | distribute three +N/+N counters among one, two, or three target creatures, then double the number of +N/+N counters on each of those creatures. | 1 | Biogenic Upgrade | rna |
@@ -338,7 +337,6 @@
 | {M}{M}: adapt N. ~ costs {M} less to activate for each instant and sorcery card in your graveyard. | 1 | Pteramander | rna |
 | {M}{M}: exchange control of ~ and target nonland permanent. activate only as a sorcery. | 1 | Eyes Everywhere | rna |
 | ~ can't be blocked by creature tokens. | 1 | Rubblebelt Runner | rna |
-| ~ deals N damage to target creature an opponent controls. then ~ deals N damage to each other creature that player controls if you control a creature with power | 1 | Flames of the Raze-Boar | rna |
 | −N: tap all permanents target opponent controls. that player skips their next untap step. | 1 | Dovin, Architect of Law | rna |
 
 ## Notes

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 11.8% |
+| Tested | 37 | 12.2% |
 | Works (untested) | 127 | 41.8% |
 | Partial (unaudited) | 15 | 4.9% |
-| Not working | 126 | 41.4% |
+| Not working | 125 | 41.1% |
 
 ## Cards needing work
 
@@ -140,7 +140,6 @@
 | Eden, Seat of the Sanctum | notice | {5}, {T}: Mill two cards. Then you may sacrifice this land. When you do, return another target permanent card from your graveyard to your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Golbez, Crystal Collector | notice | At the beginning of your end step, if you control four or more artifacts, return target creature card from your graveyard to your hand. Then if you control eigh | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Ice Magic | notice | Tiered (Choose one additional cost.) • Blizzard — {0} — Return target creature to its owner's hand. • Blizzara — {2} — Target creature's owner puts it on their  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Judgment Bolt | notice | Judgment Bolt deals 5 damage to target creature and X damage to that creature's controller, where X is the number of Equipment you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Light of Judgment | notice | Light of Judgment deals 6 damage to target creature. Destroy up to one Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Moogles' Valor | notice | For each creature you control, create a 1/2 white Moogle creature token with lifelink. Then creatures you control gain indestructible until end of turn. | unparsed remainder: For each creature you control, create a 1/2 white Moogle creature token with lifelink. | Y/Y/Y | not_working |
 | Prishe's Wanderings | notice | Search your library for a basic land card or Town card, put it onto the battlefield tapped, then shuffle. When you search your library this way, put a +1/+1 cou | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -298,7 +297,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Blitzball
 - Cactuar
@@ -312,6 +311,7 @@
 - Haste Magic
 - Jill, Shiva's Dominant // Shiva, Warden of Ice
 - Joshua, Phoenix's Dominant // Phoenix, Warden of Fire
+- Judgment Bolt
 - Matoya, Archon Elder
 - Noctis, Prince of Lucis
 - Prompto Argentum
@@ -474,7 +474,6 @@
 | {M}{M}{M}: ~ becomes a N/N beast creature in addition to its other types. | 1 | Ride the Shoopuf | fin |
 | {M}{M}{M}{M}{M}: return ~ from your graveyard to the battlefield transformed. activate only as a sorcery. | 1 | Garland, Knight of Cornelia // Chaos, the Endless | fin |
 | ~ can't be blocked except by three or more creatures. | 1 | Relentless X-ATM092 | fin |
-| ~ deals N damage to target creature and N damage to that creature's controller, where N is the number of equipment you control. | 1 | Judgment Bolt | fin |
 | ~ deals N damage to target creature. destroy up to one equipment attached to that creature. | 1 | Light of Judgment | fin |
 | ~ enters tapped with a stun counter on it. | 1 | Tonberry | fin |
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 7.7% |
+| Tested | 13 | 9.1% |
 | Works (untested) | 62 | 43.4% |
 | Partial (unaudited) | 12 | 8.4% |
-| Not working | 58 | 40.6% |
+| Not working | 56 | 39.2% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Darien, King of Kjeldor | silent | Whenever you're dealt damage, you may create that many 1/1 white Soldier creature tokens. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Dark Depths | silent | When Dark Depths has no ice counters on it, sacrifice it. If you do, create Marit Lage, a legendary 20/20 black Avatar creature token with flying and indestruct | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Diamond Faerie | silent | {1}{S}: Snow creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Feast of Flesh | silent | Feast of Flesh deals X damage to target creature and you gain X life, where X is 1 plus the number of cards named Feast of Flesh in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Field Marshal | silent | Other Soldier creatures get +1/+1 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fury of the Horde | silent | You may exile two red cards from your hand rather than pay this spell's mana cost. Untap all creatures that attacked this turn. After this main phase, there is  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Garza's Assassin | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -78,7 +77,6 @@
 | Woolly Razorback | silent | As long as this creature has an ice counter on it, prevent all combat damage it would deal and it has defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blizzard Specter | notice | Whenever this creature deals combat damage to a player, choose one — • That player returns a permanent they control to its owner's hand. • That player discards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Frostweb Spider | notice | Whenever this creature blocks a creature with flying, put a +1/+1 counter on this creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Kjeldoran War Cry | notice | Creatures you control get +X/+X until end of turn, where X is 1 plus the number of cards named Kjeldoran War Cry in all graveyards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mystic Melting | notice | Destroy target artifact or enchantment. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ohran Viper | notice | Whenever this creature deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Swift Maneuver | notice | Prevent the next 2 damage that would be dealt to any target this turn. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -162,12 +160,14 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>13 cards</summary>
 
 - Allosaurus Rider
 - Balduvian Warlord
 - Braid of Fire
+- Feast of Flesh
 - Kjeldoran Javelineer
+- Kjeldoran War Cry
 - Martyr of Ashes
 - Martyr of Sands
 - Mishra's Bauble
@@ -191,7 +191,6 @@
 | at the beginning of your end step, ~ deals N damage divided as you choose among any number of target creatures, where N is the number of age counters on it. | 1 | Magmatic Core | csp |
 | counter target spell unless its controller pays {M} plus an additional {M} for each card named ~ in each graveyard. | 1 | Rune Snag | csp |
 | creatures with ice counters on them don"..." untap steps. | 1 | Rimescale Dragon | csp |
-| creatures you control get +N/+N until end of turn, where N is N plus the number of cards named ~ in all graveyards. | 1 | Kjeldoran War Cry | csp |
 | destroy target artifact or enchantment. draw a card at the beginning of the next turn's upkeep. | 1 | Mystic Melting | csp |
 | draw two cards, then sacrifice a permanent. | 1 | Perilous Research | csp |
 | enchanted creature can"..."t be activated. | 1 | Gelid Shackles | csp |
@@ -237,7 +236,6 @@
 | {M}{M}: target creature loses flying until end of turn. | 1 | Adarkar Windform | csp |
 | ~ can't be the target of blue or black spells. | 1 | Karplusan Strider | csp |
 | ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |
-| ~ deals N damage to target creature and you gain N life, where N is N plus the number of cards named ~ in all graveyards. | 1 | Feast of Flesh | csp |
 | ~ deals damage to target creature equal to the number of snow permanents you control. | 1 | Skred | csp |
 | ~'s power and toughness are each equal to the number of illusions on the battlefield. | 1 | Krovikan Mist | csp |
 | ~'s power and toughness are each equal to the number of snow permanents on the battlefield. | 1 | Rimefeather Owl | csp |

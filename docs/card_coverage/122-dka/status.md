@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 11.7% |
+| Tested | 20 | 13.0% |
 | Works (untested) | 74 | 48.1% |
 | Partial (unaudited) | 5 | 3.2% |
-| Not working | 57 | 37.0% |
+| Not working | 55 | 35.7% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Beguiler of Wills | silent | {T}: Gain control of target creature with power less than or equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Black Cat | silent | When this creature dies, target opponent discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Call to the Kindred | silent | At the beginning of your upkeep, you may look at the top five cards of your library. If you do, you may put a creature card that shares a creature type with enc | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Clinging Mists | silent | Prevent all combat damage that would be dealt this turn. Fateful hour — If you have 5 or less life, tap all attacking creatures. Those creatures don't untap dur | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Echoes | silent | Whenever enchanted player casts an instant or sorcery spell, each other player may copy that spell and may choose new targets for the copy they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Misfortunes | silent | At the beginning of your upkeep, you may search your library for a Curse card that doesn't have the same name as a Curse attached to enchanted player, put it on | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Thirst | silent | At the beginning of enchanted player's upkeep, this Aura deals damage to that player equal to the number of Curses attached to them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -60,7 +59,6 @@
 | Ravenous Demon // Archdemon of Greed | silent | At the beginning of your upkeep, sacrifice a Human. If you can't, tap this creature and it deals 9 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Relentless Skaabs | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Scorch the Fields | silent | Destroy target land. Scorch the Fields deals 1 damage to each Human creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shattered Perception | silent | Discard all the cards in your hand, then draw that many cards. Flashback {5}{R} (You may cast this card from your graveyard for its flashback cost. Then exile i | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sightless Ghoul | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sorin, Lord of Innistrad | silent | −6: Destroy up to three target creatures and/or other planeswalkers. Return each card put into a graveyard this way to the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spiteful Shadows | silent | Whenever enchanted creature is dealt damage, it deals that much damage to its controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -166,11 +164,12 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>20 cards</summary>
 
 - Avacyn's Collar
 - Break of Day
 - Chalice of Life // Chalice of Death
+- Clinging Mists
 - Curse of Exhaustion
 - Dungeon Geists
 - Faithless Looting
@@ -183,6 +182,7 @@
 - Increasing Vengeance
 - Predator Ooze
 - Secrets of the Dead
+- Shattered Perception
 - Soul Seizer // Ghastly Haunting
 - Thalia, Guardian of Thraben
 - Thought Scour
@@ -207,14 +207,12 @@
 | create two N/N white human creature tokens. fateful hour — if you have N or less life, create five of those tokens instead. | 1 | Gather the Townsfolk | dka |
 | destroy target creature. if that creature was a human, you gain life equal to its toughness. | 1 | Death's Caress | dka |
 | destroy target land. ~ deals N damage to each human creature. | 1 | Scorch the Fields | dka |
-| discard all the cards in your hand, then draw that many cards. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Shattered Perception | dka |
 | during turns other than yours, ~ is a N/N gargoyle artifact creature with flying. | 1 | Warden of the Wall | dka |
 | exile all nonland permanents target player controls. return the exiled cards to the battlefield under their owner's control at the beginning of the next end ste | 1 | Sudden Disappearance | dka |
 | if a source would deal damage to enchanted player, it deals double that damage to that player instead. | 1 | Curse of Bloodletting | dka |
 | non-human werewolves you control can't transform. | 1 | Immerwolf | dka |
 | other spirit creatures you control get +N/+N and have hexproof. | 1 | Drogskol Captain | dka |
 | other vampire creatures you control get +N/+N and have first strike. | 1 | Stromkirk Captain | dka |
-| prevent all combat damage that would be dealt ~. fateful hour — if you have N or less life, tap all attacking creatures. those creatures don"..."s next untap st | 1 | Clinging Mists | dka |
 | return all zombie creature cards from your graveyard to the battlefield tapped, then destroy all humans. | 1 | Zombie Apocalypse | dka |
 | reveal the top four cards of your library. put a creature card from among them into your hand and the rest into your graveyard. flashback {M}{M} (you may cast ~ | 1 | Tracker's Instincts | dka |
 | search your library for a card and put that card into your hand. if ~ was cast from a graveyard, instead search your library for two cards and put those cards i | 1 | Increasing Ambition | dka |

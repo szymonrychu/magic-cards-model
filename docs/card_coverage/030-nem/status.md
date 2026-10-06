@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 4.3% |
+| Tested | 2 | 8.7% |
 | Works (untested) | 15 | 65.2% |
 | Partial (unaudited) | 1 | 4.3% |
-| Not working | 6 | 26.1% |
+| Not working | 5 | 21.7% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Ascendant Evincar | silent | Other black creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blinding Angel | silent | Whenever this creature deals combat damage to a player, that player skips their next combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oracle's Attendants | silent | {T}: All damage that would be dealt to target creature this turn by a source of your choice is dealt to this creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stronghold Discipline | silent | Each player loses 1 life for each creature they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Treetop Bracers | silent | Enchanted creature gets +1/+1 and can't be blocked except by creatures with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Defiant Vanguard | notice | When this creature blocks, at end of combat, destroy it and all creatures it blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rhox | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -52,9 +51,10 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
 - Death Pit Offering
+- Stronghold Discipline
 
 </details>
 
@@ -62,7 +62,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| each player loses N life for each creature they control. | 1 | Stronghold Discipline | nem |
 | enchanted creature gets +N/+N and can't be blocked except by creatures with flying. | 1 | Treetop Bracers | nem |
 | other black creatures get +N/+N. | 1 | Ascendant Evincar | nem |
 | when ~ blocks, at end of combat, destroy it and all creatures it blocked ~. | 1 | Defiant Vanguard | nem |

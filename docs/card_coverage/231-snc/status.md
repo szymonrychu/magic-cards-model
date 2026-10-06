@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 11.1% |
+| Tested | 29 | 11.5% |
 | Works (untested) | 134 | 53.0% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 81 | 32.0% |
+| Not working | 80 | 31.6% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Girder Goons | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Graveyard Shift | silent | This spell has flash as long as there are five or more mana values among cards in your graveyard. Return target creature card from your graveyard to the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grisly Sigil | silent | Casualty 1 (As you cast this spell, you may sacrifice a creature with power 1 or greater. When you do, copy this spell and you may choose a new target for the c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Incandescent Aria | silent | Incandescent Aria deals 3 damage to each nontoken creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Incriminate | silent | Choose two target creatures controlled by the same player. That player sacrifices one of them of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jaxis, the Troublemaker | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Jetmir, Nexus of Revels | silent | Creatures you control also get +1/+0 and have trample as long as you control six or more creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -255,7 +254,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
@@ -270,6 +269,7 @@
 - Getaway Car
 - Hostile Takeover
 - Hypnotic Grifter
+- Incandescent Aria
 - Jetmir's Fixer
 - Join the Maestros
 - Lagrella, the Magpie
@@ -365,7 +365,6 @@
 | {M}, {M}, sacrifice a creature: count the colors of the sacrificed creature, then search your library for a creature card that's exactly that many colors plus o | 1 | Evolving Door | snc |
 | {M}{M}, {M}: copy target spell you control that wasn't cast. you may choose new targets for the copy. | 1 | Errant, Street Artist | snc |
 | {M}{M}: ~ can't be blocked ~. ~ costs {M} less to activate if there are five or more mana values among cards in your graveyard. | 1 | Sewer Crocodile | snc |
-| ~ deals N damage to each nontoken creature. | 1 | Incandescent Aria | snc |
 | ~ deals N damage to target creature or planeswalker. when it deals excess damage ~, destroy target artifact or enchantment an opponent controls with mana value  | 1 | Unleash the Inferno | snc |
 | ~ has flash as long as there are five or more mana values among cards in your graveyard. return target creature card from your graveyard to the battlefield. | 1 | Graveyard Shift | snc |
 | ~ has indestructible as long as it entered ~. | 1 | Crew Captain | snc |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 12.6% |
-| Works (untested) | 66 | 59.5% |
+| Tested | 16 | 14.4% |
+| Works (untested) | 65 | 58.6% |
 | Partial (unaudited) | 8 | 7.2% |
-| Not working | 23 | 20.7% |
+| Not working | 22 | 19.8% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Protean Hydra | silent | Whenever a +1/+1 counter is removed from this creature, put two +1/+1 counters on it at the beginning of the next end step. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Rhox Pikemaster | silent | Other Soldier creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Safe Passage | silent | Prevent all damage that would be dealt to you and creatures you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sleep | silent | Tap all creatures target player controls. Those creatures don't untap during that player's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphinx Ambassador | silent | Whenever this creature deals combat damage to a player, search that player's library for a card, then that player chooses a card name. If you searched for a cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vampire Nocturnus | silent | As long as the top card of your library is black, this creature and other Vampire creatures you control get +2/+1 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Djinn of Wishes | notice | {2}{U}{U}, Remove a wish counter from this creature: Reveal the top card of your library. You may play that card without paying its mana cost. If you don't, exi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -83,7 +82,6 @@
 | Gargoyle Castle | handled | {5}, {T}, Sacrifice this land: Create a 3/4 colorless Gargoyle artifact creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glacial Fortress | handled | This land enters tapped unless you control a Plains or an Island. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glorious Charge | handled | Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Goblin Artillery | handled | {T}: This creature deals 2 damage to any target and 3 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gorgon Flail | handled | Equipped creature gets +1/+1 and has deathtouch. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Sentinel | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Howling Banshee | handled | When this creature enters, each player loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -127,7 +125,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>16 cards</summary>
 
 - Acidic Slime
 - Act of Treason
@@ -137,11 +135,13 @@
 - Divination
 - Elite Vanguard
 - Essence Scatter
+- Goblin Artillery
 - Great Sable Stag
 - Lifelink
 - Runeclaw Bear
 - Sign in Blood
 - Silence
+- Sleep
 - Yawning Fissure
 
 </details>
@@ -164,7 +164,6 @@
 | prevent all damage that would be dealt to you and creatures you control ~. | 1 | Safe Passage | m10 |
 | put target creature card from a graveyard onto the battlefield under your control. that creature is a black zombie in addition to its other colors and types. | 1 | Rise from the Grave | m10 |
 | return all artifact and enchantment cards from all graveyards to the battlefield under their owners' control. (auras with nothing to enchant remain in graveyard | 1 | Open the Vaults | m10 |
-| tap all creatures target player controls. those creatures don"..."s next untap step. | 1 | Sleep | m10 |
 | the next N damage that a source of your choice would deal to you and/or permanents you control ~ is dealt to any target instead. | 1 | Harm's Way | m10 |
 | when enchanted creature becomes the target of a spell or ability, destroy ~. | 1 | Ice Cage | m10 |
 | when ~ enters, target forest becomes a N/N green treefolk creature for as long as ~ remains on the battlefield. it's still a land. | 1 | Awakener Druid | m10 |

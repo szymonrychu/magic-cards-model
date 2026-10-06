@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 7.7% |
+| Tested | 12 | 8.4% |
 | Works (untested) | 74 | 51.7% |
 | Partial (unaudited) | 9 | 6.3% |
-| Not working | 49 | 34.3% |
+| Not working | 48 | 33.6% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Glassdust Hulk | silent | Whenever another artifact you control enters, this creature gets +1/+1 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glory of Warfare | silent | During your turn, creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grixis Grimblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Intimidation Bolt | silent | Intimidation Bolt deals 3 damage to target creature. Other creatures can't attack this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jund Hackblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karrthus, Tyrant of Jund | silent | When Karrthus enters, gain control of all Dragons, then untap all Dragons. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of New Alara | silent | Each other multicolored creature you control gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -162,12 +161,13 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Architects of Will
 - Bloodbraid Elf
 - Dragon Appeasement
 - Identity Crisis
+- Intimidation Bolt
 - Maelstrom Nexus
 - Maelstrom Pulse
 - Predatory Advantage
@@ -231,7 +231,6 @@
 | {M}, sacrifice ~: you gain life equal to the total life lost by all players ~. | 1 | Tainted Sigil | arb |
 | {M}: equipped creature gets +N/+N until end of turn. | 1 | Demonspine Whip | arb |
 | {M}{M}{M}{M}: target player loses N life and mills N cards, where N is the number of zombies you control. | 1 | Lich Lord of Unx | arb |
-| ~ deals N damage to target creature. other creatures can't attack ~. | 1 | Intimidation Bolt | arb |
 | ~'s power and toughness are each equal to the number of cards in all graveyards. | 1 | Lord of Extinction | arb |
 
 ## Notes

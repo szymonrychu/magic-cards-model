@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 5.0% |
+| Tested | 9 | 5.7% |
 | Works (untested) | 73 | 45.9% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 68 | 42.8% |
+| Not working | 67 | 42.1% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Crawling Filth | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cunning Bandit // Azamuki, Treachery Incarnate | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faithful Squire // Kaiso, Memory of Loyalty | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Flames of the Blood Hand | silent | Flames of the Blood Hand deals 4 damage to target player or planeswalker. The damage can't be prevented. If that player or that planeswalker's controller would  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Forked-Branch Garami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Genju of the Cedars | silent | {2}: Enchanted Forest becomes a 4/4 green Spirit creature until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genju of the Falls | silent | {2}: Enchanted Island becomes a 3/2 blue Spirit creature with flying until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -181,11 +180,12 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Aura Barbs
 - Bile Urchin
 - Disrupting Shoal
+- Flames of the Blood Hand
 - Goryo's Vengeance
 - Kami of False Hope
 - Nourishing Shoal
@@ -255,7 +255,6 @@
 | {M}{M}: switch each creature's power and toughness until end of turn. | 1 | Mannichi, the Fevered Dream | bok |
 | {M}{M}: the next N damage that would be dealt to enchanted creature ~ is dealt to any target instead. | 1 | Ward of Piety | bok |
 | ~ can"..."ve cast a creature spell ~. | 1 | Goblin Cohort | bok |
-| ~ deals N damage to target player or planeswalker. the damage can"..."s controller would gain life ~, that player gains no life instead. | 1 | Flames of the Blood Hand | bok |
 | ~ has protection from each color among permanents you control. | 1 | Empty-Shrine Kannushi | bok |
 | ~ has soulshift N, where N is the number of spirits you control. | 1 | Kodama of the Center Tree | bok |
 | ~'s toughness is equal to the number of forests on the battlefield. | 1 | Traproot Kami | bok |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 10.6% |
+| Tested | 18 | 11.2% |
 | Works (untested) | 77 | 47.8% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 56 | 34.8% |
+| Not working | 55 | 34.2% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Ugin, the Spirit Dragon | silent | −X: Exile each permanent with mana value X or less that's one or more colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whisperwood Elemental | silent | Sacrifice this creature: Until end of turn, face-up nontoken creatures you control gain "When this creature dies, manifest the top card of your library." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wildcall | silent | Manifest the top card of your library, then put X +1/+1 counters on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it fa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Winds of Qal Sisma | silent | Prevent all combat damage that would be dealt this turn. Ferocious — If you control a creature with power 4 or greater, instead prevent all combat damage that w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Write into Being | silent | Look at the top two cards of your library. Manifest one of those cards, then put the other on the top or bottom of your library. (To manifest a card, put it ont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yasova Dragonclaw | silent | At the beginning of combat on your turn, you may pay {1}{U/R}{U/R}. If you do, gain control of target creature an opponent controls with power less than Yasova  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Abzan Kin-Guard | notice | This creature has lifelink as long as you control a white or black permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -174,7 +173,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Ainok Guide
 - Arcbond
@@ -193,6 +192,7 @@
 - Wandering Champion
 - War Flare
 - Warden of the First Tree
+- Winds of Qal Sisma
 
 </details>
 
@@ -226,7 +226,6 @@
 | manifest the top card of your library, then put a +N/+N counter on it. (to manifest a card, put it onto the battlefield face down as a N/N creature. turn it fac | 1 | Formless Nurturing | frf |
 | manifest the top card of your library, then put two +N/+N counters on it. (to manifest a card, put it onto the battlefield face down as a N/N creature. turn it  | 1 | Fierce Invocation | frf |
 | mill four cards, then return a creature card and a land card from your graveyard to your hand. | 1 | Sudden Reclamation | frf |
-| prevent all combat damage that would be dealt ~. ferocious — if you control a creature with power N or greater, instead prevent all combat damage that would be  | 1 | Winds of Qal Sisma | frf |
 | prevent all damage that would be dealt to you and permanents you control ~ by sources you don't control. if damage is prevented ~, you may have ~ deal that much | 1 | Channel Harm | frf |
 | return each creature card with mana value N or less from your graveyard to the battlefield. exile those creatures at the beginning of your next upkeep. exile ~. | 1 | Rally the Ancestors | frf |
 | return target creature card from your graveyard to the battlefield. if it's a dragon, put two +N/+N counters on it. | 1 | Fearsome Awakening | frf |

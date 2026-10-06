@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 8.1% |
+| Tested | 24 | 8.5% |
 | Works (untested) | 130 | 45.9% |
 | Partial (unaudited) | 14 | 4.9% |
-| Not working | 116 | 41.0% |
+| Not working | 115 | 40.6% |
 
 ## Cards needing work
 
@@ -116,7 +116,6 @@
 | Sift Through Sands | silent | Draw two cards, then discard a card. If you've cast a spell named Peer Through Depths and a spell named Reach Through Mists this turn, you may search your libra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Silent-Chant Zubera | silent | When this creature dies, you gain 2 life for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soratami Savant | silent | {3}, Return a land you control to its owner's hand: Counter target spell unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soratami Seer | silent | {4}, Return two lands you control to their owner's hand: Discard all the cards in your hand, then draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strange Inversion | silent | Switch target creature's power and toughness until end of turn. Splice onto Arcane {1}{R} (As you cast an Arcane spell, you may reveal this card from your hand  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Struggle for Sanity | silent | Target opponent reveals their hand. That player exiles a card from it, then you exile a card from it. Repeat this process until all cards in that hand have been | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Student of Elements // Tobita, Master of Winds | silent | When this creature has flying, flip it. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -290,7 +289,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Azusa, Lost but Seeking
 - Ben-Ben, Akki Hermit
@@ -311,6 +310,7 @@
 - Lava Spike
 - Minamo, School at Water's Edge
 - Shimatsu the Bloodcloaked
+- Soratami Seer
 - Soulblast
 - Through the Breach
 - Time Stop
@@ -401,7 +401,6 @@
 | whenever ~ deals damage to an opponent, flip it. | 1 | Akki Lavarunner // Tok-Tok, Volcano Born | chk |
 | {M}, exile tatsumasa: create a N/N blue dragon spirit creature token with flying. return tatsumasa to the battlefield under its owner's control when that token  | 1 | Tatsumasa, the Dragon's Fang | chk |
 | {M}, return a land you control to its owner's hand: counter target spell unless its controller pays {M}. | 1 | Soratami Savant | chk |
-| {M}, return two lands you control to their owner's hand: discard all the cards in your hand, then draw that many cards. | 1 | Soratami Seer | chk |
 | {M}, tap an untapped creature you control: untap enchanted creature. | 1 | Aura of Dominion | chk |
 | {M}, {M}: attacking creatures gain first strike until end of turn. | 1 | Akki Coalflinger | chk |
 | {M}, {M}: create a N/N green snake creature token for each charge counter on ~. | 1 | Orochi Hatchery | chk |

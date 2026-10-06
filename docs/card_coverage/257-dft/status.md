@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.2% |
+| Tested | 27 | 10.5% |
 | Works (untested) | 126 | 49.2% |
 | Partial (unaudited) | 19 | 7.4% |
-| Not working | 85 | 33.2% |
+| Not working | 84 | 32.8% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Waxen Shapethief | silent | You may have this creature enter as a copy of an artifact or creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Winter, Cursed Rider | silent | Exhaust — {2}{U}{B}, {T}, Exile X artifact cards from your graveyard: Each other nonartifact creature gets -X/-X until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brightglass Gearhulk | notice | When this creature enters, you may search your library for up to two artifact, creature, and/or enchantment cards with mana value 1 or less, reveal them, put th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Collision Course | notice | Choose one — • Collision Course deals X damage to target creature, where X is the number of permanents you control that are creatures and/or Vehicles. • Destroy | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Crash and Burn | notice | Choose one — • Destroy target Vehicle. • Crash and Burn deals 6 damage to target creature or planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Demonic Junker | notice | When this Vehicle enters, for each player, destroy up to one target creature that player controls. If a creature you controlled was destroyed this way, put two  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Gastal Blockbuster | notice | When this creature enters, you may sacrifice a creature or Vehicle. When you do, destroy target artifact an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -260,11 +259,12 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Bleachbone Verge
 - Boommobile
 - Captain Howler, Sea Scourge
+- Collision Course
 - Endrider Catalyzer
 - Fang-Druid Summoner
 - Fearless Swashbuckler
@@ -299,7 +299,7 @@
 | Exhaust | 5 | Boom Scholar, Mindspring Merfolk, Sita Varma, Masked Racer, Spire Mechcycle, Winter, Cursed Rider | dft |
 | ~ enters tapped unless you control a mount or vehicle. | 5 | Country Roads, Foul Roads, Reef Roads, Rocky Roads, Wild Roads | dft |
 | ~ saddles mounts and crews vehicles as though its power were N greater. | 3 | Cloudspire Captain, Deathless Pilot, Dynamite Diver | dft |
-| Choose one | 2 | Collision Course, Crash and Burn | dft |
+| Choose one | 1 | Crash and Burn | dft |
 | +N: attach ~ to up to one target creature you control. put a +N/+N counter on that creature. | 1 | The Aetherspark | dft |
 | activated abilities of sources with the chosen name cost {M} more to activate. | 1 | Skyseer's Chariot | dft |
 | after ~ phase, there are two additional combat phases. at the beginning of each combat ~, untap all creatures that attacked ~. | 1 | Full Throttle | dft |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 11.7% |
+| Tested | 31 | 12.1% |
 | Works (untested) | 135 | 52.7% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 80 | 31.2% |
+| Not working | 79 | 30.9% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Fade from History | silent | Each player who controls an artifact or enchantment creates a 2/2 green Bear creature token. Then destroy all artifacts and enchantments. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fallaji Dragon Engine | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fateful Handoff | silent | Draw cards equal to the mana value of target artifact or creature you control. An opponent gains control of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fog of War | silent | You gain 1 life for each creature on the battlefield. Prevent all combat damage that would be dealt this turn by creatures with power 3 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gnawing Vermin | silent | When this creature dies, target creature you don't control gets -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goring Warplow | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Great Desert Prospector | silent | When this creature enters, create a tapped Powerstone token for each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -256,7 +255,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Aeronaut Cavalry
 - Alloy Animist
@@ -267,6 +266,7 @@
 - Demolition Field
 - Drafna, Founder of Lat-Nam
 - Fallaji Archaeologist
+- Fog of War
 - Gix, Yawgmoth Praetor
 - Goblin Blast-Runner
 - Haywire Mite
@@ -353,7 +353,6 @@
 | whenever you discard one or more artifact cards, create a tapped powerstone token. ~ triggers only once each turn. | 1 | Urza, Powerstone Prodigy | bro |
 | whenever ~ attacks, defending player mills half their library, rounded up. | 1 | Terisian Mindbreaker | bro |
 | whenever ~ attacks, you may sacrifice another creature or artifact. if you do, ~ gains flying until end of turn. | 1 | Kill-Zone Acrobat | bro |
-| you gain N life for each creature on the battlefield. prevent all combat damage that would be dealt ~ by creatures with power N or less. | 1 | Fog of War | bro |
 | you may cast colorless spells and artifact spells as though they had flash. | 1 | Liberator, Urza's Battlethopter | bro |
 | {M}, {M}, exile ~: you gain protection from everything until your next turn. | 1 | The Stasis Coffin | bro |
 | {M}, {M}, sacrifice ~: exile the top two cards of your library. choose one of them. until the end of your next turn, you may play that card. | 1 | Mishra's Research Desk | bro |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 9.3% |
-| Works (untested) | 145 | 64.2% |
+| Tested | 23 | 10.2% |
+| Works (untested) | 157 | 69.5% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 54 | 23.9% |
+| Not working | 40 | 17.7% |
 
 ## Cards needing work
 
@@ -28,17 +28,12 @@
 |---|---|---|---|---|---|
 | Bane of Bala Ged | silent | Whenever this creature attacks, defending player exiles two permanents they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Benthic Infiltrator | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Boiling Earth | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Brilliant Spectrum | silent | Converge — Draw X cards, where X is the number of colors of mana spent to cast this spell. Then discard two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bring to Light | silent | Converge — Search your library for a creature, instant, or sorcery card with mana value less than or equal to the number of colors of mana spent to cast this sp | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Call the Scions | silent | Devoid (This card has no color.) Create two 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine's reading came from quoted text, not this clause's own words | Y/Y/- | not_working |
-| Clutch of Currents | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Coastal Discovery | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Crumble to Dust | silent | Devoid (This card has no color.) Exile target nonbasic land. Search its controller's graveyard, hand, and library for any number of cards with the same name as  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Culling Drone | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Drana, Liberator of Malakir | silent | Whenever Drana deals combat damage to a player, put a +1/+1 counter on each attacking creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Earthen Arms | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Encircling Fissure | silent | Prevent all combat damage that would be dealt this turn by creatures target opponent controls. Awaken 2—{4}{W} (If you cast this spell for {4}{W}, also put two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exert Influence | silent | Converge — Gain control of target creature if its power is less than or equal to the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fathom Feeder | silent | {3}{U}{B}: Draw a card. Each opponent exiles the top card of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fertile Thicket | silent | When this land enters, you may look at the top five cards of your library. If you do, reveal up to one basic land card from among them, then put that card on to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -47,22 +42,13 @@
 | Gruesome Slaughter | silent | Until end of turn, colorless creatures you control gain "{T}: This creature deals damage equal to its power to target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hedron Blade | silent | Whenever equipped creature becomes blocked by one or more colorless creatures, it gains deathtouch until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Infuse with the Elements | silent | Converge — Put X +1/+1 counters on target creature, where X is the number of colors of mana spent to cast this spell. That creature gains trample until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mire's Malice | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Mist Intruder | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Munda, Ambush Leader | silent | Rally — Whenever Munda or another Ally you control enters, you may look at the top four cards of your library. If you do, reveal any number of Ally cards from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ondu Rising | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Part the Waterveil | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Planar Outburst | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Quarantine Field | silent | When this enchantment enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until this enchantment leaves the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Radiant Flames | silent | Converge — Radiant Flames deals X damage to each creature, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rising Miasma | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Roil Spout | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Roilmage's Trick | silent | Converge — Creatures your opponents control get -X/-0 until end of turn, where X is the number of colors of mana spent to cast this spell. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ruination Guide | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Ruinous Path | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Rush of Ice | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Salvage Drone | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Scatter to the Winds | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Silent Skimmer | silent | Whenever this creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sire of Stagnation | silent | Whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyline Cascade | silent | When this land enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -102,6 +88,7 @@
 | Blighted Steppe | handled | {3}{W}, {T}, Sacrifice this land: You gain 2 life for each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blighted Woodland | handled | {3}{G}, {T}, Sacrifice this land: Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodbond Vampire | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Boiling Earth | handled | Boiling Earth deals 1 damage to each creature your opponents control. Awaken 4—{6}{R} (If you cast this spell for {6}{R}, also put four +1/+1 counters on target | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brood Butcher | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brood Monitor | handled | When this creature enters, create three 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Broodhunter Wurm | handled |  |  | Y/Y/- | not_tested |
@@ -112,6 +99,7 @@
 | Cinder Glade | handled | This land enters tapped unless you control two or more basic lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cliffside Lookout | handled | {4}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cloud Manta | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Coastal Discovery | handled | Draw two cards. Awaken 4—{5}{U} (If you cast this spell for {5}{U}, also put four +1/+1 counters on target land you control and it becomes a 0/0 Elemental creat | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Complete Disregard | handled | Devoid (This card has no color.) Exile target creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Coralhelm Guide | handled | {4}{U}: Target creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Courier Griffin | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -123,6 +111,7 @@
 | Desolation Twin | handled | When you cast this spell, create a 10/10 colorless Eldrazi creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drana's Emissary | handled | At the beginning of your upkeep, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drowner of Hope | handled | When this creature enters, create two 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Earthen Arms | handled | Put two +1/+1 counters on target permanent. Awaken 4—{6}{G} (If you cast this spell for {6}{G}, also put four +1/+1 counters on target land you control and it b | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eldrazi Devastator | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Eldrazi Skyspawner | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Expedition Envoy | handled |  |  | Y/Y/- | not_tested |
@@ -163,6 +152,7 @@
 | Malakir Familiar | handled | Whenever you gain life, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | March from the Tomb | handled | Return any number of target Ally creature cards with total mana value 8 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mind Raker | handled | When this creature enters, you may put a card an opponent owns from exile into that player's graveyard. If you do, each opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mire's Malice | handled | Target opponent discards two cards. Awaken 3—{5}{B} (If you cast this spell for {5}{B}, also put three +1/+1 counters on target land you control and it becomes  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Molten Nursery | handled | Whenever you cast a colorless spell, this enchantment deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mortuary Mire | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murasa Ranger | handled | Landfall — Whenever a land you control enters, you may pay {3}{G}. If you do, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -175,11 +165,14 @@
 | Omnath, Locus of Rage | handled | Landfall — Whenever a land you control enters, create a 5/5 red and green Elemental creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ondu Champion | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control gain trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ondu Greathorn | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ondu Rising | handled | Whenever a creature attacks this turn, it gains lifelink until end of turn. Awaken 4—{4}{W} (If you cast this spell for {4}{W}, also put four +1/+1 counters on  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oracle of Dust | handled | {2}, Put a card an opponent owns from exile into that player's graveyard: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oran-Rief Hydra | handled | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. If that land is a Forest, put two +1/+1 counters on this creature instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oran-Rief Invoker | handled | {8}: This creature gets +5/+5 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Outnumber | handled | Outnumber deals damage to target creature equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Part the Waterveil | handled | Take an extra turn after this one. Exile Part the Waterveil. Awaken 6—{6}{U}{U}{U} (If you cast this spell for {6}{U}{U}{U}, also put six +1/+1 counters on targ | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pathway Arrows | handled | Equipped creature has "{2}, {T}: This creature deals 1 damage to target creature. If a colorless creature is dealt damage this way, tap it." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Planar Outburst | handled | Destroy all nonland creatures. Awaken 4—{5}{W}{W}{W} (If you cast this spell for {5}{W}{W}{W}, also put four +1/+1 counters on target land you control and it be | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Plated Crusher | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | Prairie Stream | handled | This land enters tapped unless you control two or more basic lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prism Array | handled | Converge — This enchantment enters with a crystal counter on it for each color of mana spent to cast it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -190,10 +183,15 @@
 | Retreat to Emeria | handled | Landfall — Whenever a land you control enters, choose one — • Create a 1/1 white Kor Ally creature token. • Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Retreat to Hagra | handled | Landfall — Whenever a land you control enters, choose one — • Target creature gets +1/+0 and gains deathtouch until end of turn. • Each opponent loses 1 life an | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Retreat to Valakut | handled | Landfall — Whenever a land you control enters, choose one — • Target creature gets +2/+0 until end of turn. • Target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rising Miasma | handled | All creatures get -2/-2 until end of turn. Awaken 3—{5}{B}{B} (If you cast this spell for {5}{B}{B}, also put three +1/+1 counters on target land you control an | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Roil Spout | handled | Put target creature on top of its owner's library. Awaken 4—{4}{W}{U} (If you cast this spell for {4}{W}{U}, also put four +1/+1 counters on target land you con | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roil's Retribution | handled | Roil's Retribution deals 5 damage divided as you choose among any number of target attacking or blocking creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rot Shambler | handled | Whenever another creature you control dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruin Processor | handled | When you cast this spell, you may put a card an opponent owns from exile into that player's graveyard. If you do, you gain 5 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ruinous Path | handled | Destroy target creature or planeswalker. Awaken 4—{5}{B}{B} (If you cast this spell for {5}{B}{B}, also put four +1/+1 counters on target land you control and i | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rush of Ice | handled | Tap target creature. It doesn't untap during its controller's next untap step. Awaken 3—{4}{U} (If you cast this spell for {4}{U}, also put three +1/+1 counters | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sandstone Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Scatter to the Winds | handled | Counter target spell. Awaken 3—{4}{U}{U} (If you cast this spell for {4}{U}{U}, also put three +1/+1 counters on target land you control and it becomes a 0/0 El | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scour from Existence | handled | Exile target permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scythe Leopard | handled | Landfall — Whenever a land you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seek the Wilds | handled | Look at the top four cards of your library. You may reveal a creature or land card from among them and put it into your hand. Put the rest on the bottom of your | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -235,14 +233,16 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>23 cards</summary>
 
 - Akoum Hellkite
 - Aligned Hedron Network
 - Blisterpod
 - Canopy Vista
+- Clutch of Currents
 - Conduit of Ruin
 - Dust Stalker
+- Encircling Fissure
 - Endless One
 - Guul Draz Overseer
 - Kiora, Master of the Depths
@@ -265,7 +265,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| awaken | 13 | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice | bfz |
 | Converge | 7 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements, Radiant Flames | bfz |
 | ingest | 7 | Benthic Infiltrator, Culling Drone, Mist Intruder, Ruination Guide, Salvage Drone | bfz |
 | Landfall | 1 | Emeria Shepherd | bfz |
@@ -283,7 +282,6 @@
 | devoid (~ has no color.) target player reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Transgress the Mind | bfz |
 | enchanted creature gets -N/-N and loses flying. | 1 | Tightening Coils | bfz |
 | if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove a +N/+N counter from ~. | 1 | Undergrowth Champion | bfz |
-| prevent all combat damage that would be dealt ~ by creatures target opponent controls. awaken N—{M}{M} (if you cast ~ for {M}{M}, also put two +N/+N counters on | 1 | Encircling Fissure | bfz |
 | target creature gets +N/+N until end of turn. prevent all damage that would be dealt to that creature ~ by colorless sources. | 1 | Lithomancer's Focus | bfz |
 | until end of turn, colorless creatures you control gain "..." | 1 | Gruesome Slaughter | bfz |
 | when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |

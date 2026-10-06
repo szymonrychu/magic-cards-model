@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 13.9% |
-| Works (untested) | 150 | 54.7% |
+| Tested | 40 | 14.6% |
+| Works (untested) | 149 | 54.4% |
 | Partial (unaudited) | 5 | 1.8% |
-| Not working | 81 | 29.6% |
+| Not working | 80 | 29.2% |
 
 ## Cards needing work
 
@@ -100,7 +100,6 @@
 | Emergent Sequence | notice | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature that's stil | unparsed remainder: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Put a +1/+1 counter on it for each land you had enter the battlefield under your control this turn. | Y/Y/- | not_working |
 | Flunk | notice | Target creature gets -X/-X until end of turn, where X is 7 minus the number of cards in that creature's controller's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lorehold Command | notice | Choose two — • Create a 3/2 red and white Spirit creature token. • Creatures you control get +1/+0 and gain indestructible and haste until end of turn. • Loreho | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Pigment Storm | notice | Pigment Storm deals 5 damage to target creature. Excess damage is dealt to that creature's controller instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Prismari Apprentice | notice | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature can't be blocked this turn. If that spell has mana value 5 or greater, put a +1 | unparsed remainder: If that spell has mana value 5 or greater, put a +1/+1 counter on this creature. | Y/Y/- | not_working |
 | Quandrix Command | notice | Choose two — • Return target creature or planeswalker to its owner's hand. • Counter target artifact or enchantment spell. • Put two +1/+1 counters on target cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Scurrid Colony | notice | This creature gets +2/+2 as long as you control eight or more lands. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -228,7 +227,6 @@
 | Silverquill Command | handled | Choose two — • Target creature gets +3/+3 and gains flying until end of turn. • Return target creature card with mana value 2 or less from your graveyard to the | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverquill Pledgemage | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature gains your choice of flying or lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverquill Silencer | handled | As this creature enters, choose a nonland card name. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Snow Day | handled | Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Draw two cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Solve the Equation | handled | Search your library for an instant or sorcery card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soothsayer Adept | handled | {1}{U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sparring Regimen | handled | When this enchantment enters, learn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -266,7 +264,7 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>40 cards</summary>
 
 - Academic Dispute
 - Bayou Groff
@@ -296,11 +294,13 @@
 - Lorehold Excavation
 - Make Your Mark
 - Mascot Exhibition
+- Pigment Storm
 - Prismari Command
 - Professor of Symbology
 - Promising Duskmage
 - Secret Rendezvous
 - Show of Confidence
+- Snow Day
 - Thrilling Discovery
 - Torrent Sculptor // Flamethrower Sonata
 - Vanishing Verse
@@ -388,7 +388,6 @@
 | {M}: you may cast target instant or sorcery card from your graveyard ~. if that spell doesn't target a creature you control, it costs {M} more to cast ~. if tha | 1 | Mavinda, Students' Advocate | stx |
 | {M}{M}: double ~ power and toughness until end of turn. | 1 | Reckless Amplimancer | stx |
 | ~ costs {M} less to cast if it targets an attacking creature. put target creature into its owner's library second from the top. | 1 | Bury in Books | stx |
-| ~ deals N damage to target creature. excess damage is dealt to that creature's controller instead. | 1 | Pigment Storm | stx |
 | ~ gets +N/+N as long as you control eight or more lands. | 1 | Scurrid Colony | stx |
 | −N: each opponent may discard a card. if they don't, they lose N life. repeat ~ six more times. | 1 | Professor Onyx | stx |
 | −N: exile up to five target permanents. for each permanent exiled ~, its controller creates a N/N blue and red elemental creature token. | 1 | Rowan, Scholar of Sparks // Will, Scholar of Frost | stx |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 11.7% |
+| Tested | 34 | 12.1% |
 | Works (untested) | 132 | 47.0% |
 | Partial (unaudited) | 20 | 7.1% |
-| Not working | 96 | 34.2% |
+| Not working | 95 | 33.8% |
 
 ## Cards needing work
 
@@ -107,7 +107,6 @@
 | Eastfarthing Farmer | notice | When this creature enters, create a Food token. When you do, target creature you control gets +1/+1 until end of turn for each Food you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fires of Mount Doom | notice | When Fires of Mount Doom enters, it deals 2 damage to target creature an opponent controls. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flowering of the White Tree | notice | Legendary creatures you control get +2/+1 and have ward {1}. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Gandalf's Sanction | notice | Gandalf's Sanction deals X damage to target creature, where X is the number of instant and sorcery cards in your graveyard. Excess damage is dealt to that creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gimli's Fury | notice | Target creature gets +3/+2 until end of turn. If it's legendary, it also gains trample until end of turn. | unparsed remainder: If it's legendary, it also gains trample until end of turn. | Y/-/- | not_working |
 | Glorious Gale | notice | Counter target creature spell. If it was a legendary spell, the Ring tempts you. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gorbag of Minas Morgul | notice | Whenever a Goblin or Orc you control deals combat damage to a player, you may sacrifice it. When you do, choose one — • Draw a card. • Create a Treasure token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -278,7 +277,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Arwen, Mortal Queen
 - Bill the Pony
@@ -293,6 +292,7 @@
 - Flame of Anor
 - Friendly Rivalry
 - Galadhrim Bow
+- Gandalf's Sanction
 - Generous Ent
 - Gimli, Counter of Kills
 - Glóin, Dwarf Emissary
@@ -430,7 +430,6 @@
 | ~ can't be blocked except by three or more creatures. | 1 | Troll of Khazad-dûm | ltr |
 | ~ can't be copied. copy any number of target instant and/or sorcery spells. you may choose new targets for the copies. | 1 | Display of Power | ltr |
 | ~ costs {M} less to cast for each permanent sacrificed ~. | 1 | The Balrog, Durin's Bane | ltr |
-| ~ deals N damage to target creature, where N is the number of instant and sorcery cards in your graveyard. excess damage is dealt to that creature's controller  | 1 | Gandalf's Sanction | ltr |
 | ~ enters tapped with nine stun counters on it. | 1 | The Watcher in the Water | ltr |
 
 ## Notes

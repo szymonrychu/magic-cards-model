@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 8.8% |
+| Tested | 24 | 10.5% |
 | Works (untested) | 99 | 43.4% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 87 | 38.2% |
+| Not working | 83 | 36.4% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Mythos of Brokkos | silent | If {U}{B} was spent to cast this spell, search your library for a card, put that card into your graveyard, then shuffle. Return up to two permanent cards from y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mythos of Nethroi | silent | Destroy target nonland permanent if it's a creature or if {G}{W} was spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mythos of Snapdax | silent | Each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest. If {B} | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mythos of Vadrok | silent | Mythos of Vadrok deals 5 damage divided as you choose among any number of target creatures and/or planeswalkers. If {W}{U} was spent to cast this spell, until y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necropanther | silent | Whenever this creature mutates, return target creature card with mana value 3 or less from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Nethroi, Apex of Death | silent | Whenever this creature mutates, return any number of target creature cards with total power 10 or less from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Parcelbeast | silent | Mutate | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -90,7 +89,6 @@
 | Snapdax, Apex of the Hunt | silent | Whenever this creature mutates, it deals 4 damage to target creature or planeswalker an opponent controls and you gain 4 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Solid Footing | silent | As long as enchanted creature has vigilance, it assigns combat damage equal to its toughness rather than its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Ozolith | silent | Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Thwart the Enemy | silent | Prevent all damage that would be dealt this turn by creatures your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trumpeting Gnarr | silent | Whenever this creature mutates, create a 3/3 green Beast creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Vadrok, Apex of Thunder | silent | Whenever this creature mutates, you may cast target noncreature card with mana value 3 or less from your graveyard without paying its mana cost. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Vivien, Monsters' Advocate | silent | +1: Create a 3/3 green Beast creature token. Put your choice of a reach counter, a vigilance counter, or a trample counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -104,12 +102,10 @@
 | Bushmeat Poacher | notice | {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Call of the Death-Dweller | notice | Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire Tactics | notice | Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Flame Spill | notice | Flame Spill deals 4 damage to target creature. Excess damage is dealt to that creature's controller instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heightened Reflexes | notice | Target creature gets +1/+0 until end of turn. Put a first strike counter on it. | unparsed remainder: Put a first strike counter on it. | Y/Y/- | not_working |
 | Lavabrink Venturer | notice | This creature has protection from each mana value of the chosen quality. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Monstrous Step | notice | Target creature gets +7/+7 until end of turn. Up to one other target creature blocks it this turn if able. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: Up to one other target creature blocks it this turn if able. | Y/Y/- | not_working |
 | Mythos of Illuna | notice | Create a token that's a copy of target permanent. If {R}{G} was spent to cast this spell, instead create a token that's a copy of that permanent, except the tok | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ram Through | notice | Target creature you control deals damage equal to its power to target creature you don't control. If the creature you control has trample, excess damage is deal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rooting Moloch | notice | When this creature enters, exile target card with a cycling ability from your graveyard. Until the end of your next turn, you may play that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spelleater Wolverine | notice | This creature has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Will of the All-Hunter | notice | Target creature gets +2/+2 until end of turn. If it's blocking, instead put two +1/+1 counters on it. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: If it's blocking, instead put two +1/+1 counters on it. | Y/Y/- | not_working |
@@ -238,7 +234,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>24 cards</summary>
 
 - Back for More
 - Blade Banish
@@ -247,17 +243,21 @@
 - Fiend Artisan
 - Fight as One
 - Fire Prophecy
+- Flame Spill
 - Gyruda, Doom of Depths
 - Heartless Act
 - Indatha Triome
 - Kaheera, the Orphanguard
 - Keruga, the Macrosage
 - Kinnan, Bonder Prodigy
+- Mythos of Vadrok
 - Narset of the Ancient Way
 - Offspring's Revenge
+- Ram Through
 - Raugrin Triome
 - Startling Development
 - Swallow Whole
+- Thwart the Enemy
 - Unbreakable Bond
 - Yorion, Sky Nomad
 
@@ -297,7 +297,6 @@
 | lethal damage dealt to creatures you control is determined by their power rather than their toughness. | 1 | Zilortha, Strength Incarnate | iko |
 | look at the top five cards of your library. put any number of permanent cards from among them onto the battlefield and the rest into your hand. exile ~. | 1 | Genesis Ultimatum | iko |
 | once during each of your turns, you may cast a permanent spell with mana value N or less from your graveyard. | 1 | Lurrus of the Dream-Den | iko |
-| prevent all damage that would be dealt ~ by creatures your opponents control. | 1 | Thwart the Enemy | iko |
 | return any number of permanent cards with different names from your graveyard to the battlefield. | 1 | Eerie Ultimatum | iko |
 | return up to two target creature cards with total mana value N or less from your graveyard to the battlefield. put a deathtouch counter on either of them. then  | 1 | Call of the Death-Dweller | iko |
 | search your library for up to three monocolored cards with different names and exile them. an opponent chooses one of those cards. shuffle that card into your l | 1 | Emergent Ultimatum | iko |
@@ -305,7 +304,6 @@
 | target creature gets +N/+N until end of turn. if it's blocking, instead put two +N/+N counters on it. cycling {M} ({M}, discard ~: draw a card.) | 1 | Will of the All-Hunter | iko |
 | target creature gets +N/+N until end of turn. put a first strike counter on it. | 1 | Heightened Reflexes | iko |
 | target creature gets +N/+N until end of turn. up to one other target creature blocks it ~ if able. cycling {M} ({M}, discard ~: draw a card.) | 1 | Monstrous Step | iko |
-| target creature you control deals damage equal to its power to target creature you don"..."s controller instead. | 1 | Ram Through | iko |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. cycling {M} ({M}, discard ~: draw a card.) | 1 | Memory Leak | iko |
 | when you cycle ~, put a first strike counter on target creature you control. | 1 | Sanctuary Smasher | iko |
 | when you cycle ~, shuffle it into your library from your graveyard. if you've cycled a card named ~ four or more times ~, put it onto the battlefield from your  | 1 | Yidaro, Wandering Monster | iko |
@@ -358,9 +356,7 @@
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with trample. | 1 | Hornbash Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with vigilance. | 1 | Keensight Mentor | iko |
 | {M}{M}: search your library for a card named ~, put it onto the battlefield tapped, then shuffle. | 1 | Whisper Squad | iko |
-| ~ deals N damage divided as you choose among any number of target creatures and/or planeswalkers. if {M}{M} was spent to cast ~, until your next turn, those per | 1 | Mythos of Vadrok | iko |
 | ~ deals N damage to any target and you gain N life, where N is the number of cards with a cycling ability in your graveyard. | 1 | Zenith Flare | iko |
-| ~ deals N damage to target creature. excess damage is dealt to that creature's controller instead. | 1 | Flame Spill | iko |
 | ~ enters with your choice of a deathtouch counter or a lifelink counter on it. | 1 | Boot Nipper | iko |
 | ~ enters with your choice of a flying counter or a first strike counter on it. | 1 | Helica Glider | iko |
 | ~ enters with your choice of a flying counter or a hexproof counter on it. | 1 | Wingfold Pteron | iko |

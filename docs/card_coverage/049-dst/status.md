@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 5.6% |
+| Tested | 10 | 6.2% |
 | Works (untested) | 79 | 48.8% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 64 | 39.5% |
+| Not working | 63 | 38.9% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | Eater of Days | silent | When this creature enters, you skip your next two turns. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Emissary of Hope | silent | Whenever this creature deals combat damage to a player, you gain 1 life for each artifact that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fangren Firstborn | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Flamebreak | silent | Flamebreak deals 3 damage to each creature without flying and each player. Creatures dealt damage this way can't be regenerated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genesis Chamber | silent | Whenever a nontoken creature enters, if this artifact is untapped, that creature's controller creates a 1/1 colorless Myr artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Archaeologist | silent | {R}, {T}: Flip a coin. If you win the flip, destroy target artifact and untap this creature. If you lose the flip, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Greater Harvester | silent | At the beginning of your upkeep, sacrifice a permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -183,12 +182,13 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Aether Snap
 - Darksteel Gargoyle
 - Echoing Courage
 - Echoing Truth
+- Flamebreak
 - Furnace Dragon
 - Sword of Fire and Ice
 - Tanglewalker
@@ -262,7 +262,6 @@
 | {M}: you may put a creature card with mana value equal to the number of charge counters on ~ from your hand onto the battlefield. | 1 | Aether Vial | dst |
 | {M}{M}{M}: target permanent becomes an artifact in addition to its other types. | 1 | Memnarch | dst |
 | ~ can block only creatures with flying. | 1 | Hoverguard Observer | dst |
-| ~ deals N damage to each creature without flying and each player. creatures dealt damage ~ can't be regenerated ~. | 1 | Flamebreak | dst |
 | ~ deals N damage to target player or planeswalker. then if that player or that planeswalker"..."s hand. | 1 | Pulse of the Forge | dst |
 | ~ has shroud as long as you control another artifact creature. | 1 | Drill-Skimmer | dst |
 

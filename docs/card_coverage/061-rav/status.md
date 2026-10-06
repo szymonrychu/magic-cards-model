@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.9% |
-| Works (untested) | 118 | 47.8% |
+| Tested | 32 | 13.0% |
+| Works (untested) | 120 | 48.6% |
 | Partial (unaudited) | 17 | 6.9% |
-| Not working | 85 | 34.4% |
+| Not working | 78 | 31.6% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Agrus Kos, Wojek Veteran | silent | Whenever Agrus Kos attacks, attacking red creatures get +2/+0 and attacking white creatures get +0/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bathe in Light | silent | Radiance — Choose a color. Target creature and each other creature that shares a color with it gain protection from the chosen color until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blockbuster | silent | {1}{R}, Sacrifice this enchantment: It deals 3 damage to each tapped creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blood Funnel | silent | Whenever you cast a noncreature spell, counter that spell unless you sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodbond March | silent | Whenever a player casts a creature spell, each player returns all cards with the same name as that spell from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bottled Cloister | silent | At the beginning of each opponent's upkeep, exile all cards from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -40,7 +39,6 @@
 | Crown of Convergence | silent | As long as the top card of your library is a creature card, creatures you control that share a color with that card get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dimir Machinations | silent | Look at the top three cards of target player's library. Exile any number of those cards, then put the rest back in any order. Transmute {1}{B}{B} ({1}{B}{B}, Di | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drake Familiar | silent | When this creature enters, sacrifice it unless you return an enchantment to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dryad's Caress | silent | You gain 1 life for each creature on the battlefield. If {W} was spent to cast this spell, untap all creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Empty the Catacombs | silent | Each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eye of the Storm | silent | Whenever a player casts an instant or sorcery card, exile it. Then that player copies each instant or sorcery card exiled with this enchantment. For each copy,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Festival of the Guildpact | silent | Prevent the next X damage that would be dealt to you this turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -50,7 +48,6 @@
 | Golgari Brownscale | silent | When this card is put into your hand from your graveyard, you gain 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Grozoth | silent | When this creature enters, you may search your library for any number of cards that have mana value 9, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Halcyon Glaze | silent | Whenever you cast a creature spell, this enchantment becomes a 4/4 Illusion creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hammerfist Giant | silent | {T}: This creature deals 4 damage to each creature without flying and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incite Hysteria | silent | Radiance — Until end of turn, target creature and each other creature that shares a color with it gain "This creature can't block." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Induce Paranoia | silent | Counter target spell. If {B} was spent to cast this spell, that spell's controller mills X cards, where X is the spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loxodon Hierarch | silent | {G}{W}, Sacrifice this creature: Regenerate each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -62,16 +59,12 @@
 | Moonlight Bargain | silent | Look at the top five cards of your library. For each card, put that card into your graveyard unless you pay 2 life. Then put the rest into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mortipede | silent | {2}{G}: All creatures able to block this creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Necroplasm | silent | At the beginning of your end step, destroy each creature with mana value equal to the number of +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Netherborn Phalanx | silent | When this creature enters, each opponent loses 1 life for each creature they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ordruun Commando | silent | {W}: Prevent the next 1 damage that would be dealt to this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Peel from Reality | silent | Return target creature you control and target creature you don't control to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perplex | silent | Counter target spell unless its controller discards their hand. Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Plague Boiler | silent | {1}{B}{G}: Put a plague counter on this artifact or remove a plague counter from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quickchange | silent | Target creature becomes the color or colors of your choice until end of turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rain of Embers | silent | Rain of Embers deals 1 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Razia's Purification | silent | Each player chooses three permanents they control, then sacrifices the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ribbons of Night | silent | Ribbons of Night deals 4 damage to target creature and you gain 4 life. If {U} was spent to cast this spell, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rolling Spoil | silent | Destroy target land. If {B} was spent to cast this spell, all creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sabertooth Alley Cat | silent | {1}{R}: Creatures without defender can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sadistic Augermage | silent | When this creature dies, each player puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Savra, Queen of the Golgari | silent | Whenever you sacrifice a black creature, you may pay 2 life. If you do, each other player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -131,6 +124,7 @@
 | Autochthon Wurm | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Barbarian Riftcutter | handled | {R}, Sacrifice this creature: Destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Benevolent Ancestor | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blockbuster | handled | {1}{R}, Sacrifice this enchantment: It deals 3 damage to each tapped creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodletter Quill | handled | {2}, {T}, Put a blood counter on this artifact: Draw a card, then you lose 1 life for each blood counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boros Garrison | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boros Guildmage | handled | {1}{R}: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -214,6 +208,7 @@
 | Putrefy | handled | Destroy target artifact or creature. It can't be regenerated. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Recollect | handled | Return target card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reroute | handled | Change the target of target activated ability with a single target. (Mana abilities can't be targeted.) Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ribbons of Night | handled | Ribbons of Night deals 4 damage to target creature and you gain 4 life. If {U} was spent to cast this spell, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Roofstalker Wight | handled | {1}{U}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Root-Kin Ally | handled | Tap two untapped creatures you control: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scion of the Wild | handled | Scion of the Wild's power and toughness are each equal to the number of creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -250,7 +245,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>32 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
@@ -262,17 +257,22 @@
 - Concerted Effort
 - Dark Confidant
 - Doubling Season
+- Dryad's Caress
 - Firemane Angel
 - Golgari Thug
 - Greater Mossdog
+- Hammerfist Giant
 - Hunted Horror
 - Instill Furor
 - Life from the Loam
 - Lightning Helix
 - Mausoleum Turnkey
 - Muddle the Mixture
+- Netherborn Phalanx
 - Overgrown Tomb
+- Rain of Embers
 - Razia, Boros Archangel
+- Rolling Spoil
 - Sacred Foundry
 - Sisters of Stone Death
 - Temple Garden
@@ -308,7 +308,6 @@
 | counter target spell. if {M} was spent to cast ~, that spell"..."s mana value. | 1 | Induce Paranoia | rav |
 | creatures you control have vigilance as long as ~ is enchanted. | 1 | Gate Hound | rav |
 | damage that would be dealt by ~ can't be prevented. | 1 | Excruciator | rav |
-| destroy target land. if {M} was spent to cast ~, all creatures get -N/-N until end of turn. | 1 | Rolling Spoil | rav |
 | each player chooses three permanents they control, then sacrifices the rest. | 1 | Razia's Purification | rav |
 | each player returns all creature cards from their graveyard to their hand. | 1 | Empty the Catacombs | rav |
 | each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. each player puts all artifact, crea | 1 | Warp World | rav |
@@ -337,7 +336,6 @@
 | until end of turn, you may cast target instant or sorcery card from your graveyard without paying its mana cost. if that spell would be put into your graveyard, | 1 | Sins of the Past | rav |
 | when enchanted creature deals combat damage to a player, sacrifice it and attach ~ to a creature you control. if you do, untap all creatures you control and aft | 1 | Breath of Fury | rav |
 | when ~ dies, each player puts a card from their hand on top of their library. | 1 | Sadistic Augermage | rav |
-| when ~ enters, each opponent loses N life for each creature they control. | 1 | Netherborn Phalanx | rav |
 | when ~ enters, sacrifice a creature. | 1 | Vindictive Mob | rav |
 | when ~ enters, sacrifice it unless you return an enchantment to its owner's hand. | 1 | Drake Familiar | rav |
 | when ~ enters, you may exchange control of target creature you control and target creature with power less than or equal to that creature's power an opponent co | 1 | Spawnbroker | rav |
@@ -357,7 +355,6 @@
 | whenever ~ deals combat damage, you gain that much life. | 1 | Sunhome Enforcer | rav |
 | whenever ~ is dealt damage, it deals that much damage to each player. | 1 | Coalhauler Swine | rav |
 | you can't choose an untapped permanent as ~ target as you cast it. | 1 | Dream Leash | rav |
-| you gain N life for each creature on the battlefield. if {M} was spent to cast ~, untap all creatures you control. | 1 | Dryad's Caress | rav |
 | your opponents can't cast spells with the same name as a card exiled with circu. | 1 | Circu, Dimir Lobotomist | rav |
 | {M}, sacrifice a creature: look at the top two cards of target opponent's library, then exile one of them. | 1 | Thoughtpicker Witch | rav |
 | {M}, sacrifice ~: create a N/N white spirit creature token with flying at the beginning of the next end step. | 1 | Transluminant | rav |
@@ -368,9 +365,7 @@
 | {M}: prevent the next N damage that would be dealt to ~ ~. | 1 | Ordruun Commando | rav |
 | {M}: regenerate enchanted creature. | 1 | Strands of Undeath | rav |
 | {M}: target creature can't block ~ ~. | 1 | Screeching Griffin | rav |
-| {M}: ~ deals N damage to each creature without flying and each player. | 1 | Hammerfist Giant | rav |
 | {M}: ~ loses defender until end of turn. | 1 | Tidewater Minion | rav |
-| {M}{M}, sacrifice ~: it deals N damage to each tapped creature and each player. | 1 | Blockbuster | rav |
 | {M}{M}, sacrifice ~: regenerate each creature you control. | 1 | Loxodon Hierarch | rav |
 | {M}{M}, unattach ~: search your library for a red or white instant card with mana value N or less and cast that card without paying its mana cost. then shuffle. | 1 | Sunforger | rav |
 | {M}{M}: all creatures able to block ~ ~ do so. | 1 | Mortipede | rav |
@@ -381,8 +376,6 @@
 | {M}{M}{M}: put a plague counter on ~ or remove a plague counter from it. | 1 | Plague Boiler | rav |
 | {M}{M}{M}: until end of turn, ~ becomes a black and green plant zombie creature with "..." it's still a land. | 1 | Svogthos, the Restless Tomb | rav |
 | ~ can block an additional creature each combat. | 1 | Selesnya Sagittars | rav |
-| ~ deals N damage to each creature and each player. | 1 | Rain of Embers | rav |
-| ~ deals N damage to target creature and you gain N life. if {M} was spent to cast ~, draw a card. | 1 | Ribbons of Night | rav |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 7.4% |
+| Tested | 18 | 8.3% |
 | Works (untested) | 107 | 49.3% |
 | Partial (unaudited) | 16 | 7.4% |
-| Not working | 78 | 35.9% |
+| Not working | 76 | 35.0% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Demonlord of Ashmouth | silent | When this creature enters, exile it unless you sacrifice another creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Descendants' Path | silent | At the beginning of your upkeep, reveal the top card of your library. If it's a creature card that shares a creature type with a creature you control, you may c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Diregraf Escort | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Divine Deflection | silent | Prevent the next X damage that would be dealt to you and/or permanents you control this turn. If damage is prevented this way, Divine Deflection deals that much | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dread Slaver | silent | Whenever a creature dealt damage by this creature this turn dies, return it to the battlefield under your control. That creature is a black Zombie in addition t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dreadwaters | silent | Target player mills X cards, where X is the number of lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Druid's Familiar | silent | As long as this creature is paired with another creature, each of those creatures gets +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -82,7 +81,6 @@
 | Stern Mentor | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Stonewright | silent | As long as Stonewright is paired with another creature, each of those creatures has "{R}: This creature gets +1/+0 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tandem Lookout | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Terrifying Presence | silent | Prevent all combat damage that would be dealt by creatures other than target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tibalt, the Fiend-Blooded | silent | +1: Draw a card, then discard a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tormentor's Trident | silent | Equipped creature gets +3/+0 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Treacherous Pit-Dweller | silent | When this creature enters from a graveyard, target opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -231,7 +229,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>18 cards</summary>
 
 - Aggravate
 - Blood Artist
@@ -239,6 +237,7 @@
 - Cavern of Souls
 - Craterhoof Behemoth
 - Demonic Rising
+- Divine Deflection
 - Entreat the Angels
 - Griselbrand
 - Lone Revenant
@@ -247,6 +246,7 @@
 - Reforge the Soul
 - Stolen Goods
 - Terminus
+- Terrifying Presence
 - Thunderous Wrath
 - Unhallowed Pact
 
@@ -301,9 +301,7 @@
 | instant and sorcery spells cost {M} less to cast. | 1 | Arcane Melee | avr |
 | other permanents you control have indestructible. | 1 | Avacyn, Angel of Hope | avr |
 | players can't pay life or sacrifice creatures to cast spells or activate abilities. | 1 | Angel of Jubilation | avr |
-| prevent all combat damage that would be dealt by creatures other than target creature ~. | 1 | Terrifying Presence | avr |
 | prevent all damage that would be dealt by enchanted creature. | 1 | Defang | avr |
-| prevent the next N damage that would be dealt to you and/or permanents you control ~. if damage is prevented ~, ~ deals that much damage to any target. | 1 | Divine Deflection | avr |
 | put target artifact, creature, or enchantment on the bottom of its owner"..."s the first card you drew ~.) | 1 | Banishing Stroke | avr |
 | return target creature card from your graveyard to the battlefield. if it's an angel, put two +N/+N counters on it. | 1 | Defy Death | avr |
 | reveal the top two cards of your library. put all creature and land cards revealed ~ into your hand and the rest on the bottom of your library in any order. | 1 | Lair Delve | avr |

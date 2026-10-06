@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 25.0% |
-| Works (untested) | 58 | 50.0% |
+| Tested | 32 | 27.6% |
+| Works (untested) | 57 | 49.1% |
 | Partial (unaudited) | 3 | 2.6% |
-| Not working | 26 | 22.4% |
+| Not working | 24 | 20.7% |
 
 ## Cards needing work
 
@@ -33,14 +33,12 @@
 | Circle of Protection: Red | silent | {1}: The next time a red source of your choice would deal damage to you this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Circle of Protection: White | silent | {1}: The next time a white source of your choice would deal damage to you this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dingus Egg | silent | Whenever a land is put into a graveyard from the battlefield, this artifact deals 2 damage to that land's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Earthquake | silent | Earthquake deals X damage to each creature without flying and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Evil Presence | silent | Enchanted land is a Swamp. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Firebreathing | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flashfires | silent | Destroy all Plains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Force of Nature | silent | At the beginning of your upkeep, this creature deals 8 damage to you unless you pay {G}{G}{G}{G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gaea's Liege | silent | As long as Gaea's Liege isn't attacking, its power and toughness are each equal to the number of Forests you control. As long as Gaea's Liege is attacking, its  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin King | silent | Other Goblins get +1/+1 and have mountainwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hurricane | silent | Hurricane deals X damage to each creature with flying and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hypnotic Specter | silent | Whenever this creature deals damage to an opponent, that player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jade Statue | silent | {2}: This artifact becomes a 3/6 Golem artifact creature until end of combat. Activate only during combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lord of Atlantis | silent | Other Merfolk get +1/+1 and have islandwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -82,7 +80,6 @@
 | Nightmare | handled | Nightmare's power and toughness are each equal to the number of Swamps you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Orcish Artillery | handled | {T}: This creature deals 2 damage to any target and 3 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Prodigal Sorcerer | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Psionic Blast | handled | Psionic Blast deals 4 damage to any target and 2 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Regrowth | handled | Return target card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Resurrection | handled | Return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Righteousness | handled | Target blocking creature gets +7/+7 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -117,7 +114,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>32 cards</summary>
 
 - Birds of Paradise
 - Black Knight
@@ -125,6 +122,7 @@
 - Counterspell
 - Craw Wurm
 - Disrupting Scepter
+- Earthquake
 - Fireball
 - Fog
 - Forest
@@ -132,6 +130,7 @@
 - Giant Spider
 - Grizzly Bears
 - Hill Giant
+- Hurricane
 - Icy Manipulator
 - Island
 - Juggernaut
@@ -140,6 +139,7 @@
 - Llanowar Elves
 - Mountain
 - Plains
+- Psionic Blast
 - Raise Dead
 - Savannah Lions
 - Serra Angel
@@ -181,8 +181,6 @@
 | {M}: ~ becomes a N/N golem artifact creature until end of combat. activate only during combat. | 1 | Jade Statue | lea |
 | {M}: ~ gets +N/+N until end of turn. if ~ has been activated four or more times ~, sacrifice ~ at the beginning of the next end step. | 1 | Dragon Whelp | lea |
 | ~ deals N damage to any target. if it"..."t be regenerated ~, and if it would die ~, exile it instead. | 1 | Disintegrate | lea |
-| ~ deals N damage to each creature with flying and each player. | 1 | Hurricane | lea |
-| ~ deals N damage to each creature without flying and each player. | 1 | Earthquake | lea |
 
 ## Notes
 

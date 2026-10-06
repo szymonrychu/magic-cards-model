@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 10.4% |
+| Tested | 33 | 12.3% |
 | Works (untested) | 105 | 39.2% |
 | Partial (unaudited) | 27 | 10.1% |
-| Not working | 108 | 40.3% |
+| Not working | 103 | 38.4% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Ghitu Firebreathing | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghostflame Sliver | silent | All Slivers are colorless. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glass Asp | silent | Whenever this creature deals combat damage to a player, that player loses 2 life at the beginning of their next draw step unless they pay {2} before that step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Haunting Hymn | silent | Target player discards two cards. If you cast this spell during your main phase, that player discards four cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hivestone | silent | Creatures you control are Slivers in addition to their other creature types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hypergenesis | silent | Suspend 3—{1}{G}{G} Starting with you, each player may put an artifact, creature, enchantment, or land card from their hand onto the battlefield. Repeat this pr | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ib Halfheart, Goblin Tactician | silent | Whenever another Goblin you control becomes blocked, sacrifice it. If you do, it deals 4 damage to each creature blocking it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
@@ -67,7 +66,6 @@
 | Ith, High Arcanist | silent | {T}: Untap target attacking creature. Prevent all combat damage that would be dealt to and dealt by that creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ivory Giant | silent | When this creature enters, tap all nonwhite creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ixidron | silent | Ixidron's power and toughness are each equal to the number of face-down creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jaya Ballard, Task Mage | silent | {1}{R}, {T}, Discard a card: Jaya Ballard deals 3 damage to any target. A creature dealt damage this way can't be regenerated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jhoira's Timebug | silent | {T}: Choose target permanent you control or suspended card you own. If that permanent or card has a time counter on it, you may remove a time counter from it or | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of the Holy Nimbus | silent | {2}: This creature can't be regenerated this turn. Only your opponents may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Pit | silent | At the beginning of your upkeep, sacrifice a creature other than this creature. If you can't, this creature deals 7 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -80,7 +78,6 @@
 | Moonlace | silent | Target spell or permanent becomes colorless. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nether Traitor | silent | Whenever another creature is put into your graveyard from the battlefield, you may pay {B}. If you do, return this card from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Nightshade Assassin | silent | When this creature enters, you may reveal X black cards in your hand. If you do, target creature gets -X/-X until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Orcish Cannonade | silent | Orcish Cannonade deals 2 damage to any target and 3 damage to you. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Outrider en-Kor | silent | {0}: The next 1 damage that would be dealt to this creature this turn is dealt to target creature you control instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Paradox Haze | silent | At the beginning of enchanted player's first upkeep each turn, that player gets an additional upkeep step after this step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pardic Dragon | silent | Whenever an opponent casts a spell, if this card is suspended, that player may put a time counter on this card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -106,11 +103,9 @@
 | Spinneret Sliver | silent | All Sliver creatures have reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spirit Loop | silent | Whenever enchanted creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sprite Noble | silent | Other creatures you control with flying get +0/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Squall Line | silent | Squall Line deals X damage to each creature with flying and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stronghold Overseer | silent | {B}{B}: Creatures with shadow get +1/+0 until end of turn and creatures without shadow get -1/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stuffy Doll | silent | Whenever this creature is dealt damage, it deals that much damage to the chosen player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Subterranean Shambler | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Sulfurous Blast | silent | Sulfurous Blast deals 2 damage to each creature and each player. If you cast this spell during your main phase, Sulfurous Blast deals 3 damage to each creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tectonic Fiend | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Thelon of Havenwood | silent | Each Fungus creature gets +1/+1 for each spore counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thick-Skinned Goblin | silent | {R}: This creature gains protection from red until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -176,7 +171,6 @@
 | Cancel | handled | Counter target spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Careful Consideration | handled | Target player draws four cards, then discards three cards. If you cast this spell during your main phase, instead that player draws four cards, then discards tw | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chromatic Star | handled | When this artifact is put into a graveyard from the battlefield, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Clockwork Hydra | handled | This creature enters with four +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cloudchaser Kestrel | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conflagrate | handled | Conflagrate deals X damage divided as you choose among any number of targets. Flashback—{R}{R}, Discard X cards. (You may cast this card from your graveyard for | the engine reads this text and performs it | Y/-/- | not_tested |
 | Coral Trickster | handled | When this creature is turned face up, you may tap or untap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -246,6 +240,7 @@
 | Stonewood Invocation | handled | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Target creature gets +5/+5 and | the engine reads this text and performs it | Y/-/- | not_tested |
 | Strangling Soot | handled | Destroy target creature with toughness 3 or less. Flashback {5}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sudden Death | handled | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Target creature gets -4/-4 unt | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sulfurous Blast | handled | Sulfurous Blast deals 2 damage to each creature and each player. If you cast this spell during your main phase, Sulfurous Blast deals 3 damage to each creature  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Swarmyard | handled | {T}: Regenerate target Insect, Rat, Spider, or Squirrel. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Temporal Eddy | handled | Put target creature or land on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tendrils of Corruption | handled | Tendrils of Corruption deals X damage to target creature and you gain X life, where X is the number of Swamps you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -270,13 +265,14 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>33 cards</summary>
 
 - Ancestral Vision
 - Assembly-Worker
 - Brine Elemental
 - Calciform Pools
 - Children of Korlis
+- Clockwork Hydra
 - Coal Stoker
 - Dreadship Reef
 - Empty the Warrens
@@ -285,16 +281,20 @@
 - Gemstone Caverns
 - Grapeshot
 - Greater Gargadon
+- Haunting Hymn
+- Jaya Ballard, Task Mage
 - Krosan Grip
 - Living End
 - Lotus Bloom
 - Molten Slagheap
 - Mystical Teachings
 - Opal Guardian
+- Orcish Cannonade
 - Pit Keeper
 - Rift Bolt
 - Saltcrusted Steppe
 - Snapback
+- Squall Line
 - Sudden Shock
 - Sudden Spoiling
 - Tromp the Domains
@@ -358,7 +358,6 @@
 | suspend N—{M} each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices  | 1 | Restore Balance | tsp |
 | suspend N—{M}{M}{M} starting with you, each player may put an artifact, creature, enchantment, or land card from their hand onto the battlefield. repeat ~ until | 1 | Hypergenesis | tsp |
 | target creature gets +N/+N, becomes black, and gains shadow until end of turn. (it can block or be blocked by only creatures with shadow.) flashback {M}{M} (you | 1 | Traitor's Clutch | tsp |
-| target player discards two cards. if you cast ~ during your main phase, that player discards four cards instead. | 1 | Haunting Hymn | tsp |
 | target player reveals a card at random from their hand. ~ deals damage to that player equal to that card's mana value. storm (when you cast ~, copy it for each  | 1 | Ignite Memories | tsp |
 | target player reveals their hand and the top card of their library. you choose a card revealed ~. that player puts the chosen card on the bottom of their librar | 1 | Psychotic Episode | tsp |
 | target player sacrifices half the permanents they control of their choice, rounded down. suspend N—{M}{M}{M} (rather than cast ~ from your hand, you may pay {M} | 1 | Curse of the Cabal | tsp |
@@ -408,7 +407,6 @@
 | {M}: ~ gains protection from red until end of turn. | 1 | Thick-Skinned Goblin | tsp |
 | {M}: ~ gets +N/+N until end of turn. you skip your next turn. activate only once each turn and only if ~ is a creature. | 1 | Chronatog Totem | tsp |
 | {M}{M}, {M}, discard a card: each other player loses N life. you gain life equal to the life lost ~. | 1 | Urborg Syphon-Mage | tsp |
-| {M}{M}, {M}, discard a card: jaya ballard deals N damage to any target. a creature dealt damage ~ can't be regenerated ~. | 1 | Jaya Ballard, Task Mage | tsp |
 | {M}{M}, {M}: if ~ is on the battlefield, it deals damage equal to its power to target attacking creature. that creature deals damage equal to its power to ~. | 1 | Durkwood Tracker | tsp |
 | {M}{M}: creatures with shadow get +N/+N until end of turn and creatures without shadow get -N/-N until end of turn. | 1 | Stronghold Overseer | tsp |
 | {M}{M}: return ~ from your graveyard to the battlefield tapped. you skip your next turn. | 1 | Chronosavant | tsp |
@@ -416,9 +414,6 @@
 | ~ can block creatures with shadow as though they didn't have shadow. | 1 | Aetherflame Wall | tsp |
 | ~ can block only creatures with flying. | 1 | Stormcloud Djinn | tsp |
 | ~ can't be blocked except by artifact creatures and/or white creatures. | 1 | Amrou Seekers | tsp |
-| ~ deals N damage to any target and N damage to you. draw a card. | 1 | Orcish Cannonade | tsp |
-| ~ deals N damage to each creature and each player. if you cast ~ during your main phase, ~ deals N damage to each creature and each player instead. | 1 | Sulfurous Blast | tsp |
-| ~ deals N damage to each creature with flying and each player. | 1 | Squall Line | tsp |
 | ~'s power and toughness are each equal to the number of face-down creatures on the battlefield. | 1 | Ixidron | tsp |
 
 ## Notes

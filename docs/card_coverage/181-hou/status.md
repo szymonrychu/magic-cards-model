@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 8.2% |
+| Tested | 16 | 8.7% |
 | Works (untested) | 96 | 52.5% |
 | Partial (unaudited) | 5 | 2.7% |
-| Not working | 67 | 36.6% |
+| Not working | 66 | 36.1% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Nissa, Genesis Mage | silent | +2: Untap up to two target creatures and up to two target lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Proven Combatant | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Reason // Believe | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Look at the top card of your library. You may put it onto the battlefield if it's a creatur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Refuse // Cooperate | silent | Refuse deals damage to target spell's controller equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Resilient Khenra | silent | When this creature enters, you may have target creature get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Resolute Survivors | silent | Whenever you exert a creature, this creature deals 1 damage to each opponent and you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Rhonas's Stalwart | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 until end of turn and can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -198,7 +197,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Abrade
 - Chandra's Defeat
@@ -211,6 +210,7 @@
 - Nissa's Defeat
 - Oketra's Last Mercy
 - Pride Sovereign
+- Refuse // Cooperate
 - Sand Strangler
 - Solemnity
 - Striped Riverwinder
@@ -278,7 +278,6 @@
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn and can't be blocked by creatures with power N or less ~. | 1 | Rhonas's Stalwart | hou |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 1 | Khenra Scrapper | hou |
 | you may exert ~ as it attacks. when you do, prevent all combat damage that would be dealt to it ~. | 1 | Oketra's Avenger | hou |
-| ~ deals damage to target spell"..."s mana value. | 1 | Refuse // Cooperate | hou |
 | ~ gets +N/+N as long as you control a desert. | 1 | Ramunap Hydra | hou |
 | ~ gets +N/+N for each card with cycling in your graveyard. | 1 | Vile Manifestation | hou |
 | ~ has first strike as long as it's attacking. | 1 | Thorned Moloch | hou |

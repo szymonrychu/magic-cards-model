@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.6% |
+| Tested | 28 | 11.4% |
 | Works (untested) | 149 | 60.6% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 64 | 26.0% |
+| Not working | 62 | 25.2% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Captured by the Consulate | silent | Whenever an opponent casts a spell, if it has a single target, change the target to enchanted creature if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cataclysmic Gearhulk | silent | When this creature enters, each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Combustible Gearhulk | silent | When this creature enters, target opponent may have you draw three cards. If the player doesn't, you mill three cards, then this creature deals damage to that p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Commencement of Festivities | silent | Prevent all combat damage that would be dealt to players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Confiscation Coup | silent | Choose target artifact or creature. You get {E}{E}{E}{E} (four energy counters), then you may pay an amount of {E} equal to that permanent's mana value. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consulate Surveillance | silent | Pay {E}{E}: Prevent all damage that would be dealt to you this turn by a source of your choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cultivator of Blades | silent | Whenever this creature attacks, you may have other attacking creatures get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -52,7 +51,6 @@
 | Eager Construct | silent | When this creature enters, each player may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elegant Edgecrafters | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Empyreal Voyager | silent | Whenever this creature deals combat damage to a player, you get that many {E} . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fateful Showdown | silent | Fateful Showdown deals damage to any target equal to the number of cards in your hand. Discard all the cards in your hand, then draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fleetwheel Cruiser | silent | When this Vehicle enters, it becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fumigate | silent | Destroy all creatures. You gain 1 life for each creature destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gearshift Ace | silent | Whenever this creature crews a Vehicle, that Vehicle gains first strike until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -250,7 +248,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>28 cards</summary>
 
 - Aetherstorm Roc
 - Armorcraft Judge
@@ -258,6 +256,7 @@
 - Blossoming Defense
 - Cathartic Reunion
 - Chandra, Torch of Defiance
+- Commencement of Festivities
 - Concealed Courtyard
 - Consul's Shieldguard
 - Cultivator's Caravan
@@ -265,6 +264,7 @@
 - Eddytrail Hawk
 - Fabrication Module
 - Fairgrounds Trumpeter
+- Fateful Showdown
 - Harnessed Lightning
 - Hijack
 - Inspiring Vantage
@@ -310,7 +310,6 @@
 | pay {M}: ~ gets +N/-N or -N/+N until end of turn. | 1 | Multiform Wonder | kld |
 | pay {M}{M}: prevent all damage that would be dealt to you ~ by a source of your choice. | 1 | Consulate Surveillance | kld |
 | pay {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Hightide Hermit | kld |
-| prevent all combat damage that would be dealt to players ~. | 1 | Commencement of Festivities | kld |
 | return any number of target nonland, nontoken permanents you control to their owners' hands. draw a card for each card returned to your hand ~. | 1 | Paradoxical Outcome | kld |
 | reveal cards from the top of your library until you reveal an artifact card. put that card onto the battlefield and the rest on the bottom of your library in a  | 1 | Madcap Experiment | kld |
 | search your library for a basic land card and put it onto the battlefield tapped. search your library and graveyard for a card named nissa, nature's artisan, re | 1 | Verdant Crescendo | kld |
@@ -342,7 +341,6 @@
 | ~ can't attack alone. | 1 | Trusty Companion | kld |
 | ~ can't be blocked by creatures with power N or less. | 1 | Demolition Stomper | kld |
 | ~ costs {M} less to cast, where N is the total mana value of noncreature artifacts you control. | 1 | Metalwork Colossus | kld |
-| ~ deals damage to any target equal to the number of cards in your hand. discard all the cards in your hand, then draw that many cards. | 1 | Fateful Showdown | kld |
 | −N: reveal the top two cards of your library. put all land cards from among them onto the battlefield and the rest into your hand. | 1 | Nissa, Nature's Artisan | kld |
 
 ## Notes

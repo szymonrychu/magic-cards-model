@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 48 | 19.0% |
-| Works (untested) | 136 | 54.0% |
+| Tested | 51 | 20.2% |
+| Works (untested) | 134 | 53.2% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 61 | 24.2% |
+| Not working | 60 | 23.8% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Dawnstrike Vanguard | silent | At the beginning of your end step, if you control two or more tapped creatures, put a +1/+1 counter on each creature you control other than this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Debris Field Crusher | silent | {1}{R}: This Spacecraft gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dyadrine, Synthesis Amalgam | silent | Whenever you attack, you may remove a +1/+1 counter from each of two creatures you control. If you do, draw a card and create a 2/2 colorless Robot artifact cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Focus Fire | silent | Focus Fire deals X damage to target attacking or blocking creature, where X is 2 plus the number of creatures and/or Spacecraft you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gravblade Heavy | silent | As long as you control an artifact, this creature gets +1/+0 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hymn of the Faller | silent | Surveil 1, then you draw a card and lose 1 life. (To surveil 1, look at the top card of your library. You may put it into your graveyard.) Void — If a nonland p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infinite Guideline Station | silent | When Infinite Guideline Station enters, create a tapped 2/2 colorless Robot artifact creature token for each multicolored permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -154,7 +153,6 @@
 | Lashwhip Predator | handled | This spell costs {2} less to cast if your opponents control three or more creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lightless Evangel | handled | Whenever you sacrifice another creature or artifact, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lost in Space | handled | Target artifact or creature's owner puts it on their choice of the top or bottom of their library. Surveil 1. (Look at the top card of your library. You may put | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Lumen-Class Frigate | handled | Other creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mechan Assembler | handled | Whenever another artifact you control enters, create a 2/2 colorless Robot artifact creature token. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mechan Navigator | handled | Whenever this creature becomes tapped, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mechanozoa | handled | When this creature enters, tap target artifact or creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -228,13 +226,12 @@
 | Wedgelight Rammer | handled | When this Spacecraft enters, create a 2/2 colorless Robot artifact creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Weftblade Enhancer | handled | When this creature enters, put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Weftstalker Ardent | handled | Whenever another creature or artifact you control enters, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Wurmwall Sweeper | handled | When this Spacecraft enters, surveil 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Zookeeper Mechan | handled | {6}{R}: Target creature you control gets +4/+0 until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>48 cards</summary>
+<summary>51 cards</summary>
 
 - Archenemy's Charm
 - Biotech Specialist
@@ -249,6 +246,7 @@
 - Extinguisher Battleship
 - Famished Worldsire
 - Fell Gravship
+- Focus Fire
 - Gene Pollinator
 - Haliya, Guided by Light
 - Hylderblade
@@ -258,6 +256,7 @@
 - Kavaron Harrier
 - Kavaron Skywarden
 - Lithobraking
+- Lumen-Class Frigate
 - Meltstrider's Resolve
 - Mightform Harmonizer
 - Moonlit Meditation
@@ -283,6 +282,7 @@
 - Uthros, Titanic Godcore
 - Voidforged Titan
 - Weapons Manufacturing
+- Wurmwall Sweeper
 - Zealous Display
 
 </details>
@@ -353,7 +353,6 @@
 | {M}{M}, {M}, sacrifice a land: create a N/N colorless robot artifact creature token, then creatures you control get +N/+N and gain haste until end of turn. | 1 | Kavaron, Memorial World | eoe |
 | {M}{M}, {M}: create a token that"..."s legendary. activate only as a sorcery. | 1 | Adagia, Windswept Bastion | eoe |
 | {M}{M}: ~ gets +N/+N until end of turn. | 1 | Debris Field Crusher | eoe |
-| ~ deals N damage to target attacking or blocking creature, where N is N plus the number of creatures and/or spacecraft you control. | 1 | Focus Fire | eoe |
 | ~ deals N damage to target creature. if excess damage was dealt ~, create a lander token. (it's an artifact with "...") | 1 | Orbital Plunge | eoe |
 | ~ enters with a +N/+N counter on it for each other creature and/or artifact you control. | 1 | Luxknight Breacher | eoe |
 | ~ gets +N/+N as long as you've cast two or more spells ~. | 1 | Brightspear Zealot | eoe |

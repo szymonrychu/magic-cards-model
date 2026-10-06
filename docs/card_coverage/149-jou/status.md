@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 6.2% |
-| Works (untested) | 97 | 60.2% |
+| Works (untested) | 98 | 60.9% |
 | Partial (unaudited) | 6 | 3.7% |
-| Not working | 48 | 29.8% |
+| Not working | 47 | 29.2% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Godsend | silent | Whenever equipped creature blocks or becomes blocked by one or more creatures, you may exile one of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goldenhide Ox | silent | Constellation — Whenever this creature or another enchantment you control enters, target creature must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness by Force | silent | Strive — This spell costs {2}{R} more to cast for each target beyond the first. Gain control of any number of target creatures until end of turn. Untap those cr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Harvestguard Alseids | silent | Constellation — Whenever this creature or another enchantment you control enters, prevent all damage that would be dealt to target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hour of Need | silent | Strive — This spell costs {1}{U} more to cast for each target beyond the first. Exile any number of target creatures. For each creature exiled this way, its con | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hubris | silent | Return target creature and all Auras attached to it to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hydra Broodmaster | silent | When this creature becomes monstrous, create X X/X green Hydra creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -124,6 +123,7 @@
 | Gold-Forged Sentinel | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Golden Hind | handled |  |  | Y/Y/- | not_tested |
 | Grim Guardian | handled | Constellation — Whenever this creature or another enchantment you control enters, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Harvestguard Alseids | handled | Constellation — Whenever this creature or another enchantment you control enters, prevent all damage that would be dealt to target creature this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Humbler of Mortals | handled | Constellation — Whenever this creature or another enchantment you control enters, creatures you control gain trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hypnotic Siren | handled | You control enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kiora's Dismissal | handled | Strive — This spell costs {U} more to cast for each target beyond the first. Return any number of target enchantments to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -202,7 +202,7 @@
 |---|---|---|---|
 | Strive | 8 | Blinding Flare, Colossal Heroics, Harness by Force, Hour of Need, Nature's Panoply | jou |
 | Inspired | 3 | Daring Thief, Disciple of Deceit, King Macar, the Gold-Cursed | jou |
-| Constellation | 2 | Goldenhide Ox, Harvestguard Alseids | jou |
+| Constellation | 1 | Goldenhide Ox | jou |
 | as an additional cost to cast ~, sacrifice a creature. target player discards a number of cards equal to the sacrificed creature's power. | 1 | Tormented Thoughts | jou |
 | at the beginning of your upkeep, return an enchantment you control to its owner's hand. | 1 | Riptide Chimera | jou |
 | counter target spell. its controller mills four cards. | 1 | Countermand | jou |

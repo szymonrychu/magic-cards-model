@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 6.3% |
+| Tested | 15 | 6.7% |
 | Works (untested) | 141 | 63.2% |
 | Partial (unaudited) | 7 | 3.1% |
-| Not working | 61 | 27.4% |
+| Not working | 60 | 26.9% |
 
 ## Cards needing work
 
@@ -66,7 +66,6 @@
 | Realm Razer | silent | When this creature leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Resounding Scream | silent | Target player discards a card at random. Cycling {5}{U}{B}{R} ({5}{U}{B}{R}, Discard this card: Draw a card.) When you cycle this card, target player discards t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rhox Charger | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Rockcaster Platoon | silent | {4}{G}: This creature deals 2 damage to each creature with flying and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sacellum Godspeaker | silent | {T}: Reveal any number of creature cards with power 5 or greater from your hand. Add {G} for each card revealed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scourglass | silent | {T}, Sacrifice this artifact: Destroy all permanents except for artifacts and lands. Activate only during your upkeep. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sighted-Caste Sorcerer | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -239,7 +238,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Angelsong
 - Blightning
@@ -252,6 +251,7 @@
 - Lich's Mirror
 - Punish Ignorance
 - Relic of Progenitus
+- Rockcaster Platoon
 - Salvage Titan
 - Thunder-Thrash Elder
 - Vein Drinker
@@ -314,7 +314,6 @@
 | {M}{M}, {M}, sacrifice a white creature, a blue creature, and a black creature: search your library for a card named sphinx sovereign, put it onto the battlefie | 1 | Sphinx's Herald | ala |
 | {M}{M}, {M}: prevent all damage that would be dealt to target creature with power N or greater ~. | 1 | Godtoucher | ala |
 | {M}{M}, {M}: target player loses N life and reveals their hand. | 1 | Thoughtcutter Agent | ala |
-| {M}{M}: ~ deals N damage to each creature with flying and each player. | 1 | Rockcaster Platoon | ala |
 | {M}{M}{M}{M}, {M}: look at the top five cards of your library. you may put a creature card with power N or greater from among them onto the battlefield. put the | 1 | Mayael the Anima | ala |
 | ~ deals N damage to target creature. when a creature dealt damage ~ dies ~, create a N/N black skeleton creature token with "..." | 1 | Skeletonize | ala |
 | ~ gets +N/+N as long as you control a mountain. | 1 | Wild Nacatl | ala |

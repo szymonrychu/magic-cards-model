@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 0 | 0.0% |
+| Tested | 1 | 5.3% |
 | Works (untested) | 10 | 52.6% |
 | Partial (unaudited) | 4 | 21.1% |
-| Not working | 5 | 26.3% |
+| Not working | 4 | 21.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Inflame | silent | Inflame deals 2 damage to each creature dealt damage this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jolrael, Empress of Beasts | silent | {2}{G}, {T}, Discard two cards: All lands target player controls become 3/3 creatures until end of turn. They're still lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lesser Gargadon | silent | Whenever this creature attacks or blocks, sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Panic Attack | silent | Up to three target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -49,8 +48,9 @@
 ## Fully supported
 
 <details>
-<summary>0 cards</summary>
+<summary>1 cards</summary>
 
+- Inflame
 
 </details>
 
@@ -66,7 +66,6 @@
 | up to three target creatures can't block ~. | 1 | Panic Attack | pcy |
 | whenever ~ attacks or blocks, sacrifice a land. | 1 | Lesser Gargadon | pcy |
 | {M}{M}, {M}, discard two cards: all lands target player controls become N/N creatures until end of turn. they're still lands. | 1 | Jolrael, Empress of Beasts | pcy |
-| ~ deals N damage to each creature dealt damage ~. | 1 | Inflame | pcy |
 
 ## Notes
 

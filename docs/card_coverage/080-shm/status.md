@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 11.7% |
+| Tested | 34 | 12.4% |
 | Works (untested) | 124 | 45.3% |
 | Partial (unaudited) | 12 | 4.4% |
-| Not working | 106 | 38.7% |
+| Not working | 104 | 38.0% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Enchanted Evening | silent | All permanents are enchantments in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faerie Swarm | silent | Faerie Swarm's power and toughness are each equal to the number of blue permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fate Transfer | silent | Move all counters from target creature onto another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Firespout | silent | Firespout deals 3 damage to each creature without flying if {R} was spent to cast this spell and 3 damage to each creature with flying if {G} was spent to cast  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fists of the Demigod | silent | As long as enchanted creature is black, it gets +1/+1 and has wither. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flourishing Defenses | silent | Whenever a -1/-1 counter is put on a creature, you may create a 1/1 green Elf Warrior creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Fossil Find | silent | Return a card at random from your graveyard to your hand, then reorder your graveyard as you choose. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -68,7 +67,6 @@
 | Incremental Blight | silent | Put a -1/-1 counter on target creature, two -1/-1 counters on another target creature, and three -1/-1 counters on a third target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inkfathom Witch | silent | {2}{U}{B}: Each unblocked creature has base power and toughness 4/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inquisitor's Snare | silent | Prevent all damage target attacking or blocking creature would deal this turn. If that creature is black or red, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jaws of Stone | silent | Jaws of Stone deals X damage divided as you choose among any number of targets, where X is the number of Mountains you control as you cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kinscaer Harpoonist | silent | Whenever this creature attacks, you may have target creature lose flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kithkin Rabble | silent | Kithkin Rabble's power and toughness are each equal to the number of white permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knollspine Dragon | silent | When this creature enters, you may discard your hand and draw cards equal to the damage dealt to target opponent this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -92,7 +90,6 @@
 | Raking Canopy | silent | Whenever a creature with flying attacks you, this enchantment deals 4 damage to it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Repel Intruders | silent | Create two 1/1 white Kithkin Soldier creature tokens if {W} was spent to cast this spell. Counter up to one target creature spell if {U} was spent to cast this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rhys the Redeemed | silent | {4}{G/W}{G/W}, {T}: For each creature token you control, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| River's Grasp | silent | If {U} was spent to cast this spell, return up to one target creature to its owner's hand. If {B} was spent to cast this spell, target player reveals their hand | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Roughshod Mentor | silent | Green creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Runes of the Deus | silent | As long as enchanted creature is red, it gets +1/+1 and has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scuttlemutt | silent | {T}: Target creature becomes the color or colors of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -128,6 +125,7 @@
 | Mudbrawler Cohort | notice | This creature gets +1/+1 as long as you control another red creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Puppeteer Clique | notice | When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rattleblaze Scarecrow | notice | This creature has persist as long as you control a black creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| River's Grasp | notice | If {U} was spent to cast this spell, return up to one target creature to its owner's hand. If {B} was spent to cast this spell, target player reveals their hand | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thornwatch Scarecrow | notice | This creature has wither as long as you control a green creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Watchwing Scarecrow | notice | This creature has vigilance as long as you control a white creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wicker Warcrawler | notice | Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -272,7 +270,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>34 cards</summary>
 
 - Beseech the Queen
 - Blowfly Infestation
@@ -285,8 +283,10 @@
 - Devoted Druid
 - Ember Gale
 - Faerie Macabre
+- Firespout
 - Hollowborn Barghest
 - Illuminated Folio
+- Jaws of Stone
 - Kitchen Finks
 - Manamorphose
 - Mirrorweave
@@ -413,8 +413,6 @@
 | {M}{M}{M}: each unblocked creature has base power and toughness N/N until end of turn. | 1 | Inkfathom Witch | shm |
 | ~ can block only creatures with flying. | 1 | Gloomwidow | shm |
 | ~ can't attack unless defending player controls a blue permanent. | 1 | Whimwader | shm |
-| ~ deals N damage divided as you choose among any number of targets, where N is the number of mountains you control as you cast ~. | 1 | Jaws of Stone | shm |
-| ~ deals N damage to each creature without flying if {M} was spent to cast ~ and N damage to each creature with flying if {M} was spent to cast ~. (do both if {M | 1 | Firespout | shm |
 | ~ gets +N/+N as long as a library has twenty or fewer cards in it. | 1 | Isleback Spawn | shm |
 | ~ gets +N/+N as long as you control another black creature. | 1 | Ashenmoor Cohort | shm |
 | ~ gets +N/+N as long as you control another blue creature. | 1 | Briarberry Cohort | shm |

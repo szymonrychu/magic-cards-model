@@ -52,7 +52,7 @@
 | Hydra's Growth | silent | When this Aura enters, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Impending Doom | silent | Enchanted creature gets +3/+3 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inspire Awe | silent | Prevent all combat damage that would be dealt this turn except combat damage that would be dealt by enchanted creatures and enchantment creatures. Scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kiora Bests the Sea God | silent | II — Tap all nonland permanents target opponent controls. They don't untap during their controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Kiora Bests the Sea God | silent | III — Gain control of target permanent an opponent controls. Untap it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lagonna-Band Storyteller | silent | When this creature enters, you may put target enchantment card from your graveyard on top of your library. If you do, you gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Medomai's Prophecy | silent | III — When you cast a spell with the chosen name for the first time this turn, draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mystic Repeal | silent | Put target enchantment on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -307,6 +307,7 @@
 | equipped creatures you control have flying and haste. | 1 | Dalakos, Crafter of Wonders | thb |
 | exile target opponent's graveyard. | 1 | Elspeth's Nightmare | thb |
 | for each spell and ability your opponents control, counter it unless its controller pays {M}. | 1 | Whirlwind Denial | thb |
+| gain control of target permanent an opponent controls. untap it. | 1 | Kiora Bests the Sea God | thb |
 | if a creature dealt damage by ~ ~ would die, exile it instead. | 1 | Incendiary Oracle | thb |
 | if a creature would deal combat damage to ~, prevent that damage and put a +N/+N counter on ~. | 1 | Ironscale Hydra | thb |
 | if damage would be dealt to polukranos while it has a +N/+N counter on it, prevent that damage and remove that many +N/+N counters from it. | 1 | Polukranos, Unchained | thb |
@@ -321,7 +322,6 @@
 | reveal the top six cards of your library. an opponent exiles a nonland card from among them, then you put the rest into your hand. that opponent may cast the ex | 1 | Allure of the Unknown | thb |
 | sacrifice ~: equipped creature can't be blocked ~. sacrifice it at the beginning of the next end step. | 1 | Wings of Hubris | thb |
 | spells you cast with mana value N or greater cost {M} less to cast and can't be countered. | 1 | Thryx, the Sudden Storm | thb |
-| tap all nonland permanents target opponent controls. they don"..."s next untap step. | 1 | Kiora Bests the Sea God | thb |
 | target creature gets +N/+N until end of turn. if it"..."t be the target of spells or abilities your opponents control. damage and effects that say "..." don't d | 1 | Karametra's Blessing | thb |
 | target opponent reveals their hand. you choose a nonland card from it or a card from their graveyard. exile that card. you lose N life. | 1 | Agonizing Remorse | thb |
 | tymaret's toughness is equal to your devotion to black. | 1 | Tymaret, Chosen from Death | thb |

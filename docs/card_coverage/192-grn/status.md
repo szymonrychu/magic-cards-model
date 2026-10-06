@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 7.3% |
-| Works (untested) | 133 | 57.1% |
+| Works (untested) | 134 | 57.5% |
 | Partial (unaudited) | 5 | 2.1% |
-| Not working | 78 | 33.5% |
+| Not working | 77 | 33.0% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Beamsplitter Mage | silent | Whenever you cast an instant or sorcery spell that targets only this creature, if you control one or more other creatures that spell could target, choose one of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blade Instructor | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Blood Operative | silent | Whenever you surveil, if this card is in your graveyard, you may pay 3 life. If you do, return this card to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Book Devourer | silent | Whenever this creature deals combat damage to a player, you may discard all the cards in your hand. If you do, draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boros Challenger | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chance for Glory | silent | Creatures you control gain indestructible. Take an extra turn after this one. At the beginning of that turn's end step, you lose the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Charnel Troll | silent | At the beginning of your upkeep, exile a creature card from your graveyard. If you do, put a +1/+1 counter on this creature. Otherwise, sacrifice it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -116,6 +115,7 @@
 | Barrier of Bones | handled | When this creature enters, surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bartizan Bats | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Beast Whisperer | handled | Whenever you cast a creature spell, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Book Devourer | handled | Whenever this creature deals combat damage to a player, you may discard all the cards in your hand. If you do, draw that many cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boros Locket | handled | {R/W}{R/W}{R/W}{R/W}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bounty Agent | handled | {T}, Sacrifice this creature: Destroy target legendary permanent that's an artifact, creature, or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bounty of Might | handled | Target creature gets +3/+3 until end of turn. Target creature gets +3/+3 until end of turn. Target creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -326,7 +326,6 @@
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Ledev Champion | grn |
 | whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Ornery Goblin | grn |
 | whenever ~ deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest into their grav | 1 | Thief of Sanity | grn |
-| whenever ~ deals combat damage to a player, you may discard all the cards in your hand. if you do, draw that many cards. | 1 | Book Devourer | grn |
 | you may put two +N/+N counters on a creature you control. then all creatures get -N/-N until end of turn. | 1 | Find // Finality | grn |
 | {M}: ~ loses all abilities until end of turn. any player may activate ~. | 1 | Nullhide Ferox | grn |
 | {M}{M}, {M}: copy target instant or sorcery spell you control with mana value N. you may choose new targets for the copy. | 1 | League Guildmage | grn |

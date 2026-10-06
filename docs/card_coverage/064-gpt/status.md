@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 6.7% |
+| Tested | 11 | 7.4% |
 | Works (untested) | 81 | 54.4% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 51 | 34.2% |
+| Not working | 50 | 33.6% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Nivix, Aerie of the Firemind | silent | {2}{U}{R}, {T}: Exile the top card of your library. Until your next turn, you may cast it if it's an instant or sorcery spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orzhov Euthanist | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Orzhov Pontiff | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Parallectric Feedback | silent | Parallectric Feedback deals damage to target spell's controller equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Poisonbelly Ogre | silent | Whenever another creature enters, its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Predatory Focus | silent | You may have creatures you control assign their combat damage this turn as though they weren't blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primeval Light | silent | Destroy all enchantments target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -169,7 +168,7 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Burning-Tree Shaman
 - Electrolyze
@@ -178,6 +177,7 @@
 - Gruul Turf
 - Leyline of the Void
 - Order of the Stars
+- Parallectric Feedback
 - Skarrgan Firebird
 - Steam Vents
 - Stomping Ground
@@ -238,7 +238,6 @@
 | {M}{M}{M}, {M}, sacrifice ~: exile target nonland card from a graveyard, all other cards from graveyards with the same name as that card, and all permanents wit | 1 | Moratorium Stone | gpt |
 | {M}{M}{M}, {M}: exile the top card of your library. until your next turn, you may cast it if it's an instant or sorcery spell. | 1 | Nivix, Aerie of the Firemind | gpt |
 | ~ can block only creatures with flying. | 1 | Stratozeppelid | gpt |
-| ~ deals damage to target spell"..."s mana value. | 1 | Parallectric Feedback | gpt |
 
 ## Notes
 

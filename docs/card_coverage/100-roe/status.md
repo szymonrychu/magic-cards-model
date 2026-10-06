@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 10.9% |
+| Tested | 25 | 11.4% |
 | Works (untested) | 105 | 47.7% |
 | Partial (unaudited) | 8 | 3.6% |
-| Not working | 83 | 37.7% |
+| Not working | 82 | 37.3% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Guul Draz Assassin | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hada Spy Patrol | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Halimar Wavewatch | silent | Level up {2} ({2}: Put a level counter on this. Level up only as a sorcery.) LEVEL 1-4 0/6 LEVEL 5+ 6/6 Islandwalk (This creature can't be blocked as long as de | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Harmless Assault | silent | Prevent all combat damage that would be dealt this turn by attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Haze Frog | silent | When this creature enters, prevent all combat damage that other creatures would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hedron-Field Purists | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hellcarver Demon | silent | Whenever this creature deals combat damage to a player, sacrifice all other permanents you control and discard your hand. Exile the top six cards of your librar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -226,7 +225,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -235,6 +234,7 @@
 - Eldrazi Temple
 - Emrakul, the Aeons Torn
 - Essence Feed
+- Harmless Assault
 - Hyena Umbra
 - Inquisition of Kozilek
 - Living Destiny
@@ -300,7 +300,6 @@
 | level up {M}{M} ({M}{M}: put a level counter on this. level up only as a sorcery.) level N-N N/N deathtouch level N+ N/N first strike, deathtouch | 1 | Nirkana Cutthroat | roe |
 | level up {M}{M} ({M}{M}: put a level counter on this. level up only as a sorcery.) level N-N N/N level N+ N/N trample | 1 | Beastbreaker of Bala Ged | roe |
 | other creatures you control with defender get +N/+N. | 1 | Stalwart Shield-Bearers | roe |
-| prevent all combat damage that would be dealt ~ by attacking creatures. | 1 | Harmless Assault | roe |
 | put target creature into its owner's library second from the top. its controller gains N life. | 1 | Oust | roe |
 | return an instant card at random from your graveyard to your hand. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your next | 1 | Surreal Memoir | roe |
 | sacrifice all creatures you control, then create that many N/N red hellion creature tokens. | 1 | Hellion Eruption | roe |

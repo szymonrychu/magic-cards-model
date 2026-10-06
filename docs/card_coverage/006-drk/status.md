@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 15.0% |
+| Tested | 4 | 20.0% |
 | Works (untested) | 11 | 55.0% |
 | Partial (unaudited) | 2 | 10.0% |
-| Not working | 4 | 20.0% |
+| Not working | 3 | 15.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Inferno | silent | Inferno deals 6 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mana Clash | silent | You and target opponent each flip a coin. Mana Clash deals 1 damage to each player whose coin comes up tails. Repeat this process until both players' coins come | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Safe Haven | notice | At the beginning of your upkeep, you may sacrifice this land. If you do, return each card exiled with this land to the battlefield under its owner's control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | War Barge | notice | {3}: Target creature gains islandwalk until end of turn. When this artifact leaves the battlefield this turn, destroy that creature. A creature destroyed this w | unparsed remainder: When this artifact leaves the battlefield this turn, destroy that creature. A creature destroyed this way can't be regenerated. | Y/-/- | not_working |
@@ -47,10 +46,11 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>4 cards</summary>
 
 - Ball Lightning
 - Blood Moon
+- Inferno
 - Tormod's Crypt
 
 </details>
@@ -63,7 +63,6 @@
 | prevent all damage that would be dealt to ~ by creatures. | 1 | Uncle Istvan | drk |
 | you and target opponent each flip a coin. ~ deals N damage to each player whose coin comes up tails. repeat ~ until both players' coins come up heads on the sam | 1 | Mana Clash | drk |
 | {M}: target creature gains islandwalk until end of turn. when ~ leaves the battlefield ~, destroy that creature. a creature destroyed ~ can't be regenerated. | 1 | War Barge | drk |
-| ~ deals N damage to each creature and each player. | 1 | Inferno | drk |
 | ~ enters tapped and doesn't untap during your untap step. | 1 | Leviathan | drk |
 
 ## Notes

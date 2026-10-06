@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 9.4% |
-| Works (untested) | 104 | 57.5% |
+| Tested | 19 | 10.5% |
+| Works (untested) | 103 | 56.9% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 53 | 29.3% |
+| Not working | 52 | 28.7% |
 
 ## Cards needing work
 
@@ -69,7 +69,6 @@
 | Tragic Arrogance | silent | For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Undead Servant | silent | When this creature enters, create a 2/2 black Zombie creature token for each card named Undead Servant in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Valeron Wardens | silent | Whenever a creature you control becomes renowned, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Vine Snare | silent | Prevent all combat damage that would be dealt this turn by creatures with power 4 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | War Horn | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Willbreaker | silent | Whenever a creature an opponent controls becomes the target of a spell or ability you control, gain control of that creature for as long as you control this cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Demonic Pact | notice | At the beginning of your upkeep, choose one that hasn't been chosen — • This enchantment deals 4 damage to any target and you gain 4 life. • Target opponent dis | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -188,13 +187,12 @@
 | Vryn Wingmare | handled | Noncreature spells cost {1} more to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | War Oracle | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Whirler Rogue | handled | When this creature enters, create two 1/1 colorless Thopter artifact creature tokens with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Wild Instincts | handled | Target creature you control gets +2/+2 until end of turn. It fights target creature an opponent controls. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zendikar's Roil | handled | Landfall — Whenever a land you control enters, create a 2/2 green Elemental creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>19 cards</summary>
 
 - Alhammarret's Archive
 - Boggart Brute
@@ -212,6 +210,8 @@
 - Scab-Clan Berserker
 - Sigil of Valor
 - Unholy Hunger
+- Vine Snare
+- Wild Instincts
 - Zendikar Incarnate
 
 </details>
@@ -243,7 +243,6 @@
 | if another red source you control would deal damage to a permanent or player, it deals that much damage plus N to that permanent or player instead. | 1 | Embermaw Hellion | ori |
 | non-elf creatures get -N/-N until end of turn. | 1 | Eyeblight Massacre | ori |
 | other creatures you control with flying get +N/+N. | 1 | Thunderclap Wyvern | ori |
-| prevent all combat damage that would be dealt ~ by creatures with power N or less. | 1 | Vine Snare | ori |
 | put target creature card from a graveyard onto the battlefield under your control. spell mastery — if there are two or more instant and/or sorcery cards in your | 1 | Necromantic Summons | ori |
 | regenerate target creature. draw a card. (the next time the creature would be destroyed ~, instead tap it, remove it from combat, and heal all damage on it.) sp | 1 | Dark Dabbling | ori |
 | return all nonland permanents with mana value N or less to their owners' hands. | 1 | Displacement Wave | ori |

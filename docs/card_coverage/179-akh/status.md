@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 8.3% |
-| Works (untested) | 136 | 56.4% |
+| Tested | 21 | 8.7% |
+| Works (untested) | 137 | 56.8% |
 | Partial (unaudited) | 19 | 7.9% |
-| Not working | 66 | 27.4% |
+| Not working | 64 | 26.6% |
 
 ## Cards needing work
 
@@ -42,9 +42,7 @@
 | Destined // Lead | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) All creatures able to block target creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dispossess | silent | Choose an artifact card name. Search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. Then that playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dusk // Dawn | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Return all creature cards with power 2 or less from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Edifice of Authority | silent | {1}, {T}: Until your next turn, target creature can't attack or block and its activated abilities can't be activated. Activate only if there are three or more b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emberhorn Minotaur | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 and gains menace until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Exemplar of Strength | silent | Whenever this creature attacks, remove a -1/-1 counter from it. If you do, you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Failure // Comply | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Choose a card name. Until your next turn, your opponents can't cast spells with the chosen  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gate to the Afterlife | silent | {2}, {T}, Sacrifice this artifact: Search your graveyard, hand, and/or library for a card named God-Pharaoh's Gift and put it onto the battlefield. If you searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon's Resolve | silent | When this enchantment enters, you may search your library and/or graveyard for a card named Gideon, Martial Paragon, reveal it, and put it into your hand. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -149,6 +147,7 @@
 | Dread Wanderer | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dune Beetle | handled |  |  | Y/Y/- | not_tested |
 | Electrify | handled | Electrify deals 4 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Exemplar of Strength | handled | When this creature enters, put three -1/-1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Faith of the Devoted | handled | Whenever you cycle or discard a card, you may pay {1}. If you do, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fan Bearer | handled | {2}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Festering Mummy | handled | When this creature dies, you may put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -251,13 +250,14 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Angler Drake
 - Archfiend of Ifnir
 - Cascading Cataracts
 - Censor
 - Curator of Mysteries
+- Edifice of Authority
 - Gideon of the Trials
 - Harsh Mentor
 - Harvest Season
@@ -327,7 +327,6 @@
 | whenever you exert a creature, you may discard a card. if you do, draw a card. | 1 | Battlefield Scavenger | akh |
 | whenever you put one or more -N/-N counters on ~, remove a -N/-N counter from another target creature you control. | 1 | Defiant Greatmaw | akh |
 | whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Honored Crop-Captain | akh |
-| whenever ~ attacks, remove a -N/-N counter from it. if you do, you gain N life. | 1 | Exemplar of Strength | akh |
 | whenever ~ attacks, remove a -N/-N counter from target creature you control and put a -N/-N counter on up to one target creature defending player controls. | 1 | Decimator Beetle | akh |
 | whenever ~ becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | 1 | Glyph Keeper | akh |
 | you can spend mana of any type to cast creature spells. | 1 | Vizier of the Menagerie | akh |
@@ -345,7 +344,6 @@
 | you may exert ~ as it attacks. when you do, you may put a creature card from your hand onto the battlefield. | 1 | Champion of Rhonas | akh |
 | your opponents can't cast spells with the chosen name. | 1 | Gideon's Intervention | akh |
 | {M}, {M}, sacrifice ~: search your graveyard, hand, and/or library for a card named god-pharaoh's gift and put it onto the battlefield. if you search your libra | 1 | Gate to the Afterlife | akh |
-| {M}, {M}: until your next turn, target creature can"..."t be activated. activate only if there are three or more brick counters on ~. | 1 | Edifice of Authority | akh |
 | {M}{M}, {M}: all zombies gain menace until end of turn. | 1 | Lord of the Accursed | akh |
 | {M}{M}: draw a card, then you may return a land you control to its owner's hand. | 1 | Kefnet the Mindful | akh |
 | ~ gets +N/+N as long as you have one or fewer cards in hand. | 1 | Thresher Lizard | akh |

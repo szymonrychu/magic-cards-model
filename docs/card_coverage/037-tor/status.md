@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 14.3% |
+| Tested | 3 | 21.4% |
 | Works (untested) | 7 | 50.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 5 | 35.7% |
+| Not working | 4 | 28.6% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Ghostly Wings | silent | Discard a card: Return enchanted creature to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mind Sludge | silent | Target player discards a card for each Swamp you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mutilate | silent | All creatures get -1/-1 until end of turn for each Swamp you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pay No Heed | silent | Prevent all damage a source of your choice would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cabal Coffers | handled |  |  | Y/-/- | not_tested |
 | Deep Analysis | handled | Target player draws two cards. Flashback—{1}{U}, Pay 3 life. (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fiery Temper | handled | Fiery Temper deals 3 damage to any target. Madness {R} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it int | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -42,9 +41,10 @@
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>3 cards</summary>
 
 - Ambassador Laquatus
+- Pay No Heed
 - Plagiarize
 
 </details>
@@ -55,7 +55,6 @@
 |---|---|---|---|
 | all creatures get -N/-N until end of turn for each swamp you control. | 1 | Mutilate | tor |
 | discard a card: return enchanted creature to its owner's hand. | 1 | Ghostly Wings | tor |
-| prevent all damage a source of your choice would deal ~. | 1 | Pay No Heed | tor |
 | target player discards a card for each swamp you control. | 1 | Mind Sludge | tor |
 | when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Faceless Butcher | tor |
 

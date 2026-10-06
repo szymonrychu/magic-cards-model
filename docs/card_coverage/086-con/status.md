@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 9.9% |
+| Tested | 16 | 11.3% |
 | Works (untested) | 76 | 53.9% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 46 | 32.6% |
+| Not working | 44 | 31.2% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Giltspire Avenger | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Grixis Illusionist | silent | {T}: Target land you control becomes the basic land type of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gwafa Hazid, Profiteer | silent | {W}{U}, {T}: Put a bribery counter on target creature you don't control. Its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ignite Disorder | silent | Ignite Disorder deals 3 damage divided as you choose among one, two, or three target white and/or blue creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maelstrom Archangel | silent | Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Malfegor | silent | When Malfegor enters, discard your hand. Each opponent sacrifices a creature of their choice for each card discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manaforce Mace | silent | Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -57,7 +56,6 @@
 | Unstable Frontier | silent | {T}: Target land you control becomes the basic land type of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vectis Agents | silent | {U}{B}: This creature gets -2/-0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Voices from the Void | silent | Domain — Target player discards a card for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Volcanic Fallout | silent | This spell can't be countered. Volcanic Fallout deals 2 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Voracious Dragon | silent | When this creature enters, it deals damage to any target equal to twice the number of Goblins it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wall of Reverence | silent | At the beginning of your end step, you may gain life equal to the power of target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wandering Goblins | silent | Domain — {3}: This creature gets +1/+0 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -157,7 +155,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>16 cards</summary>
 
 - Aerie Mystics
 - Ancient Ziggurat
@@ -166,6 +164,7 @@
 - Celestial Purge
 - Exotic Orchard
 - Gleam of Resistance
+- Ignite Disorder
 - Magister Sphinx
 - Mark of Asylum
 - Path to Exile
@@ -173,6 +172,7 @@
 - Skyward Eye Prophets
 - Suicidal Charge
 - Thornling
+- Volcanic Fallout
 
 </details>
 
@@ -214,8 +214,6 @@
 | {M}{M}{M}: ~ and each other creature with the same name as it get +N/+N until end of turn. | 1 | Cylian Sunsinger | con |
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes a dragon, gets +N/+N, and gains flying and trample. | 1 | Dragonsoul Knight | con |
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes an angel, gets +N/+N, and gains flying and lifelink. | 1 | Paragon of the Amesha | con |
-| ~ can't be countered. ~ deals N damage to each creature and each player. | 1 | Volcanic Fallout | con |
-| ~ deals N damage divided as you choose among one, two, or three target white and/or blue creatures. | 1 | Ignite Disorder | con |
 | ~ deals N damage to target player or planeswalker. it deals an additional N damage to that player or planeswalker at the beginning of your next upkeep step unle | 1 | Quenchable Fire | con |
 | ~ enters with N +N/+N counters on it. if N is N or more, it enters with an additional N +N/+N counters on it. | 1 | Apocalypse Hydra | con |
 | ~ gets +N/+N as long as you control another artifact. | 1 | Court Homunculus | con |

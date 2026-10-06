@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 14.1% |
+| Tested | 32 | 14.5% |
 | Works (untested) | 118 | 53.6% |
 | Partial (unaudited) | 7 | 3.2% |
-| Not working | 64 | 29.1% |
+| Not working | 63 | 28.6% |
 
 ## Cards needing work
 
@@ -78,7 +78,6 @@
 | Shoal Serpent | silent | Landfall — Whenever a land you control enters, this creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spreading Seas | silent | Enchanted land is an Island. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tajuru Archer | silent | Whenever this creature or another Ally you control enters, you may have this creature deal damage to target creature with flying equal to the number of Allies y | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Tanglesap | silent | Prevent all combat damage that would be dealt this turn by creatures without trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trapfinder's Trick | silent | Target player reveals their hand and discards all Trap cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Turntimber Basilisk | silent | Landfall — Whenever a land you control enters, you may have target creature block this creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vampire Lacerator | silent | At the beginning of your upkeep, you lose 1 life unless an opponent has 10 or less life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -219,7 +218,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>32 cards</summary>
 
 - Archive Trap
 - Arid Mesa
@@ -247,6 +246,7 @@
 - Sorin Markov
 - Spell Pierce
 - Steppe Lynx
+- Tanglesap
 - Valakut, the Molten Pinnacle
 - Vampire Hexmage
 - Vampire Nighthawk
@@ -286,7 +286,6 @@
 | kicker—tap an untapped vampire you control. (you may tap a vampire you control in addition to any other costs as you cast ~.) target opponent loses half their l | 1 | Blood Tribute | zen |
 | other kor creatures you control get +N/+N for each equipment attached to ~. | 1 | Armament Master | zen |
 | play with the top card of your library revealed. | 1 | Oracle of Mul Daya | zen |
-| prevent all combat damage that would be dealt ~ by creatures without trample. | 1 | Tanglesap | zen |
 | remove five quest counters from ~ and sacrifice it: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, | 1 | Quest for the Holy Relic | zen |
 | remove four quest counters from ~ and sacrifice it: if any source you control would deal damage to a permanent or player ~, it deals double that damage to that  | 1 | Quest for Pure Flame | zen |
 | target player reveals their hand and discards all trap cards. | 1 | Trapfinder's Trick | zen |

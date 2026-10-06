@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.7% |
-| Works (untested) | 81 | 32.0% |
+| Tested | 28 | 11.1% |
+| Works (untested) | 94 | 37.2% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 135 | 53.4% |
+| Not working | 121 | 47.8% |
 
 ## Cards needing work
 
@@ -57,8 +57,6 @@
 | Dreadfeast Demon | silent | At the beginning of your end step, sacrifice a non-Demon creature. If you do, create a token that's a copy of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drogskol Infantry // Drogskol Armaments | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Faithbound Judge // Sinner's Judgment | silent | As long as this creature has three or more judgment counters on it, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Falkenrath Celebrants | silent | When this creature enters, create two Blood tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Falkenrath Forebear | silent | Whenever this creature deals combat damage to a player, create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fell Stinger | silent | When this creature exploits a creature, target player draws two cards and loses 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Fierce Retribution | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Flourishing Hunter | silent | When this creature enters, you gain life equal to the greatest toughness among other creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -66,7 +64,6 @@
 | Geistlight Snare | silent | This spell costs {1} less to cast if you control a Spirit. It also costs {1} less to cast if you control an enchantment. Counter target spell unless its control | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gift of Fangs | silent | Enchanted creature gets +2/+2 as long as it's a Vampire. Otherwise, it gets -2/-2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Graf Reaver | silent | When this creature exploits a creature, destroy target planeswalker. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Grisly Ritual | silent | Destroy target creature or planeswalker. Create two Blood tokens. (They're artifacts with "{1}, {T}, Discard a card, Sacrifice this token: Draw a card.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grolnok, the Omnivore | silent | Whenever a permanent card is put into your graveyard from your library, exile it with a croak counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Gryff Rider | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Gryffwing Cavalry | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -95,7 +92,6 @@
 | Necroduality | silent | Whenever a nontoken Zombie you control enters, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Odric, Blood-Cursed | silent | When Odric enters, create X Blood tokens, where X is the number of abilities from among flying, first strike, double strike, deathtouch, haste, hexproof, indest | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Old Rutstein | silent | When Old Rutstein enters and at the beginning of your upkeep, mill a card. If a land card is milled this way, create a Treasure token. If a creature card is mil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Olivia's Attendants | silent | Whenever this creature deals damage, create that many Blood tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Olivia, Crimson Bride | silent | Whenever Olivia attacks, return target creature card from your graveyard to the battlefield tapped and attacking. It gains "When you don't control a legendary V | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ollenbock Escort | silent | Sacrifice this creature: Target creature you control with a +1/+1 counter on it gains lifelink and indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overcharged Amalgam | silent | When this creature exploits a creature, counter target spell, activated ability, or triggered ability. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -103,7 +99,6 @@
 | Parasitic Grasp | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Parish-Blade Trainee | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Path of Peril | silent | Cleave {4}{W}{B} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Destroy all creatures [with mana value 2 or less | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pointed Discussion | silent | You draw two cards, lose 2 life, then create a Blood token. (It's an artifact with "{1}, {T}, Discard a card, Sacrifice this token: Draw a card.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Radiant Grace // Radiant Restraints | silent | When enchanted creature dies, return this card to the battlefield transformed under your control attached to target opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ragged Recluse // Odious Witch | silent | Whenever this creature attacks, defending player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Repository Skaab | silent | When this creature exploits a creature, return target instant or sorcery card from your graveyard to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -114,7 +109,6 @@
 | Rural Recruit | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sanguine Statuette | silent | Whenever you sacrifice a Blood token, you may have this artifact become a 3/3 Vampire artifact creature with haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Savior of Ollenbock | silent | Whenever this creature trains, exile up to one other target creature from the battlefield or creature card from a graveyard. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Sigarda's Imprisonment | silent | {4}{W}: Exile enchanted creature. Create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigarda's Summons | silent | Creatures you control with +1/+1 counters on them have base power and toughness 4/4, have flying, and are Angels in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigardian Paladin | silent | As long as you've put one or more +1/+1 counters on a creature this turn, this creature has trample and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skulking Killer | silent | When this creature enters, target creature an opponent controls gets -2/-2 until end of turn if that opponent controls no other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -123,36 +117,28 @@
 | Sporeback Wolf | silent | During your turn, this creature gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steelclad Spirit | silent | Whenever an enchantment you control enters, this creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stitched Assistant | silent | When this creature exploits a creature, scry 1, then draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Syphon Essence | silent | Counter target creature or planeswalker spell. Create a Blood token. (It's an artifact with "{1}, {T}, Discard a card, Sacrifice this token: Draw a card.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thirst for Discovery | silent | Draw three cards. Then discard two cards unless you discard a basic land card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torens, Fist of the Angels | silent | Whenever you cast a creature spell, create a 1/1 green and white Human Soldier creature token with training. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Toxrill, the Corrosive | silent | At the beginning of each end step, put a slime counter on each creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Twinblade Geist // Twinblade Invocation | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Vampire Slayer | silent | Whenever this creature deals damage to a Vampire, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vampire's Kiss | silent | Target player loses 2 life and you gain 2 life. Create two Blood tokens. (They're artifacts with "{1}, {T}, Discard a card, Sacrifice this token: Draw a card.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vampires' Vengeance | silent | Vampires' Vengeance deals 2 damage to each non-Vampire creature. Create a Blood token. (It's an artifact with "{1}, {T}, Discard a card, Sacrifice this token: D | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voice of the Blessed | silent | As long as this creature has four or more +1/+1 counters on it, it has flying and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Volatile Arsonist // Dire-Strain Anarchist | silent | Whenever this creature attacks, it deals 1 damage to each of up to one target creature, up to one target player, and/or up to one target planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voldaren Bloodcaster // Bloodbat Summoner | silent | Whenever you create a Blood token, if you control five or more Blood tokens, transform this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Voldaren Epicure | silent | When this creature enters, it deals 1 damage to each opponent. Create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Voldaren Estate | silent | {5}, {T}: Create a Blood token. This ability costs {1} less to activate for each Vampire you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wash Away | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Wedding Announcement // Wedding Festivity | silent | At the beginning of your end step, put an invitation counter on this enchantment. If you attacked with two or more creatures this turn, draw a card. Otherwise,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Winged Portent | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Witness the Future | silent | Target player shuffles up to four target cards from their graveyard into their library. You look at the top four cards of your library, then put one of those ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wretched Throng | silent | When this creature dies, you may search your library for a card named Wretched Throng, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ancestral Anger | notice | Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Arm the Cathars | notice | Until end of turn, target creature gets +3/+3, up to one other target creature gets +2/+2, and up to one other target creature gets +1/+1. Those creatures gain  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Biolume Egg // Biolume Serpent | notice | When you sacrifice this creature, return it to the battlefield transformed under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Petal Celebrant | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bloodcrazed Socialite | notice | Whenever this creature attacks, you may sacrifice a Blood token. If you do, it gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Bloody Betrayal | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Blood token. (It's an artifact with "{1}, {T} | unparsed remainder: Untap that creature. It gains haste until end of turn. Create a Blood token. | Y/Y/- | not_working |
 | Cemetery Desecrator | notice | When this creature enters or dies, exile another card from a graveyard. When you do, choose one — • Remove X counters from target permanent, where X is the mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dormant Grove // Gnarled Grovestrider | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has toughness 6 or greater, transform this en | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dreamshackle Geist | notice | At the beginning of combat on your turn, choose up to one — • Tap target creature. • Target creature doesn't untap during its controller's next untap step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Edgar, Charmed Groom // Edgar Markov's Coffin | notice | At the beginning of your upkeep, create a 1/1 white and black Vampire creature token with lifelink and put a bloodline counter on Edgar Markov's Coffin. Then if | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Geralf, Visionary Stitcher | notice | {U}, {T}, Sacrifice another nontoken creature: Create an X/X blue Zombie creature token, where X is the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Lacerate Flesh | notice | Lacerate Flesh deals 4 damage to target creature. Create a number of Blood tokens equal to the amount of excess damage dealt to that creature this way. (They're | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Manaform Hellkite | notice | Whenever you cast a noncreature spell, create an X/X red Dragon Illusion creature token with flying and haste, where X is the amount of mana spent to cast that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Markov Retribution | notice | Choose one or both — • Creatures you control get +1/+0 until end of turn. • Target Vampire you control deals damage equal to its power to another target creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oakshade Stalker // Moonlit Ambusher | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -171,6 +157,7 @@
 | Militia Rallier | unaudited | This creature can't attack alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Supernatural Rescue | unaudited | This spell has flash as long as you control a Spirit. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Wanderlight Spirit | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Ancestral Anger | handled | Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Angelic Quartermaster | handled | When this creature enters, put a +1/+1 counter on each of up to two other target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Anje, Maid of Dishonor | handled | Whenever Anje and/or one or more other Vampires you control enter, create a Blood token. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Belligerent Guest | handled | Whenever this creature deals combat damage to a player, create a Blood token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -178,6 +165,7 @@
 | Blood Hypnotist | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood Servitor | handled | When this creature enters, create a Blood token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodsworn Squire // Bloodsworn Knight | handled | {1}{B}, Discard a card: This creature gains indestructible until end of turn. Tap it. Then if there are four or more creature cards in your graveyard, transform | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bloody Betrayal | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Blood token. (It's an artifact with "{1}, {T} | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bramble Wurm | handled | When this creature enters, you gain 5 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bride's Gown | handled | Equipped creature gets +2/+0. It gets an additional +0/+2 and has first strike as long as an Equipment named Groom's Finery is attached to a creature you contro | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ceremonial Knife | handled | Equipped creature gets +1/+0 and has "Whenever this creature deals combat damage, create a Blood token." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -197,11 +185,14 @@
 | Dreamroot Cascade | handled | This land enters tapped unless you control two or more other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dying to Serve | handled | Whenever you discard one or more cards, create a tapped 2/2 black Zombie creature token. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Estwald Shieldbasher | handled | Whenever this creature attacks, you may pay {1}. If you do, it gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Falkenrath Celebrants | handled | When this creature enters, create two Blood tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Falkenrath Forebear | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fearful Villager // Fearsome Werewolf | handled | Transform | no code needed | Y/Y/- | not_tested |
 | Flame-Blessed Bolt | handled | Flame-Blessed Bolt deals 2 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frenzied Devils | handled | Whenever you cast a noncreature spell, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glorious Sunrise | handled | At the beginning of combat on your turn, choose one — • Creatures you control get +1/+1 and gain trample until end of turn. • Target land gains "{T}: Add {G}{G} | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gluttonous Guest | handled | When this creature enters, create a Blood token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Grisly Ritual | handled | Destroy target creature or planeswalker. Create two Blood tokens. (They're artifacts with "{1}, {T}, Discard a card, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Groom's Finery | handled | Equipped creature gets +2/+0. It gets an additional +0/+2 and has deathtouch as long as an Equipment named Bride's Gown is attached to a creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Halana and Alena, Partners | handled | At the beginning of combat on your turn, put X +1/+1 counters on another target creature you control, where X is Halana and Alena's power. That creature gains h | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hallowed Haunting | handled | As long as you control seven or more enchantments, creatures you control have flying and vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -223,9 +214,11 @@
 | Massive Might | handled | Target creature gets +2/+2 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nebelgast Beguiler | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nurturing Presence | handled | Enchanted creature has "Whenever a creature you control enters, this creature gets +1/+1 until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Olivia's Attendants | handled | Whenever this creature deals damage, create that many Blood tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Panicked Bystander // Cackling Culprit | handled | Whenever this creature or another creature you control dies, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Persistent Specimen | handled | {2}{B}: Return this card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Piercing Light | handled | Piercing Light deals 2 damage to target attacking or blocking creature. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pointed Discussion | handled | You draw two cards, lose 2 life, then create a Blood token. (It's an artifact with "{1}, {T}, Discard a card, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyre Spawn | handled | When this creature dies, it deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resistance Squad | handled | When this creature enters, if you control another Human, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Restless Bloodseeker // Bloodsoaked Reveler | handled | At the beginning of your end step, if you gained life this turn, create a Blood token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -233,17 +226,23 @@
 | Scattered Thoughts | handled | Look at the top four cards of your library. Put two of those cards into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Selhoff Entomber | handled | {T}, Discard a creature card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sheltering Boughs | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sigarda's Imprisonment | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skywarp Skaab | handled | When this creature enters, you may exile two creature cards from your graveyard. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spore Crawler | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stensia Uprising | handled | At the beginning of your end step, create a 1/1 red Human creature token. Then if you control exactly thirteen permanents, you may sacrifice this enchantment. W | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stormchaser Drake | handled | Whenever this creature becomes the target of a spell you control, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Syphon Essence | handled | Counter target creature or planeswalker spell. Create a Blood token. (It's an artifact with "{1}, {T}, Discard a card, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Toxic Scorpion | handled | When this creature enters, another target creature you control gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Traveling Minister | handled | {T}: Target creature gets +1/+0 until end of turn. You gain 1 life. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ulvenwald Oddity // Ulvenwald Behemoth | handled | {5}{G}{G}: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Undead Butler | handled | When this creature enters, mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unhallowed Phalanx | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unholy Officiant | handled | {4}{W}: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Vampire's Kiss | handled | Target player loses 2 life and you gain 2 life. Create two Blood tokens. (They're artifacts with "{1}, {T}, Discard a card, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Vampires' Vengeance | handled | Vampires' Vengeance deals 2 damage to each non-Vampire creature. Create a Blood token. (It's an artifact with "{1}, {T}, Discard a card, Sacrifice this token: D | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vilespawn Spider | handled | At the beginning of your upkeep, mill a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Voldaren Epicure | handled | When this creature enters, it deals 1 damage to each opponent. Create a Blood token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Voldaren Estate | handled | {5}, {T}: Create a Blood token. This ability costs {1} less to activate for each Vampire you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wandering Mind | handled | When this creature enters, look at the top six cards of your library. You may reveal a noncreature, nonland card from among them and put it into your hand. Put  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weary Prisoner // Wrathful Jailbreaker | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weaver of Blossoms // Blossom-Clad Werewolf | handled | Transform | no code needed | Y/Y/- | not_tested |
@@ -256,7 +255,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
@@ -274,6 +273,7 @@
 - Fleeting Spirit
 - Honeymoon Hearse
 - Infestation Expert // Infested Werewolf
+- Lacerate Flesh
 - Patchwork Crawler
 - Reckless Impulse
 - Rending Flame
@@ -322,18 +322,15 @@
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) ~ deals N damage to target creature or planeswalker and y | 1 | Lantern Flare | vow |
 | cleave {M}{M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) search your library for a [basic land] card, [reveal i | 1 | Dig Up | vow |
 | cleave {M}{M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) take an extra turn after ~. during that turn, damage c | 1 | Alchemist's Gambit | vow |
-| counter target creature or planeswalker spell. create a blood token. (it's an artifact with "...") | 1 | Syphon Essence | vow |
 | creatures attacking enchanted player have trample. | 1 | Curse of Hospitality | vow |
 | creatures attacking you get -N/-N. | 1 | Boarded Window | vow |
 | creatures you control with +N/+N counters on them have base power and toughness N/N, have flying, and are angels in addition to their other types. | 1 | Sigarda's Summons | vow |
-| destroy target creature or planeswalker. create two blood tokens. (they're artifacts with "...") | 1 | Grisly Ritual | vow |
 | draw three cards. then discard two cards unless you discard a basic land card. | 1 | Thirst for Discovery | vow |
 | during your turn, ~ gets +N/+N. | 1 | Sporeback Wolf | vow |
 | each player chooses a nonland permanent they control. return all nonland permanents not chosen ~ to their owners' hands. then you draw a card for each opponent  | 1 | Consuming Tide | vow |
 | enchanted creature gets +N/+N as long as it's a vampire. otherwise, it gets -N/-N. | 1 | Gift of Fangs | vow |
 | enchanted creature gets -N/-N, where N is the number of cards in your graveyard. | 1 | Fear of Death | vow |
 | exile the top thirteen cards of your library, then search your library for a card. put that card into your hand, then shuffle. | 1 | Demonic Bargain | vow |
-| gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. create a blood token. (it's an artifact with "...") | 1 | Bloody Betrayal | vow |
 | if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove that many +N/+N counters from it. when one or more counters are | 1 | Magma Pummeler | vow |
 | if you would draw a card, exile the top two cards of your library instead. you may play those cards ~. | 1 | Eruth, Tormented Prophet | vow |
 | it becomes night. discard any number of cards, then draw that many cards plus one. | 1 | Into the Night | vow |
@@ -341,9 +338,7 @@
 | other permanents you control have hexproof. | 1 | Avabruck Caretaker // Hollowhenge Huntmaster | vow |
 | return up to one target creature card and up to one target noncreature permanent card from your graveyard to your hand. exile ~. | 1 | Retrieve | vow |
 | sacrifice ~: target creature you control with a +N/+N counter on it gains lifelink and indestructible until end of turn. | 1 | Ollenbock Escort | vow |
-| target creature gains trample and gets +N/+N until end of turn, where N is N plus the number of cards named ~ in your graveyard. draw a card. | 1 | Ancestral Anger | vow |
 | target creature you control gets +N/+N until end of turn if it"..."t control. | 1 | Wolf Strike | vow |
-| target player loses N life and you gain N life. create two blood tokens. (they're artifacts with "...") | 1 | Vampire's Kiss | vow |
 | target player shuffles up to four target cards from their graveyard into their library. you look at the top four cards of your library, then put one of those ca | 1 | Witness the Future | vow |
 | until end of turn, target creature gains "..." | 1 | Undying Malice | vow |
 | until end of turn, target creature gets +N/+N, up to one other target creature gets +N/+N, and up to one other target creature gets +N/+N. those creatures gain  | 1 | Arm the Cathars | vow |
@@ -354,9 +349,7 @@
 | when ~ dies, you may search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Wretched Throng | vow |
 | when ~ enters and at the beginning of your upkeep, mill a card. if a land card is milled ~, create a treasure token. if a creature card is milled ~, create a N/ | 1 | Old Rutstein | vow |
 | when ~ enters or dies, exile another card from a graveyard. when you do, choose one — • remove N counters from target permanent, where N is the mana value of th | 1 | Cemetery Desecrator | vow |
-| when ~ enters, create two blood tokens. | 1 | Falkenrath Celebrants | vow |
 | when ~ enters, gain control of target creature with mana value less than or equal to the number of vampires you control until end of turn. untap that creature.  | 1 | Dominating Vampire | vow |
-| when ~ enters, it deals N damage to each opponent. create a blood token. | 1 | Voldaren Epicure | vow |
 | when ~ enters, mill three cards, then put a +N/+N counter on ~ for each creature card in your graveyard. | 1 | Moldgraf Millipede | vow |
 | when ~ enters, target creature an opponent controls gets -N/-N until end of turn if that opponent controls no other creatures. | 1 | Skulking Killer | vow |
 | when ~ enters, you gain life equal to the greatest toughness among other creatures you control. | 1 | Flourishing Hunter | vow |
@@ -385,29 +378,22 @@
 | whenever ~ attacks, it deals N damage to each of up to one target creature, up to one target player, and/or up to one target planeswalker. | 1 | Volatile Arsonist // Dire-Strain Anarchist | vow |
 | whenever ~ attacks, you may sacrifice a blood token. if you do, it gets +N/+N until end of turn. | 1 | Bloodcrazed Socialite | vow |
 | whenever ~ attacks, you may search your library for a basic land card that doesn't share a land type with a land you control, put that card onto the battlefield | 1 | Hiveheart Shaman | vow |
-| whenever ~ deals combat damage to a player, create a blood token. | 1 | Falkenrath Forebear | vow |
 | whenever ~ deals damage to a vampire, destroy that creature. | 1 | Vampire Slayer | vow |
-| whenever ~ deals damage, create that many blood tokens. | 1 | Olivia's Attendants | vow |
 | whenever ~ or another zombie you control dies, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard | 1 | Archghoul of Thraben | vow |
 | whenever ~ trains, exile up to one other target creature from the battlefield or creature card from a graveyard. | 1 | Savior of Ollenbock | vow |
-| you draw two cards, lose N life, then create a blood token. (it's an artifact with "...") | 1 | Pointed Discussion | vow |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Oakshade Stalker // Moonlit Ambusher | vow |
 | {M}, sacrifice ~: target creature can"..."s a vampire, it also gains lifelink until end of turn. | 1 | Wedding Invitation | vow |
 | {M}, sacrifice ~: target creature gets -N/-N until end of turn, where N is twice the number of blood tokens you control. activate only as a sorcery. | 1 | Bloodtithe Harvester | vow |
 | {M}, {M}, exile a creature card from your graveyard: create a token that"..."s a N/N construct artifact in addition to its other types and it has "..." it gains | 1 | Dollhouse of Horrors | vow |
 | {M}, {M}, exile ~: exile all cards from all graveyards, then draw a card. | 1 | Lantern of the Lost | vow |
 | {M}, {M}, sacrifice another nontoken creature: create an N/N blue zombie creature token, where N is the sacrificed creature's toughness. | 1 | Geralf, Visionary Stitcher | vow |
-| {M}, {M}: create a blood token. ~ costs {M} less to activate for each vampire you control. | 1 | Voldaren Estate | vow |
 | {M}: draw a card, then exile a card from your hand face down. you may look at that card for as long as it remains exiled. you may pay {M}{M}{M}. if you do, tran | 1 | Jacob Hauken, Inspector // Hauken's Insight | vow |
 | {M}{M}, {M}: look at the top two cards of your library. put one of them into your graveyard. | 1 | Soulcipher Board // Cipherbound Spirit | vow |
 | {M}{M}, {M}: ~ deals damage equal to the number of wolves and werewolves you control to target opponent. | 1 | Runebound Wolf | vow |
-| {M}{M}: exile enchanted creature. create a blood token. | 1 | Sigarda's Imprisonment | vow |
 | {M}{M}{M}: each creature you control with flying, deathtouch, and/or lifelink gets +N/+N until end of turn. | 1 | Henrika Domnathi // Henrika, Infernal Seer | vow |
 | ~ can block only creatures with flying. | 1 | Wanderlight Spirit | vow |
 | ~ can't attack alone. | 1 | Militia Rallier | vow |
 | ~ costs {M} less to cast if you control a spirit. it also costs {M} less to cast if you control an enchantment. counter target spell unless its controller pays  | 1 | Geistlight Snare | vow |
-| ~ deals N damage to each non-vampire creature. create a blood token. (it's an artifact with "...") | 1 | Vampires' Vengeance | vow |
-| ~ deals N damage to target creature. create a number of blood tokens equal to the amount of excess damage dealt to that creature ~. (they're artifacts with "... | 1 | Lacerate Flesh | vow |
 | ~ enters with a +N/+N counter on it if you control a permanent with mana value N or greater. | 1 | Ascendant Packleader | vow |
 | ~ enters with a number of suspect counters on it equal to the greatest number of creatures a player controls. | 1 | Investigator's Journal | vow |
 | ~ enters with two +N/+N counters on it for each other nontoken human you control. | 1 | Hamlet Vanguard | vow |

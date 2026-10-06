@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 10.6% |
-| Works (untested) | 60 | 42.3% |
+| Tested | 19 | 13.4% |
+| Works (untested) | 59 | 41.5% |
 | Partial (unaudited) | 15 | 10.6% |
-| Not working | 52 | 36.6% |
+| Not working | 49 | 34.5% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Calcite Snapper | silent | Landfall — Whenever a land you control enters, you may switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Caustic Crawler | silent | Landfall — Whenever a land you control enters, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Claws of Valakut | silent | Enchanted creature gets +1/+0 for each Mountain you control and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Comet Storm | silent | Multikicker {1} (You may pay an additional {1} any number of times as you cast this spell.) Choose any target, then choose another target for each time this spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deathforge Shaman | silent | When this creature enters, it deals damage to target player or planeswalker equal to twice the number of times it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Halimar Excavator | silent | Whenever this creature or another Ally you control enters, target player mills X cards, where X is the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Joraga Warcaller | silent | Other Elf creatures you control get +1/+1 for each +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -50,13 +49,11 @@
 | Novablast Wurm | silent | Whenever this creature attacks, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quest for Ula's Temple | silent | At the beginning of your upkeep, you may look at the top card of your library. If it's a creature card, you may reveal it and put a quest counter on this enchan | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quest for the Nihil Stone | silent | At the beginning of each opponent's upkeep, if that player has no cards in hand and this enchantment has two or more quest counters on it, you may have that pla | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Refraction Trap | silent | If an opponent cast a red instant or sorcery spell this turn, you may pay {W} rather than pay this spell's mana cost. Prevent the next 3 damage that a source of | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rumbling Aftershocks | silent | Whenever you cast a kicked spell, you may have this enchantment deal damage to any target equal to the number of times that spell was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Selective Memory | silent | Search your library for any number of nonland cards, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Slavering Nulls | silent | Whenever this creature deals combat damage to a player, if you control a Swamp, you may have that player discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spell Contortion | silent | Multikicker {1}{U} (You may pay an additional {1}{U} any number of times as you cast this spell.) Counter target spell unless its controller pays {2}. Draw a ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stone Idol Trap | silent | This spell costs {1} less to cast for each attacking creature. Create a 6/12 colorless Construct artifact creature token with trample. Exile it at the beginning | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Strength of the Tajuru | silent | Multikicker {1} (You may pay an additional {1} any number of times as you cast this spell.) Choose target creature, then choose another target creature for each | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Talus Paladin | silent | Whenever this creature or another Ally you control enters, you may have Allies you control gain lifelink until end of turn, and you may put a +1/+1 counter on t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Terastodon | silent | When this creature enters, you may destroy up to three target noncreature permanents. For each permanent put into a graveyard this way, its controller creates a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Treasure Hunt | silent | Reveal cards from the top of your library until you reveal a nonland card, then put all cards revealed this way into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -123,7 +120,6 @@
 | Kalastria Highborn | handled | Whenever this creature or another Vampire you control dies, you may pay {B}. If you do, target player loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Khalni Garden | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kitesail | handled | Equipped creature gets +1/+0 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Kor Firewalker | handled | Whenever a player casts a red spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lavaclaw Reaches | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leatherback Baloth | handled |  |  | Y/-/- | not_tested |
 | Marsh Threader | handled | Landwalk | no code needed | Y/-/- | not_tested |
@@ -157,7 +153,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>19 cards</summary>
 
 - Amulet of Vigor
 - Basilisk Collar
@@ -165,14 +161,18 @@
 - Bojuka Bog
 - Celestial Colonnade
 - Chain Reaction
+- Comet Storm
 - Explore
 - Hada Freeblade
+- Kor Firewalker
 - Lodestone Golem
 - Nature's Claim
 - Omnath, Locus of Mana
+- Refraction Trap
 - Ricochet Trap
 - Ruthless Cullblade
 - Searing Blaze
+- Strength of the Tajuru
 - Tectonic Edge
 
 </details>
@@ -201,9 +201,6 @@
 | enchanted land is a N/N red beast creature with trample. it's still a land. | 1 | Crusher Zendikon | wwk |
 | enchanted land is a N/N white wall creature with defender. it's still a land. | 1 | Guardian Zendikon | wwk |
 | if a white creature is attacking, you may pay {M}{M} rather than pay ~ mana cost. exile target attacking creature. create a token that's a copy of that creature | 1 | Nemesis Trap | wwk |
-| if an opponent cast a red instant or sorcery spell ~, you may pay {M} rather than pay ~ mana cost. prevent the next N damage that a source of your choice would  | 1 | Refraction Trap | wwk |
-| multikicker {M} (you may pay an additional {M} any number of times as you cast ~.) choose any target, then choose another target for each time ~ was kicked. ~ d | 1 | Comet Storm | wwk |
-| multikicker {M} (you may pay an additional {M} any number of times as you cast ~.) choose target creature, then choose another target creature for each time ~ w | 1 | Strength of the Tajuru | wwk |
 | multikicker {M}{M} (you may pay an additional {M}{M} any number of times as you cast ~.) counter target spell unless its controller pays {M}. draw a card for ea | 1 | Spell Contortion | wwk |
 | other elf creatures you control get +N/+N for each +N/+N counter on ~. | 1 | Joraga Warcaller | wwk |
 | put a +N/+N counter on target creature you control. another target creature blocks it ~ if able. | 1 | Feral Contest | wwk |

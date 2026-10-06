@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 11.9% |
+| Tested | 18 | 12.6% |
 | Works (untested) | 73 | 51.0% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 48 | 33.6% |
+| Not working | 47 | 32.9% |
 
 ## Cards needing work
 
@@ -62,7 +62,6 @@
 | Render Silent | silent | Counter target spell. Its controller can't cast spells this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Renegade Krasis | silent | Whenever this creature evolves, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Restore the Peace | silent | Return each creature that dealt damage this turn to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Riot Control | silent | You gain 1 life for each creature your opponents control. Prevent all damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scion of Vitu-Ghazi | silent | When this creature enters, if you cast it from your hand, create a 1/1 white Bird creature token with flying, then populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Showstopper | silent | Until end of turn, creatures you control gain "When this creature dies, it deals 2 damage to target creature an opponent controls." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sinister Possession | silent | Whenever enchanted creature attacks or blocks, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -156,7 +155,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Aetherling
 - Beck // Call
@@ -172,6 +171,7 @@
 - Possibility Storm
 - Protect // Serve
 - Ready // Willing
+- Riot Control
 - Trostani's Summoner
 - Voice of Resurgence
 - Wear // Tear
@@ -229,7 +229,6 @@
 | whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn and can attack ~ as though it didn't have defender. | 1 | Nivix Cyclops | dgm |
 | whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Jelenn Sphinx | dgm |
 | whenever ~ evolves, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Renegade Krasis | dgm |
-| you gain N life for each creature your opponents control. prevent all damage that would be dealt to you ~. | 1 | Riot Control | dgm |
 | {M}{M}, {M}: double the number of each kind of counter on target artifact, creature, or land. | 1 | Vorel of the Hull Clade | dgm |
 | {M}{M}, {M}: target opponent loses N life, then reveals a card at random from their hand. | 1 | Hired Torturer | dgm |
 | {M}{M}{M}, return ~ to its owner's hand: put two +N/+N counters on enchanted creature. | 1 | Krasis Incubation | dgm |

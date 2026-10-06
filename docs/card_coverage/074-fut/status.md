@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 12.4% |
+| Tested | 24 | 13.5% |
 | Works (untested) | 68 | 38.2% |
 | Partial (unaudited) | 18 | 10.1% |
-| Not working | 70 | 39.3% |
+| Not working | 68 | 38.2% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Fleshwrither | silent | Transfigure | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Flowstone Embrace | silent | {T}: Enchanted creature gets +2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gathan Raiders | silent | Hellbent — This creature gets +2/+2 as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ghostfire | silent | Ghostfire is colorless. Ghostfire deals 3 damage to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goldmeadow Lookout | silent | {W}, {T}, Discard a card: Create a 1/1 white Kithkin Soldier creature token named Goldmeadow Harrier. It has "{W}, {T}: Tap target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Haze of Rage | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Heartwood Storyteller | silent | Whenever a player casts a noncreature spell, each of that player's opponents may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,13 +58,12 @@
 | Maelstrom Djinn | silent | When this creature is turned face up, put two time counters on it and it gains vanishing. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mesmeric Sliver | silent | Fateseal | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Minions' Murmurs | silent | You draw X cards and you lose X life, where X is the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Molten Disaster | silent | Kicker {R} (You may pay an additional {R} as you cast this spell.) If this spell was kicked, it has split second. (As long as this spell is on the stack, player | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Muraganda Petroglyphs | silent | Creatures with no abilities get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mystic Speculation | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Narcomoeba | silent | When this card is put into your graveyard from your library, you may put it onto the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Nihilith | silent | Whenever a card is put into an opponent's graveyard from anywhere, if this card is suspended, you may remove a time counter from this card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Nix | silent | Counter target spell if no mana was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Oriss, Samite Guardian | silent | {T}: Prevent all damage that would be dealt to target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Oriss, Samite Guardian | silent | Grandeur — Discard another card named Oriss, Samite Guardian: Target player can't cast spells this turn, and creatures that player controls can't attack this tu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phosphorescent Feast | silent | Chroma — Reveal any number of cards in your hand. You gain 2 life for each green mana symbol in those cards' mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pooling Venom | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Putrid Cyclops | silent | When this creature enters, scry 1, then reveal the top card of your library. This creature gets -X/-X until end of turn, where X is that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -186,7 +184,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Akroma's Memorial
 - Arc Blade
@@ -196,6 +194,7 @@
 - Delay
 - Dryad Arbor
 - Festering March
+- Ghostfire
 - Glittering Wish
 - Grave Scrabbler
 - Grove of the Burnwillows
@@ -204,6 +203,7 @@
 - Llanowar Empath
 - Logic Knot
 - Mistmeadow Skulk
+- Molten Disaster
 - Pact of Negation
 - Street Wraith
 - Summoner's Pact
@@ -220,9 +220,9 @@
 | Hellbent | 3 | Cutthroat il-Dal, Gathan Raiders, Gibbering Descent | fut |
 | buyback | 3 | Haze of Rage, Mystic Speculation, Sprout Swarm | fut |
 | echo | 3 | Deepcavern Imp, Henchfiend of Ukor, Skizzik Surger | fut |
+| Grandeur | 2 | Linessa, Zephyr Mage, Oriss, Samite Guardian | fut |
 | Choose one | 1 | Dust of Moments | fut |
 | Chroma | 1 | Phosphorescent Feast | fut |
-| Grandeur | 1 | Linessa, Zephyr Mage | fut |
 | all sliver creatures get +N/+N for each other sliver on the battlefield. | 1 | Sliver Legion | fut |
 | all sliver creatures have absorb N. | 1 | Lymph Sliver | fut |
 | all sliver creatures have frenzy N. | 1 | Frenzy Sliver | fut |
@@ -249,7 +249,6 @@
 | if an opponent would search a library, that player searches the top four cards of that library instead. | 1 | Aven Mindcensor | fut |
 | if ~ was kicked, it enters with four +N/+N counters on it. | 1 | Kavu Primarch | fut |
 | if ~ was kicked, it enters with three additional time counters on it. | 1 | Ravaging Riftwurm | fut |
-| kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, it has split second. (as long as ~ is on the stack, players can"..."t mana abilities. | 1 | Molten Disaster | fut |
 | play with the top card of your library revealed. | 1 | Magus of the Future | fut |
 | put target creature on top of its owner"..."s library, then put any number of them on the bottom of that player's library and the rest on top in any order.) | 1 | Spin into Myth | fut |
 | regenerate each creature you control. | 1 | Wrap in Vigor | fut |
@@ -292,13 +291,11 @@
 | {M}, {M}, discard a card: create a N/N red elemental creature token named spark elemental. it has trample, haste, and "..." | 1 | Sparkspitter | fut |
 | {M}, {M}, discard a card: create a N/N white kithkin soldier creature token named goldmeadow harrier. it has "..." | 1 | Goldmeadow Lookout | fut |
 | {M}: enchanted creature gets +N/-N until end of turn. | 1 | Flowstone Embrace | fut |
-| {M}: prevent all damage that would be dealt to target creature ~. | 1 | Oriss, Samite Guardian | fut |
 | {M}: target creature becomes a coward until end of turn. | 1 | Boldwyr Intimidator | fut |
 | {M}: untap enchanted creature. | 1 | Second Wind | fut |
 | {M}{M}: ~ deals N damage to each other creature with flying. | 1 | Scourge of Kher Ridges | fut |
 | ~ deals N damage to any target. whenever one or more creatures you control deal combat damage to a player, if ~ is in your graveyard, you may pay {M}{M}{M}{M}.  | 1 | Thunderblade Charge | fut |
 | ~ enters with a +N/+N counter on it for each other spell cast ~. | 1 | Storm Entity | fut |
-| ~ is colorless. ~ deals N damage to any target. | 1 | Ghostfire | fut |
 
 ## Notes
 

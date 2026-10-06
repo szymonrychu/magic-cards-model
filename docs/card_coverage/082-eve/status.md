@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 7.3% |
+| Tested | 14 | 7.8% |
 | Works (untested) | 91 | 50.8% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 71 | 39.7% |
+| Not working | 70 | 39.1% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Aerie Ouphes | silent | Sacrifice this creature: It deals damage equal to its power to target creature with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Altar Golem | silent | Altar Golem's power and toughness are each equal to the number of creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Balefire Liege | silent | Other red creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Batwing Brume | silent | Prevent all combat damage that would be dealt this turn if {W} was spent to cast this spell. Each player loses 1 life for each attacking creature they control i | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloom Tender | silent | Vivid — {T}: For each color among permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cache Raiders | silent | At the beginning of your upkeep, return a permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Call the Skybreaker | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -196,9 +195,10 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Antler Skulkin
+- Batwing Brume
 - Belligerent Hatchling
 - Chaotic Backlash
 - Divinity of Pride
@@ -244,7 +244,6 @@
 | other green creatures you control get +N/+N. | 1 | Murkfiend Liege | eve |
 | other red creatures you control get +N/+N. | 1 | Balefire Liege | eve |
 | other white creatures you control get +N/+N. | 1 | Deathbringer Liege | eve |
-| prevent all combat damage that would be dealt ~ if {M} was spent to cast ~. each player loses N life for each attacking creature they control if {M} was spent t | 1 | Batwing Brume | eve |
 | prevent all damage that would be dealt to you and permanents you control ~. | 1 | Endure | eve |
 | return all nonblue creatures to their owners' hands. | 1 | Inundate | eve |
 | sacrifice ~: it deals damage equal to its power to target creature with flying. | 1 | Aerie Ouphes | eve |

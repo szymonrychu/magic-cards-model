@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 12.1% |
-| Works (untested) | 126 | 58.6% |
+| Tested | 28 | 13.0% |
+| Works (untested) | 127 | 59.1% |
 | Partial (unaudited) | 8 | 3.7% |
-| Not working | 55 | 25.6% |
+| Not working | 52 | 24.2% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Clone Shell | silent | Imprint — When this creature enters, look at the top four cards of your library, exile one face down, then put the rest on the bottom of your library in any ord | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Contagion Engine | silent | {4}, {T}: Proliferate twice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Copperhorn Scout | silent | Whenever this creature attacks, untap each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dispense Justice | silent | Target player sacrifices an attacking creature of their choice. Metalcraft — That player sacrifices two attacking creatures of their choice instead if you contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elspeth Tirel | silent | −5: Destroy all other permanents except for lands and tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Engulfing Slagwurm | silent | Whenever this creature blocks or becomes blocked by a creature, destroy that creature. You gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Exsanguinate | silent | Each opponent loses X life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -58,7 +57,6 @@
 | Kemba, Kha Regent | silent | At the beginning of your upkeep, create a 2/2 white Cat creature token for each Equipment attached to Kemba. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Tangle | silent | Whenever this creature deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. Each | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memoricide | silent | Choose a nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuffles | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Molten Psyche | silent | Each player shuffles the cards from their hand into their library, then draws that many cards. Metalcraft — If you control three or more artifacts, Molten Psych | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Battlesphere | silent | Whenever this creature attacks, you may tap X untapped Myr you control. If you do, this creature gets +X/+0 until end of turn and deals X damage to the player o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Galvanizer | silent | {1}, {T}: Untap each other Myr you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nim Deathmantle | silent | Equipped creature gets +2/+2, has intimidate, and is a black Zombie. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -69,7 +67,6 @@
 | Prototype Portal | silent | {X}, {T}: Create a token that's a copy of the exiled card. X is the mana value of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Psychic Miasma | silent | Target player discards a card. If a land card is discarded this way, return Psychic Miasma to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shape Anew | silent | The controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. That player puts that card | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soul Parry | silent | Prevent all damage one or two target creatures would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strata Scythe | silent | Equipped creature gets +1/+1 for each land on the battlefield with the same name as the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunblast Angel | silent | When this creature enters, destroy all tapped creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunspear Shikari | silent | As long as this creature is equipped, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,6 +114,7 @@
 | Darksteel Juggernaut | handled | Darksteel Juggernaut's power and toughness are each equal to the number of artifacts you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Myr | handled | Indestructible | machines/keywords.py | Y/-/- | not_tested |
 | Darksteel Sentinel | handled | Indestructible | machines/keywords.py | Y/-/- | not_tested |
+| Dispense Justice | handled | Target player sacrifices an attacking creature of their choice. Metalcraft — That player sacrifices two attacking creatures of their choice instead if you contr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dissipation Field | handled | Whenever a permanent deals damage to you, return it to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dross Hopper | handled | Sacrifice a creature: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Embersmith | handled | Whenever you cast an artifact spell, you may pay {1}. If you do, this creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -219,7 +217,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>28 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
@@ -233,11 +231,13 @@
 - Liquimetal Coating
 - Memnite
 - Mimic Vat
+- Molten Psyche
 - Molten-Tail Masticore
 - Mox Opal
 - Necrotic Ooze
 - Nihil Spellbomb
 - Riddlesmith
+- Soul Parry
 - Spikeshot Elder
 - Steel Hellkite
 - Tainted Strike
@@ -264,7 +264,6 @@
 | choose two target creatures. tap those creatures, then unattach all equipment from them. | 1 | Fulgent Distraction | som |
 | counter target spell that targets a permanent you control. | 1 | Turn Aside | som |
 | each opponent loses N life. you gain life equal to the life lost ~. | 1 | Exsanguinate | som |
-| each player shuffles the cards from their hand into their library, then draws that many cards. metalcraft — if you control three or more artifacts, ~ deals dama | 1 | Molten Psyche | som |
 | equipped creature can block an additional creature each combat. | 1 | Echo Circlet | som |
 | equipped creature gets +N/+N for each land on the battlefield with the same name as the exiled card. | 1 | Strata Scythe | som |
 | equipped creature gets +N/+N, has intimidate, and is a black zombie. | 1 | Nim Deathmantle | som |
@@ -272,12 +271,10 @@
 | other creatures you control with infect get +N/+N. | 1 | Hand of the Praetors | som |
 | other green creatures you control have intimidate. | 1 | Bellowing Tanglewurm | som |
 | players can't search libraries. any player may pay {M} for that player to ignore ~ until end of turn. | 1 | Leonin Arbiter | som |
-| prevent all damage one or two target creatures would deal ~. | 1 | Soul Parry | som |
 | reveal the top N cards of your library. you may put any number of permanent cards with mana value N or less from among them onto the battlefield. then put all c | 1 | Genesis Wave | som |
 | spells you cast that share a card type with the exiled card cost {M} less to cast. | 1 | Semblance Anvil | som |
 | target opponent reveals the top card of their library. ~ deals damage equal to the revealed card"..."s hand. | 1 | Cerebral Eruption | som |
 | target player discards a card. if a land card is discarded ~, return ~ to its owner's hand. | 1 | Psychic Miasma | som |
-| target player sacrifices an attacking creature of their choice. metalcraft — that player sacrifices two attacking creatures of their choice instead if you contr | 1 | Dispense Justice | som |
 | the controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. that player puts that card | 1 | Shape Anew | som |
 | when ~ enters, destroy all tapped creatures. | 1 | Sunblast Angel | som |
 | when ~ enters, sacrifice it unless you return an artifact you control to its owner's hand. | 1 | Glint Hawk | som |

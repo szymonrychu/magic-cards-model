@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.5% |
+| Tested | 19 | 8.2% |
 | Works (untested) | 117 | 50.4% |
 | Partial (unaudited) | 8 | 3.4% |
-| Not working | 92 | 39.7% |
+| Not working | 88 | 37.9% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | Gyre Sage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hands of Binding | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hellkite Tyrant | silent | Whenever this creature deals combat damage to a player, gain control of all artifacts that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hindervines | silent | Prevent all combat damage that would be dealt this turn by creatures with no +1/+1 counters on them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hydroform | silent | Target land becomes a 3/3 Elemental creature with flying until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illness in the Ranks | silent | Creature tokens get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusionist's Bracers | silent | Whenever an ability of equipped creature is activated, if it isn't a mana ability, copy that ability. You may choose new targets for the copy. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -69,7 +68,6 @@
 | Last Thoughts | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Lazav, Dimir Mastermind | silent | Whenever a creature card is put into an opponent's graveyard from anywhere, you may have Lazav become a copy of that card, except its name is Lazav, Dimir Maste | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Lord of the Void | silent | Whenever this creature deals combat damage to a player, exile the top seven cards of that player's library, then put a creature card from among them onto the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mark for Death | silent | Target creature an opponent controls blocks this turn if able. Untap that creature. Other creatures that player controls can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Master Biomancer | silent | Each other creature you control enters with a number of additional +1/+1 counters on it equal to this creature's power and as a Mutant in addition to its other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mental Vapors | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Midnight Recovery | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -85,7 +83,6 @@
 | Sepulchral Primordial | silent | When this creature enters, for each opponent, you may put up to one target creature card from that player's graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadow Slice | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shambleshark | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Shielded Passage | silent | Prevent all damage that would be dealt to target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Signal the Clans | silent | Search your library for three creature cards and reveal them. If you reveal three cards with different names, choose one of them at random and put that card int | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Simic Fluxmage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Simic Manipulator | silent | {T}, Remove one or more +1/+1 counters from this creature: Gain control of target creature with power less than or equal to the number of +1/+1 counters removed | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -111,7 +108,6 @@
 | Grisly Spectacle | notice | Destroy target nonartifact creature. Its controller mills cards equal to that creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gruul Charm | notice | Choose one — • Creatures without flying can't block this turn. • Gain control of all permanents you own. • Gruul Charm deals 3 damage to each creature with flyi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hellraiser Goblin | notice | Creatures you control have haste and attack each combat if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Homing Lightning | notice | Homing Lightning deals 4 damage to target creature and each other creature with the same name as that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Molten Primordial | notice | When this creature enters, for each opponent, gain control of up to one target creature that player controls until end of turn. Untap those creatures. They gain | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Obzedat, Ghost Council | notice | At the beginning of your end step, you may exile Obzedat. If you do, return it to the battlefield under its owner's control at the beginning of your next upkeep | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Orzhov Charm | notice | Choose one — • Return target creature you control and all Auras you control attached to it to their owner's hand. • Destroy target creature and you lose life eq | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -247,7 +243,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>19 cards</summary>
 
 - Aerial Maneuver
 - Aurelia's Fury
@@ -257,10 +253,14 @@
 - Dimir Guildgate
 - Glaring Spotlight
 - Gruul Guildgate
+- Hindervines
 - Hold the Gates
+- Homing Lightning
 - Luminate Primordial
+- Mark for Death
 - Orzhov Guildgate
 - Serene Remembrance
+- Shielded Passage
 - Simic Guildgate
 - Skullcrack
 - Syndic of Tithes
@@ -303,15 +303,12 @@
 | lands you control are the chosen type in addition to their other types. | 1 | Realmwright | gtc |
 | move any number of +N/+N counters from target creature onto another target creature with the same controller. | 1 | Bioshift | gtc |
 | prevent all combat damage that would be dealt to ~ by creatures blocking it. | 1 | Armored Transport | gtc |
-| prevent all combat damage that would be dealt ~ by creatures with no +N/+N counters on them. | 1 | Hindervines | gtc |
-| prevent all damage that would be dealt to target creature ~. | 1 | Shielded Passage | gtc |
 | remove two +N/+N counters from ~: regenerate it. | 1 | Experiment One | gtc |
 | return all attacking creatures to their owner's hand. | 1 | Aetherize | gtc |
 | sacrifice another creature: ~ gains protection from the color of your choice until end of turn. | 1 | Cartel Aristocrat | gtc |
 | sacrifice ~: counter target spell with {M} in its mana cost unless its controller pays {M}. | 1 | Frontline Medic | gtc |
 | search your library for three creature cards and reveal them. if you reveal three cards with different names, choose one of them at random and put that card int | 1 | Signal the Clans | gtc |
 | shuffle your library, then reveal the top card. if it"..."s a land card, you may put it onto the battlefield and return ~ to its owner's hand. | 1 | Unexpected Results | gtc |
-| target creature an opponent controls blocks ~ if able. untap that creature. other creatures that player controls can't block ~. | 1 | Mark for Death | gtc |
 | target creature that dealt damage ~ gets -N/-N until end of turn. | 1 | Executioner's Swing | gtc |
 | target land becomes a N/N elemental creature with flying until end of turn. it's still a land. | 1 | Hydroform | gtc |
 | target player loses N life, discards a card, then sacrifices a permanent of their choice. cipher (then you may exile ~ card encoded on a creature you control. w | 1 | Undercity Plague | gtc |
@@ -349,7 +346,6 @@
 | {M}{M}{M}: whenever you gain life ~, each opponent loses that much life. | 1 | Vizkopa Guildmage | gtc |
 | ~ can't be blocked except by creatures with flying or reach. | 1 | Spire Tracer | gtc |
 | ~ can't be blocked except by rogues. | 1 | Deathcult Rogue | gtc |
-| ~ deals N damage to target creature and each other creature with the same name as that creature. | 1 | Homing Lightning | gtc |
 | ~ gets +N/+N for each creature card in your opponents' graveyards. | 1 | Wight of Precinct Six | gtc |
 | ~"..." graveyards. | 1 | Consuming Aberration | gtc |
 

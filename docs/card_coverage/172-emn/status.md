@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 15.6% |
-| Works (untested) | 109 | 54.8% |
+| Tested | 33 | 16.6% |
+| Works (untested) | 110 | 55.3% |
 | Partial (unaudited) | 9 | 4.5% |
-| Not working | 50 | 25.1% |
+| Not working | 47 | 23.6% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Eternal Scourge | silent | When this creature becomes the target of a spell or ability an opponent controls, exile this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fogwalker | silent | When this creature enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fortune's Favor | silent | Target opponent looks at the top four cards of your library and separates them into a face-down pile and a face-up pile. Put one pile into your hand and the oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Galvanic Bombardment | silent | Galvanic Bombardment deals X damage to target creature, where X is 2 plus the number of cards named Galvanic Bombardment in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Geist of the Lonely Vigil | silent | Delirium — This creature can attack as though it didn't have defender as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gisela, the Broken Blade | silent | At the beginning of your end step, if you both own and control Gisela and a creature named Bruna, the Fading Light, exile them, then meld them into Brisela, Voi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gnarlwood Dryad | silent | Delirium — This creature gets +2/+2 as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -51,7 +50,6 @@
 | Mind's Dilation | silent | Whenever an opponent casts their first spell each turn, that player exiles the top card of their library. If it's a nonland card, you may cast it without paying | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirrorwing Dragon | silent | Whenever a player casts an instant or sorcery spell that targets only this creature, that player copies that spell for each other creature they control that the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mournwillow | silent | Delirium — When this creature enters, if there are four or more card types among cards in your graveyard, creatures with power 2 or less can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Noosegraf Mob | silent | Whenever a player casts a spell, remove a +1/+1 counter from this creature. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Permeating Mass | silent | Whenever this creature deals combat damage to a creature, that creature becomes a copy of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Prying Questions | silent | Target opponent loses 3 life and puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Repel the Abominable | silent | Prevent all damage that would be dealt this turn by non-Human sources. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,7 +60,6 @@
 | Spell Queller | silent | When this creature leaves the battlefield, the exiled card's owner may cast that card without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spirit of the Hunt | silent | When this creature enters, each other creature you control that's a Wolf or a Werewolf gets +0/+3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stitcher's Graft | silent | Whenever equipped creature attacks, it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Take Inventory | silent | Draw a card, then draw cards equal to the number of cards named Take Inventory in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tamiyo, Field Researcher | silent | +1: Choose up to two target creatures. Until your next turn, whenever either of those creatures deals combat damage, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thraben Foulbloods | silent | Delirium — This creature gets +1/+1 and has menace as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tree of Perdition | silent | {T}: Exchange target opponent's life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -157,6 +154,7 @@
 | Nebelgast Herald | handled | Whenever this creature or another Spirit you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Niblis of Frost | handled | Whenever you cast an instant or sorcery spell, tap target creature an opponent controls. That creature doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Noose Constrictor | handled | Discard a card: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Noosegraf Mob | handled | This creature enters with five +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oath of Liliana | handled | When Oath of Liliana enters, each opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Olivia's Dragoon | handled | Discard a card: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Otherworldly Outburst | handled | Target creature gets +1/+0 until end of turn. When that creature dies this turn, create a 3/2 colorless Eldrazi Horror creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -198,7 +196,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>33 cards</summary>
 
 - Blessed Alliance
 - Cemetery Recruitment
@@ -211,6 +209,7 @@
 - Eldritch Evolution
 - Emrakul, the Promised End
 - Foul Emissary
+- Galvanic Bombardment
 - Geier Reach Sanitarium
 - Gisa and Geralf
 - Graf Rats
@@ -226,6 +225,7 @@
 - Stensia Innkeeper
 - Subjugator Angel
 - Summary Dismissal
+- Take Inventory
 - Thirsting Axe
 - Unsubstantiate
 - Vexing Scuttler
@@ -243,7 +243,6 @@
 | at the beginning of your end step, if you both own and control gisela and a creature named bruna, the fading light, exile them, then meld them into brisela, voi | 1 | Gisela, the Broken Blade | emn |
 | creature spells you cast cost {M} more to cast. | 1 | Geist-Fueled Scarecrow | emn |
 | creatures with power less than ~ power can't block it. | 1 | Shrill Howler // Howling Chorus | emn |
-| draw a card, then draw cards equal to the number of cards named ~ in your graveyard. | 1 | Take Inventory | emn |
 | enchanted creature gets -N/-N, where N is the number of cards in your graveyard. | 1 | Spontaneous Mutation | emn |
 | enchanted permanent is a colorless land with "..." and loses all other card types and abilities. | 1 | Imprisoned in the Moon | emn |
 | equipped creature gets +N/+N and must be blocked by an eldrazi if able. | 1 | Slayer's Cleaver | emn |
@@ -268,7 +267,6 @@
 | when ~ enters, you may have it fight target creature you don't control. | 1 | Somberwald Stag | emn |
 | when ~ leaves the battlefield, the exiled card's owner may cast that card without paying its mana cost. | 1 | Spell Queller | emn |
 | whenever a creature you control attacks, defending player loses N life and you gain N life. | 1 | Campaign of Vengeance | emn |
-| whenever a player casts a spell, remove a +N/+N counter from ~. if you do, create a N/N black zombie creature token. | 1 | Noosegraf Mob | emn |
 | whenever a player casts an instant or sorcery spell that targets only ~, that player copies that spell for each other creature they control that the spell could | 1 | Mirrorwing Dragon | emn |
 | whenever an equipment you control enters, you may attach it to target creature you control. | 1 | Sigarda's Aid | emn |
 | whenever an opponent casts their first spell each turn, that player exiles the top card of their library. if it's a nonland card, you may cast it without paying | 1 | Mind's Dilation | emn |
@@ -287,7 +285,6 @@
 | ~ can block an additional creature each combat. | 1 | Tangleclaw Werewolf // Fibrous Entangler | emn |
 | ~ can block only creatures with flying. | 1 | Tattered Haunter | emn |
 | ~ can't attack or block unless a player has no cards in hand. | 1 | Lupine Prototype | emn |
-| ~ deals N damage to target creature, where N is N plus the number of cards named ~ in your graveyard. | 1 | Galvanic Bombardment | emn |
 | ~ has hexproof as long as it entered ~. | 1 | Drownyard Behemoth | emn |
 
 ## Notes

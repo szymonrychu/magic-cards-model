@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 13.7% |
+| Tested | 36 | 14.1% |
 | Works (untested) | 122 | 47.8% |
 | Partial (unaudited) | 21 | 8.2% |
-| Not working | 77 | 30.2% |
+| Not working | 76 | 29.8% |
 
 ## Cards needing work
 
@@ -100,7 +100,6 @@
 | Oblivion's Hunger | notice | Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it. (Damage and effects that say "destro | unparsed remainder: Draw a card if that creature has a +1/+1 counter on it. | Y/Y/- | not_working |
 | Pyroclastic Hellion | notice | When this creature enters, you may return a land you control to its owner's hand. When you do, this creature deals 2 damage to each opponent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sejiri Shelter // Sejiri Glacier | notice | Target creature you control gains protection from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Synchronized Spellcraft | notice | Synchronized Spellcraft deals 4 damage to target creature and X damage to that creature's controller, where X is the number of creatures in your party. (Your pa | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Taborax, Hope's Demise | notice | Taborax has lifelink as long as it has five or more +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Zulaport Duelist | notice | When this creature enters, up to one target creature gets -2/-0 until end of turn. Its controller mills two cards. | unparsed remainder: Its controller mills two cards. | Y/Y/- | not_working |
 | Archpriest of Iona | unaudited | Archpriest of Iona's power is equal to the number of creatures in your party. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -250,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>36 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
@@ -285,6 +284,7 @@
 - Sea Gate Restoration // Sea Gate, Reborn
 - Shatterskull Smashing // Shatterskull, the Hammer Pass
 - Skyclave Apparition
+- Synchronized Spellcraft
 - Turntimber Symbiosis // Turntimber, Serpentine Wood
 - Valakut Awakening // Valakut Stoneforge
 
@@ -377,7 +377,6 @@
 | ~ costs {M} less to cast for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, and wizard.) return target creature  | 1 | Thwart the Grave | znr |
 | ~ costs {M} less to cast for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, and wizard.) search your library for | 1 | Coveted Prize | znr |
 | ~ costs {M} less to cast if it targets a creature whose controller has eight or more cards in their graveyard. gain control of target creature with mana value N | 1 | Lullmage's Domination | znr |
-| ~ deals N damage to target creature and N damage to that creature's controller, where N is the number of creatures in your party. (your party consists of up to  | 1 | Synchronized Spellcraft | znr |
 | ~ gets +N/+N as long as you control another warrior. | 1 | Expedition Champion | znr |
 | ~'s power and toughness are each equal to N minus the highest life total among players. | 1 | Scourge of the Skyclaves | znr |
 | ~'s power is equal to the number of creatures in your party. | 1 | Archpriest of Iona | znr |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 11.2% |
+| Tested | 32 | 12.0% |
 | Works (untested) | 120 | 44.9% |
 | Partial (unaudited) | 11 | 4.1% |
-| Not working | 106 | 39.7% |
+| Not working | 104 | 39.0% |
 
 ## Cards needing work
 
@@ -114,13 +114,11 @@
 | Boon of Boseiju | notice | Target creature gets +X/+X until end of turn, where X is the greatest mana value among permanents you control. Untap it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Debt to the Kami | notice | Choose one — • Target opponent exiles a creature they control. • Target opponent exiles an enchantment they control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dokuchi Silencer | notice | Whenever this creature deals combat damage to a player, you may discard a creature card. When you do, destroy target creature or planeswalker that player contro | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Flame Discharge | notice | Flame Discharge deals X damage to target creature or planeswalker. If you controlled a modified creature as you cast this spell, it deals X plus 2 damage instea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Go-Shintai of Lost Wisdom | notice | At the beginning of your end step, you may pay {1}. When you do, target player mills X cards, where X is the number of Shrines you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hidetsugu, Devouring Chaos | notice | {2}{R}, {T}: Exile the top card of your library. You may play that card this turn. When you exile a nonland card this way, Hidetsugu deals damage equal to the e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hinata, Dawn-Crowned | notice | Spells you cast cost {1} less to cast for each target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Invoke Despair | notice | Target opponent sacrifices a creature of their choice. If they can't, they lose 2 life and you draw a card. Then repeat this process for an enchantment and a pl | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kairi, the Swirling Sky | notice | When Kairi dies, choose one — • Return any number of target nonland permanents with total mana value 6 or less to their owners' hands. • Mill six cards, then re | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Kami's Flare | notice | Kami's Flare deals 3 damage to target creature or planeswalker. Kami's Flare also deals 2 damage to that permanent's controller if you control a modified creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kappa Tech-Wrecker | notice | Whenever this creature deals combat damage to a player, you may remove a deathtouch counter from it. When you do, exile target artifact or enchantment that play | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitsune Ace | notice | Whenever a Vehicle you control attacks, choose one — • That Vehicle gains first strike until end of turn. • Untap this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lethal Exploit | notice | Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until end of turn for each modified creature you controlled as you cast this spell. (E | unparsed remainder: It gets an additional -1/-1 until end of turn for each modified creature you controlled as you cast this spell. | Y/Y/- | not_working |
@@ -267,7 +265,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>32 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
@@ -276,12 +274,14 @@
 - Eiganjo, Seat of the Empire
 - Experimental Synthesizer
 - Fable of the Mirror-Breaker // Reflection of Kiki-Jiki
+- Flame Discharge
 - Go-Shintai of Boundless Vigor
 - Goro-Goro, Disciple of Ryusei
 - Greasefang, Okiba Boss
 - Iron Apprentice
 - Jin-Gitaxias, Progress Tyrant
 - Kami of Transience
+- Kami's Flare
 - Malicious Malfunction
 - March of Otherworldly Light
 - March of Swirling Mist
@@ -404,8 +404,6 @@
 | {M}{M}: tatsunari and target frog you control can't be blocked ~ except by creatures with flying or reach. | 1 | Tatsunari, Toad Rider | neo |
 | ~ costs {M} less to cast for each modified creature you control. | 1 | Walking Skyscraper | neo |
 | ~ crews vehicles as though its power were N greater. | 1 | Hotshot Mechanic | neo |
-| ~ deals N damage to target creature or planeswalker. if you controlled a modified creature as you cast ~, it deals N plus N damage instead. (equipment, auras yo | 1 | Flame Discharge | neo |
-| ~ deals N damage to target creature or planeswalker. ~ also deals N damage to that permanent's controller if you control a modified creature. (equipment, auras  | 1 | Kami's Flare | neo |
 | ~ enters with a +N/+N counter on it if you control a modified creature. | 1 | Heir of the Ancient Fang | neo |
 | ~ gets +N/+N for each artifact and/or enchantment card in your graveyard. | 1 | Runaway Trash-Bot | neo |
 | ~ gets +N/+N for each other modified creature you control. | 1 | Upriser Renegade | neo |

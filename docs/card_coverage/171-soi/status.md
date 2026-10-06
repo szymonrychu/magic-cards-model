@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 7.7% |
-| Works (untested) | 170 | 65.1% |
+| Works (untested) | 171 | 65.5% |
 | Partial (unaudited) | 10 | 3.8% |
-| Not working | 61 | 23.4% |
+| Not working | 60 | 23.0% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Ever After | silent | Return up to two target creature cards from your graveyard to the battlefield. Each of those creatures is a black Zombie in addition to its other colors and typ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fevered Visions | silent | At the beginning of each player's end step, that player draws a card. If the player is your opponent and has four or more cards in hand, this enchantment deals  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flameblade Angel | silent | Whenever a source an opponent controls deals damage to you or a permanent you control, you may have this creature deal 1 damage to that source's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Forgotten Creation | silent | At the beginning of your upkeep, you may discard all the cards in your hand. If you do, draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fork in the Road | silent | Search your library for up to two basic land cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | From Under the Floorboards | silent | Madness {X}{B}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Create three tappe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Geier Reach Bandit // Vildin-Pack Alpha | silent | Whenever a Werewolf you control enters, you may transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -143,6 +142,7 @@
 | Farbog Revenant | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Fleeting Memories | handled | When this enchantment enters, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foreboding Ruins | handled | As this land enters, you may reveal a Swamp or Mountain card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Forgotten Creation | handled | At the beginning of your upkeep, you may discard all the cards in your hand. If you do, draw that many cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forsaken Sanctuary | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fortified Village | handled | As this land enters, you may reveal a Forest or Plains card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foul Orchard | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -311,7 +311,6 @@
 | at the beginning of your upkeep, each player discards a card. each opponent who discarded a card that shares a card type with the card you discarded loses N lif | 1 | Creeping Dread | soi |
 | at the beginning of your upkeep, reveal the top card of your library. any opponent may have you put that card into your graveyard. if a player does, ~ deals dam | 1 | Sin Prodder | soi |
 | at the beginning of your upkeep, sacrifice ~ unless you sacrifice a land. | 1 | The Gitrog Monster | soi |
-| at the beginning of your upkeep, you may discard all the cards in your hand. if you do, draw that many cards. | 1 | Forgotten Creation | soi |
 | attacking creatures you control get +N/+N and have trample. | 1 | Breakneck Rider // Neck Breaker | soi |
 | counter target sorcery spell. delirium — if there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | 1 | Invasive Surgery | soi |
 | each vampire creature card you own that isn't on the battlefield has madness. the madness cost is equal to its mana cost. | 1 | Falkenrath Gorger | soi |

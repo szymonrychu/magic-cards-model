@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 7.7% |
+| Tested | 12 | 8.4% |
 | Works (untested) | 74 | 51.7% |
 | Partial (unaudited) | 6 | 4.2% |
-| Not working | 52 | 36.4% |
+| Not working | 51 | 35.7% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Garruk, Apex Predator | silent | −3: Destroy target creature. You gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glacial Crasher | silent | This creature can't attack unless there is a Mountain on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hot Soup | silent | Whenever equipped creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hunter's Ambush | silent | Prevent all combat damage that would be dealt by nongreen creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | In Garruk's Wake | silent | Destroy all creatures you don't control and all planeswalkers you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Indulgent Tormentor | silent | At the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasive Species | silent | When this creature enters, return another permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -162,13 +161,14 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Ensoul Artifact
 - Feast on the Fallen
 - First Response
 - Genesis Hydra
 - Goblin Kaboomist
+- Hunter's Ambush
 - Hushwing Gryff
 - Might Makes Right
 - Ob Nixilis, Unshackled
@@ -199,7 +199,6 @@
 | other green creatures you control get +N/+N. | 1 | Paragon of Eternal Wilds | m15 |
 | other red creatures you control get +N/+N. | 1 | Paragon of Fierce Defiance | m15 |
 | other white creatures you control get +N/+N. | 1 | Paragon of New Dawns | m15 |
-| prevent all combat damage that would be dealt by nongreen creatures ~. | 1 | Hunter's Ambush | m15 |
 | put target creature into its owner's library second from the top. | 1 | Chronostutter | m15 |
 | sliver creatures you control have "..." | 1 | Constricting Sliver | m15 |
 | sliver creatures you control have deathtouch. | 1 | Venom Sliver | m15 |

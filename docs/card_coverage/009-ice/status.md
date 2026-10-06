@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 17.1% |
+| Tested | 7 | 20.0% |
 | Works (untested) | 19 | 54.3% |
 | Partial (unaudited) | 2 | 5.7% |
-| Not working | 8 | 22.9% |
+| Not working | 7 | 20.0% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Enduring Renewal | silent | Whenever a creature is put into your graveyard from the battlefield, return it to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Goblin Snowman | silent | Whenever this creature blocks, prevent all combat damage that would be dealt to and dealt by it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Incinerate | silent | Incinerate deals 3 damage to any target. A creature dealt damage this way can't be regenerated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jester's Cap | silent | {2}, {T}, Sacrifice this artifact: Search target player's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kjeldoran Royal Guard | silent | {T}: All combat damage that would be dealt to you by unblocked creatures this turn is dealt to this creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merieke Ri Berit | silent | {T}: Gain control of target creature for as long as you control Merieke Ri Berit. When Merieke Ri Berit leaves the battlefield or becomes untapped, destroy that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,8 +58,9 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
+- Incinerate
 - Karplusan Forest
 - Karplusan Yeti
 - Pyroclasm
@@ -82,7 +82,6 @@
 | {M}, {M}: look at the top eight cards of your library. exile four of them at random, then put the rest on top of your library in any order. | 1 | Orcish Librarian | ice |
 | {M}: all combat damage that would be dealt to you by unblocked creatures ~ is dealt to ~ instead. | 1 | Kjeldoran Royal Guard | ice |
 | {M}: gain control of target creature for as long as you control ~. when ~ leaves the battlefield or becomes untapped, destroy that creature. it can't be regener | 1 | Merieke Ri Berit | ice |
-| ~ deals N damage to any target. a creature dealt damage ~ can't be regenerated ~. | 1 | Incinerate | ice |
 | ~'s power is equal to the number of creature cards in all graveyards and its toughness is equal to that number plus N. | 1 | Lhurgoyf | ice |
 
 ## Notes

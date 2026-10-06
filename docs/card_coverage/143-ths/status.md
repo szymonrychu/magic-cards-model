@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 10.4% |
+| Tested | 24 | 11.4% |
 | Works (untested) | 131 | 62.1% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 50 | 23.7% |
+| Not working | 48 | 22.7% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Colossus of Akros | silent | As long as this creature is monstrous, it has trample and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Curse of the Swine | silent | Exile X target creatures. For each creature exiled this way, its controller creates a 2/2 green Boar creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Decorated Griffin | silent | {1}{W}: Prevent the next 1 combat damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Defend the Hearth | silent | Prevent all combat damage that would be dealt to players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evangel of Heliod | silent | When this creature enters, create a number of 1/1 white Soldier creature tokens equal to your devotion to white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fanatic of Mogis | silent | When this creature enters, it deals damage to each opponent equal to your devotion to red. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fate Foretold | silent | When enchanted creature dies, its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -73,7 +72,6 @@
 | Favored Hoplite | notice | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature and prevent all damage that would be dealt to it this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gift of Immortality | notice | When enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gods Willing | notice | Target creature you control gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt damage, enchanted, or equipp | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Hunt the Hunter | notice | Target green creature you control gets +2/+2 until end of turn. It fights target green creature an opponent controls. | unparsed remainder: It fights target green creature an opponent controls. | Y/Y/- | not_working |
 | Rage of Purphoros | notice | Rage of Purphoros deals 4 damage to target creature. It can't be regenerated this turn. Scry 1. (Look at the top card of your library. You may put that card on  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rescue from the Underworld | notice | As an additional cost to cast this spell, sacrifice a creature. Choose target creature card in your graveyard. Return that card and the sacrificed card to the b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos, God of the Dead | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -219,17 +217,19 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
 - Arbor Colossus
 - Commune with the Gods
 - Dauntless Onslaught
+- Defend the Hearth
 - Elspeth, Sun's Champion
 - Fleecemane Lion
 - Gray Merchant of Asphodel
 - Hopeful Eidolon
+- Hunt the Hunter
 - Karametra's Acolyte
 - Lagonna-Band Elder
 - Nessian Asp
@@ -263,11 +263,9 @@
 | medomai can't attack during extra turns. | 1 | Medomai the Ageless | ths |
 | minotaur creatures you control have haste. | 1 | Kragma Warcaller | ths |
 | other minotaur creatures you control get +N/+N and have trample. | 1 | Rageblood Shaman | ths |
-| prevent all combat damage that would be dealt to players ~. | 1 | Defend the Hearth | ths |
 | reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put that pile into your hand and the other i | 1 | Steam Augury | ths |
 | target creature gets +N/+N until end of turn. regenerate it. you lose N life. | 1 | Boon of Erebos | ths |
 | target creature you control gains protection from the color of your choice until end of turn. (it can't be blocked, targeted, dealt damage, enchanted, or equipp | 1 | Gods Willing | ths |
-| target green creature you control gets +N/+N until end of turn. it fights target green creature an opponent controls. | 1 | Hunt the Hunter | ths |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. you may cast that card for as long as it remain | 1 | Psychic Intrusion | ths |
 | untap all creatures and lands you control during each other player's untap step. | 1 | Prophet of Kruphix | ths |
 | up to two target creatures each get +N/+N until end of turn. untap those creatures. at ~ next end of combat, tap each creature that was blocked by one of those  | 1 | Triton Tactics | ths |

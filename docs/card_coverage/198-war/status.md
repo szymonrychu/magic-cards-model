@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.8% |
+| Tested | 25 | 10.2% |
 | Works (untested) | 143 | 58.6% |
 | Partial (unaudited) | 16 | 6.6% |
-| Not working | 61 | 25.0% |
+| Not working | 60 | 24.6% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | God-Eternal Bontu | silent | When God-Eternal Bontu enters, sacrifice any number of other permanents, then draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | God-Eternal Rhonas | silent | When God-Eternal Rhonas enters, double the power of each other creature you control until end of turn. Those creatures gain vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guild Globe | silent | {2}, {T}, Sacrifice this artifact: Add two mana of different colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Heartwarming Redemption | silent | Discard all the cards in your hand, then draw that many cards plus one. You gain life equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Interplanar Beacon | silent | {1}, {T}: Add two mana of different colors. Spend this mana only to cast planeswalker spells. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace's Ruse | silent | Return up to two target creatures to their owner's hand. You may search your library and/or graveyard for a card named Jace, Arcane Strategist, reveal it, and p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, Arcane Strategist | silent | −7: Creatures you control can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -250,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Arboreal Grazer
 - Ashiok, Dream Render
@@ -262,6 +261,7 @@
 - Enter the God-Eternals
 - Feather, the Redeemed
 - Finale of Eternity
+- Heartwarming Redemption
 - Ilharg, the Raze-Boar
 - Karn, the Great Creator
 - Kronch Wrangler
@@ -295,7 +295,6 @@
 | copy target instant or sorcery spell, then return it to its owner's hand. you may choose new targets for the copy. | 1 | Narset's Reversal | war |
 | create N N/N white soldier creature tokens with vigilance. if N is N or more, also create N N/N white angel creature tokens with flying and vigilance. | 1 | Finale of Glory | war |
 | destroy any number of target planeswalkers. choose a planeswalker you control. put two loyalty counters on it for each planeswalker destroyed ~. | 1 | The Elderspell | war |
-| discard all the cards in your hand, then draw that many cards plus one. you gain life equal to the number of cards in your hand. | 1 | Heartwarming Redemption | war |
 | draw N cards. if N is N or more, instead shuffle your graveyard into your library, draw N cards, untap up to five lands, and you have no maximum hand size for t | 1 | Finale of Revelation | war |
 | during your turn, creatures you control have first strike and equip abilities you activate cost {M} less to activate. | 1 | Nahiri, Storm of Stone | war |
 | each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Huatli, the Sun's Heart | war |

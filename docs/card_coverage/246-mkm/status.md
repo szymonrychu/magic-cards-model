@@ -62,7 +62,6 @@
 | Harried Dronesmith | silent | At the beginning of combat on your turn, create a 1/1 colorless Thopter artifact creature token with flying. It gains haste until end of turn. Sacrifice it at t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hedge Whisperer | silent | {3}{G}, {T}, Collect evidence 4: Target land you control becomes a 5/5 green Plant Boar creature with haste for as long as this creature remains tapped. It's st | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hide in Plain Sight | silent | Look at the top five cards of your library, cloak two of them, and put the rest on the bottom of your library in a random order. (To cloak a card, put it onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Hustle // Bustle | silent | Target creature attacks or blocks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Innocent Bystander | silent | Whenever this creature is dealt 3 or more damage, investigate. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Insidious Roots | silent | Whenever one or more creature cards leave your graveyard, create a 0/1 green Plant creature token, then put a +1/+1 counter on each Plant you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Intrude on the Mind | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -116,6 +115,7 @@
 | Eliminate the Impossible | notice | Investigate. Creatures your opponents control get -2/-0 until end of turn. If any of them are suspected, they're no longer suspected. (To investigate, create a  | unparsed remainder: Investigate. If any of them are suspected, they're no longer suspected. | Y/Y/Y | not_working |
 | Gearbane Orangutan | notice | When this creature enters, choose one — • Destroy up to one target artifact. • Sacrifice an artifact. If you do, put two +1/+1 counters on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Hotshot Investigators | notice | When this creature enters, return up to one other target creature to its owner's hand. If you controlled it, investigate. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Hustle // Bustle | notice | Creatures you control get +2/+2 and gain trample until end of turn. You may turn a creature you control face up. | unparsed remainder: You may turn a creature you control face up. | Y/Y/Y | not_working |
 | Incinerator of the Guilty | notice | Whenever this creature deals combat damage to a player, you may collect evidence X. When you do, this creature deals X damage to each creature and planeswalker  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | It Doesn't Add Up | notice | Return target creature card from your graveyard to the battlefield. Suspect it. (It has menace and can't block.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kellan, Inquisitive Prodigy // Tail the Suspect | notice | Whenever Kellan attacks, destroy up to one target artifact. If you controlled that permanent, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -325,6 +325,7 @@
 | at the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. | 1 | Wojek Investigator | mkm |
 | create a N/N green ooze creature token with trample. put N +N/+N counters on it, where N is two plus the total number of cards you own in exile and in your grav | 1 | Slime Against Humanity | mkm |
 | create a N/N green plant creature token, then draw cards equal to the number of differently named creature tokens you control. | 1 | Audience with Trostani | mkm |
+| creatures you control get +N/+N and gain trample until end of turn. you may turn a creature you control face up. | 1 | Hustle // Bustle | mkm |
 | creatures you control with power N or less can't be blocked by creatures with power N or greater. | 1 | Delney, Streetwise Lookout | mkm |
 | destroy all artifacts you don't control, then exile the top N cards of your library, where N is the number of artifacts that were put into graveyards from the b | 1 | Anzrag's Rampage | mkm |
 | disguise | 1 | Fugitive Codebreaker | mkm |
@@ -345,7 +346,6 @@
 | return target creature card with mana value N or less from your graveyard to the battlefield. put a flying counter on it. it's a spirit in addition to its other | 1 | Call a Surprise Witness | mkm |
 | return up to one target artifact card, up to one target land card, and up to one target non-aura enchantment card from your graveyard to the battlefield. they a | 1 | Relive the Past | mkm |
 | reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put that pile into your hand and the other i | 1 | Intrude on the Mind | mkm |
-| target creature attacks or blocks ~ if able. | 1 | Hustle // Bustle | mkm |
 | target creature you control gets +N/+N and gains haste until end of turn. when that creature dies ~, create a N/N white and blue detective creature token. | 1 | Felonious Rage | mkm |
 | target opponent exiles the top N cards of their library face down. you may look at and play those cards for as long as they remain exiled. if you cast a spell ~ | 1 | Outrageous Robbery | mkm |
 | target opponent reveals their hand. you choose a nonland card from it. exile that card. if the card's mana value is N or less, create a N/N white and black spir | 1 | Soul Search | mkm |

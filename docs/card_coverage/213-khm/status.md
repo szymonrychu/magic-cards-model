@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 31 | 10.8% |
-| Works (untested) | 133 | 46.3% |
+| Works (untested) | 134 | 46.7% |
 | Partial (unaudited) | 15 | 5.2% |
-| Not working | 108 | 37.6% |
+| Not working | 107 | 37.3% |
 
 ## Cards needing work
 
@@ -116,7 +116,6 @@
 | Waking the Trolls | silent | III — Choose target opponent. If they control fewer lands than you, create a number of 4/4 green Troll Warrior creature tokens with trample equal to the differe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Absorb Identity | notice | Return target creature to its owner's hand. You may have Shapeshifters you control become copies of that creature until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Axgard Armory | notice | {1}{R}{R}{W}, {T}, Sacrifice this land: Search your library for an Aura card and/or an Equipment card, reveal them, put them into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Berg Strider | notice | When this creature enters, tap target artifact or creature an opponent controls. If {S} was spent to cast this spell, that permanent doesn't untap during its co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bind the Monster | notice | When this Aura enters, tap enchanted creature. It deals damage to you equal to its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Divine Gambit | notice | Exile target artifact, creature, or enchantment an opponent controls. That player may put a permanent card from their hand onto the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Draugr Thought-Thief | notice | When this creature enters, look at the top card of target player's library. You may put that card into their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -159,6 +158,7 @@
 | Battershield Warrior | handled | Boast — {1}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Battlefield Raptor | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Behold the Multiverse | handled | Scry 2, then draw two cards. Foretell {1}{U} (During your turn, you may pay {2} and exile this card from your hand face down. Cast it on a later turn for its fo | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Berg Strider | handled | When this creature enters, tap target artifact or creature an opponent controls. If {S} was spent to cast this spell, that permanent doesn't untap during its co | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Beskir Shieldmate | handled | When this creature dies, create a 1/1 white Human Warrior creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Binding the Old Gods | handled | I — Destroy target nonland permanent an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blightstep Pathway // Searstep Pathway | handled |  |  | Y/Y/- | not_tested |
@@ -406,7 +406,6 @@
 | when ~ enters, look at the top card of target player's library. you may put that card into their graveyard. | 1 | Draugr Thought-Thief | khm |
 | when ~ enters, search your library for an instant or sorcery card with the same name as a card in your graveyard, reveal it, put it into your hand, then shuffle | 1 | Frostpyre Arcanist | khm |
 | when ~ enters, tap enchanted creature. it deals damage to you equal to its power. | 1 | Bind the Monster | khm |
-| when ~ enters, tap target artifact or creature an opponent controls. if {M} was spent to cast ~, that permanent doesn"..."s next untap step. | 1 | Berg Strider | khm |
 | when ~ enters, you may exile any number of non-angel creatures you control until ~ leaves the battlefield. | 1 | Glorious Protector | khm |
 | when ~ enters, you may pay {M}. if you do, create a N/N green elf warrior creature token, then attach ~ to it. | 1 | Elven Bow | khm |
 | when ~ enters, you may pay {M}. if you do, create a N/N red dwarf berserker creature token, then attach ~ to it. | 1 | Dwarven Hammer | khm |

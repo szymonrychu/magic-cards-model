@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 11.8% |
+| Tested | 18 | 12.5% |
 | Works (untested) | 87 | 60.4% |
 | Partial (unaudited) | 3 | 2.1% |
-| Not working | 37 | 25.7% |
+| Not working | 36 | 25.0% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Abyssal Harvester | notice | {T}: Exile target creature card from a graveyard that was put there this turn. Create a token that's a copy of it, except it's a Nightmare in addition to its ot | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Chandra, Flameshaper | notice | +2: Add {R}{R}{R}. Exile the top three cards of your library. Choose one. You may play that card this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Divine Resilience | notice | Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Target creature you control gains indestructible until end of turn. If this spell was k | unparsed remainder: If this spell was kicked, instead any number of target creatures you control gain indestructible until end of turn. | Y/Y/Y | not_working |
-| Goblin Negotiation | notice | Goblin Negotiation deals X damage to target creature. Create a number of 1/1 red Goblin creature tokens equal to the amount of excess damage dealt to that creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Strongbox Raider | notice | Raid — When this creature enters, if you attacked this turn, exile the top two cards of your library. Choose one of them. Until the end of your next turn, you m | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Tragic Banshee | notice | Morbid — When this creature enters, target creature an opponent controls gets -1/-1 until end of turn. If a creature died this turn, that creature gets -13/-13  | unparsed remainder: If a creature died this turn, that creature gets -13/-13 until end of turn instead. | Y/Y/Y | not_working |
 | Vampire Gourmand | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, draw a card and this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -157,13 +156,14 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Arbiter of Woe
 - Crossway Troublemakers
 - Crystal Barricade
 - Curator of Destinies
 - Elenda, Saint of Dusk
+- Goblin Negotiation
 - High Fae Trickster
 - Hinterland Sanctifier
 - Inspiration from Beyond
@@ -219,7 +219,6 @@
 | {M}{M}: if kellan is a scout, it becomes a human faerie detective and gains "..." | 1 | Kellan, Planar Trailblazer | fdn |
 | {M}{M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put the rest  | 1 | Squad Rallier | fdn |
 | {M}{M}{M}, {M}: look at the top six cards of your library. you may reveal a creature card with mana value less than or equal to the number of lands you control  | 1 | Loot, Exuberant Explorer | fdn |
-| ~ deals N damage to target creature. create a number of N/N red goblin creature tokens equal to the amount of excess damage dealt to that creature ~. | 1 | Goblin Negotiation | fdn |
 | ~ enters with eight revival counters on it if you cast it. | 1 | Nine-Lives Familiar | fdn |
 
 ## Notes

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 17.8% |
+| Tested | 34 | 18.4% |
 | Works (untested) | 110 | 59.5% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 38 | 20.5% |
+| Not working | 37 | 20.0% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Lightning Runner | silent | Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an addi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mechanized Production | silent | At the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one anoth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Metallic Mimic | silent | This creature is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Monstrous Onslaught | silent | Monstrous Onslaught deals X damage divided as you choose among any number of target creatures, where X is the greatest power among creatures you control as you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Natural Obsolescence | silent | Put target artifact on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peacewalker Colossus | silent | {1}{W}: Another target Vehicle you control becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peema Aether-Seer | silent | When this creature enters, you get an amount of {E} equal to the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -182,7 +181,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Aether Chaser
 - Aether Swooper
@@ -208,6 +207,7 @@
 - Maulfist Revolutionary
 - Merchant's Dockhand
 - Metallic Rebuke
+- Monstrous Onslaught
 - Renegade Rallier
 - Rishkar's Expertise
 - Scrounging Bandar
@@ -261,7 +261,6 @@
 | {M}, sacrifice ~: return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | 1 | Restoration Specialist | aer |
 | {M}{M}: another target vehicle you control becomes an artifact creature until end of turn. | 1 | Peacewalker Colossus | aer |
 | ~ can block an additional creature each combat. | 1 | Night Market Guard | aer |
-| ~ deals N damage divided as you choose among any number of target creatures, where N is the greatest power among creatures you control as you cast ~. | 1 | Monstrous Onslaught | aer |
 | ~ is the chosen type in addition to its other types. | 1 | Metallic Mimic | aer |
 | −N: target opponent loses life equal to the number of artifacts you control. | 1 | Tezzeret, Master of Metal | aer |
 

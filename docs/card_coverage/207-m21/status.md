@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 21 | 11.5% |
-| Works (untested) | 97 | 53.3% |
+| Works (untested) | 98 | 53.8% |
 | Partial (unaudited) | 10 | 5.5% |
-| Not working | 54 | 29.7% |
+| Not working | 53 | 29.1% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Experimental Overload | silent | Create an X/X blue and red Weird creature token, where X is the number of instant and sorcery cards in your graveyard. Then you may return an instant or sorcery | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Feline Sovereign | silent | Other Cats you control get +1/+1 and have protection from Dogs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fiery Emancipation | silent | Triple | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Frantic Inventory | silent | Draw a card, then draw cards equal to the number of cards named Frantic Inventory in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gadrak, the Crown-Scourge | silent | At the beginning of your end step, create a Treasure token for each nontoken creature that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk's Harbinger | silent | Whenever this creature deals combat damage to a player or planeswalker, look at that many cards from the top of your library. You may reveal a creature card or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk's Warsteed | silent | When this creature enters, you may search your library and/or graveyard for a card named Garruk, Savage Herald, reveal it, and put it into your hand. If you sea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -113,6 +112,7 @@
 | Falconer Adept | handled | Whenever this creature attacks, create a 1/1 white Bird creature token with flying that's tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Finishing Blow | handled | Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forgotten Sentinel | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Frantic Inventory | handled | Draw a card, then draw cards equal to the number of cards named Frantic Inventory in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fungal Rebirth | handled | Return target permanent card from your graveyard to your hand. If a creature died this turn, create two 1/1 green Saproling creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gale Swooper | handled | When this creature enters, target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Garruk's Gorehorn | handled |  |  | Y/Y/- | not_tested |
@@ -235,7 +235,6 @@
 | creature spells with flying you cast cost {M} less to cast. | 1 | Watcher of the Spheres | m21 |
 | discard a card: tap ~. it gains indestructible until end of turn. | 1 | Seasoned Hallowblade | m21 |
 | double the power of target creature until end of turn. | 1 | Unleash Fury | m21 |
-| draw a card, then draw cards equal to the number of cards named ~ in your graveyard. | 1 | Frantic Inventory | m21 |
 | during your turn, ~ costs {M}{M}{M} less to cast. end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discard | 1 | Discontinuity | m21 |
 | equipped creature gets +N/+N for each soul counter on ~. | 1 | Malefic Scythe | m21 |
 | exile target creature. that creature's controller reveals cards from the top of their library until they reveal a creature card. that player puts that card onto | 1 | Transmogrify | m21 |

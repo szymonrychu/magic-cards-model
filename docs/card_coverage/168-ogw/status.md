@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 13.6% |
-| Works (untested) | 114 | 64.8% |
+| Works (untested) | 115 | 65.3% |
 | Partial (unaudited) | 4 | 2.3% |
-| Not working | 34 | 19.3% |
+| Not working | 33 | 18.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Chandra, Flamecaller | silent | 0: Discard all the cards in your hand, then draw that many cards plus one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dazzling Reflection | silent | You gain life equal to target creature's power. The next time that creature would deal damage this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deceiver of Form | silent | At the beginning of combat on your turn, reveal the top card of your library. If a creature card is revealed this way, you may have creatures you control other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dread Defiler | silent | {3}{C}, Exile a creature card from your graveyard: Target opponent loses life equal to the exiled card's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -79,6 +78,7 @@
 | Call the Gatewatch | handled | Search your library for a planeswalker card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Canopy Gorger | handled |  |  | Y/Y/- | not_tested |
 | Captain's Claws | handled | Equipped creature gets +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chandra, Flamecaller | handled | +1: Create two 3/1 red Elemental creature tokens with haste. Exile them at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chitinous Cloak | handled | Equipped creature gets +2/+2 and has menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cinder Barrens | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cinder Hellion | handled | When this creature enters, it deals 2 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -216,7 +216,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Landfall | 2 | Embodiment of Fury, Embodiment of Insight | ogw |
-| N: discard all the cards in your hand, then draw that many cards plus one. | 1 | Chandra, Flamecaller | ogw |
 | as long as you control six or more lands, ~ and land creatures you control get +N/+N. | 1 | Sylvan Advocate | ogw |
 | at the beginning of combat on your turn, reveal the top card of your library. if a creature card is revealed ~, you may have creatures you control other than ~  | 1 | Deceiver of Form | ogw |
 | at the beginning of your upkeep, you lose N life unless you control another colorless creature. | 1 | Reaver Drone | ogw |

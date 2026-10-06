@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 14.3% |
+| Tested | 16 | 15.2% |
 | Works (untested) | 63 | 60.0% |
 | Partial (unaudited) | 6 | 5.7% |
-| Not working | 21 | 20.0% |
+| Not working | 20 | 19.0% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Autumn's Veil | silent | Spells you control can't be countered by blue or black spells this turn, and creatures you control can't be the targets of blue or black spells this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blood Tithe | silent | Each opponent loses 3 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Combust | silent | This spell can't be countered. Combust deals 5 damage to target white or blue creature. The damage can't be prevented. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cyclops Gladiator | silent | Whenever this creature attacks, you may have it deal damage equal to its power to target creature defending player controls. If you do, that creature deals dama | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elixir of Immortality | silent | {2}, {T}: You gain 5 life. Shuffle this artifact and your graveyard into their owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gargoyle Sentinel | silent | {3}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -120,12 +119,13 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Aether Adept
 - Ajani's Mantra
 - Brittle Effigy
 - Captivating Vampire
+- Combust
 - Conundrum Sphinx
 - Cultivate
 - Frost Titan
@@ -167,7 +167,6 @@
 | {M}: prevent the next N damage that would be dealt to you ~. if damage is prevented ~, ~ deals that much damage to target player or planeswalker. | 1 | Vengeful Archon | m11 |
 | {M}: put a +N/+N counter on each artifact creature you control. | 1 | Steel Overseer | m11 |
 | {M}: until end of turn, ~ loses defender and gains flying. | 1 | Gargoyle Sentinel | m11 |
-| ~ can"..."t be prevented. | 1 | Combust | m11 |
 | ~ can't attack unless an opponent has been dealt damage ~. | 1 | Bloodcrazed Goblin | m11 |
 | ~ can't attack unless there are five or more islands on the battlefield. | 1 | Harbor Serpent | m11 |
 | ~ can't be the target of nongreen spells or abilities from nongreen sources. | 1 | Gaea's Revenge | m11 |
