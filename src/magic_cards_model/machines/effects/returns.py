@@ -2735,23 +2735,21 @@ def _parse_return_self_then_may_attach_equipment(text: str) -> AbilityEffect | N
 # Command the Dreadhorde: "Choose any number of target creature and/or
 # planeswalker cards in graveyards. Command the Dreadhorde deals damage to
 # you equal to the total mana value of those cards. Put them onto the
-# battlefield under your control." The opener only names the targets (CR
-# 115.1a); "those cards" / "them" are the ones still legal as the spell
+# battlefield under your control." Grim Return: "Choose target creature card
+# in a graveyard that was put there from the battlefield this turn. Put that
+# card onto the battlefield under your control." The opener only names the
+# targets (CR 115.1a; the "put there from the battlefield this turn"
+# restriction is `TargetRequirement.put_there_from_battlefield_this_turn`'s);
+# "those cards" / "them" / "that card" are the ones still legal as the spell
 # resolves (CR 608.2b - one that left its graveyard is neither paid for nor
-# returned). The optional payment is read generally: the spell dealing that
-# damage to its controller, or its controller losing that much life, by the
-# total mana value of the chosen cards (CR 202.3) or, for one card, its mana
-# value. The target phrase must end at its graveyard: a further restriction
-# after it ("... in a graveyard that was put there from the battlefield this
-# turn") is one `machines/targeting.py` does not enforce, so that shape is
-# not read here rather than read with the restriction dropped.
+# returned). The optional payment is the spell dealing damage to its
+# controller equal to the total mana value of the chosen cards (CR 202.3).
 _CHOSEN_GRAVEYARD_CARDS_ONTO_BATTLEFIELD_RE = re.compile(
-    r"^choose (?P<phrase>[^.]*\btarget\b[^.]*\bcards? in "
-    r"(?:a |your |an opponent's )?graveyards?)\.\s+"
-    r"(?:(?P<payment>[^.]+? deals damage to you|you lose life) equal to "
-    r"(?P<amount>the total mana value of those cards|that card's mana value)\.\s+)?"
-    r"(?:put|return) (?:them|those cards|that card|it) onto the battlefield under your control"
-    r"(?P<tapped> tapped)?\.?$",
+    r"^choose (?P<phrase>[^.]*\btarget\b[^.]*\bcards? in (?:a )?graveyards?"
+    r"(?: that (?:was|were) put there from the battlefield this turn)?)\.\s+"
+    r"(?:(?P<payment>[^.]+? deals damage to you) equal to "
+    r"the total mana value of those cards\.\s+)?"
+    r"put (?:them|that card) onto the battlefield under your control\.?$",
     re.IGNORECASE,
 )
 
@@ -2765,25 +2763,20 @@ def _parse_return_chosen_graveyard_cards_spell_text(text: str) -> Effect | None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
         return None
-    payment = match.group("payment")
-    loses_life = payment is not None and payment.lower() == "you lose life"
-    tapped = match.group("tapped") is not None
+    pays_damage = match.group("payment") is not None
 
     def effect(game: "Game", spell: CardState) -> None:
         controller = game.controller_of(spell)
         chosen = [card for card in game.resolve_card_targets(spell) if card.zone is Zone.GRAVEYARD]
         if not chosen:
             return
-        if payment is not None:
+        if pays_damage:
             total = int(sum(card.mana_value for card in chosen))
             if total > 0:
-                if loses_life:
-                    game.lose_life(controller, total)
-                else:
-                    game.deal_damage(controller, total, source=spell)
+                game.deal_damage(controller, total, source=spell)
         for card in chosen:
             if card.zone is Zone.GRAVEYARD:
-                game.put_onto_battlefield(card, controller.username, tapped=tapped)
+                game.put_onto_battlefield(card, controller.username)
 
     return effect
 

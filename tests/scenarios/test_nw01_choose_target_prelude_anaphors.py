@@ -26,15 +26,20 @@ Proof printings (not listed cards, not in any deck):
   is" count rather than a damage amount.
 - **Spellbound Dragon** - "the discarded card's mana value" on a triggered
   ability's pump rather than a spell's damage.
+- **Grim Return** - "Choose target creature card in a graveyard that was put
+  there from the battlefield this turn. Put that card onto the battlefield
+  under your control." - the same graveyard-cards return, with a per-turn
+  zone-change restriction on its target (CR 115.1, 400.7).
 
 Rules, each looked up with `mise run rules:find` in the session that wrote
 this file: CR 115.1a, 608.2b (illegal targets on resolution), 608.2c, 107.14,
-700.8, 700.8a, 700.8b, 120.3.
+700.8, 700.8a, 700.8b, 120.3, 115.1, 400.7.
 """
 
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.keywords import discard
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -298,6 +303,80 @@ def test_command_the_dreadhorde_cannot_choose_a_noncreature_nonplaneswalker_card
 
     with pytest.raises(ValueError):
         scenario.cast_and_resolve("Command the Dreadhorde", auto=True, targets=[bolt])
+
+
+# --------------------------------------------------------------------------
+# Grim Return (proof): the same return, its target restricted to a card put
+# into a graveyard from the battlefield this turn
+# --------------------------------------------------------------------------
+
+
+def _grim_return_board(**bob) -> Scenario:
+    return (
+        Scenario()
+        .player("alice", hand=["Grim Return"], battlefield=["Swamp"] * 3)
+        .player("bob", **bob)
+    )
+
+
+def test_grim_return_takes_a_creature_that_died_this_turn():
+    scenario = _grim_return_board(battlefield=["Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.game.destroy(bears)
+
+    scenario.cast_and_resolve("Grim Return", auto=True, targets=[bears])
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert scenario.game.controller_of(bears).username == "alice"
+
+
+def test_grim_return_cannot_choose_a_creature_card_already_in_the_graveyard():
+    scenario = _grim_return_board(graveyard=["Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "bob")
+
+    with pytest.raises(ValueError, match="put there from the battlefield this turn"):
+        scenario.cast_and_resolve("Grim Return", auto=True, targets=[bears])
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_grim_return_cannot_choose_a_creature_card_discarded_this_turn():
+    scenario = _grim_return_board(hand=["Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "bob")
+    discard(scenario.game, bears, "bob")
+
+    with pytest.raises(ValueError, match="put there from the battlefield this turn"):
+        scenario.cast_and_resolve("Grim Return", auto=True, targets=[bears])
+
+
+def test_grim_return_cannot_choose_a_card_that_died_then_came_back_another_way():
+    """CR 400.7: died this turn, returned to hand, then discarded - its latest
+    arrival in the graveyard was not from the battlefield."""
+    scenario = _grim_return_board(battlefield=["Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.game.destroy(bears)
+    scenario.game.return_to_hand(bears)
+    discard(scenario.game, bears, "bob")
+
+    with pytest.raises(ValueError, match="put there from the battlefield this turn"):
+        scenario.cast_and_resolve("Grim Return", auto=True, targets=[bears])
+
+
+def test_grim_return_does_nothing_when_its_target_left_the_graveyard():
+    """CR 608.2b: the only target is illegal on resolution."""
+    scenario = _grim_return_board(battlefield=["Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.game.destroy(bears)
+    scenario.cast_onto_stack("Grim Return", auto=True, targets=[bears])
+    scenario.game.exile_cards([bears])
+
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.EXILE
 
 
 # --------------------------------------------------------------------------
