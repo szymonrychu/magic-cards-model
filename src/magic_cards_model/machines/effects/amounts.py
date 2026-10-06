@@ -36,6 +36,7 @@ from ..abilities import (
 from ..casting import (
     PlayAction,
 )
+from ..conditions.cast_record import treasure_mana_spent_to_cast
 from ..converge import colors_of_mana_spent
 from ..cost import (
     removes_announced_number_of_counters,
@@ -69,8 +70,9 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
+    _OBJECT_ANAPHOR,
     _UNQUOTED_PREFIX,
     AbilityEffect,
     AmountReader,
@@ -158,7 +160,7 @@ _COUNT_YOU_CONTROL_RE = re.compile(
     r"^(?:the )?(?:number of )?(?:(?P<status>tapped|untapped|attacking) )?"
     r"(?:(?P<nontoken>nontoken) )?"
     rf"(?:(?P<colors>{_COUNT_COLOR_WORD}(?:(?: and/or | or ){_COUNT_COLOR_WORD})*) )?"
-    r"(?:(?P<snow>snow|nonsnow) )?"
+    r"(?:(?P<snow>snow|nonsnow|basic|nonbasic) )?"
     r"(?P<qualifier>[a-z]+) "
     r"(?P<whose>you control|they control|your opponents control|on the battlefield)$"
     # CR 508.1k: every attacking creature, whoever controls it - Path of
@@ -341,6 +343,12 @@ _COUNT_NONTOKEN_CREATURES_DIED_UNDER_CONTROL_RE = re.compile(
 #: count instead of a threshold check.
 _COUNT_CARDS_DRAWN_THIS_TURN_RE = re.compile(
     r"^(?:the number of )?cards? you(?:'ve| have)? drawn this turn$", re.IGNORECASE
+)
+#: "the damage already dealt to you this turn" - Final Punishment's own
+#: amount, its "that player" already written as "you" for the player it is
+#: counted for (`_TARGET_PLAYER_REFERENCES`).
+_COUNT_DAMAGE_ALREADY_DEALT_TO_YOU_RE = re.compile(
+    r"^(?:the )?damage already dealt to you this turn$", re.IGNORECASE
 )
 #: "the number of permanents you've sacrificed this turn" - Obsessive
 #: Pursuit's own X (CR 701.21a), read off `Game.turn_history`'s "sacrificed"
@@ -691,11 +699,15 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return not wanted_colors or bool(wanted_colors & set(colors))
 
         snow_word = (match.group("snow") or "").lower()
+        # CR 205.4g: a snow permanent is any permanent with the supertype
+        # snow; a nonsnow permanent is any that does not have it. CR 205.4a
+        # lists "basic" among the supertypes the same way, so a nonbasic land
+        # is any land without it (Weight of Spires's "nonbasic lands").
+        wanted_supertype = Supertype.BASIC if "basic" in snow_word else Supertype.SNOW
+        wants_supertype = not snow_word.startswith("non")
 
         def _has_wanted_snow(supertypes: "Sequence[Supertype]") -> bool:
-            # CR 205.4g: a snow permanent is any permanent with the supertype
-            # snow; a nonsnow permanent is any that does not have it.
-            return not snow_word or (Supertype.SNOW in supertypes) == (snow_word == "snow")
+            return not snow_word or (wanted_supertype in supertypes) == wants_supertype
 
         def _belongs_to_group(board_controller: str | None, controller: str) -> bool:
             if wants_anyone:
@@ -920,6 +932,22 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return len(game.player(controller).graveyard)
 
         return count_in_graveyard_unfiltered
+
+    if match := _SPELLS_CAST_THIS_TURN_AMOUNT_RE.fullmatch(stripped):
+        return _spells_cast_this_turn_count(match)
+
+    if _COUNT_DAMAGE_ALREADY_DEALT_TO_YOU_RE.fullmatch(stripped):
+        # CR 120.3a counts what was *dealt*: `Game.damage_dealt_this_turn`
+        # holds each damage event as it happened, after prevention (CR 615.6:
+        # prevented damage never happens), so it never held the prevented part.
+        def damage_already_dealt_to_you(game: "Game", controller: str) -> int:
+            return sum(
+                event.amount
+                for event in game.damage_dealt_this_turn
+                if event.recipient_player == controller
+            )
+
+        return damage_already_dealt_to_you
 
     if _COUNT_CARDS_DRAWN_THIS_TURN_RE.fullmatch(stripped):
         # EC4's own running per-player total (`machines/conditions/history.
@@ -1167,7 +1195,41 @@ _CARDS_EXILED_WITH_IT_RE = re.compile(
 #: "any abilities that trigger when a spell is cast" moment being the same
 #: moment this list gains an entry.
 _SPELLS_CAST_THIS_TURN_AMOUNT_RE = re.compile(
-    r"^(?:(?P<types>[a-z, ]+?) )?spells? you'?ve cast this turn$", re.IGNORECASE
+    r"^(?:the number of )?(?P<other>other )?(?:(?P<types>[a-z, ]+?) )?spells? you'?ve cast "
+    r"this turn$",
+    re.IGNORECASE,
+)
+
+
+def _spells_cast_this_turn_count(match: re.Match[str]) -> Callable[["Game", str], int] | None:
+    """`_SPELLS_CAST_THIS_TURN_AMOUNT_RE`'s count: the spells `controller` has
+    cast this turn (`Game.spells_cast_this_turn`, written as each becomes cast,
+    CR 601.2i), narrowed to a type list when one is printed. "Other" leaves out
+    the spell now resolving - Thunder Salvo's own "2 plus the number of other
+    spells you've cast this turn" does not count itself - and is the whole
+    list when nothing is resolving. `None` for a type list this cannot read."""
+    types = None if match.group("types") is None else _read_type_word_list(match.group("types"))
+    if match.group("types") is not None and types is None:
+        return None
+    leaves_out_resolving = match.group("other") is not None
+
+    def count_spells_cast_this_turn(game: "Game", controller: str) -> int:
+        resolving = game.resolving if leaves_out_resolving else None
+        return sum(
+            1
+            for state in game.spells_cast_this_turn.get(controller, [])
+            if (resolving is None or state.id != resolving.id)
+            and (types is None or set(state.types) & types)
+        )
+
+    return count_spells_cast_this_turn
+
+
+#: "2 or the greatest power among Dinosaurs you control, whichever is greater"
+#: (Triumphant Chomp): the larger (or, "whichever is less", the smaller) of two
+#: terms, each read as any other term of an amount is.
+_WHICHEVER_IS_RE = re.compile(
+    r"^(?P<first>.+?) or (?P<second>.+?),? whichever is (?P<which>greater|less)$", re.IGNORECASE
 )
 
 
@@ -1175,6 +1237,15 @@ def _amount_term(term: str) -> AmountReader | None:
     """One term of `amount_expression`, or `None` when it is not readable."""
     text = term.strip()
     lowered = text.lower()
+    if "whichever is" in lowered and (extremum := _WHICHEVER_IS_RE.fullmatch(text)) is not None:
+        first = _amount_term(extremum.group("first"))
+        second = _amount_term(extremum.group("second"))
+        if first is None or second is None:
+            return None
+        pick = max if extremum.group("which").lower() == "greater" else min
+        return lambda game, controller, obj, x: pick(
+            first(game, controller, obj, x), second(game, controller, obj, x)
+        )
     constant = parse_count(text)
     if constant is not None:
         return lambda _game, _controller, _object, _x: constant
@@ -1410,17 +1481,10 @@ def _amount_term(term: str) -> AmountReader | None:
 
         return count_cards_exiled_with_it
     if match := _SPELLS_CAST_THIS_TURN_AMOUNT_RE.fullmatch(text):
-        types = None if match.group("types") is None else _read_type_word_list(match.group("types"))
-        if match.group("types") is not None and types is None:
+        counted_spells = _spells_cast_this_turn_count(match)
+        if counted_spells is None:
             return None
-
-        def count_spells_cast_this_turn(
-            game: "Game", controller: str, _obj: CardState | None, _x: int
-        ) -> int:
-            cast = game.spells_cast_this_turn.get(controller, [])
-            return sum(1 for state in cast if types is None or set(state.types) & types)
-
-        return count_spells_cast_this_turn
+        return lambda game, controller, _obj, _x: counted_spells(game, controller)
     counted = count_expression(text) or _devotion_count(text)
     if counted is not None:
         return lambda game, controller, _object, _x: counted(game, controller)
@@ -1969,26 +2033,114 @@ def _parse_target_pump_for_each_clause(clause: str, *, for_spell: bool) -> Targe
 
     def effect(game: "Game", spell: "StackObject") -> None:
         assert isinstance(spell, CardState)
-        controller = game.controller_of(spell)
-        count = multiplier(game, controller.username, str(spell.id))
-        literal = f"{subject} gets {power * count:+d}/{toughness * count:+d} until end of turn."
-        builder = parsed_layer_effects(literal)
-        if builder is None:
-            continuous_effects(game).layer_notices.append(
-                LayerNotice(source_id=spell.id, source_name=spell.card.name, text=literal)
-            )
-            return
-        targets = game.resolve_card_targets(spell)
-        if not targets:
-            return
-        store = continuous_effects(game)
-        timestamp = store.tick()
-        context = layer_context_for(game, controller)
-        for built in builder(spell, timestamp, targets, context):
-            if built.holds(game):
-                store.add(built)
+        _apply_for_each_pump(game, spell, subject, power, toughness, multiplier)
 
     return effect
+
+
+def _subject_targets(game: "Game", spell: CardState, subject: str) -> list[CardState]:
+    """The spell's resolved card targets that `subject`'s "you control" /
+    "an opponent controls" / "you don't control" names. A spell with several
+    target clauses carries one flat target list, so a clause names its own
+    by who controls them (CR 608.2b already dropped the illegal ones)."""
+    targets = game.resolve_card_targets(spell)
+    lowered = subject.lower()
+    caster = game.controller_of(spell).username
+    if "you control" in lowered:
+        return [t for t in targets if game.controller_of(t).username == caster]
+    if "an opponent controls" in lowered or "you don't control" in lowered:
+        return [t for t in targets if game.controller_of(t).username != caster]
+    return targets
+
+
+def _apply_for_each_pump(
+    game: "Game",
+    spell: CardState,
+    subject: str,
+    power: int,
+    toughness: int,
+    multiplier: Callable[["Game", str, str | None], int],
+) -> None:
+    """`power`/`toughness` times `multiplier`'s count, taken once as the spell
+    resolves (CR 608.2h), as a layer effect (CR 611.2, CR 613.4c) on the first
+    target `subject` names - or on each of them when it names no controller."""
+    controller = game.controller_of(spell)
+    count = multiplier(game, controller.username, str(spell.id))
+    literal = f"{subject} gets {power * count:+d}/{toughness * count:+d} until end of turn."
+    builder = parsed_layer_effects(literal)
+    if builder is None:
+        continuous_effects(game).layer_notices.append(
+            LayerNotice(source_id=spell.id, source_name=spell.card.name, text=literal)
+        )
+        return
+    targets = _subject_targets(game, spell, subject)
+    if not targets:
+        return
+    store = continuous_effects(game)
+    timestamp = store.tick()
+    context = layer_context_for(game, controller)
+    for built in builder(spell, timestamp, targets, context):
+        if built.holds(game):
+            store.add(built)
+
+
+#: "Then that creature deals damage equal to its power to target creature an
+#: opponent controls." - the bite that follows a pump (Spoils of the Hunt's
+#: second sentence). "Then" is CR 608.2c's ordering word, never part of the
+#: instruction.
+_PUMP_BITE_RIDER_RE = re.compile(
+    rf"^(?:then )?{_OBJECT_ANAPHOR} deals damage equal to its power to "
+    r"(?P<phrase>.*\btarget\b.+)$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_pump_for_each_then_bite_text(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """ "Target creature you control gets +N/+M until end of turn for each
+    `<count>`. Then that creature deals damage equal to its power to target
+    creature an opponent controls." as one CR 608.2c instruction.
+
+    Its own reader because the spell carries both creatures as one flat
+    target list: the pump belongs to the one the caster controls and the bite
+    lands on the other, which the generic anaphor pair (it reads the first
+    sentence on every target) cannot tell apart. The count is read as the
+    spell resolves (CR 608.2h) - a cast-time count such as the mana from a
+    Treasure that paid for it (CR 601.2h) comes off the cast record - and the
+    bite is read afterwards, from the creature's power as pumped."""
+    if (
+        not for_spell
+        or "for each" not in text.lower()
+        or "deals damage equal to" not in text.lower()
+    ):
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(" ".join(text.split())))
+    if len(sentences) != 2:
+        return None
+    pump = _TARGET_PUMP_FOR_EACH_RE.fullmatch(sentences[0].strip())
+    rider = _PUMP_BITE_RIDER_RE.fullmatch(sentences[1].strip().rstrip("."))
+    if pump is None or rider is None:
+        return None
+    subject = pump.group("subject")
+    if subject.lower() != "target creature you control" or not _targets_understood(subject):
+        return None
+    if not _targets_understood(rider.group("phrase"), count_agnostic=True):
+        return None
+    multiplier = _for_each_multiplier(pump.group("each"))
+    if multiplier is None:
+        return None
+    power, toughness = int(pump.group("power")), int(pump.group("toughness"))
+    if parsed_layer_effects(f"{subject} gets {power:+d}/{toughness:+d} until end of turn.") is None:
+        return None
+
+    def effect(game: "Game", spell: "StackObject") -> None:
+        assert isinstance(spell, CardState)
+        _apply_for_each_pump(game, spell, subject, power, toughness, multiplier)
+        _resolve_bite_damage(game, spell, "power")
+
+    return [effect]
 
 
 def _bounded_quality_matcher(
@@ -2077,7 +2229,8 @@ def _parse_counted_life_change_clause(clause: str) -> ClauseEffect | None:
     if third_person:
         if _YOU_OR_YOUR_RE.search(expression):
             return None
-        expression = _THEY_CONTROL_RE.sub("you control", expression)
+        for pattern, replacement in _TARGET_PLAYER_REFERENCES:
+            expression = pattern.sub(replacement, expression)
     elif _THEY_CONTROL_RE.search(expression):
         return None
     reader = amount_expression(expression)
@@ -2387,6 +2540,14 @@ def _count_for_targeted_player(game: "Game", counted: Callable[["Game", str], in
     return 0
 
 
+#: "for each mana from a Treasure that was spent to cast this spell" (Spoils
+#: of the Hunt): CR 601.2h's spent mana, of which CR 106.3 keeps the source -
+#: the part of it a Treasure produced, read off the spell's own cast record.
+_TREASURE_MANA_SPENT_EACH_RE = re.compile(
+    r"^mana from an? treasure (?:that was )?spent to cast (?:this spell|it)$", re.IGNORECASE
+)
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -2402,6 +2563,19 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     spells the count out that way instead.
     """
     stripped = phrase.strip().rstrip(".")
+    if _TREASURE_MANA_SPENT_EACH_RE.fullmatch(stripped):
+        # Fixed as the spell was cast (CR 601.2h), never the Treasures still
+        # on the board as it resolves.
+        def count_treasure_mana_spent(game: "Game", _controller: str, source_id: str | None) -> int:
+            # A spell is off the stack by the time its own effect runs, so the
+            # resolving object is asked before the board.
+            resolving = game.resolving
+            if isinstance(resolving, CardState) and str(resolving.id) == source_id:
+                return treasure_mana_spent_to_cast(game, resolving)
+            source = None if source_id is None else game.find_by_id(UUID(source_id))
+            return treasure_mana_spent_to_cast(game, source)
+
+        return count_treasure_mana_spent
     if target_player := _TARGET_PLAYER_CONTROLS_TAIL_RE.fullmatch(stripped):
         # Kithkin Zealot's "for each black and/or red permanent target
         # opponent controls": counted on the targeted player's board (CR
@@ -2906,12 +3080,41 @@ _DAMAGE_TO_PLAYER_EQUAL_TO_THEIR_RE = re.compile(
     r"(?P<phrase>target (?:player|opponent)) equal to (?P<expr>[^.]+?)\.?$",
     re.IGNORECASE,
 )
+#: "deals damage to target creature equal to the number of nonbasic lands that
+#: creature's controller controls" (Weight of Spires): the amount counts what
+#: the *target's controller* has, read for each target as the spell resolves.
+_DAMAGE_TO_PERMANENT_EQUAL_TO_ITS_CONTROLLERS_RE = re.compile(
+    rf"^{_UNQUOTED_PREFIX}\bdeals? damage to "
+    r"(?P<phrase>[^.]*?\btargets?\b[^.]*?) equal to (?P<expr>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
 #: The targeted player's own words inside `_DAMAGE_TO_PLAYER_EQUAL_TO_THEIR_RE`
 #: 's `expr`, rewritten to the second person `count_expression` reads, then
 #: evaluated for that player (CR 608.2h).
 _TARGET_PLAYER_REFERENCES = (
     (re.compile(r"\b(?:they|that player) controls?\b", re.IGNORECASE), "you control"),
+    # "the number of cards they've drawn this turn" (Cerebral Vortex), "the
+    # number of cards that player has drawn this turn" (Molten Psyche).
+    (re.compile(r"\b(?:they've|they have|that player has)\b", re.IGNORECASE), "you've"),
+    # "the damage already dealt to that player this turn" (Final Punishment).
+    (
+        re.compile(r"\bdealt to (?:that player|them|target (?:player|opponent))\b", re.IGNORECASE),
+        "dealt to you",
+    ),
     (re.compile(r"\b(?:their|that player's)\b", re.IGNORECASE), "your"),
+)
+#: "the number of nonbasic lands that creature's controller controls" (Weight of
+#: Spires): the controller of the creature the spell targets, so the same
+#: second-person rewrite for each target's own controller.
+_TARGET_CONTROLLER_REFERENCES = (
+    (
+        re.compile(
+            r"\b(?:that|the targeted) (?:creature|permanent|planeswalker|battle)'s controller "
+            r"controls\b",
+            re.IGNORECASE,
+        ),
+        "you control",
+    ),
 )
 #: A subject that is itself chosen - "Target creature you control deals
 #: damage equal to its power to each of ..." (bite) - is not the spell
@@ -2932,8 +3135,8 @@ def _deal_expression_damage(
     """Each target still legal (CR 608.2b) is dealt `reader`'s amount, read
     as the effect applies (CR 608.2h) with the resolving object's own X; the
     spell itself, or an ability's source, deals it (CR 120.1). With
-    `for_target_player`, the amount is read for the targeted player rather
-    than the controller."""
+    `for_target_player`, the amount is read for the targeted player (or the
+    controller of the targeted permanent) rather than the caster."""
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
@@ -2946,7 +3149,13 @@ def _deal_expression_damage(
         for target in game.resolve_targets(stack_object):
             amount = shared
             if amount is None:
-                whose = target.username if isinstance(target, Player) else controller
+                # A player is counted for themselves, a permanent for the
+                # player who controls it (CR 608.2h: as the spell resolves).
+                whose = (
+                    target.username
+                    if isinstance(target, Player)
+                    else game.controller_of(target).username
+                )
                 amount = max(reader(game, whose, source, x_value), 0)
             game.deal_damage(target, amount, source=source)
 
@@ -2987,11 +3196,15 @@ def _parse_expression_amount_damage_clause(
         match = _EQUAL_TO_DAMAGE_TO_EACH_RE.fullmatch(text)
     if match is None:
         match = _DAMAGE_TO_PLAYER_EQUAL_TO_THEIR_RE.fullmatch(text)
+        references = _TARGET_PLAYER_REFERENCES
+        if match is None:
+            match = _DAMAGE_TO_PERMANENT_EQUAL_TO_ITS_CONTROLLERS_RE.fullmatch(text)
+            references = _TARGET_CONTROLLER_REFERENCES
         if match is None:
             return None
         expr = match.group("expr")
         rewritten = expr
-        for pattern, replacement in _TARGET_PLAYER_REFERENCES:
+        for pattern, replacement in references:
             rewritten = pattern.sub(replacement, rewritten)
         if rewritten == expr:
             return None
@@ -3007,6 +3220,50 @@ def _parse_expression_amount_damage_clause(
     ):
         return None
     return _deal_expression_damage(reader, for_target_player=for_target_player)
+
+
+#: "`<src>` deals damage to each player equal to the number of nonbasic lands
+#: that player controls." (Sunspine Lynx) - each player's own count, every
+#: amount fixed before the first is dealt (CR 608.2h, CR 120.3a), the rewrite
+#: to the second person the same `_TARGET_PLAYER_REFERENCES` gives a targeted
+#: player's.
+_DAMAGE_EACH_PLAYER_EQUAL_TO_THEIRS_RE = re.compile(
+    rf"^{_UNQUOTED_PREFIX}\bdeals? damage to each (?P<who>player|opponent) equal to "
+    r"(?P<expr>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s36", for_spell=FORWARD)
+def _parse_damage_each_player_equal_to_their_count_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_DAMAGE_EACH_PLAYER_EQUAL_TO_THEIRS_RE`'s shape, spell or ability."""
+    if "damage to each" not in clause.lower():
+        return None
+    match = _DAMAGE_EACH_PLAYER_EQUAL_TO_THEIRS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    expr = match.group("expr")
+    rewritten = expr
+    for pattern, replacement in _TARGET_PLAYER_REFERENCES:
+        rewritten = pattern.sub(replacement, rewritten)
+    reader = amount_expression(rewritten) if rewritten != expr else None
+    if reader is None:
+        return None
+    opponents_only = match.group("who").lower() == "opponent"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = _resolving_source(game, stack_object)
+        controller = game.controller_of(stack_object).username
+        deals = [
+            (source, player, max(reader(game, player.username, source, 0), 0))
+            for player in game.players_in_game
+            if not opponents_only or player.username != controller
+        ]
+        _deal_all(game, deals)
+
+    return effect
 
 
 # --------------------------------------------------------------------------
@@ -4498,8 +4755,11 @@ from .continuous import (  # noqa: E402
 )
 from .counters import _counter_kind, _distribute_counters_shares  # noqa: E402
 from .damage import (  # noqa: E402
+    _deal_all,
     _deal_divided_damage_shares,
     _lethal_amount_before_damage,
+    _resolve_bite_damage,
+    _resolving_source,
     card_types_among_spells_cast_reader,
 )
 from .dispatch import (  # noqa: E402

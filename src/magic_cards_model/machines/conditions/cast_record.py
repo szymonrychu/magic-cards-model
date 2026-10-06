@@ -49,7 +49,7 @@ from . import ConditionReader
 
 if TYPE_CHECKING:
     from ...models.card_state import CardState
-    from ...models.game import CastRecord
+    from ...models.game import CastRecord, Game
     from . import ConditionContext
 
 
@@ -229,6 +229,24 @@ def _other_value(context: "ConditionContext", text: str, record: "CastRecord") -
     game = context.game
     value = game.power_of(source) if stat.group("stat") == "power" else game.toughness_of(source)
     return float(value or 0)
+
+
+def treasure_mana_spent_to_cast(game: "Game", state: "CardState | None") -> int:
+    """How much of the mana that paid for `state` came from a Treasure (CR
+    601.2h's spent mana, whose source CR 106.3 keeps), read off the
+    `CastRecord` fixed as it was cast - zero for an object that was never cast
+    (a token, a permanent put onto the battlefield). The one fact "mana from a
+    Treasure was spent to cast this spell" and "for each mana from a Treasure
+    that was spent to cast this spell" both read."""
+    record = None if state is None else game.cast_record_of(state)
+    return 0 if record is None else record.treasure_mana_spent
+
+
+def _treasure_mana_spent(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "mana from a Treasure was spent to cast this spell" - at least one of
+    the mana that paid for the spell came from a Treasure (CR 106.3)."""
+    record = _record(context, match.group("subject"))
+    return record is not None and record.treasure_mana_spent > 0
 
 
 def _amount_compared(context: "ConditionContext", match: re.Match[str]) -> bool:
@@ -555,6 +573,10 @@ READERS: tuple[ConditionReader, ...] = (
         _same_color,
     ),
     _reader(rf"no colored mana was spent to cast {_IT}", _no_colored_mana),
+    _reader(
+        rf"mana from an? treasure (?:was|were) spent to cast (?P<subject>{_IT})",
+        _treasure_mana_spent,
+    ),
     _reader(
         rf"\{{(?P<symbol>[wubrgc])\}} (?:wasn't|was not) spent to cast {_IT}",
         _symbol_not_spent,

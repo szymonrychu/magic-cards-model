@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "ea3f71d6-e333-4e50-9545-deb73749413c",
+  "oracle_id": "bfea2229-a1ca-40c1-aaad-5f97add3f079",
+  "multiverse_ids": [
+    640543
+  ],
+  "mtgo_id": 118894,
+  "tcgplayer_id": 525782,
+  "cardmarket_id": 743599,
+  "name": "Rampaging Brontodon",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/ea3f71d6-e333-4e50-9545-deb73749413c",
+  "scryfall_uri": "https://scryfall.com/card/lcc/247/rampaging-brontodon?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:37:38Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.jpg?1783913858",
+    "normal": "https://cards.scryfall.io/normal/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.jpg?1783913858",
+    "large": "https://cards.scryfall.io/large/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.jpg?1783913858",
+    "png": "https://cards.scryfall.io/png/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.png?1783913858",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.jpg?1783913858",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.jpg?1783913858",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.webp?1783913858",
+    "grid": "https://cards.scryfall.io/grid/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.webp?1783913858",
+    "display": "https://cards.scryfall.io/display/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.webp?1783913858",
+    "art": "https://cards.scryfall.io/art/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.webp?1783913858",
+    "crop": "https://cards.scryfall.io/crop/front/e/a/ea3f71d6-e333-4e50-9545-deb73749413c.webp?1783913858"
+  },
+  "mana_cost": "{5}{G}{G}",
+  "cmc": 7.0,
+  "type_line": "Creature \u2014 Dinosaur",
+  "oracle_text": "Trample\nWhenever this creature attacks, it gets +1/+1 until end of turn for each land you control.",
+  "power": "7",
+  "toughness": "7",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d253edc3-5bc7-4cf1-9446-a8540dedffa5",
+  "set": "lcc",
+  "set_name": "The Lost Caverns of Ixalan Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d253edc3-5bc7-4cf1-9446-a8540dedffa5",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alcc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lcc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ea3f71d6-e333-4e50-9545-deb73749413c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abfea2229-a1ca-40c1-aaad-5f97add3f079&unique=prints",
+  "collector_number": "247",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Not even the tallest tree stands a chance against the underside of a dinosaur's foot.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lars Grant-West",
+  "artist_ids": [
+    "21ed6499-c4d3-4965-ab02-6c7228275bec"
+  ],
+  "illustration_id": "723b3093-aa6e-44fd-8715-03e66e0ac5c2",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 3965,
+  "penny_rank": 16065,
+  "prices": {
+    "usd": "0.36",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.26",
+    "eur_foil": null,
+    "tix": "0.27"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=640543&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRampaging%2BBrontodon",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRampaging%2BBrontodon",
+    "edhrec": "https://edhrec.com/route/?cc=Rampaging+Brontodon"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525782%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743599&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/118894?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
