@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 14.4% |
+| Tested | 17 | 15.3% |
 | Works (untested) | 65 | 58.6% |
 | Partial (unaudited) | 8 | 7.2% |
-| Not working | 22 | 19.8% |
+| Not working | 21 | 18.9% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Open the Vaults | silent | Return all artifact and enchantment cards from all graveyards to the battlefield under their owners' control. (Auras with nothing to enchant remain in graveyard | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Protean Hydra | silent | Whenever a +1/+1 counter is removed from this creature, put two +1/+1 counters on it at the beginning of the next end step. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Rhox Pikemaster | silent | Other Soldier creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Safe Passage | silent | Prevent all damage that would be dealt to you and creatures you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx Ambassador | silent | Whenever this creature deals combat damage to a player, search that player's library for a card, then that player chooses a card name. If you searched for a cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vampire Nocturnus | silent | As long as the top card of your library is black, this creature and other Vampire creatures you control get +2/+1 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Djinn of Wishes | notice | {2}{U}{U}, Remove a wish counter from this creature: Reveal the top card of your library. You may play that card without paying its mana cost. If you don't, exi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -125,7 +124,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Acidic Slime
 - Act of Treason
@@ -139,6 +138,7 @@
 - Great Sable Stag
 - Lifelink
 - Runeclaw Bear
+- Safe Passage
 - Sign in Blood
 - Silence
 - Sleep
@@ -161,7 +161,6 @@
 | other goblin creatures you control get +N/+N and have haste. | 1 | Goblin Chieftain | m10 |
 | other soldier creatures you control get +N/+N and have vigilance. | 1 | Captain of the Watch | m10 |
 | other soldier creatures you control have first strike. | 1 | Rhox Pikemaster | m10 |
-| prevent all damage that would be dealt to you and creatures you control ~. | 1 | Safe Passage | m10 |
 | put target creature card from a graveyard onto the battlefield under your control. that creature is a black zombie in addition to its other colors and types. | 1 | Rise from the Grave | m10 |
 | return all artifact and enchantment cards from all graveyards to the battlefield under their owners' control. (auras with nothing to enchant remain in graveyard | 1 | Open the Vaults | m10 |
 | the next N damage that a source of your choice would deal to you and/or permanents you control ~ is dealt to any target instead. | 1 | Harm's Way | m10 |

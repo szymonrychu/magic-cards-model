@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 12.9% |
+| Tested | 33 | 13.3% |
 | Works (untested) | 125 | 50.2% |
 | Partial (unaudited) | 15 | 6.0% |
-| Not working | 77 | 30.9% |
+| Not working | 76 | 30.5% |
 
 ## Cards needing work
 
@@ -64,7 +64,6 @@
 | Neonate's Rush | silent | This spell costs {1} less to cast if you control a Vampire. Neonate's Rush deals 1 damage to target creature and 1 damage to its controller. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overwhelmed Archivist // Archive Haunt | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Path to the Festival | silent | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Then if there are three or more basic land types among lands | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Play with Fire | silent | Play with Fire deals 2 damage to any target. If a player is dealt damage this way, scry 1. (Look at the top card of your library. You may put that card on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Primal Adversary | silent | When this creature enters, you may pay {1}{G} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seize the Storm | silent | Create a red Elemental creature token with trample and "This token's power and toughness are each equal to the number of instant and sorcery cards in your grave | the engine's reading came from quoted text, not this clause's own words | Y/Y/- | not_working |
 | Sigarda's Splendor | silent | At the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for this enchantment. Then note your life  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -247,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>33 cards</summary>
 
 - Blood Pact
 - Bounding Wolf
@@ -272,6 +271,7 @@
 - Old Stickfingers
 - Otherworldly Gaze
 - Overgrown Farmland
+- Play with Fire
 - Reckless Stormseeker // Storm-Charged Slasher
 - Rite of Harmony
 - Rockfall Vale
@@ -362,7 +362,6 @@
 | {M}, {M}: if it's night, it becomes day. otherwise, it becomes night. activate only as a sorcery. | 1 | The Celestus | mid |
 | ~ costs {M} less to cast for each creature you attacked with ~. | 1 | Search Party Captain | mid |
 | ~ costs {M} less to cast if you control a vampire. ~ deals N damage to target creature and N damage to its controller. draw a card. | 1 | Neonate's Rush | mid |
-| ~ deals N damage to any target. if a player is dealt damage ~, scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Play with Fire | mid |
 | ~ deals N damage to any target. it deals N plus N damage instead if that target is a creature or planeswalker. flashback—{M}{M}, remove N loyalty counters from  | 1 | Light Up the Night | mid |
 | ~ enters with a +N/+N counter on it for each creature that died ~. | 1 | Grizzly Ghoul | mid |
 | ~ enters with a +N/+N counter on it if an opponent lost life ~. | 1 | Mounted Dreadknight | mid |

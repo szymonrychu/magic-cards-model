@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 16.6% |
+| Tested | 34 | 17.1% |
 | Works (untested) | 110 | 55.3% |
 | Partial (unaudited) | 9 | 4.5% |
-| Not working | 47 | 23.6% |
+| Not working | 46 | 23.1% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Mournwillow | silent | Delirium — When this creature enters, if there are four or more card types among cards in your graveyard, creatures with power 2 or less can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Permeating Mass | silent | Whenever this creature deals combat damage to a creature, that creature becomes a copy of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Prying Questions | silent | Target opponent loses 3 life and puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Repel the Abominable | silent | Prevent all damage that would be dealt this turn by non-Human sources. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shreds of Sanity | silent | Return up to one target instant card and up to one target sorcery card from your graveyard to your hand, then discard a card. Exile Shreds of Sanity. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigarda's Aid | silent | Whenever an Equipment you control enters, you may attach it to target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slayer's Cleaver | silent | Equipped creature gets +3/+1 and must be blocked by an Eldrazi if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -196,7 +195,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Blessed Alliance
 - Cemetery Recruitment
@@ -221,6 +220,7 @@
 - Midnight Scavengers
 - Nahiri's Wrath
 - Providence
+- Repel the Abominable
 - Savage Alliance
 - Stensia Innkeeper
 - Subjugator Angel
@@ -249,7 +249,6 @@
 | escalate {M} (pay ~ for each mode chosen beyond the first.) choose one or more — • target player discards all the cards in their hand, then draws that many card | 1 | Collective Defiance | emn |
 | exile target creature. at the beginning of the next end step, return that card to the battlefield under its owner's control with a +N/+N counter on it. | 1 | Long Road Home | emn |
 | if a spell or ability an opponent controls causes you to discard a card, you may reveal that card and put it on top of your library instead of putting it anywhe | 1 | Nephalia Academy | emn |
-| prevent all damage that would be dealt ~ by non-human sources. | 1 | Repel the Abominable | emn |
 | return up to one target instant card and up to one target sorcery card from your graveyard to your hand, then discard a card. exile ~. | 1 | Shreds of Sanity | emn |
 | sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}, where N is ~ power. | 1 | Mausoleum Wanderer | emn |
 | target creature gets +N/+N until end of turn and can block any number of creatures ~. | 1 | Give No Ground | emn |

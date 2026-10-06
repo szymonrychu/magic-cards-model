@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.5% |
-| Works (untested) | 126 | 49.2% |
+| Tested | 29 | 11.3% |
+| Works (untested) | 125 | 48.8% |
 | Partial (unaudited) | 19 | 7.4% |
-| Not working | 84 | 32.8% |
+| Not working | 83 | 32.4% |
 
 ## Cards needing work
 
@@ -80,7 +80,6 @@
 | Reckless Velocitaur | silent | Whenever this creature saddles a Mount or crews a Vehicle during your main phase, that Mount or Vehicle gets +2/+0 and gains trample until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Rise from the Wreck | silent | Return up to one target creature card, up to one target Mount card, up to one target Vehicle card, and up to one target creature card with no abilities from you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Riverchurn Monument | silent | {1}, {T}: Any number of target players each mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Road Rage | silent | Road Rage deals X damage to target creature or planeswalker, where X is 2 plus the number of Mounts and Vehicles you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roadside Assistance | silent | Enchanted permanent gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Silken Strength | silent | When this Aura enters, untap enchanted permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sita Varma, Masked Racer | silent | Exhaust — {X}{G}{G}{U}: Put X +1/+1 counters on Sita Varma. Then you may have the base power and toughness of each other creature you control become equal to Si | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -147,7 +146,6 @@
 | Broadcast Rambler | handled | When this Vehicle enters, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Broadside Barrage | handled | Broadside Barrage deals 5 damage to target creature or planeswalker. Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Broodheart Engine | handled | At the beginning of your upkeep, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Bulwark Ox | handled | Whenever this creature attacks while saddled, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Burner Rocket | handled | When this Vehicle enters, target creature you control gets +2/+0 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Caelorna, Coral Tyrant | handled |  |  | Y/Y/Y | not_tested |
 | Camera Launcher | handled | Exhaust — {3}: Put a +1/+1 counter on this creature. Create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -259,10 +257,11 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>29 cards</summary>
 
 - Bleachbone Verge
 - Boommobile
+- Bulwark Ox
 - Captain Howler, Sea Scourge
 - Collision Course
 - Endrider Catalyzer
@@ -280,6 +279,7 @@
 - Radiant Lotus
 - Repurposing Bay
 - Riverpyre Verge
+- Road Rage
 - Shefet Archfiend
 - Skyserpent Seeker
 - Stock Up
@@ -375,7 +375,6 @@
 | {M}: target creature card in your graveyard gains embalm until end of turn. the embalm cost is equal to its mana cost. | 1 | Cursecloth Wrappings | dft |
 | {M}{M}, sacrifice ~: search your library for up to N basic land cards, where N is your speed. put those cards onto the battlefield tapped, then shuffle. | 1 | Point the Way | dft |
 | ~ costs {M} less to cast for each artifact and/or creature card in your graveyard. | 1 | Chitin Gravestalker | dft |
-| ~ deals N damage to target creature or planeswalker, where N is N plus the number of mounts and vehicles you control. | 1 | Road Rage | dft |
 | ~ gets -N/-N, where N is your life total. | 1 | The Last Ride | dft |
 | ~ saddles mounts and crews vehicles using its toughness rather than its power. | 1 | Interface Ace | dft |
 

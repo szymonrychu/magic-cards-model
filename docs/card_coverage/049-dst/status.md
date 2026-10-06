@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 6.2% |
+| Tested | 12 | 7.4% |
 | Works (untested) | 79 | 48.8% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 63 | 38.9% |
+| Not working | 61 | 37.7% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Genesis Chamber | silent | Whenever a nontoken creature enters, if this artifact is untapped, that creature's controller creates a 1/1 colorless Myr artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Archaeologist | silent | {R}, {T}: Flip a coin. If you win the flip, destroy target artifact and untap this creature. If you lose the flip, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Greater Harvester | silent | At the beginning of your upkeep, sacrifice a permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hallow | silent | Prevent all damage target spell would deal this turn. You gain life equal to the damage prevented this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich's Tomb | silent | Whenever you lose life, sacrifice a permanent for each 1 life you lost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memnarch | silent | {1}{U}{U}: Target permanent becomes an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mephitic Ooze | silent | Whenever this creature deals combat damage to a creature, destroy that creature. The creature can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -87,7 +86,6 @@
 | Shriveling Rot | notice | Choose one — • Until end of turn, whenever a creature is dealt damage, destroy it. • Until end of turn, whenever a creature dies, that creature's controller los | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Stir the Pride | notice | Choose one — • Creatures you control get +2/+2 until end of turn. • Until end of turn, creatures you control gain "Whenever this creature deals damage, you gain | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tears of Rage | notice | Cast this spell only during the declare attackers step. Attacking creatures you control get +X/+0 until end of turn, where X is the number of attacking creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Test of Faith | notice | Prevent the next 3 damage that would be dealt to target creature this turn. For each 1 damage prevented this way, put a +1/+1 counter on that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unforge | notice | Destroy target Equipment. If that Equipment was attached to a creature, Unforge deals 2 damage to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Darksteel Colossus | unaudited | If Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Darksteel Forge | unaudited | Artifacts you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -182,7 +180,7 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>12 cards</summary>
 
 - Aether Snap
 - Darksteel Gargoyle
@@ -190,8 +188,10 @@
 - Echoing Truth
 - Flamebreak
 - Furnace Dragon
+- Hallow
 - Sword of Fire and Ice
 - Tanglewalker
+- Test of Faith
 - Trinisphere
 - Turn the Tables
 
@@ -229,8 +229,6 @@
 | equipped creature can't be blocked and has shroud. | 1 | Whispersilk Cloak | dst |
 | if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Darksteel Colossus | dst |
 | myr creatures get +N/+N. | 1 | Myr Matrix | dst |
-| prevent all damage target spell would deal ~. you gain life equal to the damage prevented ~. | 1 | Hallow | dst |
-| prevent the next N damage that would be dealt to target creature ~. for each N damage prevented ~, put a +N/+N counter on that creature. | 1 | Test of Faith | dst |
 | put two +N/+N counters on target creature and two +N/+N counters on another target creature. | 1 | Stand Together | dst |
 | put two target artifacts on top of their owners' libraries. | 1 | Rebuking Ceremony | dst |
 | return all artifacts you control to their owner's hand. | 1 | Retract | dst |

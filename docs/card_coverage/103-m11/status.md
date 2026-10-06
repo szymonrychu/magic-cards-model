@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 15.2% |
+| Tested | 17 | 16.2% |
 | Works (untested) | 63 | 60.0% |
 | Partial (unaudited) | 6 | 5.7% |
-| Not working | 20 | 19.0% |
+| Not working | 19 | 18.1% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Squadron Hawk | silent | When this creature enters, you may search your library for up to three cards named Squadron Hawk, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Steel Overseer | silent | {T}: Put a +1/+1 counter on each artifact creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stormtide Leviathan | silent | All lands are Islands in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vengeful Archon | silent | {X}: Prevent the next X damage that would be dealt to you this turn. If damage is prevented this way, this creature deals that much damage to target player or p | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Evocation | silent | At the beginning of each player's upkeep, that player reveals a card at random from their hand. If it's a land card, the player puts it onto the battlefield. Ot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angelic Arbiter | unaudited | Each opponent who cast a spell this turn can't attack with creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bloodcrazed Goblin | unaudited | This creature can't attack unless an opponent has been dealt damage this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -119,7 +118,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Aether Adept
 - Ajani's Mantra
@@ -137,6 +136,7 @@
 - Pyretic Ritual
 - Reverberate
 - Serra Ascendant
+- Vengeful Archon
 
 </details>
 
@@ -164,7 +164,6 @@
 | whenever ~ deals combat damage to a player, that player reveals a card at random from their hand. | 1 | Merfolk Spy | m11 |
 | you may choose new targets for target spell. | 1 | Redirect | m11 |
 | {M}, {M}: you gain N life. shuffle ~ and your graveyard into their owner's library. | 1 | Elixir of Immortality | m11 |
-| {M}: prevent the next N damage that would be dealt to you ~. if damage is prevented ~, ~ deals that much damage to target player or planeswalker. | 1 | Vengeful Archon | m11 |
 | {M}: put a +N/+N counter on each artifact creature you control. | 1 | Steel Overseer | m11 |
 | {M}: until end of turn, ~ loses defender and gains flying. | 1 | Gargoyle Sentinel | m11 |
 | ~ can't attack unless an opponent has been dealt damage ~. | 1 | Bloodcrazed Goblin | m11 |

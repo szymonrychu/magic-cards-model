@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 71 | 27.1% |
+| Tested | 72 | 27.5% |
 | Works (untested) | 92 | 35.1% |
 | Partial (unaudited) | 18 | 6.9% |
-| Not working | 81 | 30.9% |
+| Not working | 80 | 30.5% |
 
 ## Cards needing work
 
@@ -84,7 +84,6 @@
 | Scurry of Gremlins | silent | When this enchantment enters, create two 1/1 red Gremlin creature tokens. Then you get an amount of {E} equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadow of the Second Sun | silent | At the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after this phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shilgengar, Sire of Famine | silent | Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Signature Slam | silent | Put a +1/+1 counter on target creature you control, then each modified creature you control deals damage equal to its power to target creature you don't control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Springheart Nantuko | silent | Landfall — Whenever a land you control enters, you may pay {1}{G} if this permanent is attached to a creature you control. If you do, create a token that's a co | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spymaster's Vault | silent | {B}, {T}: Target creature you control connives X, where X is the number of creatures that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strength of the Harvest // Haven of the Harvest | silent | Enchanted creature gets +1/+1 for each creature and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -221,7 +220,7 @@
 ## Fully supported
 
 <details>
-<summary>71 cards</summary>
+<summary>72 cards</summary>
 
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
 - Archway of Innovation
@@ -271,6 +270,7 @@
 - Refurbished Familiar
 - Riddle Gate Gargoyle
 - Shifting Woodland
+- Signature Slam
 - Sink into Stupor // Soporific Springs
 - Smelted Chargebug
 - Sorin of House Markov // Sorin, Ravenous Neonate
@@ -350,7 +350,6 @@
 | permanents you control have "..." | 1 | Cursed Wombat | mh3 |
 | players can't untap more than one nonbasic land during their untap steps. | 1 | Winter Moon | mh3 |
 | prototype | 1 | Frogmyr Enforcer | mh3 |
-| put a +N/+N counter on target creature you control, then each modified creature you control deals damage equal to its power to target creature you don't control | 1 | Signature Slam | mh3 |
 | reinforce | 1 | Fowl Strike | mh3 |
 | return target artifact or creature card from your graveyard to your hand. ~ deals damage equal to that card's mana value to up to one target creature or planesw | 1 | Pyretic Rebirth | mh3 |
 | sacrifice another creature: create a blood token. if you sacrificed an angel ~, create a number of blood tokens equal to its toughness instead. | 1 | Shilgengar, Sire of Famine | mh3 |

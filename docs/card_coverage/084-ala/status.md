@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.7% |
+| Tested | 18 | 8.1% |
 | Works (untested) | 141 | 63.2% |
 | Partial (unaudited) | 7 | 3.1% |
-| Not working | 60 | 26.9% |
+| Not working | 57 | 25.6% |
 
 ## Cards needing work
 
@@ -46,9 +46,7 @@
 | Death Baron | silent | Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Demon's Herald | silent | {2}{B}, {T}, Sacrifice a blue creature, a black creature, and a red creature: Search your library for a card named Prince of Thralls, put it onto the battlefiel | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragon's Herald | silent | {2}{R}, {T}, Sacrifice a black creature, a red creature, and a green creature: Search your library for a card named Hellkite Overlord, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Esper Battlemage | silent | {W}, {T}: Prevent the next 2 damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Godsire | silent | {T}: Create an 8/8 Beast creature token that's red, green, and white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Godtoucher | silent | {1}{W}, {T}: Prevent all damage that would be dealt to target creature with power 5 or greater this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guardians of Akrasa | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hindering Light | silent | Counter target spell that targets you or a permanent you control. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Immortal Coil | silent | When there are no cards in your graveyard, you lose the game. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -71,7 +69,6 @@
 | Sighted-Caste Sorcerer | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sigil of Distinction | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sigiled Paladin | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Skeletonize | silent | Skeletonize deals 3 damage to target creature. When a creature dealt damage this way dies this turn, create a 1/1 black Skeleton creature token with "{B}: Regen | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skill Borrower | silent | As long as the top card of your library is an artifact or creature card, this creature has all activated abilities of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skullmulcher | silent | When this creature enters, draw a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Fire | silent | Target creature you control deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -238,14 +235,16 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>18 cards</summary>
 
 - Angelsong
 - Blightning
 - Bone Splinters
 - Deft Duelist
+- Esper Battlemage
 - Fatestitcher
 - Gather Specimens
+- Godtoucher
 - Gustrider Exuberant
 - Invincible Hymn
 - Lich's Mirror
@@ -253,6 +252,7 @@
 - Relic of Progenitus
 - Rockcaster Platoon
 - Salvage Titan
+- Skeletonize
 - Thunder-Thrash Elder
 - Vein Drinker
 
@@ -303,7 +303,6 @@
 | whenever you gain life, you may pay {M}{M}. if you do, put a +N/+N counter on target creature for each N life you gained. | 1 | Cradle of Vitality | ala |
 | you gain life equal to target creature's power. | 1 | Soul's Grace | ala |
 | {M}, sacrifice ~: destroy all permanents except for artifacts and lands. activate only during your upkeep. | 1 | Scourglass | ala |
-| {M}, {M}: prevent the next N damage that would be dealt to you ~. | 1 | Esper Battlemage | ala |
 | {M}: create an N/N beast creature token that's red, green, and white. | 1 | Godsire | ala |
 | {M}: reveal any number of creature cards with power N or greater from your hand. add {M} for each card revealed ~. | 1 | Sacellum Godspeaker | ala |
 | {M}{M}, sacrifice a non-ooze creature: create an N/N green ooze creature token, where N is the sacrificed creature's power. activate only as a sorcery. | 1 | Ooze Garden | ala |
@@ -312,10 +311,8 @@
 | {M}{M}, {M}, sacrifice a green creature, a white creature, and a blue creature: search your library for a card named empyrial archangel, put it onto the battlef | 1 | Angel's Herald | ala |
 | {M}{M}, {M}, sacrifice a red creature, a green creature, and a white creature: search your library for a card named godsire, put it onto the battlefield, then s | 1 | Behemoth's Herald | ala |
 | {M}{M}, {M}, sacrifice a white creature, a blue creature, and a black creature: search your library for a card named sphinx sovereign, put it onto the battlefie | 1 | Sphinx's Herald | ala |
-| {M}{M}, {M}: prevent all damage that would be dealt to target creature with power N or greater ~. | 1 | Godtoucher | ala |
 | {M}{M}, {M}: target player loses N life and reveals their hand. | 1 | Thoughtcutter Agent | ala |
 | {M}{M}{M}{M}, {M}: look at the top five cards of your library. you may put a creature card with power N or greater from among them onto the battlefield. put the | 1 | Mayael the Anima | ala |
-| ~ deals N damage to target creature. when a creature dealt damage ~ dies ~, create a N/N black skeleton creature token with "..." | 1 | Skeletonize | ala |
 | ~ gets +N/+N as long as you control a mountain. | 1 | Wild Nacatl | ala |
 | ~ has flying as long as an artifact card is in your graveyard. | 1 | Windwright Mage | ala |
 

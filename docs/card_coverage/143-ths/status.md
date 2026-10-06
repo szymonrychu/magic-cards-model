@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 11.4% |
+| Tested | 25 | 11.8% |
 | Works (untested) | 131 | 62.1% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 48 | 22.7% |
+| Not working | 47 | 22.3% |
 
 ## Cards needing work
 
@@ -71,7 +71,6 @@
 | Erebos's Emissary | notice | Discard a creature card: This creature gets +2/+2 until end of turn. If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | unparsed remainder: If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | Y/Y/- | not_working |
 | Favored Hoplite | notice | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature and prevent all damage that would be dealt to it this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gift of Immortality | notice | When enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Gods Willing | notice | Target creature you control gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt damage, enchanted, or equipp | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rage of Purphoros | notice | Rage of Purphoros deals 4 damage to target creature. It can't be regenerated this turn. Scry 1. (Look at the top card of your library. You may put that card on  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rescue from the Underworld | notice | As an additional cost to cast this spell, sacrifice a creature. Choose target creature card in your graveyard. Return that card and the sacrificed card to the b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos, God of the Dead | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -217,7 +216,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
@@ -227,6 +226,7 @@
 - Defend the Hearth
 - Elspeth, Sun's Champion
 - Fleecemane Lion
+- Gods Willing
 - Gray Merchant of Asphodel
 - Hopeful Eidolon
 - Hunt the Hunter
@@ -265,7 +265,6 @@
 | other minotaur creatures you control get +N/+N and have trample. | 1 | Rageblood Shaman | ths |
 | reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put that pile into your hand and the other i | 1 | Steam Augury | ths |
 | target creature gets +N/+N until end of turn. regenerate it. you lose N life. | 1 | Boon of Erebos | ths |
-| target creature you control gains protection from the color of your choice until end of turn. (it can't be blocked, targeted, dealt damage, enchanted, or equipp | 1 | Gods Willing | ths |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. you may cast that card for as long as it remain | 1 | Psychic Intrusion | ths |
 | untap all creatures and lands you control during each other player's untap step. | 1 | Prophet of Kruphix | ths |
 | up to two target creatures each get +N/+N until end of turn. untap those creatures. at ~ next end of combat, tap each creature that was blocked by one of those  | 1 | Triton Tactics | ths |

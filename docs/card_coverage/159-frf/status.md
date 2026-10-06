@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 11.2% |
+| Tested | 19 | 11.8% |
 | Works (untested) | 77 | 47.8% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 55 | 34.2% |
+| Not working | 54 | 33.5% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Battle Brawler | silent | As long as you control a red or white permanent, this creature gets +1/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brutal Hordechief | silent | Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cached Defenses | silent | Bolster 3. (Choose a creature with the least toughness among creatures you control and put three +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Channel Harm | silent | Prevent all damage that would be dealt to you and permanents you control this turn by sources you don't control. If damage is prevented this way, you may have C | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cloudform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Daghatar the Adamant | silent | {1}{B/G}{B/G}: Move a +1/+1 counter from target creature onto a second target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Diplomacy of the Wastes | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. If you control a Warrior, that player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -173,11 +172,12 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Ainok Guide
 - Arcbond
 - Break Through the Line
+- Channel Harm
 - Crucible of the Spirit Dragon
 - Dark Deal
 - Ethereal Ambush
@@ -226,7 +226,6 @@
 | manifest the top card of your library, then put a +N/+N counter on it. (to manifest a card, put it onto the battlefield face down as a N/N creature. turn it fac | 1 | Formless Nurturing | frf |
 | manifest the top card of your library, then put two +N/+N counters on it. (to manifest a card, put it onto the battlefield face down as a N/N creature. turn it  | 1 | Fierce Invocation | frf |
 | mill four cards, then return a creature card and a land card from your graveyard to your hand. | 1 | Sudden Reclamation | frf |
-| prevent all damage that would be dealt to you and permanents you control ~ by sources you don't control. if damage is prevented ~, you may have ~ deal that much | 1 | Channel Harm | frf |
 | return each creature card with mana value N or less from your graveyard to the battlefield. exile those creatures at the beginning of your next upkeep. exile ~. | 1 | Rally the Ancestors | frf |
 | return target creature card from your graveyard to the battlefield. if it's a dragon, put two +N/+N counters on it. | 1 | Fearsome Awakening | frf |
 | return target creature to its owner"..."s a copy of that creature. | 1 | Supplant Form | frf |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 36 | 14.1% |
-| Works (untested) | 122 | 47.8% |
+| Works (untested) | 123 | 48.2% |
 | Partial (unaudited) | 21 | 8.2% |
-| Not working | 76 | 29.8% |
+| Not working | 75 | 29.4% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Leyline Tyrant | notice | When this creature dies, you may pay any amount of {R}. When you do, it deals that much damage to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oblivion's Hunger | notice | Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it. (Damage and effects that say "destro | unparsed remainder: Draw a card if that creature has a +1/+1 counter on it. | Y/Y/- | not_working |
 | Pyroclastic Hellion | notice | When this creature enters, you may return a land you control to its owner's hand. When you do, this creature deals 2 damage to each opponent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sejiri Shelter // Sejiri Glacier | notice | Target creature you control gains protection from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Taborax, Hope's Demise | notice | Taborax has lifelink as long as it has five or more +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Zulaport Duelist | notice | When this creature enters, up to one target creature gets -2/-0 until end of turn. Its controller mills two cards. | unparsed remainder: Its controller mills two cards. | Y/Y/- | not_working |
 | Archpriest of Iona | unaudited | Archpriest of Iona's power is equal to the number of creatures in your party. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -209,6 +208,7 @@
 | Scion of the Swarm | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scorch Rider | handled | When this creature enters, if it was kicked, it gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sea Gate Banneret | handled | {4}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sejiri Shelter // Sejiri Glacier | handled | Target creature you control gains protection from the color of your choice until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shadow Stinger | handled | Tap another untapped Rogue you control: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shell Shield | handled | Kicker {1} (You may pay an additional {1} as you cast this spell.) Target creature you control gets +0/+3 until end of turn. If this spell was kicked, that crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silundi Vision // Silundi Isle | handled | Look at the top six cards of your library. You may reveal an instant or sorcery card from among them and put it into your hand. Put the rest on the bottom of yo | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -336,7 +336,6 @@
 | taborax has lifelink as long as it has five or more +N/+N counters on it. | 1 | Taborax, Hope's Demise | znr |
 | tap target creature. its controller mills two cards. that creature doesn"..."s next untap step. (they put the top two cards of their library into their graveyar | 1 | Glacial Grasp | znr |
 | target creature you control gains indestructible until end of turn. draw a card if that creature has a +N/+N counter on it. (damage and effects that say "..." d | 1 | Oblivion's Hunger | znr |
-| target creature you control gains protection from the color of your choice until end of turn. | 1 | Sejiri Shelter // Sejiri Glacier | znr |
 | target opponent reveals their hand. you choose a card from it with mana value N or greater. that player discards that card. | 1 | Pelakka Predation // Pelakka Caverns | znr |
 | the first kicked spell you cast each turn costs {M} less to cast. | 1 | Vine Gecko | znr |
 | when jace enters, if jace was kicked, create a token that"..."s not legendary and its starting loyalty is N. | 1 | Jace, Mirror Mage | znr |

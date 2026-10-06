@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 10.2% |
+| Tested | 27 | 11.9% |
 | Works (untested) | 157 | 69.5% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 40 | 17.7% |
+| Not working | 36 | 15.9% |
 
 ## Cards needing work
 
@@ -45,8 +45,6 @@
 | Mist Intruder | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Munda, Ambush Leader | silent | Rally — Whenever Munda or another Ally you control enters, you may look at the top four cards of your library. If you do, reveal any number of Ally cards from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quarantine Field | silent | When this enchantment enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until this enchantment leaves the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Radiant Flames | silent | Converge — Radiant Flames deals X damage to each creature, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Roilmage's Trick | silent | Converge — Creatures your opponents control get -X/-0 until end of turn, where X is the number of colors of mana spent to cast this spell. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ruination Guide | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Salvage Drone | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Silent Skimmer | silent | Whenever this creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -58,13 +56,11 @@
 | Tightening Coils | silent | Enchanted creature gets -6/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Titan's Presence | silent | As an additional cost to cast this spell, reveal a colorless creature card from your hand. Exile target creature if its power is less than or equal to the revea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Transgress the Mind | silent | Devoid (This card has no color.) Target player reveals their hand. You choose a card from it with mana value 3 or greater and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Unified Front | silent | Converge — Create a 1/1 white Kor Ally creature token for each color of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vile Aggregate | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Zada, Hedron Grinder | silent | Whenever you cast an instant or sorcery spell that targets only Zada, copy that spell for each other creature you control that the spell could target. Each copy | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barrage Tyrant | notice | {2}{R}, Sacrifice another colorless creature: This creature deals damage equal to the sacrificed creature's power to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emeria Shepherd | notice | Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Herald of Kozilek | notice | Colorless spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Lithomancer's Focus | notice | Target creature gets +2/+2 until end of turn. Prevent all damage that would be dealt to that creature this turn by colorless sources. | unparsed remainder: Prevent all damage that would be dealt to that creature this turn by colorless sources. | Y/Y/- | not_working |
 | Unnatural Aggression | notice | Devoid (This card has no color.) Target creature you control fights target creature an opponent controls. If the creature an opponent controls would die this tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Breaker of Armies | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kor Castigator | unaudited | This creature can't be blocked by Eldrazi Scions. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -233,7 +229,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>27 cards</summary>
 
 - Akoum Hellkite
 - Aligned Hedron Network
@@ -246,8 +242,11 @@
 - Endless One
 - Guul Draz Overseer
 - Kiora, Master of the Depths
+- Lithomancer's Focus
 - Murk Strider
 - Painful Truths
+- Radiant Flames
+- Roilmage's Trick
 - Sanctum of Ugin
 - Serpentine Spike
 - Shrine of the Forsaken Gods
@@ -256,6 +255,7 @@
 - Swarm Surge
 - Tide Drifter
 - Ulamog, the Ceaseless Hunger
+- Unified Front
 - Vampiric Rites
 - Wasteland Strangler
 
@@ -265,8 +265,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Converge | 7 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements, Radiant Flames | bfz |
 | ingest | 7 | Benthic Infiltrator, Culling Drone, Mist Intruder, Ruination Guide, Salvage Drone | bfz |
+| Converge | 4 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements | bfz |
 | Landfall | 1 | Emeria Shepherd | bfz |
 | Rally | 1 | Munda, Ambush Leader | bfz |
 | +N: until end of turn, gideon becomes a N/N human soldier ally creature with indestructible that's still a planeswalker. prevent all damage that would be dealt  | 1 | Gideon, Ally of Zendikar | bfz |
@@ -282,7 +282,6 @@
 | devoid (~ has no color.) target player reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Transgress the Mind | bfz |
 | enchanted creature gets -N/-N and loses flying. | 1 | Tightening Coils | bfz |
 | if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove a +N/+N counter from ~. | 1 | Undergrowth Champion | bfz |
-| target creature gets +N/+N until end of turn. prevent all damage that would be dealt to that creature ~ by colorless sources. | 1 | Lithomancer's Focus | bfz |
 | until end of turn, colorless creatures you control gain "..." | 1 | Gruesome Slaughter | bfz |
 | when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Skyline Cascade | bfz |

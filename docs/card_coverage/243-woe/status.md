@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 13.2% |
-| Works (untested) | 143 | 53.8% |
+| Tested | 37 | 13.9% |
+| Works (untested) | 142 | 53.4% |
 | Partial (unaudited) | 8 | 3.0% |
-| Not working | 80 | 30.1% |
+| Not working | 79 | 29.7% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Cruel Somnophage // Can't Wake Up | silent | Cruel Somnophage's power and toughness are each equal to the number of creature cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Devouring Sugarmaw // Have for Dinner | silent | At the beginning of your upkeep, you may sacrifice an artifact, enchantment, or token. If you don't, tap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Discerning Financier | silent | {2}{W}: Choose another player. That player gains control of target Treasure you control. You draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Eerie Interference | silent | Prevent all damage that would be dealt to you and creatures you control this turn by creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ego Drain | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. If you don't control a Faerie, exile a card from your han | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Embereth Veteran | silent | {1}, Sacrifice this creature: Create a Young Hero Role token attached to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Expel the Interlopers | silent | Choose a number between 0 and 10. Destroy all creatures with power greater than or equal to the chosen number. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -143,7 +142,6 @@
 | Eriette's Whisper | handled | Target opponent discards two cards. Create a Wicked Role token attached to up to one target creature you control. (If you control another Role on it, put that o | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Experimental Confectioner | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Faerie Dreamthief | handled | When this creature enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Faerie Fencing | handled | Target creature gets -X/-X until end of turn. That creature gets an additional -3/-3 until end of turn if you controlled a Faerie as you cast this spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Feed the Cauldron | handled | Destroy target creature with mana value 3 or less. If it's your turn, create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 li | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ferocious Werefox // Guard Change | handled | Create a Monster Role token attached to target creature you control. (Enchanted creature gets +1/+1 and has trample.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flick a Coin | handled | Flick a Coin deals 1 damage to any target. You create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") Draw a c | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -261,7 +259,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>37 cards</summary>
 
 - Agatha's Champion
 - Agatha's Soul Cauldron
@@ -272,7 +270,9 @@
 - Cut In
 - Decadent Dragon // Expensive Taste
 - Edgewall Inn
+- Eerie Interference
 - Extraordinary Journey
+- Faerie Fencing
 - Fell Horseman // Deathly Ride
 - Frantic Firebolt
 - Gnawing Crescendo
@@ -334,7 +334,6 @@
 | one or two target creatures each gain haste until end of turn. for each of those creatures, create a monster role token attached to it. (if you control another  | 1 | Become Brutes | woe |
 | other creatures you control get +N/+N for each aura and equipment attached to kellan. | 1 | Kellan, the Fae-Blooded // Birthright Boon | woe |
 | other creatures you control that are enchanted by auras you control have base power and toughness N/N and have flying. | 1 | Archon of the Wild Rose | woe |
-| prevent all damage that would be dealt to you and creatures you control ~ by creatures. | 1 | Eerie Interference | woe |
 | return all creatures to their owners' hands. for each opponent who controlled a creature returned ~, you create two N/N blue faerie creature tokens with flying  | 1 | Faerie Slumber Party | woe |
 | return the exiled card to the battlefield under its owner's control. | 1 | The Princess Takes Flight | woe |
 | sacrifice any number of artifacts, enchantments, and/or tokens. return that many creature cards from your graveyard to the battlefield. | 1 | Lich-Knights' Conquest | woe |

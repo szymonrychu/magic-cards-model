@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 9.8% |
+| Tested | 24 | 10.7% |
 | Works (untested) | 161 | 71.6% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 33 | 14.7% |
+| Not working | 31 | 13.8% |
 
 ## Cards needing work
 
@@ -51,12 +51,10 @@
 | See the Unwritten | silent | Reveal the top eight cards of your library. You may put a creature card from among them onto the battlefield. Put the rest into your graveyard. Ferocious — If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smoke Teller | silent | {1}{U}: Look at target face-down creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Solemn Visitor | silent | +1: Until your next turn, creatures you control get +1/+0 and gain lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Feat of Resistance | notice | Put a +1/+1 counter on target creature you control. It gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | High Sentinels of Arashin | notice | This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mardu Charm | notice | Choose one — • Mardu Charm deals 4 damage to target creature. • Create two 1/1 white Warrior creature tokens. They gain first strike until end of turn. • Target | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ride Down | notice | Destroy target blocking creature. Creatures that were blocked by that creature this combat gain trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rite of the Serpent | notice | Destroy target creature. If that creature had a +1/+1 counter on it, create a 1/1 green Snake creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Savage Punch | notice | Target creature you control fights target creature you don't control. Ferocious — The creature you control gets +2/+2 until end of turn before it fights if you  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Temur Charm | notice | Choose one — • Target creature you control gets +1/+1 until end of turn. It fights target creature you don't control. • Counter target spell unless its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Villainous Wealth | notice | Target opponent exiles the top X cards of their library. You may cast any number of spells with mana value X or less from among them without paying their mana c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Anafenza, the Foremost | unaudited | If a nontoken creature an opponent owns would die or a creature card not on the battlefield would be put into an opponent's graveyard, exile that card instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -233,7 +231,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
@@ -245,6 +243,7 @@
 - Crackling Doom
 - Crater's Claws
 - Death Frenzy
+- Feat of Resistance
 - Hardened Scales
 - Hooting Mandrills
 - Jeering Instigator
@@ -254,6 +253,7 @@
 - Monastery Swiftspear
 - Necropolis Fiend
 - Rush of Battle
+- Savage Punch
 - Stubborn Denial
 - Treasure Cruise
 - Utter End
@@ -281,11 +281,9 @@
 | face-down creatures you control get +N/+N. | 1 | Secret Plans | ktk |
 | if a nontoken creature an opponent owns would die or a creature card not on the battlefield would be put into an opponent's graveyard, exile that card instead. | 1 | Anafenza, the Foremost | ktk |
 | if a player would begin an extra turn, that player skips that turn instead. | 1 | Ugin's Nexus | ktk |
-| put a +N/+N counter on target creature you control. it gains protection from the color of your choice until end of turn. (it can't be blocked, targeted, dealt d | 1 | Feat of Resistance | ktk |
 | return target creature to its owner's hand. ferocious — if you control a creature with power N or greater, you may draw a card. if you do, discard a card. | 1 | Force Away | ktk |
 | reveal the top eight cards of your library. you may put a creature card from among them onto the battlefield. put the rest into your graveyard. ferocious — if y | 1 | See the Unwritten | ktk |
 | tap N target creatures. ferocious — if you control a creature with power N or greater, those creatures don"..." next untap steps. | 1 | Icy Blast | ktk |
-| target creature you control fights target creature you don't control. ferocious — the creature you control gets +N/+N until end of turn before it fights if you  | 1 | Savage Punch | ktk |
 | target opponent exiles the top N cards of their library. you may cast any number of spells with mana value N or less from among them without paying their mana c | 1 | Villainous Wealth | ktk |
 | the next time a source of your choice would deal damage to you ~, prevent that damage. if damage is prevented ~, ~ deals that much damage to that source's contr | 1 | Deflecting Palm | ktk |
 | untap each creature you control with a +N/+N counter on it during each other player's untap step. | 1 | Ivorytusk Fortress | ktk |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 4.2% |
+| Tested | 2 | 8.3% |
 | Works (untested) | 14 | 58.3% |
 | Partial (unaudited) | 1 | 4.2% |
-| Not working | 8 | 33.3% |
+| Not working | 7 | 29.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Crypt Rats | silent | {X}: This creature deals X damage to each creature and each player. Spend only black mana on X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Honorable Passage | silent | The next time a source of your choice would deal damage to any target this turn, prevent that damage. If damage from a red source is prevented this way, Honorab | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quicksand | silent | {T}, Sacrifice this land: Target attacking creature without flying gets -1/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Relentless Assault | silent | Untap all creatures that attacked this turn. After this main phase, there is an additional combat phase followed by an additional main phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -53,8 +52,9 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
+- Crypt Rats
 - Suq'Ata Lancer
 
 </details>
@@ -70,7 +70,6 @@
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Shrieking Drake | vis |
 | you may play up to three additional lands ~. | 1 | Summer Bloom | vis |
 | {M}, sacrifice ~: target attacking creature without flying gets -N/-N until end of turn. | 1 | Quicksand | vis |
-| {M}: ~ deals N damage to each creature and each player. spend only black mana on N. | 1 | Crypt Rats | vis |
 | ~ can block only creatures with flying. | 1 | Cloud Elemental | vis |
 
 ## Notes

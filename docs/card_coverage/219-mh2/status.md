@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 15.1% |
+| Tested | 42 | 16.3% |
 | Works (untested) | 122 | 47.3% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 85 | 32.9% |
+| Not working | 82 | 31.8% |
 
 ## Cards needing work
 
@@ -67,7 +67,6 @@
 | Inevitable Betrayal | silent | Suspend 3—{1}{U}{U} (Rather than cast this card from your hand, pay {1}{U}{U} and exile it with three time counters on it. At the beginning of your upkeep, remo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jade Avenger | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kaldra Compleat | silent | Equipped creature gets +5/+5 and has first strike, trample, indestructible, haste, and "Whenever this creature deals combat damage to a creature, exile that cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kaleidoscorch | silent | Converge — Kaleidoscorch deals X damage to any target, where X is the number of colors of mana spent to cast this spell. Flashback {4}{R} (You may cast this car | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Landscaper Colos | silent | When this creature enters, put target card from an opponent's graveyard on the bottom of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loathsome Curator | silent | When this creature exploits a creature, destroy target creature you don't control with mana value 3 or less. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Lonis, Cryptozoologist | silent | {T}, Sacrifice X Clues: Target opponent reveals the top X cards of their library. You may put a nonland permanent card with mana value X or less from among them | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -81,7 +80,6 @@
 | Out of Time | silent | When this enchantment enters, untap all creatures, then those creatures phase out until this enchantment leaves the battlefield. Put a time counter on this ench | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Piru, the Volatile | silent | At the beginning of your upkeep, sacrifice Piru unless you pay {R}{W}{B}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Power Depot | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Radiant Epicure | silent | Converge — When this creature enters, each opponent loses X life and you gain X life, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Headliner | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rise and Shine | silent | Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on each artifact that became a creature this way. Overload {4}{ | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scour the Desert | silent | Exile target creature card from your graveyard. Create X 1/1 white Bird creature tokens with flying, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,7 +89,6 @@
 | Shattered Ego | silent | {3}{U}{U}: Put enchanted creature into its owner's library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skophos Reaver | silent | During your turn, this creature gets +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sojourner's Companion | silent | Affinity for artifacts Artifact landcycling {2} ({2}, Discard this card: Search your library for an artifact land card, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sweep the Skies | silent | Converge — Create a 1/1 colorless Thopter artifact creature token with flying for each color of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sword of Hearth and Home | silent | Whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. Put both ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sylvan Anthem | silent | Green creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tavern Scoundrel | silent | Whenever you win a coin flip, create two Treasure tokens. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -249,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>42 cards</summary>
 
 - Abiding Grace
 - Archon of Cruelty
@@ -268,12 +265,14 @@
 - Grief
 - Grist, the Hunger Tide
 - Harmonic Prodigy
+- Kaleidoscorch
 - Legion Vanguard
 - Murktide Regent
 - Obsidian Charmaw
 - Persist
 - Prismatic Ending
 - Prophetic Titan
+- Radiant Epicure
 - Ragavan, Nimble Pilferer
 - Rustvale Bridge
 - Sanctifier en-Vec
@@ -283,6 +282,7 @@
 - Subtlety
 - Suspend
 - Svyelun of Sea and Sky
+- Sweep the Skies
 - Territorial Kavu
 - Tireless Provisioner
 - Unholy Heat
@@ -298,10 +298,10 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | modular | 8 | Arcbound Javelineer, Arcbound Mouser, Arcbound Prototype, Arcbound Slasher, Arcbound Tracker | mh2 |
-| Converge | 4 | Glinting Creeper, Kaleidoscorch, Radiant Epicure, Sweep the Skies | mh2 |
 | Delirium | 4 | Bloodbraid Marauder, Foul Watcher, Gouged Zealot, Scuttletide | mh2 |
 | eternalize | 2 | Timeless Dragon, Timeless Witness | mh2 |
 | reinforce | 2 | Break Ties, Wren's Run Hydra | mh2 |
+| Converge | 1 | Glinting Creeper | mh2 |
 | Hellbent | 1 | Necromancer's Familiar | mh2 |
 | Metalcraft | 1 | Vedalken Infiltrator | mh2 |
 | aeve isn"..."s a token. | 1 | Aeve, Progenitor Ooze | mh2 |

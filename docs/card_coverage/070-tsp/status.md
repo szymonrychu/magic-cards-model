@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 12.3% |
+| Tested | 35 | 13.1% |
 | Works (untested) | 105 | 39.2% |
 | Partial (unaudited) | 27 | 10.1% |
-| Not working | 103 | 38.4% |
+| Not working | 101 | 37.7% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Aether Web | silent | Enchanted creature gets +1/+1, has reach, and can block creatures with shadow as though they didn't have shadow. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aetherflame Wall | silent | This creature can block creatures with shadow as though they didn't have shadow. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Angel's Grace | silent | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) You can't lose the game this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Barbed Shocker | silent | Whenever this creature deals damage to a player, that player discards all the cards in their hand, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Basalt Gargoyle | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Blazing Blade Askari | silent | {2}: This creature becomes colorless until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -36,7 +35,6 @@
 | Candles of Leng | silent | {4}, {T}: Reveal the top card of your library. If it has the same name as a card in your graveyard, put it into your graveyard. Otherwise, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Castle Raptors | silent | As long as this creature is untapped, it gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Celestial Crusader | silent | Other white creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Chameleon Blur | silent | Prevent all damage that creatures would deal to players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chronosavant | silent | {1}{W}: Return this card from your graveyard to the battlefield tapped. You skip your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clockspinning | silent | Buyback {3} (You may pay an additional {3} as you cast this spell. If you do, put this card into your hand as it resolves.) Choose a counter on target permanent | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crookclaw Transmuter | silent | When this creature enters, switch target creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -265,12 +263,14 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>35 cards</summary>
 
 - Ancestral Vision
+- Angel's Grace
 - Assembly-Worker
 - Brine Elemental
 - Calciform Pools
+- Chameleon Blur
 - Children of Korlis
 - Clockwork Hydra
 - Coal Stoker
@@ -345,7 +345,6 @@
 | other creatures you control with flanking have flanking. | 1 | Cavalry Master | tsp |
 | other creatures you control with flying get +N/+N. | 1 | Sprite Noble | tsp |
 | other white creatures get +N/+N. | 1 | Celestial Crusader | tsp |
-| prevent all damage that creatures would deal to players ~. | 1 | Chameleon Blur | tsp |
 | prevent all damage that would be dealt by enchanted creature. | 1 | Temporal Isolation | tsp |
 | put target face-up exiled card into its owner's graveyard. | 1 | Pull from Eternity | tsp |
 | reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put a card from the chosen pile into your ha | 1 | Truth or Tale | tsp |
@@ -354,7 +353,6 @@
 | spells you cast cost {M} less to cast for each card with the same name as that spell in your graveyard. | 1 | Locket of Yesterdays | tsp |
 | split second (as long as ~ is on the stack, players can"..."t mana abilities.) counter target activated or triggered ability. if a permanent"..."t be activated  | 1 | Trickbind | tsp |
 | split second (as long as ~ is on the stack, players can"..."t mana abilities.) untap target permanent and gain control of it until end of turn. it gains haste u | 1 | Word of Seizing | tsp |
-| split second (as long as ~ is on the stack, players can"..."t mana abilities.) you can"..."t win the game ~. until end of turn, damage that would reduce your li | 1 | Angel's Grace | tsp |
 | suspend N—{M} each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices  | 1 | Restore Balance | tsp |
 | suspend N—{M}{M}{M} starting with you, each player may put an artifact, creature, enchantment, or land card from their hand onto the battlefield. repeat ~ until | 1 | Hypergenesis | tsp |
 | target creature gets +N/+N, becomes black, and gains shadow until end of turn. (it can block or be blocked by only creatures with shadow.) flashback {M}{M} (you | 1 | Traitor's Clutch | tsp |

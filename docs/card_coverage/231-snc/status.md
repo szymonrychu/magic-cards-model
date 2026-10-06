@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 11.5% |
-| Works (untested) | 134 | 53.0% |
+| Tested | 30 | 11.9% |
+| Works (untested) | 135 | 53.4% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 80 | 31.6% |
+| Not working | 78 | 30.8% |
 
 ## Cards needing work
 
@@ -83,7 +83,6 @@
 | Shakedown Heavy | silent | Whenever this creature attacks, defending player may have you draw a card. If they do, untap this creature and remove it from combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Snooping Newsie | silent | As long as there are five or more mana values among cards in your graveyard, this creature gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soul of Emancipation | silent | When this creature enters, destroy up to three other target nonland permanents. For each of those permanents, its controller creates a 3/3 white Angel creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Structural Assault | silent | Destroy all artifacts, then Structural Assault deals damage to each creature equal to the number of artifacts that were put into graveyards from the battlefield | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Syndicate Infiltrator | silent | As long as there are five or more mana values among cards in your graveyard, this creature gets +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tenacious Underdog | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Toluz, Clever Conductor | silent | Whenever you discard one or more cards, exile them from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -96,7 +95,6 @@
 | Crew Captain | notice | This creature has indestructible as long as it entered this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extract the Truth | notice | Choose one — • Target opponent reveals their hand. You may choose a creature, enchantment, or planeswalker card from it. That player discards that card. • Targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extraction Specialist | notice | When this creature enters, return target creature card with mana value 2 or less from your graveyard to the battlefield. That creature can't attack or block for | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Revelation of Power | notice | Target creature gets +2/+2 until end of turn. If it has a counter on it, it also gains flying and lifelink until end of turn. | unparsed remainder: If it has a counter on it, it also gains flying and lifelink until end of turn. | Y/Y/- | not_working |
 | Rhox Pummeler | notice | This creature has trample as long as it has a shield counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sewer Crocodile | notice | {3}{U}: This creature can't be blocked this turn. This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | unparsed remainder: This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | Y/Y/- | not_working |
 | Sizzling Soloist | notice | Alliance — Whenever another creature you control enters, target creature an opponent controls can't block this turn. If this is the second time this ability has | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -215,6 +213,7 @@
 | Ready to Rumble | handled | Choose one — • Ready to Rumble deals 5 damage to target creature or planeswalker. • Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Refuse to Yield | handled | Target creature gets +2/+7 until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Revel Ruiner | handled | When this creature enters, it connives. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Revelation of Power | handled | Target creature gets +2/+2 until end of turn. If it has a counter on it, it also gains flying and lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rigo, Streetwise Mentor | handled | Rigo enters with a shield counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riveteers Ascendancy | handled | Whenever you sacrifice a creature, you may return target creature card with lesser mana value from your graveyard to the battlefield tapped. Do this only once e | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riveteers Initiate | handled | {1}{B/G}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,7 +253,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
@@ -282,6 +281,7 @@
 - Sanguine Spy
 - Scuttling Butler
 - Shadow of Mortality
+- Structural Assault
 - Take to the Streets
 - Urabrask, Heretic Praetor
 - Vivien on the Hunt
@@ -317,7 +317,6 @@
 | connive | 1 | Security Bypass | snc |
 | create two N/N blue fish creature tokens with "..." then for each kind of counter among creatures you control, put a counter of that kind on either of those tok | 1 | Exotic Pets | snc |
 | creatures you control also get +N/+N and have trample as long as you control six or more creatures. | 1 | Jetmir, Nexus of Revels | snc |
-| destroy all artifacts, then ~ deals damage to each creature equal to the number of artifacts that were put into graveyards from the battlefield ~. | 1 | Structural Assault | snc |
 | draw two cards, then look at the top card of each player's library. | 1 | Case the Joint | snc |
 | during your turn, ~ gets +N/+N. | 1 | Dapper Shieldmate | snc |
 | each other angel you control enters with an additional +N/+N counter on it for each angel you already control. | 1 | Giada, Font of Hope | snc |
@@ -330,7 +329,6 @@
 | if you would create one or more tokens, you may instead create that many N/N green cat creature tokens with haste or that many N/N green dog creature tokens wit | 1 | Jinnie Fay, Jetmir's Second | snc |
 | once during each of your turns, you may cast an instant or sorcery spell from your graveyard by sacrificing a creature in addition to paying its other costs. if | 1 | Maestros Ascendancy | snc |
 | put a +N/+N counter on target creature. it phases out. (treat it and anything attached to it as though they don"..."s next turn.) | 1 | Slip Out the Back | snc |
-| target creature gets +N/+N until end of turn. if it has a counter on it, it also gains flying and lifelink until end of turn. | 1 | Revelation of Power | snc |
 | until end of turn, target artifact or creature becomes a N/N angel artifact creature and gains flying. draw a card. | 1 | Majestic Metamorphosis | snc |
 | when lord xander enters, target opponent discards half the cards in their hand, rounded down. | 1 | Lord Xander, the Collector | snc |
 | when ~ enters, choose target creature you don"..."t untap during its controller's next untap step. | 1 | Celestial Regulator | snc |

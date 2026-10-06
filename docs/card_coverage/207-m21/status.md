@@ -19,8 +19,8 @@
 |---|---|---|
 | Tested | 21 | 11.5% |
 | Works (untested) | 98 | 53.8% |
-| Partial (unaudited) | 10 | 5.5% |
-| Not working | 53 | 29.1% |
+| Partial (unaudited) | 11 | 6.0% |
+| Not working | 52 | 28.6% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Liliana, Death Mage | silent | −7: Target opponent loses 2 life for each creature card in their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Malefic Scythe | silent | Equipped creature gets +1/+1 for each soul counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necromentia | silent | Choose a card name other than a basic land card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nine Lives | silent | When this enchantment leaves the battlefield, you lose the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pack Leader | silent | Whenever this creature attacks, prevent all combat damage that would be dealt this turn to Dogs you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanctum of Calm Waters | silent | At the beginning of your first main phase, you may draw X cards, where X is the number of Shrines you control. If you do, discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasoned Hallowblade | silent | Discard a card: Tap this creature. It gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -84,6 +83,7 @@
 | Demonic Embrace | unaudited | You may cast this card from your graveyard by paying 3 life and discarding a card in addition to paying its other costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Enthralling Hold | unaudited | You can't choose an untapped creature as this spell's target as you cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kinetic Augur | unaudited | Kinetic Augur's power is equal to the number of instant and sorcery cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Nine Lives | unaudited | If a source would deal damage to you, prevent that damage and put an incarnation counter on this enchantment. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Radha, Heart of Keld | unaudited | You may look at the top card of your library any time, and you may play lands from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sanctum of All | unaudited | If a triggered ability of another Shrine you control triggers while you control six or more Shrines, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shacklegeist | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -239,6 +239,7 @@
 | equipped creature gets +N/+N for each soul counter on ~. | 1 | Malefic Scythe | m21 |
 | exile target creature. that creature's controller reveals cards from the top of their library until they reveal a creature card. that player puts that card onto | 1 | Transmogrify | m21 |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. add two mana of any one color. (the creature can attac | 1 | Traitorous Greed | m21 |
+| if a source would deal damage to you, prevent that damage and put an incarnation counter on ~. | 1 | Nine Lives | m21 |
 | if a triggered ability of another shrine you control triggers while you control six or more shrines, that ability triggers an additional time. | 1 | Sanctum of All | m21 |
 | look at the top three cards of your library. put one of those cards into your hand and the rest on the bottom of your library in any order. if ~ was cast from a | 1 | See the Truth | m21 |
 | other cats you control get +N/+N and have protection from dogs. | 1 | Feline Sovereign | m21 |
@@ -258,7 +259,6 @@
 | when ~ enters, you may search your library and/or graveyard for a card named garruk, savage herald, reveal it, and put it into your hand. if you search your lib | 1 | Garruk's Warsteed | m21 |
 | when ~ enters, you may search your library and/or graveyard for a card named teferi, timeless voyager, reveal it, and put it into your hand. if you search your  | 1 | Teferi's Wavecaster | m21 |
 | when ~ enters, you may search your library for a card named alpine watchdog and/or a card named igneous cur, reveal them, put them into your hand, then shuffle. | 1 | Alpine Houndmaster | m21 |
-| when ~ leaves the battlefield, you lose the game. | 1 | Nine Lives | m21 |
 | whenever a creature you control with deathtouch deals damage to a planeswalker, destroy that planeswalker. | 1 | Hooded Blightfang | m21 |
 | whenever a source you control deals noncombat damage to an opponent, ~ deals that much damage to target creature or planeswalker that player controls. | 1 | Chandra's Incinerator | m21 |
 | whenever a source you control deals noncombat damage to an opponent, ~ gets +N/+N and gains double strike until end of turn. | 1 | Chandra's Pyreling | m21 |

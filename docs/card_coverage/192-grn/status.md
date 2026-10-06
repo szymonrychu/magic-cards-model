@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 7.3% |
-| Works (untested) | 134 | 57.5% |
+| Works (untested) | 135 | 57.9% |
 | Partial (unaudited) | 5 | 2.1% |
-| Not working | 77 | 33.0% |
+| Not working | 76 | 32.6% |
 
 ## Cards needing work
 
@@ -67,7 +67,6 @@
 | Maximize Velocity | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Mission Briefing | silent | Surveil 2, then choose an instant or sorcery card in your graveyard. You may cast it this turn. If that spell would be put into your graveyard, exile it instead | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Never Happened | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Notion Rain | silent | Surveil 2, then draw two cards. Notion Rain deals 2 damage to you. (To surveil 2, look at the top two cards of your library, then put any number of them into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nullhide Ferox | silent | {2}: This creature loses all abilities until end of turn. Any player may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Omnispell Adept | silent | {2}{U}, {T}: You may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ornery Goblin | silent | Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -192,6 +191,7 @@
 | Nightveil Predator | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Nightveil Sprite | handled | Whenever this creature attacks, surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Niv-Mizzet, Parun | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Notion Rain | handled | Surveil 2, then draw two cards. Notion Rain deals 2 damage to you. (To surveil 2, look at the top two cards of your library, then put any number of them into yo | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pack's Favor | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Passwall Adept | handled | {2}{U}: Target creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pause for Reflection | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Prevent all | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -302,7 +302,6 @@
 | return N target creatures of the creature type of your choice to their owner's hand. | 1 | Selective Snare | grn |
 | search your library for up to two basic land cards and/or gate cards, put them onto the battlefield tapped, then shuffle. | 1 | Circuitous Route | grn |
 | surveil N, then choose an instant or sorcery card in your graveyard. you may cast it ~. if that spell would be put into your graveyard, exile it instead. (to su | 1 | Mission Briefing | grn |
-| surveil N, then draw two cards. ~ deals N damage to you. (to surveil N, look at the top two cards of your library, then put any number of them into your graveya | 1 | Notion Rain | grn |
 | switch the power and toughness of each of up to two target creatures until end of turn. | 1 | Invert // Invent | grn |
 | target creature you control deals damage equal to its power to target player. jump-start (you may cast ~ from your graveyard by discarding a card in addition to | 1 | Gravitic Punch | grn |
 | target opponent may have ~ deal N damage to them. if that player doesn't, you draw three cards. jump-start (you may cast ~ from your graveyard by discarding a c | 1 | Risk Factor | grn |

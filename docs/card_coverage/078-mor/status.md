@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 8.8% |
+| Tested | 14 | 9.5% |
 | Works (untested) | 57 | 38.5% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 71 | 48.0% |
+| Not working | 70 | 47.3% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Fertilid | silent | {1}{G}, Remove a +1/+1 counter from this creature: Target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fire Juggler | silent | Whenever this creature becomes blocked, clash with an opponent. If you win, this creature deals 4 damage to each creature blocking it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Floodchaser | silent | {U}, Remove a +1/+1 counter from this creature: Target land becomes an Island until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Forfend | silent | Prevent all damage that would be dealt to creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graceful Reprieve | silent | When target creature dies this turn, return that card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Greatbow Doyen | silent | Whenever an Archer you control deals damage to a creature, that Archer deals that much damage to that creature's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grimoire Thief | silent | Whenever this creature becomes tapped, exile the top three cards of target opponent's library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -165,10 +164,11 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Deglamer
 - Distant Melody
+- Forfend
 - Indomitable Ancients
 - Latchkey Faerie
 - Maralen of the Mornsong
@@ -212,7 +212,6 @@
 | kithkin spells and soldier spells you cast cost {M} less to cast. | 1 | Ballyrush Banneret | mor |
 | knight creatures you control have double strike. | 1 | Kinsbaile Cavalier | mor |
 | merfolk spells and wizard spells you cast cost {M} less to cast. | 1 | Stonybrook Banneret | mor |
-| prevent all damage that would be dealt to creatures ~. | 1 | Forfend | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) create N N/N black faerie rogue creature tokens with flying, | 1 | Notorious Throng | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) search target opponent's library for an instant or sorcery c | 1 | Knowledge Exploitation | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) target player reveals three cards from their hand. you choos | 1 | Noggin Whack | mor |

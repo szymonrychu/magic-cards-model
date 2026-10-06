@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 7.7% |
-| Works (untested) | 171 | 65.5% |
+| Tested | 21 | 8.0% |
+| Works (untested) | 172 | 65.9% |
 | Partial (unaudited) | 10 | 3.8% |
-| Not working | 60 | 23.0% |
+| Not working | 58 | 22.2% |
 
 ## Cards needing work
 
@@ -78,12 +78,10 @@
 | Wolf of Devil's Breach | silent | Whenever this creature attacks, you may pay {1}{R} and discard a card. If you do, this creature deals damage to target creature or planeswalker equal to the dis | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Altered Ego | notice | You may have this creature enter as a copy of any creature on the battlefield, except it enters with X additional +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Avacyn's Judgment | notice | Madness {X}{R} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Avacyn's Judgment dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Burn from Within | notice | Burn from Within deals X damage to any target. If a creature is dealt damage this way, it loses indestructible until end of turn. If that creature would die thi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Declaration in Stone | notice | Exile target creature and all other creatures its controller controls with the same name as that creature. That player investigates for each nontoken creature e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Essence Flux | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If it's a Spirit, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Geralf's Masterpiece | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Malevolent Whispers | notice | Gain control of target creature until end of turn. Untap that creature. It gets +2/+0 and gains haste until end of turn. Madness {3}{R} (If you discard this car | unparsed remainder: Untap that creature. It gets +2/+0 and gains haste until end of turn. | Y/Y/- | not_working |
-| Structural Distortion | notice | Exile target artifact or land. Structural Distortion deals 2 damage to that permanent's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thing in the Ice // Awoken Horror | notice | Whenever you cast an instant or sorcery spell, remove an ice counter from this creature. Then if it has no ice counters on it, transform it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Triskaidekaphobia | notice | At the beginning of your upkeep, choose one — • Each player with exactly 13 life loses the game, then each player gains 1 life. • Each player with exactly 13 li | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bound by Moonsilver | unaudited | Enchanted creature can't attack, block, or transform. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -239,6 +237,7 @@
 | Stormrider Spirit | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Strength of Arms | handled | Target creature gets +2/+2 until end of turn. If you control an Equipment, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stromkirk Mentor | handled | When this creature enters, put a +1/+1 counter on another target Vampire you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Structural Distortion | handled | Exile target artifact or land. Structural Distortion deals 2 damage to that permanent's controller. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Survive the Night | handled | Target creature gets +1/+0 and gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) Investigate. (Create a Clue tok | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tamiyo's Journal | handled | At the beginning of your upkeep, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thalia's Lieutenant | handled | When this creature enters, put a +1/+1 counter on each other Human you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -271,13 +270,14 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
 - Avacynian Missionaries // Lunarch Inquisitors
 - Behold the Beyond
 - Briarbridge Patrol
+- Burn from Within
 - Clip Wings
 - Cryptolith Rite
 - Diregraf Colossus
@@ -316,7 +316,6 @@
 | each vampire creature card you own that isn't on the battlefield has madness. the madness cost is equal to its mana cost. | 1 | Falkenrath Gorger | soi |
 | enchanted creature can't attack, block, or transform. | 1 | Bound by Moonsilver | soi |
 | enchanted land has "..." | 1 | Weirding Wood | soi |
-| exile target artifact or land. ~ deals N damage to that permanent's controller. | 1 | Structural Distortion | soi |
 | exile target creature and all other creatures its controller controls with the same name as that creature. that player investigates for each nontoken creature e | 1 | Declaration in Stone | soi |
 | exile target creature you control, then return that card to the battlefield under its owner"..."s a spirit, put a +N/+N counter on it. | 1 | Essence Flux | soi |
 | for each token you control, create a token that's a copy of that permanent. | 1 | Second Harvest | soi |
@@ -360,7 +359,6 @@
 | ~ can block an additional seven creatures each combat. | 1 | Watcher in the Web | soi |
 | ~ can"..."ve cast a noncreature spell ~. | 1 | Silburlind Snapper | soi |
 | ~ can't attack unless you control a creature with power N or greater. | 1 | Lambholt Pacifist // Lambholt Butcher | soi |
-| ~ deals N damage to any target. if a creature is dealt damage ~, it loses indestructible until end of turn. if that creature would die ~, exile it instead. | 1 | Burn from Within | soi |
 | ~ gets -N/-N for each card in your hand. | 1 | Geralf's Masterpiece | soi |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Sage of Ancient Lore // Werewolf of Ancient Hunger | soi |
 

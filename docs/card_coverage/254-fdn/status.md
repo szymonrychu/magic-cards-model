@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 12.5% |
+| Tested | 20 | 13.9% |
 | Works (untested) | 87 | 60.4% |
-| Partial (unaudited) | 3 | 2.1% |
-| Not working | 36 | 25.0% |
+| Partial (unaudited) | 2 | 1.4% |
+| Not working | 35 | 24.3% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Faebloom Trick | silent | Create two 1/1 blue Faerie creature tokens with flying. When you do, tap target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fiendish Panda | silent | When this creature dies, return another target non-Bear creature card with mana value less than or equal to this creature's power from your graveyard to the bat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fishing Pole | silent | Whenever equipped creature becomes untapped, remove a bait counter from this Equipment. If you do, create a 1/1 blue Fish creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fleeting Flight | silent | Put a +1/+1 counter on target creature. It gains flying until end of turn. Prevent all combat damage that would be dealt to it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hare Apparent | silent | When this creature enters, create a number of 1/1 white Rabbit creature tokens equal to the number of other creatures you control named Hare Apparent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infernal Vessel | silent | When this creature dies, if it wasn't a Demon, return it to the battlefield under its owner's control with two +1/+1 counters on it. It's a Demon in addition to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Inspiring Paladin | silent | During your turn, creatures you control with +1/+1 counters on them have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -63,7 +62,6 @@
 | Tragic Banshee | notice | Morbid — When this creature enters, target creature an opponent controls gets -1/-1 until end of turn. If a creature died this turn, that creature gets -13/-13  | unparsed remainder: If a creature died this turn, that creature gets -13/-13 until end of turn instead. | Y/Y/Y | not_working |
 | Vampire Gourmand | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, draw a card and this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Goblin Boarders | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Herald of Eternal Dawn | unaudited | You can't lose the game and your opponents can't win the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Nine-Lives Familiar | unaudited | This creature enters with eight revival counters on it if you cast it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Ambush Wolf | handled | When this creature enters, exile up to one target card from a graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Anthem of Champions | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -156,14 +154,16 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>20 cards</summary>
 
 - Arbiter of Woe
 - Crossway Troublemakers
 - Crystal Barricade
 - Curator of Destinies
 - Elenda, Saint of Dusk
+- Fleeting Flight
 - Goblin Negotiation
+- Herald of Eternal Dawn
 - High Fae Trickster
 - Hinterland Sanctifier
 - Inspiration from Beyond
@@ -196,7 +196,6 @@
 | during your turn, equipped creature gets +N/+N and has first strike. | 1 | Quick-Draw Katana | fdn |
 | each player mills N cards. for each creature card put into a graveyard ~, you create a tapped N/N black zombie creature token. (to mill a card, a player puts th | 1 | Dread Summons | fdn |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature you control gains indestructible until end of turn. if ~ was kicked, instead any | 1 | Divine Resilience | fdn |
-| put a +N/+N counter on target creature. it gains flying until end of turn. prevent all combat damage that would be dealt to it ~. | 1 | Fleeting Flight | fdn |
 | when ~ dies, if it wasn"..."s control with two +N/+N counters on it. it's a demon in addition to its other types. | 1 | Infernal Vessel | fdn |
 | when ~ dies, return another target non-bear creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Fiendish Panda | fdn |
 | when ~ enters, create a number of N/N white rabbit creature tokens equal to the number of other creatures you control named ~. | 1 | Hare Apparent | fdn |
@@ -209,7 +208,6 @@
 | whenever you put one or more +N/+N counters on ~, draw a card. ~ triggers only once each turn. | 1 | Exemplar of Light | fdn |
 | whenever ~ attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. the flashback cost is equal to that card's mana cost. | 1 | Sphinx of Forgotten Lore | fdn |
 | whenever ~ attacks, you may sacrifice another creature. if you do, draw a card and ~ can't be blocked ~. | 1 | Vampire Gourmand | fdn |
-| you can"..."t win the game. | 1 | Herald of Eternal Dawn | fdn |
 | you may pay {M} rather than pay ~ mana cost if there are thirteen or more creatures on the battlefield. each player sacrifices thirteen creatures of their choic | 1 | Blasphemous Edict | fdn |
 | {M}, {M}, sacrifice ~: each opponent loses life equal to the number of soul counters on ~. | 1 | Ravenous Amulet | fdn |
 | {M}: exile target creature card from a graveyard that was put there ~. create a token that"..."s a nightmare in addition to its other types. then exile all othe | 1 | Abyssal Harvester | fdn |

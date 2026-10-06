@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 37 | 13.2% |
-| Works (untested) | 136 | 48.6% |
+| Works (untested) | 137 | 48.9% |
 | Partial (unaudited) | 16 | 5.7% |
-| Not working | 91 | 32.5% |
+| Not working | 90 | 32.1% |
 
 ## Cards needing work
 
@@ -101,7 +101,6 @@
 | Twinning Glass | silent | {1}, {T}: You may cast a spell from your hand without paying its mana cost if it has the same name as a spell that was cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wanderwine Prophets | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Weed Strangle | silent | Destroy target creature. Clash with an opponent. If you win, you gain life equal to that creature's toughness. (Each clashing player reveals the top card of the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wellgabber Apothecary | silent | {1}{W}: Prevent all damage that would be dealt to target tapped Merfolk or Kithkin creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whirlpool Whelm | silent | Clash | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Wild Ricochet | silent | You may choose new targets for target instant or sorcery spell. Then copy that spell. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Windbrisk Heights | silent | {W}, {T}: You may play the exiled card without paying its mana cost if you attacked with three or more creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -262,6 +261,7 @@
 | Veteran of the Depths | handled | Whenever this creature becomes tapped, you may put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wanderer's Twig | handled | {1}, Sacrifice this artifact: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wanderwine Hub | handled | As this land enters, you may reveal a Merfolk card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wellgabber Apothecary | handled | {1}{W}: Prevent all damage that would be dealt to target tapped Merfolk or Kithkin creature this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wispmare | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wizened Cenn | handled | Other Kithkin creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Woodland Changeling | handled | Changeling | machines/keywords.py | Y/-/- | not_tested |
@@ -399,7 +399,6 @@
 | {M}: target land becomes an island until end of turn. | 1 | Streambed Aquitects | lrw |
 | {M}: target land becomes the basic land type of your choice until end of turn. activate only during your turn. | 1 | Tideshaper Mystic | lrw |
 | {M}: until end of turn, target forest becomes an N/N treefolk creature in addition to its other types, where N is the number of elves you control. | 1 | Elvish Branchbender | lrw |
-| {M}{M}: prevent all damage that would be dealt to target tapped merfolk or kithkin creature ~. | 1 | Wellgabber Apothecary | lrw |
 | {M}{M}: put a +N/+N counter on ashling. if ~ the third time ~ has resolved ~, remove all +N/+N counters from ashling, and it deals that much damage to each crea | 1 | Ashling the Pilgrim | lrw |
 | {M}{M}: switch ~ power and toughness until end of turn. | 1 | Turtleshell Changeling | lrw |
 | {M}{M}{M}{M}{M}: you may play target elemental card from your graveyard without paying its mana cost. | 1 | Horde of Notions | lrw |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 13.0% |
+| Tested | 33 | 13.4% |
 | Works (untested) | 120 | 48.6% |
 | Partial (unaudited) | 17 | 6.9% |
-| Not working | 78 | 31.6% |
+| Not working | 77 | 31.2% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Drake Familiar | silent | When this creature enters, sacrifice it unless you return an enchantment to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Empty the Catacombs | silent | Each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eye of the Storm | silent | Whenever a player casts an instant or sorcery card, exile it. Then that player copies each instant or sorcery card exiled with this enchantment. For each copy,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Festival of the Guildpact | silent | Prevent the next X damage that would be dealt to you this turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flame Fusillade | silent | Until end of turn, permanents you control gain "{T}: This permanent deals 1 damage to any target." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Followed Footsteps | silent | At the beginning of your upkeep, create a token that's a copy of enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gleancrawler | silent | At the beginning of your end step, return to your hand all creature cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -245,7 +244,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>33 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
@@ -258,6 +257,7 @@
 - Dark Confidant
 - Doubling Season
 - Dryad's Caress
+- Festival of the Guildpact
 - Firemane Angel
 - Golgari Thug
 - Greater Mossdog
@@ -323,7 +323,6 @@
 | players play with the top card of their libraries revealed. | 1 | Wizened Snitches | rav |
 | prevent all damage that would be dealt to creatures you control by sources you control. | 1 | Light of Sanction | rav |
 | prevent all damage that ~ would deal to red creatures. | 1 | Indentured Oaf | rav |
-| prevent the next N damage that would be dealt to you ~. draw a card. | 1 | Festival of the Guildpact | rav |
 | return target creature card from your graveyard to the battlefield. if {M} was spent to cast ~, that creature enters with an additional +N/+N counter on it. | 1 | Vigor Mortis | rav |
 | return target creature you control and target creature you don"..." hands. | 1 | Peel from Reality | rav |
 | sacrifice three lands: ~ loses defender until end of turn. | 1 | Torpid Moloch | rav |

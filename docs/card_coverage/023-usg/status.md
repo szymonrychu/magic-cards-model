@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 19.7% |
+| Tested | 14 | 21.2% |
 | Works (untested) | 34 | 51.5% |
 | Partial (unaudited) | 7 | 10.6% |
-| Not working | 12 | 18.2% |
+| Not working | 11 | 16.7% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Hibernation | silent | Return all green permanents to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | No Rest for the Wicked | silent | Sacrifice this enchantment: Return to your hand all creature cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Persecute | silent | Choose a color. Target player reveals their hand and discards all cards of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Redeem | silent | Prevent all damage that would be dealt this turn to up to two target creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rewind | silent | Counter target spell. Untap up to four lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanctum Guardian | silent | Sacrifice this creature: The next time a source of your choice would deal damage to any target this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shiv's Embrace | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -83,7 +82,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Arc Lightning
 - Claws of Gix
@@ -96,6 +95,7 @@
 - Imaginary Pet
 - Meltdown
 - Priest of Titania
+- Redeem
 - Reflexes
 - Vernal Bloom
 
@@ -112,7 +112,6 @@
 | if a source would deal damage to you, prevent N of that damage. | 1 | Urza's Armor | usg |
 | if you control a creature, damage that would reduce your life total to less than N reduces it to N instead. | 1 | Worship | usg |
 | if you would draw a card, you may instead choose land or nonland and reveal cards from the top of your library until you reveal a card of the chosen kind. put t | 1 | Abundance | usg |
-| prevent all damage that would be dealt ~ to up to two target creatures. | 1 | Redeem | usg |
 | return all green permanents to their owners' hands. | 1 | Hibernation | usg |
 | sacrifice ~: return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | No Rest for the Wicked | usg |
 | sacrifice ~: the next time a source of your choice would deal damage to any target ~, prevent that damage. | 1 | Sanctum Guardian | usg |

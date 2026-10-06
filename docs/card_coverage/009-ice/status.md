@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 20.0% |
-| Works (untested) | 19 | 54.3% |
+| Tested | 8 | 22.9% |
+| Works (untested) | 18 | 51.4% |
 | Partial (unaudited) | 2 | 5.7% |
 | Not working | 7 | 20.0% |
 
@@ -47,7 +47,6 @@
 | Fyndhorn Elder | handled |  |  | Y/-/- | not_tested |
 | Sabretooth Tiger | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Scaled Wurm | handled |  |  | Y/-/- | not_tested |
-| Snow-Covered Mountain | handled |  |  | Y/Y/- | not_tested |
 | Snow-Covered Plains | handled |  |  | Y/Y/- | not_tested |
 | Snow-Covered Swamp | handled |  |  | Y/Y/- | not_tested |
 | Stormbind | handled | {2}, Discard a card at random: This enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -58,7 +57,7 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Incinerate
 - Karplusan Forest
@@ -66,6 +65,7 @@
 - Pyroclasm
 - Snow-Covered Forest
 - Snow-Covered Island
+- Snow-Covered Mountain
 - Vexing Arcanix
 
 </details>

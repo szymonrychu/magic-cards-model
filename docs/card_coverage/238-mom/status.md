@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 61 | 22.4% |
+| Tested | 62 | 22.8% |
 | Works (untested) | 98 | 36.0% |
 | Partial (unaudited) | 6 | 2.2% |
-| Not working | 107 | 39.3% |
+| Not working | 106 | 39.0% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Streetwise Negotiator | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sunder the Gateway | silent | Incubate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sunfall | silent | Exile all creatures. Incubate X, where X is the number of creatures exiled this way. (Create an Incubator token with X +1/+1 counters on it and "{2}: Transform  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Surge of Salvation | silent | You and permanents you control gain hexproof until end of turn. Prevent all damage that black and/or red sources would deal to creatures you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sword of Once and Future | silent | Whenever equipped creature deals combat damage to a player, surveil 2. Then you may cast an instant or sorcery spell with mana value 2 or less from your graveya | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tangled Skyline | silent | When this enchantment enters, you gain 5 life and incubate 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thalia and The Gitrog Monster | silent | Whenever Thalia and The Gitrog Monster attacks, sacrifice a creature or land, then draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -241,7 +240,7 @@
 ## Fully supported
 
 <details>
-<summary>61 cards</summary>
+<summary>62 cards</summary>
 
 - Archangel Elspeth
 - Borborygmos and Fblthp
@@ -297,6 +296,7 @@
 - Sandstalker Moloch
 - See Double
 - Seed of Hope
+- Surge of Salvation
 - Tandem Takedown
 - Temporal Cleansing
 - Tribute to the World Tree
@@ -379,7 +379,6 @@
 | whenever ~ deals combat damage to an opponent, it deals that much damage to target planeswalker that player controls or battle that player protects. | 1 | Rampaging Raptor | mom |
 | whenever ~ enters or attacks, you may exile five cards from your graveyard. when you do, return target creature card from your graveyard to the battlefield. | 1 | Kroxa and Kunoros | mom |
 | whenever ~ or another phyrexian you control enters, incubate N. | 1 | Essence of Orthodoxy | mom |
-| you and permanents you control gain hexproof until end of turn. prevent all damage that black and/or red sources would deal to creatures you control ~. | 1 | Surge of Salvation | mom |
 | you may cast spells with flash or flying from the top of your library. | 1 | Errant and Giada | mom |
 | {M}, exile ~ from your graveyard: incubate N. activate only as a sorcery. | 1 | Ichor Drinker | mom |
 | {M}, sacrifice another creature or artifact: ayara deals N damage to target opponent or battle and you gain N life, where N is the sacrificed permanent's mana v | 1 | Ayara, Widow of the Realm // Ayara, Furnace Queen | mom |

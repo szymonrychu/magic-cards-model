@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 8.3% |
+| Tested | 19 | 8.8% |
 | Works (untested) | 107 | 49.3% |
 | Partial (unaudited) | 16 | 7.4% |
-| Not working | 76 | 35.0% |
+| Not working | 75 | 34.6% |
 
 ## Cards needing work
 
@@ -97,7 +97,6 @@
 | Eaten by Spiders | notice | Destroy target creature with flying and all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Herald of War | notice | Angel spells and Human spells you cast cost {1} less to cast for each +1/+1 counter on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Joint Assault | notice | Target creature gets +2/+2 until end of turn. If it's paired with a creature, that creature also gets +2/+2 until end of turn. | unparsed remainder: If it's paired with a creature, that creature also gets +2/+2 until end of turn. | Y/-/- | not_working |
-| Leap of Faith | notice | Target creature gains flying until end of turn. Prevent all damage that would be dealt to that creature this turn. | unparsed remainder: Prevent all damage that would be dealt to that creature this turn. | Y/-/- | not_working |
 | Necrobite | notice | Target creature gains deathtouch until end of turn. Regenerate it. (The next time that creature would be destroyed this turn, instead tap it, remove it from com | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
 | Revenge of the Hunted | notice | Until end of turn, target creature gets +6/+6 and gains trample, and all creatures able to block it this turn do so. Miracle {G} (You may cast this card for its | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rush of Blood | notice | Target creature gets +X/+0 until end of turn, where X is its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -229,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Aggravate
 - Blood Artist
@@ -240,6 +239,7 @@
 - Divine Deflection
 - Entreat the Angels
 - Griselbrand
+- Leap of Faith
 - Lone Revenant
 - Midnight Duelist
 - Predator's Gambit
@@ -307,7 +307,6 @@
 | reveal the top two cards of your library. put all creature and land cards revealed ~ into your hand and the rest on the bottom of your library in any order. | 1 | Lair Delve | avr |
 | spells and abilities your opponents control can't cause you to sacrifice permanents. | 1 | Sigarda, Host of Herons | avr |
 | target creature gains deathtouch until end of turn. regenerate it. (the next time that creature would be destroyed ~, instead tap it, remove it from combat, and | 1 | Necrobite | avr |
-| target creature gains flying until end of turn. prevent all damage that would be dealt to that creature ~. | 1 | Leap of Faith | avr |
 | target creature gets +N/+N until end of turn, where N is its power. | 1 | Rush of Blood | avr |
 | target creature gets +N/+N until end of turn. if it's paired with a creature, that creature also gets +N/+N until end of turn. | 1 | Joint Assault | avr |
 | target creature you control gains hexproof until end of turn. you gain life equal to that creature"..."t be the target of spells or abilities your opponents con | 1 | Sheltering Word | avr |

@@ -30,7 +30,7 @@
 | Essence Sliver | silent | Whenever a Sliver deals damage, its controller gains that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graveborn Muse | silent | At the beginning of your upkeep, you draw X cards and lose X life, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Krosan Cloudscraper | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {G}{G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Phage the Untouchable | silent | When Phage enters, if you didn't cast it from your hand, you lose the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Phage the Untouchable | silent | Whenever Phage deals combat damage to a creature, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mistform Ultimus | unaudited | Mistform Ultimus is every creature type . | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Seedborn Muse | unaudited | Untap all permanents you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Akroma, Angel of Wrath | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -60,8 +60,8 @@
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M}{M}. | 1 | Krosan Cloudscraper | lgn |
 | at the beginning of your upkeep, you draw N cards and lose N life, where N is the number of zombies you control. | 1 | Graveborn Muse | lgn |
 | untap all permanents you control during each other player's untap step. | 1 | Seedborn Muse | lgn |
-| when phage enters, if you didn't cast it from your hand, you lose the game. | 1 | Phage the Untouchable | lgn |
 | whenever a sliver deals damage, its controller gains that much life. | 1 | Essence Sliver | lgn |
+| whenever phage deals combat damage to a creature, destroy that creature. it can't be regenerated. | 1 | Phage the Untouchable | lgn |
 | ~ is every creature type . | 1 | Mistform Ultimus | lgn |
 
 ## Notes

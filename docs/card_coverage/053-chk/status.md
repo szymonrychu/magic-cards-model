@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 8.5% |
-| Works (untested) | 130 | 45.9% |
+| Tested | 26 | 9.2% |
+| Works (untested) | 131 | 46.3% |
 | Partial (unaudited) | 14 | 4.9% |
-| Not working | 115 | 40.6% |
+| Not working | 112 | 39.6% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Cage of Hands | silent | {1}{W}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Call to Glory | silent | Untap all creatures you control. Samurai creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Callous Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +1/+0 and gains flying until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Candles' Glow | silent | Prevent the next 3 damage that would be dealt to any target this turn. You gain life equal to the damage prevented this way. Splice onto Arcane {1}{W} (As you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cranial Extraction | silent | Choose a nonland card name. Search target player's graveyard, hand, and library for all cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cursed Ronin | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cut the Tethers | silent | For each Spirit, return it to its owner's hand unless that player pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -70,7 +69,6 @@
 | Kashi-Tribe Reaver | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kashi-Tribe Warriors | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kitsune Blademaster | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Kitsune Healer | silent | {T}: Prevent all damage that would be dealt to target legendary creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kitsune Mystic // Autumn-Tail, Kitsune Sage | silent | At the beginning of the end step, if this creature is enchanted by two or more Auras, flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kokusho, the Evening Star | silent | When Kokusho dies, each opponent loses 5 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Konda's Banner | silent | Creatures that share a color with equipped creature get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -131,7 +129,6 @@
 | Vine Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Wicked Akuba | silent | {B}: Target player dealt damage by this creature this turn loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zo-Zu the Punisher | silent | Whenever a land enters, Zo-Zu deals 2 damage to that land's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blessed Breath | notice | Target creature you control gains protection from the color of your choice until end of turn. Splice onto Arcane {W} (As you cast an Arcane spell, you may revea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Blind with Anger | notice | Untap target nonlegendary creature and gain control of it until end of turn. That creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Devouring Rage | notice | As an additional cost to cast this spell, you may sacrifice any number of Spirits. Target creature gets +3/+0 until end of turn. For each Spirit sacrificed this | unparsed remainder: As an additional cost to cast this spell, you may sacrifice any number of Spirits. For each Spirit sacrificed this way, that creature gets an additional +3/+0 until end of turn. | Y/-/- | not_working |
 | Feast of Worms | notice | Destroy target land. If that land was legendary, its controller sacrifices another land of their choice. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -159,6 +156,7 @@
 | Akki Rockspeaker | handled | When this creature enters, add {R}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Akki Underminer | handled | Whenever this creature deals combat damage to a player, that player sacrifices a permanent of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Azami, Lady of Scrolls | handled | Tap an untapped Wizard you control: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blessed Breath | handled | Target creature you control gains protection from the color of your choice until end of turn. Splice onto Arcane {W} (As you cast an Arcane spell, you may revea | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blood Rites | handled | {1}{R}, Sacrifice a creature: This enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blood Speaker | handled | At the beginning of your upkeep, you may sacrifice this creature. If you do, search your library for a Demon card, reveal that card, put it into your hand, then | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boseiju, Who Shelters All | handled | Boseiju enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -289,10 +287,11 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>26 cards</summary>
 
 - Azusa, Lost but Seeking
 - Ben-Ben, Akki Hermit
+- Candles' Glow
 - Commune with Nature
 - Desperate Ritual
 - Distress
@@ -306,6 +305,7 @@
 - Isamaru, Hound of Konda
 - Keiga, the Tide Star
 - Kiki-Jiki, Mirror Breaker
+- Kitsune Healer
 - Kitsune Riftwalker
 - Lava Spike
 - Minamo, School at Water's Edge
@@ -360,7 +360,6 @@
 | look at the top three cards of your library. you may put those cards on the bottom of your library in any order. if you do, return ~ to its owner's hand. otherw | 1 | Petals of Insight | chk |
 | players can cast spells only during their own turns. | 1 | Dosan the Falling Leaf | chk |
 | players can't untap more than one artifact during their untap steps. | 1 | Imi Statue | chk |
-| prevent the next N damage that would be dealt to any target ~. you gain life equal to the damage prevented ~. splice onto arcane {M}{M} (as you cast an arcane s | 1 | Candles' Glow | chk |
 | redistribute any number of players' life totals. (each of those players gets one life total back.) | 1 | Reverse the Sands | chk |
 | remove a divinity counter from ~: destroy all other creatures. | 1 | Myojin of Cleansing Fire | chk |
 | remove a divinity counter from ~: each opponent discards their hand. | 1 | Myojin of Night's Reach | chk |
@@ -370,7 +369,6 @@
 | shamans you control have "..." | 1 | Sachi, Daughter of Seshiro | chk |
 | switch target creature's power and toughness until end of turn. splice onto arcane {M}{M} (as you cast an arcane spell, you may reveal ~ from your hand and pay  | 1 | Strange Inversion | chk |
 | tapped creatures you control can block as though they were untapped. | 1 | Masako the Humorless | chk |
-| target creature you control gains protection from the color of your choice until end of turn. splice onto arcane {M} (as you cast an arcane spell, you may revea | 1 | Blessed Breath | chk |
 | target opponent reveals their hand. that player exiles a card from it, then you exile a card from it. repeat ~ until all cards in that hand have been exiled. th | 1 | Struggle for Sanity | chk |
 | target permanent's controller sacrifices it. if the player does, they reveal cards from the top of their library until they reveal a permanent card that shares  | 1 | Reweave | chk |
 | untap all creatures you control. samurai creatures you control get +N/+N until end of turn. | 1 | Call to Glory | chk |
@@ -404,7 +402,6 @@
 | {M}, tap an untapped creature you control: untap enchanted creature. | 1 | Aura of Dominion | chk |
 | {M}, {M}: attacking creatures gain first strike until end of turn. | 1 | Akki Coalflinger | chk |
 | {M}, {M}: create a N/N green snake creature token for each charge counter on ~. | 1 | Orochi Hatchery | chk |
-| {M}: prevent all damage that would be dealt to target legendary creature ~. | 1 | Kitsune Healer | chk |
 | {M}: regenerate enchanted creature. | 1 | Serpent Skin | chk |
 | {M}: reveal the top card of your library. if it's a land card, untap ~ and it gets +N/+N until end of turn. activate only once each turn. | 1 | Harsh Deceiver | chk |
 | {M}: reveal the top card of your library. if it's a land card, ~ gets +N/+N and gains first strike until end of turn. activate only once each turn. | 1 | Brutal Deceiver | chk |

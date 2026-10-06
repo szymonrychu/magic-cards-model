@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 13.0% |
-| Works (untested) | 127 | 59.1% |
+| Tested | 29 | 13.5% |
+| Works (untested) | 126 | 58.6% |
 | Partial (unaudited) | 8 | 3.7% |
 | Not working | 52 | 24.2% |
 
@@ -112,7 +112,6 @@
 | Darkslick Drake | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Axe | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Juggernaut | handled | Darksteel Juggernaut's power and toughness are each equal to the number of artifacts you control. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Darksteel Myr | handled | Indestructible | machines/keywords.py | Y/-/- | not_tested |
 | Darksteel Sentinel | handled | Indestructible | machines/keywords.py | Y/-/- | not_tested |
 | Dispense Justice | handled | Target player sacrifices an attacking creature of their choice. Metalcraft — That player sacrifices two attacking creatures of their choice instead if you contr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dissipation Field | handled | Whenever a permanent deals damage to you, return it to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -217,7 +216,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
@@ -225,6 +224,7 @@
 - Assault Strobe
 - Carrion Call
 - Darkslick Shores
+- Darksteel Myr
 - Galvanic Blast
 - Koth of the Hammer
 - Kuldotha Phoenix

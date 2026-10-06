@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.9% |
+| Tested | 21 | 9.0% |
 | Works (untested) | 127 | 54.5% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 79 | 33.9% |
+| Not working | 74 | 31.8% |
 
 ## Cards needing work
 
@@ -73,7 +73,6 @@
 | Sandcrafter Mage | silent | When this creature enters, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sandsteppe Scavenger | silent | When this creature enters, bolster 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan Unbroken | silent | +1: Draw a card, then add one mana of any color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sarkhan's Rage | silent | Sarkhan's Rage deals 5 damage to any target. If you control no Dragons, Sarkhan's Rage deals 2 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Savage Ventmaw | silent | Whenever this creature attacks, add {R}{R}{R}{G}{G}{G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Scale Blessing | silent | Bolster 1, then put a +1/+1 counter on each creature you control with a +1/+1 counter on it. (To bolster 1, choose a creature with the least toughness among cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shieldhide Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -92,14 +91,10 @@
 | Blessed Reincarnation | notice | Exile target creature an opponent controls. That player reveals cards from the top of their library until a creature card is revealed. The player puts that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood-Chin Fanatic | notice | {1}{B}, Sacrifice another Warrior creature: Target player loses X life and you gain X life, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Butcher's Glee | notice | Target creature gets +3/+0 and gains lifelink until end of turn. Regenerate it. (Damage dealt by a creature with lifelink also causes its controller to gain tha | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
-| Center Soul | notice | Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Display of Dominance | notice | Choose one — • Destroy target blue or black noncreature permanent. • Permanents you control can't be the targets of blue or black spells your opponents control  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Draconic Roar | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. Draconic Roar deals 3 damage to target creature. If you revealed a Dragon | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Dromoka's Command | notice | Choose two — • Prevent all damage target instant or sorcery spell would deal this turn. • Target player sacrifices an enchantment of their choice. • Put a +1/+1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lightwalker | notice | This creature has flying as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror Mockery | notice | Whenever enchanted creature attacks, you may create a token that's a copy of that creature. Exile that token at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ojutai Exemplars | notice | Whenever you cast a noncreature spell, choose one — • Tap target creature. • This creature gains first strike and lifelink until end of turn. • Exile this creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Pristine Skywise | notice | Whenever you cast a noncreature spell, untap this creature. It gains protection from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Risen Executioner | notice | You may cast this creature from your graveyard if you pay {1} more to cast it for each other creature card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Self-Inflicted Wound | notice | Target opponent sacrifices a green or white creature of their choice. If that player does, they lose 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swift Warkite | notice | When this creature enters, you may put a creature card with mana value 3 or less from your hand or graveyard onto the battlefield. That creature gains haste. Re | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -247,21 +242,26 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>21 cards</summary>
 
 - Ambuscade Shaman
 - Anticipate
 - Atarka Beastbreaker
 - Atarka's Command
+- Center Soul
 - Clone Legion
 - Collected Company
 - Corpseweft
+- Draconic Roar
 - Dragon-Scarred Bear
+- Dromoka's Command
 - Epic Confrontation
 - Impact Tremors
 - Kolaghan's Command
 - Marang River Skeleton
 - Myth Realized
+- Pristine Skywise
+- Sarkhan's Rage
 - Shaman of Forgotten Ways
 - Stampeding Elk Herd
 - Zurgo Bellstriker
@@ -277,10 +277,8 @@
 | Formidable | 2 | Crater Elemental, Glade Watcher | dtk |
 | as an additional cost to cast ~, you may reveal a dragon card from your hand. | 2 | Orator of Ojutai, Scaleguard Sentinels | dtk |
 | Choose one | 1 | Display of Dominance | dtk |
-| Choose two | 1 | Dromoka's Command | dtk |
 | +N: draw a card, then add one mana of any color. | 1 | Sarkhan Unbroken | dtk |
 | +N: look at the top card of your library. if it's a noncreature, nonland card, you may reveal it and put it into your hand. | 1 | Narset Transcendent | dtk |
-| as an additional cost to cast ~, you may reveal a dragon card from your hand. ~ deals N damage to target creature. if you revealed a dragon card or controlled a | 1 | Draconic Roar | dtk |
 | as long as you control a dragon, ~ gets +N/+N and has flying and trample. | 1 | Dragonloft Idol | dtk |
 | as long as you control exactly one creature, that creature gets +N/+N and has deathtouch and lifelink. | 1 | Deadly Wanderings | dtk |
 | attacking creatures get +N/+N and gain trample until end of turn. | 1 | Volcanic Rush | dtk |
@@ -303,7 +301,6 @@
 | return target instant or sorcery card from your graveyard to your hand. ~ deals damage equal to that card's mana value to each creature your opponents control.  | 1 | Volcanic Vision | dtk |
 | target creature gets +N/+N and gains lifelink until end of turn. regenerate it. (damage dealt by a creature with lifelink also causes its controller to gain tha | 1 | Butcher's Glee | dtk |
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Taigam's Strike | dtk |
-| target creature you control gains protection from the color of your choice until end of turn. rebound (if you cast ~ from your hand, exile it as it resolves. at | 1 | Center Soul | dtk |
 | target opponent loses N life for each attacking creature you control. you gain that much life. | 1 | Foul-Tongue Shriek | dtk |
 | target opponent sacrifices a green or white creature of their choice. if that player does, they lose N life. | 1 | Self-Inflicted Wound | dtk |
 | target player shuffles their graveyard into their library. draw a card. | 1 | Learn from the Past | dtk |
@@ -330,7 +327,6 @@
 | whenever another nontoken creature you control enters, bolster N. | 1 | Anafenza, Kin-Tree Spirit | dtk |
 | whenever enchanted creature attacks, you may create a token that's a copy of that creature. exile that token at end of combat. | 1 | Mirror Mockery | dtk |
 | whenever you cast a noncreature spell, choose one — • tap target creature. • ~ gains first strike and lifelink until end of turn. • exile ~, then return it to t | 1 | Ojutai Exemplars | dtk |
-| whenever you cast a noncreature spell, untap ~. it gains protection from the color of your choice until end of turn. | 1 | Pristine Skywise | dtk |
 | whenever you cast a noncreature spell, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Elusive Spellfist | dtk |
 | whenever ~ attacks, add {M}{M}{M}{M}{M}{M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Savage Ventmaw | dtk |
 | whenever ~ attacks, bolster N. | 1 | Dromoka Captain | dtk |
@@ -349,7 +345,6 @@
 | ~ can be attached only to a creature with toughness N or greater. | 1 | Gate Smasher | dtk |
 | ~ can block dragons as though it had reach. | 1 | Dragon Hunter | dtk |
 | ~ can't attack or block unless you pay {M}. | 1 | Qal Sisma Behemoth | dtk |
-| ~ deals N damage to any target. if you control no dragons, ~ deals N damage to you. | 1 | Sarkhan's Rage | dtk |
 | ~ enters with a +N/+N counter on it for each other creature you control with a +N/+N counter on it. | 1 | Avatar of the Resolute | dtk |
 | ~ has flying as long as it has a +N/+N counter on it. | 1 | Lightwalker | dtk |
 | ~ has reach as long as it has a +N/+N counter on it. | 1 | Ainok Artillerist | dtk |

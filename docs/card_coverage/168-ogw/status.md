@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 13.6% |
+| Tested | 25 | 14.2% |
 | Works (untested) | 115 | 65.3% |
 | Partial (unaudited) | 4 | 2.3% |
-| Not working | 33 | 18.8% |
+| Not working | 32 | 18.2% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Reaver Drone | silent | At the beginning of your upkeep, you lose 1 life unless you control another colorless creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Remorseless Punishment | silent | Target opponent loses 5 life unless that player discards two cards or sacrifices a creature or planeswalker of their choice. Repeat this process once. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ruin in Their Wake | silent | Devoid (This card has no color.) Search your library for a basic land card and reveal it. You may put that card onto the battlefield tapped if you control a lan | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sparkmage's Gambit | silent | Sparkmage's Gambit deals 1 damage to each of up to two target creatures. Those creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steppe Glider | silent | {1}{W}: Target creature with a +1/+1 counter on it gains flying and vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stone Haven Outfitter | silent | Equipped creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stoneforge Masterwork | silent | Equipped creature gets +1/+1 for each other creature you control that shares a creature type with it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -182,7 +181,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Ayli, Eternal Pilgrim
 - Crumbling Vestige
@@ -199,6 +198,7 @@
 - Reckless Bushwhacker
 - Ruins of Oran-Rief
 - Shoulder to Shoulder
+- Sparkmage's Gambit
 - Spatial Contortion
 - Thought-Knot Seer
 - Tyrant of Valakut
@@ -245,7 +245,6 @@
 | {M}{M}: each creature with toughness greater than its power can't block ~. | 1 | Immobilizer Eldrazi | ogw |
 | {M}{M}: target creature with a +N/+N counter on it gains flying and vigilance until end of turn. | 1 | Steppe Glider | ogw |
 | {M}{M}{M}{M}{M}: ally creatures you control get +N/+N until end of turn, where N is the number of colors among those creatures. | 1 | General Tazri | ogw |
-| ~ deals N damage to each of up to two target creatures. those creatures can't block ~. | 1 | Sparkmage's Gambit | ogw |
 | ~ gets +N/+N for each land you control named wastes. | 1 | Walker of the Wastes | ogw |
 | ~ has first strike as long as it's attacking. | 1 | Kor Scythemaster | ogw |
 | ~ has haste as long as you control another colorless creature. | 1 | Eldrazi Aggressor | ogw |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.7% |
+| Tested | 22 | 9.1% |
 | Works (untested) | 137 | 56.8% |
 | Partial (unaudited) | 19 | 7.9% |
-| Not working | 64 | 26.6% |
+| Not working | 63 | 26.1% |
 
 ## Cards needing work
 
@@ -83,7 +83,6 @@
 | Unwavering Initiate | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Vizier of Many Faces | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Watchers of the Dead | silent | Exile this creature: Each opponent chooses two cards in their graveyard and exiles the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Djeru's Resolve | notice | Untap target creature. Prevent all damage that would be dealt to it this turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grim Strider | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hazoret's Favor | notice | At the beginning of combat on your turn, you may have target creature you control get +2/+0 and gain haste until end of turn. If you do, sacrifice it at the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Onward // Victory | notice | Target creature gets +X/+0 until end of turn, where X is its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -250,13 +249,14 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Angler Drake
 - Archfiend of Ifnir
 - Cascading Cataracts
 - Censor
 - Curator of Mysteries
+- Djeru's Resolve
 - Edifice of Authority
 - Gideon of the Trials
 - Harsh Mentor
@@ -315,7 +315,6 @@
 | rhonas can't attack or block unless you control another creature with power N or greater. | 1 | Rhonas the Indomitable | akh |
 | target creature gets +N/+N until end of turn, where N is its power. | 1 | Onward // Victory | akh |
 | target creature gets +N/+N until end of turn. you may remove a -N/-N counter from it. | 1 | Shed Weakness | akh |
-| untap target creature. prevent all damage that would be dealt to it ~. cycling {M} ({M}, discard ~: draw a card.) | 1 | Djeru's Resolve | akh |
 | untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Synchronized Strike | akh |
 | when ~ dies, you may put a -N/-N counter on target creature for each -N/-N counter on ~. | 1 | Soulstinger | akh |
 | when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Quarry Hauler | akh |

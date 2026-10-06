@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 8.6% |
-| Works (untested) | 97 | 59.9% |
+| Tested | 15 | 9.3% |
+| Works (untested) | 96 | 59.3% |
 | Partial (unaudited) | 12 | 7.4% |
 | Not working | 39 | 24.1% |
 
@@ -139,7 +139,6 @@
 | Lunar Avenger | handled | Remove a +1/+1 counter from this creature: This creature gains your choice of flying, first strike, or haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moriok Rigger | handled | Whenever an artifact is put into a graveyard from the battlefield, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Neurok Stealthsuit | handled | Equipped creature has shroud. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Night's Whisper | handled | You draw two cards and lose 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Grotesque | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pentad Prism | handled | Sunburst | machines/replacement.py (_sunburst_modifier, CR 702.44a) | Y/-/- | not_tested |
 | Plasma Elemental | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -178,7 +177,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Beacon of Unrest
 - Cranial Plating
@@ -187,6 +186,7 @@
 - Eternal Witness
 - Grinding Station
 - Magma Jet
+- Night's Whisper
 - Opaline Bracers
 - Paradise Mantle
 - Rite of Passage

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 9.1% |
+| Tested | 17 | 11.9% |
 | Works (untested) | 62 | 43.4% |
 | Partial (unaudited) | 12 | 8.4% |
-| Not working | 56 | 39.2% |
+| Not working | 52 | 36.4% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Krovikan Mist | silent | Krovikan Mist's power and toughness are each equal to the number of Illusions on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Krovikan Rot | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Lightning Storm | silent | Lightning Storm deals X damage to any target, where X is 3 plus the number of charge counters on Lightning Storm. Discard a land card: Put two charge counters o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Luminesce | silent | Prevent all damage that black sources and red sources would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magmatic Core | silent | At the beginning of your end step, this enchantment deals X damage divided as you choose among any number of target creatures, where X is the number of age coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Perilous Research | silent | Draw two cards, then sacrifice a permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Resize | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -64,7 +63,6 @@
 | Rune Snag | silent | Counter target spell unless its controller pays {2} plus an additional {2} for each card named Rune Snag in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrying Sheets | silent | {1}{S}, {T}: Look at the top card of your library. If that card is snow, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shape of the Wiitigo | silent | When this Aura enters, put six +1/+1 counters on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Skred | silent | Skred deals damage to target creature equal to the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stalking Yeti | silent | When this creature enters, if it's on the battlefield, it deals damage equal to its power to target creature an opponent controls and that creature deals damage | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sun's Bounty | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Surging Aether | silent | Ripple | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -77,9 +75,7 @@
 | Woolly Razorback | silent | As long as this creature has an ice counter on it, prevent all combat damage it would deal and it has defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blizzard Specter | notice | Whenever this creature deals combat damage to a player, choose one — • That player returns a permanent they control to its owner's hand. • That player discards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Frostweb Spider | notice | Whenever this creature blocks a creature with flying, put a +1/+1 counter on this creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Mystic Melting | notice | Destroy target artifact or enchantment. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ohran Viper | notice | Whenever this creature deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Swift Maneuver | notice | Prevent the next 2 damage that would be dealt to any target this turn. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thermal Flux | notice | Choose one — • Target nonsnow permanent becomes snow until end of turn. • Target snow permanent isn't snow until end of turn. Draw a card at the beginning of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vanish into Memory | notice | Exile target creature. You draw cards equal to that creature's power. At the beginning of your next upkeep, return that card to the battlefield under its owner' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cover of Winter | unaudited | If a creature would deal combat damage to you and/or one or more creatures you control, prevent X of that damage, where X is the number of age counters on this  | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -160,7 +156,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>17 cards</summary>
 
 - Allosaurus Rider
 - Balduvian Warlord
@@ -168,12 +164,16 @@
 - Feast of Flesh
 - Kjeldoran Javelineer
 - Kjeldoran War Cry
+- Luminesce
 - Martyr of Ashes
 - Martyr of Sands
 - Mishra's Bauble
+- Mystic Melting
 - Rimewind Cryomancer
 - Ronom Hulk
+- Skred
 - Soul Spike
+- Swift Maneuver
 - Vexing Sphinx
 
 </details>
@@ -191,7 +191,6 @@
 | at the beginning of your end step, ~ deals N damage divided as you choose among any number of target creatures, where N is the number of age counters on it. | 1 | Magmatic Core | csp |
 | counter target spell unless its controller pays {M} plus an additional {M} for each card named ~ in each graveyard. | 1 | Rune Snag | csp |
 | creatures with ice counters on them don"..." untap steps. | 1 | Rimescale Dragon | csp |
-| destroy target artifact or enchantment. draw a card at the beginning of the next turn's upkeep. | 1 | Mystic Melting | csp |
 | draw two cards, then sacrifice a permanent. | 1 | Perilous Research | csp |
 | enchanted creature can"..."t be activated. | 1 | Gelid Shackles | csp |
 | enchanted creature gets +N/+N for each age counter on ~. | 1 | Glacial Plating | csp |
@@ -199,10 +198,8 @@
 | if a creature would deal combat damage to you and/or one or more creatures you control, prevent N of that damage, where N is the number of age counters on ~. | 1 | Cover of Winter | csp |
 | if another creature would die, exile it instead. | 1 | Void Maw | csp |
 | other soldier creatures get +N/+N and have first strike. | 1 | Field Marshal | csp |
-| prevent all damage that black sources and red sources would deal ~. | 1 | Luminesce | csp |
 | prevent all damage that would be dealt to ~ by creatures with first strike. | 1 | Tresserhorn Skyknight | csp |
 | prevent all damage that ~ would deal to snow creatures. | 1 | Goblin Furrier | csp |
-| prevent the next N damage that would be dealt to any target ~. draw a card at the beginning of the next turn's upkeep. | 1 | Swift Maneuver | csp |
 | remove a healing counter from ~: prevent the next N damage that would be dealt to ~ ~. | 1 | Ursine Fylgja | csp |
 | snow permanents don"..." untap steps. | 1 | Freyalise's Radiance | csp |
 | spells you cast have ripple N. | 1 | Thrumming Stone | csp |
@@ -236,7 +233,6 @@
 | {M}{M}: target creature loses flying until end of turn. | 1 | Adarkar Windform | csp |
 | ~ can't be the target of blue or black spells. | 1 | Karplusan Strider | csp |
 | ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |
-| ~ deals damage to target creature equal to the number of snow permanents you control. | 1 | Skred | csp |
 | ~'s power and toughness are each equal to the number of illusions on the battlefield. | 1 | Krovikan Mist | csp |
 | ~'s power and toughness are each equal to the number of snow permanents on the battlefield. | 1 | Rimefeather Owl | csp |
 | ~'s power is equal to the number of nonbasic lands your opponents control. | 1 | Wilderness Elemental | csp |

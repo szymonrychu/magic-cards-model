@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 11.4% |
-| Works (untested) | 105 | 47.7% |
+| Tested | 28 | 12.7% |
+| Works (untested) | 106 | 48.2% |
 | Partial (unaudited) | 8 | 3.6% |
-| Not working | 82 | 37.3% |
+| Not working | 78 | 35.5% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Guul Draz Assassin | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hada Spy Patrol | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Halimar Wavewatch | silent | Level up {2} ({2}: Put a level counter on this. Level up only as a sorcery.) LEVEL 1-4 0/6 LEVEL 5+ 6/6 Islandwalk (This creature can't be blocked as long as de | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Haze Frog | silent | When this creature enters, prevent all combat damage that other creatures would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hedron-Field Purists | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hellcarver Demon | silent | Whenever this creature deals combat damage to a player, sacrifice all other permanents you control and discard your hand. Exile the top six cards of your librar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hellion Eruption | silent | Sacrifice all creatures you control, then create that many 4/4 red Hellion creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -78,7 +77,6 @@
 | Perish the Thought | silent | Target opponent reveals their hand. You choose a card from it. That player shuffles that card into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raid Bombardment | silent | Whenever a creature you control with power 2 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Realms Uncharted | silent | Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Reinforced Bulwark | silent | {T}: Prevent the next 1 damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Renegade Doppelganger | silent | Whenever another creature you control enters, you may have this creature become a copy of that creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sarkhan the Mad | silent | 0: Reveal the top card of your library and put it into your hand. Sarkhan deals damage to himself equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | See Beyond | silent | Draw two cards, then shuffle a card from your hand into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -98,14 +96,12 @@
 | Vent Sentinel | silent | {1}{R}, {T}: This creature deals damage to target player or planeswalker equal to the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Warmonger's Chariot | silent | As long as equipped creature has defender, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | World at War | silent | After the second main phase this turn, there's an additional combat phase followed by an additional main phase. At the beginning of that combat, untap all creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wrap in Flames | silent | Wrap in Flames deals 1 damage to each of up to three target creatures. Those creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zulaport Enforcer | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arrogant Bloodlord | notice | Whenever this creature blocks or becomes blocked by a creature with power 1 or less, destroy this creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Champion's Drake | notice | This creature gets +3/+3 as long as you control a creature with three or more level counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Consuming Vapors | notice | Target player sacrifices a creature of their choice. You gain life equal to that creature's toughness. Rebound (If you cast this spell from your hand, exile it  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Distortion Strike | notice | Target creature gets +1/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Emerge Unscathed | notice | Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Induce Despair | notice | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Traitorous Instinct | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | unparsed remainder: Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | Y/Y/- | not_working |
 | Aura Gnarlid | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -141,6 +137,7 @@
 | Dreamstone Hedron | handled | {3}, {T}, Sacrifice this artifact: Draw three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eel Umbra | handled | Enchanted creature gets +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eland Umbra | handled | Enchanted creature gets +0/+4. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Emerge Unscathed | handled | Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emrakul's Hatcher | handled | When this creature enters, create three 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enatu Golem | handled | When this creature dies, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Escaped Null | handled | Whenever this creature blocks or becomes blocked, it gets +5/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -225,7 +222,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>28 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -235,6 +232,7 @@
 - Emrakul, the Aeons Torn
 - Essence Feed
 - Harmless Assault
+- Haze Frog
 - Hyena Umbra
 - Inquisition of Kozilek
 - Living Destiny
@@ -247,11 +245,13 @@
 - Pestilence Demon
 - Prophetic Prism
 - Recurring Insight
+- Reinforced Bulwark
 - Repay in Kind
 - Spawning Breath
 - Ulamog's Crusher
 - Vengevine
 - Wall of Omens
+- Wrap in Flames
 
 </details>
 
@@ -307,10 +307,8 @@
 | spells and abilities your opponents control can't cause you to sacrifice permanents. | 1 | Tajuru Preserver | roe |
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Distortion Strike | roe |
 | target creature must be blocked ~ if able. draw a card. | 1 | Irresistible Prey | roe |
-| target creature you control gains protection from the color of your choice until end of turn. rebound (if you cast ~ from your hand, exile it as it resolves. at | 1 | Emerge Unscathed | roe |
 | target opponent reveals their hand. you choose a card from it. that player shuffles that card into their library. | 1 | Perish the Thought | roe |
 | target player sacrifices a creature of their choice. you gain life equal to that creature's toughness. rebound (if you cast ~ from your hand, exile it as it res | 1 | Consuming Vapors | roe |
-| when ~ enters, prevent all combat damage that other creatures would deal ~. | 1 | Haze Frog | roe |
 | when ~ enters, put a +N/+N counter on it for each card in your hand. if you do, discard your hand. | 1 | Thought Gorger | roe |
 | when ~ enters, put two level counters on each creature you control with level up. | 1 | Venerated Teacher | roe |
 | when ~ enters, you may tap any number of untapped creatures you control. you gain N life for each creature tapped ~. | 1 | Jaddi Lifestrider | roe |
@@ -328,14 +326,12 @@
 | whenever ~ deals combat damage to a player, you may draw N cards, where N is the number of charge counters on it. | 1 | Surrakar Spellblade | roe |
 | {M}, {M}: target player mills N cards, where N is the number of cards in that player's graveyard. | 1 | Keening Stone | roe |
 | {M}: cast any number of eldrazi spells from among cards you own outside the game without paying their mana costs. | 1 | Spawnsire of Ulamog | roe |
-| {M}: prevent the next N damage that would be dealt to you ~. | 1 | Reinforced Bulwark | roe |
 | {M}{M}, {M}: copy target instant or sorcery spell twice. you may choose new targets for the copies. | 1 | Echo Mage | roe |
 | {M}{M}, {M}: ~ deals damage to target player or planeswalker equal to the number of creatures you control with defender. | 1 | Vent Sentinel | roe |
 | {M}{M}: untap enchanted creature. | 1 | Crab Umbra | roe |
 | {M}{M}{M}: target creature gets -N/-N until end of turn and drana gets +N/+N until end of turn. | 1 | Drana, Kalastria Bloodchief | roe |
 | ~ can't be blocked except by three or more creatures. | 1 | Pathrazer of Ulamog | roe |
 | ~ costs {M} less to cast for each green creature you control. | 1 | Khalni Hydra | roe |
-| ~ deals N damage to each of up to three target creatures. those creatures can't block ~. | 1 | Wrap in Flames | roe |
 | ~ gets +N/+N as long as you control a creature with three or more level counters on it. | 1 | Champion's Drake | roe |
 
 ## Notes

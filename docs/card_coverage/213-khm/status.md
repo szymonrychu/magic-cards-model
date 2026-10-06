@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 10.8% |
+| Tested | 33 | 11.5% |
 | Works (untested) | 134 | 46.7% |
 | Partial (unaudited) | 15 | 5.2% |
-| Not working | 107 | 37.3% |
+| Not working | 105 | 36.6% |
 
 ## Cards needing work
 
@@ -79,7 +79,6 @@
 | Old-Growth Troll | silent | When Old-Growth Troll dies, if it was a creature, return it to the battlefield. It's an Aura enchantment with enchant Forest you control and "Enchanted Forest h | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Orvar, the All-Form | silent | Whenever you cast an instant or sorcery spell, if it targets one or more other permanents you control, create a token that's a copy of one of those permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Poison the Cup | silent | Destroy target creature. If this spell was foretold, scry 2. Foretell {1}{B} (During your turn, you may pay {2} and exile this card from your hand face down. Ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Priest of the Haunted Edge | silent | {T}, Sacrifice this creature: Target creature gets -X/-X until end of turn, where X is the number of snow lands you control. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pyre of Heroes | silent | {2}, {T}, Sacrifice a creature: Search your library for a creature card that shares a creature type with the sacrificed creature and has mana value equal to 1 p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quakebringer | silent | At the beginning of your upkeep, Quakebringer deals 2 damage to each opponent. This ability triggers only if Quakebringer is on the battlefield or if Quakebring | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rampage of the Valkyries | silent | Whenever an Angel you control dies, each other player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -123,7 +122,6 @@
 | Kaya the Inexorable | notice | +1: Put a ghostform counter on up to one target nontoken creature. It gains "When this creature dies or is put into exile, return it to its owner's hand and cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | King Harald's Revenge | notice | Until end of turn, target creature gets +1/+1 for each creature you control and gains trample. It must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Open the Omenpaths | notice | Choose one — • Add two mana of any one color and two mana of any other color. Spend this mana only to cast creature or enchantment spells. • Creatures you contr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Provoke the Trolls | notice | Provoke the Trolls deals 3 damage to any target. If a creature is dealt damage this way, it gets +5/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Replicating Ring | notice | At the beginning of your upkeep, put a night counter on this artifact. Then if it has eight or more night counters on it, remove all of them and create eight co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Resplendent Marshal | notice | When this creature enters or dies, you may exile another creature card from your graveyard. When you do, put a +1/+1 counter on each creature you control other  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Return Upon the Tide | notice | Return target creature card from your graveyard to the battlefield. If it's an Elf, create two 1/1 green Elf Warrior creature tokens. Foretell {3}{B} (During yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -286,7 +284,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>33 cards</summary>
 
 - Armed and Armored
 - Axgard Braggart
@@ -308,6 +306,8 @@
 - Magda, Brazen Outlaw
 - Moritte of the Frost
 - Niko Aris
+- Priest of the Haunted Edge
+- Provoke the Trolls
 - Raise the Draugr
 - Raven Wings
 - Righteous Valkyrie
@@ -433,7 +433,6 @@
 | you may cast creature spells of the chosen type from the top of your library. | 1 | Realmwalker | khm |
 | you may pay {M} rather than pay the mana cost for rune spells you cast. | 1 | Runeforge Champion | khm |
 | you may pay {M}{M} and exile a creature card from your graveyard rather than pay ~ mana cost. | 1 | Stalwart Valkyrie | khm |
-| {M}, sacrifice ~: target creature gets -N/-N until end of turn, where N is the number of snow lands you control. activate only as a sorcery. | 1 | Priest of the Haunted Edge | khm |
 | {M}, {M}, sacrifice a creature: search your library for a creature card that shares a creature type with the sacrificed creature and has mana value equal to N p | 1 | Pyre of Heroes | khm |
 | {M}, {M}: create a colorless snow artifact token named icy manalith with "..." | 1 | Svella, Ice Shaper | khm |
 | {M}, {M}: look at the top card of your library. if it's a snow card, you may reveal it and put it into your hand. | 1 | Frost Augur | khm |
@@ -443,7 +442,6 @@
 | {M}{M}{M}{M}, {M}, sacrifice ~: search your library for an aura card and/or an equipment card, reveal them, put them into your hand, then shuffle. | 1 | Axgard Armory | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: up to one target creature you don't control gets -N/-N until end of turn. create two N/N green elf warrior creature tokens. acti | 1 | Skemfar Elderhall | khm |
 | ~ crews vehicles using its toughness rather than its power. | 1 | Giant Ox | khm |
-| ~ deals N damage to any target. if a creature is dealt damage ~, it gets +N/+N until end of turn. | 1 | Provoke the Trolls | khm |
 | ~ deals N damage to target creature or planeswalker. add {M} for each {M} spent to cast ~. until end of turn, you don't lose ~ as steps and phases end. ({M} is  | 1 | Tundra Fumarole | khm |
 | ~ gets +N/+N for each other snow permanent you control. | 1 | Spirit of the Aldergard | khm |
 

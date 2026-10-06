@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 9.3% |
+| Tested | 27 | 10.0% |
 | Works (untested) | 155 | 57.6% |
-| Partial (unaudited) | 9 | 3.3% |
-| Not working | 80 | 29.7% |
+| Partial (unaudited) | 8 | 3.0% |
+| Not working | 79 | 29.4% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Chimney Imp | silent | When this creature dies, target opponent puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chrome Mox | silent | {T}: Add one mana of any of the exiled card's colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Confusion in the Ranks | silent | Whenever an artifact, creature, or enchantment enters, its controller chooses target permanent another player controls that shares a card type with it. Exchange | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Consume Spirit | silent | Spend only black mana on X. Consume Spirit deals X damage to any target and you gain X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Contaminated Bond | silent | Whenever enchanted creature attacks or blocks, its controller loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crystal Shard | silent | {3}, {T} or {U}, {T}: Return target creature to its owner's hand unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dead-Iron Sledge | silent | Whenever equipped creature blocks or becomes blocked by a creature, destroy both creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -111,7 +110,6 @@
 | Krark's Thumb | unaudited | If you would flip a coin, instead flip two coins and ignore one. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leonin Abunas | unaudited | Artifacts you control have hexproof. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Myr Prototype | unaudited | This creature can't attack or block unless you pay {1} for each +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Platinum Angel | unaudited | You can't lose the game and your opponents can't win the game. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Relic Bane | unaudited | Enchanted artifact has "At the beginning of your upkeep, you lose 2 life." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Shared Fate | unaudited | If a player would draw a card, that player exiles the top card of one of their opponents' libraries face down instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sphere of Purity | unaudited | If an artifact would deal damage to you, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -274,12 +272,13 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>27 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
 - Bonesplitter
 - Chalice of the Void
+- Consume Spirit
 - Damping Matrix
 - Electrostatic Bolt
 - Frogmite
@@ -293,6 +292,7 @@
 - Loxodon Punisher
 - Mindslaver
 - Oblivion Stone
+- Platinum Angel
 - Raise the Alarm
 - Rule of Law
 - Seat of the Synod
@@ -344,7 +344,6 @@
 | if an artifact would deal damage to you, prevent N of that damage. | 1 | Sphere of Purity | mrd |
 | if you would flip a coin, instead flip two coins and ignore one. | 1 | Krark's Thumb | mrd |
 | search your library for a nonland card and reveal it. each opponent who cast a spell ~ with the same name as that card loses N life. then shuffle. {M}{M}: retur | 1 | Grim Reminder | mrd |
-| spend only black mana on N. ~ deals N damage to any target and you gain N life. | 1 | Consume Spirit | mrd |
 | target permanent you control gains protection from artifacts or from the color of your choice until end of turn. | 1 | Razor Barrier | mrd |
 | target player discards two cards unless they discard an artifact card. | 1 | Wrench Mind | mrd |
 | unattach all equipment from target creature. | 1 | Disarm | mrd |
@@ -369,7 +368,6 @@
 | whenever ~ becomes blocked by an artifact creature, destroy that creature. | 1 | Ogre Leadfoot | mrd |
 | whenever ~ becomes blocked, regenerate it. | 1 | Duskworker | mrd |
 | whenever ~ deals combat damage to a creature, that creature's controller loses that much life. | 1 | Flayed Nim | mrd |
-| you can"..."t win the game. | 1 | Platinum Angel | mrd |
 | you can't cast creature spells. | 1 | Grid Monitor | mrd |
 | you control enchanted artifact creature. | 1 | Domineer | mrd |
 | {M}, sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Wizard Replica | mrd |

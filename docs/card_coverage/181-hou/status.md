@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 8.7% |
+| Tested | 17 | 9.3% |
 | Works (untested) | 96 | 52.5% |
 | Partial (unaudited) | 5 | 2.7% |
-| Not working | 66 | 36.1% |
+| Not working | 65 | 35.5% |
 
 ## Cards needing work
 
@@ -81,7 +81,6 @@
 | Vizier of the Anointed | silent | Whenever you activate an eternalize or embalm ability, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Vizier of the True | silent | Whenever you exert a creature, tap target creature an opponent controls. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Wildfire Eternal | silent | Whenever this creature attacks and isn't blocked, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blur of Blades | notice | Put a -1/-1 counter on target creature. Blur of Blades deals 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Doomfall | notice | Choose one — • Target opponent exiles a creature they control. • Target opponent reveals their hand. You choose a nonland card from it. Exile that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gideon's Defeat | notice | Exile target white creature that's attacking or blocking. If it was a Gideon planeswalker, you gain 5 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hour of Eternity | notice | Exile X target creature cards from your graveyard. For each card exiled this way, create a token that's a copy of that card, except it's a 4/4 black Zombie. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -197,9 +196,10 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Abrade
+- Blur of Blades
 - Chandra's Defeat
 - Claim // Fame
 - Desert of the True
@@ -247,7 +247,6 @@
 | exile target white creature that's attacking or blocking. if it was a gideon planeswalker, you gain N life. | 1 | Gideon's Defeat | hou |
 | gain control of target artifact, creature, or enchantment. lands you control don't untap during your next untap step. | 1 | Kefnet's Last Word | hou |
 | if a source would deal damage to a planeswalker you control, prevent N of that damage. | 1 | Djeru, With Eyes Open | hou |
-| put a -N/-N counter on target creature. ~ deals N damage to that creature's controller. | 1 | Blur of Blades | hou |
 | put three -N/-N counters on target creature. its controller loses N life unless they sacrifice another nonland permanent of their choice or discard a card. | 1 | Torment of Venom | hou |
 | repeat the following process N times. each opponent loses N life unless that player sacrifices a nonland permanent of their choice or discards a card. | 1 | Torment of Hailfire | hou |
 | search your library and graveyard for a card named forest, a card named brambleweft behemoth, and a card named nissa, genesis mage. reveal those cards, put them | 1 | Nissa's Encouragement | hou |

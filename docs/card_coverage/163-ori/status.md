@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 10.5% |
+| Tested | 20 | 11.0% |
 | Works (untested) | 103 | 56.9% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 52 | 28.7% |
+| Not working | 51 | 28.2% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | War Horn | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Willbreaker | silent | Whenever a creature an opponent controls becomes the target of a spell or ability you control, gain control of that creature for as long as you control this cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Demonic Pact | notice | At the beginning of your upkeep, choose one that hasn't been chosen — • This enchantment deals 4 damage to any target and you gain 4 life. • Target opponent dis | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Enshrouding Mist | notice | Target creature gets +1/+1 until end of turn. Prevent all damage that would be dealt to it this turn. If it's renowned, untap it. | unparsed remainder: Prevent all damage that would be dealt to it this turn. If it's renowned, untap it. | Y/Y/- | not_working |
 | Flameshadow Conjuring | notice | Whenever a nontoken creature you control enters, you may pay {R}. If you do, create a token that's a copy of that creature. That token gains haste. Exile it at  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Harbinger of the Tides | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Necromantic Summons | notice | Put target creature card from a graveyard onto the battlefield under your control. Spell mastery — If there are two or more instant and/or sorcery cards in your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -192,12 +191,13 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Alhammarret's Archive
 - Boggart Brute
 - Day's Undoing
 - Deep-Sea Terror
+- Enshrouding Mist
 - Evolutionary Leap
 - Exquisite Firecraft
 - Faerie Miscreant
@@ -251,7 +251,6 @@
 | scry N, then reveal the top card of your library. if it's a creature card, you draw cards equal to its power and you gain life equal to its toughness. | 1 | Nissa's Revelation | ori |
 | search your library for up to two basic forest cards, reveal those cards, and put one onto the battlefield tapped and the rest into your hand. then shuffle. spe | 1 | Nissa's Pilgrimage | ori |
 | tap up to two target creatures. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, those creatures don"..." next untap ste | 1 | Send to Sleep | ori |
-| target creature gets +N/+N until end of turn. prevent all damage that would be dealt to it ~. if it's renowned, untap it. | 1 | Enshrouding Mist | ori |
 | target creature you control deals damage equal to its power to each other creature and each opponent. | 1 | Chandra's Ignition | ori |
 | target creature you control gets +N/+N and gains deathtouch until end of turn. whenever a creature dealt damage by that creature dies ~, its controller loses N  | 1 | Touch of Moonglove | ori |
 | target opponent reveals the top seven cards of their library. you may cast an instant or sorcery spell from among them without paying its mana cost. then that p | 1 | Talent of the Telepath | ori |

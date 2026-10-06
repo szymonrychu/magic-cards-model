@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 61 | 22.0% |
+| Tested | 62 | 22.4% |
 | Works (untested) | 124 | 44.8% |
 | Partial (unaudited) | 12 | 4.3% |
-| Not working | 80 | 28.9% |
+| Not working | 79 | 28.5% |
 
 ## Cards needing work
 
@@ -67,7 +67,6 @@
 | Rabaroo Troop | silent | Landfall — Whenever a land you control enters, this creature gains flying until end of turn and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ran and Shaw | silent | When Ran and Shaw enter, if you cast them and there are three or more Dragon and/or Lesson cards in your graveyard, create a token that's a copy of Ran and Shaw | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Raven Eagle | silent | Whenever this creature enters or attacks, exile up to one target card from a graveyard. If a creature card is exiled this way, create a Clue token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Razor Rings | silent | Razor Rings deals 4 damage to target attacking or blocking creature. You gain life equal to the excess damage dealt this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ruinous Waterbending | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Secret Tunnel | silent | {4}, {T}: Two target creatures you control that share a creature type can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Secret of Bloodbending | silent | As an additional cost to cast this spell, you may waterbend {10}. You control target opponent during their next combat phase. If this spell's additional cost wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -246,7 +245,7 @@
 ## Fully supported
 
 <details>
-<summary>61 cards</summary>
+<summary>62 cards</summary>
 
 - Aang, Swift Savior // Aang and La, Ocean's Fury
 - Aang, at the Crossroads // Aang, Destined Savior
@@ -294,6 +293,7 @@
 - Ozai, the Phoenix King
 - Phoenix Fleet Airship
 - Price of Freedom
+- Razor Rings
 - Realm of Koh
 - Redirect Lightning
 - Rockalanche
@@ -398,7 +398,6 @@
 | ~ can't attack or block unless there are three or more lesson cards in your graveyard. | 1 | The Lion-Turtle | tla |
 | ~ can't attack or block unless you control another creature with power N or greater. | 1 | Tiger-Dillo | tla |
 | ~ costs {M} less to cast if it targets a creature with flying. | 1 | Swampsnare Trap | tla |
-| ~ deals N damage to target attacking or blocking creature. you gain life equal to the excess damage dealt ~. | 1 | Razor Rings | tla |
 | ~ gets +N/+N and has trample as long as you control a land creature or a land entered the battlefield under your control ~. | 1 | Earth Rumble Wrestlers | tla |
 | ~ gets +N/+N as long as there's a lesson card in your graveyard. | 1 | First-Time Flyer | tla |
 | ~ gets +N/+N as long as you've drawn two or more cards ~. | 1 | Messenger Hawk | tla |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 8.8% |
+| Tested | 17 | 10.6% |
 | Works (untested) | 89 | 55.6% |
 | Partial (unaudited) | 8 | 5.0% |
-| Not working | 49 | 30.6% |
+| Not working | 46 | 28.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Acolyte's Reward | silent | Prevent the next X damage that would be dealt to target creature this turn, where X is your devotion to white. If damage is prevented this way, Acolyte's Reward | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aerie Worshippers | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{U}. If you do, create a 2/2 blue Bird enchantment creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arbiter of the Ideal | silent | Inspired — Whenever this creature becomes untapped, reveal the top card of your library. If it's an artifact, creature, or land card, you may put it onto the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archetype of Aggression | silent | Creatures your opponents control lose trample and can't have or gain trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -58,7 +57,6 @@
 | Satyr Nyx-Smith | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{R}. If you do, create a 3/1 red Elemental enchantment creature token with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Servant of Tymaret | silent | Inspired — Whenever this creature becomes untapped, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siren of the Silent Song | silent | Inspired — Whenever this creature becomes untapped, each opponent discards a card, then each opponent mills a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Skyreaping | silent | Skyreaping deals damage to each creature with flying equal to your devotion to green. (Each {G} in the mana costs of permanents you control counts toward your d | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spiteful Returned | silent | Whenever this creature or enchanted creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sudden Storm | silent | Tap up to two target creatures. Those creatures don't untap during their controllers' next untap steps. Scry 1. (Look at the top card of your library. You may p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thassa's Rebuff | silent | Counter target spell unless its controller pays {X}, where X is your devotion to blue. (Each {U} in the mana costs of permanents you control counts toward your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -74,7 +72,6 @@
 | Ragemonger | notice | Minotaur spells you cast cost {B}{R} less to cast. This effect reduces only the amount of colored mana you pay. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Retraction Helix | notice | Until end of turn, target creature gains "{T}: Return target nonland permanent to its owner's hand." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Satyr Firedancer | notice | Whenever an instant or sorcery spell you control deals damage to an opponent, this creature deals that much damage to target creature that player controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Searing Blood | notice | Searing Blood deals 2 damage to target creature. When that creature dies this turn, Searing Blood deals 3 damage to the creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Archetype of Endurance | unaudited | Creatures your opponents control lose hexproof and can't have or gain hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Courser of Kruphix | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Floodtide Serpent | unaudited | This creature can't attack unless you return an enchantment you control to its owner's hand. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -176,8 +173,9 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>17 cards</summary>
 
+- Acolyte's Reward
 - Deepwater Hypnotist
 - Ephara, God of the Polis
 - Fate Unraveler
@@ -188,6 +186,8 @@
 - Ornitharch
 - Pain Seer
 - Satyr Wayfinder
+- Searing Blood
+- Skyreaping
 - Snake of the Golden Grove
 - Spirit of the Labyrinth
 - Temple of Enlightenment
@@ -219,7 +219,6 @@
 | exile target creature. create a gold token. (it's an artifact with "...") | 1 | Gild | bng |
 | minotaur spells you cast cost {M}{M} less to cast. ~ reduces only the amount of colored mana you pay. | 1 | Ragemonger | bng |
 | play with the top card of your library revealed. | 1 | Courser of Kruphix | bng |
-| prevent the next N damage that would be dealt to target creature ~, where N is your devotion to white. if damage is prevented ~, ~ deals that much damage to any | 1 | Acolyte's Reward | bng |
 | put target creature card from a graveyard onto the battlefield under your control. it gains indestructible. if it's your turn, scry N. | 1 | Fated Return | bng |
 | return all creatures to their owners' hands except for krakens, leviathans, octopuses, and serpents. | 1 | Whelming Wave | bng |
 | search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. shuffle, then scry | 1 | Peregrination | bng |
@@ -247,8 +246,6 @@
 | ~ can"..."s hand. | 1 | Floodtide Serpent | bng |
 | ~ can't attack or block alone. | 1 | Loyal Pegasus | bng |
 | ~ can't be blocked unless all creatures defending player controls block it. | 1 | Tromokratis | bng |
-| ~ deals N damage to target creature. when that creature dies ~, ~ deals N damage to the creature's controller. | 1 | Searing Blood | bng |
-| ~ deals damage to each creature with flying equal to your devotion to green. (each {M} in the mana costs of permanents you control counts toward your devotion t | 1 | Skyreaping | bng |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 11.1% |
-| Works (untested) | 94 | 37.2% |
+| Tested | 29 | 11.5% |
+| Works (untested) | 95 | 37.5% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 121 | 47.8% |
+| Not working | 119 | 47.0% |
 
 ## Cards needing work
 
@@ -104,7 +104,6 @@
 | Repository Skaab | silent | When this creature exploits a creature, return target instant or sorcery card from your graveyard to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Retrieve | silent | Return up to one target creature card and up to one target noncreature permanent card from your graveyard to your hand. Exile Retrieve. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rot-Tide Gargantua | silent | When this creature exploits a creature, each opponent sacrifices a creature of their choice. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Runebound Wolf | silent | {3}{R}, {T}: This creature deals damage equal to the number of Wolves and Werewolves you control to target opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Runo Stromkirk // Krothuss, Lord of the Deep | silent | At the beginning of your upkeep, look at the top card of your library. You may reveal that card. If a creature card with mana value 6 or greater is revealed thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rural Recruit | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sanguine Statuette | silent | Whenever you sacrifice a Blood token, you may have this artifact become a 3/3 Vampire artifact creature with haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -145,7 +144,6 @@
 | Reclusive Taxidermist | notice | This creature gets +3/+2 as long as there are four or more creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spiked Ripsaw | notice | Whenever equipped creature attacks, you may sacrifice a Forest. If you do, that creature gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Undying Malice | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Wedding Invitation | notice | {T}, Sacrifice this artifact: Target creature can't be blocked this turn. If it's a Vampire, it also gains lifelink until end of turn. | unparsed remainder: If it's a Vampire, it also gains lifelink until end of turn. | Y/Y/- | not_working |
 | Wolf Strike | notice | Target creature you control gets +2/+0 until end of turn if it's night. Then it deals damage equal to its power to target creature you don't control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ascendant Packleader | unaudited | This creature enters with a +1/+1 counter on it if you control a permanent with mana value 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Avabruck Caretaker // Hollowhenge Huntmaster | unaudited | Other permanents you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -246,6 +244,7 @@
 | Wandering Mind | handled | When this creature enters, look at the top six cards of your library. You may reveal a noncreature, nonland card from among them and put it into your hand. Put  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weary Prisoner // Wrathful Jailbreaker | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weaver of Blossoms // Blossom-Clad Werewolf | handled | Transform | no code needed | Y/Y/- | not_tested |
+| Wedding Invitation | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wedding Security | handled | Whenever this creature attacks, you may sacrifice a Blood token. If you do, put a +1/+1 counter on this creature and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Welcoming Vampire | handled | Whenever one or more other creatures you control with power 2 or less enter, draw a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whispering Wizard | handled | Whenever you cast a noncreature spell, create a 1/1 white Spirit creature token with flying. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -255,7 +254,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
@@ -277,6 +276,7 @@
 - Patchwork Crawler
 - Reckless Impulse
 - Rending Flame
+- Runebound Wolf
 - Sawblade Slinger
 - Screaming Swarm
 - Serpentine Ambush
@@ -382,14 +382,12 @@
 | whenever ~ or another zombie you control dies, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard | 1 | Archghoul of Thraben | vow |
 | whenever ~ trains, exile up to one other target creature from the battlefield or creature card from a graveyard. | 1 | Savior of Ollenbock | vow |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Oakshade Stalker // Moonlit Ambusher | vow |
-| {M}, sacrifice ~: target creature can"..."s a vampire, it also gains lifelink until end of turn. | 1 | Wedding Invitation | vow |
 | {M}, sacrifice ~: target creature gets -N/-N until end of turn, where N is twice the number of blood tokens you control. activate only as a sorcery. | 1 | Bloodtithe Harvester | vow |
 | {M}, {M}, exile a creature card from your graveyard: create a token that"..."s a N/N construct artifact in addition to its other types and it has "..." it gains | 1 | Dollhouse of Horrors | vow |
 | {M}, {M}, exile ~: exile all cards from all graveyards, then draw a card. | 1 | Lantern of the Lost | vow |
 | {M}, {M}, sacrifice another nontoken creature: create an N/N blue zombie creature token, where N is the sacrificed creature's toughness. | 1 | Geralf, Visionary Stitcher | vow |
 | {M}: draw a card, then exile a card from your hand face down. you may look at that card for as long as it remains exiled. you may pay {M}{M}{M}. if you do, tran | 1 | Jacob Hauken, Inspector // Hauken's Insight | vow |
 | {M}{M}, {M}: look at the top two cards of your library. put one of them into your graveyard. | 1 | Soulcipher Board // Cipherbound Spirit | vow |
-| {M}{M}, {M}: ~ deals damage equal to the number of wolves and werewolves you control to target opponent. | 1 | Runebound Wolf | vow |
 | {M}{M}{M}: each creature you control with flying, deathtouch, and/or lifelink gets +N/+N until end of turn. | 1 | Henrika Domnathi // Henrika, Infernal Seer | vow |
 | ~ can block only creatures with flying. | 1 | Wanderlight Spirit | vow |
 | ~ can't attack alone. | 1 | Militia Rallier | vow |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 12.2% |
-| Works (untested) | 127 | 41.8% |
+| Tested | 38 | 12.5% |
+| Works (untested) | 128 | 42.1% |
 | Partial (unaudited) | 15 | 4.9% |
-| Not working | 125 | 41.1% |
+| Not working | 123 | 40.5% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Auron's Inspiration | silent | Attacking creatures get +2/+0 until end of turn. Flashback {2}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bard's Bow | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Barret Wallace | silent | Whenever Barret Wallace attacks, it deals damage equal to the number of equipped creatures you control to defending player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Bartz and Boko | silent | When Bartz and Boko enters, each other Bird you control deals damage equal to its power to target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beatrix, Loyal General | silent | At the beginning of combat on your turn, you may attach any number of Equipment you control to target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Black Mage's Rod | silent | Equipped creature gets +1/+0, has "Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent," and is a Wizard in addition to its oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Blazing Bomb | silent | Blow Up — {T}, Sacrifice this creature: It deals damage equal to its power to target creature. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -43,7 +42,6 @@
 | Clive's Hideaway | silent | {2}, {T}: You may play the exiled card without paying its mana cost if you control four or more legendary creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cloud of Darkness | silent | Particle Beam — When Cloud of Darkness enters, target creature an opponent controls gets -X/-X until end of turn, where X is the number of permanent cards in yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cloud, Planet's Champion | silent | During your turn, as long as Cloud is equipped, it has double strike and indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Crystal Fragments // Summon: Alexander | silent | I, II — Prevent all damage that would be dealt to creatures you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dark Knight's Greatsword | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Deadly Embrace | silent | Destroy target creature an opponent controls. Then draw a card for each creature that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Demon Wall | silent | As long as this creature has a counter on it, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -192,6 +190,7 @@
 | Coral Sword | handled | When this Equipment enters, attach it to target creature you control. That creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cornered by Black Mages | handled | Target opponent sacrifices a creature of their choice. Create a 0/1 black Wizard creature token with "Whenever you cast a noncreature spell, this token deals 1  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Crossroads Village | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Crystal Fragments // Summon: Alexander | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Delivery Moogle | handled | When this creature enters, search your library and/or graveyard for an artifact card with mana value 2 or less, reveal it, and put it into your hand. If you sea | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diamond Weapon | handled | This spell costs {1} less to cast for each permanent card in your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dragoon's Wyvern | handled | When this creature enters, create a 1/1 colorless Hero creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -297,8 +296,9 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>38 cards</summary>
 
+- Bartz and Boko
 - Blitzball
 - Cactuar
 - Cargo Ship
@@ -419,7 +419,6 @@
 | mega flare — ~ deals damage equal to the total mana value of other permanents you control to each opponent. | 1 | Summon: Bahamut | fin |
 | neo exdeath's power is equal to the number of permanent cards in your graveyard. | 1 | Exdeath, Void Warlock // Neo Exdeath, Dimension's End | fin |
 | other permanents you control have "..." | 1 | A Realm Reborn | fin |
-| prevent all damage that would be dealt to creatures you control ~. | 1 | Crystal Fragments // Summon: Alexander | fin |
 | return each creature that isn"..."s hand. | 1 | Summon: Leviathan | fin |
 | return target creature card from your graveyard to the battlefield with two additional +N/+N counters on it. | 1 | Evil Reawakened | fin |
 | reveal the top five cards of your library. put one of them into your hand. then choose an opponent. they put one on the bottom of your library. then you put one | 1 | Memories Returning | fin |
@@ -437,7 +436,6 @@
 | two-headed coin — the first time you flip one or more coins each turn, those coins come up heads and you win those flips. | 1 | Edgar, King of Figaro | fin |
 | when zodiark enters, each player sacrifices half the non-god creatures they control of their choice, rounded down. | 1 | Zodiark, Umbral God | fin |
 | when ~ dies, put N +N/+N counters on each legendary creature you control, where N is the number of +N/+N counters on ~. | 1 | Aerith Gainsborough | fin |
-| when ~ enters, each other bird you control deals damage equal to its power to target creature an opponent controls. | 1 | Bartz and Boko | fin |
 | when ~ enters, mill four cards. you may put a land card from among them into your hand. if you put a town card into your hand ~, you gain N life. | 1 | Town Greeter | fin |
 | when ~ enters, you may return another permanent you control to its owner's hand. | 1 | Ambrosia Whiteheart | fin |
 | when ~ enters, you may search your library for a bird or basic land card, reveal it, put it into your hand, then shuffle. | 1 | Sazh Katzroy | fin |

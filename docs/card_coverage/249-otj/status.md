@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 11.6% |
-| Works (untested) | 129 | 49.8% |
+| Tested | 33 | 12.7% |
+| Works (untested) | 128 | 49.4% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 93 | 35.9% |
+| Not working | 91 | 35.1% |
 
 ## Cards needing work
 
@@ -111,13 +111,11 @@
 | Rustler Rampage | notice | Spree (Choose one or more additional costs.) + {1} — Untap all creatures target player controls. + {1} — Target creature gains double strike until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shepherd of the Clouds | notice | When this creature enters, return target permanent card with mana value 3 or less from your graveyard to your hand. Return that card to the battlefield instead  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shifting Grift | notice | Spree (Choose one or more additional costs.) + {2} — Exchange control of two target creatures. + {1} — Exchange control of two target artifacts. + {1} — Exchang | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Steer Clear | notice | Steer Clear deals 2 damage to target attacking or blocking creature. Steer Clear deals 4 damage to that creature instead if you controlled a Mount as you cast t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Stingerback Terror | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Stoic Sphinx | notice | This creature has hexproof as long as you haven't cast a spell this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Take for a Ride | notice | Take for a Ride has flash as long as you've committed a crime this turn. (Targeting opponents, anything they control, and/or cards in their graveyards is a crim | unparsed remainder: Take for a Ride has flash as long as you've committed a crime this turn. Untap that creature. It gains haste until end of turn. | Y/Y/Y | not_working |
 | Take the Fall | notice | Target creature gets -1/-0 until end of turn. It gets -4/-0 until end of turn instead if you control an outlaw. (Assassins, Mercenaries, Pirates, Rogues, and Wa | unparsed remainder: It gets -4/-0 until end of turn instead if you control an outlaw. Draw a card. | Y/Y/Y | not_working |
 | The Gitrog, Ravenous Ride | notice | Whenever The Gitrog deals combat damage to a player, you may sacrifice a creature that saddled it this turn. If you do, draw X cards, then put up to X land card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Throw from the Saddle | notice | Target creature you control gets +1/+1 until end of turn. Put a +1/+1 counter on it instead if it's a Mount. Then it deals damage equal to its power to target c | unparsed remainder: Put a +1/+1 counter on it instead if it's a Mount. Then it deals damage equal to its power to target creature you don't control. | Y/Y/Y | not_working |
 | Trash the Town | notice | Spree (Choose one or more additional costs.) + {2} — Put two +1/+1 counters on target creature. + {1} — Target creature gains trample until end of turn. + {1} — | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Doc Aurlock, Grizzled Genius | unaudited | Spells you cast from your graveyard or from exile cost {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Duelist of the Mind | unaudited | Duelist of the Mind's power is equal to the number of cards you've drawn this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -168,7 +166,6 @@
 | Form a Posse | handled | Create X 1/1 red Mercenary creature tokens with "{T}: Target creature you control gets +1/+0 until end of turn. Activate only as a sorcery." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Freestrider Lookout | handled | Whenever you commit a crime, look at the top five cards of your library. You may put a land card from among them onto the battlefield tapped. Put the rest on th | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frontier Seeker | handled | When this creature enters, look at the top five cards of your library. You may reveal a Mount creature card or a Plains card from among them and put it into you | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Giant Beaver | handled | Whenever this creature attacks while saddled, put a +1/+1 counter on target creature that saddled it this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gila Courser | handled | Whenever this creature attacks while saddled, exile the top card of your library. Until the end of your next turn, you may play that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gold Pan | handled | When this Equipment enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hardbristle Bandit | handled | Whenever you commit a crime, untap this creature. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -259,12 +256,13 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>33 cards</summary>
 
 - Armored Armadillo
 - Drover Grizzly
 - Final Showdown
 - Forsaken Miner
+- Giant Beaver
 - Gisa, the Hellraiser
 - Goldvein Hydra
 - Hell to Pay
@@ -289,8 +287,10 @@
 - Slickshot Show-Off
 - Slickshot Vault-Buster
 - Smuggler's Surprise
+- Steer Clear
 - Step Between Worlds
 - Three Steps Ahead
+- Throw from the Saddle
 
 </details>
 
@@ -330,7 +330,6 @@
 | target creature you control deals damage equal to its power to each of two other target creatures. | 1 | Betrayal at the Vault | otj |
 | target creature you control gains hexproof until end of turn. untap that creature. until end of turn, it becomes a copy of up to one other target creature. | 1 | Fleeting Reflection | otj |
 | target creature you control gets +N/+N and gains first strike until end of turn. creatures target opponent controls lose first strike and double strike until en | 1 | Quick Draw | otj |
-| target creature you control gets +N/+N until end of turn. put a +N/+N counter on it instead if it"..."t control. | 1 | Throw from the Saddle | otj |
 | target opponent reveals their hand. you may choose a nonland card from it. if you do, they discard it. otherwise, you may put a face-up exiled card they own int | 1 | Binding Negotiation | otj |
 | until end of turn, each creature you control gets +N/+N and gains trample and "..." | 1 | Full Steam Ahead | otj |
 | when ~ becomes plotted, it deals N damage to any target. | 1 | Longhorn Sharpshooter | otj |
@@ -387,7 +386,6 @@
 | {M}, {M}: put a +N/+N counter on each creature you control that entered ~. | 1 | Raucous Entertainer | otj |
 | {M}: ~ can't be blocked ~ except by creatures with haste. | 1 | Resilient Roadrunner | otj |
 | {M}{M}, sacrifice another creature: put a +N/+N counter on ~. if an outlaw was sacrificed ~, create a treasure token. | 1 | Boneyard Desecrator | otj |
-| ~ deals N damage to target attacking or blocking creature. ~ deals N damage to that creature instead if you controlled a mount as you cast ~. | 1 | Steer Clear | otj |
 | ~ deals N damage to target creature, where N is N plus the number of other spells you've cast ~. | 1 | Thunder Salvo | otj |
 | ~ enters with a +N/+N counter on it plus an additional +N/+N counter on it for each other creature you control. | 1 | Sheriff of Safe Passage | otj |
 | ~ enters with two +N/+N counters on it if it wasn't cast or no mana was spent to cast it. | 1 | Freestrider Commando | otj |

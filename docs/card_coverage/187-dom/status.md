@@ -17,18 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 10.4% |
-| Works (untested) | 128 | 55.7% |
+| Tested | 28 | 12.2% |
+| Works (untested) | 129 | 56.1% |
 | Partial (unaudited) | 20 | 8.7% |
-| Not working | 58 | 25.2% |
+| Not working | 53 | 23.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Ancient Animus | silent | Put a +1/+1 counter on target creature you control if it's legendary. Then it fights target creature an opponent controls. (Each deals damage equal to its power | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Darigaaz Reincarnated | silent | At the beginning of your upkeep, if this card is exiled with an egg counter on it, remove an egg counter from it. Then if this card has no egg counters on it, r | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dark Bargain | silent | Look at the top three cards of your library. Put two of them into your hand and the other into your graveyard. Dark Bargain deals 2 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dauntless Bodyguard | silent | Sacrifice this creature: The chosen creature gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deep Freeze | silent | Enchanted creature has base power and toughness 0/4, has defender, loses all other abilities, and is a blue Wall in addition to its other colors and types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Demonlord Belzenlok | silent | When Demonlord Belzenlok enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. If the card's mana  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -40,14 +38,12 @@
 | Ghitu Lavarunner | silent | As long as there are two or more instant and/or sorcery cards in your graveyard, this creature gets +1/+0 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gift of Growth | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Untap target creature. It gets +2/+2 until end of turn. If this spell was kicked, that creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Haphazard Bombardment | silent | When this enchantment enters, choose four nonenchantment permanents you don't control and put an aim counter on each of them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Healing Grace | silent | Prevent the next 3 damage that would be dealt to any target this turn by a source of your choice. You gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Helm of the Host | silent | At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jousting Lance | silent | During your turn, equipped creature has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kamahl's Druidic Vow | silent | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Look at the top X cards of your library. You may put any number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karn's Temporal Sundering | silent | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Target player takes an extra turn after this one. Return up to one  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karn, Scion of Urza | silent | +1: Reveal the top two cards of your library. An opponent chooses one of them. Put that card into your hand and exile the other with a silver counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kwende, Pride of Femeref | silent | Creatures you control with first strike have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lich's Mastery | silent | Whenever you lose life, for each 1 life you lost, exile a permanent you control or a card from your hand or graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Navigator's Compass | silent | {T}: Until end of turn, target land you control becomes the basic land type of your choice in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Niambi, Faithful Healer | silent | When Niambi enters, you may search your library and/or graveyard for a card named Teferi, Timebender, reveal it, and put it into your hand. If you search your l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | On Serra's Wings | silent | Enchanted creature is legendary, gets +1/+1, and has flying, vigilance, and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -73,7 +69,6 @@
 | Urza's Tome | silent | {3}, {T}: Draw a card. Then discard a card unless you exile a historic card from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warcry Phoenix | silent | Whenever you attack with three or more creatures, you may pay {2}{R}. If you do, return this card from your graveyard to the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Benalish Honor Guard | notice | This creature gets +1/+0 for each legendary creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Blessing of Belzenlok | notice | Target creature gets +2/+1 until end of turn. If it's legendary, it also gains lifelink until end of turn. | unparsed remainder: If it's legendary, it also gains lifelink until end of turn. | Y/Y/- | not_working |
 | Champion of the Flame | notice | This creature gets +2/+2 for each Aura and Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chandra's Outburst | notice | Chandra's Outburst deals 4 damage to target player or planeswalker. Search your library and/or graveyard for a card named Chandra, Bold Pyromancer, reveal it, a | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Corrosive Ooze | notice | Whenever this creature blocks or becomes blocked by an equipped creature, destroy all Equipment attached to that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -132,6 +127,7 @@
 | Cold-Water Snapper | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | D'Avenant Trapper | handled | Whenever you cast a historic spell, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daring Archaeologist | handled | When this creature enters, you may return target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dark Bargain | handled | Look at the top three cards of your library. Put two of them into your hand and the other into your graveyard. Dark Bargain deals 2 damage to you. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathbloom Thallid | handled | When this creature dies, create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Demonic Vigor | handled | Enchanted creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Diligent Excavator | handled | Whenever you cast a historic spell, target player mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -236,22 +232,26 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>28 cards</summary>
 
 - Adamant Will
 - Adventurous Impulse
+- Ancient Animus
 - Arvad the Cursed
+- Blessing of Belzenlok
 - Bloodstone Goblin
 - Cabal Stronghold
 - Damping Sphere
 - Gaea's Protector
 - Grand Warlord Radha
 - Hallar, the Firefletcher
+- Healing Grace
 - History of Benalia
 - Jaya Ballard
 - Josu Vess, Lich Knight
 - Knight of Grace
 - Knight of Malice
+- Lich's Mastery
 - Marwyn, the Nurturer
 - Mox Amber
 - Naban, Dean of Iteration
@@ -301,16 +301,12 @@
 | if grunn was kicked, it enters with five +N/+N counters on it. | 1 | Grunn, the Lonely King | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) untap target creature. it gets +N/+N until end of turn. if ~ was kicked, that creature gets +N/+N unti | 1 | Gift of Growth | dom |
-| look at the top three cards of your library. put two of them into your hand and the other into your graveyard. ~ deals N damage to you. | 1 | Dark Bargain | dom |
-| prevent the next N damage that would be dealt to any target ~ by a source of your choice. you gain N life. | 1 | Healing Grace | dom |
-| put a +N/+N counter on target creature you control if it's legendary. then it fights target creature an opponent controls. (each deals damage equal to its power | 1 | Ancient Animus | dom |
 | return all land cards from your graveyard to the battlefield, then shuffle your graveyard into your library. | 1 | The Mending of Dominaria | dom |
 | return all tapped creatures to their owners' hands. | 1 | Time of Ice | dom |
 | sacrifice a mountain. if you do, ~ deals N damage to each creature. | 1 | The First Eruption | dom |
 | sacrifice ~: the chosen creature gains indestructible until end of turn. | 1 | Dauntless Bodyguard | dom |
 | search your library for two cards. put one into your hand and the other into your graveyard. then shuffle. | 1 | Final Parting | dom |
 | shanna can't be the target of abilities your opponents control. | 1 | Shanna, Sisay's Legacy | dom |
-| target creature gets +N/+N until end of turn. if it's legendary, it also gains lifelink until end of turn. | 1 | Blessing of Belzenlok | dom |
 | target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | 1 | Triumph of Gerrard | dom |
 | traxos enters tapped and doesn't untap during your untap step. | 1 | Traxos, Scourge of Kroog | dom |
 | until your next turn, all lands you control become N/N elemental creatures with reach, indestructible, and haste. they're still lands. | 1 | Sylvan Awakening | dom |
@@ -323,7 +319,6 @@
 | when ~ enters, tap target creature an opponent controls. it loses all abilities until end of turn. | 1 | Merfolk Trickster | dom |
 | whenever urgoros deals combat damage to a player, that player discards a card at random. if the player can't, you draw a card. | 1 | Urgoros, the Empty One | dom |
 | whenever you attack with three or more creatures, you may pay {M}{M}. if you do, return ~ from your graveyard to the battlefield tapped and attacking. | 1 | Warcry Phoenix | dom |
-| whenever you lose life, for each N life you lost, exile a permanent you control or a card from your hand or graveyard. | 1 | Lich's Mastery | dom |
 | whenever ~ attacks, flip two coins. if both coins come up heads, ~ gains double strike until end of turn. if both coins come up tails, ~ gains menace until end  | 1 | Two-Headed Giant | dom |
 | whenever ~ blocks or becomes blocked by an equipped creature, destroy all equipment attached to that creature at end of combat. | 1 | Corrosive Ooze | dom |
 | you may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once. | 1 | Oath of Teferi | dom |

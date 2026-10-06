@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 27.6% |
-| Works (untested) | 57 | 49.1% |
+| Tested | 33 | 28.4% |
+| Works (untested) | 56 | 48.3% |
 | Partial (unaudited) | 3 | 2.6% |
 | Not working | 24 | 20.7% |
 
@@ -65,7 +65,6 @@
 | Flight | handled | Enchanted creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fungusaur | handled | Whenever this creature is dealt damage, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Balloon Brigade | handled | {R}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Healing Salve | handled | Choose one — • Target player gains 3 life. • Prevent the next 3 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Holy Strength | handled | Enchanted creature gets +1/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Howling Mine | handled | At the beginning of each player's draw step, if this artifact is untapped, that player draws an additional card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Iron Star | handled | Whenever a player casts a red spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -114,7 +113,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>33 cards</summary>
 
 - Birds of Paradise
 - Black Knight
@@ -129,6 +128,7 @@
 - Giant Growth
 - Giant Spider
 - Grizzly Bears
+- Healing Salve
 - Hill Giant
 - Hurricane
 - Icy Manipulator

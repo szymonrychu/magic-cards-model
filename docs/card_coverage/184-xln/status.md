@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.8% |
+| Tested | 25 | 10.2% |
 | Works (untested) | 158 | 64.5% |
 | Partial (unaudited) | 14 | 5.7% |
-| Not working | 49 | 20.0% |
+| Not working | 48 | 19.6% |
 
 ## Cards needing work
 
@@ -66,7 +66,6 @@
 | Vance's Blasting Cannons // Spitfire Bastion | silent | At the beginning of your upkeep, exile the top card of your library. If it's a nonland card, you may cast that card this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wakening Sun's Avatar | silent | When this creature enters, if you cast it from your hand, destroy all non-Dinosaur creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wildgrowth Walker | silent | Whenever a creature you control explores, put a +1/+1 counter on this creature and you gain 3 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Blinding Fog | notice | Prevent all damage that would be dealt to creatures this turn. Creatures you control gain hexproof until end of turn. (They can't be the targets of spells or ab | unparsed remainder: Prevent all damage that would be dealt to creatures this turn. | Y/Y/- | not_working |
 | Drover of the Mighty | notice | This creature gets +2/+2 as long as you control a Dinosaur. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emergent Growth | notice | Target creature gets +5/+5 until end of turn and must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kumena's Speaker | notice | This creature gets +1/+1 as long as you control another Merfolk or an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -251,11 +250,12 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Admiral Beckett Brass
 - Arguel's Blood Fast // Temple of Aclazotz
 - Bellowing Aegisaur
+- Blinding Fog
 - Captivating Crew
 - Carnage Tyrant
 - Colossal Dreadmaw
@@ -307,7 +307,6 @@
 | explore | 1 | Deadeye Tracker | xln |
 | gain control of target creature with mana value N. | 1 | Entrancing Melody | xln |
 | players can't cast spells from graveyards or activate abilities of cards in graveyards. | 1 | Ashes of the Abhorrent | xln |
-| prevent all damage that would be dealt to creatures ~. creatures you control gain hexproof until end of turn. (they can't be the targets of spells or abilities  | 1 | Blinding Fog | xln |
 | put a +N/+N counter on target creature and a +N/+N counter on up to one target merfolk. | 1 | River Heralds' Boon | xln |
 | return a pirate card from your graveyard to your hand, then do the same for vampire, dinosaur, and merfolk. | 1 | Grim Captain's Call | xln |
 | return all nonland permanents target player controls to their owner's hand. | 1 | River's Rebuke | xln |

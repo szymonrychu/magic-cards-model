@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 14.3% |
+| Tested | 32 | 15.2% |
 | Works (untested) | 97 | 46.2% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 68 | 32.4% |
+| Not working | 66 | 31.4% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Bellowing Elk | silent | As long as you had another creature enter the battlefield under your control this turn, this creature has trample and indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudshredder Sliver | silent | Sliver creatures you control have flying and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Collected Conjuring | silent | Exile the top six cards of your library. You may cast up to two sorcery spells with mana value 3 or less from among them without paying their mana costs. Put th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Conifer Wurm | silent | {3}{G}: This creature gets +X/+X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cunning Evasion | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Dead of Winter | silent | All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Face of Divinity | silent | As long as another Aura is attached to enchanted creature, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -55,7 +54,6 @@
 | Orcish Hellraiser | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Phantasmal Form | silent | Until end of turn, up to two target creatures each have base power and toughness 3/3, gain flying, and become blue Illusions in addition to their other colors a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Plague Engineer | silent | Creatures of the chosen type your opponents control get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pyrophobia | silent | Pyrophobia deals 3 damage to target creature. Cowards can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quakefoot Cyclops | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reap the Past | silent | Return X cards at random from your graveyard to your hand. Exile Reap the Past. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Recruit the Worthy | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -210,10 +208,11 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>32 cards</summary>
 
 - Changeling Outcast
 - Collector Ouphe
+- Conifer Wurm
 - Ephemerate
 - Everdream
 - Fiery Islet
@@ -228,6 +227,7 @@
 - Martyr's Soul
 - Nurturing Peatland
 - Pondering Mage
+- Pyrophobia
 - Ranger-Captain of Eos
 - Return from Extinction
 - Seasoned Pyromancer
@@ -313,11 +313,9 @@
 | {M}: shuffle your library, then exile the top card. until end of turn, you may play that card without paying its mana cost. | 1 | Urza, Lord High Artificer | mh1 |
 | {M}: ~ can attack ~ as though it didn't have defender. | 1 | Wall of One Thousand Cuts | mh1 |
 | {M}{M}, exile ~ from your graveyard: search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Trustworthy Scout | mh1 |
-| {M}{M}: ~ gets +N/+N until end of turn, where N is the number of snow permanents you control. | 1 | Conifer Wurm | mh1 |
 | {M}{M}{M}, exile a creature card from your graveyard: create a N/N green spider creature token with reach, then each opponent loses N life for each spider you c | 1 | Rotwidow Pack | mh1 |
 | ~ costs {M} less to cast for each creature type among creatures you control. ~ can't reduce the amount of mana ~ costs by more than {M}. | 1 | Valiant Changeling | mh1 |
 | ~ costs {M} less to cast if there is a land card in your graveyard. | 1 | Igneous Elemental | mh1 |
-| ~ deals N damage to target creature. cowards can't block ~. | 1 | Pyrophobia | mh1 |
 | ~ gets +N/+N as long as there is a land card in your graveyard. | 1 | Murasa Behemoth | mh1 |
 | ~ gets +N/+N as long as you had another creature enter the battlefield under your control ~. | 1 | Saddled Rimestag | mh1 |
 | ~ gets +N/+N as long as you've drawn two or more cards ~. | 1 | Eyekite | mh1 |

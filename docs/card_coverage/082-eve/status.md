@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 7.8% |
+| Tested | 15 | 8.4% |
 | Works (untested) | 91 | 50.8% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 70 | 39.1% |
+| Not working | 69 | 38.5% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Duergar Mine-Captain | silent | {1}{R/W}, {Q}: Attacking creatures get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Edge of the Divinity | silent | As long as enchanted creature is white, it gets +1/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Endless Horizons | silent | When this enchantment enters, search your library for any number of Plains cards, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Endure | silent | Prevent all damage that would be dealt to you and permanents you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Favor of the Overbeing | silent | As long as enchanted creature is green, it gets +1/+1 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiery Bombardment | silent | Chroma — {2}, Sacrifice a creature: This enchantment deals damage to any target equal to the number of red mana symbols in the sacrificed creature's mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flame Jab | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -195,7 +194,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Antler Skulkin
 - Batwing Brume
@@ -203,6 +202,7 @@
 - Chaotic Backlash
 - Divinity of Pride
 - Duergar Hedge-Mage
+- Endure
 - Figure of Destiny
 - Flickerwisp
 - Flooded Grove
@@ -244,7 +244,6 @@
 | other green creatures you control get +N/+N. | 1 | Murkfiend Liege | eve |
 | other red creatures you control get +N/+N. | 1 | Balefire Liege | eve |
 | other white creatures you control get +N/+N. | 1 | Deathbringer Liege | eve |
-| prevent all damage that would be dealt to you and permanents you control ~. | 1 | Endure | eve |
 | return all nonblue creatures to their owners' hands. | 1 | Inundate | eve |
 | sacrifice ~: it deals damage equal to its power to target creature with flying. | 1 | Aerie Ouphes | eve |
 | search target player's library for up to N cards, where N is the number of swamps you control, and exile them. then that player shuffles. | 1 | Nightmare Incursion | eve |

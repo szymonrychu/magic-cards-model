@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 14.2% |
+| Tested | 26 | 15.4% |
 | Works (untested) | 61 | 36.1% |
 | Partial (unaudited) | 4 | 2.4% |
-| Not working | 80 | 47.3% |
+| Not working | 78 | 46.2% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Biomantic Mastery | silent | Draw a card for each creature target player controls, then draw a card for each creature another target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blessing of the Nephilim | silent | Enchanted creature gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bond of Agony | silent | As an additional cost to cast this spell, pay X life. Each other player loses X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Brace for Impact | silent | Prevent all damage that would be dealt to target multicolored creature this turn. For each 1 damage prevented this way, put a +1/+1 counter on that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brain Pry | silent | Choose a nonland card name. Target player reveals their hand. That player discards a card with that name. If they can't, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bronze Bombshell | silent | When a player other than this creature's owner controls it, that player sacrifices it. If the player does, this creature deals 7 damage to the player. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Condemn | silent | Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -69,7 +68,6 @@
 | Odds // Ends | silent | Flip a coin. If it comes up heads, counter target instant or sorcery spell. If it comes up tails, copy that spell and you may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pain Magnification | silent | Whenever an opponent is dealt 3 or more damage by a single source, that player discards a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Paladin of Prahv | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Palliation Accord | silent | Remove a palliation counter from this enchantment: Prevent the next 1 damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Plaxcaster Frogling | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Protean Hulk | silent | When this creature dies, search your library for any number of creature cards with total mana value 6 or less, put them onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pure // Simple | silent | Destroy all Auras and Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -175,13 +173,14 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>26 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
 - Azorius Ploy
 - Blood Crypt
 - Bound // Determined
+- Brace for Impact
 - Breeding Pool
 - Carom
 - Coiling Oracle
@@ -191,6 +190,7 @@
 - Grand Arbiter Augustin IV
 - Guardian of the Guildpact
 - Hallowed Fountain
+- Palliation Accord
 - Prahv, Spires of Order
 - Pride of the Clouds
 - Psychic Possession
@@ -232,10 +232,8 @@
 | flip a coin. if it comes up heads, counter target instant or sorcery spell. if it comes up tails, copy that spell and you may choose new targets for the copy. | 1 | Odds // Ends | dis |
 | gain control of target monocolored creature. forecast — {M}{M}, reveal ~ from your hand: target creature becomes the color or colors of your choice until end of | 1 | Govern the Guildless | dis |
 | if a spell or ability would cause its controller to gain life, that player loses that much life instead. | 1 | Rain of Gore | dis |
-| prevent all damage that would be dealt to target multicolored creature ~. for each N damage prevented ~, put a +N/+N counter on that creature. | 1 | Brace for Impact | dis |
 | put target artifact or enchantment on the bottom of its owner's library. | 1 | Hide // Seek | dis |
 | put target attacking creature on the bottom of its owner's library. its controller gains life equal to its toughness. | 1 | Condemn | dis |
-| remove a palliation counter from ~: prevent the next N damage that would be dealt to you ~. | 1 | Palliation Accord | dis |
 | return all creatures blocking or blocked by target creature to their owner's hand. | 1 | Trial // Error | dis |
 | return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | 1 | Rise // Fall | dis |
 | reveal a card from your hand. search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. hellbent — if you  | 1 | Infernal Tutor | dis |
