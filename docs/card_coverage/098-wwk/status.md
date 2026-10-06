@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 13 | 9.2% |
-| Works (untested) | 60 | 42.3% |
+| Works (untested) | 61 | 43.0% |
 | Partial (unaudited) | 15 | 10.6% |
-| Not working | 54 | 38.0% |
+| Not working | 53 | 37.3% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Comet Storm | silent | Multikicker {1} (You may pay an additional {1} any number of times as you cast this spell.) Choose any target, then choose another target for each time this spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deathforge Shaman | silent | When this creature enters, it deals damage to target player or planeswalker equal to twice the number of times it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Halimar Excavator | silent | Whenever this creature or another Ally you control enters, target player mills X cards, where X is the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Harabaz Druid | silent | {T}: Add X mana of any one color, where X is the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Joraga Warcaller | silent | Other Elf creatures you control get +1/+1 for each +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jwari Shapeshifter | silent | You may have this creature enter as a copy of any Ally creature on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kazuul, Tyrant of the Cliffs | silent | Whenever a creature an opponent controls attacks, if you're the defending player, create a 3/3 red Ogre creature token unless that creature's controller pays {3 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,6 +116,7 @@
 | Hada Freeblade | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Halimar Depths | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hammer of Ruin | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Harabaz Druid | handled |  |  | Y/-/- | not_tested |
 | Hedron Rover | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Horizon Drake | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Iona's Judgment | handled | Exile target creature or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -235,7 +235,6 @@
 | you can"..."t lose the game. | 1 | Abyssal Persecutor | wwk |
 | you may have ~ enter as a copy of any ally creature on the battlefield. | 1 | Jwari Shapeshifter | wwk |
 | you may put target creature card from your graveyard on top of your library. if you do, ~ deals damage equal to that card's power to target creature. | 1 | Dead Reckoning | wwk |
-| {M}: add N mana of any one color, where N is the number of allies you control. | 1 | Harabaz Druid | wwk |
 | {M}: put target creature card from an opponent's graveyard onto the battlefield under your control if its mana value is less than or equal to the number of alli | 1 | Agadeem Occultist | wwk |
 | {M}: target land you control becomes an N/N elemental creature until end of turn, where N is the number of allies you control. it's still a land. | 1 | Vastwood Animist | wwk |
 | {M}: target player gains control of target artifact, creature, or land you control. | 1 | Bazaar Trader | wwk |

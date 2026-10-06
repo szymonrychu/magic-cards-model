@@ -27,6 +27,7 @@ from magic_cards_model.machines.decisions import (
     CardSplit,
     Decision,
     DecisionKind,
+    NamedManaAbility,
     ScriptedAnswer,
 )
 from magic_cards_model.machines.objects_as_costs import waterbend
@@ -882,6 +883,7 @@ class PlayedScenario:
         source: str | None = None,
         times: int | None = 1,
         sources: Sequence[CardState] | None = None,
+        mana_abilities: Sequence[NamedManaAbility] | None = None,
     ) -> None:
         """Answer the next "unless its controller pays {N}" (CR 118.12a, CR
         608.2d) - Censor's and Mystical Dispute's shape.
@@ -890,8 +892,17 @@ class PlayedScenario:
         the payer's untapped mana sources cannot cover it (CR 118.3, CR
         608.2g). `sources` names which mana sources to activate while paying;
         left out, the engine chooses them the way `CostPayment.auto_tap` does.
+        `mana_abilities` names mana abilities of any cost to activate too
+        (CR 605.3a - Vivi Ornitier's `{0}`), each by its source and index.
         """
-        value: object = paid if sources is None else tuple(state.id for state in sources)
+        value: object = (
+            paid
+            if sources is None and mana_abilities is None
+            else (
+                *(state.id for state in sources or ()),
+                *(mana_abilities or ()),
+            )
+        )
         self._queue(DecisionKind.PAY_MANA, value, username, source, times)
 
     def will_pay_energy_amount(

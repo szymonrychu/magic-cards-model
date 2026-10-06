@@ -1123,6 +1123,28 @@ def _demand_list(
     return demands
 
 
+def _kept(amounts: dict[Color, int], keep: frozenset[Color]) -> dict[Color, int]:
+    """The part of a per-colour tally whose colour a CR 614.1a "don't lose"
+    replacement keeps (`ManaPool.empty`)."""
+    return {color: amount for color, amount in amounts.items() if color in keep and amount}
+
+
+def _recoloured(
+    amounts: dict[Color, int], lost: dict[Color, int], becomes: Color
+) -> dict[Color, int]:
+    """A per-colour tally after the mana `lost` would have lost became
+    `becomes` instead (`ManaPool.empty`): up to the lost amount of each colour
+    moves to the new colour, whatever retained mana is left of it stays."""
+    moved: dict[Color, int] = {}
+    for color, amount in amounts.items():
+        shift = min(amount, lost.get(color, 0))
+        if amount - shift:
+            moved[color] = moved.get(color, 0) + amount - shift
+        if shift:
+            moved[becomes] = moved.get(becomes, 0) + shift
+    return moved
+
+
 class ManaPool(EngineModel):
     """Mana floating in a player's pool.
 
@@ -1251,7 +1273,13 @@ class ManaPool(EngineModel):
                 creature=creature,
             )
 
-    def empty(self, *, expiring: frozenset[ManaRetentionScope] = frozenset()) -> None:
+    def empty(
+        self,
+        *,
+        expiring: frozenset[ManaRetentionScope] = frozenset(),
+        keep: frozenset[Color] = frozenset(),
+        becomes: Color | None = None,
+    ) -> None:
         """Empty the pool, as happens when each step and phase ends.
 
         CR 703.4q and CR 500.5: "as each step or phase ends, any unspent mana
@@ -1266,18 +1294,62 @@ class ManaPool(EngineModel):
         them empties too, along with everything ordinary. A scope left out of
         `expiring` keeps its mana floating, still spendable exactly like
         ordinary mana, until a later call names it.
+
+        `keep` and `becomes` are what replaced the loss of the rest (CR
+        614.1a, `machines/unspent_mana.settle_mana_loss`): mana of a colour in
+        `keep` is not lost at all and stays exactly as it is ("You don't lose
+        unspent red mana as steps and phases end"), and whatever would still
+        be lost becomes `becomes` instead ("If you would lose unspent mana,
+        that mana becomes black instead"). The printings' rulings keep a
+        restriction or rider with mana that changes colour, so every tag
+        travels with it to the new colour.
         """
         surviving = [entry for entry in self.retained if entry.until not in expiring]
-        floating: dict[Color, int] = {}
+        survived: dict[Color, int] = {}
         for entry in surviving:
             for color, amount in entry.amounts.items():
-                floating[color] = floating.get(color, 0) + amount
-        self.floating = floating
-        self.snow = {}
-        self.treasure = {}
-        self.creature = {}
-        self.restricted = []
-        self.spend_effects = []
+                survived[color] = survived.get(color, 0) + amount
+        if not keep and becomes is None:
+            self.floating = survived
+            self.snow = {}
+            self.treasure = {}
+            self.creature = {}
+            self.restricted = []
+            self.spend_effects = []
+            self.retained = surviving
+            return
+        lost = {
+            color: amount - survived.get(color, 0)
+            for color, amount in self.floating.items()
+            if color not in keep and amount - survived.get(color, 0) > 0
+        }
+        if becomes is None or not lost:
+            floating = {
+                color: amount if color in keep else survived.get(color, 0)
+                for color, amount in self.floating.items()
+            }
+            self.floating = {color: amount for color, amount in floating.items() if amount}
+            self.snow = _kept(self.snow, keep)
+            self.treasure = _kept(self.treasure, keep)
+            self.creature = _kept(self.creature, keep)
+            for tagged in (*self.restricted, *self.spend_effects):
+                tagged.amounts = _kept(tagged.amounts, keep)
+            self.restricted = [entry for entry in self.restricted if entry.amounts]
+            self.spend_effects = [entry for entry in self.spend_effects if entry.amounts]
+            # An expired retention's tag goes even where the mana stays: what
+            # keeps that mana now is the static, not the retention.
+            self.retained = surviving
+            return
+        floating = {color: amount for color, amount in self.floating.items() if color not in lost}
+        for color, amount in lost.items():
+            floating[color] = floating.get(color, 0) + (self.floating[color] - amount)
+        floating[becomes] = floating.get(becomes, 0) + sum(lost.values())
+        self.floating = {color: amount for color, amount in floating.items() if amount}
+        self.snow = _recoloured(self.snow, lost, becomes)
+        self.treasure = _recoloured(self.treasure, lost, becomes)
+        self.creature = _recoloured(self.creature, lost, becomes)
+        for tagged in (*self.restricted, *self.spend_effects):
+            tagged.amounts = _recoloured(tagged.amounts, lost, becomes)
         self.retained = surviving
 
     def _entry_for(self, restriction: ManaRestriction) -> RestrictedMana:

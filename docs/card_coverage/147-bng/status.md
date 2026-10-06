@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 8.8% |
-| Works (untested) | 88 | 55.0% |
+| Works (untested) | 89 | 55.6% |
 | Partial (unaudited) | 8 | 5.0% |
-| Not working | 50 | 31.2% |
+| Not working | 49 | 30.6% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Archetype of Courage | silent | Creatures your opponents control lose first strike and can't have or gain first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archetype of Finality | silent | Creatures your opponents control lose deathtouch and can't have or gain deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archetype of Imagination | silent | Creatures your opponents control lose flying and can't have or gain flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Astral Cornucopia | silent | {T}: Choose a color. Add one mana of that color for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brimaz, King of Oreskos | silent | Whenever Brimaz attacks, create a 1/1 white Cat Soldier creature token with vigilance that's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eidolon of Countless Battles | silent | This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ephara's Enlightenment | silent | When this Aura enters, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -89,6 +88,7 @@
 | Akroan Skyguard | handled | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ashiok's Adept | handled | Heroic — Whenever you cast a spell that targets this creature, each opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Asphyxiate | handled | Destroy target untapped creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Astral Cornucopia | handled | This artifact enters with X charge counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bile Blight | handled | Target creature and all other creatures with the same name as that creature get -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Black Oak of Odunos | handled | {B}, Tap another untapped creature you control: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bolt of Keranos | handled | Bolt of Keranos deals 3 damage to any target. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -241,7 +241,6 @@
 | whenever enchanted creature attacks, it gets +N/+N until end of turn, where N is your devotion to red. | 1 | Thunderous Might | bng |
 | whenever ~ or enchanted creature attacks, defending player loses N life. | 1 | Spiteful Returned | bng |
 | you draw N cards and you lose N life, where N is your devotion to black. (each {M} in the mana costs of permanents you control counts toward your devotion to bl | 1 | Sanguimancy | bng |
-| {M}: choose a color. add one mana of that color for each charge counter on ~. | 1 | Astral Cornucopia | bng |
 | {M}: put ~ and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | 1 | Vortex Elemental | bng |
 | {M}: ~ gets +N/+N until end of turn. if it's an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Everflame Eidolon | bng |
 | ~ and enchanted creature each get +N/+N for each creature you control and +N/+N for each aura you control. | 1 | Eidolon of Countless Battles | bng |

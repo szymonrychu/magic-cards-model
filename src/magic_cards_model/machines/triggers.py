@@ -7189,6 +7189,11 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
         ability
         for ability in parse_abilities(card)
         if isinstance(ability, TriggeredAbility)
+        # CR 721.2a: a station striation's trigger is granted by the symbol's
+        # static ability (`layers._station_symbol_effects`) and is found
+        # through `added_ability_lines` while the counters reach N - never as
+        # a printed ability the permanent always has.
+        and ability.station_threshold is None
         # An ability the parser could not file under a `TriggerEvent` is kept
         # when this module can read its condition anyway (`_unread_trigger_
         # events`) - it is matched from the printed condition rather than from
@@ -7720,7 +7725,11 @@ def activated_abilities_of(card: Card, face: str | None = None) -> list[Activate
     printed = [
         ability
         for ability in parse_abilities(card)
-        if isinstance(ability, ActivatedAbility) and (face is None or ability.face == face)
+        if isinstance(ability, ActivatedAbility)
+        and (face is None or ability.face == face)
+        # CR 721.2a: granted by the station symbol's static ability at N
+        # charge counters, and found then through `added_ability_lines`.
+        and ability.station_threshold is None
     ]
     result = printed or ([intrinsic] if (intrinsic := intrinsic_land_ability(card, face)) else [])
     _activated_abilities_cache[key] = result

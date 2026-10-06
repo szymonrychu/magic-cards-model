@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 8.6% |
-| Works (untested) | 107 | 39.9% |
+| Tested | 28 | 10.4% |
+| Works (untested) | 103 | 38.4% |
 | Partial (unaudited) | 27 | 10.1% |
-| Not working | 111 | 41.4% |
+| Not working | 110 | 41.0% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Evangelize | silent | Buyback {2}{W}{W} (You may pay an additional {2}{W}{W} as you cast this spell. If you do, put this card into your hand as it resolves.) Gain control of target c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Evil Eye of Urborg | silent | Whenever this creature becomes blocked by a creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faceless Devourer | silent | When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fallen Ideal | silent | Enchanted creature has flying and "Sacrifice a creature: This creature gets +2/+1 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Firemaw Kavu | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Firewake Sliver | silent | All Sliver creatures have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flamecore Elemental | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -175,7 +174,6 @@
 | Bogardan Hellkite | handled | When this creature enters, it deals 5 damage divided as you choose among any number of targets. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bogardan Rager | handled | When this creature enters, target creature gets +4/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brass Gnat | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Calciform Pools | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Call to the Netherworld | handled | Return target black creature card from your graveyard to your hand. Madness {0} (If you discard this card, discard it into exile. When you do, cast it for its m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cancel | handled | Counter target spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Careful Consideration | handled | Target player draws four cards, then discards three cards. If you cast this spell during your main phase, instead that player draws four cards, then discards tw | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -191,13 +189,13 @@
 | Deep-Sea Kraken | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Draining Whelk | handled | When this creature enters, counter target spell. Put X +1/+1 counters on this creature, where X is that spell's mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dread Return | handled | Return target creature card from your graveyard to the battlefield. Flashback—Sacrifice three creatures. (You may cast this card from your graveyard for its fla | the engine reads this text and performs it | Y/-/- | not_tested |
-| Dreadship Reef | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drudge Reavers | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Durkwood Baloth | handled | Suspend | machines/casting.py (MarkedExile.suspend, finish_suspend) | Y/-/- | not_tested |
 | Duskrider Peregrine | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Errant Doomsayers | handled | {T}: Tap target creature with toughness 2 or less. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Errant Ephemeron | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Eternity Snare | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Fallen Ideal | handled | Enchanted creature has flying and "Sacrifice a creature: This creature gets +2/+1 until end of turn." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fathom Seer | handled | When this creature is turned face up, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feebleness | handled | Enchanted creature gets -2/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fledgling Mawcor | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -206,7 +204,6 @@
 | Fool's Demise | handled | When enchanted creature dies, return that card to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fortify | handled | Choose one — • Creatures you control get +2/+0 until end of turn. • Creatures you control get +0/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fortune Thief | handled | Damage that would reduce your life total to less than 1 reduces it to 1 instead. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Fungal Reaches | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gaze of Justice | handled | As an additional cost to cast this spell, tap three untapped white creatures you control. Exile target creature. Flashback {5}{W} (You may cast this card from y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greenseeker | handled | {G}, {T}, Discard a card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Guide | handled | Enchanted creature gets +2/+2 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -226,7 +223,6 @@
 | Might of Old Krosa | handled | Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindstab | handled | Target player discards three cards. Suspend 4—{B} (Rather than cast this card from your hand, you may pay {B} and exile it with four time counters on it. At the | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molder | handled | Destroy target artifact or enchantment with mana value X. It can't be regenerated. You gain X life. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Molten Slagheap | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Momentary Blink | handled | Exile target creature you control, then return it to the battlefield under its owner's control. Flashback {3}{U} (You may cast this card from your graveyard for | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mwonvuli Acid-Moss | handled | Destroy target land. Search your library for a Forest card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nantuko Shaman | handled | When this creature enters, if you control no tapped lands, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -240,7 +236,6 @@
 | Return to Dust | handled | Exile target artifact or enchantment. If you cast this spell during your main phase, you may exile up to one other target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Riftwing Cloudskate | handled | When this creature enters, return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sage of Epityr | handled | When this creature enters, look at the top four cards of your library, then put them back in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Saltcrusted Steppe | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scarwood Treefolk | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scryb Ranger | handled | Return a Forest you control to its owner's hand: Untap target creature. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Search for Tomorrow | handled | Search your library for a basic land card, put it onto the battlefield, then shuffle. Suspend 2—{G} (Rather than cast this card from your hand, you may pay {G}  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -275,25 +270,30 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>28 cards</summary>
 
 - Ancestral Vision
 - Assembly-Worker
 - Brine Elemental
+- Calciform Pools
 - Children of Korlis
 - Coal Stoker
+- Dreadship Reef
 - Empty the Warrens
 - Flagstones of Trokair
+- Fungal Reaches
 - Gemstone Caverns
 - Grapeshot
 - Greater Gargadon
 - Krosan Grip
 - Living End
 - Lotus Bloom
+- Molten Slagheap
 - Mystical Teachings
 - Opal Guardian
 - Pit Keeper
 - Rift Bolt
+- Saltcrusted Steppe
 - Snapback
 - Sudden Shock
 - Sudden Spoiling
@@ -338,7 +338,6 @@
 | each fungus creature gets +N/+N for each spore counter on it. | 1 | Thelon of Havenwood | tsp |
 | each player loses N life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | 1 | Smallpox | tsp |
 | enchanted creature gets +N/+N, has reach, and can block creatures with shadow as though they didn't have shadow. | 1 | Aether Web | tsp |
-| enchanted creature has flying and "..." | 1 | Fallen Ideal | tsp |
 | enchanted creature has protection from the chosen color. ~ doesn't remove ~. | 1 | Pentarch Ward | tsp |
 | if a spell would deal damage to a permanent or player, prevent N damage that spell would deal to that permanent or player. | 1 | Plated Pegasus | tsp |
 | if damage would be dealt to dralnu, sacrifice that many permanents instead. | 1 | Dralnu, Lich Lord | tsp |

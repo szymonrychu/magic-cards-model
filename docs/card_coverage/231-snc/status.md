@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 27 | 10.7% |
-| Works (untested) | 134 | 53.0% |
+| Works (untested) | 135 | 53.4% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 82 | 32.4% |
+| Not working | 81 | 32.0% |
 
 ## Cards needing work
 
@@ -84,7 +84,6 @@
 | Shakedown Heavy | silent | Whenever this creature attacks, defending player may have you draw a card. If they do, untap this creature and remove it from combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Snooping Newsie | silent | As long as there are five or more mana values among cards in your graveyard, this creature gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soul of Emancipation | silent | When this creature enters, destroy up to three other target nonland permanents. For each of those permanents, its controller creates a 3/3 white Angel creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sticky Fingers | silent | Enchanted creature has menace and "Whenever this creature deals combat damage to a player, create a Treasure token." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Structural Assault | silent | Destroy all artifacts, then Structural Assault deals damage to each creature equal to the number of artifacts that were put into graveyards from the battlefield | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Syndicate Infiltrator | silent | As long as there are five or more mana values among cards in your graveyard, this creature gets +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tenacious Underdog | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -234,6 +233,7 @@
 | Spara's Adjudicators | handled | When this creature enters, target creature an opponent controls can't attack or block until your next turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spara's Headquarters | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Speakeasy Server | handled | When this creature enters, you gain 1 life for each other creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sticky Fingers | handled | Enchanted creature has menace and "Whenever this creature deals combat damage to a player, create a Treasure token." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stimulus Package | handled | When this enchantment enters, create two Treasure tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strangle | handled | Strangle deals 3 damage to target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swooping Protector | handled | This creature enters with a shield counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -323,7 +323,6 @@
 | each other angel you control enters with an additional +N/+N counter on it for each angel you already control. | 1 | Giada, Font of Hope | snc |
 | each player who controls a multicolored creature draws a card. then destroy all creatures. | 1 | Depopulate | snc |
 | enchanted creature can"..."s controller sacrifices it and draws a card. activate only as a sorcery." | 1 | Hold for Ransom | snc |
-| enchanted creature has menace and "..." | 1 | Sticky Fingers | snc |
 | enchanted creature loses all abilities and is a green and white citizen creature with base power and toughness N/N named legitimate businessperson. | 1 | Witness Protection | snc |
 | equipped creature gets +N/+N for each counter on it. | 1 | Luxior, Giada's Gift | snc |
 | exile the top ten cards of your library. you may cast spells with exactly three colors from among them ~. add {M}{M}{M}{M}{M}{M}{M}{M}{M}{M}. spend ~ only to ca | 1 | Meeting of the Five | snc |

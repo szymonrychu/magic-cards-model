@@ -20,9 +20,11 @@ blocker ate all 13 damage and the defending player took none).
 
 The fix is the vocabulary, not the all-or-nothing rule: the permanent's own
 keyword abilities join it, so `protection` is a word the reader knows and the
-line parses whole. The all-or-nothing rule has to stay, because Extinguisher
-Battleship's "5+ | Flying, trample" is CR 721.2a's station symbol and half of
-that line is a grant the card does not make. What a line the reader still
+line parses whole. The all-or-nothing rule has to stay: a line half of which
+is not a keyword (Nevinyrral's "Hexproof from artifacts, creatures, and
+enchantments") must not hand out the half that is. A station symbol's line
+("5+ | Flying, trample", CR 721.2a) is no longer such a line - it is read as
+the station static ability it is (`layers._station_symbol_effects`). What a line the reader still
 cannot take whole gets now is a `KeywordLineNotice` - the same "unreadable is
 not the same as no effect" record `EvasionNotice` and `UndefinedPowerNotice`
 keep - instead of vanishing with nothing said.
@@ -148,15 +150,15 @@ def test_a_face_down_permanent_has_none_of_the_line():
     assert (turtle.power, turtle.toughness) == (2, 2)
 
 
-def test_a_station_line_is_not_read_and_says_so():
+def test_a_station_line_grants_nothing_below_its_threshold_and_is_read():
     """Extinguisher Battleship: "5+ | Flying, trample".
 
     CR 721.2a: "{N+}[abilities]" means "As long as this permanent has N or more
-    charge counters on it, it has [abilities]." Keeping the `trample` this
-    reader can match while dropping the `5+ |` it cannot would grant
-    unconditionally what the card grants at five charge counters, so the whole
-    line is still dropped - and a `KeywordLineNotice` says which token stopped
-    it, which is the half that was missing.
+    charge counters on it, it has [abilities]." With no charge counters the
+    Battleship has neither keyword - the station symbol is never read as an
+    unconditional keyword line - and, since the line is now read as the
+    station static ability it is (`tests/scenarios/test_station.py` covers it
+    at five), no `KeywordLineNotice` claims it went unread.
     """
     scenario = Scenario().player("alice", battlefield=["Extinguisher Battleship"]).build()
     battleship = scenario.find("Extinguisher Battleship", Zone.BATTLEFIELD)
@@ -164,11 +166,7 @@ def test_a_station_line_is_not_read_and_says_so():
     assert not has_keyword(battleship, "trample", scenario.game), "CR 721.2a: only at 5+"
     assert not has_keyword(battleship, "flying", scenario.game)
 
-    (notice,) = scenario.game.keyword_line_notices
-    assert notice.source_id == battleship.id
-    assert notice.source_name == "Extinguisher Battleship"
-    assert notice.text == "5+ | Flying, trample"
-    assert notice.unread == ("5+ | Flying",)
+    assert not scenario.game.keyword_line_notices
 
 
 def test_a_hexproof_from_list_is_not_read_and_says_so():

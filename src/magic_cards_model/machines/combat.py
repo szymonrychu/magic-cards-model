@@ -326,10 +326,10 @@ class KeywordLineNotice(EngineModel):
     `machines/abilities.py::_parse_keywords` is all-or-nothing on purpose: a
     line is CR 702.1's "only the name of the ability as a keyword" repeated, or
     it is not a keyword line at all, and reading half of one would grant an
-    ability the card does not have unconditionally. Extinguisher Battleship's
-    "5+ | Flying, trample" is exactly that trap - CR 721.2a makes the whole line
-    conditional on five charge counters, so keeping the `trample` off it would
-    be a fabricated grant.
+    ability the card does not have. Nevinyrral, Urborg Tyrant's "Hexproof from
+    artifacts, creatures, and enchantments" is that trap (CR 702.11f). A
+    station symbol's line ("5+ | Flying, trample", CR 721.2a) never reaches
+    this record: it is read as the station static ability it is.
 
     Dropping the line is therefore right; dropping it silently is not. This is
     the record that says which tokens went unread, the same "unreadable is not

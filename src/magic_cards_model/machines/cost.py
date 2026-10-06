@@ -91,9 +91,11 @@ from .abilities import (
     ManaAbility,
     granted_mana_abilities,
     intrinsic_land_ability,
+    one_named_color,
     parse_abilities,
     parse_mana_abilities,
     parse_triggered_mana,
+    resolve_mana_count_expression,
 )
 from .combat import Keyword, has_keyword
 from .triggers import (
@@ -1119,6 +1121,197 @@ def _mana_narrowings(
     return {"could_produce_colors": could_produce_colors, "chosen_color": chosen_color}
 
 
+def mana_ability_count(
+    game: Any,
+    permanent: CardState,
+    mana: ManaAbility,
+    color: "Color | Sequence[Color] | str | None" = None,
+    controller: str | None = None,
+    *,
+    x_value: int | None = None,
+    sacrificed_ids: Sequence[UUID] = (),
+) -> int | None:
+    """How many mana `mana` adds if it resolves now, where the board decides
+    it, else `None` (a printed amount, which `ManaAbility.resolve` already
+    knows).
+
+    CR 700.5's devotion to the colour `color` names (Nykthos), or the "where
+    X is ..." / "for each ..." / "equal to ..." count (`resolve_mana_count_
+    expression`) - with `x_value` the X announced for a "Remove any number of
+    counters" cost (CR 107.3a) and `sacrificed_ids` what the activation cost
+    sacrificed. This is the one reading `Game.activate_ability` resolves with,
+    and the one a caller naming a source's mana before it is tapped should ask
+    (CR 605.3b).
+    """
+    controller = controller or game.controller_of(permanent).username
+    if mana.amount_from_devotion:
+        from .effects import devotion_to
+
+        devotion_color = one_named_color(color)
+        if devotion_color is None:
+            return None
+        return devotion_to(game, controller, devotion_color)
+    expression = mana.any_color_count_expression or mana.for_each_expression
+    if expression is None:
+        return None
+    return resolve_mana_count_expression(
+        game, controller, permanent, expression, x_value, sacrificed_ids
+    )
+
+
+def mana_ability_most(
+    game: Any, permanent: CardState, index: int = 0, controller: str | None = None
+) -> int | None:
+    """The most `mana_ability_count` could be for this ability if it were
+    activated now, over the choices its own cost leaves open - every counter
+    a "Remove any number of `<kind>` counters" cost could remove (CR 107.3a's
+    announced X, bounded by the counters there), each permanent its sacrifice
+    cost could take (CR 118.3). `None` where the board decides no count (a
+    printed amount, or devotion with no colour named). For a caller
+    describing a source before paying with it; the activation itself counts
+    what was actually paid.
+    """
+    mana = game.activated_abilities(permanent)[index].mana
+    if mana is None:
+        return None
+    controller = controller or game.controller_of(permanent).username
+    cost = game.activation_cost(permanent, index, controller)
+    x_value: int | None = None
+    sacrifices: list[CardState] = []
+    for component in cost.components:
+        if component.kind is ComponentKind.REMOVE_COUNTERS and component.variable_count:
+            x_value = permanent.counter_count(component.counter_kind)
+        elif component.kind is ComponentKind.SACRIFICE:
+            sacrifices = list(game._cost_candidates(component, controller) or [])
+    if not sacrifices:
+        return mana_ability_count(game, permanent, mana, None, controller, x_value=x_value)
+    counts = [
+        mana_ability_count(
+            game, permanent, mana, None, controller, x_value=x_value, sacrificed_ids=(state.id,)
+        )
+        for state in sacrifices
+    ]
+    known = [count for count in counts if count is not None]
+    return max(known) if known else None
+
+
+def counted_mana_options(
+    game: Any,
+    payer: str | None,
+    source: CardState,
+    ability: ManaAbility,
+    options: list[list[Color]],
+) -> tuple[list[list[Color]], int | None]:
+    """`options` scaled to the amount `ability` would really add if it
+    resolved now (CR 605.3b), and that amount - `None` for a printed one.
+
+    `ManaAbility.effective` answers *what* an ability makes; a count the board
+    decides - "Add {C} for each charge counter on this artifact"
+    (`for_each_expression`), "X mana of any one color, where X is ..."
+    (`any_color_count_expression`), CR 700.5's devotion
+    (`amount_from_devotion`) - is left at its one-mana placeholder there, and
+    a payment plan built on the placeholder over- or under-taps. This is the
+    same count `Game.activate_ability` passes to `ManaAbility.resolve`, read
+    through the same `resolve_mana_count_expression` / `devotion_to`, so what
+    a plan counts on is what the tap adds. A count of zero leaves no option at
+    all: CR 605.2 keeps it a mana ability, but it is no mana source now.
+    """
+    expression = ability.for_each_expression or ability.any_color_count_expression
+    if game is None or (expression is None and not ability.amount_from_devotion):
+        return options, None
+    controller = source.controller or payer
+    if controller is None:
+        return options, None
+    if ability.amount_from_devotion:
+        from .effects import devotion_to
+
+        counted = []
+        for option in options:
+            if not option:
+                continue
+            amount = devotion_to(game, controller, option[0])
+            if amount > 0:
+                counted.append([option[0]] * amount)
+        return counted, None
+    assert expression is not None
+    # `x_value` stays unset: a plan pays no "Remove any number of counters"
+    # cost, and only bare-`{T}` abilities are planned at all.
+    amount = resolve_mana_count_expression(game, controller, source, expression)
+    if amount <= 0:
+        return [], 0
+    if ability.for_each_expression is not None:
+        return [list(option) * amount for option in options], amount
+    return [[option[0]] * amount for option in options if option], amount
+
+
+class MixedProduction(list[Color]):
+    """One activation of "Add N mana in any combination of <colours>" as an
+    auto-tap candidate: N mana, each of its own colour among `palette`
+    (CR 106.1a's five for "colors", the printed ones for "{U} and/or {R}").
+
+    The solver's other alternatives are whole productions - "two mana of any
+    one color" is five of them, `[[W, W], [U, U], ...]` - but a mixture's
+    productions are every multiset of N over the palette, which is 126 at
+    five mana and unbounded for a count the board decides. So it is carried
+    as one alternative the flow network can express directly: a provider of
+    capacity N with an edge of capacity N to every palette colour, which is
+    exactly "N mana, each its own colour" (`_bucket_map`), and the split is
+    read back off the flow (`_chosen_alternative`). The list itself holds N
+    mana of the palette's first colour, so a caller that only reads it as a
+    production (`_flexibility`, the life-loss replay) still sees a legal one.
+    """
+
+    palette: tuple[Color, ...]
+
+    def __init__(self, palette: Sequence[Color], count: int) -> None:
+        super().__init__([palette[0]] * count)
+        self.palette = tuple(palette)
+
+    def __eq__(self, other: object) -> bool:
+        # Two mixtures are the same alternative only over the same palette;
+        # the list content alone (N of the first colour) cannot tell "{U}
+        # and/or {R}" from "{U} and/or {B}".
+        if isinstance(other, MixedProduction):
+            return self.palette == other.palette and len(self) == len(other)
+        if isinstance(other, list):
+            return False
+        return NotImplemented
+
+    def splits(self) -> list[list[Color]]:
+        """Every production this mixture offers, spelled out - for a caller
+        that must see each one (the brute-force oracle, a replacement or
+        triggered mana ability that depends on what was produced)."""
+        return [list(split) for split in combinations_with_replacement(self.palette, len(self))]
+
+    def split_from(self, used: dict[Color, int]) -> list[Color]:
+        """The production a flow solution's per-colour use names: what it
+        spent of each colour, the rest of the N padded with the first
+        palette colour (unspent mana floats, CR 106.4a)."""
+        colors = [color for color in self.palette for _ in range(used.get(color, 0))]
+        return colors + [self.palette[0]] * (len(self) - len(colors))
+
+
+def _mixed_options(options: list[list[Color]]) -> list[list[Color]]:
+    """A mixed ability's `options` (`[[c] * n for c in palette]`, already
+    narrowed and counted) as the one `MixedProduction` they stand for. One
+    mana is already a plain choice of colour, and nothing to mix."""
+    if not options or len(options[0]) <= 1:
+        return options
+    palette = list(dict.fromkeys(option[0] for option in options if option))
+    return [MixedProduction(palette, len(options[0]))]
+
+
+def _spelled_out(options: list[list[Color]]) -> list[list[Color]]:
+    """`options` with every `MixedProduction` expanded to its splits."""
+    spelled: list[list[Color]] = []
+    for option in options:
+        if isinstance(option, MixedProduction):
+            spelled.extend(option.splits())
+        else:
+            spelled.append(option)
+    return spelled
+
+
 #: One thing `auto_tap` may tap: the permanent, what its chosen ability would
 #: add right now, and the CR 106.6 restriction that mana would carry.
 _Candidate = tuple[CardState, list[list[Color]], ManaRestriction | None]
@@ -1380,6 +1573,10 @@ def _unreplaced_production(
         options, _any = _narrow_to_defined_colors(
             options, any_color, _among_colors(activation.effect, context, source)
         )
+        options, _amount = counted_mana_options(game, context.payer, source, ability, options)
+        if ability.any_color_mixed:
+            # Every split of a mixture is a production it offers.
+            options = _spelled_out(_mixed_options(options))
         productions.extend(options)
     wanted = list(wanted)
     for cut in range(len(wanted), 0, -1):
@@ -1466,8 +1663,20 @@ def _scan_mana_candidates(
             options, any_color = _narrow_to_defined_colors(
                 options, any_color, _among_colors(activation.effect, payment, source)
             )
+            options, _amount = counted_mana_options(
+                payment.game, payment.payer, source, ability, options
+            )
             if not options:
                 continue
+            if ability.any_color_mixed:
+                # "N mana in any combination of <colours>": one mixed
+                # alternative, not N of a single colour (CR 106.1a).
+                options = _mixed_options(options)
+                any_color = True
+            if production_effects or trigger_sources:
+                # What a replacement or a triggered mana ability does depends
+                # on the production itself, so each split is asked separately.
+                options = _spelled_out(options)
             if production_effects:
                 options = _replaced_options(payment, source, options, production_effects)
             if trigger_sources:
@@ -1826,7 +2035,10 @@ def _solve_auto_tap_brute_force(
         return []
 
     sources = list(sources)
-    candidates = _auto_tap_candidates(context, sources)
+    candidates = [
+        (source, _spelled_out(options), restriction)
+        for source, options, restriction in _auto_tap_candidates(context, sources)
+    ]
     max_size = min(len(candidates), max(1, owed.converted))
 
     for size in range(1, max_size + 1):
@@ -1938,6 +2150,13 @@ def _is_exotic(alternatives: list[_Alternative]) -> bool:
     one option of that choice is more than one mana - Shang-Chi's is the only
     card in this pool shaped that way.
     """
+    if any(isinstance(option, MixedProduction) for option, _restriction in alternatives):
+        # A mixture is expressible as edges (`_bucket_map`), but it is still
+        # branched over: tapping it makes all N mana at once, so a plan that
+        # commits it is offered its whole capacity first (committed sources
+        # are inserted ahead of the rest) and never taps a land beside it for
+        # mana it would have floated anyway.
+        return True
     return len(alternatives) > 1 and any(len(option) > 1 for option, _restriction in alternatives)
 
 
@@ -1976,6 +2195,15 @@ def _bucket_map(
     of them being spent at once.
     """
     snow = is_snow_source(source, game)
+    if len(alternatives) == 1 and isinstance(alternatives[0][0], MixedProduction):
+        # N mana, each its own colour: capacity N, any colour of the palette
+        # for every one of them.
+        mixture, restriction = alternatives[0]
+        slot = _slot_for(restriction, registry)
+        count = len(mixture)
+        return {
+            (color, snow, slot, NO_SPEND_EFFECT, NOT_RETAINED): count for color in mixture.palette
+        }, count
     if len(alternatives) <= 1:
         option, restriction = alternatives[0] if alternatives else ([], None)
         slot = _slot_for(restriction, registry)
@@ -2026,6 +2254,11 @@ def _chosen_alternative(
         if not alternatives:
             return [], None
         option, restriction = alternatives[0]
+        if isinstance(option, MixedProduction):
+            spent: dict[Color, int] = {}
+            for bucket, amount in used.items():
+                spent[bucket[0]] = spent.get(bucket[0], 0) + amount
+            return option.split_from(spent), restriction
         return list(option), restriction
     for option, restriction in alternatives:
         slot = _slot_for(restriction, registry)
@@ -2072,10 +2305,12 @@ def _exotic_choice_combos(
         for option, restriction in alternatives:
             colors = set(option)
             if (
-                len(colors) == 1
+                not isinstance(option, MixedProduction)
+                and len(colors) == 1
                 and not colors & wanted
                 and any(
-                    len(kept) == len(option)
+                    not isinstance(kept, MixedProduction)
+                    and len(kept) == len(option)
                     and kept_restriction == restriction
                     and len(set(kept)) == 1
                     and not set(kept) & wanted
@@ -6480,7 +6715,9 @@ def restriction_for_production(
         spend_restriction(activation.effect)
         for _index, activation in tappable_mana_activations(source, game)
         if activation.mana is not None
-        for option in activation.mana.effective()[0]
+        for option in counted_mana_options(
+            game, None, source, activation.mana, activation.mana.effective()[0]
+        )[0]
         if sorted(option) == wanted
     ]
     if not matches or any(restriction is None for restriction in matches):
@@ -6577,7 +6814,16 @@ def _activated_mana_ability(
     for ability in abilities:
         behind = _activation_behind(activations, ability)
         effect = behind[1].effect if behind is not None else ""
-        if behind is not None and [piece.kind for piece in behind[1].costs] == [CostKind.TAP]:
+        if behind is not None and [piece.kind for piece in behind[1].costs] != [CostKind.TAP]:
+            # A tap is all this path pays (CR 602.2b): an ability whose cost
+            # is more than `{T}` - Cabal Stronghold's `{3}, {T}` - is the
+            # player's to activate with its whole cost (CR 605.3a), never
+            # one a bare tap may stand in for.
+            refusals.append(
+                f'its "{behind[1].cost}" ability costs more than {{T}}; activate it to pay that'
+            )
+            continue
+        if behind is not None:
             # CR 602.5, asked of the ability actually being activated: a
             # prohibited activation is refused however the source was
             # chosen. Only a bare-`{T}` ability is asked, because that is
@@ -6604,7 +6850,8 @@ def _activated_mana_ability(
         options, any_color = _narrow_to_defined_colors(
             offered, any_color, _among_colors(effect, context, source)
         )
-        if ability.offers(list(produces), options, any_color):
+        options, amount = counted_mana_options(game, context.payer, source, ability, options)
+        if ability.offers(list(produces), options, any_color, amount=amount):
             match = _ActivatedMana(behind[0] if behind is not None else None, ability)
             if activated is None:
                 activated = match
@@ -6699,6 +6946,38 @@ def mana_ability_index(
     except ValueError:
         return None
     return activated.index if activated is not None else None
+
+
+def _activation_moves_library_card(ability: Any) -> bool:
+    """CR 605.1a's library criterion, asked of `models/game.py`'s own reader."""
+    from ..models.game import moves_a_library_card
+
+    return moves_a_library_card(ability)
+
+
+def _activation_bookkeeping_restore(
+    game: Any, key: str, activations_before: int | None, exhausted_before: set[str]
+) -> None:
+    """Put `Game.activations[key]` and `Game.exhausted` back as they were
+    before an activation that is being reversed (CR 733.1)."""
+    if activations_before is None:
+        game.activations.pop(key, None)
+    else:
+        game.activations[key] = activations_before
+    game.exhausted.intersection_update(exhausted_before)
+
+
+def _mana_pool_overwrite(target: ManaPool, contents: ManaPool) -> None:
+    """Give `target` exactly `contents`' mana, tags included, without
+    aliasing either pool to the other."""
+    copied = _copy_pool(contents)
+    target.floating = copied.floating
+    target.snow = copied.snow
+    target.treasure = copied.treasure
+    target.creature = copied.creature
+    target.restricted = copied.restricted
+    target.spend_effects = copied.spend_effects
+    target.retained = copied.retained
 
 
 def _copy_pool(pool: ManaPool) -> ManaPool:
@@ -6922,6 +7201,17 @@ class CostPayment(EngineModel):
     A `PrivateAttr`, so it does not survive a dump/decode round trip -
     `_restore_payer_pool` refuses loudly rather than silently restoring
     nothing when that matters (see its own docstring)."""
+
+    _nested: list[tuple["CostPayment", UUID, str, int | None, frozenset[str]]] = PrivateAttr(
+        default_factory=list
+    )
+    """The mana abilities `activate_mana_ability` activated during this
+    payment, oldest first, for CR 733.1's reversal (`_undo_nested_activations`):
+    each activation's own paid payment, its source's id, its
+    `Game.activations` key and that key's count and `Game.exhausted` as they
+    stood before. Like `_tapped_sources` it holds live objects and does not
+    survive a dump/decode round trip; a payment is never persisted
+    mid-activation."""
 
     _tapped_sources: dict[UUID, CardState] = PrivateAttr(default_factory=dict)
     """The live objects behind `tapped_for_mana`'s ids, for the one case that
@@ -7303,6 +7593,129 @@ class CostPayment(EngineModel):
                 ability.id for ability in self.game.pending_triggers if id(ability) not in waiting
             )
         return self.pool
+
+    def activate_mana_ability(
+        self,
+        source: CardState,
+        index: int,
+        *,
+        color: Color | Sequence[Color] | None = None,
+        x_value: int = 0,
+    ) -> ManaPool:
+        """Activate `source`'s mana ability number `index` in the middle of
+        this payment, whatever its cost, and put its mana into the pool.
+
+        CR 605.3a: a player may activate a mana ability "whenever they are
+        casting a spell or activating an ability that requires a mana
+        payment"; CR 605.3 has it follow CR 602.2's activation rules, so its
+        own cost is paid in full - Vivi Ornitier's `{0}`, Rakdos Signet's
+        `{1}, {T}`, Lotus Petal's `{T}, Sacrifice this artifact`. `tap_for_mana`
+        is the bare-`{T}` case of this (CR 106.12) and stays the path for it.
+
+        The activation runs through the game's own `begin_activating` /
+        `activate_ability`, so every refusal is the engine's own: an ability
+        that is not a mana ability (CR 605.1a), one prohibited right now ("only
+        once each turn", CR 602.5b), a colour the ability does not offer, a
+        cost that cannot be paid. A mana cost on the ability is paid out of
+        the mana already in this payment's pool (CR 601.2g: that pool *is* the
+        player's mana pool while the payment is open) - name the sources that
+        pay for it first. A refusal leaves the payment exactly as it was.
+
+        `color` is the choice the ability offers (`Game.activate_ability`'s own
+        argument), `x_value` an X its cost announces (CR 107.3a).
+
+        CR 733.1: rewinding or cancelling this payment undoes the activation
+        too - its cost is unpaid, its bookkeeping ("once each turn") taken
+        back, and its mana dies with the payment's pool.
+        """
+        self._require_open()
+        game = self.game
+        if game is None or self.payer is None:
+            raise ValueError("a mana ability can only be activated in a payment inside a game")
+        abilities = game.activated_abilities(source)
+        if not 0 <= index < len(abilities):
+            raise ValueError(
+                f"{source.name} has no ability {index}: it has {len(abilities)} activated "
+                f"{'ability' if len(abilities) == 1 else 'abilities'}"
+            )
+        ability = abilities[index]
+        if (
+            ability.mana is None
+            or ability.loyalty is not None
+            or _activation_moves_library_card(ability)
+        ):
+            raise ValueError(
+                f"{source.name}'s ability {index} ({ability.text}) is not a mana ability "
+                "(CR 605.1a), so it cannot be activated while paying a cost (CR 605.3a)"
+            )
+        player = game.player(self.payer)
+        own_pool = _copy_pool(player.mana_pool)
+        key = game._activation_key(source, index)  # noqa: SLF001
+        activations_before = game.activations.get(key)
+        exhausted_before = set(game.exhausted)
+        waiting = {id(pending) for pending in game.pending_triggers}
+        # The working pool becomes the player's pool for the activation, so
+        # its cost spends the mana this payment already has and its mana
+        # lands beside it; the player's own pool is put back afterwards.
+        _mana_pool_overwrite(player.mana_pool, self.pool)
+        inner: CostPayment | None = None
+        game._holding_mana_triggers = True  # noqa: SLF001
+        try:
+            inner = game.begin_activating(source, index, self.payer, x_value=x_value)
+            if inner.shortfall:
+                raise ValueError(
+                    f"{source.name}'s mana ability costs {inner.cost}, and the mana already "
+                    f"in the pool cannot pay it - activate the sources that pay for it first "
+                    "(CR 605.3a, CR 601.2g)"
+                )
+            inner.pay()
+            game.activate_ability(source, index, self.payer, color=color, x_value=x_value)
+        except ValueError:
+            if inner is not None:
+                inner.rewind()
+            _activation_bookkeeping_restore(game, key, activations_before, exhausted_before)
+            _mana_pool_overwrite(player.mana_pool, own_pool)
+            self._register_pool()
+            raise
+        finally:
+            game._holding_mana_triggers = False  # noqa: SLF001
+        self._transition(CostStep.TAPPING)
+        _mana_pool_overwrite(self.pool, player.mana_pool)
+        _mana_pool_overwrite(player.mana_pool, own_pool)
+        self._register_pool()
+        assert inner is not None
+        self._nested.append(
+            (inner, source.id, key, activations_before, frozenset(exhausted_before))
+        )
+        self.triggers_caused.extend(
+            pending.id for pending in game.pending_triggers if id(pending) not in waiting
+        )
+        return self.pool
+
+    @property
+    def mana_abilities_activated(self) -> list[UUID]:
+        """The sources whose mana abilities `activate_mana_ability` activated
+        during this payment, oldest first - the any-cost twin of
+        `tapped_for_mana`, for a caller reporting what paid."""
+        return [source_id for _payment, source_id, *_rest in self._nested]
+
+    def _undo_nested_activations(self) -> None:
+        """CR 733.1: reverse every `activate_mana_ability` this payment made,
+        newest first - each activation's own payment is rewound (its cost
+        given back) and its bookkeeping restored. The player's pool is left
+        as it was; the caller restores it from its own snapshot."""
+        if not self._nested or self.game is None or self.payer is None:
+            self._nested = []
+            return
+        player = self.game.player(self.payer)
+        own_pool = _copy_pool(player.mana_pool)
+        for inner, _source_id, key, activations_before, exhausted_before in reversed(self._nested):
+            inner.rewind()
+            _activation_bookkeeping_restore(
+                self.game, key, activations_before, set(exhausted_before)
+            )
+        _mana_pool_overwrite(player.mana_pool, own_pool)
+        self._nested = []
 
     def auto_tap(self, sources: Iterable[CardState]) -> list[CardState]:
         """Solve which of `sources` to tap, and which colour each makes, to
@@ -7733,6 +8146,7 @@ class CostPayment(EngineModel):
         pool.retained = [entry.model_copy(deep=True) for entry in self._preexisting.retained]
 
     def _undo_everything(self) -> None:
+        self._undo_nested_activations()
         for component in reversed(self.components):
             component.unpay(self.game)
         for source_id in self.tapped_for_mana:

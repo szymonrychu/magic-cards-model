@@ -134,6 +134,7 @@ from pydantic import ConfigDict, model_validator
 
 from magic_cards_model.phrases import with_indefinite_article
 
+from ..models.card import Color
 from ..models.card_state import TargetRef
 from ..snapshot import EngineModel
 
@@ -150,6 +151,7 @@ __all__ = [
     "DecisionPending",
     "DecisionScript",
     "DeclaredPair",
+    "NamedManaAbility",
     "PendingAbility",
     "PendingDecision",
     "ScriptedAnswer",
@@ -1056,6 +1058,23 @@ def damage_assignment_answer(
     return tuple((canonical[ref], amount) for ref, amount in chosen.items() if amount)
 
 
+class NamedManaAbility(EngineModel):
+    """One mana ability a `PAY_MANA` answer activates while paying, whatever
+    its cost (CR 605.3a, CR 608.2g) - named by its source and its index in
+    `Game.activated_abilities`, with the colours it makes when it offers a
+    choice (one per mana for "any combination", CR 106.1a). The bare-`{T}`
+    sources `Decision.mana_sources` offers are named by id instead; this is
+    for the rest (Vivi Ornitier's `{0}`, a Signet's `{1}, {T}`), which
+    `CostPayment.activate_mana_ability` activates in full and refuses in the
+    engine's own words when its cost cannot be paid."""
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    ability_index: int
+    colors: tuple[Color, ...] = ()
+
+
 class Answer(EngineModel):
     """One recorded answer to one `Decision` - the tape `DecisionScript.recorded`
     is made of, and what `Game.ask`/`ask_mulligan`/`ask_trigger_order`/
@@ -1114,6 +1133,10 @@ class Answer(EngineModel):
     #: 603.3b). Both are "a tuple of ids naming some of `Decision.cards`",
     #: which is why they share a field rather than each growing its own.
     card_ids: tuple[UUID, ...] | None = None
+    #: `PAY_MANA` (beside `accept=True` only) - mana abilities of any cost
+    #: to activate while paying (CR 605.3a, `NamedManaAbility`), alongside or
+    #: instead of `card_ids`' offered sources.
+    mana_abilities: tuple[NamedManaAbility, ...] | None = None
     #: `CHOOSE_PLAYERS` - which candidate players were chosen (CR 701.34a's
     #: own "and/or players" half). `card_ids`' own twin: a player has no
     #: `UUID`, only a username, so this cannot share that field's type.
@@ -1161,6 +1184,10 @@ class Answer(EngineModel):
         allowed_extra = {"card_ids"} if self.kind is DecisionKind.PAY_MANA else set()
         if self.kind is DecisionKind.PAY_MANA and self.card_ids is not None and not self.accept:
             raise ValueError("a pay_mana answer names mana sources only when it pays")
+        if self.mana_abilities is not None and (
+            self.kind is not DecisionKind.PAY_MANA or not self.accept
+        ):
+            raise ValueError("only a pay_mana answer that pays names mana abilities")
         stray = [
             field_name
             for field_name in _ANSWER_VALUE_FIELDS
@@ -1185,8 +1212,10 @@ class Answer(EngineModel):
         `_check_one_value_field` already guarantees the right field is set, so
         this is a lookup, not a re-validation.
         """
-        if self.kind is DecisionKind.PAY_MANA and self.card_ids is not None:
-            return self.card_ids
+        if self.kind is DecisionKind.PAY_MANA and (
+            self.card_ids is not None or self.mana_abilities is not None
+        ):
+            return (*(self.card_ids or ()), *(self.mana_abilities or ()))
         return getattr(self, _ANSWER_FIELD_FOR_KIND[self.kind])
 
 

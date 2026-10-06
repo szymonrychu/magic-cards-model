@@ -135,6 +135,7 @@ from ..machines.decisions import (
     DecisionKind,
     DecisionPending,
     DecisionScript,
+    NamedManaAbility,
     PendingAbility,
     PendingDecision,
     ask_attackers,
@@ -334,6 +335,7 @@ from ..machines.turn import (
     TurnMachine,
     day_night_after_untap_check,
 )
+from ..machines.unspent_mana import settle_mana_loss
 from ..numbers import MULTIPLIER, count_pattern, parse_count, parse_multiplier
 from ..serialization import SortedFrozenSet, SortedSet
 from ..snapshot import EngineModel, board_snapshot, cached_board, command, scan_pin
@@ -2015,6 +2017,29 @@ _DAMAGE_CANT_BE_PREVENTED_RE = re.compile(
 )
 
 
+def _named_mana_abilities(answer: object) -> tuple[NamedManaAbility, ...]:
+    """The mana abilities of any cost a `PAY_MANA` answer named (CR 605.3a),
+    beside the offered source ids it may also name."""
+    if not isinstance(answer, tuple):
+        return ()
+    return tuple(entry for entry in answer if isinstance(entry, NamedManaAbility))
+
+
+def _activate_named_mana_abilities(
+    game: "Game", payment: CostPayment, named: Sequence[NamedManaAbility]
+) -> None:
+    """Activate each mana ability a `PAY_MANA` answer named, in order, into
+    `payment` (CR 605.3a, `CostPayment.activate_mana_ability`)."""
+    for entry in named:
+        source = game.find_by_id(entry.card_id)
+        if not isinstance(source, CardState) or source.zone is not Zone.BATTLEFIELD:
+            raise ValueError(
+                f"{entry.card_id} is not a permanent on the battlefield whose mana "
+                "ability can be activated (CR 605.3a)"
+            )
+        payment.activate_mana_ability(source, entry.ability_index, color=list(entry.colors) or None)
+
+
 def is_player_rules_static_line(text: str) -> bool:
     """Whether a permanent's static line is one of the rules-of-the-game
     effects `Game` reads straight off the battlefield: "Players can't gain
@@ -3541,8 +3566,7 @@ class Game(EngineModel):
     keyword_line_notices: list[KeywordLineNotice] = Field(default_factory=list)
     """One entry per computed ability line (CR 613.5) that is part CR 702
     keyword and part something `machines/combat.py`'s reading vocabulary cannot
-    name - Extinguisher Battleship's "5+ | Flying, trample", where CR 721.2a's
-    station symbol makes the whole line conditional, and Nevinyrral, Urborg
+    name - Nevinyrral, Urborg
     Tyrant's "Hexproof from artifacts, creatures, and enchantments", which
     CR 702.11f makes shorthand for several separate abilities. The line is
     dropped whole rather than half-read, because half-reading it would grant an
@@ -4505,7 +4529,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 110
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 113
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4714,6 +4738,22 @@ class Game(EngineModel):
     #: `of_its_controller` and `ControlledQuality` gained `color`.
     #: 110 (round 293-fra): `GameEvent` gained `loyalty_removed` (CR 606.4),
     #: read by "if you removed two or more loyalty counters to activate it".
+    #: 111 (fix-station): `BaseAbility` gained `station_threshold` (CR 721.2a)
+    #: and `ManaAbility` gained `for_each_expression`, both reachable from
+    #: `Game` through a pending `AbilityOnStack.ability`.
+    #: 112 (fix-mana-any-combination): "Add N mana in any combination of
+    #: {A} and/or {B}" parses as a mixed palette mana ability (it read as one
+    #: mana of one colour), an X announced by the cost counts, and the new
+    #: `AddManaInAnyCombinationForController` delayed effect kind.
+    #: 113 (fix-mana-leftovers): `Answer` gained `mana_abilities` (a
+    #: `PAY_MANA` answer naming mana abilities of any cost, CR 605.3a),
+    #: reachable from `Game` through the decision tape; and existing boards
+    #: resolve differently - a step ending under "If you would lose unspent
+    #: mana, that mana becomes <colour> instead" / "You don't lose unspent
+    #: <colour> mana" keeps the mana (CR 106.4, 614.1a), Ozai's "as long as you
+    #: have six or more unspent mana" grants apply, and Xenagos's `-6`,
+    #: Tezzeret, Master of the Bridge's `-8`, Omnath, Locus of All's first-main
+    #: trigger and Sorin the Mirthless's `+1` resolve where they did nothing.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -5742,6 +5782,14 @@ class Game(EngineModel):
     the same reason `continuous_effects` is a field.
     """
 
+    _holding_mana_triggers: bool = False
+    """True while `CostPayment.activate_mana_ability` activates a mana
+    ability in the middle of a payment (CR 605.3a): the triggers the
+    activation sets off wait in `pending_triggers` for the next player to
+    receive priority (CR 603.3), the same as a `{T}` source tapped by
+    `tap_for_mana`, rather than going onto the stack under the spell still
+    being cast."""
+
     _mana_hints_planned: bool = False
     """True while a payment's solver planned the tap now resolving its
     triggered mana abilities: a "may add" the plan did not count is declined
@@ -6455,14 +6503,23 @@ class Game(EngineModel):
         phase, passed here by `_advance_past_checks`/`advance_to`; CR
         500.5b/514.2's cleanup step, passed by `cleanup_step`). Left out, no
         scope expires and every retained tag survives, exactly as an ordinary
-        mid-phase boundary should leave it. Replacement effects shaped
-        differently from those two - Horizon Stone's "doesn't empty ... this
-        turn" - are not modelled: `machines/effects.py`'s parsers for those two
-        sentences are the only source of a `ManaRetentionScope` tag today.
+        mid-phase boundary should leave it. A permanent's own static that
+        replaces the loss - "If you would lose unspent mana, that mana becomes
+        <colour> instead", "You don't lose unspent <colour> mana as steps and
+        phases end" - is read by `machines/unspent_mana`, not tagged on the
+        mana: it holds only while its source is on the battlefield.
         """
         scopes = expiring or frozenset()
         for player in self.players:
-            player.mana_pool.empty(expiring=scopes)
+            # CR 106.4/614.1a: the player is said to *lose* this mana, and a
+            # static that replaces that loss ("If you would lose unspent
+            # mana, that mana becomes black instead", "You don't lose unspent
+            # red mana as steps and phases end") decides what stays -
+            # `machines/unspent_mana.settle_mana_loss`, CR 616.1 order and all.
+            keep, becomes = settle_mana_loss(
+                self, player.username, player.mana_pool, frozenset(scopes)
+            )
+            player.mana_pool.empty(expiring=scopes, keep=keep, becomes=becomes)
 
     def turn_based_actions(self) -> None:
         """Perform the turn-based actions of the step that has just begun (CR 703.3).
@@ -9059,6 +9116,7 @@ class Game(EngineModel):
         chosen = (
             sources if answer is True else [state for state in sources if state.id in set(answer)]
         )
+        _activate_named_mana_abilities(self, payment, _named_mana_abilities(answer))
         payment.auto_tap(chosen)
 
     def _offer_additional_cost(
@@ -13213,17 +13271,25 @@ class Game(EngineModel):
 
         if decision.kind is DecisionKind.PAY_MANA and isinstance(value, tuple):
             # CR 608.2g / CR 605.3a: paying, and naming the mana sources to
-            # activate while doing it. Every one must have been offered.
-            if not all(isinstance(card_id, UUID) for card_id in value):
+            # activate while doing it. Every id must have been offered; a
+            # `NamedManaAbility` (a mana ability of any cost) is checked by
+            # activating it, which refuses in the engine's own words.
+            if not all(isinstance(entry, UUID | NamedManaAbility) for entry in value):
                 raise ValueError(f"{decision.prompt}: needs a tuple of mana source ids")
             offered = set(decision.mana_sources)
-            stray = [str(card_id) for card_id in value if card_id not in offered]
+            stray = [
+                str(entry) for entry in value if isinstance(entry, UUID) and entry not in offered
+            ]
             if stray:
                 raise ValueError(
                     f"{decision.prompt}: {', '.join(stray)} is not one of the mana sources "
                     f"{decision.player} can activate while paying (CR 605.3a)"
                 )
-            if True not in allowed:
+            named = any(isinstance(entry, NamedManaAbility) for entry in value)
+            if True not in allowed and not named:
+                # `affirmative_is_legal` counts the offered `{T}` sources only;
+                # an answer naming mana abilities of any cost is judged by the
+                # payment itself (CR 118.3), which refuses what it cannot pay.
                 raise ValueError(_illegal_option_refusal(decision))
             return value
 
@@ -13907,7 +13973,14 @@ class Game(EngineModel):
             return False
         if not free:
             chosen = sources if answer is True else [s for s in sources if s.id in set(answer)]
-            self._pay_mana_while_resolving(player, cost, chosen, prompt=prompt, spend=spend)
+            self._pay_mana_while_resolving(
+                player,
+                cost,
+                chosen,
+                prompt=prompt,
+                spend=spend,
+                named=_named_mana_abilities(answer),
+            )
         return True
 
     def _mana_sources_while_resolving(self, player: Player) -> list[CardState]:
@@ -13935,6 +14008,7 @@ class Game(EngineModel):
         *,
         prompt: str,
         spend: ManaSpend | None = None,
+        named: Sequence[NamedManaAbility] = (),
     ) -> None:
         """Pay `cost` from the floating pool plus mana abilities of `sources`.
 
@@ -13943,10 +14017,19 @@ class Game(EngineModel):
         needs, through `CostPayment.auto_tap` - the one solver every other mana
         payment in this engine uses. What is left over stays in the pool
         (CR 106.4a).
+
+        `named` are mana abilities of any cost the player chose to activate
+        first (CR 605.3a, CR 608.2g - Vivi Ornitier's `{0}`), each activated in
+        full by `CostPayment.activate_mana_ability`.
         """
         payment = CostPayment.for_total(
             TotalCost.of(cost), game=self, payer=player.username, spend=spend
         )
+        try:
+            _activate_named_mana_abilities(self, payment, named)
+        except ValueError as refused:
+            payment.cancel()
+            raise ValueError(f"{prompt}: {refused}") from refused
         try:
             payment.auto_tap(sources)
         except ValueError as unpayable:
@@ -22026,8 +22109,10 @@ class Game(EngineModel):
             has_convoke,
             has_delve,
             has_improvise,
+            has_station,
             improvise_offer,
             is_vehicle_permanent,
+            station_offer,
         )
 
         battlefield = self.battlefield
@@ -22063,6 +22148,15 @@ class Game(EngineModel):
             out["crew"] = ObjectCostOffer(
                 rule="CR 702.122a",
                 number=crew_number(card.card),
+                candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
+            )
+        # CR 702.184a: a station permanent's own ability, offered while it is
+        # on the battlefield - the candidates are the creatures its cost could
+        # tap, the same `why_not` `station_activation`'s tap cost applies.
+        if card.zone is Zone.BATTLEFIELD and has_station(card.card):
+            offer = station_offer(card)
+            out["station"] = ObjectCostOffer(
+                rule="CR 702.184a",
                 candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
             )
         return out
@@ -23069,6 +23163,7 @@ class Game(EngineModel):
                 if ability.face == up_face_name
                 and ability.kind is AbilityKind.STATIC
                 and (ability.class_level is None or ability.class_level <= permanent.class_level)
+                and permanent.station_threshold_met(ability.station_threshold)
             }
             for line in (permanent.class_ability_text or "").split("\n"):
                 text = line.strip()
@@ -25760,7 +25855,20 @@ class Game(EngineModel):
             return 0
         if not self.mana_color_options(permanent, index, controller):
             return 0
-        return ability.mana.any_color_count if ability.mana.any_color_mixed else 1
+        if not ability.mana.any_color_mixed:
+            return 1
+        # A count the board decides ("X mana in any combination of {U} and/or
+        # {R}, where X is Vivi Ornitier's power") is that count now, not the
+        # parser's placeholder of one - the same `mana_ability_most` reading a
+        # payment counts on. An X the ability's own cost announces (CR 107.3a:
+        # "Remove X storage counters") is reported at its most - every counter
+        # there - and a caller names one colour per X it actually announces;
+        # an X nothing on the board bounds ("{X}, {T}, Sacrifice ...") reports
+        # the placeholder, one colour per X announced all the same.
+        from ..machines.cost import mana_ability_most
+
+        most = mana_ability_most(self, permanent, index, controller)
+        return most if most else ability.mana.any_color_count
 
     def begin_turning_face_up(
         self,
@@ -26504,11 +26612,22 @@ class Game(EngineModel):
                 # already refused to build this ability at all if its own
                 # "where X is ..." text were not one `resolve_mana_count_
                 # expression` can answer, so this is never `None` here.
+                count_expression = (
+                    ability.mana.any_color_count_expression or ability.mana.for_each_expression
+                )
                 expression_count = (
                     resolve_mana_count_expression(
-                        self, controller, permanent, ability.mana.any_color_count_expression
+                        self,
+                        controller,
+                        permanent,
+                        count_expression,
+                        # Mage-Ring Network's counters "removed this way"
+                        # (CR 107.3a's announced X) and Slobad's "the
+                        # sacrificed artifact" - what this activation paid.
+                        x_value,
+                        _cost_moved(paid, ComponentKind.SACRIFICE) if paid is not None else (),
                     )
-                    if ability.mana.any_color_count_expression is not None
+                    if count_expression is not None
                     else None
                 )
                 # The two board-derived narrowings `ManaAbility.effective` asks
@@ -26651,7 +26770,8 @@ class Game(EngineModel):
                 # triggers (Leyline of Abundance, battle 7 B7-02) as much as the
                 # adding's.
                 self.resolve_triggered_mana_abilities(set_off)
-                self.put_triggers_on_stack()
+                if not self._holding_mana_triggers:
+                    self.put_triggers_on_stack()
                 return None
 
             on_stack = AbilityOnStack(

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 9.0% |
-| Works (untested) | 132 | 62.6% |
+| Tested | 21 | 10.0% |
+| Works (untested) | 131 | 62.1% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 52 | 24.6% |
+| Not working | 51 | 24.2% |
 
 ## Cards needing work
 
@@ -68,7 +68,6 @@
 | Triton Tactics | silent | Up to two target creatures each get +0/+3 until end of turn. Untap those creatures. At this turn's next end of combat, tap each creature that was blocked by one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Underworld Cerberus | silent | When this creature dies, exile it and each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Viper's Kiss | silent | Enchanted creature gets -1/-1, and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Xenagos, the Reveler | silent | +1: Add X mana in any combination of {R} and/or {G}, where X is the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boon of Erebos | notice | Target creature gets +2/+0 until end of turn. Regenerate it. You lose 2 life. | unparsed remainder: Regenerate it. You lose 2 life. | Y/Y/- | not_working |
 | Daxos of Meletis | notice | Whenever Daxos deals combat damage to a player, exile the top card of that player's library. You gain life equal to that card's mana value. Until end of turn, y | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos's Emissary | notice | Discard a creature card: This creature gets +2/+2 until end of turn. If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | unparsed remainder: If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | Y/Y/- | not_working |
@@ -138,7 +137,6 @@
 | Horizon Scholar | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ill-Tempered Cyclops | handled | {5}{R}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Insatiable Harpy | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
-| Karametra's Acolyte | handled |  |  | Y/Y/- | not_tested |
 | Keepsake Gorgon | handled | {5}{B}{B}: Monstrosity 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Labyrinth Champion | handled | Heroic — Whenever you cast a spell that targets this creature, this creature deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lash of the Whip | handled | Target creature gets -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -222,7 +220,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>21 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
@@ -233,6 +231,7 @@
 - Fleecemane Lion
 - Gray Merchant of Asphodel
 - Hopeful Eidolon
+- Karametra's Acolyte
 - Lagonna-Band Elder
 - Nessian Asp
 - Nykthos, Shrine to Nyx
@@ -243,6 +242,7 @@
 - Swan Song
 - Warriors' Lesson
 - Whip of Erebos
+- Xenagos, the Reveler
 
 </details>
 
@@ -251,7 +251,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Heroic | 4 | Anthousa, Setessan Hero, Artisan of Forms, Favored Hoplite, Tormented Hero | ths |
-| +N: add N mana in any combination of {M} and/or {M}, where N is the number of creatures you control. | 1 | Xenagos, the Reveler | ths |
 | as an additional cost to cast ~, sacrifice a creature. choose target creature card in your graveyard. return that card and the sacrificed card to the battlefiel | 1 | Rescue from the Underworld | ths |
 | as long as ~ is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | 1 | Hundred-Handed One | ths |
 | as long as ~ is monstrous, it has trample and can attack as though it didn't have defender. | 1 | Colossus of Akros | ths |

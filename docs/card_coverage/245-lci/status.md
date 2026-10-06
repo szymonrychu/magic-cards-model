@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 62 | 22.5% |
-| Works (untested) | 135 | 49.1% |
+| Works (untested) | 136 | 49.5% |
 | Partial (unaudited) | 13 | 4.7% |
-| Not working | 65 | 23.6% |
+| Not working | 64 | 23.3% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Magmatic Galleon | silent | Whenever one or more creatures your opponents control are dealt excess noncombat damage, create a Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Malamet Battle Glyph | silent | Choose target creature you control and target creature you don't control. If the creature you control entered this turn, put a +1/+1 counter on it. Then those c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Malcolm, Alluring Scoundrel | silent | Whenever Malcolm deals combat damage to a player, put a chorus counter on it. Draw a card, then discard a card. If there are four or more chorus counters on Mal | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Matzalantli, the Great Door // The Core | silent | Fathomless descent — {T}: Add X mana of any one color, where X is the number of permanent cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Merfolk Cave-Diver | silent | Whenever a creature you control explores, this creature gets +1/+0 until end of turn and can't be blocked this turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Nicanzil, Current Conductor | silent | Whenever a creature you control explores a land card, you may put a land card from your hand onto the battlefield tapped. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Ojer Kaslem, Deepest Growth // Temple of Cultivation | silent | Whenever Ojer Kaslem deals combat damage to a player, reveal that many cards from the top of your library. You may put a creature card and/or a land card from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -182,6 +181,7 @@
 | Malamet Veteran | handled | Descend 4 — Whenever this creature attacks, if there are four or more permanent cards in your graveyard, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Malamet War Scribe | handled | When this creature enters, creatures you control get +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Marauding Brinefang | handled | Islandcycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/Y | not_tested |
+| Matzalantli, the Great Door // The Core | handled | {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mephitic Draught | handled | When this artifact enters or is put into a graveyard from the battlefield, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Might of the Ancestors | handled | At the beginning of combat on your turn, target creature you control gets +2/+0 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mineshaft Spider | handled | When this creature enters, you may mill two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -314,7 +314,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Fathomless descent | 5 | Chupacabra Echo, Matzalantli, the Great Door // The Core, Song of Stupefaction, Squirming Emergence, Terror Tide | lci |
+| Fathomless descent | 4 | Chupacabra Echo, Song of Stupefaction, Squirming Emergence, Terror Tide | lci |
 | explore | 3 | Deepfathom Echo, Defossilize, Glowcap Lantern | lci |
 | as an additional cost to cast ~, discard a card or sacrifice a permanent. | 1 | Souls of the Lost | lci |
 | as an additional cost to cast ~, tap four untapped artifacts, creatures, and/or lands you control. | 1 | Guardian of the Great Door | lci |

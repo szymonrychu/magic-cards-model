@@ -303,6 +303,7 @@ def total_power(cards: list[CardState], game: Any = None) -> int:
 CONVOKE_RULE = "CR 702.51a"
 DELVE_RULE = "CR 702.66a"
 CREW_RULE = "CR 702.122a"
+STATION_RULE = "CR 702.184a"
 IMPROVISE_RULE = "CR 702.126a"
 WATERBEND_RULE = "CR 701.67a"
 WATERBEND_RULE_B = "CR 701.67b"
@@ -379,6 +380,25 @@ def crew_offer(vehicle: CardState) -> ObjectOffer:
         untapped_only=True,
         excluding=vehicle.id,
     )
+
+
+def station_offer(permanent: CardState) -> ObjectOffer:
+    """CR 702.184a: "Tap another untapped creature you control" - one
+    creature, its power the number of charge counters put on."""
+    return ObjectOffer(
+        keyword="station",
+        rule=STATION_RULE,
+        action=ObjectAction.TAP,
+        zone=Zone.BATTLEFIELD,
+        permitted_types=frozenset({Type.CREATURE}),
+        untapped_only=True,
+        excluding=permanent.id,
+    )
+
+
+def has_station(card: Card) -> bool:
+    """CR 702.184b: a station card is one printed with a station ability."""
+    return _has(card, "station")
 
 
 # --------------------------------------------------------------------------

@@ -220,6 +220,7 @@ from magic_cards_model.machines.triggers import (
 from magic_cards_model.machines.triggers import (
     _required_types as _condition_required_types,
 )
+from magic_cards_model.machines.unspent_mana import reads_unspent_mana_line
 from magic_cards_model.models import CardState, Game, Player, Zone
 from magic_cards_model.models.card import (
     Card,
@@ -2090,6 +2091,12 @@ def _static_ability_category(
         # `machines/replacement.py` compiles and `applicable_effects` applies
         # from the battlefield (Solphim's double, Crystal Barricade's
         # prevention, Mjolnir's "Double all damage ...").
+        return HANDLED
+    if reads_unspent_mana_line(text):
+        # CR 106.4 / CR 614.1a: `machines/unspent_mana.settle_mana_loss` reads
+        # "If you would lose unspent mana, that mana becomes <colour> instead"
+        # and "You don't lose unspent [<colour>] mana as steps and phases end"
+        # off the battlefield as each step and phase empties the pools.
         return HANDLED
     if reads_maximum_hand_size_line(text):
         # CR 402.2 / CR 613.11: `Player.cards_over_maximum_hand_size` reads

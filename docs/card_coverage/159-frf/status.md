@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 8.7% |
-| Works (untested) | 77 | 47.8% |
+| Tested | 15 | 9.3% |
+| Works (untested) | 76 | 47.2% |
 | Partial (unaudited) | 11 | 6.8% |
 | Not working | 59 | 36.6% |
 
@@ -108,7 +108,6 @@
 | Aven Surveyor | handled | When this creature enters, choose one — • Put a +1/+1 counter on this creature. • Return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bathe in Dragonfire | handled | Bathe in Dragonfire deals 4 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Collateral Damage | handled | As an additional cost to cast this spell, sacrifice a creature. Collateral Damage deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Crucible of the Spirit Dragon | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cunning Strike | handled | Cunning Strike deals 2 damage to target creature and 2 damage to target player or planeswalker. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Defiant Ogre | handled | When this creature enters, choose one — • Put a +1/+1 counter on this creature. • Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Destructor Dragon | handled | When this creature dies, destroy target noncreature permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -177,10 +176,11 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Ainok Guide
 - Break Through the Line
+- Crucible of the Spirit Dragon
 - Dark Deal
 - Ethereal Ambush
 - Flamerush Rider

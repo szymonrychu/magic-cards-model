@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 8.3% |
-| Works (untested) | 130 | 56.5% |
+| Tested | 23 | 10.0% |
+| Works (untested) | 127 | 55.2% |
 | Partial (unaudited) | 20 | 8.7% |
-| Not working | 61 | 26.5% |
+| Not working | 60 | 26.1% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Garna, the Bloodflame | silent | When Garna enters, return to your hand all creature cards in your graveyard that were put there from anywhere this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ghitu Lavarunner | silent | As long as there are two or more instant and/or sorcery cards in your graveyard, this creature gets +1/+0 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gift of Growth | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Untap target creature. It gets +2/+2 until end of turn. If this spell was kicked, that creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Grand Warlord Radha | silent | Whenever one or more creatures you control attack, add that much mana in any combination of {R} and/or {G}. Until end of turn, you don't lose this mana as steps | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Haphazard Bombardment | silent | When this enchantment enters, choose four nonenchantment permanents you don't control and put an aim counter on each of them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Healing Grace | silent | Prevent the next 3 damage that would be dealt to any target this turn by a source of your choice. You gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Helm of the Host | silent | At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -125,7 +124,6 @@
 | Broken Bond | handled | Destroy target artifact or enchantment. You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cabal Evangel | handled |  |  | Y/Y/- | not_tested |
 | Cabal Paladin | handled | Whenever you cast a historic spell, this creature deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Cabal Stronghold | handled |  |  | Y/Y/- | not_tested |
 | Caligo Skin-Witch | handled | When this creature enters, if it was kicked, each opponent discards two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Call the Cavalry | handled | Create two 2/2 white Knight creature tokens with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cast Down | handled | Destroy target nonlegendary creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -177,7 +175,6 @@
 | Llanowar Scout | handled | {T}: You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lyra Dawnbringer | handled | Other Angels you control get +1/+1 and have lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mammoth Spider | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
-| Marwyn, the Nurturer | handled | Whenever another Elf you control enters, put a +1/+1 counter on Marwyn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memorial to Folly | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memorial to Genius | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memorial to Glory | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -191,7 +188,6 @@
 | Pardic Wanderer | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Pegasus Courser | handled | Whenever this creature attacks, another target attacking creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pierce the Sky | handled | Pierce the Sky deals 7 damage to target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Powerstone Shard | handled |  |  | Y/Y/- | not_tested |
 | Primordial Wurm | handled |  |  | Y/Y/- | not_tested |
 | Pyromantic Pilgrim | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
 | Relic Runner | handled | This creature can't be blocked if you've cast a historic spell this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -241,22 +237,26 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>23 cards</summary>
 
 - Adamant Will
 - Adventurous Impulse
 - Arvad the Cursed
 - Bloodstone Goblin
+- Cabal Stronghold
 - Damping Sphere
 - Gaea's Protector
+- Grand Warlord Radha
 - Hallar, the Firefletcher
 - History of Benalia
 - Jaya Ballard
 - Josu Vess, Lich Knight
 - Knight of Grace
 - Knight of Malice
+- Marwyn, the Nurturer
 - Mox Amber
 - Naban, Dean of Iteration
+- Powerstone Shard
 - Rona, Disciple of Gix
 - Sentinel of the Pearl Trident
 - Teferi, Timebender
@@ -322,7 +322,6 @@
 | when ~ enters, choose four nonenchantment permanents you don't control and put an aim counter on each of them. | 1 | Haphazard Bombardment | dom |
 | when ~ enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. if the card's mana value is N or grea | 1 | Demonlord Belzenlok | dom |
 | when ~ enters, tap target creature an opponent controls. it loses all abilities until end of turn. | 1 | Merfolk Trickster | dom |
-| whenever one or more creatures you control attack, add that much mana in any combination of {M} and/or {M}. until end of turn, you don't lose ~ as steps and pha | 1 | Grand Warlord Radha | dom |
 | whenever urgoros deals combat damage to a player, that player discards a card at random. if the player can't, you draw a card. | 1 | Urgoros, the Empty One | dom |
 | whenever you attack with three or more creatures, you may pay {M}{M}. if you do, return ~ from your graveyard to the battlefield tapped and attacking. | 1 | Warcry Phoenix | dom |
 | whenever you lose life, for each N life you lost, exile a permanent you control or a card from your hand or graveyard. | 1 | Lich's Mastery | dom |

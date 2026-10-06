@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 8.8% |
+| Tested | 17 | 9.4% |
 | Works (untested) | 104 | 57.5% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 54 | 29.8% |
+| Not working | 53 | 29.3% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Blood-Cursed Knight | silent | As long as you control an enchantment, this creature gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra's Ignition | silent | Target creature you control deals damage equal to its power to each other creature and each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | silent | −7: Chandra deals 6 damage to each opponent. Each player dealt damage this way gets an emblem with "At the beginning of your upkeep, this emblem deals 3 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cleric of the Forward Order | silent | When this creature enters, you gain 2 life for each creature you control named Cleric of the Forward Order. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consul's Lieutenant | silent | Whenever this creature attacks, if it's renowned, other attacking creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Dabbling | silent | Regenerate target creature. Draw a card. (The next time the creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Displacement Wave | silent | Return all nonland permanents with mana value X or less to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -108,6 +107,7 @@
 | Chief of the Foundry | handled | Other artifact creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Citadel Castellan | handled | Renown | machines/keywords.py | Y/Y/- | not_tested |
 | Clash of Wills | handled | Counter target spell unless its controller pays {X}. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Cleric of the Forward Order | handled | When this creature enters, you gain 2 life for each creature you control named Cleric of the Forward Order. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Conclave Naturalists | handled | When this creature enters, you may destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Consecrated by Blood | handled | Enchanted creature gets +2/+2 and has flying and "Sacrifice two other creatures: Regenerate this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dark Petition | handled | Search your library for a card, put that card into your hand, then shuffle. Spell mastery — If there are two or more instant and/or sorcery cards in your gravey | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -145,7 +145,6 @@
 | Languish | handled | All creatures get -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lightning Javelin | handled | Lightning Javelin deals 3 damage to any target. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mage-Ring Bully | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Mage-Ring Network | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mage-Ring Responder | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Magmatic Insight | handled | As an additional cost to cast this spell, discard a land card. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Malakir Cullblade | handled | Whenever a creature an opponent controls dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -195,7 +194,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Alhammarret's Archive
 - Boggart Brute
@@ -209,6 +208,7 @@
 - Hangarback Walker
 - Jace, Vryn's Prodigy // Jace, Telepath Unbound
 - Kytheon's Tactics
+- Mage-Ring Network
 - Scab-Clan Berserker
 - Sigil of Valor
 - Unholy Hunger
@@ -261,7 +261,6 @@
 | when ~ enters, create a N/N black zombie creature token for each card named ~ in your graveyard. | 1 | Undead Servant | ori |
 | when ~ enters, creatures without flying can't block ~. | 1 | Seismic Elemental | ori |
 | when ~ enters, target opponent loses life equal to the number of elves you control. | 1 | Shaman of the Pack | ori |
-| when ~ enters, you gain N life for each creature you control named ~. | 1 | Cleric of the Forward Order | ori |
 | when ~ enters, you may destroy target non-elf creature whose power and toughness aren't equal. | 1 | Gilt-Leaf Winnower | ori |
 | when ~ enters, you may search your library for a nonlegendary green creature card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Woodland Bellower | ori |
 | whenever a creature an opponent controls becomes the target of a spell or ability you control, gain control of that creature for as long as you control ~. | 1 | Willbreaker | ori |

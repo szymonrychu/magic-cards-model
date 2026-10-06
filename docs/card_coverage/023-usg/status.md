@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 16.7% |
+| Tested | 12 | 18.2% |
 | Works (untested) | 34 | 51.5% |
 | Partial (unaudited) | 7 | 10.6% |
-| Not working | 14 | 21.2% |
+| Not working | 13 | 19.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Academy Researchers | silent | When this creature enters, you may put an Aura card from your hand onto the battlefield attached to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Congregate | silent | Target player gains 2 life for each creature on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corrupt | silent | Corrupt deals damage to any target equal to the number of Swamps you control. You gain life equal to the damage dealt this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fecundity | silent | Whenever a creature dies, that creature's controller may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hibernation | silent | Return all green permanents to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -57,6 +56,7 @@
 | Chimeric Staff | handled | {X}: This artifact becomes an X/X Construct artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Citanul Flute | handled | {X}, {T}: Search your library for a creature card with mana value X or less, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Confiscate | handled | You control enchanted permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Congregate | handled | Target player gains 2 life for each creature on the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Coral Merfolk | handled |  |  | Y/Y/- | not_tested |
 | Dragon Blood | handled | {3}, {T}: Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eastern Paladin | handled | {B}{B}, {T}: Destroy target green creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -70,7 +70,6 @@
 | Looming Shade | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pegasus Charger | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Phyrexian Tower | handled |  |  | Y/-/- | not_tested |
-| Priest of Titania | handled |  |  | Y/-/- | not_tested |
 | Scoria Wurm | handled | At the beginning of your upkeep, flip a coin. If you lose the flip, return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Serra Avatar | handled | Serra Avatar's power and toughness are each equal to your life total. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Serra's Embrace | handled | Enchanted creature gets +2/+2 and has flying and vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -85,7 +84,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Arc Lightning
 - Claws of Gix
@@ -96,6 +95,7 @@
 - Greater Good
 - Imaginary Pet
 - Meltdown
+- Priest of Titania
 - Reflexes
 - Vernal Bloom
 
@@ -116,7 +116,6 @@
 | return all green permanents to their owners' hands. | 1 | Hibernation | usg |
 | sacrifice ~: return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | No Rest for the Wicked | usg |
 | sacrifice ~: the next time a source of your choice would deal damage to any target ~, prevent that damage. | 1 | Sanctum Guardian | usg |
-| target player gains N life for each creature on the battlefield. | 1 | Congregate | usg |
 | when enchanted land becomes tapped, destroy it. | 1 | Spreading Algae | usg |
 | when ~ enters, target opponent gains control of it. | 1 | Sleeper Agent | usg |
 | when ~ enters, you may put an aura card from your hand onto the battlefield attached to ~. | 1 | Academy Researchers | usg |

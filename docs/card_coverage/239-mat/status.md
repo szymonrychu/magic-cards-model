@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 16.3% |
+| Tested | 9 | 18.4% |
 | Works (untested) | 12 | 24.5% |
-| Partial (unaudited) | 5 | 10.2% |
+| Partial (unaudited) | 4 | 8.2% |
 | Not working | 24 | 49.0% |
 
 ## Cards needing work
@@ -52,7 +52,6 @@
 | Urborg Scavengers | notice | This creature has flying as long as a card exiled with it has flying. The same is true for first strike, double strike, deathtouch, haste, hexproof, indestructi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Deification | unaudited | As this enchantment enters, choose a planeswalker type. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Gold-Forged Thopteryx | unaudited | Each legendary permanent you control has ward {2}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Leyline Immersion | unaudited | Enchanted creature has ward {2} and "{T}: Add five mana in any combination of colors. Spend this mana only to cast spells." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Niv-Mizzet, Supreme | unaudited | Each instant and sorcery card in your graveyard that's exactly two colors has jump-start. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sigarda, Font of Blessings | unaudited | Other permanents you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Animist's Might | handled | This spell costs {2} less to cast if it targets a legendary creature you control. Target creature you control deals damage equal to twice its power to target cr | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -71,11 +70,12 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Ayara's Oathsworn
 - Blot Out
 - Jolrael, Voice of Zhalfir
+- Leyline Immersion
 - Narset, Enlightened Exile
 - Nashi, Moon's Legacy
 - Rebuild the City
@@ -100,7 +100,6 @@
 | each legendary permanent you control has ward {M}. | 1 | Gold-Forged Thopteryx | mat |
 | each other human you control gets +N/+N and has ward {M}. | 1 | Coppercoat Vanguard | mat |
 | each planeswalker with one or more loyalty counters on it loses all abilities and is a creature with power and toughness each equal to the number of loyalty cou | 1 | Spark Rupture | mat |
-| enchanted creature has ward {M} and "..." | 1 | Leyline Immersion | mat |
 | karn's power and toughness are each equal to the greatest mana value among artifacts you control. | 1 | Karn, Legacy Reforged | mat |
 | other permanents you control have hexproof. | 1 | Sigarda, Font of Blessings | mat |
 | return all noncreature, nonland permanents to their owners' hands. | 1 | Filter Out | mat |

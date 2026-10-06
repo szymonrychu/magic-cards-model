@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 10.0% |
-| Works (untested) | 106 | 48.2% |
+| Tested | 23 | 10.5% |
+| Works (untested) | 105 | 47.7% |
 | Partial (unaudited) | 8 | 3.6% |
 | Not working | 84 | 38.2% |
 
@@ -188,7 +188,6 @@
 | Ogre Sentry | handled | Defender | machines/combat.py | Y/-/- | not_tested |
 | Ogre's Cleaver | handled | Equipped creature gets +5/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ondu Giant | handled | When this creature enters, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Overgrown Battlement | handled | Defender | machines/combat.py | Y/-/- | not_tested |
 | Pawn of Ulamog | handled | Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has "Sacrifice this token: | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pelakka Wurm | handled | When this creature enters, you gain 7 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pennon Blade | handled | Equipped creature gets +1/+1 for each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -228,7 +227,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -244,6 +243,7 @@
 - Momentous Fall
 - Near-Death Experience
 - Nirkana Revenant
+- Overgrown Battlement
 - Pestilence Demon
 - Prophetic Prism
 - Recurring Insight

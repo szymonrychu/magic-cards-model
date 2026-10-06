@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 5.6% |
+| Tested | 10 | 6.2% |
 | Works (untested) | 94 | 58.4% |
-| Partial (unaudited) | 7 | 4.3% |
+| Partial (unaudited) | 6 | 3.7% |
 | Not working | 51 | 31.7% |
 
 ## Cards needing work
@@ -82,7 +82,6 @@
 | Godhunter Octopus | unaudited | This creature can't attack unless defending player controls an enchantment or an enchanted permanent. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Iroas, God of Victory | unaudited | Prevent all damage that would be dealt to attacking creatures you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Keranos, God of Storms | unaudited | Reveal the first card you draw on each of your turns. Whenever you reveal a land card this way, draw a card. Whenever you reveal a nonland card this way, Kerano | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kruphix, God of Horizons | unaudited | If you would lose unspent mana, that mana becomes colorless instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oppressive Rays | unaudited | Enchanted creature can't attack or block unless its controller pays {3}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Agent of Erebos | handled | Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Presence | handled | Strive — This spell costs {2}{W} more to cast for each target beyond the first. Any number of target creatures each get +1/+1 and gain indestructible until end  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -182,12 +181,13 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Aegis of the Gods
 - Aerial Formation
 - Hall of Triumph
 - Heroes' Bane
+- Kruphix, God of Horizons
 - Launch the Fleet
 - Mana Confluence
 - Master of the Feast
@@ -219,7 +219,6 @@
 | enchanted creature has double strike as long as it's an enchantment. otherwise, prevent all damage that would be dealt by enchanted creature. | 1 | Armament of Nyx | jou |
 | exile target creature card from your graveyard. create a black zombie creature token. its power is equal to that card"..."s toughness. | 1 | Ritual of the Returned | jou |
 | exile target enchantment. if the exiled card is a god card, search its controller's graveyard, hand, and library for any number of cards with the same name as t | 1 | Deicide | jou |
-| if you would lose unspent mana, that mana becomes colorless instead. | 1 | Kruphix, God of Horizons | jou |
 | other centaur creatures you control get +N/+N and have vigilance and trample. | 1 | Pheres-Band Warchief | jou |
 | other minotaur creatures you control have deathtouch. | 1 | Felhide Petrifier | jou |
 | prevent all damage that would be dealt to attacking creatures you control. | 1 | Iroas, God of Victory | jou |

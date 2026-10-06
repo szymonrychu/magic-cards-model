@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 11.2% |
-| Works (untested) | 58 | 34.3% |
+| Tested | 20 | 11.8% |
+| Works (untested) | 57 | 33.7% |
 | Partial (unaudited) | 4 | 2.4% |
 | Not working | 88 | 52.1% |
 
@@ -147,7 +147,6 @@
 | Proper Burial | handled | Whenever a creature you control dies, you gain life equal to that creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Carnarium | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Guildmage | handled | {3}{B}, Discard a card: Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Rakdos Signet | handled |  |  | Y/-/- | not_tested |
 | Ratcatcher | handled | At the beginning of your upkeep, you may search your library for a Rat card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Riot Spikes | handled | Enchanted creature gets +2/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rix Maadi, Dungeon Palace | handled | {1}{B}{R}, {T}: Each player discards a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -180,7 +179,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
@@ -197,6 +196,7 @@
 - Psychic Possession
 - Psychotic Fury
 - Ragamuffyn
+- Rakdos Signet
 - Simic Growth Chamber
 - Spell Snare
 - Utopia Sprawl

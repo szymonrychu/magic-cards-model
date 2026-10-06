@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.5% |
+| Tested | 25 | 9.9% |
 | Works (untested) | 81 | 32.0% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 138 | 54.5% |
+| Not working | 137 | 54.2% |
 
 ## Cards needing work
 
@@ -120,7 +120,6 @@
 | Sigardian Paladin | silent | As long as you've put one or more +1/+1 counters on a creature this turn, this creature has trample and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skulking Killer | silent | When this creature enters, target creature an opponent controls gets -2/-2 until end of turn if that opponent controls no other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skull Skaab | silent | Whenever a creature you control exploits a nontoken creature, create a 2/2 black Zombie creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Sorin the Mirthless | silent | +1: Look at the top card of your library. You may reveal that card and put it into your hand. If you do, you lose life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulcipher Board // Cipherbound Spirit | silent | {1}{U}, {T}: Look at the top two cards of your library. Put one of them into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sporeback Wolf | silent | During your turn, this creature gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steelclad Spirit | silent | Whenever an enchantment you control enters, this creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -140,7 +139,7 @@
 | Voldaren Estate | silent | {5}, {T}: Create a Blood token. This ability costs {1} less to activate for each Vampire you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wash Away | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Wedding Announcement // Wedding Festivity | silent | At the beginning of your end step, put an invitation counter on this enchantment. If you attacked with two or more creatures this turn, draw a card. Otherwise,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Winged Portent | silent | Cleave {4}{G}{U} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Draw a card for each creature you control [with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Winged Portent | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Witness the Future | silent | Target player shuffles up to four target cards from their graveyard into their library. You look at the top four cards of your library, then put one of those ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wretched Throng | silent | When this creature dies, you may search your library for a card named Wretched Throng, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ancestral Anger | notice | Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -259,7 +258,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
@@ -282,6 +281,7 @@
 - Screaming Swarm
 - Serpentine Ambush
 - Shattered Sanctum
+- Sorin the Mirthless
 - Stormcarved Coast
 - Sundown Pass
 - Voltaic Visionary // Volt-Charged Berserker
@@ -294,12 +294,11 @@
 |---|---|---|---|
 | disturb | 10 | Binding Geist // Spectral Binding, Brine Comber // Brinebound Gift, Distracting Geist // Clever Distraction, Dorothea, Vengeful Victim // Dorothea's Retribution, Drogskol Infantry // Drogskol Armaments | vow |
 | training | 7 | Apprentice Sharpshooter, Cloaked Cadet, Gryff Rider, Gryffwing Cavalry, Hopeful Initiate | vow |
-| cleave | 5 | Alchemist's Retrieval, Fierce Retribution, Lunar Rejection, Parasitic Grasp, Wash Away | vow |
+| cleave | 6 | Alchemist's Retrieval, Fierce Retribution, Lunar Rejection, Parasitic Grasp, Wash Away | vow |
 | when ~ enters, exile a card from a graveyard. | 2 | Cemetery Gatekeeper, Cemetery Protector | vow |
 | whenever ~ enters or attacks, exile a card from a graveyard. | 2 | Cemetery Illuminator, Cemetery Prowler | vow |
 | Choose one or both | 1 | Markov Retribution | vow |
 | +N: exile the top card of your library. if it's red, you may cast it ~. | 1 | Chandra, Dressed to Kill | vow |
-| +N: look at the top card of your library. you may reveal that card and put it into your hand. if you do, you lose life equal to its mana value. | 1 | Sorin the Mirthless | vow |
 | as long as enchanted permanent is a creature, it gets +N/+N. | 1 | Nature's Embrace | vow |
 | as long as you control another wolf or werewolf, ~ gets +N/+N and has trample. | 1 | Hungry Ridgewolf | vow |
 | as long as you've put one or more +N/+N counters on a creature ~, ~ has trample and lifelink. | 1 | Sigardian Paladin | vow |
@@ -319,7 +318,6 @@
 | choose a number between N and N. each player sacrifices that many creatures of their choice. | 1 | By Invitation Only | vow |
 | cleave {M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) target player reveals their hand. you choose a nonland card  | 1 | Dread Fugue | vow |
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) destroy all creatures [with mana value N or less]. | 1 | Path of Peril | vow |
-| cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) draw a card for each creature you control [with flying]. | 1 | Winged Portent | vow |
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) draw three cards. [your maximum hand size is reduced by t | 1 | Inspired Idea | vow |
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) ~ deals N damage to target creature or planeswalker and y | 1 | Lantern Flare | vow |
 | cleave {M}{M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) search your library for a [basic land] card, [reveal i | 1 | Dig Up | vow |

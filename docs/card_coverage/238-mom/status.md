@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 58 | 21.3% |
+| Tested | 59 | 21.7% |
 | Works (untested) | 98 | 36.0% |
 | Partial (unaudited) | 6 | 2.2% |
-| Not working | 110 | 40.4% |
+| Not working | 109 | 40.1% |
 
 ## Cards needing work
 
@@ -79,7 +79,6 @@
 | Moment of Truth | silent | Look at the top three cards of your library. Put one of those cards into your hand, one into your graveyard, and one on the bottom of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri's Warcrafting | silent | Nahiri's Warcrafting deals 5 damage to target creature, planeswalker, or battle. Look at the top X cards of your library, where X is the excess damage dealt thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Norn's Inquisitor | silent | When this creature enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Omnath, Locus of All | silent | At the beginning of your first main phase, look at the top card of your library. You may reveal that card if it has three or more colored mana symbols in its ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overgrown Pest | silent | When this creature enters, look at the top five cards of your library. You may reveal a land or double-faced card from among them and put that card into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phyrexian Awakening | silent | When this enchantment enters, incubate 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Portent Tracker | silent | {T}: Choose target battle. If an opponent protects it, remove a defense counter from it. Otherwise, put a defense counter on it. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -244,7 +243,7 @@
 ## Fully supported
 
 <details>
-<summary>58 cards</summary>
+<summary>59 cards</summary>
 
 - Archangel Elspeth
 - Borborygmos and Fblthp
@@ -293,6 +292,7 @@
 - Invasion of Xerex // Vertex Paladin
 - Invasion of Zendikar // Awakened Skyclave
 - Kami of Whispered Hopes
+- Omnath, Locus of All
 - Orthion, Hero of Lavabrink
 - Rampaging Geoderm
 - Sandstalker Moloch
@@ -323,7 +323,6 @@
 | as long as you control a transformed permanent, ~ has "..." | 1 | Oculus Whelp | mom |
 | as long as you have one or fewer cards in hand, ~ has vigilance and haste. | 1 | Djeru and Hazoret | mom |
 | as long as ~ power is N or greater, it can attack as though it didn't have defender. | 1 | Karsus Depthguard | mom |
-| at the beginning of your first main phase, look at the top card of your library. you may reveal that card if it has three or more colored mana symbols in its ma | 1 | Omnath, Locus of All | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) tap up to two target creature | 1 | Wicked Slumber | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) you may cast sorcery spells ~ | 1 | Complete the Circuit | mom |
 | draw cards equal to the number of cards in your hand. you have no maximum hand size for as long as you control ~. | 1 | Jin-Gitaxias // The Great Synthesis | mom |

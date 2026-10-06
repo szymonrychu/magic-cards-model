@@ -544,6 +544,33 @@ class AddManaAmountForController(DelayedEffectSpecBase):
             pool.add(self.color)
 
 
+class AddManaInAnyCombinationForController(DelayedEffectSpecBase):
+    """ "At the beginning of your next first main phase, add X mana in any
+    combination of colors, where X is that spell's mana value" - Plasm
+    Capture's own delayed trigger (CR 603.7). `amount` is the countered
+    spell's mana value, captured as the countering spell resolved, since the
+    spell itself is gone by now (CR 608.2b, CR 608.2h). Each unit's colour is
+    chosen as this resolves (CR 608.2d), among `palette` - CR 106.1a's five
+    for "colors", a printed palette for "{R} and/or {G}".
+
+    Not a mana ability, for the reason `AddManaAmountForController` gives: a
+    step beginning is not CR 605.1b's trigger, so this uses the stack.
+    """
+
+    kind: Literal["add_mana_in_any_combination_for_controller"] = (
+        "add_mana_in_any_combination_for_controller"
+    )
+    amount: int
+    palette: list[Color]
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if not game.is_in_game(trigger.controller) or self.amount <= 0 or not self.palette:
+            return
+        from .effects import _add_mana_in_any_combination
+
+        _add_mana_in_any_combination(game, ability, self.amount, self.palette)
+
+
 class DestroySubject(DelayedEffectSpecBase):
     """ "Destroy it at the beginning of the next end step" - CR 701.8a: "To
     destroy a permanent, move it from the battlefield to its owner's
@@ -2031,6 +2058,7 @@ DelayedEffectSpec = Annotated[
     | ParadigmCopyAndCast
     | DrawACardForController
     | AddManaAmountForController
+    | AddManaInAnyCombinationForController
     | DestroySubject
     | TapSubject
     | TransformSubject

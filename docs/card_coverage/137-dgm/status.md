@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 9.8% |
+| Tested | 15 | 10.5% |
 | Works (untested) | 71 | 49.7% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 53 | 37.1% |
+| Not working | 52 | 36.4% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Mirko Vosk, Mind Drinker | silent | Whenever Mirko Vosk deals combat damage to a player, that player reveals cards from the top of their library until they reveal four land cards, then puts those  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Morgue Burst | silent | Return target creature card from your graveyard to your hand. Morgue Burst deals damage to any target equal to the power of the card returned this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nivix Cyclops | silent | Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn and can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Plasm Capture | silent | Counter target spell. At the beginning of your next first main phase, add X mana in any combination of colors, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pyrewild Shaman | silent | Whenever one or more creatures you control deal combat damage to a player, if this card is in your graveyard, you may pay {3}. If you do, return this card to yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakdos Drake | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ral Zarek | silent | −7: Flip five coins. Take an extra turn after this one for each coin that comes up heads. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -159,7 +158,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Aetherling
 - Beck // Call
@@ -169,6 +168,7 @@
 - Master of Cruelties
 - Maze's End
 - Notion Thief
+- Plasm Capture
 - Possibility Storm
 - Protect // Serve
 - Ready // Willing
@@ -193,7 +193,6 @@
 | choose any target. draw three cards, then discard a card. ~ deals damage equal to the discarded card's mana value to that permanent or player. | 1 | Blast of Genius | dgm |
 | choose target creature. mill four cards, then that creature gets -N/-N until end of turn for each land card in your graveyard. | 1 | Drown in Filth | dgm |
 | cipher | 1 | Hidden Strings | dgm |
-| counter target spell. at the beginning of your next first main phase, add N mana in any combination of colors, where N is that spell's mana value. | 1 | Plasm Capture | dgm |
 | counter target spell. its controller can't cast spells ~. | 1 | Render Silent | dgm |
 | detain up to two target creatures your opponents control. (until your next turn, those creatures can"..."t be activated.) | 1 | Lyev Decree | dgm |
 | each creature card in your graveyard has scavenge. the scavenge cost is equal to its mana cost. | 1 | Varolz, the Scar-Striped | dgm |

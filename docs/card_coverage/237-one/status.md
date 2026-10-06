@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 12.7% |
-| Works (untested) | 106 | 42.1% |
+| Tested | 33 | 13.1% |
+| Works (untested) | 105 | 41.7% |
 | Partial (unaudited) | 9 | 3.6% |
 | Not working | 105 | 41.7% |
 
@@ -216,7 +216,6 @@
 | Shrapnel Slinger | handled | When this creature enters, you may sacrifice a creature. When you do, destroy target artifact an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sinew Dancer | handled | {3}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slaughter Singer | handled | Whenever another creature you control with toxic attacks, it gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Slobad, Iron Goblin | handled |  |  | Y/Y/- | not_tested |
 | Staff of Compleation | handled | {T}, Pay 1 life: Destroy target permanent you own. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Surgical Skullbomb | handled | {1}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sword of Forge and Frontier | handled | Equipped creature gets +2/+2 and has protection from red and from green. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -250,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>33 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
@@ -274,6 +273,7 @@
 - Prosthetic Injector
 - Sheoldred's Edict
 - Skyscythe Engulfer
+- Slobad, Iron Goblin
 - Solphim, Mayhem Dominus
 - Soulless Jailer
 - Swooping Lookout

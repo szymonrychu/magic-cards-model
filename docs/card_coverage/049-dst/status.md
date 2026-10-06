@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.3% |
-| Works (untested) | 78 | 48.1% |
+| Works (untested) | 79 | 48.8% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 67 | 41.4% |
+| Not working | 66 | 40.7% |
 
 ## Cards needing work
 
@@ -71,7 +71,6 @@
 | Scrounge | silent | Target opponent chooses an artifact card in their graveyard. Put that card onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stand Together | silent | Put two +1/+1 counters on target creature and two +1/+1 counters on another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sundering Titan | silent | When this creature enters or leaves the battlefield, choose a land of each basic land type, then destroy those lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Surestrike Trident | silent | Equipped creature has first strike and "{T}, Unattach Surestrike Trident: This creature deals damage equal to its power to target player or planeswalker." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Dissector | silent | {X}, {T}: Target opponent reveals cards from the top of their library until an artifact card or X cards are revealed, whichever comes first. If an artifact card | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thunderstaff | silent | {2}, {T}: Attacking creatures get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Turn the Tables | silent | All combat damage that would be dealt to you this turn is dealt to target attacking creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -166,6 +165,7 @@
 | Spincrusher | handled | Whenever this creature blocks, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spire Golem | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Steelshaper Apprentice | handled | {W}, {T}, Return this creature to its owner's hand: Search your library for an Equipment card, reveal that card, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Surestrike Trident | handled | Equipped creature has first strike and "{T}, Unattach Surestrike Trident: This creature deals damage equal to its power to target player or planeswalker." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sword of Light and Shadow | handled | Equipped creature gets +2/+2 and has protection from white and from black. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Synod Artificer | handled | {X}, {T}: Tap X target noncreature artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Talon of Pain | handled | Whenever a source you control other than this artifact deals damage to an opponent, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -228,7 +228,6 @@
 | enchanted permanent has "..." | 1 | Psychic Overload | dst |
 | equipment named sword of kaldra, ~, and helm of kaldra have indestructible. | 1 | Shield of Kaldra | dst |
 | equipped creature can't be blocked and has shroud. | 1 | Whispersilk Cloak | dst |
-| equipped creature has first strike and "..." | 1 | Surestrike Trident | dst |
 | if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Darksteel Colossus | dst |
 | myr creatures get +N/+N. | 1 | Myr Matrix | dst |
 | prevent all damage target spell would deal ~. you gain life equal to the damage prevented ~. | 1 | Hallow | dst |

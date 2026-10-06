@@ -1,0 +1,157 @@
+{
+  "object": "card",
+  "id": "aad61d99-5c8e-47b7-ab1a-e70905f59205",
+  "oracle_id": "ee35de1c-aef1-4bd4-85fd-fe77bc927790",
+  "multiverse_ids": [
+    508358
+  ],
+  "mtgo_id": 88041,
+  "tcgplayer_id": 231237,
+  "cardmarket_id": 535338,
+  "name": "Marwyn, the Nurturer",
+  "lang": "en",
+  "released_at": "2021-02-05",
+  "uri": "https://api.scryfall.com/cards/aad61d99-5c8e-47b7-ab1a-e70905f59205",
+  "scryfall_uri": "https://scryfall.com/card/khc/68/marwyn-the-nurturer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:38:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.jpg?1783928311",
+    "normal": "https://cards.scryfall.io/normal/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.jpg?1783928311",
+    "large": "https://cards.scryfall.io/large/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.jpg?1783928311",
+    "png": "https://cards.scryfall.io/png/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.png?1783928311",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.jpg?1783928311",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.jpg?1783928311",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.webp?1783928311",
+    "grid": "https://cards.scryfall.io/grid/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.webp?1783928311",
+    "display": "https://cards.scryfall.io/display/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.webp?1783928311",
+    "art": "https://cards.scryfall.io/art/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.webp?1783928311",
+    "crop": "https://cards.scryfall.io/crop/front/a/a/aad61d99-5c8e-47b7-ab1a-e70905f59205.webp?1783928311"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Elf Druid",
+  "oracle_text": "Whenever another Elf you control enters, put a +1/+1 counter on Marwyn.\n{T}: Add an amount of {G} equal to Marwyn's power.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "G"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8ef95e7a-9f07-41f8-908b-2df93e03d391",
+      "component": "combo_piece",
+      "name": "Marwyn's Kindred",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/8ef95e7a-9f07-41f8-908b-2df93e03d391"
+    },
+    {
+      "object": "related_card",
+      "id": "aad61d99-5c8e-47b7-ab1a-e70905f59205",
+      "component": "combo_piece",
+      "name": "Marwyn, the Nurturer",
+      "type_line": "Legendary Creature \u2014 Elf Druid",
+      "uri": "https://api.scryfall.com/cards/aad61d99-5c8e-47b7-ab1a-e70905f59205"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d532ef25-e52b-4276-941a-3a1c095544b0",
+  "set": "khc",
+  "set_name": "Kaldheim Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d532ef25-e52b-4276-941a-3a1c095544b0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Akhc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/khc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/aad61d99-5c8e-47b7-ab1a-e70905f59205/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aee35de1c-aef1-4bd4-85fd-fe77bc927790&unique=prints",
+  "collector_number": "68",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Midwife to mothers and leader to all.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rahn",
+  "artist_ids": [
+    "7742047e-0f80-4c0f-a530-d07460165e86"
+  ],
+  "illustration_id": "63ac8c76-d027-40ee-8f7f-d6ff8d619227",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1199,
+  "penny_rank": 1869,
+  "prices": {
+    "usd": "5.69",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "5.09",
+    "eur_foil": null,
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=508358&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMarwyn%252C%2Bthe%2BNurturer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMarwyn%252C%2Bthe%2BNurturer",
+    "edhrec": "https://edhrec.com/route/?cc=Marwyn%2C+the+Nurturer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F231237%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=535338&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/88041?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

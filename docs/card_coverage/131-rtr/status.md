@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 8.9% |
+| Tested | 21 | 9.4% |
 | Works (untested) | 100 | 44.6% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 94 | 42.0% |
+| Not working | 93 | 41.5% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Angel of Serenity | silent | When this creature leaves the battlefield, return the exiled cards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archon of the Triumvirate | silent | Whenever this creature attacks, detain up to two target nonland permanents your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Axebane Guardian | silent | {T}: Add X mana in any combination of colors, where X is the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azorius Arrester | silent | When this creature enters, detain target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azorius Justiciar | silent | When this creature enters, detain up to two target creatures your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodfray Giant | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -234,9 +233,10 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Abrupt Decay
+- Axebane Guardian
 - Azorius Guildgate
 - Batterhorn
 - Chromatic Lantern
@@ -324,7 +324,6 @@
 | you may cast sorcery spells as though they had flash. | 1 | Hypersonic Dragon | rtr |
 | {M}, pay N life: flip a coin. if you win the flip, you gain N life. | 1 | Tavern Swindler | rtr |
 | {M}, {M}, discard a card: ~ deals damage to target creature equal to the discarded card's mana value. | 1 | Mercurial Chemister | rtr |
-| {M}: add N mana in any combination of colors, where N is the number of creatures you control with defender. | 1 | Axebane Guardian | rtr |
 | {M}: exile target land card from a graveyard. add one mana of any color. | 1 | Deathrite Shaman | rtr |
 | {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Doorkeeper | rtr |
 | {M}{M}: target player who lost life ~ loses N life. | 1 | Rix Maadi Guildmage | rtr |

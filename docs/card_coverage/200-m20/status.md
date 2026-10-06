@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 17.0% |
-| Works (untested) | 91 | 51.7% |
+| Works (untested) | 92 | 52.3% |
 | Partial (unaudited) | 5 | 2.8% |
-| Not working | 50 | 28.4% |
+| Not working | 49 | 27.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aerial Assault | silent | Destroy target tapped creature. You gain 1 life for each creature you control with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angelic Guardian | silent | Whenever one or more creatures you control attack, they gain indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Atemsis, All-Seeing | silent | Whenever Atemsis deals damage to an opponent, you may reveal your hand. If cards with at least six different mana values are revealed this way, that player lose | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bag of Holding | silent | Whenever you discard a card, exile that card from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -81,6 +80,7 @@
 | Mystic Forge | unaudited | You may cast artifact spells and colorless spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sephara, Sky's Blade | unaudited | You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Squad Captain | unaudited | This creature enters with a +1/+1 counter on it for each other creature you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Aerial Assault | handled | Destroy target tapped creature. You gain 1 life for each creature you control with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Agonizing Syphon | handled | Agonizing Syphon deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani, Inspiring Leader | handled | +2: You gain 2 life. Put two +1/+1 counters on up to one target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ancestral Blade | handled | When this Equipment enters, create a 1/1 white Soldier creature token, then attach this Equipment to it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -224,7 +224,6 @@
 | choose up to two target permanent cards in your graveyard that were put there from the battlefield ~. return them to the battlefield tapped. | 1 | Brought Back | m20 |
 | counter target activated ability, triggered ability, or legendary spell. | 1 | Tale's End | m20 |
 | creatures your opponents control can't have +N/+N counters put on them. | 1 | Blightbeetle | m20 |
-| destroy target tapped creature. you gain N life for each creature you control with flying. | 1 | Aerial Assault | m20 |
 | enchanted creature gets +N/+N and assigns combat damage equal to its toughness rather than its power. | 1 | Gauntlets of Light | m20 |
 | equipped creature gets +N/+N and loses flying. | 1 | Colossus Hammer | m20 |
 | exile target creature an opponent controls with mana value N or less and all other creatures that player controls with the same name as that creature. then that | 1 | Legion's End | m20 |

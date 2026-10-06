@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 16.0% |
-| Works (untested) | 99 | 52.9% |
-| Partial (unaudited) | 13 | 7.0% |
+| Works (untested) | 100 | 53.5% |
+| Partial (unaudited) | 12 | 6.4% |
 | Not working | 45 | 24.1% |
 
 ## Cards needing work
@@ -75,7 +75,6 @@
 | Anti-Venom, Horrifying Healer | unaudited | If damage would be dealt to Anti-Venom, prevent that damage and put that many +1/+1 counters on him. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Arachne, Psionic Weaver | unaudited | As Arachne enters, look at an opponent's hand, then choose a card type other than creature. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Doc Ock, Sinister Scientist | unaudited | As long as there are eight or more cards in your graveyard, Doc Ock has base power and toughness 8/8. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Electro, Assaulting Battery | unaudited | You don't lose unspent red mana as steps and phases end. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Kraven, Proud Predator | unaudited | Top of the Food Chain — Kraven's power is equal to the greatest mana value among permanents you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Madame Web, Clairvoyant | unaudited | You may cast Spider spells and noncreature spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Morlun, Devourer of Spiders | unaudited | Morlun enters with X +1/+1 counters on him. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -100,6 +99,7 @@
 | Daily Bugle Reporters | handled | When this creature enters, choose one — • Puff Piece — Put a +1/+1 counter on each of up to two target creatures. • Investigative Journalism — Return target cre | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Damage Control Crew | handled | When this creature enters, choose one — • Repair — Return target card with mana value 4 or greater from your graveyard to your hand. • Impound — Exile target ar | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eerie Gravestone | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Electro, Assaulting Battery | handled | You don't lose unspent red mana as steps and phases end. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ezekiel Sims, Spider-Totem | handled | At the beginning of combat on your turn, target Spider you control gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flying Octobot | handled | Whenever another Villain you control enters, put a +1/+1 counter on this creature. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gallant Citizen | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -275,7 +275,6 @@
 | whenever you draw your first or second card each turn, put an ingenuity counter on lady octopus. | 1 | Lady Octopus, Inspired Inventor | spm |
 | whenever ~ deals N or more damage, exile the top card of your library. until the end of your next turn, you may play that card. | 1 | Spinneret and Spiderling | spm |
 | whenever ~ deals combat damage to a player, look at that many cards from the top of your library. put one of them into your hand and the rest into your graveyar | 1 | Symbiote Spider-Man | spm |
-| you don't lose unspent red mana as steps and phases end. | 1 | Electro, Assaulting Battery | spm |
 | you may cast spider spells and noncreature spells from the top of your library. | 1 | Madame Web, Clairvoyant | spm |
 | you may cast ~ from your graveyard by discarding a card in addition to paying its other costs. | 1 | Alien Symbiosis | spm |
 | {M}, return a tapped creature you control to its owner's hand: put ~ from your hand onto the battlefield. activate only as a sorcery. | 1 | Urban Retreat | spm |

@@ -3264,7 +3264,7 @@ class CardState(EngineModel):
         """
         text = self.oracle_text
         if not self.is_class:
-            return text
+            return self.station_live_text(text)
         from ..machines.abilities import ActivatedAbility, parse_abilities
 
         up_face_name = self.up_face_name or self.card.name
@@ -3278,6 +3278,28 @@ class CardState(EngineModel):
             and (ability.class_level is None or ability.class_level <= self.class_level)
         ]
         return "\n".join(lines)
+
+    def station_threshold_met(self, threshold: int | None) -> bool:
+        """CR 721.2a: "As long as this permanent has N or more charge counters
+        on it" - True for an ability printed outside every striation."""
+        return threshold is None or self.counter_count("charge") >= threshold
+
+    def station_live_text(self, text: str | None) -> str:
+        """`text` with each station striation (CR 721.2) narrowed to what this
+        permanent has right now: a striation whose N its charge counters
+        reach keeps its abilities, symbol taken off; one they do not reach is
+        left out, the same way `class_ability_text` leaves out a level the
+        Class has not reached. Text with no station symbol comes back as is.
+        """
+        from ..machines.abilities import STATION_SYMBOL_RE, station_striations
+
+        if not text or not any(STATION_SYMBOL_RE.match(line.strip()) for line in text.splitlines()):
+            return text or ""
+        return "\n".join(
+            line
+            for line, threshold in station_striations(text.splitlines())
+            if self.station_threshold_met(threshold)
+        )
 
     @property
     def chapter_numbers(self) -> tuple[int, ...]:

@@ -78,7 +78,7 @@ from ..models.card_state import (
     FaceDownCharacteristics,
     TargetRef,
 )
-from ..models.mana import ManaCost, ManaRetentionScope
+from ..models.mana import ManaCost, ManaRestriction, ManaRetentionScope
 from ..models.player import Player
 from ..models.token import (
     PREDEFINED,
@@ -161,6 +161,7 @@ from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
     AddManaAmountForController,
+    AddManaInAnyCombinationForController,
     AddManaWhenLandTapped,
     CombatDamageToPlayerDraw,
     CopyNextSpellYouCast,
@@ -1036,19 +1037,26 @@ _COLOR_LETTERS: tuple[str, ...] = ("W", "U", "B", "R", "G")
 
 
 def _choose_a_color(
-    game: "Game", player: Player, source_name: str, prompt: str, *, source_id: str | None
+    game: "Game",
+    player: Player,
+    source_name: str,
+    prompt: str,
+    *,
+    source_id: str | None,
+    colors: "Sequence[Color] | None" = None,
 ) -> Color:
     """CR 608.2d's "of your choice", asked with `DecisionKind.CHOOSE_A_
     QUALITY` narrowed to CR 105's five colours - the same kind and the same
     narrowing `_parse_destroy_each_then_add_mana_per_destroyed` already uses
-    for Culling Ritual's own per-unit colour choice.
+    for Culling Ritual's own per-unit colour choice. `colors` narrows it
+    further to a printed palette ("any combination of {R} and/or {G}").
     """
     decision = Decision(
         kind=DecisionKind.CHOOSE_A_QUALITY,
         player=player.username,
         prompt=prompt,
         source=source_name,
-        options=_COLOR_LETTERS,
+        options=_COLOR_LETTERS if colors is None else tuple(color.value for color in colors),
         source_id=source_id,
     )
     value = game.ask(decision)
@@ -11111,7 +11119,9 @@ _PUT_COUNTER_THEN_FOR_EACH_COUNTER_RE = re.compile(
 )
 
 
-def _parse_put_counter_then_for_each_counter_punisher_clause(text: str) -> AbilityEffect | None:
+def _parse_put_counter_then_for_each_counter_punisher_clause(
+    text: str,
+) -> AbilityEffect | None:
     """`_PUT_COUNTER_THEN_FOR_EACH_COUNTER_RE`'s shape, or `None`.
 
     Ability-only in practice (the "it" is CR 109.2's self-reference to the
@@ -12107,7 +12117,100 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     generic = count_expression(stripped)
     if generic is not None:
         return lambda game, controller, _source_id: generic(game, controller)
-    return None
+    return _for_each_described_count(stripped)
+
+
+#: "`<description>` you control", the control clause anywhere in it -
+#: Overgrown Battlement's "creature you control with defender", Leafkin
+#: Avenger's "creature with power 4 or greater you control", Cabal
+#: Stronghold's "basic Swamp you control". The rest is read with the
+#: target grammar (`targeting.permanent_description`), so a "for each" count
+#: and a target restriction can never disagree about what a word means.
+_DESCRIBED_CONTROL_CLAUSE_RE = re.compile(
+    r"\s+(?P<whose>you control|your opponents control|on the battlefield)(?=\s|$)",
+    re.IGNORECASE,
+)
+#: CR 201.2's name, trailing a description - Powerstone Shard's "artifact you
+#: control named Powerstone Shard".
+_DESCRIBED_NAMED_RE = re.compile(r"^(?P<rest>.+?)\s+named\s+(?P<name>[A-Z][\w',-]*(?: [\w',-]+)*)$")
+#: "`<quality>` card(s) in your graveyard" whose quality is more than one
+#: word - Crypt of Agadeem's "black creature card in your graveyard"; read
+#: with the search grammar's `_quality_matcher` (a colour word qualifying a
+#: type word).
+_DESCRIBED_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
+    r"^(?P<quality>.+?) cards? in your graveyard$", re.IGNORECASE
+)
+
+
+def _for_each_described_count(phrase: str) -> Callable[["Game", str, str | None], int] | None:
+    """The "for each `<description>`" counts the narrower readers above do
+    not reach, as a `(game, controller, source_id) -> int` reader, or `None`
+    when any word of the description is left unread.
+
+    - **On the battlefield**: one control clause ("you control" / "your
+      opponents control", or "on the battlefield" for everyone's) wherever
+      it sits, an optional trailing "named
+      `<name>`" (CR 201.2a: same name), and a permanent description the target
+      grammar reads in full - supertypes (CR 205.4a's "basic"), colours,
+      keywords (CR 702.3a's defender), and power/toughness/mana value
+      comparisons. Read off the computed board (CR 613.5).
+    - **In your graveyard**: a card description `_quality_matcher` reads in
+      full - a colour word qualifying a type word.
+
+    CR 608.2h: whoever calls this counts once, as the effect applies.
+    """
+    # "the number of creatures you control with defender" (Axebane Guardian's
+    # "where X is") is the identical count spelled as a number.
+    text = re.sub(r"^(?:the )?number of ", "", " ".join(phrase.split()), flags=re.IGNORECASE)
+    graveyard = _DESCRIBED_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(text)
+    if graveyard is not None:
+        quality = graveyard.group("quality")
+        if not _card_description_is_readable(quality):
+            return None
+        matches_card = _quality_matcher(quality)
+
+        def count_described_cards(game: "Game", controller: str, _source_id: str | None) -> int:
+            return sum(1 for card in game.player(controller).graveyard if matches_card(card))
+
+        return count_described_cards
+    clauses = list(_DESCRIBED_CONTROL_CLAUSE_RE.finditer(text))
+    if len(clauses) != 1:
+        return None
+    clause = clauses[0]
+    whose = clause.group("whose").lower()
+    opponents = whose == "your opponents control"
+    # Priest of Titania's "Elf on the battlefield": no control clause at all,
+    # so every player's permanents count.
+    anyone = whose == "on the battlefield"
+    description = f"{text[: clause.start()]}{text[clause.end() :]}".strip()
+    name: str | None = None
+    if named := _DESCRIBED_NAMED_RE.fullmatch(description):
+        description, name = named.group("rest"), named.group("name")
+    if description.lower() in ("permanent", "permanents"):
+        requirement = None
+    else:
+        requirement = permanent_description(description)
+        if requirement is None:
+            return None
+
+    def count_described(game: "Game", controller: str, _source_id: str | None) -> int:
+        board = game.computed_board()
+        total = 0
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            owner = chars.controller
+            if opponents and (owner is None or owner == controller):
+                continue
+            if not opponents and not anyone and owner != controller:
+                continue
+            if name is not None and chars.name != name:
+                continue
+            if requirement is not None and requirement.rejects(permanent, controller, game):
+                continue
+            total += 1
+        return total
+
+    return count_described
 
 
 def _amount_reader(n_text: str, where_text: str | None) -> Callable[["Game", str], int] | None:
@@ -21755,9 +21858,10 @@ def _merge_add_any_combination_mana_with_restriction_clauses(
     match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(clauses[index].strip())
     if match is None:
         return None
-    count = parse_count(match.group("n"))
-    if count is None or count <= 0:
+    read = _read_any_combination_mana(match, clauses[index])
+    if read is None:
         return None
+    palette, count_of = read
     second = clauses[index + 1].strip()
     if not second.endswith("."):
         second = second + "."
@@ -21766,20 +21870,11 @@ def _merge_add_any_combination_mana_with_restriction_clauses(
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        player = game.controller_of(stack_object)
-        pool = player.mana_pool
-        source = (
-            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        )
-        for _ in range(count):
-            color = _choose_a_color(
-                game,
-                player,
-                source,
-                "choose a color for mana",
-                source_id=source_id_of(stack_object),
+        count = count_of(game, stack_object)
+        if count:
+            _add_mana_in_any_combination(
+                game, stack_object, count, palette, restriction=restriction
             )
-            pool.add(color, restriction=restriction)
 
     return 2, effect
 
@@ -27778,6 +27873,80 @@ def _parse_look_top_x_put_permanents_clause(text: str) -> AbilityEffect | None:
 
 
 # --------------------------------------------------------------------------
+# "Exile the top N cards of your library. [You may ]put <any number of|all>
+# <quality> cards from among them onto the battlefield." (CR 406.1's exile,
+# CR 110.2's put)
+# --------------------------------------------------------------------------
+#
+# Xenagos, the Reveler's `-6`: "Exile the top seven cards of your library. You
+# may put any number of creature and/or land cards from among them onto the
+# battlefield." and Tezzeret, Master of the Bridge's `-8`: "Exile the top ten
+# cards of your library. Put all artifact cards from among them onto the
+# battlefield." - one shape, two quantifiers. "Any number of" is CR 107.1c's
+# own built-in optionality (zero included), so the player chooses among the
+# qualifying cards; "all" asks nothing. "Them" is the cards this instruction
+# just exiled, never the rest of the exile zone, and whatever is not put onto
+# the battlefield simply stays exiled - there is no "the rest" instruction to
+# move it. CR 609.3: a library shorter than N exiles what there is.
+_EXILE_TOP_N_PUT_FROM_AMONG_RE = re.compile(
+    rf"^exile the top (?P<n>{COUNT}) cards of your library\.\s*"
+    r"(?:(?P<may>you may )?put (?P<quantifier>any number of|all) )"
+    r"(?P<quality>[a-z]+(?:(?:,| or| and/or) [a-z]+)*?) cards?"
+    r" from among them onto the battlefield(?P<tapped> tapped)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_exile_top_n_put_from_among_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_TOP_N_PUT_FROM_AMONG_RE`'s shape - see the banner above."""
+    match = _EXILE_TOP_N_PUT_FROM_AMONG_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).strip().split())
+    )
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+    quality = re.sub(r"\s+and/or\s+", " or ", match.group("quality"))
+    if not _search_quality_is_readable(quality):
+        return None
+    quality_matches = _quality_matcher(quality)
+    choose = match.group("quantifier").lower() == "any number of"
+    if not choose and match.group("may") is not None:
+        return None
+    tapped = match.group("tapped") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+        top = list(controller.library[:count])
+        if not top:
+            return
+        exiled = [state for state in game.exile_cards(top) if state.zone is Zone.EXILE]
+        candidates = [state for state in exiled if quality_matches(state)]
+        chosen = candidates
+        if choose and candidates:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="put any number of them onto the battlefield",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=len(candidates),
+                    exact=False,
+                    cards=tuple(state.id for state in candidates),
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            chosen = [state for card_id in chosen_ids if (state := by_id.get(card_id)) is not None]
+        for state in chosen:
+            if state.zone is Zone.EXILE:
+                game.put_onto_battlefield(state, controller.username, tapped=tapped)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
 # ecl-T8: "Mill N cards, then [you may ]put a[n] <quality> card [from among
 # them|from your graveyard] on top of your library." (CR 701.17a's mill)
 # --------------------------------------------------------------------------
@@ -28059,6 +28228,150 @@ def _aura_host_for_entry(
         assert isinstance(picked, tuple)
         return next(player for player in players if player.username == picked[0])
     return None
+
+
+#: "Look at the top card of your library. You may reveal that card[ if
+#: <condition>][ and put it into your hand]. If you do, <effect>[ and put it
+#: into your hand].[ If you don't reveal it, put it into your hand.]" - the
+#: reveal is the choice, and the "if you do" effect reads the revealed card
+#: back through "its" (CR 608.2c's anaphora onto the card this same
+#: instruction showed). Omnath, Locus of All's first-main-phase trigger
+#: gates the reveal on "it has three or more colored mana symbols in its mana
+#: cost", adds "three mana in any combination of its colors" and puts the
+#: card into hand either way; Sorin the Mirthless's `+1` has no condition,
+#: puts the card into hand as part of the reveal, and "if you do, you lose
+#: life equal to its mana value" - declined, the card stays on top (CR
+#: 701.20b: looking moves nothing).
+_LOOK_TOP_MAY_REVEAL_RE = re.compile(
+    r"^look at the top card of your library\. you may reveal (?:that card|it)"
+    r"(?: if (?P<condition>[^.]+?))?(?P<put_with_reveal> and put it into your hand)?\. "
+    r"if you do, (?P<consequence>[^.]+?)(?P<put_after> and put it into your hand)?\."
+    r"(?P<else_put> if you don't reveal it, put it into your hand\.?)?$",
+    re.IGNORECASE,
+)
+
+#: CR 107.4c/107.4e/107.4f: a colored mana symbol is one with a color in it
+#: - a hybrid ({R/G}), a monocolored hybrid ({2/W}) and a Phyrexian ({G/P})
+#: symbol each count once (Omnath, Locus of All's own ruling counts
+#: {R/G}{G}{G/W} as three).
+_COLORED_SYMBOLS_CONDITION_RE = re.compile(
+    rf"^it has (?P<n>{COUNT}) or more colored mana symbols in its mana cost$", re.IGNORECASE
+)
+_IT_IS_A_QUALITY_CONDITION_RE = re.compile(r"^it's an? (?P<quality>.+?) card$", re.IGNORECASE)
+_ADD_ANY_COMBINATION_OF_ITS_COLORS_RE = re.compile(
+    rf"^add (?P<n>{COUNT}) mana in any combination of its colors$", re.IGNORECASE
+)
+_LOSE_LIFE_EQUAL_TO_ITS_MANA_VALUE_RE = re.compile(
+    r"^you lose life equal to its mana value$", re.IGNORECASE
+)
+
+
+def colored_mana_symbols(state: CardState) -> int:
+    """How many colored mana symbols `state`'s mana cost has (CR 107.4)."""
+    return sum(
+        1
+        for symbol in re.findall(r"\{([^}]+)\}", state.mana_cost or "")
+        if set(symbol.upper()) & set(_COLOR_LETTERS)
+    )
+
+
+def _look_top_reveal_condition(text: str) -> Callable[[CardState], bool] | None:
+    """The "if <condition>" gate on the reveal, read against the looked-at card."""
+    if match := _COLORED_SYMBOLS_CONDITION_RE.fullmatch(text.strip()):
+        threshold = parse_count(match.group("n"))
+        if threshold is None:
+            return None
+        return lambda state: colored_mana_symbols(state) >= threshold
+    if match := _IT_IS_A_QUALITY_CONDITION_RE.fullmatch(text.strip()):
+        quality = match.group("quality")
+        if not _search_quality_is_readable(quality):
+            return None
+        return _quality_matcher(quality)
+    return None
+
+
+_RevealedCardEffect = Callable[["Game", AbilityOnStack, CardState], None]
+
+
+def _look_top_reveal_consequence(text: str) -> _RevealedCardEffect | None:
+    """The "if you do" effect, given the revealed card its "its" names."""
+    if match := _ADD_ANY_COMBINATION_OF_ITS_COLORS_RE.fullmatch(text.strip()):
+        count = parse_count(match.group("n"))
+        if count is None:
+            return None
+
+        def add_its_colors(game: "Game", ability: AbilityOnStack, revealed: CardState) -> None:
+            # CR 105.2: the revealed card's own colors; a colorless card
+            # offers no color, and CR 609.3 adds nothing.
+            palette = tuple(color for color in revealed.colors if color is not Color.COLORLESS)
+            if palette:
+                _add_mana_in_any_combination(game, ability, count, palette)
+
+        return add_its_colors
+    if _LOSE_LIFE_EQUAL_TO_ITS_MANA_VALUE_RE.fullmatch(text.strip()):
+
+        def lose_its_mana_value(game: "Game", ability: AbilityOnStack, revealed: CardState) -> None:
+            # CR 202.3: the card's mana value, read as it was revealed.
+            game.lose_life(ability.controller, int(revealed.mana_value))
+
+        return lose_its_mana_value
+    if re.search(r"\b(?:it|its|that card)\b", text, re.IGNORECASE):
+        return None
+    plain = _parse_mixed_clause(text.strip(), for_spell=False)
+    if plain is None:
+        return None
+    return lambda game, ability, _revealed: plain(game, ability)
+
+
+def _parse_look_top_may_reveal_clause(text: str) -> AbilityEffect | None:
+    """`_LOOK_TOP_MAY_REVEAL_RE`'s shape - see the banner above.
+
+    An empty library has no top card (CR 609.3: nothing happens). The look
+    (CR 701.20e) shows the card to its controller only; the reveal, when
+    taken, shows it to everyone (CR 701.20a). A card that fails the condition
+    cannot be revealed, so no question is asked about it at all."""
+    match = _LOOK_TOP_MAY_REVEAL_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).strip().split())
+    )
+    if match is None:
+        return None
+    condition = (
+        _look_top_reveal_condition(match.group("condition"))
+        if match.group("condition") is not None
+        else (lambda _state: True)
+    )
+    if condition is None:
+        return None
+    consequence = _look_top_reveal_consequence(match.group("consequence"))
+    if consequence is None:
+        return None
+    put_with_reveal = match.group("put_with_reveal") is not None
+    put_after = match.group("put_after") is not None
+    else_put = match.group("else_put") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        if not player.library:
+            return
+        top = player.library[0]
+        game.look(top, ability.controller, source=ability.source_name)
+        revealed = condition(top) and game.may(
+            player,
+            f"reveal {top.name}",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        )
+        if revealed:
+            game.reveal(top, source=ability.source_name)
+            if put_with_reveal and top.zone is Zone.LIBRARY:
+                player.move(top, Zone.HAND)
+            consequence(game, ability, top)
+            if put_after and top.zone is Zone.LIBRARY:
+                player.move(top, Zone.HAND)
+        elif else_put and top.zone is Zone.LIBRARY:
+            player.move(top, Zone.HAND)
+
+    return effect
 
 
 #: One instruction ahead of the look/reveal - Llanowar Empath's "scry 2, then
@@ -31576,6 +31889,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     add_one_mana_of_any_color = _parse_add_one_mana_of_any_color_trigger(effect_text)
     if add_one_mana_of_any_color is not None:
         return add_one_mana_of_any_color
+    add_mana_in_any_combination = _parse_add_mana_in_any_combination_trigger(effect_text)
+    if add_mana_in_any_combination is not None:
+        return add_mana_in_any_combination
     add_that_much_colored_mana = _parse_add_that_much_colored_mana_trigger(effect_text)
     if add_that_much_colored_mana is not None:
         return add_that_much_colored_mana
@@ -31857,12 +32173,18 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     # family. It replaced a card-specific `_parse_mill_then_may_put_land_in_hand_clause`
     # (Six only), which is why the dispatch entry for that parser is not
     # carried over here - the function no longer exists.
+    look_top_may_reveal = _parse_look_top_may_reveal_clause(effect_text)
+    if look_top_may_reveal is not None:
+        return look_top_may_reveal
     select_from_top = _parse_select_from_top_clause(effect_text)
     if select_from_top is not None:
         return select_from_top
     look_top_x_put_permanents = _parse_look_top_x_put_permanents_clause(effect_text)
     if look_top_x_put_permanents is not None:
         return look_top_x_put_permanents
+    exile_top_n_put_from_among = _parse_exile_top_n_put_from_among_clause(effect_text)
+    if exile_top_n_put_from_among is not None:
+        return exile_top_n_put_from_among
     that_player_loses_life_searches = _parse_that_player_loses_life_searches_puts_in_hand_clause(
         effect_text, for_spell=False
     )
@@ -40254,6 +40576,84 @@ def _parse_counter_then_wizard_mana_from_countered_pair(
                     only_when_active=controller.username,
                 )
             )
+
+    return effect
+
+
+#: Plasm Capture: "Counter target spell. At the beginning of your next first
+#: main phase, add X mana in any combination of colors, where X is that
+#: spell's mana value." The countered spell's mana value is read the way
+#: Access Denied's is (CR 400.7's "that spell", captured before the counter
+#: moves it); the mana is CR 603.7's delayed trigger, at the beginning of the
+#: controller's next first main phase (CR 505.1a: the precombat one) - or of
+#: any next main phase when "first" is not printed - adding that many mana in
+#: `_ADD_ANY_COMBINATION_MANA_RE`'s per-unit choice.
+_AT_NEXT_MAIN_PHASE_ADD_RE = re.compile(
+    r"^at the beginning of your next (?P<first>first )?main phase, (?P<add>add .+)$",
+    re.IGNORECASE,
+)
+_THAT_SPELLS_MANA_VALUE_RE = re.compile(r"^that spell'?s mana value$", re.IGNORECASE)
+
+
+def _parse_counter_then_delayed_any_combination_mana_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Plasm Capture's whole text as one CR 608.2c instruction pair - see the
+    banner above. A target that already left the stack (CR 608.2b) is
+    neither countered nor read, and no trigger is created."""
+    if not for_spell:
+        return None
+    if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
+        return None
+    timing = _AT_NEXT_MAIN_PHASE_ADD_RE.fullmatch(second.strip().rstrip("."))
+    if timing is None:
+        return None
+    match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(timing.group("add").strip())
+    if match is None or match.group("n") is None or match.group("n").lower() != "x":
+        return None
+    where_x = match.group("where_x")
+    if where_x is None or not _THAT_SPELLS_MANA_VALUE_RE.fullmatch(where_x.strip()):
+        return None
+    palette_text = match.group("palette")
+    palette = (
+        [Color(letter) for letter in _COLOR_LETTERS]
+        if palette_text.lower() == "colors"
+        else [Color(symbol.upper()) for symbol in _MANA_SYMBOL_RE.findall(palette_text)]
+    )
+    precombat_only = timing.group("first") is not None
+    trigger_text = second.strip()
+    if not trigger_text.endswith("."):
+        trigger_text += "."
+    trigger_text = trigger_text[0].upper() + trigger_text[1:]
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        countered: CardState | None = None
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            countered = target
+            game.counter(target)
+        if countered is None:
+            return
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=trigger_text,
+                effect=AddManaInAnyCombinationForController(
+                    amount=int(countered.card.cmc), palette=palette
+                ),
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=Step.PRECOMBAT_MAIN if precombat_only else None,
+                any_main_phase=not precombat_only,
+                controller=controller.username,
+                source_id=spell.id,
+                source_name=spell.card.name,
+                only_when_active=controller.username,
+            )
+        )
 
     return effect
 
@@ -53315,12 +53715,108 @@ def _parse_if_condition_add_mana_equal_to_clause(
 #: chosen parts) rather than `_ADD_MANA_RE`'s literal run of printed symbols.
 #: `DecisionKind.CHOOSE_A_QUALITY` is the same kind `_parse_destroy_each_
 #: then_add_mana_per_destroyed` already asks through for Culling Ritual's own
-#: per-unit colour choice, unnarrowed here (all five colours, not two) since
-#: nothing about "any combination of colors" picks a subset the way Culling
-#: Ritual's own printed "{B} or {G}" does.
+#: per-unit colour choice.
+#:
+#: The whole phrase family reads here, on a resolving spell or ability (a
+#: loyalty ability is never a mana ability, CR 605.1a, so Xenagos, the
+#: Reveler's "+1" resolves through this too):
+#:
+#: - the universe: CR 106.1a's five ("colors") or a printed palette ("{R}
+#:   and/or {G}"; "{U}, {B}, and/or {R}"), each unit chosen among it;
+#: - the count: a printed number (Manamorphose's "two"), CR 107.3's X with a
+#:   "where X is <count>" the board answers as it resolves (Xenagos's "the
+#:   number of creatures you control", CR 608.2h), or "that much" - CR 607.1's
+#:   anaphora onto the triggering event (Grand Warlord Radha's attackers).
 _ADD_ANY_COMBINATION_MANA_RE = re.compile(
-    rf"^add (?P<n>{COUNT}) mana in any combination of colors\.?$", re.IGNORECASE
+    rf"^add (?:(?P<that_much>that much)|{count_pattern('n', x=True)}) mana in any combination of "
+    r"(?P<palette>colors|\{[wubrg]\}(?:, \{[wubrg]\})*,? and/or \{[wubrg]\})"
+    rf"{where_x_pattern()}\.?$",
+    re.IGNORECASE,
 )
+
+#: How many mana an any-combination instruction adds, read as it resolves:
+#: `None` when there is nothing to read (a "that much" with no event count,
+#: which has already filed its own notice).
+_AnyCombinationCount = Callable[["Game", "StackObject"], int | None]
+
+
+def _read_any_combination_mana(
+    match: "re.Match[str]", text: str
+) -> tuple[tuple[Color, ...], _AnyCombinationCount] | None:
+    """`_ADD_ANY_COMBINATION_MANA_RE`'s palette and count reader, or `None`
+    when the count cannot be read at all (an unknown word, an X with no
+    readable definition) - the instruction then fails closed whole."""
+    palette_text = match.group("palette")
+    palette = (
+        tuple(Color(letter) for letter in _COLOR_LETTERS)
+        if palette_text.lower() == "colors"
+        else tuple(Color(symbol.upper()) for symbol in _MANA_SYMBOL_RE.findall(palette_text))
+    )
+    if match.group("that_much") is not None:
+
+        def that_much(game: "Game", stack_object: "StackObject") -> int | None:
+            if not isinstance(stack_object, AbilityOnStack):
+                return None
+            return _that_many_or_notice(
+                game,
+                text,
+                source_id=stack_object.source_id,
+                source_name=stack_object.source_name,
+                stack_object=stack_object,
+            )
+
+        return palette, that_much
+    word = match.group("n")
+    if word.lower() == "x":
+        where_x = match.group("where_x")
+        if where_x is None:
+            return None
+        reader = count_expression(where_x.strip())
+        if reader is None:
+            return None
+
+        def counted(game: "Game", stack_object: "StackObject") -> int | None:
+            return max(reader(game, game.controller_of(stack_object).username), 0)
+
+        return palette, counted
+    if match.group("where_x") is not None:
+        return None
+    fixed = parse_count(word)
+    if fixed is None or fixed <= 0:
+        return None
+    return palette, lambda _game, _stack_object: fixed
+
+
+def _add_mana_in_any_combination(
+    game: "Game",
+    stack_object: "StackObject",
+    count: int,
+    palette: Sequence[Color],
+    *,
+    restriction: "ManaRestriction | None" = None,
+    retain_until: "ManaRetentionScope | None" = None,
+) -> None:
+    """Add `count` mana to the controller's pool, each unit's colour chosen
+    on its own among `palette` (CR 106.1a, CR 608.2d); a palette of one is
+    no choice at all."""
+    player = game.controller_of(stack_object)
+    source = (
+        stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
+    )
+    for _ in range(max(count, 0)):
+        color = (
+            palette[0]
+            if len(palette) == 1
+            else _choose_a_color(
+                game,
+                player,
+                source,
+                "choose a color for mana",
+                source_id=source_id_of(stack_object),
+                colors=None if len(palette) == len(_COLOR_LETTERS) else palette,
+            )
+        )
+        player.mana_pool.add(color, restriction=restriction, retain_until=retain_until)
 
 
 def _parse_add_any_combination_mana_clause(
@@ -53330,23 +53826,60 @@ def _parse_add_any_combination_mana_clause(
     match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    count = parse_count(match.group("n"))
-    if count <= 0:
+    read = _read_any_combination_mana(match, clause)
+    if read is None:
         return None
+    palette, count_of = read
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        player = game.controller_of(stack_object)
-        pool = player.mana_pool
-        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
-        for _ in range(count):
-            color = _choose_a_color(
-                game,
-                player,
-                source,
-                "choose a color for mana",
-                source_id=source_id_of(stack_object),
-            )
-            pool.add(color)
+        count = count_of(game, stack_object)
+        if count:
+            _add_mana_in_any_combination(game, stack_object, count, palette)
+
+    return effect
+
+
+#: "`<add any combination>`. Until end of turn, you don't lose this mana as
+#: steps and phases end." / "... Spend this mana only to `<restriction>`." -
+#: the instruction with its own trailing sentences, read whole: CR 500.5b's
+#: retention (`_KEEP_MANA_UNTIL_END_OF_TURN_RE`, Grand Warlord Radha) and
+#: CR 106.6's restriction tag every unit it adds.
+def _parse_add_mana_in_any_combination_trigger(text: str) -> AbilityEffect | None:
+    """`_ADD_ANY_COMBINATION_MANA_RE` plus its trailing sentences, as one
+    triggered ability's whole effect - see the banner above."""
+    sentences = [part for part in re.split(r"(?<=\.)\s+", text.strip()) if part]
+    if not sentences:
+        return None
+    match = _ADD_ANY_COMBINATION_MANA_RE.fullmatch(sentences[0])
+    if match is None:
+        return None
+    read = _read_any_combination_mana(match, sentences[0])
+    if read is None:
+        return None
+    palette, count_of = read
+    retain_until: ManaRetentionScope | None = None
+    restriction_text: str | None = None
+    for sentence in sentences[1:]:
+        if _KEEP_MANA_UNTIL_END_OF_TURN_RE.fullmatch(sentence):
+            retain_until = ManaRetentionScope.END_OF_TURN
+            continue
+        restriction = spend_restriction(sentence)
+        if restriction is None or not restriction.understood:
+            return None
+        restriction_text = sentence
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        count = count_of(game, ability)
+        if not count:
+            return
+        restriction = (
+            spend_restriction(restriction_text, ability.source(game))
+            if restriction_text is not None
+            else None
+        )
+        _add_mana_in_any_combination(
+            game, ability, count, palette, restriction=restriction, retain_until=retain_until
+        )
 
     return effect
 
@@ -64346,6 +64879,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 parsed.append(paired)
                 index += 2
                 continue
+            paired = _parse_counter_then_delayed_any_combination_mana_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
             paired = _parse_counter_then_recruit_by_mana_value_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
@@ -64453,6 +64993,8 @@ def parse_mixed_effect_for_spell(text: str) -> Effect | None:
     the two parsers it is tried against.
     """
     clauses = _parse_mixed_clauses(text, for_spell=True)
+    if clauses is None and (carried := _carry_where_x_forward(text)) != text.strip():
+        clauses = _parse_mixed_clauses(carried, for_spell=True)
     if clauses is None:
         return None
 
@@ -64462,6 +65004,31 @@ def parse_mixed_effect_for_spell(text: str) -> Effect | None:
             game.announce_batched_events()  # CR 603.2c: one event per instruction
 
     return effect
+
+
+#: ", where X is <count>." closing a sentence - the definition CR 107.3c
+#: reads off the ability's own text.
+_WHERE_X_DEFINITION_RE = re.compile(r",\s*where X is (?P<expr>[^.]+)\.", re.IGNORECASE)
+
+
+def _carry_where_x_forward(text: str) -> str:
+    """`text` with a sentence's "where X is <count>" repeated onto each later
+    sentence that uses X without defining it (CR 107.3c, 107.3i: X defined by
+    the text has that value everywhere on the object) - Tezzeret, Master of
+    the Bridge's "... where X is the number of artifacts you control. You
+    gain X life." becomes two sentences each readable on its own. Returned
+    unchanged when there is nothing to carry."""
+    sentences = re.split(r"(?<=\.)\s+", text.strip())
+    expression: str | None = None
+    carried: list[str] = []
+    for sentence in sentences:
+        defined = _WHERE_X_DEFINITION_RE.search(sentence)
+        if defined is not None:
+            expression = defined.group("expr").strip()
+        elif expression is not None and re.search(r"\bX\b", sentence):
+            sentence = re.sub(r"\.?$", f", where X is {expression}.", sentence, count=1)
+        carried.append(sentence)
+    return " ".join(carried)
 
 
 def parse_mixed_effect(text: str) -> AbilityEffect | None:
@@ -64483,6 +65050,8 @@ def parse_mixed_effect(text: str) -> AbilityEffect | None:
     succeeds on the first of the three parsers it is tried against.
     """
     clauses = _parse_mixed_clauses(text, for_spell=False)
+    if clauses is None and (carried := _carry_where_x_forward(text)) != text.strip():
+        clauses = _parse_mixed_clauses(carried, for_spell=False)
     if clauses is None:
         return None
 

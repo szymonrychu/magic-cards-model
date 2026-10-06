@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 7.9% |
-| Works (untested) | 98 | 43.0% |
+| Works (untested) | 99 | 43.4% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 90 | 39.5% |
+| Not working | 89 | 39.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Alert Heedbonder | silent | At the beginning of your end step, you gain 1 life for each creature you control with vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archipelagore | silent | Whenever this creature mutates, tap up to X target creatures, where X is the number of times this creature has mutated. Those creatures don't untap during their | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Auspicious Starrix | silent | Whenever this creature mutates, exile cards from the top of your library until you exile X permanent cards, where X is the number of times this creature has mut | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Blood Curdle | silent | Destroy target creature. Put a menace counter on a creature you control. (It can't be blocked except by two or more creatures.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -140,6 +139,7 @@
 | Zirda, the Dawnwaker | unaudited | Companion — Each permanent card in your starting deck has an activated ability. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adaptive Shimmerer | handled | This creature enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aegis Turtle | handled |  |  | Y/Y/Y | not_tested |
+| Alert Heedbonder | handled | At the beginning of your end step, you gain 1 life for each creature you control with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Almighty Brushwagg | handled | {3}{G}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Avian Oddity | handled | When you cycle this card, put a flying counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Barrier Breach | handled | Exile up to three target enchantments. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -276,7 +276,6 @@
 | as an additional cost to cast ~, reveal a creature card from your hand. ~ deals damage to target creature or planeswalker equal to the revealed card's power. | 1 | Charge of the Forever-Beast | iko |
 | as long as enchanted creature has vigilance, it assigns combat damage equal to its toughness rather than its power. | 1 | Solid Footing | iko |
 | at the beginning of combat on your turn, choose a kind of counter at random that ~ doesn't have on it from among flying, first strike, deathtouch, hexproof, lif | 1 | Crystalline Giant | iko |
-| at the beginning of your end step, you gain N life for each creature you control with vigilance. | 1 | Alert Heedbonder | iko |
 | at the beginning of your upkeep, draw a card if you control a creature with the greatest power among creatures on the battlefield. otherwise, put a +N/+N counte | 1 | Primal Empathy | iko |
 | choose odd or even. exile each creature with mana value of the chosen quality. (zero is even.) | 1 | Extinction Event | iko |
 | counter target spell that targets a permanent you control. draw a card. | 1 | Keep Safe | iko |

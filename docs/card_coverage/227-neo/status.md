@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 11.2% |
-| Works (untested) | 119 | 44.6% |
+| Works (untested) | 120 | 44.9% |
 | Partial (unaudited) | 11 | 4.1% |
-| Not working | 107 | 40.1% |
+| Not working | 106 | 39.7% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Acquisition Octopus | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Akki War Paint | silent | As long as enchanted permanent is a creature, it gets +2/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Armguard Familiar | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Asari Captain | silent | Whenever a Samurai or Warrior you control attacks alone, it gets +1/+0 until end of turn for each Samurai or Warrior you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakened Awareness | silent | When this Aura enters, put X +1/+1 counters on enchanted permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azusa's Many Journeys // Likeness of the Seeker | silent | Whenever this creature becomes blocked, untap up to three lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Banishing Slash | silent | Destroy up to one target artifact, enchantment, or tapped creature. Then if you control an artifact and an enchantment, create a 2/2 white Samurai creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -42,7 +41,7 @@
 | Careful Cultivation | silent | As long as enchanted permanent is a creature, it gets +1/+3 and has reach and "{T}: Add {G}{G}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chainflail Centipede | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Clawing Torment | silent | As long as enchanted permanent is a creature, it gets -1/-1 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cloudsteel Kirin | silent | Equipped creature has flying and "You can't lose the game and your opponents can't win the game." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Cloudsteel Kirin | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Covert Technician | silent | Whenever this creature deals combat damage to a player, you may put an artifact card with mana value less than or equal to that damage from your hand onto the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Discover the Impossible | silent | Look at the top five cards of your library. Exile one of them face down and put the rest on the bottom of your library in a random order. You may cast the exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragonspark Reactor | silent | {4}, Sacrifice this artifact: It deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -147,6 +146,7 @@
 | Akki Ember-Keeper | handled | Whenever a nontoken modified creature you control dies, create a 1/1 colorless Spirit creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akki Ronin | handled | Whenever a Samurai or Warrior you control attacks alone, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ambitious Assault | handled | Creatures you control get +2/+0 until end of turn. If you control a modified creature, draw a card. (Equipment, Auras you control, and counters are modification | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Asari Captain | handled | Whenever a Samurai or Warrior you control attacks alone, it gets +1/+0 until end of turn for each Samurai or Warrior you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Assassin's Ink | handled | This spell costs {1} less to cast if you control an artifact and {1} less to cast if you control an enchantment. Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Atsushi, the Blazing Sky | handled | When Atsushi dies, choose one — • Exile the top two cards of your library. Until the end of your next turn, you may play those cards. • Create three Treasure to | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Automated Artificer | handled |  |  | Y/Y/- | not_tested |
@@ -306,7 +306,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| reconfigure | 10 | Acquisition Octopus, Armguard Familiar, Bronzeplate Boar, Chainflail Centipede, Leech Gauntlet | neo |
+| reconfigure | 11 | Acquisition Octopus, Armguard Familiar, Bronzeplate Boar, Chainflail Centipede, Cloudsteel Kirin | neo |
 | as long as enchanted permanent is a creature, it gets +N/+N. | 3 | Akki War Paint, Historian's Wisdom, Twisted Embrace | neo |
 | Choose one | 2 | Debt to the Kami, Storyweave | neo |
 | Channel | 1 | Mirrorshell Crab | neo |
@@ -339,7 +339,6 @@
 | enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Intercessor's Arrest | neo |
 | equipped creature gets +N/+N for each +N/+N counter on ~. | 1 | Lion Sash | neo |
 | equipped creature has base power and toughness N/N, has menace, and is a black demon in addition to its other colors and types. | 1 | Blade of the Oni | neo |
-| equipped creature has flying and "..." | 1 | Cloudsteel Kirin | neo |
 | gain control of target artifact or creature. untap it. | 1 | Invoke the Winds | neo |
 | if a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | 1 | Isshin, Two Heavens as One | neo |
 | look at the top five cards of your library. exile one of them face down and put the rest on the bottom of your library in a random order. you may cast the exile | 1 | Discover the Impossible | neo |
@@ -372,7 +371,6 @@
 | when ~ enters, tap enchanted permanent. if it's an equipment, unattach it. | 1 | Tamiyo's Compleation | neo |
 | when ~ enters, you may return an enchantment you control to its owner's hand. if you do, you gain N life. | 1 | Geothermal Kami | neo |
 | whenever a nontoken artifact you control enters, you may pay {M}{M}. if you do, create a token that's a copy of that artifact. | 1 | Replication Specialist | neo |
-| whenever a samurai or warrior you control attacks alone, it gets +N/+N until end of turn for each samurai or warrior you control. | 1 | Asari Captain | neo |
 | whenever a samurai or warrior you control attacks alone, the next spell you cast ~ costs {M} less to cast. | 1 | Peerless Samurai | neo |
 | whenever a samurai or warrior you control attacks alone, untap it. if it's the first combat phase of the turn, there is an additional combat phase after ~. | 1 | Raiyuu, Storm's Edge | neo |
 | whenever a samurai or warrior you control attacks alone, you may pay {M}. when you do, attach ~ to it. | 1 | Ancestral Katana | neo |
