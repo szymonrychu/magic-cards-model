@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from ...data.subtypes import canonical_subtype
 from ...machines import combat as combat_rules
 from ...machines.abilities import (
     AbilityKind,
@@ -1424,14 +1425,18 @@ class CostsManaMixin:
         names is left at nothing rather than guessed at.
         """
         card_type = _AFFINITY_CARD_TYPES.get(what)
-        subtype = _AFFINITY_SUBTYPES.get(what)
+        # Any printed subtype, plural as printed ("Allies", "Dragons", "Cats"),
+        # beside the basic land types the old table spelled out (CR 702.41a:
+        # "[text]" is whatever the card says; Allies at Last's "Affinity for
+        # Allies" counts Ally creatures you control).
+        subtype = (_AFFINITY_SUBTYPES.get(what) or canonical_subtype(what) or "").lower() or None
         if card_type is None and subtype is None:
             return 0
         counted = 0
         for permanent in self.permanents_controlled_by(controller):
             chars = self.characteristics_of(permanent)
             matches = (card_type is not None and card_type in chars.types) or (
-                subtype is not None and subtype in chars.subtypes
+                subtype is not None and subtype in {word.lower() for word in chars.subtypes}
             )
             # One permanent is one count however many ways it matches: CR
             # 205.2b makes an artifact creature both types, and "affinity for

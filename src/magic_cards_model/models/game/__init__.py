@@ -1922,7 +1922,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 114
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 115
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2153,6 +2153,9 @@ class Game(
     #: `every_matching` ("sacrifice all creatures you control"); existing
     #: boards resolve differently - Burn at the Stake, Soulblast, Nahiri's
     #: Wrath and Corpse Cobble read back what their additional cost paid.
+    #: 115 (nw01-t3-damage): `TargetRef` gained `slot` (CR 601.2c: which target
+    #: requirement it filled), and `TargetRequirement` gained `must_be_enchanted`
+    #: ("target enchanted creature", CR 303.4b).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

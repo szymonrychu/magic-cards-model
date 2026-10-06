@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "9b434a60-0875-47f4-a626-2c9bfa3c9b3b",
+  "oracle_id": "62879f3d-ed6d-4004-8196-f3fd7f614695",
+  "multiverse_ids": [
+    413378
+  ],
+  "mtgo_id": 60488,
+  "mtgo_foil_id": 60489,
+  "tcgplayer_id": 116783,
+  "cardmarket_id": 289549,
+  "name": "Cone of Flame",
+  "lang": "en",
+  "released_at": "2016-04-08",
+  "uri": "https://api.scryfall.com/cards/9b434a60-0875-47f4-a626-2c9bfa3c9b3b",
+  "scryfall_uri": "https://scryfall.com/card/w16/12/cone-of-flame?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:14:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.jpg?1783937685",
+    "normal": "https://cards.scryfall.io/normal/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.jpg?1783937685",
+    "large": "https://cards.scryfall.io/large/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.jpg?1783937685",
+    "png": "https://cards.scryfall.io/png/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.png?1783937685",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.jpg?1783937685",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.jpg?1783937685",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.webp?1783937685",
+    "grid": "https://cards.scryfall.io/grid/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.webp?1783937685",
+    "display": "https://cards.scryfall.io/display/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.webp?1783937685",
+    "art": "https://cards.scryfall.io/art/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.webp?1783937685",
+    "crop": "https://cards.scryfall.io/crop/front/9/b/9b434a60-0875-47f4-a626-2c9bfa3c9b3b.webp?1783937685"
+  },
+  "mana_cost": "{3}{R}{R}",
+  "cmc": 5.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Cone of Flame deals 1 damage to any target, 2 damage to another target, and 3 damage to a third target.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b3a0e4a1-5f2c-44e1-8558-61e6dcd88fda",
+  "set": "w16",
+  "set_name": "Welcome Deck 2016",
+  "set_type": "starter",
+  "set_uri": "https://api.scryfall.com/sets/b3a0e4a1-5f2c-44e1-8558-61e6dcd88fda",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aw16&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/w16?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9b434a60-0875-47f4-a626-2c9bfa3c9b3b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A62879f3d-ed6d-4004-8196-f3fd7f614695&unique=prints",
+  "collector_number": "12",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chippy",
+  "artist_ids": [
+    "a36f01a0-e51a-48b2-a556-b9b3bc73f969"
+  ],
+  "illustration_id": "74fe0162-9c70-4c85-819c-3822e5b5ddb2",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "starterdeck"
+  ],
+  "edhrec_rank": 24203,
+  "penny_rank": 14648,
+  "prices": {
+    "usd": "0.05",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": null,
+    "tix": "0.06"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=413378&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCone%2Bof%2BFlame",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCone%2Bof%2BFlame",
+    "edhrec": "https://edhrec.com/route/?cc=Cone+of+Flame"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F116783%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=289549&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/60488?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

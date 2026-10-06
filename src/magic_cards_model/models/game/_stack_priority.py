@@ -2052,10 +2052,14 @@ class StackPriorityMixin:
         this ability from the stack before it was ever placed - see there.
         """
         front = ability.source_name.split("//")[0].strip()
-        if ability.source_name in self.trigger_targets:
-            return self.trigger_targets[ability.source_name]
-        if front in self.trigger_targets:
-            return self.trigger_targets[front]
+        scripted = self.trigger_targets.get(ability.source_name)
+        if scripted is None:
+            scripted = self.trigger_targets.get(front)
+        if scripted is not None:
+            profile, _ = self._trigger_target_profile(ability)
+            return self.stamp_target_slots(
+                profile, list(scripted), ability.controller, ability.source_id
+            )
         return self._ask_trigger_targets(ability)
 
     def _legal_target_candidates(

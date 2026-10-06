@@ -902,6 +902,16 @@ class TriggersDecisionsMixin:
         An ability with no targeting requirement at all is not asked anything
         and gets no notice either - there is nothing to be silent about.
         """
+        profile, text = self._trigger_target_profile(ability)
+        return self._ask_targets(
+            profile, ability.controller, ability.source_id, ability.source_name, text
+        )
+
+    def _trigger_target_profile(
+        self: "Game", ability: AbilityOnStack
+    ) -> tuple[TargetingProfile, str]:
+        """The targeting profile (and the text it was read from) a triggered
+        ability announces its targets under (CR 603.3d)."""
         printed = ability.ability
         text = printed.text if isinstance(printed, TriggeredAbility) else ""
         # CR 603.12: when this ability *is itself* the reflexively created
@@ -949,9 +959,33 @@ class TriggersDecisionsMixin:
             .for_event_player(_that_player_of(ability))
             .for_defending_player(self._defending_player_of(ability))
         )
-        return self._ask_targets(
-            profile, ability.controller, ability.source_id, ability.source_name, text
+        return profile, text
+
+    def stamp_target_slots(
+        self: "Game",
+        profile: TargetingProfile,
+        refs: list[TargetRef],
+        controller: str,
+        source_id: UUID | None,
+    ) -> list[TargetRef]:
+        """Record on each announced target which of `profile`'s requirements it
+        filled (CR 601.2c, via CR 602.2b / CR 603.3d), as a cast does.
+
+        Only an ability with several requirements has anything to tell apart;
+        resolution then judges each target against the requirement it was
+        announced under (CR 608.2b) instead of replaying the placement on a
+        board that may have changed - a source whose controller changed in
+        response would otherwise be placed into a different requirement.
+        """
+        if not profile.understood or len(profile.requirements) < 2 or not refs:
+            return refs
+        slots = profile.assign_slots(
+            [self.resolve_target(ref) for ref in refs], controller, self, source_id
         )
+        return [
+            ref if slot is None else ref.model_copy(update={"slot": slot})
+            for ref, slot in zip(refs, slots, strict=True)
+        ]
 
     def _ask_targets(
         self: "Game",
@@ -1084,7 +1118,9 @@ class TriggersDecisionsMixin:
             # `TargetingProfile.check`'s, judged on the objects themselves.
             by_id = {TargetRef.coerce(c): c for c in candidates}
             profile.check([by_id.get(ref, ref) for ref in chosen], controller, self, source_id)
-        return list(chosen)
+        return self.stamp_target_slots(
+            profile, [TargetRef.coerce(ref) for ref in chosen], controller, source_id
+        )
 
     def choose_trigger_targets(self: "Game", card_name: str, targets: list[object]) -> None:
         """Say what a card's triggered ability will target when it goes on the stack.

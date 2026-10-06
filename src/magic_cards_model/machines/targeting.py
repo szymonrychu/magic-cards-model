@@ -526,6 +526,10 @@ class TargetRequirement(EngineModel):
     """"target outlaw creature" - CR 700.12a's outlaw quality (Assassin,
     Mercenary, Pirate, Rogue, Warlock creature types), the same vocabulary
     `machines/conditions/board.py`'s own "outlaw" condition word reads."""
+    must_be_enchanted: bool = False
+    """"target enchanted creature" (Graceful Takedown) - CR 303.4b: a permanent
+    with an Aura attached to it is enchanted. Rechecked on resolution (CR
+    608.2b), so a creature that lost its only Aura is no longer a legal one."""
     excludes_outlaw: bool = False
     """"target non-outlaw creature" (Shoot the Sheriff) - CR 700.12a's
     outlaw quality, negated: a permanent with none of the five outlaw
@@ -1091,6 +1095,9 @@ class TargetRequirement(EngineModel):
         historic = self._rejects_historic(target, game)
         if historic is not None:
             return historic
+        unenchanted = self._rejects_unenchanted(target, game)
+        if unenchanted is not None:
+            return unenchanted
         if self.must_be_tapped is not None and target.tapped is not self.must_be_tapped:
             state = "tapped" if self.must_be_tapped else "untapped"
             return (
@@ -1290,6 +1297,19 @@ class TargetRequirement(EngineModel):
         if is_historic:
             return None
         return f"{self.phrase} needs a historic card, and {target.name} is not one"
+
+    def _rejects_unenchanted(self, target: CardState, game: Any = None) -> str | None:
+        """CR 303.4b: "enchanted" means an Aura is attached to the permanent.
+
+        Fails open without a game, like every check that reads the board."""
+        if not self.must_be_enchanted or game is None:
+            return None
+        for permanent in game.battlefield:
+            if permanent.attached_to == target.id and "aura" in {
+                subtype.lower() for subtype in self._current_subtypes(permanent, game)
+            }:
+                return None
+        return f"{self.phrase} needs an enchanted permanent, and {target.name} has no Aura on it"
 
     def _rejects_required_keyword(self, target: CardState, game: Any = None) -> str | None:
         """CR 702: "with flying" and its like siblings (Kraul Harpooner).
@@ -1897,8 +1917,12 @@ class TargetingProfile(EngineModel):
         source_id: UUID | None = None,
         *,
         source: Any = None,
-    ) -> None:
+    ) -> list[int | None] | None:
         """Raise if this set of targets could not legally be announced (CR 601.2c).
+
+        Returns which requirement each target filled (`assign_slots`), for a
+        caller that stores it on the announced `TargetRef`s, or `None` for a
+        profile that was not understood.
 
         A spell that requires targets cannot be cast with fewer than it needs -
         it is not an illegal spell that fizzles later, it is a cast that never
@@ -1944,7 +1968,7 @@ class TargetingProfile(EngineModel):
         self._check_hexproof(targets, caster, game, source, source_id)
 
         if not self.understood:
-            return
+            return None
 
         maximum = self.max_targets
         if maximum is not None and len(targets) > maximum:
@@ -1976,6 +2000,7 @@ class TargetingProfile(EngineModel):
         self._check_one_per_opponent(targets, caster, game, source_id)
         self._check_prior_target_player(targets, caster, game, source_id)
         self._check_distinct_from_prior(taken)
+        return self.assign_slots(targets, caster, game, source_id)
 
     def prior_target_player(
         self,
@@ -2087,14 +2112,22 @@ class TargetingProfile(EngineModel):
         for position, requirement in enumerate(self.requirements):
             if not requirement.distinct_from_prior_requirement or position == 0:
                 continue
-            prior = self.requirements[position - 1]
-            overlap = taken.get(id(requirement), set()) & taken.get(id(prior), set())
-            if overlap:
-                raise ValueError(
-                    f"{requirement.phrase} needs a target other than the one chosen for "
-                    f"{prior.phrase}, and the same object was named for both (CR 115.3, "
-                    "CR 115.4)"
-                )
+            # A run of consecutive "other" requirements (Cone of Flame's third
+            # target, "a third target") differs from every earlier one of the
+            # run, not only the one printed immediately before it.
+            earlier = position - 1
+            while True:
+                prior = self.requirements[earlier]
+                overlap = taken.get(id(requirement), set()) & taken.get(id(prior), set())
+                if overlap:
+                    raise ValueError(
+                        f"{requirement.phrase} needs a target other than the one chosen for "
+                        f"{prior.phrase}, and the same object was named for both (CR 115.3, "
+                        "CR 115.4)"
+                    )
+                if earlier == 0 or not prior.distinct_from_prior_requirement:
+                    break
+                earlier -= 1
 
     def _check_protection(self, targets: list[Any], game: Any, caster: str | None = None) -> None:
         """CR 702.16b, at announcement (CR 601.2c) rather than only at the
@@ -2191,10 +2224,178 @@ class TargetingProfile(EngineModel):
             if refusal is not None:
                 raise ValueError(refusal)
 
+    def assign_slots(
+        self, targets: list[Any], caster: str, game: Any = None, source_id: UUID | None = None
+    ) -> list[int | None]:
+        """Which requirement (an index into `requirements`) each target fills,
+        by the same first-fit `_fill_slots` applies at announcement (CR 601.2c)
+        - but never raising: a target that fits nothing, or `None` (an object
+        that has since left), is `None` in the answer.
+
+        A spell whose several requirements name different roles (Allies at
+        Last's "up to two target creatures you control" and its victim "target
+        creature an opponent controls") needs to know at resolution which
+        target played which, and the stored targets are only in the order they
+        were announced."""
+        index_of = {
+            id(requirement): position for position, requirement in enumerate(self.requirements)
+        }
+        slots = [
+            requirement
+            for requirement in self.requirements
+            if not requirement.unbounded
+            for _ in range(requirement.count)
+        ]
+        unbounded = [r for r in self.requirements if r.unbounded]
+        taken: dict[int, set[TargetRef]] = {}
+        controllers: dict[int, set[str]] = {}
+        shared_types: dict[int, frozenset[Type]] = {}
+        totals: dict[int, float] = {}
+        mana_values: dict[int, set[float]] = {}
+        assigned: list[int | None] = []
+        for target in targets:
+            placed: int | None = None
+            if target is not None:
+                for index, slot in enumerate(slots):
+                    if (
+                        self._why_not(
+                            slot,
+                            target,
+                            caster,
+                            taken,
+                            game,
+                            source_id,
+                            controllers,
+                            shared_types,
+                            totals,
+                            mana_values,
+                        )
+                        is None
+                    ):
+                        slots.pop(index)
+                        placed = index_of[id(slot)]
+                        break
+                else:
+                    for requirement in unbounded:
+                        if (
+                            self._why_not(
+                                requirement,
+                                target,
+                                caster,
+                                taken,
+                                game,
+                                source_id,
+                                controllers,
+                                shared_types,
+                                totals,
+                                mana_values,
+                            )
+                            is None
+                        ):
+                            placed = index_of[id(requirement)]
+                            break
+            assigned.append(placed)
+        if any(a is None and t is not None for a, t in zip(assigned, targets, strict=True)):
+            present = [t for t in targets if t is not None]
+            found = self._search_slots(present, caster, game, source_id)
+            if found is not None:
+                iterator = iter(found)
+                return [None if t is None else next(iterator) for t in targets]
+        return assigned
+
     def _fill_slots(
         self, targets: list[Any], caster: str, game: Any = None, source_id: UUID | None = None
     ) -> dict[int, set[TargetRef]]:
-        """Match each chosen target to a requirement it satisfies (CR 601.2c).
+        """Match each chosen target to a requirement it satisfies (CR 601.2c):
+        first-fit in announcement order, and - only when that dead-ends - a
+        search for any assignment that does fill every requirement (Graceful
+        Takedown's enchanted creature, which first-fit would hand to the
+        "up to one other target creature" slot ahead of its own)."""
+        try:
+            return self._first_fit_slots(targets, caster, game, source_id)
+        except ValueError:
+            placed = self._search_slots(targets, caster, game, source_id)
+            if placed is None:
+                raise
+            taken: dict[int, set[TargetRef]] = {}
+            controllers: dict[int, set[str]] = {}
+            shared_types: dict[int, frozenset[Type]] = {}
+            totals: dict[int, float] = {}
+            mana_values: dict[int, set[float]] = {}
+            for target, position in zip(targets, placed, strict=True):
+                self._why_not(
+                    self.requirements[position],
+                    target,
+                    caster,
+                    taken,
+                    game,
+                    source_id,
+                    controllers,
+                    shared_types,
+                    totals,
+                    mana_values,
+                )
+            return taken
+
+    def _search_slots(
+        self, targets: list[Any], caster: str, game: Any = None, source_id: UUID | None = None
+    ) -> list[int] | None:
+        """Any assignment of every target to a requirement it satisfies that
+        also meets each requirement's own minimum, or `None` (depth-first, with
+        the per-attempt bookkeeping copied so a dead end leaves no trace)."""
+        import copy
+
+        capacity = [
+            (None if requirement.unbounded else requirement.count)
+            for requirement in self.requirements
+        ]
+
+        def descend(
+            index: int,
+            capacity: list[int | None],
+            filled: list[int],
+            state: tuple[Any, ...],
+        ) -> list[int] | None:
+            if index == len(targets):
+                if all(
+                    filled[position] >= requirement.minimum
+                    for position, requirement in enumerate(self.requirements)
+                ):
+                    return []
+                return None
+            for position, requirement in enumerate(self.requirements):
+                if capacity[position] is not None and capacity[position] <= 0:
+                    continue
+                attempt = copy.deepcopy(state)
+                if (
+                    self._why_not(
+                        requirement,
+                        targets[index],
+                        caster,
+                        attempt[0],
+                        game,
+                        source_id,
+                        *attempt[1:],
+                    )
+                    is not None
+                ):
+                    continue
+                next_capacity = list(capacity)
+                if next_capacity[position] is not None:
+                    next_capacity[position] -= 1
+                next_filled = list(filled)
+                next_filled[position] += 1
+                rest = descend(index + 1, next_capacity, next_filled, attempt)
+                if rest is not None:
+                    return [position, *rest]
+            return None
+
+        return descend(0, capacity, [0] * len(self.requirements), ({}, {}, {}, {}, {}))
+
+    def _first_fit_slots(
+        self, targets: list[Any], caster: str, game: Any = None, source_id: UUID | None = None
+    ) -> dict[int, set[TargetRef]]:
+        """First-fit in announcement order; see `_fill_slots`.
 
         Returns `taken`, keyed by `id(requirement)` exactly as `_why_not`
         keys it - which `TargetRef`s ended up filling each requirement's own
@@ -2493,6 +2694,15 @@ _ANY_TARGET = re.compile(r"\bany target\b", re.IGNORECASE)
 #: `_TARGET_WORD` scan below, which reads its "other" as `excludes_source`
 #: exactly as it always did.
 _ANY_OTHER_TARGET = re.compile(r"\bany other target\b", re.IGNORECASE)
+#: Cone of Flame's "1 damage to any target, 2 damage to another target, and 3
+#: damage to a third target" (CR 115.1, CR 115.3): a bare "another target" or
+#: "a second/third target", with no noun after it, is the same paired idiom as
+#: "any other target" - any target (creature, player, planeswalker, battle)
+#: other than the ones already chosen. Read only after a bare "any target".
+_ORDINAL_TARGET_PREFIX = re.compile(r"\ba (?:second|third|fourth)\s*$", re.IGNORECASE)
+_BARE_ANOTHER_TARGET = re.compile(
+    r"\b(?:another|a second|a third|a fourth) target(?=\s*(?:[,.;]|$|\band\b))", re.IGNORECASE
+)
 #: The plural matters: CR 115.4's damage wording is "among one or two targets",
 #: with no noun after it at all.
 _TARGET_WORD = re.compile(r"\btargets?\b", re.IGNORECASE)
@@ -3661,7 +3871,9 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
         # `_read_phrase`'s `excludes_source` reading - the wrong mechanism
         # for a spell, which is never a legal target of its own damage to
         # begin with.
-        other_targets = len(_ANY_OTHER_TARGET.findall(text))
+        other_targets = len(_ANY_OTHER_TARGET.findall(text)) + len(
+            _BARE_ANOTHER_TARGET.findall(text)
+        )
         requirements.extend(
             TargetRequirement(
                 phrase="any other target",
@@ -3671,7 +3883,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
             )
             for _ in range(other_targets)
         )
-        text = _ANY_OTHER_TARGET.sub(_PLACEHOLDER, text)
+        text = _BARE_ANOTHER_TARGET.sub(_PLACEHOLDER, _ANY_OTHER_TARGET.sub(_PLACEHOLDER, text))
     promised_spans = [match.span() for match in _GIFT_PROMISED_INSTEAD_CLAUSE.finditer(text)]
 
     scan = list(_TARGET_WORD.finditer(text))
@@ -3720,6 +3932,15 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
             requirement = requirement.model_copy(
                 update={"excludes_source": False, "distinct_from_prior_requirement": True}
             )
+        if (
+            spell_only
+            and requirements
+            and not requirement.distinct_from_prior_requirement
+            and _ORDINAL_TARGET_PREFIX.search(text[: match.start()])
+        ):
+            # "a second/third target creature" (Serpentine Spike, CR 115.3) is
+            # "another target creature" counted: never one already chosen.
+            requirement = requirement.model_copy(update={"distinct_from_prior_requirement": True})
         requirements.append(requirement)
 
     return TargetingProfile(requirements=tuple(requirements), division=division)
@@ -4968,6 +5189,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         historic=adjectives.historic,
         requires_outlaw=adjectives.requires_outlaw,
         excludes_outlaw=adjectives.excludes_outlaw,
+        must_be_enchanted=adjectives.must_be_enchanted,
         combat_states=frozenset(adjectives.combat_states),
         excluded_combat_states=frozenset(adjectives.excluded_combat_states),
         must_be_attacking_alone=attacking_alone,
@@ -5082,6 +5304,7 @@ class _Adjectives:
         self.excludes_source = False
         self.requires_outlaw = False
         self.excludes_outlaw = False
+        self.must_be_enchanted = False
         self.read = 0
 
     def take(self, raw: str, word: str) -> bool:
@@ -5113,6 +5336,8 @@ class _Adjectives:
             self.color_count = word
         elif word == "historic":
             self.historic = True
+        elif word == "enchanted":
+            self.must_be_enchanted = True
         elif word == "outlaw":
             self.requires_outlaw = True
         elif word == "non-outlaw":

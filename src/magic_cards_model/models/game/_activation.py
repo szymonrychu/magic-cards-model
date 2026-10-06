@@ -2375,7 +2375,9 @@ class ActivationMixin:
                 )
             return list(asked)
         profile.check(list(targets), controller, self, source_id=permanent.id)
-        return [TargetRef.coerce(target) for target in targets]
+        return self.stamp_target_slots(
+            profile, [TargetRef.coerce(target) for target in targets], controller, permanent.id
+        )
 
     def _check_activation_division(
         self: "Game",

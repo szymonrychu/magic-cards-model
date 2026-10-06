@@ -101,6 +101,15 @@ class TargetRef(EngineModel):
     from `decision.targets`, which is what actually closes that gap.
     """
 
+    slot: int | None = None
+    """Which of the spell's or ability's target requirements this target
+    filled when it was announced (CR 601.2c) - an index into
+    `TargetingProfile.requirements`, `None` when the announcement recorded
+    none. A spell whose requirements name different roles (Allies at Last's
+    "up to two target creatures you control" and its victim) reads it back at
+    resolution, because the list order says only the order the caster named
+    them in. Like `zone_change_stamp`, not part of this reference's identity."""
+
     @classmethod
     def to_card(cls, card: "CardState | UUID") -> "TargetRef":
         """Target an object by its `CardState`, or directly by its id.

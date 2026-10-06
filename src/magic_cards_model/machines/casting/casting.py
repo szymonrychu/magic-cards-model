@@ -3401,7 +3401,7 @@ class Casting(EngineModel):
 
         chosen = list(targets)
         try:
-            self._check_targets(chosen)
+            placement = self._check_targets(chosen)
         except ValueError:
             # CR 601.6: "If a player can't legally cast the spell, the game
             # returns to the moment before the casting was proposed" - which,
@@ -3412,6 +3412,13 @@ class Casting(EngineModel):
             raise
         self._advance_to(CastingStep.TARGETS)
         self.targets = [TargetRef.coerce(target) for target in chosen]
+        if placement is not None and len(placement) == len(self.targets):
+            # CR 601.2c: remember which requirement each target filled, so
+            # resolution can tell a spell's sources from its victim.
+            self.targets = [
+                ref.model_copy(update={"slot": slot})
+                for ref, slot in zip(self.targets, placement, strict=True)
+            ]
         if self.modal is not None and self.modal.understood and self.chosen_mode_numbers:
             # Only a modal spell's target *count* can depend on X (CR 700.2c's
             # "up to X target ..."), so only here does a later change to X
@@ -3423,7 +3430,7 @@ class Casting(EngineModel):
         self._slice_targets_by_mode(chosen)
         return self.step
 
-    def _check_targets(self, chosen: list[Any]) -> None:
+    def _check_targets(self, chosen: list[Any]) -> list[int | None] | None:
         """CR 601.2c's legality check on one announced set of targets.
 
         The game is handed over because some restrictions are not
@@ -3443,13 +3450,14 @@ class Casting(EngineModel):
         # CR 702.11b/702.11d: hexproof is judged inside `check`, with this
         # spell as the source whose quality "hexproof from" asks about.
         try:
-            self.targeting.check(chosen, self.caster, game=self.game, source=self.spell)
+            placement = self.targeting.check(chosen, self.caster, game=self.game, source=self.spell)
         except ValueError as refusal:
             raise self._trigger_targets_not_cast_targets(chosen, refusal) from None
         for target in chosen:
             refusal = self._enchant_refusal(target)
             if refusal is not None:
                 raise ValueError(refusal)
+        return placement
 
     def _trigger_targets_not_cast_targets(
         self, chosen: list[Any], refusal: ValueError

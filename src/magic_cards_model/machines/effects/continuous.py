@@ -9347,6 +9347,45 @@ def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
     return effect
 
 
+_OPPONENTS_ATTACK_IF_ABLE_RE = re.compile(
+    r"^until your next turn, creatures your opponents control attack each combat if able\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s11")
+def _parse_opponents_creatures_attack_if_able_clause(text: str) -> AbilityEffect | None:
+    """ "Until your next turn, creatures your opponents control attack each
+    combat if able." (The Akroan War's chapter II): CR 508.1d's requirement
+    for CR 611.2a's stated duration. It modifies the rules of the game, not
+    characteristics or controller, so CR 611.2c does not fix the set: the
+    selector is live and a creature that arrives under an opponent's control
+    before your next turn is bound too. It is carried as the same granted
+    "attacks each combat if able" line `machines/combat.py` already counts."""
+    if _OPPONENTS_ATTACK_IF_ABLE_RE.fullmatch(" ".join(text.split())) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability).username
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=(
+                    f"{ability.source_name}: creatures {controller}'s opponents control "
+                    "attack each combat if able"
+                ),
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_YOUR_NEXT_TURN,
+                until_next_turn_of=controller,
+                selector=creatures_controlled_by_opponents_of(controller),
+                modification=grant_ability("This creature attacks each combat if able."),
+            )
+        )
+
+    return effect
+
+
 # ---------------------------------------------------------------------------
 # C01-T3: zone play, graveyard casting and blink readers
 # ---------------------------------------------------------------------------
