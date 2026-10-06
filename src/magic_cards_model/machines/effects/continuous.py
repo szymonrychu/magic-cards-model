@@ -66,6 +66,7 @@ from ..land_animation import (
     retained_animation_sentence,
 )
 from ..layers import (
+    CANT_ACTIVATE_ABILITIES_TEXT,
     ContinuousEffect,
     ContinuousEffects,
     Duration,
@@ -90,6 +91,7 @@ from ..layers import (
     only_this_incarnation,
     other_creatures_controlled_by,
     parsed_layer_effects,
+    qualified_creatures,
     set_colors,
     set_power_toughness,
     split_and_validate_keywords,
@@ -119,7 +121,7 @@ from ..turn_scoped_riders import (
 
 if TYPE_CHECKING:
     from ...models.game import CastRecord, Game, StackObject
-from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _OBJECT_ANAPHOR,
     _SELF_ANAPHOR,
@@ -5212,27 +5214,26 @@ def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
 #: for a mass goad. CR 115.10a: only the *player* is ever a target here - the
 #: permanents are affected, never targeted.
 _TAP_ALL_GROUP_RE = re.compile(
-    r"^tap all (?P<qualifier>.+?)"
+    r"^tap all (?P<attacking>attacking )?(?P<qualifier>.+?)"
     r"(?: (?P<whose>target (?:player|opponent) controls|your opponents control"
     r"|you don'?t control|an opponent controls|you control))?\.?$",
     re.IGNORECASE,
 )
 
 
-def _tap_all_group_runner(
+def _tap_all_group_members(
     clause: str,
 ) -> Callable[["Game", "StackObject"], list[CardState]] | None:
-    """`_TAP_ALL_GROUP_RE`'s shape as a runner that returns the permanents it
-    actually tapped - CR 701.26a: "Only untapped permanents can be tapped", so
-    a permanent already tapped is left alone and is *not* one "tapped this
-    way" (Suppression Ray's own ruling, 2024-06-07), which is what a later
-    sentence reading back the tapped set needs. `None` for any clause this
-    cannot read, including a target phrase `machines/targeting.py` does not
+    """`_TAP_ALL_GROUP_RE`'s group as a selector over the board as the
+    instruction is applied (CR 608.2h) - every permanent the instruction
+    applies to, tapped already or not. `None` for any clause this cannot
+    read, including a target phrase `machines/targeting.py` does not
     understand.
 
-    The group is read once, as the instruction is applied (CR 608.2h), so a
-    permanent that arrives afterwards is never tapped by it. A target player
-    who is no longer legal (CR 608.2b) leaves the whole group untouched.
+    "attacking" (Clinging Mists' "tap all attacking creatures") narrows the
+    group to the creatures declared as attackers and still attacking
+    (CR 506.4b: a tapped attacker stays in combat). A target player who is no
+    longer legal (CR 608.2b) leaves the whole group empty.
     """
     match = _TAP_ALL_GROUP_RE.fullmatch(clause.strip())
     if match is None:
@@ -5240,13 +5241,14 @@ def _tap_all_group_runner(
     type_matches = _parse_mass_type_qualifier(match.group("qualifier"))
     if type_matches is None:
         return None
+    attacking = match.group("attacking") is not None
     whose = re.sub(r"don'?t", "don't", (match.group("whose") or "").lower())
     if whose.startswith("target") and not _targets_understood(
         whose.removesuffix(" controls"), allow_player_targets=True
     ):
         return None
 
-    def run(game: "Game", stack_object: "StackObject") -> list[CardState]:
+    def members(game: "Game", stack_object: "StackObject") -> list[CardState]:
         controller = game.controller_of(stack_object).username
         targeted: str | None = None
         if whose.startswith("target"):
@@ -5258,14 +5260,40 @@ def _tap_all_group_runner(
             if not players:
                 return []
             targeted = players[0].username
-        group = [
+        attackers = {attacker.id for attacker in game.attacking_creatures()} if attacking else None
+        return [
             permanent
             for permanent in list(game.battlefield)
             if permanent.zone is Zone.BATTLEFIELD
+            and (attackers is None or permanent.id in attackers)
             and type_matches(game.characteristics_of(permanent))
             and _goad_group_member(game, controller, whose, targeted, permanent)
         ]
-        return [permanent for permanent in group if game.tap_permanent(permanent)]
+
+    return members
+
+
+def _tap_all_group_runner(
+    clause: str,
+) -> Callable[["Game", "StackObject"], list[CardState]] | None:
+    """`_TAP_ALL_GROUP_RE`'s shape as a runner that returns the permanents it
+    actually tapped - CR 701.26a: "Only untapped permanents can be tapped", so
+    a permanent already tapped is left alone and is *not* one "tapped this
+    way" (Suppression Ray's own ruling, 2024-06-07), which is what a later
+    sentence reading back the tapped set needs. `None` for any clause
+    `_tap_all_group_members` cannot read.
+
+    The group is read once, as the instruction is applied (CR 608.2h), so a
+    permanent that arrives afterwards is never tapped by it.
+    """
+    members = _tap_all_group_members(clause)
+    if members is None:
+        return None
+
+    def run(game: "Game", stack_object: "StackObject") -> list[CardState]:
+        return [
+            permanent for permanent in members(game, stack_object) if game.tap_permanent(permanent)
+        ]
 
     return run
 
@@ -5829,8 +5857,8 @@ def _who_cant_discard_consequence(
 #: positionally would quietly pump the wrong creature the moment CR 608.2b
 #: removed one of them.
 _PUMP_TARGET_YOU_CONTROL_RE = re.compile(
-    r"^target creature you control gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
-    r"until end of turn$",
+    r"^(?P<phrase>target (?:(?:non)?(?:white|blue|black|red|green) )?creature you control) "
+    r"gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn$",
     re.IGNORECASE,
 )
 #: "Put a `<n>` `<kind>` counter[s] on target creature you control." -
@@ -5878,7 +5906,8 @@ def _parse_pump_then_fight_clause_pair(
     fight = _RIDER_FIGHTS_TARGET_RE.fullmatch(stripped_second)
     if fight is None:
         return None
-    if not _targets_understood("target creature you control", count_agnostic=True):
+    antecedent_phrase = pump.group("phrase") if pump is not None else "target creature you control"
+    if not _targets_understood(antecedent_phrase, count_agnostic=True):
         return None
     if not _targets_understood(fight.group("phrase"), count_agnostic=True):
         return None
@@ -9327,7 +9356,7 @@ def _parse_target_blocks_self_if_able_clause(text: str) -> TargetedClause | None
 #: resolving ability, for CR 611.2a's printed duration.
 _TARGET_ATTACKS_IF_ABLE_RE = re.compile(
     r"^(?:(?P<lead>until your next turn|until end of turn), )?"
-    r"(?P<phrase>(?:up to one )?target creature(?: [a-z' ]+?)?) attacks "
+    r"(?P<phrase>(?:up to one )?target creature(?: [a-z' ]+?)?) (?P<verb>attacks|blocks) "
     r"(?P<player>a player )?(?P<when>each combat|this turn) if able"
     r"(?: (?P<trail>this turn|until end of turn|until your next turn))?\.?$",
     re.IGNORECASE,
@@ -9363,11 +9392,15 @@ def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
         duration_text = "until end of turn"
     if not duration_text:
         return None
-    line = (
-        "This creature attacks a player each combat if able."
-        if match.group("player")
-        else "This creature attacks each combat if able."
-    )
+    blocks = match.group("verb").lower() == "blocks"
+    if blocks and match.group("player"):
+        return None
+    if blocks:
+        line = "This creature blocks each combat if able."
+    elif match.group("player"):
+        line = "This creature attacks a player each combat if able."
+    else:
+        line = "This creature attacks each combat if able."
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
@@ -10035,6 +10068,315 @@ def _parse_group_cant_block_this_turn_clause(
     return effect
 
 
+#: "Those creatures don't untap during `<their controller's | that player's>`
+#: next untap step." - the sentence after a mass tap (Clinging Mists' "tap all
+#: attacking creatures", Sleep's "tap all creatures target player controls").
+#: CR 611.2c: "those creatures" is the set the first sentence applied to,
+#: fixed as it resolved - every creature of the group, including one that was
+#: already tapped (CR 701.26a only stops it being tapped *again*). CR 502.3:
+#: the untap step is where "effects can keep one or more of a player's
+#: permanents from untapping"; `CardState.exerted` (the CR 701.43a-b
+#: machinery `_parse_tap_target_then_no_untap_clause` already reuses) is
+#: cleared by the creature's own controller's untap step, which is exactly
+#: "their controller's next untap step".
+_THOSE_DONT_UNTAP_RE = re.compile(
+    r"^(?:those \w+|they) don['’]?t untap during (?:their controllers?['’]?s?|that player['’]?s?) "
+    r"next untap steps?\.?$",
+    re.IGNORECASE,
+)
+_LEADING_GATE_THEN_TAP_ALL_RE = re.compile(
+    r"^if (?P<condition>.+?), (?P<tap>tap all .+)$", re.IGNORECASE
+)
+
+
+def _group_tap_then_no_untap_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "`[If <condition>, ]tap all <group>.` `Those creatures don't untap
+    during <whose> next untap step.`" as one CR 608.2c instruction pair, or
+    `None`. The optional leading condition (Clinging Mists' Fateful hour, an
+    ability word with no rules meaning of its own - CR 207.2c) gates both
+    sentences: with it false nothing is tapped and nothing is held down."""
+    if _THOSE_DONT_UNTAP_RE.fullmatch(second.strip()) is None:
+        return None
+    tap_text = first.strip()
+    condition: str | None = None
+    gated = _LEADING_GATE_THEN_TAP_ALL_RE.fullmatch(tap_text)
+    if gated is not None:
+        condition = gated.group("condition").strip()
+        tap_text = gated.group("tap")
+        if not _effect_condition_is_readable(condition, allow_anaphor=not for_spell):
+            return None
+    members = _tap_all_group_members(tap_text)
+    if members is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if condition is not None:
+            source = (
+                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+            )
+            held = _condition_holds_for_stack_object(game, stack_object, condition, source)
+            if held is None:
+                notice = ConditionalClauseNotice(
+                    source_id=source_id_of(stack_object),
+                    source_name=(
+                        stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+                    ),
+                    text=first.strip(),
+                )
+                if notice not in game.conditional_clause_notices:
+                    game.conditional_clause_notices.append(notice)
+                return
+            if not held:
+                return
+        for member in members(game, stack_object):
+            game.tap_permanent(member)
+            member.exerted = True
+
+    return effect
+
+
+#: "Other creatures [`<whose>`] can't (attack|block) this turn." -
+#: Intimidation Bolt's second sentence and Mark for Death's last. "Other" is
+#: "other than the object the spell or ability just named": the creature it
+#: targeted (a legal target when it resolves, CR 608.2b), else - an
+#: ability's own words with no creature target - its source. CR 508.1c /
+#: 509.1b make this a restriction on every creature that is not the excluded
+#: one, so it is a live selector, not a fixed set (CR 611.2c fixes the set
+#: only for effects that change characteristics or control): a creature that
+#: enters later this turn is restricted too. "that player controls" is the
+#: excluded creature's controller.
+_OTHER_CREATURES_CANT_RE = re.compile(
+    r"^other creatures(?: (?P<whose>that player controls|your opponents control))?"
+    r" can['’]?t (?P<what>attack|block) this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _other_creatures_cant_clause(clause: str) -> TargetedClause | None:
+    """`_OTHER_CREATURES_CANT_RE`'s shape, or `None`."""
+    match = _OTHER_CREATURES_CANT_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    whose = (match.group("whose") or "").lower()
+    line = f"This creature can't {match.group('what').lower()}."
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        excluded: CardState | None = next(
+            (
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, CardState)
+                and target.zone is Zone.BATTLEFIELD
+                and game.characteristics_of(target).is_creature
+            ),
+            None,
+        )
+        if excluded is None and not isinstance(stack_object, CardState):
+            excluded = stack_object.source(game)
+        if excluded is None:
+            return
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        if whose == "that player controls":
+            selector = qualified_creatures(
+                excluded.id, game.controller_of(excluded).username, other=True
+            )
+        elif whose == "your opponents control":
+            selector = qualified_creatures(excluded.id, controller, other=True, opponents=True)
+        else:
+            selector = qualified_creatures(excluded.id, None, other=True)
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source_name}: other creatures can't {match.group('what').lower()}",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=selector,
+                modification=grant_ability(line),
+            )
+        )
+
+    return effect
+
+
+#: "[If {W}{U} was spent to cast this spell, ][until your next turn, ]
+#: `<subject>` can't attack or block[ and its/their activated abilities
+#: can't be activated][ until your next turn]." - Mythos of Vadrok's own
+#: gated rider ("those permanents" is the targets the damage sentence chose),
+#: and the same words on a "target `<permanent>`"/"it"/"that permanent"
+#: subject (Edifice of Authority, Academic Probation, Linvala): CR 701.35a's
+#: detain, spelled out. CR 611.2a gives the printed duration ("until your
+#: next turn" ends when the spell's controller's next turn begins),
+#: CR 508.1c / 509.1b the two restrictions, CR 602.5 the activation ban. No
+#: mana-ability exemption is printed, so none is made (CR 605.1a keeps a
+#: mana ability an *activated* ability).
+#:
+#: The gate is CR 601.2h's mana actually spent paying for the spell, read off
+#: the cast record: a symbol is met when at least one mana of that colour was
+#: spent, and every symbol must be (a spell cast for {2}{R}{R} with Plains
+#: and Islands in the mix is one thing; one paid with Mountains alone is
+#: another). Only a spell has a cast record.
+_CANT_ATTACK_BLOCK_ACTIVATE_RE = re.compile(
+    r"^(?:if (?P<gate>(?:\{[wubrgc]\})+) was spent to cast this spell, )?"
+    r"(?:(?P<lead>until your next turn|until end of turn), )?"
+    r"(?P<subject>those (?:permanents|creatures)|that (?:permanent|creature)|it|they"
+    r"|target [a-z' ]+?)"
+    r" can['’]?t attack or block"
+    r"(?:,? and (?:its|their) activated abilities can['’]?t be activated)?"
+    r"(?: (?P<trail>until your next turn|until end of turn))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _cant_attack_block_activate_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_CANT_ATTACK_BLOCK_ACTIVATE_RE`'s shape, or `None`."""
+    match = _CANT_ATTACK_BLOCK_ACTIVATE_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    lead = (match.group("lead") or "").lower()
+    trail = (match.group("trail") or "").lower()
+    duration_text = lead or trail
+    if not duration_text or (lead and trail):
+        return None
+    gate = match.group("gate")
+    if gate is not None and not for_spell:
+        return None
+    subject = match.group("subject")
+    own_phrase = subject if subject.lower().startswith("target ") else None
+    if own_phrase is not None and not _targets_understood(own_phrase, count_agnostic=True):
+        return None
+    locks_activation = "activated abilities" in clause.lower()
+    lines = ["This creature can't attack.", "This creature can't block."]
+    if locks_activation:
+        lines.append(CANT_ACTIVATE_ABILITIES_TEXT)
+    gate_colors = [Color(letter.upper()) for letter in re.findall(r"\{(\w)\}", gate or "")]
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if gate_colors:
+            if not isinstance(stack_object, CardState):
+                return
+            record = game.cast_record(stack_object)
+            if not all(record.mana_of_color_spent(color) > 0 for color in gate_colors):
+                return
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        if own_phrase is not None:
+            affected = _own_phrase_targets(game, stack_object, own_phrase)
+        else:
+            affected = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+            ]
+        for permanent in affected:
+            _grant_keywords_to(
+                game,
+                permanent,
+                lines,
+                duration_text,
+                controller=controller,
+                source_name=source_name,
+            )
+
+    return effect
+
+
+#: "Target creature `<...>` blocks this turn if able. Untap that creature." -
+#: Mark for Death's first two sentences. CR 701.26b's untap acts on the
+#: creature the first sentence's requirement was put on (CR 608.2c: in the
+#: order written - untapped last, so it is untapped when it must block).
+_UNTAP_THAT_CREATURE_RE = re.compile(r"^untap (?:that creature|it)\.?$", re.IGNORECASE)
+
+
+def _if_able_requirement_then_untap_pair(first: str, second: str) -> TargetedClause | None:
+    """`_parse_target_attacks_if_able_clause`'s requirement sentence followed
+    by `_UNTAP_THAT_CREATURE_RE`'s untap, or `None`."""
+    if _UNTAP_THAT_CREATURE_RE.fullmatch(second.strip()) is None:
+        return None
+    requirement = _parse_target_attacks_if_able_clause(first.strip())
+    if requirement is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        requirement(game, stack_object)
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                target.untap()
+
+    return effect
+
+
+#: One whole-text reader for the riders that follow a spell's or ability's
+#: main effect and talk about what that effect applied to or named. They are
+#: read from the whole text, a sentence at a time, because each leans on the
+#: sentences around it - "those creatures" is the previous sentence's group,
+#: "other creatures" excludes the previous sentence's target, "those
+#: permanents" is the targets the damage sentence divided among - and the
+#: per-clause splitter would cut "can't attack or block and their activated
+#: abilities can't be activated" at its "and". Every sentence that is not a
+#: rider is read, a contiguous run at a time, by the ordinary clause reader,
+#: so the main effect keeps every reading it already has (CR 608.2c: the
+#: instructions are followed in the order written).
+_RIDER_LITERALS = ("untap during", "other creatures", "can't attack or block", "untap that")
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_main_effect_riders(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
+    """The text read around its riders, or `None` when it carries none."""
+    lowered = text.lower().replace("’", "'")
+    if not any(literal in lowered for literal in _RIDER_LITERALS):
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    parts: list[list[str] | TargetedClause] = []
+    run: list[str] = []
+    found = False
+    index = 0
+    while index < len(sentences):
+        sentence = sentences[index]
+        rider: TargetedClause | None = None
+        consumed = 1
+        if index + 1 < len(sentences):
+            rider = _group_tap_then_no_untap_pair(
+                sentence, sentences[index + 1], for_spell=for_spell
+            ) or _if_able_requirement_then_untap_pair(sentence, sentences[index + 1])
+            consumed = 2
+        if rider is None:
+            consumed = 1
+            rider = _other_creatures_cant_clause(sentence) or _cant_attack_block_activate_clause(
+                sentence, for_spell=for_spell
+            )
+        if rider is None:
+            run.append(sentence)
+        else:
+            found = True
+            if run:
+                parts.append(run)
+                run = []
+            parts.append(rider)
+        index += consumed
+    if not found:
+        return None
+    if run:
+        parts.append(run)
+    clauses: list[TargetedClause] = []
+    for part in parts:
+        if callable(part):
+            clauses.append(part)
+            continue
+        read = _parse_mixed_clauses(" ".join(part), for_spell=for_spell)
+        if read is None:
+            return None
+        clauses.extend(read)
+    return clauses
+
+
 #: The keywords a "loses `<keyword>`" removal may name: CR 702's keyword
 #: abilities this engine reads off the computed board, so removing one is a
 #: change something actually checks (CR 702.12b's indestructible chief among
@@ -10343,6 +10685,7 @@ from .counters import _counter_kind, _source_still_here  # noqa: E402
 from .damage import _fight, _resolve_bite_damage  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
+    _parse_mixed_clauses,
     _parse_targeted_clause,
     _spell_effect_or_notice,
     parse_clause_effect,

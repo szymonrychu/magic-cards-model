@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "61d4899f-11a4-4a2c-a499-3a447b792f86",
+  "oracle_id": "00afc724-be09-4e92-a50c-88011bd10ccd",
+  "multiverse_ids": [
+    373668
+  ],
+  "mtgo_id": 50602,
+  "mtgo_foil_id": 50603,
+  "tcgplayer_id": 71044,
+  "cardmarket_id": 264053,
+  "name": "Hunt the Hunter",
+  "lang": "en",
+  "released_at": "2013-09-27",
+  "uri": "https://api.scryfall.com/cards/61d4899f-11a4-4a2c-a499-3a447b792f86",
+  "scryfall_uri": "https://scryfall.com/card/ths/159/hunt-the-hunter?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:49:06Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.jpg?1783939746",
+    "normal": "https://cards.scryfall.io/normal/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.jpg?1783939746",
+    "large": "https://cards.scryfall.io/large/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.jpg?1783939746",
+    "png": "https://cards.scryfall.io/png/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.png?1783939746",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.jpg?1783939746",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.jpg?1783939746",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.webp?1783939746",
+    "grid": "https://cards.scryfall.io/grid/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.webp?1783939746",
+    "display": "https://cards.scryfall.io/display/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.webp?1783939746",
+    "art": "https://cards.scryfall.io/art/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.webp?1783939746",
+    "crop": "https://cards.scryfall.io/crop/front/6/1/61d4899f-11a4-4a2c-a499-3a447b792f86.webp?1783939746"
+  },
+  "mana_cost": "{G}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Target green creature you control gets +2/+2 until end of turn. It fights target green creature an opponent controls.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Fight"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "69093d6f-e25a-41a4-8cf5-688d7f11c0fb",
+  "set": "ths",
+  "set_name": "Theros",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/69093d6f-e25a-41a4-8cf5-688d7f11c0fb",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aths&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ths?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/61d4899f-11a4-4a2c-a499-3a447b792f86/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A00afc724-be09-4e92-a50c-88011bd10ccd&unique=prints",
+  "collector_number": "159",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"A grudge is a tattoo worn on the inside.\"\n\u2014Setessan warrior saying",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ryan Barger",
+  "artist_ids": [
+    "a4e0102e-bbeb-497c-babc-1c0741fea914"
+  ],
+  "illustration_id": "44b03264-9eb3-40c4-9370-b98517d633ac",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23531,
+  "penny_rank": 14126,
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.19",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.21",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=373668&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHunt%2Bthe%2BHunter",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHunt%2Bthe%2BHunter",
+    "edhrec": "https://edhrec.com/route/?cc=Hunt+the+Hunter"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F71044%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=264053&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/50602?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

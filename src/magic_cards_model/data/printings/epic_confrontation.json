@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "35ba6c05-a4c2-422b-a4cb-852b3aef77a5",
+  "oracle_id": "31123cb5-2dd5-4f2b-a2fd-8f87095972c6",
+  "multiverse_ids": [
+    583760
+  ],
+  "mtgo_id": 104970,
+  "arena_id": 82661,
+  "tcgplayer_id": 452199,
+  "cardmarket_id": 682612,
+  "name": "Epic Confrontation",
+  "lang": "en",
+  "released_at": "2022-11-18",
+  "uri": "https://api.scryfall.com/cards/35ba6c05-a4c2-422b-a4cb-852b3aef77a5",
+  "scryfall_uri": "https://scryfall.com/card/bro/176/epic-confrontation?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:20:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.jpg?1783920047",
+    "normal": "https://cards.scryfall.io/normal/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.jpg?1783920047",
+    "large": "https://cards.scryfall.io/large/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.jpg?1783920047",
+    "png": "https://cards.scryfall.io/png/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.png?1783920047",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.jpg?1783920047",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.jpg?1783920047",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.webp?1783920047",
+    "grid": "https://cards.scryfall.io/grid/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.webp?1783920047",
+    "display": "https://cards.scryfall.io/display/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.webp?1783920047",
+    "art": "https://cards.scryfall.io/art/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.webp?1783920047",
+    "crop": "https://cards.scryfall.io/crop/front/3/5/35ba6c05-a4c2-422b-a4cb-852b3aef77a5.webp?1783920047"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Target creature you control gets +1/+2 until end of turn. It fights target creature you don't control. (Each deals damage equal to its power to the other.)",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Fight"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set": "bro",
+  "set_name": "The Brothers' War",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abro&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bro?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/35ba6c05-a4c2-422b-a4cb-852b3aef77a5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A31123cb5-2dd5-4f2b-a2fd-8f87095972c6&unique=prints",
+  "collector_number": "176",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"You've let yourself grow old, and your light is dimming. Shall we talk one last time, or must I slay you now?\"\n\u2014Mishra, to Urza",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lucas Graciano",
+  "artist_ids": [
+    "ce98f39c-7cdd-47e6-a520-6c50443bb4c2"
+  ],
+  "illustration_id": "4d575cdb-5d46-472d-8248-89a7129c2304",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": true,
+  "edhrec_rank": 16144,
+  "penny_rank": 9187,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2022-11-01"
+  },
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.17",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.08",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=583760&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEpic%2BConfrontation",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEpic%2BConfrontation",
+    "edhrec": "https://edhrec.com/route/?cc=Epic+Confrontation"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F452199%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=682612&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/104970?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
