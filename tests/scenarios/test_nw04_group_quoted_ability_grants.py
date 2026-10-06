@@ -27,8 +27,9 @@ Every CR number below was looked up with `mise run rules:find`:
 
 - **CR 105.2c** - a colorless object has no color.
 - **CR 113.10** - an effect that adds an ability says the object "gains" it;
-  **CR 113.10a** - an effect that grants an ability can describe the object
-  the ability is granted to.
+  **CR 113.10a** - an effect that adds an activated ability may include
+  activation instructions for it (the granted "{T}: ..." is the permanent's
+  own ability, with its own {T} cost).
 - **CR 302.6** - a creature's activated ability with {T} in its cost can't be
   activated unless it has been under its controller's control continuously
   since their most recent turn began.
