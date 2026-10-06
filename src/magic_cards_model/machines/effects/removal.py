@@ -7842,6 +7842,113 @@ def _parse_target_opponent_sacrifice_greatest_mv_clause(
     return effect
 
 
+#: "Each opponent sacrifices a creature with the greatest power among
+#: creatures that player controls." / "Target opponent sacrifices a creature
+#: with the greatest power among creatures they control." - the edict narrowed
+#: to the sacrificing player's own highest-stat permanents (Gix's Command's
+#: fourth mode, Professor Onyx's -3, Consumed by Greed). CR 701.21a: the
+#: sacrifice is not targeted at the permanent (CR 115.10a), so hexproof or
+#: protection on it stops nothing, and indestructible does not matter. The
+#: greatest value is computed per player as the effect resolves (CR 608.2h),
+#: and a tie for it is that player's own choice (CR 101.4 for several players,
+#: APNAP order, every choice made before anything leaves).
+_SACRIFICE_GREATEST_STAT_RE = re.compile(
+    r"^(?P<who>each opponent|each player|target opponent|target player) sacrifices an? "
+    r"(?P<kinds>[a-z]+(?:\s+or\s+[a-z]+)*) with the greatest (?P<stat>power|toughness) among "
+    r"(?P<pool>[a-z]+(?:\s+(?:and|or)\s+[a-z]+)*) (?P<whose>that player controls|they control)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
+def _parse_sacrifice_greatest_stat_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SACRIFICE_GREATEST_STAT_RE`'s shape; see the banner above."""
+    match = _SACRIFICE_GREATEST_STAT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    who = match.group("who").lower()
+    targeted = who.startswith("target")
+    if targeted and not _targets_understood(who, allow_player_targets=True):
+        return None
+    if targeted and match.group("whose").lower() != "they control":
+        return None  # "that player" would name nobody the target does not already.
+    kind_types = {_singular_card_type(word) for word in re.split(r"\s+or\s+", match.group("kinds"))}
+    pool_types = {
+        _singular_card_type(word) for word in re.split(r"\s+(?:and|or)\s+", match.group("pool"))
+    }
+    if None in kind_types or None in pool_types or not kind_types <= pool_types:
+        return None
+    stat = match.group("stat").lower()
+    opponents_only = who == "each opponent"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.source_name
+            if isinstance(stack_object, AbilityOnStack)
+            else stack_object.name
+        )
+        if targeted:
+            players = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ]
+        else:
+            players = [
+                player
+                for player in _players_in_apnap_order(game)
+                if not (opponents_only and player.username == controller)
+            ]
+        board = game.computed_board()
+        chosen: list[CardState] = []
+        for player in players:
+            pool = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if pool_types & set(board.of(permanent).types)
+            ]
+
+            def value(permanent: CardState) -> int:
+                number = (
+                    game.power_of(permanent) if stat == "power" else game.toughness_of(permanent)
+                )
+                return number if number is not None else 0
+
+            if not pool:
+                continue
+            greatest = max(value(permanent) for permanent in pool)
+            tied = [
+                permanent
+                for permanent in pool
+                if value(permanent) == greatest and kind_types & set(board.of(permanent).types)
+            ]
+            if len(tied) <= 1:
+                chosen.extend(tied)
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"sacrifice a permanent with the greatest {stat}",
+                    source=source_name,
+                    amount=1,
+                    exact=True,
+                    cards=tuple(permanent.id for permanent in tied),
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in tied}
+            pick = by_id.get(chosen_ids[0]) if chosen_ids else None
+            if pick is not None:
+                chosen.append(pick)
+        for permanent in chosen:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.sacrifice(permanent)
+
+    return effect
+
+
 #: "Each player sacrifices `<a description>` of their choice. If you
 #: sacrificed `<a description>` this way, `<consequence>`." - Garruk, Veiled
 #: Butcher's own `-2`, and the real, off-set printing Rise of the

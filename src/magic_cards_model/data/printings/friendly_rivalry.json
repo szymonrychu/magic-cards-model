@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "24076763-88ba-4dee-b548-9c27bd34fdb7",
+  "oracle_id": "e6850561-3c57-4354-8850-c467a6449563",
+  "multiverse_ids": [
+    617034
+  ],
+  "mtgo_id": 112318,
+  "arena_id": 84896,
+  "tcgplayer_id": 498521,
+  "cardmarket_id": 716005,
+  "name": "Friendly Rivalry",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/24076763-88ba-4dee-b548-9c27bd34fdb7",
+  "scryfall_uri": "https://scryfall.com/card/ltr/204/friendly-rivalry?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:17:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.jpg?1783916255",
+    "normal": "https://cards.scryfall.io/normal/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.jpg?1783916255",
+    "large": "https://cards.scryfall.io/large/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.jpg?1783916255",
+    "png": "https://cards.scryfall.io/png/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.png?1783916255",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.jpg?1783916255",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.jpg?1783916255",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.webp?1783916255",
+    "grid": "https://cards.scryfall.io/grid/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.webp?1783916255",
+    "display": "https://cards.scryfall.io/display/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.webp?1783916255",
+    "art": "https://cards.scryfall.io/art/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.webp?1783916255",
+    "crop": "https://cards.scryfall.io/crop/front/2/4/24076763-88ba-4dee-b548-9c27bd34fdb7.webp?1783916255"
+  },
+  "mana_cost": "{R}{G}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Target creature you control and up to one other target legendary creature you control each deal damage equal to their power to target creature you don't control.",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "08078706-ac5d-439b-8f01-894d38751367",
+  "set": "ltr",
+  "set_name": "The Lord of the Rings: Tales of Middle-earth",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/08078706-ac5d-439b-8f01-894d38751367",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/24076763-88ba-4dee-b548-9c27bd34fdb7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae6850561-3c57-4354-8850-c467a6449563&unique=prints",
+  "collector_number": "204",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Forty-two, Master Legolas!\"\n\u2014Gimli",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Marc Simonetti",
+  "artist_ids": [
+    "8089db55-5105-47b0-8c64-f320e08c97f0"
+  ],
+  "illustration_id": "baf84905-7eaf-4638-b81f-25608e839516",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 10671,
+  "preview": {
+    "source": "Kess Wylie",
+    "source_uri": "https://twitter.com/Kesswylie/status/1663944522462576641",
+    "previewed_at": "2023-05-31"
+  },
+  "prices": {
+    "usd": "0.16",
+    "usd_foil": "0.30",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.17",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=617034&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFriendly%2BRivalry",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFriendly%2BRivalry",
+    "edhrec": "https://edhrec.com/route/?cc=Friendly+Rivalry"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F498521%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=716005&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/112318?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

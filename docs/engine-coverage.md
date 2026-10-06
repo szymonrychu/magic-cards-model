@@ -7239,3 +7239,20 @@ Sweep drivers added (no engine change): "whenever you / an opponent activates a 
 
 Schema 112 -> 113 (`Answer.mana_abilities`, and boards that now resolve differently).
 | A sentence's "where X is <count>" carried onto a later sentence that uses X undefined (CR 107.3c, 107.3i) - tried only when the text does not read as printed | `effects._carry_where_x_forward`, from `parse_mixed_effect`/`parse_mixed_effect_for_spell` | Tezzeret, Master of the Bridge (`+2`) | - (no other Modern/Pioneer/Standard printing fails without it) | `test_where_x_carried_forward.py` |
+
+## NW-01 T3: group-sourced, multi-target and filtered damage, greatest-power edict
+
+Schema 113 -> 114 (`TargetRef.slot`, `TargetRequirement.must_be_enchanted`).
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "<sources> each deal damage equal to their power to <victim>" - each source its own damage event, power read as it resolves, each source rechecked against the requirement it filled (CR 120.2b, 608.2b, 608.2h) | `damage._parse_damage_group_sources_deal_power_text`; announcement-time slots `TargetRef.slot` / `TargetingProfile.assign_slots` | Allies at Last, Graceful Takedown | Band Together, Friendly Rivalry | `test_nw01_group_sourced_damage.py` |
+| "target enchanted creature(s)" (CR 303.4b), rechecked on resolution | `TargetRequirement.must_be_enchanted`, `_rejects_unenchanted` | Graceful Takedown | - | `test_nw01_group_sourced_damage.py` |
+| Target slot search when first-fit dead-ends (an "any number of" slot beside an "up to one other" slot, CR 601.2c) | `TargetingProfile._search_slots` | Graceful Takedown | - | `test_nw01_group_sourced_damage.py` |
+| "Affinity for <any printed subtype>" (CR 702.41a) | `Game._affinity_count` via `canonical_subtype` | Allies at Last (Ally) | - | `test_nw01_group_sourced_damage.py` |
+| "Each <group> deals damage to itself equal to its power" / "Target creature deals damage to itself equal to its power" (CR 120.2b, 608.2h) | `damage._parse_damage_to_itself_equal_to_its_power_text` | Solar Blaze | Justice Strike, The Akroan War III | `test_nw01_group_sourced_damage.py` |
+| "Each <group> deals N damage to its controller[, then each <group> attached to a <host> deals N damage to the <host> it's attached to]" (CR 608.2c) | `damage._parse_damage_each_to_its_controller_or_host_text` | Aura Barbs | - | `test_nw01_group_sourced_damage.py` |
+| "N damage to any target, M damage to another target, and K damage to a third target" - distinct targets in announcement order (CR 115.3, 608.2b); bare "another/a second/third target" in `targeting._parse`, and "a second/third target <noun>" as distinct | `damage._parse_damage_amount_to_each_of_several_targets_text` | Cone of Flame | Serpentine Spike | `test_nw01_multi_target_and_filtered_damage.py` |
+| "N damage to each attacking/blocking/tapped/untapped <group>" and a bare permanent subtype as a damage group (Aura) | `damage._parse_damage_group_phrase` (`_GROUP_STATE_RE`, `_permanent_subtype_noun`) | Marrow Shards | Rain of Blades | `test_nw01_multi_target_and_filtered_damage.py` |
+| "[Damage can't be prevented this turn.] <Name> deals N damage to target <player/planeswalker/creature> and M damage to each [other] <group> <that target's controller controls>" (CR 120.3c, 615.12) | `damage._parse_damage_target_and_group_of_its_controller_text` | Chandra's Fury, Fear, Fire, Foes! | Radiating Lightning | `test_nw01_multi_target_and_filtered_damage.py` |
+| "Each opponent / target opponent sacrifices a creature with the greatest power among creatures that player controls / they control" - per player on resolution, ties the player's choice, not targeted (CR 701.21a, 115.10a, 101.4) | `removal._parse_sacrifice_greatest_stat_clause` | Crackling Doom | Professor Onyx -3, Consumed by Greed | `test_nw01_greatest_power_edict.py` |
