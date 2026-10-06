@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "f67e7070-2266-4c93-8c89-084e12ba7a4e",
+  "oracle_id": "67ee7c8b-afcc-4f09-a184-3db01f2ab175",
+  "multiverse_ids": [
+    461123
+  ],
+  "mtgo_id": 71998,
+  "arena_id": 69646,
+  "tcgplayer_id": 188487,
+  "cardmarket_id": 372184,
+  "name": "Enter the God-Eternals",
+  "lang": "en",
+  "released_at": "2019-05-03",
+  "uri": "https://api.scryfall.com/cards/f67e7070-2266-4c93-8c89-084e12ba7a4e",
+  "scryfall_uri": "https://scryfall.com/card/war/196/enter-the-god-eternals?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:03:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.jpg?1783933397",
+    "normal": "https://cards.scryfall.io/normal/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.jpg?1783933397",
+    "large": "https://cards.scryfall.io/large/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.jpg?1783933397",
+    "png": "https://cards.scryfall.io/png/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.png?1783933397",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.jpg?1783933397",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.jpg?1783933397",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.webp?1783933397",
+    "grid": "https://cards.scryfall.io/grid/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.webp?1783933397",
+    "display": "https://cards.scryfall.io/display/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.webp?1783933397",
+    "art": "https://cards.scryfall.io/art/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.webp?1783933397",
+    "crop": "https://cards.scryfall.io/crop/front/f/6/f67e7070-2266-4c93-8c89-084e12ba7a4e.webp?1783933397"
+  },
+  "mana_cost": "{2}{U}{U}{B}",
+  "cmc": 5.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Enter the God-Eternals deals 4 damage to target creature and you gain life equal to the damage dealt this way. Target player mills four cards. Amass Zombies 4. (Put four +1/+1 counters on an Army you control. It's also a Zombie. If you don't control an Army, create a 0/0 black Zombie Army creature token first.)",
+  "colors": [
+    "B",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "U"
+  ],
+  "keywords": [
+    "Amass",
+    "Mill"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f67e7070-2266-4c93-8c89-084e12ba7a4e",
+      "component": "combo_piece",
+      "name": "Enter the God-Eternals",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/f67e7070-2266-4c93-8c89-084e12ba7a4e"
+    },
+    {
+      "object": "related_card",
+      "id": "12742d1f-eb2e-4262-88e2-403c9ae6c431",
+      "component": "token",
+      "name": "Zombie Army",
+      "type_line": "Token Creature \u2014 Zombie Army",
+      "uri": "https://api.scryfall.com/cards/12742d1f-eb2e-4262-88e2-403c9ae6c431"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ee044f0b-e101-4ead-8d0e-aa510aad4277",
+  "set": "war",
+  "set_name": "War of the Spark",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ee044f0b-e101-4ead-8d0e-aa510aad4277",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awar&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/war?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f67e7070-2266-4c93-8c89-084e12ba7a4e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A67ee7c8b-afcc-4f09-a184-3db01f2ab175&unique=prints",
+  "collector_number": "196",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daniel Ljunggren",
+  "artist_ids": [
+    "0fbd4798-76eb-46d5-a5d4-1e3a25870e34"
+  ],
+  "illustration_id": "d5ad6aab-0019-4c14-b74b-3f0261d6871b",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": true,
+  "edhrec_rank": 11600,
+  "penny_rank": 3885,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/bad-news-heroes-2019-04-11",
+    "previewed_at": "2019-04-11"
+  },
+  "prices": {
+    "usd": "0.31",
+    "usd_foil": "0.54",
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": "0.56",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=461123&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEnter%2Bthe%2BGod-Eternals",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEnter%2Bthe%2BGod-Eternals",
+    "edhrec": "https://edhrec.com/route/?cc=Enter+the+God-Eternals"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F188487%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=372184&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/71998?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
