@@ -38,20 +38,7 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {
-      "Fleecemane Lion@bob#1": {
-        "granted": [
-          [],
-          ["This creature attacks each combat if able."]
-        ]
-      },
-      "Icehide Golem@bob#1": {
-        "granted": [
-          [],
-          ["This creature attacks each combat if able."]
-        ]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },

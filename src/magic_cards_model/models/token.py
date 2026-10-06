@@ -430,11 +430,11 @@ SHARD = TokenDefinition(
 )
 
 #: CR 111.10f: "A Clue token is a colorless Clue artifact token with '{2},
-#: {T}, Sacrifice this token: Draw a card.'" - CR 701.16a's "investigate".
+#: Sacrifice this token: Draw a card.'" (no {T}) - CR 701.16a's "investigate".
 CLUE = TokenDefinition(
     types=(Type.ARTIFACT,),
     subtypes=("Clue",),
-    rules_text="{2}, {T}, Sacrifice this token: Draw a card.",
+    rules_text="{2}, Sacrifice this token: Draw a card.",
 )
 
 #: CR 111.10h: "A Powerstone token is a colorless Powerstone artifact token
