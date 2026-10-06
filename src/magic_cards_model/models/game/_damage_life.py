@@ -323,7 +323,15 @@ class DamageLifeMixin:
                 if not self._still_has_static_line(source, text):
                     continue
                 return f"{source.name}: damage can't be prevented (CR 615.12)"
-        return None
+        # A resolved spell's own turn-long "Damage can't be prevented this
+        # turn." held beside another effect it created (Insult) - recorded on
+        # `created_replacements` rather than `casting_rule_effects`.
+        from ...machines.damage_modification import (
+            created_damage_unpreventable,
+            spell_damage_unpreventable,
+        )
+
+        return created_damage_unpreventable(self, event) or spell_damage_unpreventable(self, event)
 
     # -- damage and life ---------------------------------------------------
 

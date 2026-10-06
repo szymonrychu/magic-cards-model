@@ -11,6 +11,11 @@ from ...numbers import COUNT, MULTIPLIER, parse_count, parse_multiplier
 from ..abilities import keywords_in_lines, self_reference_names
 from ..combat import Keyword
 from ..damage_modification import (
+    DamageCantBePreventedReplacement,
+    DamageModifierReplacement,
+    DamageRedirectReplacement,
+    PreventDamageByReplacement,
+    TurnDamageGroup,
     compile_damage_plus_source_characteristic,
     compile_heal_other_damage,
 )
@@ -1804,9 +1809,13 @@ def _compile_damage_multiplier(effect: ReplacementEffect) -> CardReplacement | N
 #: CR 614.2: a replacement effect that applies to damage from a source; CR
 #: 609.7b: the source's properties are checked as the damage would be dealt;
 #: CR 701.10g: doubling damage is the source dealing twice that much.
+#: The subject is "source" or, narrower, "creature" (Gratuitous Violence's
+#: "If a creature you control would deal damage to a permanent or player");
+#: the recipient is optional (Insult's "If a source you control would deal
+#: damage this turn" - any recipient).
 _SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE = re.compile(
-    r"^an? (?:(?P<quality>[a-z]+) )?source you control would deal "
-    r"(?P<noncombat>noncombat )?damage to (?P<recipient>.+)$",
+    r"^an? (?:(?P<quality>[a-z]+) )?(?P<subject>source|creature) you control would deal "
+    r"(?P<noncombat>noncombat )?damage(?: to (?P<recipient>.+))?$",
     re.IGNORECASE,
 )
 _SOURCE_DAMAGE_MODIFIER_RE = re.compile(
@@ -1922,19 +1931,19 @@ def _compile_damage_as_counters(effect: ReplacementEffect) -> CardReplacement | 
     return CardReplacement(label=effect.text, applies=applies, apply=apply)
 
 
-def _compile_damage_plus_amount(effect: ReplacementEffect) -> CardReplacement | None:
-    """`_SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE` + `_SOURCE_DAMAGE_MODIFIER_RE`."""
-    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
-        return None
-    event_match = _SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE.fullmatch((effect.event or "").strip())
+def read_damage_modifier(event_text: str, replacement: str) -> DamageModifierReplacement | None:
+    """`_SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE` + `_SOURCE_DAMAGE_MODIFIER_RE`, as
+    the data both a permanent's static and a resolving spell's turn-long
+    effect apply (`damage_modification.DamageModifierReplacement`)."""
+    event_match = _SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE.fullmatch(event_text.strip())
     if event_match is None:
         return None
-    recipient = _DAMAGE_RECIPIENTS.get(event_match.group("recipient").strip().lower())
-    if recipient is None:
-        return None
-    quality = event_match.group("quality")
-    noncombat = event_match.group("noncombat") is not None
-    match = _SOURCE_DAMAGE_MODIFIER_RE.fullmatch((effect.replacement or "").strip().rstrip("."))
+    recipient = event_match.group("recipient")
+    if recipient is not None:
+        recipient = recipient.strip().lower()
+        if recipient not in _DAMAGE_RECIPIENTS:
+            return None
+    match = _SOURCE_DAMAGE_MODIFIER_RE.fullmatch(replacement.strip().rstrip("."))
     if match is None:
         return None
     if match.group("plus") is not None:
@@ -1945,21 +1954,31 @@ def _compile_damage_plus_amount(effect: ReplacementEffect) -> CardReplacement | 
     else:
         addend = 0
         factor = _DAMAGE_WORD_FACTORS[match.group("mult").lower()]
+    quality = event_match.group("quality")
+    return DamageModifierReplacement(
+        subject=event_match.group("subject").lower(),
+        quality=quality.lower() if quality is not None else None,
+        noncombat=event_match.group("noncombat") is not None,
+        recipient=recipient,
+        factor=factor,
+        addend=addend,
+    )
+
+
+def _compile_damage_plus_amount(effect: ReplacementEffect) -> CardReplacement | None:
+    """A permanent's static `read_damage_modifier` shape: "you" is the
+    permanent's controller as the damage would be dealt (CR 609.7b)."""
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    spec = read_damage_modifier(effect.event or "", effect.replacement or "")
+    if spec is None:
+        return None
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-        if event.kind is not EventKind.DAMAGE or event.source is None:
-            return False
-        if noncombat and event.combat:
-            return False  # "noncombat damage" (CR 510.2 marks combat damage).
-        source_controller = game.controller_of(source).username
-        if game.controller_of(event.source).username != source_controller:
-            return False  # "a source *you* control".
-        if quality is not None and not game.source_has_quality(event.source, quality):
-            return False  # CR 609.7b: Torbran's "red source", checked now.
-        return recipient(game, source_controller, event)
+        return spec.applies(game, game.controller_of(source).username, event)
 
     def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
-        event.amount = event.amount * factor + addend
+        spec.apply(game, game.controller_of(source).username, event)
 
     return CardReplacement(label=effect.text, applies=applies, apply=apply)
 
@@ -4033,6 +4052,137 @@ _UNTIL_END_OF_TURN_PREFIX_RE = re.compile(r"^until end of turn,\s*", re.IGNORECA
 _THIS_TURN_RE = re.compile(r"\s+this turn\b", re.IGNORECASE)
 
 
+# -- turn-long damage effects of a resolving spell or ability ------------------
+
+#: "Prevent all [combat] damage that would be dealt by creatures this turn."
+#: (Ethereal Haze), with CR 615.5's "You gain life equal to the damage
+#: prevented this way." (Chant of Vitu-Ghazi). The dealers are "creatures" or
+#: "`<quality>` sources" (CR 609.7b: a quality rechecked as damage is dealt).
+_PREVENT_ALL_BY_THIS_TURN_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that would be dealt (?:this turn )?by "
+    r"(?:(?P<creatures>creatures)|(?P<quality>[a-z]+) sources) this turn\."
+    r"(?P<gain> you gain life equal to the damage prevented this way\.)?$",
+    re.IGNORECASE,
+)
+#: "If a source you control would deal damage this turn, it deals double that
+#: damage instead." (Insult) - `read_damage_modifier`'s shape for the turn.
+_TURN_DAMAGE_MODIFIER_RE = re.compile(
+    r"^if (?P<event>.+? would deal (?:noncombat )?damage(?: to .+?)?) this turn, "
+    r"(?P<replacement>it deals .+?) instead\.$",
+    re.IGNORECASE,
+)
+#: "[Combat] damage can't be prevented this turn." - only ever read here as
+#: one part of a group (CR 615.12): on its own, the clause reader's
+#: `CastingRuleEffect` (Skullcrack, Stomp) already performs it.
+_CANT_BE_PREVENTED_THIS_TURN_RE = re.compile(
+    r"^(?P<combat>combat )?damage can'?t be prevented this turn\.$", re.IGNORECASE
+)
+#: CR 614.9's redirection, created for the turn: "All [combat] damage that
+#: would be dealt [this turn] to `<protected>` [this turn] [by a source of your
+#: choice] is dealt to `<new>` instead." (Kor Dirge, Turn the Tables) and "The
+#: next N damage that would be dealt to `<protected>` this turn is dealt to
+#: `<new>` instead." (Carom, Razia, Boros Archangel).
+_REDIRECT_ALL_RE = re.compile(
+    r"^all (?P<combat>combat )?damage that would be dealt (?P<early>this turn )?to "
+    r"(?P<protected>.+?)(?P<late> this turn)?(?: by (?P<source>a source of your choice))? "
+    r"is dealt to (?P<new>.+?) instead\.$",
+    re.IGNORECASE,
+)
+_REDIRECT_NEXT_RE = re.compile(
+    rf"^the next (?P<n>{COUNT}) damage that would be dealt to (?P<protected>.+?) this turn "
+    r"is dealt to (?P<new>.+?) instead\.$",
+    re.IGNORECASE,
+)
+#: A targeted damage recipient: a creature, planeswalker or battle (CR 614.9's
+#: own list), "another" one included (CR 115.3: a different object).
+_REDIRECT_TARGET_PHRASE_RE = re.compile(
+    r"^(?:another )?target (?:[a-z]+ )*?(?:creature|planeswalker|battle)(?: you control)?$",
+    re.IGNORECASE,
+)
+_TARGET_WORD_RE = re.compile(r"\btarget\b", re.IGNORECASE)
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=\.)\s+(?=[A-Z])")
+
+
+def _target_index(sentence: str, phrase_start: int, offset: int) -> int:
+    """Which of the creating object's targets a phrase names (CR 601.2c: they
+    are chosen in the order the text names them)."""
+    return offset + len(_TARGET_WORD_RE.findall(sentence[:phrase_start]))
+
+
+def _read_turn_damage_sentence(sentence: str, offset: int, *, grouped: bool) -> object | None:
+    """One sentence of `read_turn_damage_spec`, or None. `offset` is how many
+    targets the sentences before it named."""
+    prevent = _PREVENT_ALL_BY_THIS_TURN_RE.fullmatch(sentence)
+    if prevent is not None:
+        quality = "creature" if prevent.group("creatures") else prevent.group("quality").lower()
+        return PreventDamageByReplacement(
+            source_quality=quality,
+            combat_only=prevent.group("combat") is not None,
+            gains_life=prevent.group("gain") is not None,
+        )
+    modifier = _TURN_DAMAGE_MODIFIER_RE.fullmatch(sentence)
+    if modifier is not None:
+        return read_damage_modifier(modifier.group("event"), modifier.group("replacement"))
+    if grouped:
+        unpreventable = _CANT_BE_PREVENTED_THIS_TURN_RE.fullmatch(sentence)
+        if unpreventable is not None:
+            return DamageCantBePreventedReplacement(
+                combat_only=unpreventable.group("combat") is not None
+            )
+    redirect = _REDIRECT_ALL_RE.fullmatch(sentence)
+    amount: int | None = None
+    if redirect is None:
+        redirect = _REDIRECT_NEXT_RE.fullmatch(sentence)
+        if redirect is None:
+            return None
+        amount = parse_count(redirect.group("n"))
+        if amount is None:
+            return None
+    elif not (redirect.group("early") or redirect.group("late")):
+        return None  # no stated duration (CR 611.2a): not this shape.
+    new = redirect.group("new")
+    if _REDIRECT_TARGET_PHRASE_RE.fullmatch(new) is None:
+        return None
+    protected = redirect.group("protected")
+    protected_target: int | None = None
+    if protected.lower() != "you":
+        if _REDIRECT_TARGET_PHRASE_RE.fullmatch(protected) is None:
+            return None
+        protected_target = _target_index(sentence, redirect.start("protected"), offset)
+    return DamageRedirectReplacement(
+        combat_only=bool(redirect.groupdict().get("combat")),
+        protected_target=protected_target,
+        redirect_target=_target_index(sentence, redirect.start("new"), offset),
+        choose_source=bool(redirect.groupdict().get("source")),
+        amount=amount,
+    )
+
+
+def read_turn_damage_spec(text: str) -> CreatedReplacementSpec | None:
+    """The turn-long damage effect(s) a resolving spell's or ability's text
+    creates (`damage_modification`'s banner), or None. Several sentences, each
+    one such effect, are one `TurnDamageGroup` (CR 608.2c's printed order); a
+    sentence this does not read leaves the whole text unread."""
+    body = " ".join(text.strip().split())
+    single = _read_turn_damage_sentence(body, 0, grouped=False)
+    if single is not None:
+        return single  # type: ignore[return-value]
+    sentences = _SENTENCE_SPLIT_RE.split(body)
+    if len(sentences) < 2:
+        return None
+    parts = []
+    offset = 0
+    for sentence in sentences:
+        part = _read_turn_damage_sentence(sentence, offset, grouped=True)
+        if part is None:
+            return None
+        parts.append(part)
+        offset += len(_TARGET_WORD_RE.findall(sentence))
+    if all(isinstance(part, DamageCantBePreventedReplacement) for part in parts):
+        return None
+    return TurnDamageGroup(parts=parts)
+
+
 def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
     """The resolution-created replacement a sentence prints, or `None`.
 
@@ -4042,6 +4192,9 @@ def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
     taken off and the rest is read by the same shape readers the static forms
     use."""
     text = " ".join(sentence.strip().split())
+    turn_damage = read_turn_damage_spec(text)
+    if turn_damage is not None:
+        return turn_damage
     body = _UNTIL_END_OF_TURN_PREFIX_RE.sub("", text, count=1)
     if body == text:
         if _THIS_TURN_RE.search(text) is None:

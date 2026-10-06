@@ -435,6 +435,26 @@ def _tribute_paid(context: "ConditionContext", match: re.Match[str]) -> bool:
     return paid == (match.group("negated") is None)
 
 
+def _x_compared(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "X is 5 or more" (Banefire, Martial Coup, Red Sun's Twilight) - CR
+    107.3a: "While a spell is on the stack, any X in its mana cost ... equals
+    the announced value", which `CastRecord.x_value` holds. No record (the
+    object was never cast) is X = 0, CR 107.3b's free-cast answer too."""
+    needed = parse_count(match.group("count"))
+    if needed is None:
+        return False
+    if match.group("x") != "x":
+        # The announced value already substituted for X (`substitute_x`,
+        # CR 107.3a) - "5 is 5 or more" compares two numbers.
+        x_value = int(match.group("x"))
+    else:
+        record = _record(context)
+        x_value = record.x_value if record is not None else 0
+    if match.group("comparison") in ("more", "greater"):
+        return x_value >= needed
+    return x_value <= needed
+
+
 # -- the registry ------------------------------------------------------------------
 
 _NEGATED = r"(?P<negated>n't| not)?"
@@ -460,6 +480,9 @@ READERS: tuple[ConditionReader, ...] = (
         rf"(?:at least (?P<count>{COUNT})|(?P<count2>{COUNT}) or more) mana was spent to "
         rf"cast {_IT}",
         _at_least_mana_spent,
+    ),
+    _reader(
+        rf"(?P<x>x|\d+) is (?P<count>{COUNT}) or (?P<comparison>more|greater|less)", _x_compared
     ),
     _reader(
         rf"the amount of mana spent to cast {_IT} (?:is|was) "
