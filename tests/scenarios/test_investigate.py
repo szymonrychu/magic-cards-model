@@ -22,7 +22,7 @@ def test_tamiyo_investigates_when_she_attacks():
     Draw a card.")
 
     CR 111.10f, in full: "A Clue token is a colorless Clue artifact token with
-    '{2}, {T}, Sacrifice this token: Draw a card.'"
+    '{2}, Sacrifice this token: Draw a card.'"
     """
     scenario = (
         Scenario()
