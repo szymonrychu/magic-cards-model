@@ -4222,16 +4222,18 @@ def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedCla
     *preceding* clause's own antecedent, so this only ever claims the "end of
     combat" wording that shape never prints).
 
-    Ability-only (`for_spell=False`): a spell has no `ability.event` to read a
-    bare pronoun off, and none of these shapes appears on a spell in this
-    pool.
+    A spell has no `ability.event` to read a bare pronoun off, so on a spell
+    only the object-less draw is read (Swift Maneuver's and Mystic Melting's
+    "Draw a card at the beginning of the next turn's upkeep", CR 603.7a: the
+    spell's resolution creates a delayed triggered ability whose controller is
+    the spell's controller, CR 603.7d).
     """
-    if for_spell:
-        return None
     timing = _parse_delayed_timing_clause(clause)
     if timing is None:
         return None
     step, verb = timing
+    if for_spell and _DRAW_N_CARDS_RE.fullmatch(verb) is None:
+        return None
 
     if draw_match := _DRAW_N_CARDS_RE.fullmatch(verb):
         draw_count = parse_count(draw_match.group("count"))
@@ -4248,16 +4250,21 @@ def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedCla
         )
 
         def draw_effect(game: "Game", stack_object: "StackObject") -> None:
-            ability = stack_object
-            assert isinstance(ability, AbilityOnStack)
+            if isinstance(stack_object, CardState):
+                controller = game.controller_of(stack_object).username
+                source_id, source_name = stack_object.id, stack_object.name
+            else:
+                assert isinstance(stack_object, AbilityOnStack)
+                controller = stack_object.controller
+                source_id, source_name = stack_object.source_id, stack_object.source_name
             game.create_delayed_trigger(
                 DelayedTrigger(
                     text=clause,
                     event=TriggerEvent.BEGINNING_OF_STEP,
                     step=step,
-                    controller=ability.controller,
-                    source_id=ability.source_id,
-                    source_name=ability.source_name,
+                    controller=controller,
+                    source_id=source_id,
+                    source_name=source_name,
                     effect=draw_spec,
                 )
             )
@@ -5614,6 +5621,151 @@ def _parse_choose_then_those_clauses(text: str, *, for_spell: bool) -> list[Targ
         effects.extend(rest)
         index += 1
     return effects if found else None
+
+
+#: "`<instruction on target X>`. [If `<condition>`, ]`<source>` deals N damage
+#: to that creature's controller." where the instruction is not a destroy
+#: (`merges._merge_destroy_then_damage_controller_clauses` owns that one) -
+#: Blur of Blades' -1/-1 counter, Sonic Assault's tap, Searing Barrage's and
+#: Draconic Roar's own damage with an adamant / revealed-or-controlled gate.
+#: CR 608.2c: the second sentence is one instruction with the first, "that
+#: creature" being the first sentence's only target (the second
+#: sentence names no target of its own). CR 608.2h: the controller is read
+#: from the target before the first instruction can change it, and the
+#: damage is dealt whether or not the first instruction did anything to a
+#: still-legal target; CR 608.2b: a target that is illegal on resolution
+#: contributes no controller, so nothing at all happens to anyone.
+_TARGET_THEN_CONTROLLER_DAMAGE_RE = re.compile(
+    rf"^(?:if (?P<condition>[^,]+), )?(?P<subject>[^,]+?) deals (?P<n>{COUNT}) damage to "
+    r"that (?P<noun>creature|permanent|planeswalker|artifact|enchantment|land)'s controller\.?$",
+    re.IGNORECASE,
+)
+
+
+def _single_target_antecedent(sentence: str) -> bool:
+    """The sentence names exactly one object target and is not a destroy."""
+    lowered = sentence.lower()
+    return (
+        lowered.count("target ") == 1
+        and "up to" not in lowered
+        and "each " not in lowered
+        and not lowered.lstrip().startswith("destroy ")
+    )
+
+
+def _target_then_controller_damage_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    match = _TARGET_THEN_CONTROLLER_DAMAGE_RE.fullmatch(second.strip())
+    if match is None or "target" in match.group("subject").lower():
+        return None
+    if not _single_target_antecedent(first):
+        return None
+    condition = match.group("condition")
+    if condition is not None and not _effect_condition_is_readable(condition):
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    antecedent = _parse_mixed_clauses(first, for_spell=for_spell)
+    if antecedent is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controllers = [
+            game.controller_of(target).username
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ][:1]
+        for step in antecedent:
+            step(game, stack_object)
+        if not controllers:
+            return
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)  # type: ignore[union-attr]
+        )
+        if condition is not None:
+            holder = game.controller_of(stack_object).username
+            if game.condition_holds(holder, condition, source) is not True:
+                return
+        game.deal_damage(game.player(controllers[0]), amount, source=source)
+
+    return effect
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_target_then_controller_damage_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """Every sentence of `text`, a sentence naming one target and the
+    `_TARGET_THEN_CONTROLLER_DAMAGE_RE` sentence after it read together, the
+    rest one by one through the ordinary pipeline; `None` when no pair is that
+    shape or any other sentence fails to read (CR 608.2c: no half-run
+    instruction)."""
+    lowered = text.lower()
+    if "'s controller" not in lowered or " damage to that " not in lowered:
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if len(sentences) < 2:
+        return None
+    effects: list[TargetedClause] = []
+    found = False
+    index = 0
+    while index < len(sentences):
+        pair = (
+            _target_then_controller_damage_pair(
+                sentences[index], sentences[index + 1], for_spell=for_spell
+            )
+            if index + 1 < len(sentences)
+            else None
+        )
+        if pair is not None:
+            effects.append(pair)
+            found = True
+            index += 2
+            continue
+        rest = _parse_mixed_clauses(sentences[index], for_spell=for_spell)
+        if rest is None:
+            return None
+        effects.extend(rest)
+        index += 1
+    return effects if found else None
+
+
+#: "`<source>` deals N damage to you." as one clause of a spell or ability -
+#: Sarkhan's Rage's "If you control no Dragons, Sarkhan's Rage deals 2 damage
+#: to you.", whose condition `_parse_condition_clause` reads once this inner
+#: instruction reads. "You" is the controller of the resolving spell or
+#: ability (CR 120.3a, CR 109.5); the source is the spell itself or the
+#: ability's source as it last existed (CR 120.1, CR 608.2h).
+_DAMAGE_TO_YOU_CLAUSE_RE = re.compile(
+    rf"^(?P<subject>[^.,]+?) deals (?P<n>{COUNT}) damage to you\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s36", for_spell=FORWARD)
+def _parse_damage_to_you_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_DAMAGE_TO_YOU_CLAUSE_RE`'s shape, or `None`."""
+    if " damage to you" not in clause.lower():
+        return None
+    match = _DAMAGE_TO_YOU_CLAUSE_RE.fullmatch(clause.strip())
+    if match is None or "target" in match.group("subject").lower():
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object
+            if isinstance(stack_object, CardState)
+            else stack_object.source_or_last_known(game)  # type: ignore[union-attr]
+        )
+        game.deal_damage(game.controller_of(stack_object), amount, source=source)
+
+    return effect
 
 
 def _parse_optional_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:

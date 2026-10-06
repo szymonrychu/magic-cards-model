@@ -458,6 +458,21 @@ def _revealed_or_controlled(context: "ConditionContext", match: re.Match[str]) -
     return subtype is not None and subtype.lower() in record.controlled_subtypes_as_cast
 
 
+def _controlled_subtype_as_cast(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "you controlled a Mount as you cast this spell" (Steer Clear): the
+    caster controlled a permanent of that subtype as the spell became cast
+    (CR 601.2i), the fact `Casting` recorded in
+    `CastRecord.controlled_subtypes_as_cast` - not the board as the spell
+    resolves, so a Mount that arrives or leaves afterwards changes nothing."""
+    from ...data.subtypes import canonical_subtype
+
+    record = _record(context)
+    if record is None:
+        return False
+    subtype = canonical_subtype(match.group("controlled"))
+    return subtype is not None and subtype.lower() in record.controlled_subtypes_as_cast
+
+
 def _tribute_paid(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "tribute wasn't paid" (CR 702.104b): whether an opponent put +1/+1
     counters on the source as it entered - recorded with its putter by
@@ -600,6 +615,10 @@ READERS: tuple[ConditionReader, ...] = (
         r"you revealed an? (?P<revealed>[a-z]+) card or controlled an? (?P<controlled>[a-z]+) "
         r"as you cast (?:this spell|it)",
         _revealed_or_controlled,
+    ),
+    _reader(
+        rf"you controlled an? (?P<controlled>[a-z]+) as you cast {_IT}",
+        _controlled_subtype_as_cast,
     ),
     _reader(r"tribute was(?P<negated>n't| not)? paid", _tribute_paid),
 )

@@ -62,7 +62,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT, MIXED_CLAUSE, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _OBJECT_ANAPHOR,
     AbilityEffect,
@@ -2768,6 +2768,112 @@ def _parse_object_anaphor_clause_pair(
     return effect
 
 
+#: "`<instruction>`. [If `<condition>`, ]the `<noun>` you control `<gains or
+#: gets ...>`." - Outmuscle's "Put a +1/+1 counter on target creature you
+#: control, then it fights target creature you don't control. Adamant - If at
+#: least three green mana was spent to cast this spell, the creature you
+#: control gains indestructible until end of turn." CR 608.2c: "the creature
+#: you control" is the first sentence's "target creature you control" (the
+#: only object of that sentence the spell's controller controls), found
+#: before the antecedent runs (CR 608.2h) and left to the rider's own
+#: battlefield check afterwards; CR 608.2b: with that target illegal there is
+#: nothing for the rider to refer to and it does nothing. The rider itself is
+#: read by `_parse_referent_object_clause` with the noun phrase rewritten to
+#: "it", so every predicate and every condition that reader knows is read
+#: here too and nothing is read more loosely than an "it" rider already is.
+_THE_OBJECT_YOU_CONTROL_RIDER_RE = re.compile(
+    r"^(?:if (?P<condition>[^,]+), )?the (?:creature|permanent|artifact|land|planeswalker) "
+    r"you control (?P<predicate>(?:gains?|gets?) .+)$",
+    re.IGNORECASE,
+)
+
+
+_THE_OBJECT_YOU_CONTROL_GATE_RE = re.compile(
+    r"\bthe (?:creature|permanent|artifact|land|planeswalker) you control (?:gains?|gets?) ",
+    re.IGNORECASE,
+)
+
+
+def _the_object_you_control_pair(
+    first: str, second: str, *, for_spell: bool
+) -> "Callable[[Game, StackObject], None] | None":
+    match = _THE_OBJECT_YOU_CONTROL_RIDER_RE.fullmatch(second.strip().rstrip("."))
+    if match is None or "target " not in first.lower() or " you control" not in first.lower():
+        return None
+    condition = match.group("condition")
+    predicate = match.group("predicate")
+    # Savage Punch's "gets +2/+2 until end of turn before it fights if you
+    # control a creature with power 4 or greater": the printed order is the
+    # rule (CR 608.2c), so the rider runs ahead of the fight instead of after.
+    before = " before it fights" in predicate.lower()
+    if before:
+        predicate = re.sub(r" before it fights", "", predicate, count=1, flags=re.IGNORECASE)
+    rider_text = f"it {predicate}"
+    if condition is not None:
+        rider_text = f"if {condition}, {rider_text}"
+    rider = _parse_referent_object_clause(rider_text)
+    if rider is None:
+        return None
+    antecedent = _parse_mixed_clauses(first, for_spell=for_spell)
+    if antecedent is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        caster = game.controller_of(stack_object).username
+        referents = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState)
+            and target.zone is Zone.BATTLEFIELD
+            and game.controller_of(target).username == caster
+        ][:1]
+        if before and referents:
+            rider(game, referents, stack_object)
+        for step in antecedent:
+            step(game, stack_object)
+        if referents and not before:
+            rider(game, referents, stack_object)
+
+    return effect
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_the_object_you_control_rider_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """Every sentence of `text`, a sentence naming a target you control and the
+    `_THE_OBJECT_YOU_CONTROL_RIDER_RE` sentence after it read together, the rest
+    one by one through the ordinary pipeline; `None` when no pair is that shape
+    or any other sentence fails to read (CR 608.2c: no half-run instruction)."""
+    if " you control " not in text.lower() or _THE_OBJECT_YOU_CONTROL_GATE_RE.search(text) is None:
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if len(sentences) < 2:
+        return None
+    effects: list[TargetedClause] = []
+    found = False
+    index = 0
+    while index < len(sentences):
+        pair = (
+            _the_object_you_control_pair(
+                sentences[index], sentences[index + 1], for_spell=for_spell
+            )
+            if index + 1 < len(sentences)
+            else None
+        )
+        if pair is not None:
+            effects.append(pair)
+            found = True
+            index += 2
+            continue
+        rest = _parse_mixed_clauses(sentences[index], for_spell=for_spell)
+        if rest is None:
+            return None
+        effects.extend(rest)
+        index += 1
+    return effects if found else None
+
+
 def _parse_object_anaphor_clause_series(
     first: str, riders: Sequence[str], *, for_spell: bool, layer_antecedent_first: bool = False
 ) -> TargetedClause | None:
@@ -3152,6 +3258,22 @@ _PERMANENT_TYPES_ONLY_RE = re.compile(
 )
 
 
+#: "each of those permanents and/or players" / "each of those creatures" - the
+#: spell's own targets, named by what they may be rather than by the word
+#: "targets" (Sundering Stroke: "If at least seven red mana was spent to cast
+#: this spell, instead Sundering Stroke deals 7 damage to each of those
+#: permanents and/or players."). Only meaningful against a base that divides
+#: its effect among targets, whose chosen targets are what "those" refers to
+#: (CR 601.2d); read as the "each of those targets" the damage reader already
+#: knows.
+_EACH_OF_THOSE_TARGET_NOUNS_RE = re.compile(
+    r"\beach of those (?:creatures|planeswalkers|permanents|players|battles)"
+    r"(?:(?:, | and/or | and | or )(?:creatures|planeswalkers|permanents|players|battles))*\b",
+    re.IGNORECASE,
+)
+_DIVIDED_AMONG_TARGETS_RE = re.compile(r"\bdivided as you choose among\b", re.IGNORECASE)
+
+
 def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str | None:
     """CR 400.7's "that `<noun>`" is anaphora back to the base clause's own
     already-fixed target (CR 601.2c), not a second, elided one - Colossal
@@ -3168,6 +3290,12 @@ def _anaphoric_target_substitution(base_text: str, alternative_text: str) -> str
     can read, or the alternative uses no matching anaphor at all - the
     elided-tail splice owns every other shape.
     """
+    if _DIVIDED_AMONG_TARGETS_RE.search(base_text) and _EACH_OF_THOSE_TARGET_NOUNS_RE.search(
+        alternative_text
+    ):
+        return _EACH_OF_THOSE_TARGET_NOUNS_RE.sub(
+            "each of those targets", alternative_text, count=1
+        )
     match = _TARGET_PHRASE_ANYWHERE_RE.search(base_text.strip())
     if match is None:
         return None
@@ -4070,6 +4198,7 @@ from .counters import _counter_kind  # noqa: E402
 from .damage import _parse_damage_each_other_type_and_each_opponent_clause  # noqa: E402
 from .dispatch import (  # noqa: E402
     _parse_mixed_clause,
+    _parse_mixed_clauses,
     _spell_effect_or_notice,
     parse_clause_effect,
     parse_mixed_effect,

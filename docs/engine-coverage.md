@@ -7454,3 +7454,17 @@ No new persisted field (schema stays 115).
 | "Each player shuffles the cards from their hand into their library, then draws that many cards." (each player's own count, APNAP) followed by "Metalcraft - If you control three or more artifacts, `<src>` deals damage to each opponent equal to the number of cards that player has drawn this turn." (per-opponent `Game.cards_drawn_this_turn`) | 701.24a, 121.2, 608.2c, 207.2c, 101.4, 120.3a | `draw_discard._parse_each_player_wheel_text`, `damage._parse_damage_each_opponent_equal_to_their_draws_clause` | Molten Psyche (sole printing) | `test_nw02_wheel_then_metalcraft_damage.py` |
 
 No new persisted field (schema stays 115 here; the reserved 121 is unused).
+
+## NW03-T4: gated and anaphoric damage follow-ups, dies-this-turn delayed riders, delayed upkeep draw
+
+| Mechanic | CR | Reader | Proof cards | Test |
+|---|---|---|---|---|
+| "`<instruction on one target>`. [If `<condition>`, ]`<src>` deals N damage to that creature's controller." after a non-destroy clause (counter, tap, damage) or behind an adamant / revealed-or-controlled gate - the controller read from the target before the first instruction runs, nothing if the target is illegal | 608.2b, 608.2c, 608.2h, 207.2c, 601.2h | `modal._parse_target_then_controller_damage_clauses` | Blur of Blades, Searing Barrage, Sonic Assault, Draconic Roar | `test_nw03_controller_anaphor_after_rider_and_gate.py` |
+| "`<instruction>`. [If `<condition>`, ]the creature you control gains\|gets `<...>`." (+ "before it fights") - the rider's referent is the spell's own target you control, read through the "it" rider reader | 608.2c, 608.2h, 702.12b | `text._parse_the_object_you_control_rider_clauses` | Outmuscle, Savage Punch | `test_nw03_controller_anaphor_after_rider_and_gate.py` |
+| "If `<mana gate>`, instead `<src>` deals N damage to each of those permanents and/or players." over a divided-damage base - the noun phrase is the spell's chosen targets | 601.2d, 601.2h, 614.1a | `text._anaphoric_target_substitution` (`_EACH_OF_THOSE_TARGET_NOUNS_RE`) | Sundering Stroke, Slaying Fire | `test_nw03_mana_spent_instead_those_targets.py` |
+| "you controlled a `<subtype>` as you cast this spell" - the cast-time board snapshot (`CastRecord.controlled_subtypes_as_cast`) | 601.2i, 614.1a | `conditions.cast_record._controlled_subtype_as_cast` | Steer Clear | `test_nw03_controlled_subtype_as_you_cast_instead.py` |
+| "`<src>` deals N damage to you." as a spell or ability clause, so a leading "If you control no `<subtype>s`," reads | 120.3a, 608.2c | `modal._parse_damage_to_you_clause` | Sarkhan's Rage | `test_nw03_control_no_subtype_self_damage.py` |
+| "When that creature dies this turn, `<src>` deals N damage to the creature's controller" and "When a creature dealt damage this way dies this turn, `<consequence>`" - the delayed trigger watches only creatures the spell actually damaged | 603.7, 603.7c, 603.10a, 608.2h, 615.6 | `dies_this_turn.dies_consequence_effect`, `parse_then_when_that_creature_dies_this_turn` | Searing Blood, Skeletonize | `test_nw03_dies_this_turn_delayed_riders.py` |
+| "Draw a card at the beginning of the next turn's upkeep." on a spell - a delayed trigger for the spell's controller | 603.7a, 603.7d, 513.2 | `modal._parse_delayed_single_clause` (spell draw) | Swift Maneuver, Mystic Melting | `test_nw03_spell_delayed_upkeep_draw.py` |
+
+No new persisted field (schema unchanged; the reserved 121 is unused).
