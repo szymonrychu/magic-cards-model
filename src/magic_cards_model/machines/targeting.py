@@ -103,7 +103,7 @@ from pydantic import ConfigDict
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.subtypes import noncreature_subtype_card_type
-from ..models.card import Card, Color, Layout, Supertype, Type
+from ..models.card import Card, Color, Layout, Supertype, Type, has_changeling
 from ..models.card_state import CardState, ChoiceKind, TargetRef
 from ..models.zone import Zone
 from ..numbers import parse_count
@@ -723,6 +723,27 @@ class TargetRequirement(EngineModel):
     the identical way in `TargetingProfile._why_not` while it fills this
     requirement's own slots. Fails open for a target whose mana value cannot
     be read."""
+
+    distinct_names: bool = False
+    """"up to six target creature cards with different names" (Behold the
+    Sinister Six!) - a restriction *across* this requirement's own targets, like
+    `distinct_mana_values`: no two of them may share a name (CR 201.2), enforced
+    in `TargetingProfile._why_not` while it fills this requirement's slots."""
+
+    share_a_creature_type: bool = False
+    """"two target creature cards that share a creature type" (Raise the
+    Draugr, Return from Extinction, Unbury) - the creature-type twin of
+    `share_a_card_type`: every target chosen for this requirement must have a
+    creature type (CR 205.3m) in common with all the others. A changeling has
+    every creature type (CR 702.73a), so it shares with anything. CR 601.2c."""
+
+    chosen_by_opponent: bool = False
+    """"return target creature card of an opponent's choice from your
+    graveyard" (Mausoleum Turnkey) - an opponent, not the ability's controller,
+    makes the choice of this target. The legality of the target is the same
+    (CR 601.2c); only who is asked changes, and that is
+    `Game._ask_targets_for_profile`'s: it addresses the `CHOOSE_TARGETS`
+    question to an opponent of the controller."""
 
     excludes_enchanted: bool = False
     """"target creature other than enchanted creature" (Secret Invasion) - the
@@ -2438,6 +2459,7 @@ class TargetingProfile(EngineModel):
         shared_types: dict[int, frozenset[Type]] = {}
         totals: dict[int, float] = {}
         mana_values: dict[int, set[float]] = {}
+        across: dict[tuple[str, int], Any] = {}
         assigned: list[int | None] = []
         for target in targets:
             placed: int | None = None
@@ -2455,6 +2477,7 @@ class TargetingProfile(EngineModel):
                             shared_types,
                             totals,
                             mana_values,
+                            across,
                         )
                         is None
                     ):
@@ -2475,6 +2498,7 @@ class TargetingProfile(EngineModel):
                                 shared_types,
                                 totals,
                                 mana_values,
+                                across,
                             )
                             is None
                         ):
@@ -2508,6 +2532,7 @@ class TargetingProfile(EngineModel):
             shared_types: dict[int, frozenset[Type]] = {}
             totals: dict[int, float] = {}
             mana_values: dict[int, set[float]] = {}
+            across: dict[tuple[str, int], Any] = {}
             for target, position in zip(targets, placed, strict=True):
                 self._why_not(
                     self.requirements[position],
@@ -2520,6 +2545,7 @@ class TargetingProfile(EngineModel):
                     shared_types,
                     totals,
                     mana_values,
+                    across,
                 )
             return taken
 
@@ -2576,7 +2602,7 @@ class TargetingProfile(EngineModel):
                     return [position, *rest]
             return None
 
-        return descend(0, capacity, [0] * len(self.requirements), ({}, {}, {}, {}, {}))
+        return descend(0, capacity, [0] * len(self.requirements), ({}, {}, {}, {}, {}, {}))
 
     def _first_fit_slots(
         self, targets: list[Any], caster: str, game: Any = None, source_id: UUID | None = None
@@ -2601,6 +2627,7 @@ class TargetingProfile(EngineModel):
         filled: dict[int, int] = {}
         totals: dict[int, float] = {}
         mana_values: dict[int, set[float]] = {}
+        across: dict[tuple[str, int], Any] = {}
 
         for target in targets:
             reasons: list[str] = []
@@ -2616,6 +2643,7 @@ class TargetingProfile(EngineModel):
                     shared_types,
                     totals,
                     mana_values,
+                    across,
                 )
                 if reason is None:
                     slots.pop(index)
@@ -2635,6 +2663,7 @@ class TargetingProfile(EngineModel):
                         shared_types,
                         totals,
                         mana_values,
+                        across,
                     )
                     if reason is None:
                         filled[id(requirement)] = filled.get(id(requirement), 0) + 1
@@ -2667,6 +2696,7 @@ class TargetingProfile(EngineModel):
         shared_types: dict[int, frozenset[Type]] | None = None,
         totals: dict[int, float] | None = None,
         mana_values: dict[int, set[float]] | None = None,
+        across: dict[tuple[str, int], Any] | None = None,
     ) -> str | None:
         """Why this requirement cannot take this target, CR 115.3 included.
 
@@ -2712,6 +2742,27 @@ class TargetingProfile(EngineModel):
                     f"{requirement.phrase} need targets that share a card type, and "
                     f"{target} shares none with the others (CR 601.2c)"
                 )
+        name: str | None = None
+        if requirement.distinct_names and across is not None:
+            name = getattr(target, "name", None)
+            if name is not None and name in across.get(("names", id(requirement)), set()):
+                return (
+                    f"{requirement.phrase} need targets with different names, "
+                    f"and {name} would repeat one (CR 201.2, 601.2c)"
+                )
+        creature_types: frozenset[str] | None = None
+        if requirement.share_a_creature_type and across is not None:
+            creature_types = _shareable_creature_types(target)
+            common = across.get(("creature_types", id(requirement)))
+            if (
+                creature_types is not None
+                and common is not None
+                and not _creature_types_overlap(common, creature_types)
+            ):
+                return (
+                    f"{requirement.phrase} need targets that share a creature type, and "
+                    f"{target} shares none with the others (CR 205.3m, 601.2c)"
+                )
         mana_value: float | None = None
         if requirement.total_mana_value_at_most is not None and totals is not None:
             mana_value = _computed_mana_value(target, game)
@@ -2739,6 +2790,16 @@ class TargetingProfile(EngineModel):
         if types is not None and shared_types is not None:
             common = shared_types.get(id(requirement))
             shared_types[id(requirement)] = types if common is None else common & types
+        if name is not None and across is not None:
+            across.setdefault(("names", id(requirement)), set()).add(name)
+        if creature_types is not None and across is not None:
+            key = ("creature_types", id(requirement))
+            common = across.get(key)
+            across[key] = (
+                creature_types
+                if common is None
+                else _intersect_creature_types(common, creature_types)
+            )
         if mana_value is not None and totals is not None:
             totals[id(requirement)] = totals.get(id(requirement), 0) + mana_value
         if seen_mana_value is not None and mana_values is not None:
@@ -3427,6 +3488,17 @@ _NAMED_RE = re.compile(r"^named (?P<name>[a-z' -]+?)(?=$|\s+(?:from|in)\b)", re.
 _ISNT_SUBTYPE_RE = re.compile(r"^that (?:isn't|is not) an? (?P<subtype>[a-z]+)\b", re.IGNORECASE)
 
 
+#: "up to six target creature cards **with different names**" (Behold the
+#: Sinister Six!) - see `TargetRequirement.distinct_names`.
+_WITH_DIFFERENT_NAMES_RE = re.compile(r"^with different names\b", re.IGNORECASE)
+#: "two target creature cards **that share a creature type**" - see
+#: `TargetRequirement.share_a_creature_type`.
+_SHARE_A_CREATURE_TYPE_RE = re.compile(r"^that share a creature type\b", re.IGNORECASE)
+#: "target creature card **of an opponent's choice** from your graveyard"
+#: (Mausoleum Turnkey) - see `TargetRequirement.chosen_by_opponent`.
+_OF_AN_OPPONENTS_CHOICE_RE = re.compile(r"^of an opponent's choice\b", re.IGNORECASE)
+
+
 class _ZoneQualifiers:
     """What `_read_zone_qualifiers` read off the text around a zone clause."""
 
@@ -3443,6 +3515,9 @@ class _ZoneQualifiers:
         self.exiled_flashback_alternative = False
         self.required_name: str | None = None
         self.of_chosen_type = False
+        self.distinct_names = False
+        self.share_a_creature_type = False
+        self.chosen_by_opponent = False
         self.excluded_subtypes: set[str] = set()
         self.excluded_supertypes: frozenset[Supertype] = frozenset()
         self.excluded_types: frozenset[Type] = frozenset()
@@ -3500,6 +3575,12 @@ def _read_zone_qualifiers(
                 read.owned_by_caster = read.owned_by_caster or m.group("own") is not None
             elif m := _OF_CHOSEN_TYPE_RE.match(text):
                 read.of_chosen_type = True
+            elif m := _WITH_DIFFERENT_NAMES_RE.match(text):
+                read.distinct_names = True
+            elif m := _SHARE_A_CREATURE_TYPE_RE.match(text):
+                read.share_a_creature_type = True
+            elif m := _OF_AN_OPPONENTS_CHOICE_RE.match(text):
+                read.chosen_by_opponent = True
             elif m := _NAMED_RE.match(text):
                 read.required_name = m.group("name").lower()
             elif m := _ISNT_SUBTYPE_RE.match(text):
@@ -5373,6 +5454,9 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     not_owned_by_caster = False
     required_name: str | None = None
     of_chosen_type = False
+    distinct_names = False
+    share_a_creature_type = False
+    chosen_by_opponent = False
     extra_excluded_subtypes: frozenset[str] = frozenset()
     event_comparison_attribute: ComparisonAttribute | None = None
     event_comparison_operator: ComparisonOperator | None = None
@@ -5446,6 +5530,9 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             not_owned_by_caster = qualifiers.not_owned_by_caster
             required_name = qualifiers.required_name
             of_chosen_type = qualifiers.of_chosen_type
+            distinct_names = qualifiers.distinct_names
+            share_a_creature_type = qualifiers.share_a_creature_type
+            chosen_by_opponent = qualifiers.chosen_by_opponent
             extra_excluded_subtypes = frozenset(qualifiers.excluded_subtypes)
             required_keyword = required_keyword or qualifiers.required_keyword
             event_comparison_attribute = qualifiers.event_attribute
@@ -5617,6 +5704,9 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         not_owned_by_caster=not_owned_by_caster,
         required_name=required_name,
         of_chosen_type=of_chosen_type,
+        distinct_names=distinct_names,
+        share_a_creature_type=share_a_creature_type,
+        chosen_by_opponent=chosen_by_opponent,
         event_comparison_attribute=event_comparison_attribute,
         event_comparison_operator=event_comparison_operator,
         must_be_token=adjectives.must_be_token,
@@ -6255,6 +6345,38 @@ def _computed_mana_value(target: Any, game: Any) -> float | None:
         if characteristics_of is not None:
             return float(characteristics_of(target).mana_value)
     return float(mana_value)
+
+
+#: Stands for "every creature type" (CR 702.73a, changeling) inside the running
+#: intersection `share_a_creature_type` keeps.
+_ALL_CREATURE_TYPES = "*"
+
+
+def _shareable_creature_types(target: Any) -> frozenset[str] | None:
+    """A target's creature types for `share_a_creature_type`, `{"*"}` for a
+    changeling (CR 702.73a), or `None` when they cannot be read (a bare id)."""
+    subtypes = getattr(target, "subtypes", None)
+    if subtypes is None:
+        return None
+    if has_changeling(getattr(target, "oracle_text", None)):
+        return frozenset({_ALL_CREATURE_TYPES})
+    return frozenset(str(subtype).lower() for subtype in subtypes)
+
+
+def _creature_types_overlap(left: frozenset[str], right: frozenset[str]) -> bool:
+    if _ALL_CREATURE_TYPES in left:
+        return bool(right)
+    if _ALL_CREATURE_TYPES in right:
+        return bool(left)
+    return bool(left & right)
+
+
+def _intersect_creature_types(left: frozenset[str], right: frozenset[str]) -> frozenset[str]:
+    if _ALL_CREATURE_TYPES in left:
+        return right
+    if _ALL_CREATURE_TYPES in right:
+        return left
+    return left & right
 
 
 def _computed_card_types(target: Any, game: Any) -> frozenset[Type] | None:

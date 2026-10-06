@@ -1068,7 +1068,11 @@ class TriggersDecisionsMixin:
 
         minimum = min(profile.min_targets, len(candidates))
         across = any(
-            r.distinct_controllers or r.share_a_card_type or r.total_mana_value_at_most is not None
+            r.distinct_controllers
+            or r.share_a_card_type
+            or r.share_a_creature_type
+            or r.distinct_names
+            or r.total_mana_value_at_most is not None
             for r in profile.requirements
         )
         if any(r.distinct_controllers for r in profile.requirements):
@@ -1107,9 +1111,17 @@ class TriggersDecisionsMixin:
             leading = list(firsts.values())
             candidates = leading + [c for c in candidates if c not in leading]
             minimum = len(leading)
+        chooser = controller
+        if any(r.chosen_by_opponent for r in profile.requirements):
+            # "of an opponent's choice" (Mausoleum Turnkey): the target is
+            # still announced as the ability goes on the stack (CR 603.3d), but
+            # an opponent of its controller makes the choice.
+            chooser = next(
+                (p.username for p in self.players if p.username != controller), controller
+            )
         decision = Decision(
             kind=DecisionKind.CHOOSE_TARGETS,
-            player=controller,
+            player=chooser,
             prompt=f"choose targets for {source_name}",
             source=source_name,
             source_id=source_id_of(source_id),

@@ -10,6 +10,8 @@ printing; text no reader owns makes the phrase not-understood.
 
 import pytest
 
+from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.machines.targeting import (
     ComparisonAttribute,
     ComparisonOperator,
@@ -19,10 +21,14 @@ from magic_cards_model.machines.targeting import (
 )
 from magic_cards_model.models import Zone
 from tests.cards import card
+from tests.scenarios.harness import Scenario
 
 
 def ability_profile(name: str):
     return profile_for_text(card(name).front_oracle_text)
+
+
+ability_profile_text = ability_profile
 
 
 # -- fail closed on anything unread ----------------------------------------------
@@ -198,13 +204,103 @@ def test_you_dont_own_is_read():
     assert any(requirement.not_owned_by_caster for requirement in profile.requirements)
 
 
-@pytest.mark.parametrize(
-    "name",
-    [
-        "Mausoleum Turnkey",  # "of an opponent's choice": who picks the target
-        "Behold the Sinister Six!",  # "with different names"
-        "Raise the Draugr",  # "that share a creature type"
-    ],
-)
-def test_a_qualifier_no_reader_owns_makes_the_real_printing_not_understood(name):
-    assert not ability_profile(name).understood
+def _share_type_requirement():
+    (requirement,) = profile_for_text(
+        "Return two target creature cards that share a creature type from your graveyard "
+        "to your hand."
+    ).requirements
+    return requirement
+
+
+def test_two_cards_that_share_a_creature_type_is_read_for_the_real_printings():
+    for name in ("Raise the Draugr", "Return from Extinction", "Unbury"):
+        text = card(name).front_oracle_text.split("\u2022")[-1].strip()
+        profile = profile_for_text(text)
+        assert profile.understood, name
+        assert profile_for_text(text).requirements[0].share_a_creature_type, name
+
+
+def test_cards_that_share_a_creature_type_are_enforced_across_targets():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            graveyard=["Grizzly Bears", "Llanowar Elves", "Elvish Mystic", "Changeling Outcast"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    find = lambda name: scenario.find(name, Zone.GRAVEYARD, "alice")  # noqa: E731
+    profile = profile_for_text(
+        "Return two target creature cards that share a creature type from your graveyard "
+        "to your hand."
+    )
+
+    profile.check([find("Llanowar Elves"), find("Elvish Mystic")], "alice", scenario.game)
+    with pytest.raises(ValueError, match="creature type"):
+        profile.check([find("Llanowar Elves"), find("Grizzly Bears")], "alice", scenario.game)
+    # CR 702.73a: a changeling is every creature type.
+    profile.check([find("Changeling Outcast"), find("Grizzly Bears")], "alice", scenario.game)
+
+
+def test_cards_with_different_names_is_read_for_the_real_printing():
+    profile = ability_profile_text("Behold the Sinister Six!")
+    (requirement,) = profile.requirements
+
+    assert profile.understood
+    assert requirement.distinct_names
+    assert requirement.maximum == 6
+
+
+def test_cards_with_different_names_are_enforced_across_targets():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            graveyard=["Grizzly Bears", "Grizzly Bears", "Llanowar Elves"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = [
+        state for state in scenario.game.player("alice").graveyard if state.name == "Grizzly Bears"
+    ]
+    elves = scenario.find("Llanowar Elves", Zone.GRAVEYARD, "alice")
+    profile = profile_for_text(card("Behold the Sinister Six!").front_oracle_text)
+
+    profile.check([bears[0], elves], "alice", scenario.game)
+    with pytest.raises(ValueError, match="different names"):
+        profile.check(bears, "alice", scenario.game)
+
+
+def test_of_an_opponents_choice_is_read_for_the_real_printing():
+    profile = ability_profile("Mausoleum Turnkey")
+
+    assert profile.understood
+    assert profile.requirements[0].chosen_by_opponent
+
+
+def test_mausoleum_turnkey_asks_an_opponent_which_card_returns():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mausoleum Turnkey"],
+            battlefield=["Swamp"] * 4,
+            graveyard=["Grizzly Bears", "Llanowar Elves"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    elves = scenario.find("Llanowar Elves", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_targets(elves, username="bob")
+
+    scenario.cast_and_resolve("Mausoleum Turnkey", auto=True)
+    scenario.pass_until_resolved()
+
+    asked = [d for d in scenario.questions_asked() if d.kind is DecisionKind.CHOOSE_TARGETS]
+    assert [d.player for d in asked] == ["bob"]
+    assert elves in scenario.game.player("alice").hand
