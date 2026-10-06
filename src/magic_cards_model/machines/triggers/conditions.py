@@ -1,1275 +1,34 @@
-"""Abilities on the stack, and what makes a triggered ability trigger.
-
-`machines/abilities.py` reads an ability off printed text and stops. This is the
-half that makes one happen: it turns a game event into triggered abilities, and
-it holds the object an ability becomes once it is on the stack.
-
-Every rule number below was looked up in this session against the Comprehensive
-Rules. The load-bearing ones:
-
-- **CR 603.2** - "Whenever a game event or game state matches a triggered
-  ability's trigger event, that ability automatically triggers. The ability
-  doesn't do anything at this point."
-- **CR 603.3** - "Once an ability has triggered, its controller puts it on the
-  stack as an object that's not a card the next time a player would receive
-  priority."
-- **CR 603.3b** - several abilities that triggered since the last time a player
-  received priority go on the stack in APNAP order: the active player puts
-  theirs on first, so theirs end up *lowest* and resolve *last*.
-- **CR 603.4** - the intervening *if*: the condition is checked when the trigger
-  event occurs, and the ability triggers only if it is true. **CR 608.2a** then
-  checks it again on resolution; if it is false the ability is removed from the
-  stack and does nothing.
-- **CR 405.1** - "When a spell is cast, the physical card is put on the stack.
-  When an ability is activated or triggers, it goes on top of the stack without
-  any card associated with it." **CR 113.1c** makes that ability an object.
-- **CR 113.7 / 113.7a** - the source of an ability is the object that generated
-  it, and "once activated or triggered, an ability exists on the stack
-  independently of its source. Destruction or removal of the source after that
-  time won't affect the ability."
-- **CR 608.2n** - "As the final part of an ability's resolution, the ability is
-  removed from the stack and ceases to exist." An ability never goes to a
-  graveyard, because it is not a card.
-- **CR 603.10a** - some zone-change triggers look back in time; a dies-trigger
-  is one, so the permanent that just left the battlefield is still asked whether
-  it triggered.
-- **CR 500.6** - abilities that trigger "at the beginning of" a step trigger when
-  that step begins and go on the stack the next time a player would receive
-  priority.
-- **CR 700.4** - "dies" means "is put into a graveyard from the battlefield".
-
-## What this reads, and what it refuses to read
-
-Trigger conditions are matched by a small set of shapes rather than by a general
-parser. `condition_matches` returns False for anything it cannot read, which
-means a card whose trigger is not one of these shapes simply never fires - it is
-never *wrongly* fired. The shapes understood are listed on `condition_matches`.
-"""
-
 import contextlib
 import operator
 import re
-from collections.abc import Sequence
-from enum import StrEnum
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Any, Literal, NamedTuple
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from pydantic import ConfigDict, Field
-
-from ..data.subtypes import subtype_vocabulary
-from ..ids import new_id
-from ..models.card import Card, Color, Layout, Supertype, Type
-from ..models.card_state import CardState, ChoiceKind, Counter, ExileAnnotation, TargetRef
-from ..models.token import TokenState
-from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_ordinal
-from ..snapshot import EngineModel, scan_pin
-from .abilities import (
-    Ability,
-    AbilityKind,
-    ActivatedAbility,
+from ...data.subtypes import subtype_vocabulary
+from ...models.card import Card, Color, Supertype, Type
+from ...models.card_state import CardState, ChoiceKind, Counter
+from ...models.zone import Zone
+from ...numbers import COUNT, parse_count, parse_ordinal
+from ..abilities import (
     TriggeredAbility,
     TriggerEvent,
-    intrinsic_land_ability,
-    parse_abilities,
-    parse_granted_ability_lines,
-    parse_mana_count,
-    self_counter_mana_count,
     self_normalized_effect_text,
     self_reference_names,
     self_reference_pattern,
     self_reference_re,
 )
-from .designations import designation_holds, split_as_long_as
-from .turn import Step
+from ..turn import Step
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
-    from ..models.game import CastRecord, Game
+    from ...models.game import CastRecord, Game
 
     # `.cost` imports names from this module and `.keywords` imports
     # `AbilityOnStack` itself, so neither can be imported for real up here -
     # `keyword_activation`/`unless_payment` below carry these as string
     # annotations, and `keywords.py`'s own `model_rebuild()` call, run once
     # both classes exist, is what resolves them for real.
-    from .cost import CostPayment
-    from .keywords import KeywordActivation
-
-
-class ExtraTriggerEvent(StrEnum):
-    """Trigger events with no `machines/abilities.TriggerEvent` member.
-
-    `_trigger_event` (`machines/abilities.py`) reads a printed condition into a
-    `TriggerEvent` or leaves `event` unset; a condition it cannot read parses
-    with `event=None` and, until now, was dropped by `triggered_abilities_of`
-    and could never fire. These are the events those dropped conditions watch,
-    named here rather than there because this module owns the matching half.
-    `condition_matches` reads them off the printed condition itself (see
-    `_unread_trigger_events`), so a `TriggeredAbility` still carries
-    `event=None` and nothing about the parser's own output changes.
-
-    **Not all of these are emitted yet.** Each member below says either where
-    it is raised from or which emit is still missing; a member with no emitter
-    has a complete matcher here watching an event nothing raises.
-    """
-
-    #: CR 122.6: "Some spells and abilities refer to counters being put on an
-    #: object. This refers to putting counters on that object while it's on the
-    #: battlefield and also to an object that's given counters as it enters the
-    #: battlefield." Basking Broodscale's and Emperor of Bones' "Whenever one
-    #: or more +1/+1 counters are put on this creature". `GameEvent.
-    #: counter_kind` is which kind, `GameEvent.amount` how many - CR 603.2c's
-    #: "one event contains multiple occurrences" is *not* what a "one or more
-    #: counters" condition asks for: that is one event with a count, so it
-    #: fires once however many counters arrived at the same time.
-    #: **Missing emit:** `Game.add_counters` (`models/game.py`), which today
-    #: emits only for lore counters (CR 107.15a).
-    COUNTERS_PUT = "counters_put"
-    #: CR 122.6's same "counters being put on ... an object that's given
-    #: counters" sentence, from a player's side rather than a permanent's -
-    #: CR 122.1's "some kinds of counters are normally placed on players
-    #: rather than on objects" (energy chief among them). Fabrication
-    #: Module's "Whenever you get one or more {E} (energy counters), ..." and
-    #: Territorial Gorger's identical condition with a different effect.
-    #: `GameEvent.counter_kind` is which kind, `GameEvent.amount` how many,
-    #: `GameEvent.player` who got them - CR 603.2c's "one event, multiple
-    #: occurrences" reading is the same one `COUNTERS_PUT` documents above.
-    #: **Emitted by:** `Game.add_player_counters` (`models/game.py`), through
-    #: `Game._emit_player_counters_put`.
-    PLAYER_COUNTERS_PUT = "player_counters_put"
-    #: CR 603.10a names "abilities that trigger when a card leaves a graveyard"
-    #: among the zone-change triggers that look back in time. Murktide Regent's
-    #: "Whenever an instant or sorcery card leaves your graveyard" and Hardened
-    #: Academic's "Whenever one or more cards leave your graveyard".
-    #: **Missing emit:** every graveyard departure in `models/game.py` - the
-    #: card exiled to pay delve, the card returned to hand, the card put onto
-    #: the battlefield from a graveyard.
-    LEAVES_GRAVEYARD = "leaves_graveyard"
-    #: CR 401.1's library, as a destination: Wan Shi Tong, All-Knowing's
-    #: "Whenever one or more cards are put into a library from anywhere". One
-    #: event per instruction that moves cards there, with `GameEvent.amount`
-    #: cards, since CR 603.2c makes several cards moved by one instruction one
-    #: occurrence rather than several.
-    #: **Missing emit:** the library moves in `models/game.py`/`machines/
-    #: effects.py` (Brainstorm's own put-back among them).
-    PUT_INTO_LIBRARY = "put_into_library"
-    #: CR 406.2: "To exile an object is to put it into the exile zone from
-    #: whatever zone it's currently in." Scoped to a *graveyard* as the origin,
-    #: which is the half of Ketramose, the New Dawn's condition that
-    #: `TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE` does not already cover.
-    #: **Missing emit:** the graveyard-to-exile moves in `models/game.py`
-    #: (delve, Rest in Peace's replacement, a graveyard-hate effect).
-    EXILED_FROM_GRAVEYARD = "exiled_from_graveyard"
-    #: "An ability caused a player to add mana", which is not the same event as
-    #: CR 106.12's "tapped for mana": Caged Sun's "Whenever a land's ability
-    #: causes you to add one or more mana of the chosen color" is about the
-    #: *adding*, so a mana ability that costs no `{T}` matches it and so does
-    #: another triggered mana ability's own addition - which is the whole of
-    #: DDR#990's loop. `GameEvent.mana_added` carries which mana, and
-    #: `GameEvent.subject_types` the type line of the object whose ability
-    #: added it. Emitted by `Game.activate_ability`'s CR 605.3b fast path and
-    #: by `Game.resolve_triggered_mana_abilities`.
-    MANA_ADDED = "mana_added"
-    #: CR 702.62a's third ability: "When the last time counter is removed from
-    #: this card, if it's exiled, you may play it without paying its mana cost
-    #: if able." The *last* one specifically - a suspended card going from one
-    #: time counter to none - which is why this is its own event rather than a
-    #: generic counters-removed one: the count reaching zero is the whole
-    #: trigger condition. Emitted by `machines/casting.remove_suspend_time_
-    #: counter`, the one place in the engine that takes a time counter off a
-    #: suspended card, so both routes into it - suspend's own upkeep trigger
-    #: and Greater Gargadon's printed "Sacrifice an artifact, creature, or
-    #: land: Remove a time counter from this card" - raise it alike.
-    LAST_TIME_COUNTER_REMOVED = "last_time_counter_removed"
-    #: "When the last `<kind>` counter is removed from this permanent" for
-    #: any other counter kind - a Siege's intrinsic defeat trigger (CR
-    #: 310.12b) is the one that needs it. Raised by `CardState.remove_counters`
-    #: itself (through `Game.note_last_counter_removed`) whenever a removal
-    #: takes a permanent's count of a kind from above zero to zero, whatever
-    #: removed them - damage to a battle (CR 120.3h), a cost, an effect -
-    #: with `GameEvent.counter_kind` naming the kind.
-    LAST_COUNTER_REMOVED = "last_counter_removed"
-    #: CR 502.3: "the active player determines which permanents they control
-    #: will untap. Then they untap them all simultaneously." The Millennium
-    #: Calendar's "Whenever you untap one or more permanents during your untap
-    #: step" watches that one simultaneous untap, not each permanent's own
-    #: `TriggerEvent.BECOMES_UNTAPPED`. `GameEvent.player` is the active
-    #: player and `GameEvent.amount` how many permanents actually untapped.
-    #: Emitted by `Game.untap_step`, and only when that number is not zero
-    #: (CR 603.2g: "An ability triggers only if its trigger event actually
-    #: occurs").
-    UNTAPPED_DURING_UNTAP_STEP = "untapped_during_untap_step"
-    #: CR 701.67c: "An ability that triggers whenever a player waterbends
-    #: triggers whenever that player pays a waterbend cost, regardless of
-    #: how they paid that cost." One event per waterbend cost actually paid
-    #: (mana, taps, or a mix), not one per tap - `machines/objects_as_costs.
-    #: waterbend`'s own per-symbol substitutions are how the cost is paid,
-    #: not events of their own. Emitted by `Game.activate_ability` once the
-    #: payment it opened through `begin_activating` is confirmed `PAID` and
-    #: that `TotalCost` carried a waterbend cost (`CostPayment.
-    #: waterbend_generic is not None`). `GameEvent.player` is the payer.
-    WATERBENDS = "waterbends"
-    #: The three sibling bending verbs Avatar Aang's own "Whenever you
-    #: waterbend, earthbend, firebend, or airbend, draw a card" condition
-    #: names alongside waterbend, each raised by `machines/effects.
-    #: _record_bending`: earthbend as its delayed return is created (CR
-    #: 701.66b), firebend as a firebending ability resolves (CR 702.189b),
-    #: airbend once per instruction that exiled anything (CR 701.65b).
-    EARTHBENDS = "earthbends"
-    FIREBENDS = "firebends"
-    AIRBENDS = "airbends"
-    #: CR 702.94a's linked trigger: "When you reveal this card this way, you
-    #: may cast it by paying [cost] rather than its mana cost." CR 607.2h
-    #: links it to miracle's static ability, so only a reveal *that ability*
-    #: made is this event - never a reveal some other effect asked for.
-    #: `GameEvent.subject_id` is the revealed card, `GameEvent.player` the
-    #: player who drew and revealed it. **Emitted by:** `Game.draw_cards`,
-    #: through `Game._offer_miracle_reveal`, and nowhere else.
-    REVEALED_FOR_MIRACLE = "revealed_for_miracle"
-    #: CR 510.2: "all combat damage that's been assigned is dealt
-    #: simultaneously" - one combat damage step's damage to one player, as a
-    #: single event, which is what a batched "Whenever one or more
-    #: `<description>` you control deal combat damage to a player" condition
-    #: watches (CR 603.2c: "An ability triggers only once each time its
-    #: trigger event occurs"). Jacob Frye's "one or more Assassins", Invasion
-    #: Tactics' "one or more Allies". `GameEvent.player` is the player dealt
-    #: the damage; `GameEvent.amount` is how many `Game.combat_damage_to_
-    #: players_this_turn` records that step appended - the tail
-    #: `batched_combat_damage_sources` reads, each record carrying what its
-    #: source was at the time it dealt the damage. **Emitted by:**
-    #: `machines/combat.combat_damage_step`, once per player dealt combat
-    #: damage in the step, and only when some was actually dealt (CR 603.2g).
-    COMBAT_DAMAGE_TO_PLAYERS = "combat_damage_to_players"
-    #: CR 305.1 / CR 305.2a: a player played a land - the special action from
-    #: a hand, or a land played from another zone under a permission, or one
-    #: played during a resolution. `GameEvent.player` is who played it and
-    #: `GameEvent.origin_exile_annotation` the exile pile it was played out
-    #: of, if any. CR 601.1a makes "playing a card" either this or a cast
-    #: (`TriggerEvent.CAST_SPELL`), which is how Voltaic Visionary's "When
-    #: you play a card exiled with this creature" watches both.
-    #: **Emitted by:** `Game.play_land`, `Game._play_land_during_resolution`.
-    PLAYS_LAND = "plays_land"
-    #: CR 716.2a: a class level bar's ability, resolving, makes "This Class's
-    #: level become N" - the event a "When this Class becomes level N"
-    #: trigger printed under that bar watches. `GameEvent.subject_id` is the
-    #: Class, `GameEvent.amount` the level it became. **Emitted by:** the
-    #: level bar's resolution in `Game._effect_of`, and only when the
-    #: level actually changed.
-    CLASS_BECOMES_LEVEL = "class_becomes_level"
-    #: CR 702.29c: "'When you cycle this card' means 'When you discard this
-    #: card to pay an activation cost of a cycling ability.'" - and CR
-    #: 702.29f makes a typecycling ability a cycling ability. Its own event
-    #: rather than `TriggerEvent.DISCARDS_A_CARD`, which a cycling discard
-    #: *also* raises (the cost is a discard, CR 701.9a): a card discarded by
-    #: an effect was discarded but never cycled. `GameEvent.subject_id` is
-    #: the cycled card, `GameEvent.player` who cycled it. **Emitted by:**
-    #: `machines/keywords.KeywordActivation` once a cycling or typecycling
-    #: activation is on the stack, its cost paid.
-    CYCLED = "cycled"
-    #: CR 602.2: "To activate an ability is to put it onto the stack and pay
-    #: its costs" - raised for every activated ability that does that, and
-    #: so never for a mana ability (CR 605.3b: it does not use the stack).
-    #: Flamescroll Celebrant's and Burning-Tree Shaman's "Whenever
-    #: `<a player>` activates an ability that isn't a mana ability" watch it.
-    #: `GameEvent.subject_id`/`subject_types` are the ability's source as it
-    #: was activated, `GameEvent.origin_zone` the zone that source was in
-    #: (CR 109.2 reads "an ability of a creature" as a creature *on the
-    #: battlefield*), `GameEvent.player` who activated it. **Emitted by:**
-    #: `Game.activate_ability` (every battlefield ability, loyalty included)
-    #: and `machines/keywords.KeywordActivation` (cycling, equip and every
-    #: other keyword activation), once the ability is on the stack.
-    ABILITY_ACTIVATED = "ability_activated"
-    #: CR 731.1a: "'day becomes night' and 'night becomes day' refer to the
-    #: game losing the first designation and gaining the second one" - so
-    #: neither-to-day or neither-to-night is neither event. No subject and no
-    #: player: the designation is the game's own (CR 731.1). **Emitted by:**
-    #: `Game.set_day_night`, only when a designation is replaced.
-    DAY_BECOMES_NIGHT = "day_becomes_night"
-    NIGHT_BECOMES_DAY = "night_becomes_day"
-    #: CR 701.54d: "Some abilities trigger 'Whenever the Ring tempts you.' The
-    #: Ring tempts a player whenever they complete the actions in 701.54a,
-    #: even if some or all of those actions were impossible." Nazgul's
-    #: "Whenever the Ring tempts you, put a +1/+1 counter on each Wraith you
-    #: control". `GameEvent.player` is the player tempted, `GameEvent.
-    #: subject_id` the creature they chose as Ring-bearer (`None` when they
-    #: controlled none), `GameEvent.amount` how many times the Ring has now
-    #: tempted them. **Emitted by:** `Game.ring_tempts`, and nowhere else.
-    RING_TEMPTS_YOU = "ring_tempts_you"
-    #: CR 702.154b: enlist's own linked trigger - Guardian of New Benalia's
-    #: "Whenever this creature enlists a creature, scry 2." `GameEvent.
-    #: subject_id` is the *enlisting* creature (CR 700.7's "this creature"),
-    #: not the one it taps. **Emitted by:** `machines/enlist.apply_enlist`.
-    ENLISTS = "enlists"
-    #: CR 701.26a's tapping, as CR 603.2c's one event for every permanent one
-    #: instruction, cost or declaration tapped together: Rewrite History's
-    #: "Whenever one or more creatures you control become tapped" and Deeproot
-    #: Pilgrimage's "one or more nontoken Merfolk you control". Which
-    #: permanents were in the batch is `Game.tapped_batch`, live only while
-    #: this event is being matched. **Emitted by:** `Game.
-    #: announce_batched_events`, from what `CardState.tap`/`.tap_if_untapped`
-    #: noted (`Game.note_permanent_tapped`).
-    PERMANENTS_TAPPED = "permanents_tapped"
-    #: CR 400.6's "put into a graveyard", as CR 603.2c's one event for every
-    #: card moved there together: Robot Domination's "Whenever one or more
-    #: creature cards are put into your graveyard from anywhere" and Crawling
-    #: Infestation's "... from anywhere during your turn". Which cards is
-    #: `Game.graveyard_batch` (`GraveyardArrival` records), live only while
-    #: this event is being matched. **Emitted by:** `Game.
-    #: announce_batched_events`, off `Game.graveyard_arrivals_this_turn`.
-    PUT_INTO_GRAVEYARD = "put_into_graveyard"
-    #: CR 700.13: "A player commits a crime as that player casts a spell,
-    #: activates an ability, or puts a triggered ability on the stack and
-    #: that spell or ability targets at least one opponent; at least one
-    #: permanent, spell, or ability an opponent controls; and/or at least one
-    #: card in an opponent's graveyard." Magda, the Hoardmaster's "Whenever
-    #: you commit a crime, ..." and Forsaken Miner's identical condition.
-    #: `GameEvent.player` is the player who committed it. `machines/
-    #: conditions/history.record_crime` already stamps the turn-scoped fact
-    #: an intervening "if" reads ("you've committed a crime this turn"); this
-    #: is the same action's own event, for a trigger to watch. **Emitted
-    #: by:** `machines/conditions/history.record_crime`, the instant it finds
-    #: a qualifying target - once per crime-committing action, never once per
-    #: qualifying target (CR 700.13 is about the action, not the count).
-    CRIME_COMMITTED = "crime_committed"
-    #: CR 701.23a: "To search for a card in a zone, look at all cards in that
-    #: zone, either mentally or by looking at each card." Wan Shi Tong,
-    #: Librarian's "Whenever an opponent searches their library, ..." and Ob
-    #: Nixilis, Unshackled's identical condition. `GameEvent.player` is the
-    #: player who searched. **Emitted by:** `Game.search_library`, once per
-    #: search (CR 701.23a's own "look at all cards in that zone" is one
-    #: action, regardless of how many finds it allows).
-    SEARCHES_LIBRARY = "searches_library"
-    #: CR 709.5h: "Some abilities trigger when a player unlocks a particular
-    #: half of a permanent. These abilities trigger when that permanent is
-    #: given the appropriate unlocked designation, regardless of whether it
-    #: was given that designation while entering the battlefield or after
-    #: entering the battlefield." Ritual Chamber's "When you unlock this
-    #: door, ..." and Central Elevator // Promising Stairs' identical
-    #: condition on its own "Central Elevator" door. `GameEvent.subject_id`
-    #: is the permanent, `GameEvent.subject_name` the door's own face name
-    #: (`BaseAbility.face`, matched against the printed ability's own face so
-    #: only the door that was actually unlocked triggers), `GameEvent.player`
-    #: who unlocked it. **Emitted by:** `Game.enter_the_battlefield` (CR
-    #: 709.5d's cast-half unlock) and `Game.unlock_door` (CR 709.5e's special
-    #: action and CR 709.5f's "unlock" instruction alike).
-    DOOR_UNLOCKED = "door_unlocked"
-
-
-class GameEvent(EngineModel):
-    """One thing that happened, in the shape a trigger condition is matched against.
-
-    CR 603.2 asks whether "a game event or game state matches a triggered
-    ability's trigger event". This is that game event, reduced to the handful of
-    facts the conditions in `condition_matches` actually ask about.
-    """
-
-    event: TriggerEvent | ExtraTriggerEvent
-    """Which event this is. `ExtraTriggerEvent` widens the field rather than
-    replacing it: the parser's own `TriggerEvent` stays the vocabulary every
-    existing emitter speaks, and the members this module had to name for
-    itself sit alongside them. The two enums' values are disjoint, so a
-    serialised event still round-trips to exactly the member it was."""
-
-    subject_id: UUID | None = None
-    """The object the event happened to: the permanent that entered, died,
-    attacked, blocked or was sacrificed, the card that was drawn, the spell
-    that was cast or countered, or the source that dealt damage."""
-
-    subject_name: str | None = None
-    subject_controller: str | None = None
-    subject_card: Card | None = None
-    """The printing of the subject, kept so a cast trigger can ask what kind of
-    spell it was after the card has moved on."""
-
-    subject_stamp: UUID | None = None
-    """The subject's own `CardState.zone_change_stamp` at the moment of the
-    event - CAST_SPELL's own (`Game._put_on_stack`), so `_cast_trigger_x_
-    value`/`_cast_trigger_mana_spent_x_value` can read `Game.cast_record_as_
-    last_known` off it once the cast spell has left the stack (CR 608.2h): a
-    countered spell moves to its owner's graveyard (CR 701.6a), which stamps
-    a new `zone_change_stamp` and makes `Game.cast_record_of` - keyed by the
-    *current* stamp - find nothing, even though the Oracle ruling for these
-    cast triggers (Hydroid Krasis, Genesis Hydra, Old Stickfingers,
-    Geometer's Arthropod) is that the trigger still resolves with the cast
-    X. `subject_id` alone is not enough: `Game.find_by_id` still finds the
-    same card object after it moves, so a caller that read `cast_record_of`
-    off it directly (rather than through this stamp) got `None` back with no
-    signal anything was wrong."""
-
-    subject_types: tuple[Type, ...] | None = None
-    """The subject's card types *as they actually are* right now (CR 712.8f,
-    712.8a, 712.12), not the raw printing's front-face-only types.
-
-    `subject_card.types` reads `Card.front_type_line`, which is structurally
-    the front face - correct outside the battlefield and stack (CR 712.8a) but
-    wrong for a modal double-faced permanent played for its back face: "While a
-    modal double-faced ... permanent is on the battlefield, it has only the
-    characteristics of the face that's up" (CR 712.8f), and CR 603.10 checks a
-    trigger condition against the object "as it exists" (an enters-the-
-    battlefield trigger is not one of the look-back exceptions, so this is the
-    permanent as it exists on the battlefield now). `CardState.types` already
-    reads the up face - the land face when `land_face_played` names one,
-    otherwise the front face - so this is that value, captured at the moment
-    the event is built rather than recomputed from a bare `Card` later.
-    `None` for an event with no `CardState` subject to ask (a countered spell
-    once removed from the stack, a leaves-battlefield-to-exile event no
-    condition reads by type) - callers that use this fall back to "matches
-    nothing named" the same way `subject_card=None` already did."""
-
-    subject_subtypes: tuple[str, ...] | None = None
-    """The subject's subtypes, read the same up-face-aware way as
-    `subject_types` (CR 205.3a, 712.8f) - "whenever another Merfolk enters"
-    needs the face that's actually up, not `Card.subtypes`'s front-face-only
-    read."""
-
-    subject_colors: tuple[Color, ...] | None = None
-    """The subject's colors (CR 105.2), read the same up-face-aware way as
-    `subject_types` - `CardState.colors` rather than `Card.colors`, which is
-    front-face-only. A cast event populates this with the spell's colors as it
-    sits on the stack, which is what "Whenever you cast a colorless spell ..."
-    (Sanctum of Ugin, Ugin, Eye of the Storms) reads; `None` for an event with
-    no `CardState` subject to ask, the same fallback `subject_types` already
-    uses."""
-
-    mana_added: tuple[Color, ...] = ()
-    """The mana this event put into a player's pool, one entry per mana.
-
-    CR 106.12a's "tapped for mana" event carried no colours at all, so a
-    condition that asks *which* mana was added - Caged Sun's "Whenever a land's
-    ability causes you to add one or more mana of the chosen color" - had
-    nothing to read. Colourless is `Color.COLORLESS`, so `{C}{C}` is two
-    entries, matching how `ManaAbility.produces` already reports a production.
-    Empty for every event that is not about mana."""
-
-    related_id: UUID | None = None
-    """The other creature in a blocking pair (CR 509.1a)."""
-
-    targeted_by: UUID | None = None
-    """The spell or ability that targeted the subject (CR 702.21a).
-
-    Ward's condition is "becomes the target of a spell or ability an opponent
-    controls" and its effect is "counter *that* spell or ability", so the event
-    has to carry which one it was. Held as an id, because CR 113.1c makes an
-    ability on the stack an object with an id of its own and either kind can be
-    the answer."""
-
-    defender: TargetRef | None = None
-    """What an attacking creature is attacking (CR 508.1a)."""
-
-    defender_controller: str | None = None
-    """Who `defender` belongs to right now - the defending player themselves
-    when `defender` is a player, or that permanent's own controller when it
-    is a planeswalker or battle - resolved once, at emission, and carried on
-    the event rather than re-derived later. `DelayedTrigger.matches` (see
-    `machines/delayed.py`) has no `Game` to ask "who controls this id" of; a
-    delayed trigger watching "whenever a creature attacks you or a
-    planeswalker you control" (Jace, Reality Sculptor's own `-3`) needs this
-    answered as the attack is declared, not at match time."""
-
-    player: str | None = None
-    """The player the event is "yours" for: who cast the spell, whose step
-    began, who drew the card, gained or lost the life, or took the damage."""
-
-    combat: bool = False
-    """For a damage event, whether it was dealt as a result of combat
-    (CR 120.2a). "Deals combat damage" conditions refuse a noncombat event and
-    the other way round, which is what separates Ragavan's trigger from the
-    same creature taking a Lightning Bolt."""
-
-    tapped_for_teamwork: bool = False
-    """For a `BECOMES_TAPPED` event, whether the tap paid a `machines/
-    teamwork.py` Teamwork cost specifically - Agent Maria Hill's own
-    "Whenever Agent Maria Hill becomes tapped **to pay a teamwork cost**,
-    ..." asks about the *reason* she was tapped, not merely that she was,
-    the same way "deals **combat** damage" narrows `combat` above rather
-    than matching any damage event. Set by `machines/cost.CostComponent.
-    pay`'s own `ComponentKind.TAP` branch off `minimum_total_power is not
-    None` - the field `pay_teamwork` alone ever sets - so an equip cost, a
-    convoke tap, or any other ordinary tap cost leaves this `False`."""
-
-    step: Step | None = None
-
-    counter_kind: str | None = None
-    """Which kind of counter was put on the subject, for an
-    `ExtraTriggerEvent.COUNTERS_PUT` event (CR 122.1: "any name at all is a
-    legal counter kind", which is why this is a plain string and not the
-    `Counter` enum). `GameEvent.amount` is how many. `None` for every other
-    event, and for a counters event whose emitter did not say - which a
-    condition naming a kind ("one or more **+1/+1** counters") refuses, since
-    a counter of unknown kind is not known to be the kind it asks for."""
-
-    amount: int | None = None
-    """How much, for an event a later clause refers back to by number rather
-    than by object - "that much damage" (Questing Beast), "that many cards"
-    (Nashi, Searcher in the Dark) - which is CR 607.1's linked-ability shape
-    read within one ability rather than across two: the condition clause
-    establishes the quantity and the effect clause points back at it. A
-    damage event populates this with the amount CR 615.1's prevention and
-    CR 608.2b's legality checks already settled on (`Game.deal_damage`'s own
-    `event.amount` after replacement, not the raw amount requested).
-
-    A cast event populates it too, with the spell's mana value **as it is on
-    the stack** (CR 202.3e: "X is treated as ... the number chosen for it
-    while the object is on the stack"), which `Game.put_on_stack` works out
-    from `Card.cmc` (CR 107.3g's own X-is-0 reading of the printed cost) plus
-    whatever `Game.cast_record` says X was paid as. This is *not* the same
-    number as `subject_card.cmc` on this same event, which is always the
-    static printed value - Chalice of the Void's "mana value equal to the
-    number of charge counters" is exactly the condition that needs the real,
-    on-stack number, not the printed one, or a Chalice on 3 would never catch
-    a Fireball cast for X=3."""
-
-    loyalty_removed: int | None = None
-    """On a `LOYALTY_ABILITY_ACTIVATED` event: how many loyalty counters the
-    activation's cost actually removed (CR 606.4 - the symbol's cost as
-    modified and combined, CR 606.5), 0 for a `[+N]` or `[0]`. Way of the Mind
-    Sculptor's "if you removed two or more loyalty counters to activate it"
-    reads this on the event and again on resolution (CR 603.4), so the second
-    check never depends on the board."""
-
-    origin_zone: Zone | None = None
-    """For a `TriggerEvent.ENTERS_THE_BATTLEFIELD` event, the zone the
-    permanent entered from (`Game.enter_the_battlefield`; `Zone.STACK` for a
-    resolving spell) - read by CR 603.4's "if it entered from your
-    graveyard". For a `TriggerEvent.CAST_SPELL` event, the zone the card was in
-    immediately before CR 601.2a moved it to the stack (CR 400.7: it is a new
-    object on the stack, so this has to be captured before the move, not
-    re-derived from the object afterwards). `Game.put_on_stack` is the only
-    place a `CAST_SPELL` event is built, and it reads `card_state.zone` before
-    calling `_take_out_of_every_zone`/`move_to`.
-
-    Knowledge Pool's "Whenever a player casts a spell **from their hand**" and
-    Appa, Steadfast Guardian's "Whenever you cast a spell **from exile**" both
-    restrict this event to a specific origin - CR 603.2's "matches a triggered
-    ability's trigger event" is not satisfied by a cast from anywhere else,
-    which is exactly what `condition_matches`'s `CAST_SPELL` branch reads this
-    for. Without it, a flashback cast from the graveyard matched "from their
-    hand" the same as a cast from hand, and a card whose own free cast comes
-    from exile (Knowledge Pool's second ability) would re-trigger itself
-    forever. `None` for an event this field was never populated for."""
-
-    origin_exile_annotation: ExileAnnotation | None = None
-    """For a `TriggerEvent.CAST_SPELL` or `ExtraTriggerEvent.PLAYS_LAND`
-    event of a card played out of exile, the pile it was in - captured before
-    CR 400.7's move to the stack or the battlefield cleared it (`CastRecord.
-    exile_annotation` for a cast). Voltaic Visionary's "When you play a card
-    exiled with this creature" reads CR 607.2a's link off it. `None` for a
-    card played from anywhere else."""
-
-    target_id: UUID | None = None
-    """For a `TriggerEvent.DEALS_DAMAGE` event whose target is a permanent
-    (CR 120.3e), that permanent's id - the *recipient*, as opposed to
-    `subject_id`'s source/dealer. Hexhaven Invigorator's own "Whenever this
-    creature is dealt damage" is the only shape in the pool that asks about
-    the receiving end rather than the dealing one, which is why this is its
-    own field instead of overloading `subject_id`: a self-damaging source
-    ("this creature deals damage to itself") needs both ends distinguishable
-    at once. `None` for damage aimed at a player (that player is
-    `GameEvent.player` already) and for every non-damage event."""
-
-    target_controller: str | None = None
-    """The controller of `target_id`, read the same way `subject_controller`
-    is - `None` whenever `target_id` is."""
-
-    target_types: tuple[Type, ...] | None = None
-    """`target_id`'s computed card types (CR 613.5) at the moment of the
-    event, the recipient-side twin of `subject_types`. `None` whenever
-    `target_id` is."""
-
-    discarded_ids: tuple[UUID, ...] = ()
-    """Which cards `TriggerEvent.DISCARDS_A_CARD` actually moved, for Titanbones,
-    Towering Heart's own self-referential "When you discard this card, ...".
-    `Game.discard_cards` batches every card of one discard instruction into a
-    single event (`GameEvent.amount` is the count, CR 603.2c's "one event,
-    multiple occurrences"), so a self-reference has to be checked against the
-    whole batch rather than a single `subject_id` - this is that batch, in
-    the order `discard_cards` moved them. Empty for every other event."""
-
-    attacking_alone: bool = False
-    """Whether the whole attacking party this combat was this one creature
-    (CR 506.5) - settled only once every attacker in the declaration is
-    known, so `Game.declare_attackers` computes it after registering every
-    attack in the batch and before emitting any of their `ATTACKS` events,
-    never mid-loop. `False` for every event that is not `TriggerEvent.
-    ATTACKS`, and for an `ATTACKS` event with no attacker of its own (the
-    once-per-declaration "you attack" event `GameEvent.subject_id is None`
-    already carries)."""
-
-    attacking_player_alone: bool = False
-    """CR 506.6's narrower cousin of `attacking_alone`: whether this
-    attacker is the only creature attacking the *same defending player* it
-    is attacking (irrelevant, and left `False`, for an attack on a
-    planeswalker or a battle - CR 506.6 names a player specifically). Jiang
-    Yanggu, Alone and Yuriko, Blade of the Mighty both print "attacks a
-    player alone" rather than the bare CR 506.5 form, and the two conditions
-    disagree the moment a second creature attacks a *different* player in
-    the same combat: that declaration is not `attacking_alone`, but each
-    attacker is still `attacking_player_alone`."""
-
-    declared_attacker: bool = False
-    """`TriggerEvent.BECOMES_TAPPED` for a creature tapped because it was
-    declared as an attacker (CR 508.1f: "attacking simply causes creatures to
-    become tapped") - Verity Circle's "if it isn't being declared as an
-    attacker" (`machines/conditions/objects.py`) asks exactly this, of the
-    event itself, so CR 608.2a's recheck reads the same answer."""
-
-    during_cost_of: str | None = None
-    """`"spell"` or `"ability"` when this happened while that spell's
-    (CR 601.2h) or ability's (CR 602.2b) total cost was being paid - the
-    creature an emerge cost sacrificed, the permanents a craft cost exiled -
-    stamped by `Game.emit` from `Game.paying_cost_of`. A trigger event's own
-    "while casting a spell with emerge" / "while you're activating a craft
-    ability" qualifier reads this (CR 603.2,
-    `machines/conditions/events.py`)."""
-
-    during_cost_keyword: str | None = None
-    """The keyword that spell was cast with, or that ability expands,
-    lowercased (CR 702.119a's emerge, CR 702.167a's craft)."""
-
-    during_cost_player: str | None = None
-    """Who was paying that cost - the player casting or activating."""
-
-    keyword_action: str | None = None
-    """The keyword action this event happened during, when that is what a
-    trigger event's own "while <doing it>" qualifier asks: `"scry"` for a
-    `TriggerEvent.LIBRARY_BOTTOM_CHOSEN` made while scrying (CR 701.22a)."""
-
-    mana_ability: bool = False
-    """`ExtraTriggerEvent.ABILITY_ACTIVATED` for a mana ability (CR 605.3a:
-    it is activated; CR 605.3b: without the stack) - a condition printed
-    "that isn't a mana ability" must not meet it, and one that does not say
-    so (Elrond, Moon-Reader's "Whenever you activate an ability of a
-    creature") does."""
-
-    counters_put_index: int | None = None
-    """For a `COUNTERS_PUT` event, which of `Game.counters_put_this_turn`'s
-    placements it reports (its position there) - what "if it's the first
-    time counters have been put on that permanent this turn" (CR 122.6) asks
-    of the event, and still asks on resolution (CR 608.2a) after more
-    placements, identical in kind, amount and putter, may have followed."""
-
-    zone_change_stamp: UUID | None = None
-    """For a `TriggerEvent.DIES` event, `subject_id`'s own `CardState.
-    zone_change_stamp` as it was the instant CR 700.4's move landed it in
-    the graveyard - `Game.put_into_graveyard` reads it off the object right
-    after `Player.add` (`CardState.move_to`) mints it, before anything else
-    can move the card again.
-
-    CR 400.7e: a look-back ability "can find the new object that it became
-    in the zone it moved to when the ability triggered, if that zone is a
-    public zone" - a narrower promise than "wherever it is now". A dies
-    trigger's own "exile it" (Ancient Adamantoise), "return it to its
-    owner's hand" (Rancor) and "put it on the bottom of its owner's
-    library" (Murderous Rider) all read this stamp against the live
-    object's *current* `zone_change_stamp` before touching it: matching
-    means the graveyard object the trigger is holding is still the exact
-    incarnation CR 700.4 created, and a mismatch (moved again since,
-    including back into the same graveyard as a fresh CR 400.7 object) means
-    it cannot be found any more, so the clause does nothing - CR 608.2c
-    never runs half an instruction, so the notice-free "nothing" is CR
-    400.7's own answer, not a gap. `None` for every event this field was
-    never populated for, and for a `DIES` event built before this field
-    existed (an older decoded game), which is read the same "nothing found"
-    way rather than crashing."""
-
-    entered_together: tuple[tuple[UUID, Zone | None], ...] = ()
-    """For a `TriggerEvent.ENTERS_THE_BATTLEFIELD` event raised inside
-    `Game.entering_together` with more than one permanent in it, every
-    permanent that entered in that one event, each with the zone it came
-    from - CR 603.6a: "Each time an event puts one or more permanents onto
-    the battlefield, all permanents on the battlefield (including the
-    newcomers) are checked for any enters-the-battlefield triggers that match
-    the event." A "one or more ... enter" trigger's "them" (Twilight
-    Diviner's "a copy of one of them", Kambal, Profiteering Mayor's "for each
-    of them") is read off this: the members that match the ability's own
-    condition. Empty when the permanent entered on its own - then "them" is
-    `subject_id` alone."""
-
-
-class TargetingNoticeKind(StrEnum):
-    """Why a triggered ability went on the stack with no targets chosen."""
-
-    UNPARSED = "unparsed_targets"
-    """`machines/targeting.py` could not read the restriction at all
-    (`TargetingProfile.understood` is False). An engine gap, not a legal game
-    state - the next unparsed shape must be audible, not silently dropped."""
-
-    NO_LEGAL_TARGET = "no_legal_targets"
-    """The restriction was read fine, but nothing satisfies it right now. A
-    legitimate game state (CR 608.2d's own "nobody says otherwise" default),
-    not a bug - and not the same thing as CR 608.2b's target-becomes-illegal
-    fizzle, which only ever applies to a target that *was* chosen."""
-
-
-class TargetingNotice(EngineModel):
-    """One triggered ability whose targets could not be asked for as normal.
-
-    `Game._ask_trigger_targets` used to `return []` silently whenever a
-    restriction was unreadable, which is how White Orchid Phantom's "destroy up
-    to one target nonbasic land" went on the stack, resolved, and did nothing -
-    no decision offered, no record left anywhere. This is that record: appended
-    to `Game.targeting_notices` so a player, a test, or a log consumer can see
-    the difference between "the parser has a gap" and "there is genuinely
-    nothing to target" instead of both looking like an ability that did
-    nothing.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    kind: TargetingNoticeKind
-    source_id: UUID | None
-    source_name: str
-    text: str
-    """The ability's own rules text, read for its restriction."""
-
-
-class InterveningIfNotice(EngineModel):
-    """One triggered ability whose intervening *if* clause (CR 603.4) could not
-    be evaluated, and so was made to fail closed rather than fire on a
-    condition nobody actually checked.
-
-    The old default in `intervening_if_holds` was the opposite: any clause it
-    could not read was treated as true, which is how an unkicked Sowing
-    Mycospawn exiled a land - "if it was kicked" was never checked, only ever
-    assumed. Fail-open is worse than not implemented, so the new default is
-    the reverse: a clause this module cannot read is treated as false, and
-    that refusal is recorded here - the same "the engine could not read this"
-    pattern `TargetingNotice` already established for target restrictions -
-    so a gap in `intervening_if_holds` is visible instead of indistinguishable
-    from an ability that legitimately never triggers.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    source_id: UUID | None
-    source_name: str
-    clause: str
-    """The intervening *if* clause itself, as printed (without the leading
-    "if")."""
-
-
-class CastConditionNotice(EngineModel):
-    """One "Whenever you cast a [restriction] spell" condition (CR 601.2,
-    603.2) whose restriction this module recognised as a mana-value
-    comparison but could not parse into a number and a direction, and so was
-    made to fail closed rather than fire on a spell nobody actually checked.
-
-    Sanctum of Ugin's "mana value 7 or greater" and its siblings ("... or
-    less", "greater than ...", "less than ...", a bare "mana value N") are
-    read by `condition_matches`; a mana-value clause shaped some other way is
-    not known to be true, so the ability does not trigger, and that refusal is
-    recorded here - the same "the engine could not read this" pattern
-    `InterveningIfNotice` and `TargetingNotice` already established, so a gap
-    stays visible instead of looking like a spell that legitimately did not
-    match."""
-
-    model_config = ConfigDict(frozen=True)
-
-    source_id: UUID | None
-    source_name: str
-    condition: str
-    """The trigger condition itself, as printed (without the leading "when",
-    "whenever", or "at")."""
-
-
-class AbilityOnStack(EngineModel):
-    """An activated or triggered ability as an object on the stack (CR 113.1c).
-
-    This is deliberately *not* a `CardState`. CR 405.1: an ability "goes on top
-    of the stack without any card associated with it", so it has no zone to
-    return to and never reaches a graveyard - CR 608.2n removes it from the
-    stack and it ceases to exist.
-
-    It keeps its source's id *and* its source's name, because CR 113.7a lets the
-    source be destroyed while the ability is still waiting to resolve; the name
-    is what is left to describe the ability once the object is gone.
-    """
-
-    id: UUID = Field(default_factory=new_id)
-    kind: AbilityKind
-    ability: TriggeredAbility | ActivatedAbility
-    source_id: UUID | None = None
-    source_name: str
-    controller: str
-    source_stamp: UUID | None = None
-    """The source's `CardState.zone_change_stamp` when the ability triggered,
-    or - for an activated ability - as its activation began, before a cost
-    could move the source (`Game.begin_activating`), so a recheck on
-    resolution reads the object it came from (CR 113.7a: "if the source is
-    no longer in the zone it's expected to be in at that time,
-    its last known information is used"; CR 608.2h) rather than whatever new
-    object the card has since become (CR 400.7). `None` for an ability that
-    records no source object."""
-    source_times_transformed: int | None = None
-    """The source's `CardState.times_transformed` when the ability triggered
-    or was activated - the count CR 701.27f compares: an activated or
-    triggered ability of a permanent that tries to transform it does so "only
-    if it hasn't transformed or converted since the ability was put onto the
-    stack". A count, not a face, so a permanent turned over twice in response
-    (back where it started) is still recognised as having transformed. `None`
-    for an ability that records no source object."""
-    state_class: Literal["AbilityOnStack"] = "AbilityOnStack"
-    """Which concrete Python class built this object - decode-time identity
-    for `models.game.StackObject`'s discriminated union, the exact
-    counterpart of `CardState.state_class` (see that field's own docstring).
-
-    `StackObject` is `CardState | TokenState | AbilityOnStack`, tagged on
-    this field via `Field(discriminator="state_class")`
-    (`models/game.py:StackObject`) - not a rules concept, just the label
-    pydantic reads to pick the right arm of the union without guessing from
-    shape. An `AbilityOnStack` never changes Python class the way a token
-    does, so unlike `CardState.state_class` this one has nothing else to key
-    off and is always this one literal value.
-    """
-    source_last_known: (
-        Annotated[CardState | TokenState, Field(discriminator="state_class")] | None
-    ) = Field(default=None, repr=False)
-    """The source as it last existed, kept once it has ceased to exist while
-    this ability waits (a token, CR 704.5d). CR 113.7a: the ability "exists on
-    the stack independently of its source", and CR 608.2h has an effect that
-    needs the source use "the object's last known information" once it is no
-    longer in its zone - nothing is left to find by `source_id`. None while the
-    source can still be found. `source_or_last_known` reads it."""
-    targets: list[TargetRef] = Field(default_factory=list)
-    event: GameEvent | None = None
-    """The event that triggered it, for an effect that needs to know which
-    creature attacked or what blocked what. None for an activated ability."""
-
-    modes: list[int] = Field(default_factory=list)
-    """A modal triggered ability's chosen modes, as their 1-based printed
-    positions in the order chosen (CR 700.2). CR 603.3c: "its controller
-    announces the mode choice when putting the ability on the stack", so
-    `Game.put_triggers_on_stack` fills this before any target is chosen, and
-    the resolving effect reads it rather than asking again. Empty for a
-    non-modal ability."""
-
-    mode_targets: list[list[TargetRef]] = Field(default_factory=list)
-    """Each chosen mode's own targets (CR 700.2c, CR 700.2f), aligned by
-    position with `modes`; `targets` is their concatenation."""
-
-    x_value: int = 0
-    """CR 107.3a's X, as announced when this ability was activated (CR 602.2b
-    - "the remainder of the process for activating an ability is identical to
-    the process for casting a spell", which includes announcing X). Zero for
-    an ability whose cost carries no `{X}` at all - Fiend Artisan's
-    "{X}{B/G}, {T}, Sacrifice another creature: Search your library for a
-    creature card with mana value X or less ..." is the only ability in the
-    pool that reads this; `machines/effects.py`'s `activated_effect_for` is
-    what turns it back into the literal word "X" in the ability's own text."""
-
-    keyword_activation: "KeywordActivation | None" = Field(default=None, repr=False)
-    """The `machines/keywords.KeywordActivation` this ability came from, if any.
-
-    `machines/effects.py` keys an ability's effect by the name of the card it is
-    printed on. A CR 702 keyword's ability is printed on no card in particular -
-    cycling (CR 702.29a) and equip (CR 702.6a) are the same ability wherever
-    they appear - so there is no name to key it under and the effect lives with
-    the keyword instead.
-
-    This is the link back. `machines/keywords.keyword_effect_for` reads it, and
-    it is the one thing a resolver needs to run a keyword's effect through the
-    ordinary CR 608.2 path rather than by hand.
-
-    Round-trips as real data now, not dropped: a dumped-and-decoded ability
-    used to lose this entirely (`exclude=True`), so `keyword_effect_for` fell
-    through past a keyword's own effect to the ordinary card-name lookup and a
-    decoded cycling or equip activation resolved as nothing. `KeywordActivation`
-    itself needed three fixes before it could carry across a round trip -
-    see its own docstring and `model_post_init` below:
-
-    - `KeywordActivation.game` (a live `Game`) is still `exclude=True` and
-      reset to `None` on decode; nothing this module's `run_effect` reaches
-      needs it to have survived by the time an ability is resolved through
-      `keyword_effect_for` after a round trip, because `Game.model_post_init`
-      relinks it from the outside, the same way it already relinks
-      `Player.game`.
-    - `KeywordActivation.payment` is a `CostPayment`, which is already plain
-      data once its own `.game` is excluded (see `unless_payment` below for
-      why that is safe) - but a *paused* payment (still `PENDING`, mid crew or
-      equip) does need `.game` back to resume: `Game.model_post_init` relinks
-      `keyword_activation.payment.game` the same pass it relinks `keyword_
-      activation.game` itself, not "no change needed" as this once claimed.
-    - `KeywordActivation.on_stack` points back at this very `AbilityOnStack`,
-      which would make a dump cycle forever if both sides kept the edge.
-      `KeywordActivation.on_stack` is `exclude=True` for exactly that reason,
-      and `model_post_init` below re-wires it from this side after a decode,
-      the one direction that does not close a loop.
-    - `KeywordActivation.result` (`Any`) stays `exclude=True`. The reason is
-      not that a caller promises never to dump a `Game` mid-resolution -
-      nothing in this model enforces a caller's contract, and `machines/
-      decisions.py`'s pause-and-replay design is exactly that, a convention
-      the caller follows, not something this class can rely on. What actually
-      rules a mid-flight `result` out is `Game.resolve_top`/`_resolve_top`
-      (`models/game.py`): the ability is popped off `self.stack` (CR 608.2n)
-      before its effect ever runs, and on an exception `_resolve_ability`'s
-      `except Exception` branch discards it and calls `_before_priority()`
-      without ever pushing it back onto the stack. A mid-flight ability -
-      resolving cleanly or blown up partway through - therefore sits in no
-      serialized field at all: not `self.stack`, not `self.pending_triggers`,
-      and not `Game.resolving` either, which is itself `exclude=True` and is
-      reset to `None` in `resolve_top`'s own `finally` before control ever
-      returns to a caller that might dump the game. There is no path back into
-      a serialized `Game` for a `KeywordActivation` that is not pre-resolution
-      - not a promise, a structural fact about where the reference lives.
-
-      One field on this class *is* serialized in an intermediate-looking
-      shape, though: `applied` is a plain `bool`, not excluded, and `run_
-      effect` (`machines/keywords.py`) sets it `True` *before* calling the
-      keyword's effect function. A dump taken from inside that call - a
-      re-entrant `game.ask`, say - would decode to an activation reading
-      `applied=True` with `result` still `None`, and `run_effect`'s own early
-      return (`if self.applied: return self.result`) would then treat it as
-      already run and silently do nothing. Unreachable today only because of
-      the same pop: nothing dumps a `Game` from inside a running effect call,
-      since the ability that effect belongs to has already left every
-      serialized field by the time the call starts.
-    """
-
-    division: list[int] | None = None
-    """CR 601.2d's announced division, `Casting.division`'s own field mirrored
-    here so `machines/effects._deal_divided_damage_shares` reads the same
-    attribute off either kind of stack object - CR 602.2b: "the remainder of
-    the process for activating an ability is identical to the process for
-    casting a spell", which is what makes an ability's own "deals N damage
-    divided as you choose among one or two targets" (Ral, Monsoon Mage's −2)
-    the same CR 601.2d announcement a spell's identical wording already gets.
-    `None` here (no caller announces one yet for an ability) falls through to
-    `_divided_damage_shares`'s own even-split fallback, exactly as an
-    un-announced spell already does."""
-    target_amounts: list[int] | None = None
-    """One entry per resolved target of `targets`, in the same order, for a
-    "`<source>` deals `<n>` damage to `<phrase1>` and `<m>` damage to
-    `<phrase2>`" instruction whose two halves name *different* amounts
-    (`machines/effects._merge_split_damage_clauses`) - `CardState.target_
-    amounts`'s own twin mirrored here for the identical CR 602.2b reason
-    `division` already is. Unlike `division`, nothing here is a player
-    announcement: the amounts are fixed by the printed card text, so this is
-    computed and stamped on as resolution begins rather than carried from
-    CR 601.2c/d announcement. `None` when the resolving instruction never
-    named more than one amount (the ordinary single-amount case, and the
-    equal-amount case, which never needed a per-target answer to begin
-    with)."""
-    cost_exiled_card_id: UUID | None = None
-    """The id of the card exiled to pay this ability's own cost, when the
-    ability's *effect* refers back to it anaphorically - Back from the
-    Brink's "Exile a creature card from your graveyard and pay its mana
-    cost: Create a token that's a copy of **that card**." The choice is made
-    while the cost is paid (CR 601.2b/602.2b), before this object even
-    exists, so there is nowhere else on the ability itself to carry it -
-    unlike a target, which `machines/targeting.py` already tracks through
-    `targets`, this was never a target at all (CR 115.1 - Back from the
-    Brink's own sentence never says "target")."""
-
-    cost_exiled_card_ids: tuple[UUID, ...] = ()
-    """Every card exiled to pay this ability's own cost - Corpseweft's
-    "Exile one or more creature cards from your graveyard", whose effect
-    counts them: "where X is twice the number of cards exiled this way". The
-    plural twin of `cost_exiled_card_id` (which names the one card an
-    effect acts on), filled by `Game.activate_ability` from the paid
-    payment (CR 602.2b)."""
-
-    cost_sacrificed_card_ids: tuple[UUID, ...] = ()
-    """The ids of the permanents sacrificed to pay this ability's own cost,
-    when the ability's *effect* asks a question about them - Witch's Oven's
-    "Create a Food token. If **the sacrificed creature's** toughness was 4 or
-    greater, create two Food tokens instead."
-
-    The sacrifice twin of `cost_exiled_card_id`, and there for the identical
-    reason: CR 602.2b pays an activated ability's costs as it is activated,
-    so by the time this object exists the permanent is already in a graveyard
-    (CR 701.21a) and there is nothing on the battlefield to look at. It was
-    never a target either - CR 115.10a: "Just because an object or player is
-    being affected by a spell or ability doesn't make that object or player a
-    target of that spell or ability", and Witch's Oven's sentence never says
-    "target" - so `targets` is not where it can live.
-
-    A tuple rather than a single id because a printed cost may sacrifice more
-    than one permanent; every printing in the pool sacrifices exactly one."""
-
-    cost_sacrificed_mana_values: tuple[float, ...] = ()
-    """`cost_sacrificed_card_ids`' mana values, aligned by position and taken
-    by `Game.activate_ability` as this object is created - CR 608.2h's last
-    known information for Prime Speaker Vannifar's "the sacrificed
-    creature's mana value". The id alone cannot answer it once a sacrificed
-    token has ceased to exist (CR 704.5d), which happens before this ability
-    resolves; see `CastRecord.additional_cost_mana_values`, its spell twin."""
-
-    cost_sacrificed_powers: tuple[int | None, ...] = ()
-    """`cost_sacrificed_card_ids`' powers, aligned by position and taken by
-    `Game.activate_ability` as this object is created - CR 608.2h's last known
-    information for "the sacrificed creature's power". Pumps, counters and
-    anthems are in it, and it survives a sacrificed token ceasing to exist
-    (CR 704.5d). `None` where the creature's power was not a number."""
-
-    cost_sacrificed_toughnesses: tuple[int | None, ...] = ()
-    """`cost_sacrificed_powers`' toughness twin."""
-
-    mana_spent: dict[Color, int] = Field(default_factory=dict)
-    """How much mana of each colour paid this ability's own activation cost
-    (CR 601.2h, imported for activation by CR 602.2b), taken from `machines/
-    cost.ManaPayment.spend` the same moment `Game.activate_ability` reads
-    `cost_sacrificed_card_ids`/`cost_exiled_card_ids` off the same settled
-    payment - Paragon of Modernity's own "If exactly three colors of mana
-    were spent to activate this ability, put a +1/+1 counter on it instead."
-    `CastRecord.mana_spent` is the identical field for a *cast* spell; an
-    activated ability was never cast (CR 601.2a) and has no `CastRecord` of
-    its own, so this is where its own activation's payment is remembered.
-    Empty for a mana ability (CR 605.3b never builds an `AbilityOnStack` at
-    all) or one activated with no open `CostPayment` to read back."""
-
-    treasure_mana_spent: int = 0
-    """How much of `mana_spent` came from a Treasure (CR 106.3's source of
-    mana), from `ManaPayment.treasure_spent` - Jetmir's Fixer's own "If mana
-    from a Treasure was spent to activate this ability, put a +1/+1 counter
-    on this creature instead." `CastRecord.treasure_mana_spent`'s activation
-    twin, for the identical reason `mana_spent` is `CastRecord.mana_spent`'s."""
-
-    unless_payment: "CostPayment | None" = Field(default=None, repr=False)
-    """The `machines/cost.CostPayment` made for an "unless that player pays" clause.
-
-    CR 702.21a's ward is the one ability of this shape the engine produces:
-    "counter that spell or ability unless that player pays [cost]". The cost is
-    paid *as the ability resolves*, so the payment has to live on the ability
-    that is on the stack - **the object that is paid must be the object that
-    resolves**. `machines/keywords.WardTrigger` is the view that opens it and
-    `machines/keywords._ward_effect` is what reads it back.
-
-    Option (a) of the two the serialization task offered - reduced to data,
-    not refused. `_ward_effect` (`machines/keywords.py`) only ever reads
-    `ward_was_paid`, which is `payment.step is CostStep.PAID` - never
-    `payment.game` - so *counters or lets through* needs nothing more than
-    what was serialized here.
-
-    Resuming a *paused* payment is a different question, though, and an
-    earlier version of this note answered it wrong by not asking it at all: it
-    said every other field on `CostPayment` - "`cost`, `components`, `pool`,
-    `step`, `tapped_for_mana`, and the rest" - was "already plain pydantic
-    data with no callable or live object among them", and that a persisted
-    `unless_payment` is always terminal (`None`, `PENDING` with nothing tapped
-    yet, or settled `PAID`) so none of that mattered anyway. Both halves were
-    wrong. `tapped_for_mana` held live `CardState`s by reference until it was
-    reduced to `list[UUID]` (`machines/cost.py`) - a full duplicate permanent
-    on every dump, and untapping those decoded copies on `rewind` silently
-    left the real battlefield sources tapped forever. And a `CostStep.PENDING`
-    payment mid-tapping - the exact shape ward is opened in, one priority pass
-    before anyone decides whether to pay - round-trips identically to a
-    finished one, so "always terminal" was never true either; resuming it
-    needs `game` back to find its own tapped sources, seed its payer's pool,
-    and keep tapping, which is why `Game.model_post_init` now relinks `.game`
-    on both `keyword_activation.payment` and this field. `CostComponent.cards`
-    still holds `CardState`s by reference too (ward itself never uses one, but
-    `unless_payment`'s type does not rule one out for some future non-mana
-    ward cost) - safe because the one place that both mutates through a
-    captured reference and can run after a decode, `CostComponent.unpay`,
-    re-resolves each one through `game.find_by_id` first. And two more pieces
-    of this class's state genuinely do not survive a round trip at all:
-    `CostComponent._undo` and `CostPayment._preexisting`
-    are `PrivateAttr`s, so a decoded payment's `rewind`/`unpay` now refuse
-    loudly rather than silently restoring nothing when that state is gone -
-    see both methods' own docstrings.
-    """
-
-    def model_post_init(self, _context: object) -> None:
-        """Re-close the `KeywordActivation.on_stack` loop `exclude=True` opened.
-
-        `keyword_activation.on_stack` is excluded from serialisation so a dump
-        does not chase `self -> keyword_activation -> on_stack -> self`
-        forever; this is the one direction that puts the edge back without
-        recreating that cycle, run after both live construction (`_activate_
-        impl` already assigns `self.on_stack = AbilityOnStack(...,
-        keyword_activation=self)`, so this only repeats what it just did) and
-        `model_validate` decoding a dump (where nothing else would ever set it
-        again). `KeywordActivation.game` is not relinked here - only `Game`
-        itself has the reference to relink it with, so `Game.model_post_init`
-        does that half, the same way it already relinks `Player.game`.
-        """
-        if self.keyword_activation is not None:
-            self.keyword_activation.on_stack = self
-
-    @property
-    def name(self) -> str:
-        """A readable name, so a stack listing reads the same for both kinds."""
-        return f"{self.source_name}'s {self.kind.value} ability"
-
-    @property
-    def is_ability(self) -> bool:
-        return True
-
-    @property
-    def is_permanent(self) -> bool:
-        """An ability never becomes a permanent, whatever its source was."""
-        return False
-
-    @property
-    def zone(self) -> Zone:
-        return Zone.STACK
-
-    def source(self, game: "Game") -> CardState | None:
-        """The object that generated this ability, if it is still findable (CR 113.7)."""
-        if self.source_id is None:
-            return None
-        return game.find_by_id(self.source_id)
-
-    def source_or_last_known(self, game: "Game") -> CardState | None:
-        """The source if it can still be found, otherwise its last known
-        information (CR 113.7a, CR 608.2h), or None when there is neither."""
-        return self.source(game) or self.source_last_known
-
-
-def tapped_for_mana_event(
-    source: CardState,
-    game: "Game | None" = None,
-    mana_added: "Sequence[Color] | None" = None,
-) -> GameEvent:
-    """CR 106.12a: this permanent's mana ability just resolved and produced mana.
-
-    Built once and reused by every place the engine taps something for mana -
-    `machines/cost.CostPayment.tap_for_mana` (tapping a land to pay a total
-    cost) and `Game.activate_ability`'s mana-ability fast path (CR 605.3b: the
-    ability itself never reaches the stack, but the event still happens) -
-    so the two call sites cannot drift apart on what the event looks like.
-
-    `game`, when given and `source` is still on the battlefield, reads
-    `subject_types`/`subject_subtypes` off `Game.characteristics_of`
-    (CR 613.5) rather than `CardState.types` - a land a continuous effect has
-    turned into a creature (Badgermole Cub's own earthbend, Karn's animation)
-    is only a Creature on the *computed* board; `CardState.types` is up-face
-    aware (CR 712.8f) but knows nothing about layers, and reading it here
-    would leave "whenever you tap a creature for mana" blind to exactly the
-    land its own controller just animated. Falling back to
-    `source.types`/`.subtypes` without a `game`, or once `source` has left the
-    battlefield, keeps every existing caller working: Tinder Farm's own
-    "{T}, Sacrifice this land: Add {R}{W}" pays its sacrifice before this event
-    is emitted (CR 601.2h/602.2's cost is paid in full before the ability
-    resolves and produces this event), so the computed board built from the
-    *current* battlefield never has it to ask - `computed_board()` only knows
-    about permanents still there (CR 613.5's "objects" are the ones on it).
-    """
-    on_battlefield = game is not None and source.zone is Zone.BATTLEFIELD
-    if on_battlefield:
-        characteristics = game.characteristics_of(source)
-        types = characteristics.types
-        subtypes = characteristics.subtypes
-    else:
-        types = source.types
-        subtypes = source.subtypes
-    return GameEvent(
-        event=TriggerEvent.TAPPED_FOR_MANA,
-        subject_id=source.id,
-        subject_name=source.name,
-        subject_controller=source.controller,
-        subject_card=source.card,
-        subject_types=types,
-        subject_subtypes=subtypes,
-        mana_added=tuple(mana_added or ()),
-    )
-
-
-def triggered_mana_count(
-    game: "Game", phrase: str, controller: str, source: "CardState | None" = None
-) -> int:
-    """How many times a triggered mana ability's "for each <phrase>" adds its
-    mana, counted now (CR 608.2h: "the answer is determined only once, when
-    the effect is applied"), off the computed board (CR 613.5). An unread
-    phrase counts 0, adding nothing.
-
-    `source` is the ability's own permanent (CR 113.7a: found by id,
-    whatever zone it is in now) - Gardenize's own "charge counter on this
-    enchantment" (CR 122.1) counts nothing on the board at all, only what is
-    already on that one object, so it is checked first and short-circuits
-    the board scan entirely when it matches. `None` for a caller with no
-    source to hand (there is none in the pool that both needs one and is
-    reached without a live `AbilityOnStack`/`CardState` in scope), which
-    reads as 0 rather than guessing.
-    """
-    self_counter_kind = self_counter_mana_count(phrase)
-    if self_counter_kind is not None:
-        return max(source.counter_count(self_counter_kind), 0) if source is not None else 0
-    parsed = parse_mana_count(phrase)
-    if parsed is None:
-        return 0
-    scope, card_type, subtype = parsed
-    board = game.computed_board()
-    total = 0
-    for permanent in game.battlefield:
-        characteristics = board.of(permanent)
-        if scope == "you_control" and characteristics.controller != controller:
-            continue
-        if (
-            card_type is not None
-            and card_type in characteristics.types
-            or subtype
-            and any(word.lower() == subtype.lower() for word in characteristics.subtypes)
-        ):
-            total += 1
-    return total
-
-
-def triggered_mana_recipient(
-    recipient: str, controller: str, event: "GameEvent | None"
-) -> str | None:
-    """Whose pool a triggered mana ability's mana goes to (CR 605.1b).
-
-    "add" is the ability's own controller; "its controller" is the controller
-    of the permanent the event is about - the land that was tapped, which for
-    an Aura's "enchanted land" is the enchanted one; "that player" is the
-    player the condition named, falling back to that same permanent's
-    controller.
-    """
-    if recipient == "controller":
-        return controller
-    if event is not None:
-        if recipient == "that_player" and event.player is not None:
-            return event.player
-        if event.subject_controller is not None:
-            return event.subject_controller
-    return None
-
-
-def mana_added_event(
-    source: CardState, game: "Game | None" = None, mana_added: "Sequence[Color] | None" = None
-) -> GameEvent:
-    """An ability of `source` just caused its controller to add mana.
-
-    Distinct from `tapped_for_mana_event`: CR 106.12 defines "tap for mana" as
-    activating a mana ability "that includes the {T} symbol in its activation
-    cost", so a condition about *tapping* (Leyline of Abundance's "Whenever you
-    tap a creature for mana") is not the same question as one about *adding*
-    (Caged Sun's "Whenever a land's ability causes you to add one or more mana
-    of the chosen color"). Only the second is matched against this event, which
-    is why a triggered mana ability's own addition re-raises this one and never
-    the tap.
-
-    Types are read off `Game.characteristics_of` (CR 613.5) while the source is
-    still on the battlefield, exactly as `tapped_for_mana_event` does and for
-    the same reason: "a **land's** ability" is a question about the computed
-    type line, which is how Toph, the First Metalbender's static ability can
-    make Caged Sun's own trigger answer it.
-    """
-    on_battlefield = game is not None and source.zone is Zone.BATTLEFIELD
-    if on_battlefield:
-        characteristics = game.characteristics_of(source)
-        types = characteristics.types
-        subtypes = characteristics.subtypes
-    else:
-        types = source.types
-        subtypes = source.subtypes
-    return GameEvent(
-        event=ExtraTriggerEvent.MANA_ADDED,
-        subject_id=source.id,
-        subject_name=source.name,
-        subject_controller=source.controller,
-        subject_card=source.card,
-        subject_types=types,
-        subject_subtypes=subtypes,
-        mana_added=tuple(mana_added or ()),
-    )
-
-
-def is_ability(item: Any) -> bool:
-    """True for a stack object that is an ability rather than a spell."""
-    return isinstance(item, AbilityOnStack)
-
+from .events import ExtraTriggerEvent, GameEvent, _ReturnedSubject, _TypedWhose
 
 # --------------------------------------------------------------------------
 # Matching an event against printed trigger conditions
@@ -1378,13 +137,6 @@ _STEP_PHRASES: tuple[tuple[str, Step], ...] = (
     ("end of combat", Step.END_OF_COMBAT),
     ("combat", Step.BEGINNING_OF_COMBAT),
 )
-
-
-class TriggerReadability(StrEnum):
-    """Whether a printed condition is one of the shapes this module can read."""
-
-    READ = "read"
-    UNREAD = "unread"
 
 
 #: Chalice of the Void's shape: "a player casts a spell with mana value equal
@@ -1699,8 +451,8 @@ def _cast_spell_targets_condition_holds(
     literal identity check against `source.id` rather than an unreadable
     phrase that falls to `None` and a spurious `CastConditionNotice`.
     """
-    from .abilities import self_reference_names
-    from .targeting import _read_phrase
+    from ..abilities import self_reference_names
+    from ..targeting import _read_phrase
 
     # Storm, Windrider's "a spell that targets one or more creatures": any
     # one of the spell's targets fitting is enough, the same test as "a
@@ -1837,7 +589,7 @@ def _required_dying_subtype(condition: str) -> tuple[str, ...] | None:
     words = _parse_subtype_list(match.group("subtype"))
     if words is None:
         return None
-    from .layers import BASIC_LAND_TYPES
+    from ..layers import BASIC_LAND_TYPES
 
     return tuple(
         word
@@ -1934,7 +686,7 @@ def _required_entering_subtype(condition: str) -> str | tuple[str, ...] | None:
     # `BASIC_LAND_TYPES` lives) imports `machines/combat.py` in turn - the
     # same real, call-time-only cycle `triggered_abilities_of` already routes
     # its own `from .keywords import keyword_triggered_abilities` around.
-    from .layers import BASIC_LAND_TYPES
+    from ..layers import BASIC_LAND_TYPES
 
     return whole if whole in BASIC_LAND_TYPES else subtype
 
@@ -2117,7 +869,7 @@ def _becomes_blocked_by_qualifier_holds(
     if not isinstance(blocker, CardState):
         return False
 
-    from .combat import has_keyword
+    from ..combat import has_keyword
 
     return not has_keyword(blocker, match.group("keyword").strip(), game)
 
@@ -2510,7 +1262,7 @@ def _attacks_you_holds(
         )
     if not attacked_you:
         return False
-    from .targeting import permanent_description
+    from ..targeting import permanent_description
 
     description = re.sub(r"^(?:a|an)\s+", "", attacker_text.strip())
     requirement = permanent_description(description)
@@ -3590,7 +2342,7 @@ def _condition_matches(
 
     if ability.event is TriggerEvent.BECOMES_TARGET:
         if getattr(ability, "keyword", None) == "ward":
-            from .targeting import ward_is_switched_off
+            from ..targeting import ward_is_switched_off
 
             if ward_is_switched_off(game, source):
                 # "Ward abilities of those creatures don't trigger." (Nowhere
@@ -4011,13 +2763,6 @@ def _targeting_object_matches(game: "Game", condition: str, event: GameEvent) ->
     return is_ability_object if names_ability else not is_ability_object
 
 
-#: Basking Broodscale's and Emperor of Bones' condition: "one or more +1/+1
-#: counters are put on this creature" (CR 122.6). The kind is captured so a
-#: condition naming +1/+1 is not fired by a charge counter.
-_COUNTERS_PUT_CONDITION = re.compile(
-    r"^one or more (?:(?P<kind>\S+) )?counters are put on (?P<subject>.+)$"
-)
-
 #: The subject of a `_COUNTERS_PUT_CONDITION` that is not the source itself:
 #: Botanical Brawler's "another permanent you control", Stalwart Successor's
 #: "a creature you control" - a quality (`models.game._permanent_quality`)
@@ -4026,222 +2771,12 @@ _COUNTERS_PUT_ON_QUALITY_SUBJECT = re.compile(
     r"^(?P<article>another|an?) (?P<quality>[a-z -]+?) you control$"
 )
 
-#: Fabrication Module's and Territorial Gorger's condition: "you get one or
-#: more {E} (energy counters), ..." (CR 122.6, CR 107.14) - `machines/
-#: abilities.parse_abilities` strips the parenthetical reminder before either
-#: module ever sees the text, so the literal string is "you get one or more
-#: {e}" with no trailing "counters" word for the mana-symbol case; a
-#: spelled-out kind ("you get one or more poison counters") has no reminder to
-#: strip and keeps it, which is the second branch below. `_player_counter_
-#: kind` reads whichever branch matched into the plain kind string `GameEvent.
-#: counter_kind` carries (CR 107.14: "the energy symbol is {E}" - the only
-#: mana-symbol counter kind CR 122.1 currently names, so `{e}` is the only
-#: symbol read).
-_PLAYER_COUNTERS_PUT_CONDITION = re.compile(
-    r"^you get one or more (?:(?P<symbol>\{e\})|(?P<kind>[a-z]+) counters?)$"
-)
-
 
 def _player_counter_kind(match: re.Match[str]) -> str:
     """The counter kind `_PLAYER_COUNTERS_PUT_CONDITION` matched, as the plain
     string `GameEvent.counter_kind`/`models.card_state.Counter.ENERGY` use."""
     return "energy" if match.group("symbol") is not None else match.group("kind")
 
-
-#: Inspired Tethermage's "Whenever you put one or more loyalty counters on a
-#: planeswalker, ..." (CR 122.6, CR 606.4) - a different shape from
-#: `_COUNTERS_PUT_CONDITION` above in every way that matters: active voice
-#: ("you put", not "are put"), a controller clause instead of a bare kind,
-#: and "a planeswalker" - any one, not only the ability's own source - as the
-#: subject rather than "this creature". CR 606.4's own "to activate a loyalty
-#: ability of a permanent is to put on or remove ... loyalty counters" is
-#: what makes activating a `[+N]` ability the ordinary way this fires,
-#: alongside any effect that puts loyalty counters on directly.
-_LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION = re.compile(
-    r"^(?P<who>you put|an opponent puts) one or more loyalty counters on a planeswalker$"
-)
-
-#: Party Dude's own level-3 ability: "Whenever one or more of your opponents
-#: are attacked, ..." - "attacked" (no "s", past participle) never matches
-#: `machines/abilities._trigger_event`'s own `\battacks?\b` word-boundary
-#: read (the "k" and the "ed" that follows share no boundary), so this
-#: reaches `condition_matches` with `ability.event` still `None` - the same
-#: `_unread_trigger_events`/`_unread_condition_matches` fallback pair every
-#: other condition in this section goes through, watching the identical
-#: `TriggerEvent.ATTACKS` event "you attack" above already fires once per
-#: declaration (CR 603.2c), never once per attacker. CR 506.4: a planeswalker
-#: or a battle can itself "be attacked", so "your opponents are attacked" is
-#: read the same defending-player normalisation `_attacks_you_holds` already
-#: gives "attacks you or a planeswalker you control" - an opponent is
-#: attacked whether the declared defender is that opponent directly or a
-#: planeswalker/battle they control.
-_OPPONENTS_ARE_ATTACKED_CONDITION = re.compile(
-    r"^one or more of your opponents (?:are|is) attacked$"
-)
-
-#: The Great Goblin's own "Whenever you put one or more counters on a
-#: Goblin, Orc, or Army you control, ..." - `_LOYALTY_COUNTERS_PUT_ON_
-#: PLANESWALKER_CONDITION`'s own active-voice shape widened from one fixed
-#: subject ("a planeswalker") to any subtype or subtype list a "target
-#: `<description>`" phrase's own grammar could name, read by `_parse_subtype_
-#: list` the identical way `_DYING_SUBTYPE`'s own widened subject is.
-#: Matched against `ability.condition` **unlowercased** (unlike every other
-#: condition in this family, matched against a `.lower()`'d copy) because
-#: `_parse_subtype_list` needs Oracle's own subtype capitalisation to tell a
-#: subtype from a card-type word - the reason `_DYING_SUBTYPE`/`_ENTERING_
-#: SUBTYPE` are both matched the same unlowered way from `condition_matches`
-#: itself, just above this module's `ability.event is None` fallback.
-_COUNTERS_PUT_ON_DESCRIPTION_CONDITION = re.compile(
-    r"^you put one or more counters on an? "
-    r"(?P<subtypes>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,?\s+or\s+[A-Z][A-Za-z]*)?)"
-    r" you control$"
-)
-
-#: "Whenever you put a counter on a creature you control, ..." (Mikey & Leo,
-#: Chaos & Order) / "Whenever you put a +1/+1 counter on a creature, ..."
-#: (Ant-Man, Colony Commander, verified Modern/Pioneer/Standard legal) - CR
-#: 122.6's active voice, singular ("a counter", not "one or more"), on any
-#: object matching a plain quality (`models.game._permanent_quality`) rather
-#: than `_COUNTERS_PUT_ON_DESCRIPTION_CONDITION`'s own capitalised subtype
-#: list just above. "you control" is optional: Ant-Man's own bare "a
-#: creature" names any creature at all, not only the controller's own, so it
-#: is read the same loose "you put" convention `_LOYALTY_COUNTERS_PUT_ON_
-#: PLANESWALKER_CONDITION` above already uses for the identical active-voice
-#: shape - "you put" is read off *whose* permanent the counter landed on
-#: (`event.subject_controller`) when the clause names one, never off a
-#: separate "who actually moved it" record this engine does not keep for a
-#: plain counter placement. The kind group's negative lookahead keeps it from
-#: swallowing the literal word "counter(s)" itself when the printed text
-#: carries no kind at all ("a counter", not "a +1/+1 counter").
-_YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION = re.compile(
-    r"^you put an? (?:(?!counters?\b)(?P<kind>[a-z0-9+/-]+) )?counters? on "
-    r"(?P<article>another|an?) (?P<quality>[a-z][a-z -]*?)(?P<yours> you control)?$"
-)
-
-#: Hardened Academic's "one or more cards leave your graveyard" and Murktide
-#: Regent's "an instant or sorcery card leaves your graveyard" - one shape with
-#: an optional type restriction (CR 603.10a's own "abilities that trigger when
-#: a card leaves a graveyard").
-_LEAVES_GRAVEYARD_CONDITION = re.compile(
-    r"^(?:one or more cards leave|(?:an?|one) (?P<types>[a-z ]+?) card leaves) your graveyard$"
-)
-
-#: Wan Shi Tong, All-Knowing's "one or more cards are put into a library from
-#: anywhere" (CR 401.1's library as a destination). "From anywhere" is every
-#: other zone, so no origin is checked - and nothing that was already in the
-#: library was *put into* one, which is why a scry never matches (the event is
-#: simply never raised for a reorder).
-_PUT_INTO_LIBRARY_CONDITION = re.compile(
-    r"^one or more cards are put into a library from anywhere$"
-)
-
-#: Ketramose, the New Dawn's "one or more cards are put into exile from
-#: graveyards and/or the battlefield during your turn" - one condition naming
-#: two origins (CR 406.2's exile from "whatever zone it's currently in"),
-#: matched against either of the two events that carry them.
-_EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION = re.compile(
-    r"^one or more cards are put into exile from graveyards and/or the battlefield"
-    r" during your turn$"
-)
-
-#: Caged Sun's "a land's ability causes you to add one or more mana of the
-#: chosen color" - CR 605.1b's triggered mana ability, watching CR 106.12a's
-#: own event for the mana it now carries (`GameEvent.mana_added`). "The chosen
-#: color" is CR 614.12a's as-enters choice, recorded on `CardState.choice`.
-_LAND_ADDED_CHOSEN_MANA_CONDITION = re.compile(
-    r"^a land's ability causes you to add one or more mana of the chosen color$"
-)
-
-#: Tamiyo, Inquisitive Student's "you draw your third card in a turn",
-#: Faerie Vandal's "you draw your second card each turn", and Gleaming
-#: Splendor's own "an opponent draws their second card each turn" - an
-#: ordinal over CR 121.2's individual card draws, which are one event each.
-#: Both trailing suffixes mean the same turn-scoped count; "each turn" is how
-#: most printings say it. "You"/"your" is the ability's own controller;
-#: "an opponent"/"their" is any player who is not.
-#: King T'Challa's "a player draws their second card each turn" is the
-#: third subject: any player at all, the ability's controller included.
-_NTH_DRAW_CONDITION = re.compile(
-    r"^(?P<who>you|an opponent|a player) draws? (?:your|their) (?P<ordinal>[a-z]+) card"
-    r" (?:in a|each) turn$"
-)
-
-#: "one or more `<description>` become tapped" - Rewrite History's
-#: "creatures you control", Deeproot Pilgrimage's "nontoken Merfolk you
-#: control". The plural verb is the batch (CR 603.2c).
-_ONE_OR_MORE_BECOME_TAPPED_CONDITION = re.compile(
-    r"^one or more (?P<description>.+?) become tapped$", re.IGNORECASE
-)
-
-#: "one or more `<type>` cards are put into your graveyard from anywhere[
-#: during your turn]" (Robot Domination; Crawling Infestation) and the
-#: narrower origin "from your library" (CR 400.6). A card, so never a token
-#: (CR 108.2).
-_ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION = re.compile(
-    r"^one or more (?P<types>[a-z]+(?: or [a-z]+)*) cards are put into your graveyard"
-    r" from (?P<origin>anywhere|your library)(?P<your_turn> during your turn)?$"
-)
-
-#: The Plans' "the fourth plan counter is put on this enchantment" (Claim the
-#: Kingdom, Political Triumph; Robot Domination's "third", Doom Reigns
-#: Supreme's "fifth", Construct a Cosmic Cube's "seventh") - CR 122.6's
-#: counters being put on an object, read as a threshold: the one event that
-#: takes this object's count of that kind from below N to N or more, the
-#: reading CR 714.2b spells out for a Saga's lore counters. Self-referential
-#: only, which is how every printing names its object.
-_NTH_COUNTER_PUT_CONDITION = re.compile(
-    r"^the (?P<ordinal>[a-z]+) (?P<kind>\S+) counter is put on (?:this [a-z]+|it)$"
-)
-
-#: CR 702.62a's third ability, as `machines/keywords._suspend_abilities`
-#: writes it out: "the last time counter is removed from this card". Never
-#: printed as a line of condition text on any card - suspend prints it as one
-#: word, and the only text on Lotus Bloom that resembles it is reminder text.
-#: CR 702.63a's own third ability writes the identical condition over "this
-#: permanent" instead of "this card" (`machines/keywords._vanishing_abilities`)
-#: - the same fact asked about a battlefield permanent rather than an exiled
-#: card - so this accepts both nouns rather than becoming two near-duplicate
-#: patterns.
-_LAST_TIME_COUNTER_CONDITION = re.compile(
-    r"^the last time counter is removed from this (?:card|permanent)$"
-)
-
-#: "When the last `<kind>` counter is removed from this permanent" for every
-#: kind but time (read above) - CR 310.12b's Siege defeat trigger, "When the
-#: last defense counter is removed from this permanent".
-_LAST_COUNTER_CONDITION = re.compile(
-    r"^the last (?P<kind>(?!time )[a-z0-9+/-]+) counter is removed from this permanent$"
-)
-
-#: CR 702.94a's second ability, as `machines/keywords._miracle_ability` writes
-#: it out: "you reveal this card this way". Miracle prints it as one word, so
-#: this condition only ever arrives from that expansion.
-_REVEALED_THIS_WAY_CONDITION = re.compile(r"^you reveal this card this way$")
-
-#: Voltaic Visionary's "When you play a card exiled with this creature" - CR
-#: 601.1a's "play" (a land played or a spell cast) of a card out of this
-#: object's own CR 607.2a pile.
-_PLAY_A_CARD_EXILED_WITH_CONDITION = re.compile(r"^you play a card exiled with this \w+$")
-
-#: The Master of Lake-town's own "Whenever a player loses life" (CR 119.3's
-#: own life-loss event, `Game.deal_damage_to_player`/`.exchange_life_totals`)
-#: - "a player" is anyone, "you"/"an opponent" the narrower forms other
-#: printings of the same shape could use (`GAINS_LIFE`'s identical split).
-_LOSES_LIFE_CONDITION = re.compile(r"^(?P<who>you|an opponent|a player) loses? life$")
-
-#: CR 601.1a's "play" spelled out as its two halves: "you play a land or
-#: cast a spell [from anywhere other than your hand]" (Shadow of the Goblin) -
-#: a land played (CR 116.2a) or a spell cast (CR 601.2), by the named player,
-#: from the named origin if there is one.
-_PLAY_A_LAND_OR_CAST_CONDITION = re.compile(
-    r"^(?P<who>you|an opponent|a player) plays? a land or casts? a spell(?P<origin> from .+)?$"
-)
-
-#: The Millennium Calendar's "you untap one or more permanents during your
-#: untap step" - `ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP`.
-_UNTAPPED_DURING_UNTAP_STEP_CONDITION = re.compile(
-    r"^you untap one or more permanents during your untap step$"
-)
 
 #: A permanent returned from the battlefield to a hand - `TriggerEvent.
 #: LEAVES_BATTLEFIELD_TO_HAND`, a leaves-the-battlefield event (CR 603.6c).
@@ -4273,19 +2808,6 @@ _RETURNED_DESCRIPTION_WORD = re.compile(
     + "|".join(_plural_type_word_pattern(word) for word in _TYPE_WORDS)
     + r"|permanents?)$"
 )
-
-
-class _ReturnedSubject(NamedTuple):
-    """What `_RETURNED_SUBJECT` read: whether the condition is the plural
-    "one or more" (CR 603.2c: one trigger per event), whether it excludes its
-    own source ("another"), the type words, the controller clause, and whose
-    hand."""
-
-    plural: bool
-    another: bool
-    types: str
-    controller: str | None
-    hand: str
 
 
 def _returned_subject(condition: str) -> _ReturnedSubject | None:
@@ -4374,69 +2896,10 @@ def _returned_to_hand_matches(
     return first.subject_id == event.subject_id
 
 
-#: CR 716.2a: "[Cost]: Level N - [Abilities]" means "[Cost]: This Class's
-#: level becomes N ..." - Caretaker's Talent's, Stormchaser's Talent's and
-#: Wizard Class's "When this Class becomes level 2". Self-referential: the
-#: level is the Class's own (CR 716.2b).
-_CLASS_BECOMES_LEVEL_CONDITION = re.compile(r"^(?P<subject>.+?) becomes level (?P<level>\d+)$")
-#: CR 701.54d: "Whenever the Ring tempts you" / "When the Ring tempts you".
-_RING_TEMPTS_YOU_CONDITION = re.compile(r"^the ring tempts you$", re.IGNORECASE)
-#: CR 702.154b's own linked condition, self-referential only in the pool -
-#: Guardian of New Benalia's "this creature enlists a creature".
-_ENLISTS_A_CREATURE_CONDITION = re.compile(r"^(?:this creature|it) enlists? a creature$")
 #: CR 701.54e's "your Ring-bearer" as a trigger condition's subject.
 _RING_BEARER_SUBJECT = re.compile(r"^your ring-bearer (?P<rest>.+)$", re.IGNORECASE)
-#: CR 700.13: "you commit a crime" - Magda, the Hoardmaster's and Forsaken
-#: Miner's identical condition, always "you" (CR 700.13 is a self-designation
-#: - a player commits a crime, never "an opponent commits a crime").
-_CRIME_COMMITTED_CONDITION = re.compile(r"^you(?:'ve| have)? commits? a crime$", re.IGNORECASE)
-#: CR 701.23a: "an opponent searches their library" - Wan Shi Tong,
-#: Librarian's and Ob Nixilis, Unshackled's identical condition. "You search
-#: your library" is the same event from the controller's own side, kept for
-#: generality even though nothing in the pool prints it yet.
-_SEARCHES_LIBRARY_CONDITION = re.compile(
-    r"^(?P<who>you|an opponent|a player) search(?:es)? (?:your|their) library$", re.IGNORECASE
-)
-#: CR 603.6c: "an ability that triggers when a card is put into a certain
-#: zone 'from anywhere' is never treated as a leaves-the-battlefield
-#: ability" - so, unlike `DIES`'s battlefield-only CR 700.4 move, this is not
-#: one of CR 603.10a's own enumerated look-back exceptions either; CR
-#: 603.10's own intro answers it instead ("objects that exist immediately
-#: after an event are checked" by default), which is exactly the graveyard
-#: card as it now sits. Emrakul, the Aeons Torn's and Purity's identical
-#: condition, self-referential to the ability's own source, from *any*
-#: origin zone.
-_SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION = re.compile(
-    r"^(?P<subject>.+?) is put into a graveyard from anywhere$", re.IGNORECASE
-)
-#: CR 709.5h/709.5j: "you unlock this door" - Ritual Chamber's and Central
-#: Elevator // Promising Stairs' identical condition, self-referential to
-#: the ability's own printed face (`BaseAbility.face`), never to the
-#: permanent's other door.
-_DOOR_UNLOCKED_CONDITION = re.compile(r"^you unlock this door$", re.IGNORECASE)
 
-#: CR 702.29c's "When you cycle this card" (Vizier of Tumbling Sands,
-#: Windcaller Aven, Choking Tethers), and the non-self "you cycle a card" /
-#: "another card" forms of the same verb. CR 702.29d's "cycles or discards"
-#: is a different, discard-shaped condition `machines/abilities.
-#: _trigger_event` already files under `TriggerEvent.DISCARDS_A_CARD`.
-_CYCLE_CONDITION = re.compile(
-    r"^(?P<who>you|a player|an opponent) cycles? (?P<what>this card|another card|a card)$"
-)
 
-#: CR 602.2's activation, restricted by CR 605.1a's mana-ability test:
-#: "`<who>` activates an ability [of `<type list>`] that isn't a mana
-#: ability" - Flamescroll Celebrant's "an opponent", Burning-Tree Shaman's
-#: "a player", Immolation Shaman's "of an artifact, creature, or land", and
-#: Harsh Mentor's "... or land on the battlefield" (CR 109.2's "a type named
-#: without 'card', 'spell' or 'source'" already means one on the
-#: battlefield, which the branch reading it checks either way).
-_ABILITY_ACTIVATED_CONDITION = re.compile(
-    r"^(?P<who>you|a player|an opponent) activates? an ability"
-    r"(?: of (?P<types>an? [a-z]+(?:(?:,\s*(?:or\s+)?|\s+or\s+)(?:an? )?[a-z]+)*)"
-    r"(?: on the battlefield)?)?"
-    r"(?P<not_mana> that isn't a mana ability)?$"
-)
 #: "Whenever day becomes night or night becomes day" (Gavony Dawnguard,
 #: Brimstone Vandal), and either half on its own. CR 731.1a's two phrases,
 #: in either order.
@@ -4452,7 +2915,7 @@ def _activated_source_subtype(types: str) -> str | None:
     """The one subtype an "an ability of `<a quality>`" names, lowercased,
     when that quality is a single subtype rather than card types - `None`
     for a card-type list `_types_match` reads."""
-    from ..data.subtypes import canonical_subtype
+    from ...data.subtypes import canonical_subtype
 
     words = types.split()
     if len(words) != 2 or words[0].lower() not in {"a", "an"}:
@@ -4462,29 +2925,6 @@ def _activated_source_subtype(types: str) -> str | None:
         return None
     subtype = canonical_subtype(word)
     return subtype.lower() if subtype is not None else None
-
-
-def mana_ability_activated_event(source: CardState, game: "Game") -> GameEvent:
-    """`ExtraTriggerEvent.ABILITY_ACTIVATED` for a mana ability of `source`
-    that was just activated (CR 605.3a) - raised beside CR 106.12a's own tap
-    event by both places a mana ability resolves (`Game.activate_ability`'s
-    fast path and `CostPayment.tap_for_mana`), `mana_ability=True` so a
-    "that isn't a mana ability" condition is not met."""
-    on_battlefield = source.zone is Zone.BATTLEFIELD
-    characteristics = game.characteristics_of(source) if on_battlefield else None
-    controller = game.controller_of(source).username
-    return GameEvent(
-        event=ExtraTriggerEvent.ABILITY_ACTIVATED,
-        subject_id=source.id,
-        subject_name=source.name,
-        subject_controller=controller,
-        subject_card=source.card,
-        subject_types=tuple(characteristics.types if characteristics else source.types),
-        subject_subtypes=tuple(characteristics.subtypes if characteristics else source.subtypes),
-        origin_zone=Zone.BATTLEFIELD,
-        player=controller,
-        mana_ability=True,
-    )
 
 
 def _day_night_events_named(condition: str) -> frozenset[ExtraTriggerEvent]:
@@ -4524,96 +2964,6 @@ def _bending_events_named(condition: str) -> frozenset[ExtraTriggerEvent]:
         return frozenset()
     words = re.findall(_BENDING_WORD, condition, re.IGNORECASE)
     return frozenset(_BENDING_EVENTS[word.lower()] for word in words)
-
-
-def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTriggerEvent]:
-    """The events a condition `machines/abilities._trigger_event` left unread
-    watches, or an empty set when this module cannot read it either.
-
-    CR 603.1b: "A triggered ability may have more than one trigger condition" -
-    Ketramose, the New Dawn's single printed condition names two origins for
-    the same exile and so watches two events, which is why this returns a set
-    rather than one event.
-    """
-    lowered = condition.lower().strip()
-    if _COUNTERS_PUT_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
-    if _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
-    if _COUNTERS_PUT_ON_DESCRIPTION_CONDITION.match(condition.strip()):
-        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
-    if _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
-    if _OPPONENTS_ARE_ATTACKED_CONDITION.match(lowered):
-        return frozenset({TriggerEvent.ATTACKS})
-    if _PLAYER_COUNTERS_PUT_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.PLAYER_COUNTERS_PUT})
-    if _LEAVES_GRAVEYARD_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.LEAVES_GRAVEYARD})
-    if _PUT_INTO_LIBRARY_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.PUT_INTO_LIBRARY})
-    if _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION.match(lowered):
-        return frozenset(
-            {
-                ExtraTriggerEvent.EXILED_FROM_GRAVEYARD,
-                TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
-            }
-        )
-    if _NTH_DRAW_CONDITION.match(lowered):
-        return frozenset({TriggerEvent.DRAWS_A_CARD})
-    if _NTH_COUNTER_PUT_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
-    if _ONE_OR_MORE_BECOME_TAPPED_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.PERMANENTS_TAPPED})
-    if _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.PUT_INTO_GRAVEYARD})
-    if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.MANA_ADDED})
-    if _LAST_TIME_COUNTER_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED})
-    if _LAST_COUNTER_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.LAST_COUNTER_REMOVED})
-    if _REVEALED_THIS_WAY_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.REVEALED_FOR_MIRACLE})
-    if _UNTAPPED_DURING_UNTAP_STEP_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP})
-    if _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(lowered):
-        return frozenset({ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS})
-    if _PLAY_A_CARD_EXILED_WITH_CONDITION.match(lowered):
-        return frozenset({TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND})
-    if _PLAY_A_LAND_OR_CAST_CONDITION.match(lowered):
-        return frozenset({TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND})
-    if _LOSES_LIFE_CONDITION.match(lowered):
-        return frozenset({TriggerEvent.LOSES_LIFE})
-    if _returned_subject(lowered) is not None:
-        return frozenset({TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND})
-    if _CLASS_BECOMES_LEVEL_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.CLASS_BECOMES_LEVEL})
-    if _CYCLE_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.CYCLED})
-    if _ABILITY_ACTIVATED_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.ABILITY_ACTIVATED})
-    if _RING_TEMPTS_YOU_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.RING_TEMPTS_YOU})
-    if _CRIME_COMMITTED_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.CRIME_COMMITTED})
-    if _SEARCHES_LIBRARY_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.SEARCHES_LIBRARY})
-    if _DOOR_UNLOCKED_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.DOOR_UNLOCKED})
-    if _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.PUT_INTO_GRAVEYARD})
-    if _ENLISTS_A_CREATURE_CONDITION.match(lowered):
-        return frozenset({ExtraTriggerEvent.ENLISTS})
-    bending = _bending_events_named(lowered)
-    if bending:
-        return bending
-    day_night = _day_night_events_named(lowered)
-    if day_night:
-        return day_night
-    from .counter_effects import counter_trigger_events
-
-    return counter_trigger_events(condition)
 
 
 def _unread_condition_matches(
@@ -4722,7 +3072,7 @@ def _unread_condition_matches(
         subject = _COUNTERS_PUT_ON_QUALITY_SUBJECT.match(match.group("subject"))
         if subject is None:
             return mine and event.subject_id == source.id
-        from ..models.game import _permanent_quality
+        from ...models.game import _permanent_quality
 
         quality = _permanent_quality(subject.group("quality"))
         if quality is None:
@@ -4743,7 +3093,7 @@ def _unread_condition_matches(
         kind = match.group("kind")
         if kind is not None and event.counter_kind != kind:
             return False
-        from ..models.game import _permanent_quality
+        from ...models.game import _permanent_quality
 
         quality = _permanent_quality(match.group("quality"))
         if quality is None:
@@ -4775,7 +3125,7 @@ def _unread_condition_matches(
             return False
         if event.player != controller:
             return False
-        from .combat import defending_player
+        from ..combat import defending_player
 
         opponents = {player.username for player in game.players if player.username != controller}
         for attack in game.combat.attacks:
@@ -5093,28 +3443,9 @@ def _unread_condition_matches(
         # is no player or subject to compare.
         return event.event in day_night_events
 
-    from .counter_effects import counter_condition_matches
+    from ..counter_effects import counter_condition_matches
 
     return bool(counter_condition_matches(game, ability, source, controller, event))
-
-
-def triggers_only_off_the_stack(ability: TriggeredAbility) -> bool:
-    """Whether this triggered ability's own condition can only occur while
-    its card is in a hand on its way somewhere else - "When you discard this
-    card" (CR 701.9a) or "When you cycle this card" (CR 702.29c).
-
-    CR 113.6k: "A trigger condition that can't trigger from the battlefield
-    functions in all zones it can trigger from." Neither can occur while the
-    card is a spell on the stack either, so on an instant or sorcery such a
-    paragraph is a separate ability printed on the card, never part of the
-    spell's own resolution (CR 113.6: an instant's or sorcery's abilities
-    usually function only on the stack - this is one of the exceptions).
-    """
-    condition = ability.condition.lower().strip()
-    if ability.event is TriggerEvent.DISCARDS_A_CARD and condition.endswith("this card"):
-        return True
-    cycled = _CYCLE_CONDITION.match(condition)
-    return cycled is not None and cycled.group("what") == "this card"
 
 
 def _acting_player_matches(who: str, controller: str, actor: str | None) -> bool:
@@ -5146,232 +3477,6 @@ def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
         return event.player is not None and event.player != controller
     # "each upkeep", "the end step" - whoever's step it is.
     return True
-
-
-#: CR 603.10a's look-back events: the source is deliberately still asked for
-#: these even though it has already left the battlefield by the time the event
-#: is worked out - `Game.emit` widens `sources` for exactly this reason.
-#:
-#: `LEAVES_THE_BATTLEFIELD` belongs here on CR 603.10a's own say-so - "Some
-#: zone-change triggers look back in time. These are leaves-the-battlefield
-#: abilities, abilities that trigger when a player sacrifices a permanent,
-#: abilities that trigger when a card leaves a graveyard, and abilities that
-#: trigger when an object that all players can see is put into a hand or
-#: library" - not merely by analogy with `DIES`. Its absence was a real
-#: defect: `Game.put_into_graveyard` happens to emit `LEAVES_THE_BATTLEFIELD`
-#: *before* moving the card, so `source.zone` still read BATTLEFIELD when
-#: this was checked and the plain-battlefield default below passed by
-#: accident. `Game.exile_permanent`, `Game.return_to_hand`, `Game.
-#: put_cards_into_library`, and `Game.ante` all emit it *after* the move, so
-#: `source.zone` already read EXILE/HAND/LIBRARY/ANTE and the same default
-#: refused every one of them - a leaves-the-battlefield ability fired for a
-#: destroyed or sacrificed permanent and silently not for one exiled,
-#: bounced, tucked, or anted. Adding it here fixes every route at once,
-#: regardless of which side of its own move each one happens to emit on.
-_LOOK_BACK_EVENTS = (
-    TriggerEvent.DIES,
-    TriggerEvent.IS_SACRIFICED,
-    TriggerEvent.SPELL_IS_COUNTERED,
-    TriggerEvent.LEAVES_THE_BATTLEFIELD,
-    TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
-)
-
-
-def resolution_key(ability: "AbilityOnStack") -> str:
-    """The key `Game.ability_resolutions_this_turn` counts one ability's
-    resolutions under: its source as that object (CR 400.7 - a source that
-    changed zones is a new object, `source_stamp`) and its own text, so two
-    abilities of one permanent are counted apart."""
-    return f"{ability.source_id}:{ability.source_stamp}:{ability.ability.text}"
-
-
-def zones_ability_functions_in(
-    ability: TriggeredAbility, source: CardState, game: "Game | None" = None
-) -> frozenset[Zone]:
-    """Which zone(s) this printed ability functions from (CR 113.6).
-
-    CR 113.6: "Abilities of an instant or sorcery spell usually function only
-    while that object is on the stack. Abilities of all other objects usually
-    function only while that object is on the battlefield. The exce[ptions are
-    listed below]" - the tail truncated for this session's `knowledge_search`
-    too, so the exceptions list itself was never read directly; only the
-    individually-served subrules below were. The conservative default kept
-    here is the rule's own opening sentence: a permanent's ability functions
-    on the battlefield unless one of the confirmed exceptions applies.
-
-    Deliberately does **not** consult `_self_referential`/`mine` - CR 113.6k is
-    a narrower question ("can this specific trigger condition occur anywhere
-    other than the battlefield") than self-reference is ("does the condition
-    name this object"). Ugin, Eye of the Storms prints two self-referential
-    ("mine") cast triggers - "When you cast this spell" and "Whenever you cast
-    a colorless spell" - and only the first can happen while Ugin is a spell
-    rather than a permanent; the second names no spell in particular and keeps
-    functioning from the battlefield. Gating on `mine` would have granted the
-    second one stack rights it does not have.
-    """
-    lowered = ability.condition.lower()
-
-    if source.card.layout is Layout.EMBLEM:
-        # CR 114.4: "Abilities of emblems function in the command zone."
-        return frozenset({Zone.COMMAND})
-
-    # CR 113.6b: "An ability that states which zones it functions in functions
-    # only from those zones." An intervening if (CR 603.4) that says where its
-    # own source is - "if this card is in your graveyard", "if Firemane Angel
-    # is in your graveyard or on the battlefield" - is that statement.
-    if ability.intervening_if is not None:
-        from .conditions.player import zones_the_source_names
-
-        named = zones_the_source_names(ability.intervening_if, source)
-        if named is not None:
-            return named
-
-    # CR 113.6b again, off the trigger condition. A cast trigger's "from your graveyard" is not
-    # that: "Whenever you cast a Dragon creature spell from your graveyard"
-    # (Rivaz of the Claw, Secrets of the Dead) says where the *spell* came
-    # from - `_origin_zone_matches` reads it off the cast - and names no zone
-    # for its own source, which works from the battlefield like any other.
-    cast_origin = (
-        ability.event is TriggerEvent.CAST_SPELL
-        and _required_cast_origin_zone(lowered) is Zone.GRAVEYARD
-    )
-    # Likewise "When this creature enters from your graveyard" (Phyrexian
-    # Dragon Engine) says where the *entering permanent* came from; an enters
-    # ability triggers from the battlefield (CR 603.6a).
-    enters_origin = (
-        ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
-        and entering_origin_zone(lowered) is not None
-    )
-    if "in your graveyard" in lowered or (
-        "from your graveyard" in lowered and not cast_origin and not enters_origin
-    ):
-        return frozenset({Zone.GRAVEYARD})
-    if "opening hand" in lowered:
-        return frozenset({Zone.HAND})
-
-    # CR 113.6k: "A trigger condition that can't trigger from the battlefield
-    # functions in all zones it can trigger from." A cast-trigger that names
-    # "this spell" can only occur while the object is a spell on the stack -
-    # once it resolves and becomes a permanent it is never "cast" again - so it
-    # functions there instead of the battlefield default. Gated on the parsed
-    # event as well as the phrase: a CR 603.1b compound such as Cityscape
-    # Leveler's "When you cast this spell and whenever this creature attacks"
-    # is one `TriggeredAbility` per condition (`machines/abilities.
-    # _split_compound_condition`), and CR 113.6k's own "Other trigger
-    # conditions of the same triggered ability may function in different
-    # zones" keeps the attack half on the battlefield.
-    if ability.event is TriggerEvent.CAST_SPELL and "this spell" in lowered:
-        return frozenset({Zone.STACK})
-
-    # CR 113.6k again, the discard twin of the cast-trigger branch just
-    # above: "discard this card" (CR 701.9a) can never occur on the
-    # battlefield either - a permanent is never discarded, only a card in a
-    # hand is - so Titanbones, Towering Heart's own "When you discard this
-    # card, ..." functions wherever the discard actually lands it.
-    # `Game.discard_cards` moves the card before it ever calls `Game.emit`,
-    # so by the time this is asked the card already sits in the graveyard
-    # (CR 701.9a's ordinary destination) or, for a madness-replaced discard,
-    # exile (CR 702.35a) - both are offered rather than guessing which.
-    if ability.event is TriggerEvent.DISCARDS_A_CARD and "this card" in lowered:
-        return frozenset({Zone.GRAVEYARD, Zone.EXILE})
-
-    # CR 702.29c, the cycling twin of the discard branch just above: "These
-    # abilities trigger from whatever zone the card winds up in after it's
-    # cycled" - never the hand it was cycled from, never the battlefield.
-    cycled = _CYCLE_CONDITION.match(lowered.strip())
-    if cycled is not None and cycled.group("what") == "this card":
-        return frozenset({Zone.GRAVEYARD, Zone.EXILE})
-
-    # CR 702.35a: madness watches its own exile, which can only be observed
-    # while the card is, in fact, being exiled that way.
-    if ability.event is TriggerEvent.EXILED:
-        return frozenset({Zone.EXILE})
-
-    # CR 702.62a says it in as many words: "Suspend is a keyword that
-    # represents three abilities. The first is a static ability that functions
-    # while the card with suspend is in a player's hand. The second and third
-    # are triggered abilities that function in the exile zone." Read off
-    # `TriggeredAbility.keyword` rather than off the condition text, because
-    # neither of the two is printed as a line at all - `machines/keywords.
-    # _suspend_abilities` writes both out from the rule, and the keyword is
-    # what says which rule they came from. Both are covered by the one branch:
-    # CR 702.62a scopes the sentence to the pair, not to either one.
-    if ability.keyword is not None and ability.keyword.lower() == "suspend":
-        return frozenset({Zone.EXILE})
-
-    # CR 702.94a: miracle's static ability reveals the card "from your hand
-    # as you draw it", and its linked trigger is about that card in that
-    # hand - the only zone the reveal can happen in.
-    if ability.keyword is not None and ability.keyword.lower() == "miracle":
-        return frozenset({Zone.HAND})
-
-    # CR 603.10a: dies, is-sacrificed, countered, and leaves-the-battlefield
-    # triggers look back at the object as it existed immediately beforehand,
-    # so they function from the battlefield the source just left as well as
-    # wherever it ended up - `source.zone` already reflects the post-event
-    # location for a route that emits after the move, and still reads
-    # BATTLEFIELD for one that emits before it (`Game.put_into_graveyard`);
-    # either way the object just left is exactly what `Game.emit` widens
-    # `sources` for.
-    if ability.event in _LOOK_BACK_EVENTS:
-        # CR 603.10a looks back at the event the source was part of - it and
-        # whatever left in the same batch (its own example: a "whenever a
-        # creature dies" artifact destroyed together with two creatures
-        # triggers twice). A source that left in an earlier batch, or was
-        # never on the battlefield, is only a card in that zone and hears
-        # nothing (CR 113.6). A countered spell never left the battlefield.
-        if (
-            game is None
-            or source.zone is Zone.BATTLEFIELD
-            or ability.event is TriggerEvent.SPELL_IS_COUNTERED
-            or source.left_battlefield_in(game._departure_epoch)
-        ):
-            return frozenset({Zone.BATTLEFIELD, source.zone})
-        return frozenset({Zone.BATTLEFIELD})
-    if ability.event is None and _returned_subject(lowered) is not None:
-        # CR 603.10a's look-back for a returned-to-hand condition the parser
-        # left unread: the source returned by the same event is in a hand
-        # already. `_returned_to_hand_matches` hears it only then.
-        return frozenset({Zone.BATTLEFIELD, Zone.HAND})
-
-    if (
-        ability.event is None
-        and _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(lowered) is not None
-    ):
-        # CR 113.6k: "A trigger condition that can't trigger from the
-        # battlefield functions in all zones it can trigger from" - "is put
-        # into a graveyard from anywhere" (Emrakul, the Aeons Torn; Purity)
-        # can occur from whichever zone the source was in before the move -
-        # the battlefield (a death), the library (milled), the hand
-        # (discarded), exile - and is asked again from the graveyard it
-        # just arrived in either way, the identical widening `_LOOK_BACK_
-        # EVENTS` gives every other zone-change look-back, generalised over
-        # every origin the way "anywhere" prints.
-        return frozenset(
-            {Zone.BATTLEFIELD, Zone.GRAVEYARD, Zone.LIBRARY, Zone.HAND, Zone.EXILE, Zone.STACK}
-        )
-
-    # CR 113.6m: "An ability whose cost or effect specifies that it moves the
-    # object it's on out of a particular zone functions only in that zone,
-    # unless its trigger condition or a previous part of its cost or effect
-    # specifies that it moves the object it's on into that zone."
-    #
-    # Arclight Phoenix's "At the beginning of combat on your turn, if you've
-    # cast three or more instant and sorcery spells this turn, return this
-    # card from your graveyard to the battlefield" is exactly that: the
-    # *effect*, not the condition, names the zone. Checked after the branches
-    # above so the rule's own "unless" is honoured - a dies trigger whose
-    # effect returns the card from the graveyard puts it *into* that zone as
-    # its own trigger condition, and `_LOOK_BACK_EVENTS` has already answered
-    # for those. `machines/abilities._activated_ability_zone` applies the
-    # identical rule to an activated ability's effect text, which is why
-    # Cauldron Familiar's `Sacrifice a Food:` ability already worked from a
-    # graveyard and this triggered one did not.
-    effect = (ability.effect or "").lower()
-    if "from your graveyard" in effect and "this card" in effect:
-        return frozenset({Zone.GRAVEYARD})
-
-    return frozenset({Zone.BATTLEFIELD})
 
 
 #: Alania, Divergent Storm's shape: "it's the first instant spell, the first
@@ -5683,7 +3788,7 @@ def _descend_permanent_card_count_holds(
         # not actually recognise.
         return None
 
-    from .layers import count_permanent_cards
+    from ..layers import count_permanent_cards
 
     controller = source.controller or game.active_player.username
     return count_permanent_cards(game.player(controller).graveyard) >= threshold
@@ -5723,7 +3828,7 @@ def _opponent_cast_color_holds(game: "Game", clause: str, source: CardState) -> 
     is the only thing duplicated, and only so this stays a plain `None`
     for every clause shape this reader is not meant for.
     """
-    from ..models.game import _CONDITION_OPPONENT_CAST_COLOR
+    from ...models.game import _CONDITION_OPPONENT_CAST_COLOR
 
     if _CONDITION_OPPONENT_CAST_COLOR.fullmatch(clause) is None:
         return None
@@ -5737,7 +3842,7 @@ def _opponent_comparison_holds(game: "Game", clause: str, source: CardState) -> 
     the Bounding Spring's and Sunset Revelry's plain "if"s
     (`_CONDITION_OPPONENT_COMPARISON`), asked by CR 603.4 as the event occurs
     and again as the ability resolves. `None` for any other clause."""
-    from ..models.game import _CONDITION_OPPONENT_COMPARISON
+    from ...models.game import _CONDITION_OPPONENT_COMPARISON
 
     if _CONDITION_OPPONENT_COMPARISON.fullmatch(clause) is None:
         return None
@@ -5750,7 +3855,7 @@ def _self_is_a_creature_holds(game: "Game", clause: str, source: CardState) -> b
     source on the computed board (CR 613.5), asked by CR 603.4 as the event
     occurs and again as the ability resolves. `None` for any other clause,
     including one whose subject is not this source."""
-    from ..models.game import _CONDITION_SELF_IS_A_CREATURE
+    from ...models.game import _CONDITION_SELF_IS_A_CREATURE
 
     if _CONDITION_SELF_IS_A_CREATURE.fullmatch(clause) is None:
         return None
@@ -5799,7 +3904,7 @@ def _you_control_a_holds(game: "Game", clause: str, source: CardState) -> bool |
     asked by CR 603.4 as the event occurs and again by CR 608.2a as the
     ability resolves. `None` for any other clause, and for a quality
     `condition_is_readable` refuses, so those still fail closed."""
-    from ..models.game import _CONDITION_CONTROLS_A, condition_is_readable
+    from ...models.game import _CONDITION_CONTROLS_A, condition_is_readable
 
     if _CONDITION_CONTROLS_A.fullmatch(clause) is None or not condition_is_readable(clause):
         return None
@@ -5846,7 +3951,7 @@ def event_qualifier_holds(
     qualifier = ability.event_qualifier
     if not qualifier:
         return True
-    from . import conditions
+    from .. import conditions
 
     answer = conditions.read_condition(
         conditions.ConditionContext(game, controller, source=source, event=event, ability=ability),
@@ -5866,7 +3971,7 @@ def event_qualifier_readable(ability: TriggeredAbility) -> bool:
     engine raises. True when it prints none."""
     if not ability.event_qualifier:
         return True
-    from . import conditions
+    from .. import conditions
 
     has_event = ability.event is not None or bool(_unread_trigger_events(ability.condition))
     return has_event and conditions.claims(ability.event_qualifier)
@@ -5883,8 +3988,8 @@ def intervening_if_readable(printing: Card, ability: TriggeredAbility) -> bool:
     """
     if not (ability.intervening_if or "").strip():
         return True
-    from ..models.game import Game
-    from ..models.player import Player
+    from ...models.game import Game
+    from ...models.player import Player
 
     try:
         game = Game(
@@ -5955,7 +4060,7 @@ def intervening_if_answer(
     if not clause:
         return True
 
-    from .meld import meld_condition_holds
+    from ..meld import meld_condition_holds
 
     meld_holds = meld_condition_holds(game, clause, source)
     if meld_holds is not None:
@@ -6377,7 +4482,7 @@ def intervening_if_answer(
     if typed_turn_fact is not None:
         return typed_turn_fact
 
-    from . import conditions
+    from .. import conditions
 
     return conditions.read_condition(
         conditions.ConditionContext(
@@ -6430,7 +4535,7 @@ def _typed_turn_fact_key(prefix: str, quality: str) -> str | None:
     """The `turn_facts` key a card type or subtype word stands for."""
     if quality in {member.value for member in Type}:
         return f"{prefix}_type:{quality}"
-    from ..data.subtypes import canonical_subtype
+    from ...data.subtypes import canonical_subtype
 
     subtype = canonical_subtype(quality)
     return None if subtype is None else f"{prefix}_subtype:{subtype}"
@@ -6627,7 +4732,7 @@ def _sacrificed_this_turn_holds(game: "Game", clause: str, source: CardState) ->
     permanent left the battlefield without ever being sacrificed, which is
     why `permanents_left_battlefield_this_turn` cannot answer this. `None`
     for any other clause."""
-    from ..models.game import _CONDITION_SACRIFICED_THIS_TURN
+    from ...models.game import _CONDITION_SACRIFICED_THIS_TURN
 
     if _CONDITION_SACRIFICED_THIS_TURN.fullmatch(clause) is None:
         return None
@@ -7155,767 +5260,6 @@ def _fail_closed(game: "Game", ability: TriggeredAbility, source: CardState) -> 
     return False
 
 
-# --------------------------------------------------------------------------
-# Turning an event into abilities waiting to go on the stack
-# --------------------------------------------------------------------------
-
-
-def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
-    """Every triggered ability a card has (CR 113.3c), printed or abbreviated.
-
-    Two sources, and the second is why ward and prowess fire in a real game
-    rather than only when a scenario drives them:
-
-    - the lines that begin When, Whenever or At, read by
-      `machines/abilities.parse_abilities`;
-    - the CR 702 keywords that *are* triggered abilities without being printed
-      as one - ward (CR 702.21a), prowess (CR 702.108a), cascade (CR 702.85a),
-      persist (CR 702.79a) and mobilize (CR 702.181a). CR 702.1 calls a keyword
-      "shorthand for one or more abilities", and
-      `machines/keywords.keyword_triggered_abilities` writes each rule's own
-      expansion out.
-
-    Once they are in this list there is nothing further to special-case:
-    `triggers_for`, `Game.emit` and CR 603.3's stack ordering treat an
-    abbreviated trigger exactly like a spelled-out one.
-    """
-    # Imported here rather than at the top because `machines/keywords.py`
-    # imports this module for `AbilityOnStack`; the cycle is real and only
-    # resolvable at call time.
-    from .keywords import keyword_triggered_abilities
-    from .sieges import siege_triggered_abilities
-
-    printed = [
-        ability
-        for ability in parse_abilities(card)
-        if isinstance(ability, TriggeredAbility)
-        # CR 721.2a: a station striation's trigger is granted by the symbol's
-        # static ability (`layers._station_symbol_effects`) and is found
-        # through `added_ability_lines` while the counters reach N - never as
-        # a printed ability the permanent always has.
-        and ability.station_threshold is None
-        # An ability the parser could not file under a `TriggerEvent` is kept
-        # when this module can read its condition anyway (`_unread_trigger_
-        # events`) - it is matched from the printed condition rather than from
-        # `event`, which stays None. Everything else the parser left unread is
-        # dropped exactly as before: an ability nothing can match would only
-        # ever sit here waiting to fire on the wrong event.
-        and (ability.event is not None or _unread_trigger_events(ability.condition))
-    ]
-    expanded: list[TriggeredAbility] = []
-    for ability in printed:
-        for split in _expand_attacks_or_blocks(
-            ability, card.name, legendary=Supertype.LEGENDARY in card.supertypes
-        ):
-            for enters_split in _expand_enters_or_attacks(
-                split, card.name, legendary=Supertype.LEGENDARY in card.supertypes
-            ):
-                for leaves_split in _expand_enters_or_leaves(enters_split):
-                    for dies_split in _expand_enters_or_dies(
-                        leaves_split,
-                        card.name,
-                        legendary=Supertype.LEGENDARY in card.supertypes,
-                    ):
-                        for damage_split in _expand_enters_or_deals_combat_damage(
-                            dies_split,
-                            card.name,
-                            legendary=Supertype.LEGENDARY in card.supertypes,
-                        ):
-                            for upkeep_split in _expand_enters_and_upkeep(
-                                damage_split,
-                                card.name,
-                                legendary=Supertype.LEGENDARY in card.supertypes,
-                            ):
-                                for tapped_split in _expand_enters_or_becomes_tapped(
-                                    upkeep_split,
-                                    card.name,
-                                    legendary=Supertype.LEGENDARY in card.supertypes,
-                                ):
-                                    for transforms_split in _expand_enters_or_transforms_into(
-                                        tapped_split
-                                    ):
-                                        expanded.extend(
-                                            _expand_transforms_and_first_main(transforms_split)
-                                        )
-    return expanded + keyword_triggered_abilities(card) + siege_triggered_abilities(card)
-
-
-#: "Whenever this creature attacks or blocks, ..." - Elder Gargaroth's own
-#: condition, and the shape CR 508.1/509.1 have no single `TriggerEvent` for:
-#: `_trigger_event` (`machines/abilities.py`) reads the first event word it
-#: recognises in the condition and stops there, so a compound "attacks or
-#: blocks" condition is read as `TriggerEvent.ATTACKS` alone and the "or
-#: blocks" half is silently dropped - a real game where Elder Gargaroth
-#: blocks and never attacks would never see its own trigger. "this
-#: `<kind>`" is read the same open way `_ENTERS_OR_LEAVES_RE` already reads
-#: it, not pinned to "creature" - Smuggler's Copter's and Getaway Car's own
-#: "this Vehicle attacks or blocks" is the identical compound shape on a
-#: different self-reference noun (CR 700.7).
-_ATTACKS_OR_BLOCKS_RE = re.compile(r"^this (?P<kind>[a-z]+) attacks or blocks$", re.IGNORECASE)
-
-#: Bebop & Rocksteady: "Whenever Bebop & Rocksteady attack or block, ..." -
-#: `_ATTACKS_OR_BLOCKS_RE`'s identical compound condition, but self-referenced
-#: by a comma-joined legendary's own printed name (CR 201.5c) rather than
-#: "this creature", and with the *plural* verb form ("attack or block", no
-#: trailing "s") WotC's own templating gives an "&"-joined name (Raph & Leo,
-#: Sibling Rivals' own "Raph & Leo attack" is the identical singular-event
-#: precedent, already read by `_trigger_event`'s bare `\battacks?\b`). Tried
-#: only when `_ATTACKS_OR_BLOCKS_RE` itself declines, so a genuine "this
-#: creature attacks or blocks" is never re-read through the self-reference
-#: path by mistake.
-_SELF_ATTACKS_OR_BLOCKS_RE = re.compile(r"^attack(?:s)? or block(?:s)?$", re.IGNORECASE)
-
-#: Doran, Besieged by Time: "Whenever a creature you control attacks or
-#: blocks, ..." - `_ATTACKS_OR_BLOCKS_RE`'s identical compound-event gap
-#: (`_trigger_event` stops at the first event word it recognises), but on
-#: CR 508.1/509.1's *group* form rather than a self-reference: "a"/"another"
-#: `<quality>` (a card type, "creature", or left bare) "you control" attacks
-#: or blocks, not only the source itself. `condition_matches`'s own BLOCKS
-#: branch already reads a non-self "`<quality>` you control blocks" the
-#: identical way Tetsuko Umezawa, Pursuer's own "a creature an opponent
-#: controls ... blocks" is read - this only has to stop `_trigger_event` from
-#: ever seeing the compound and silently keeping "attacks" alone.
-_GROUP_ATTACKS_OR_BLOCKS_RE = re.compile(
-    r"^(?P<subject>a|another) (?P<quality>[a-z]+) you control attacks or blocks$",
-    re.IGNORECASE,
-)
-
-
-def _expand_attacks_or_blocks(
-    ability: TriggeredAbility, card_name: str | None = None, *, legendary: bool = True
-) -> list[TriggeredAbility]:
-    """One ability whose condition is `_ATTACKS_OR_BLOCKS_RE`'s shape becomes
-    two: the same printed effect, once watching CR 508.1's attack and once
-    watching CR 509.1's block, each a `TriggeredAbility` in its own right so
-    `triggers_for`/`condition_matches` need no special case for a compound
-    condition - this is the only place that reads "attacks or blocks" as two
-    separate self-referential conditions rather than as raw text.
-
-    Every other printed ability passes through unchanged, singleton-wrapped.
-    """
-    condition = ability.condition.strip()
-    match = _ATTACKS_OR_BLOCKS_RE.match(condition)
-    kind = match.group("kind").lower() if match is not None else "creature"
-    if match is None and card_name is not None:
-        # CR 201.5c: "Bebop & Rocksteady attack or block" names itself - strip
-        # the self-reference the same way `_expand_enters_or_attacks` already
-        # does for "Eluge enters or attacks", then read what is left as the
-        # plural-verb compound `_ATTACKS_OR_BLOCKS_RE` itself never matches.
-        for name in self_reference_names(card_name, legendary=legendary):
-            pattern = self_reference_pattern(name)
-            stripped = re.sub(pattern, "", condition, count=1).strip()
-            if stripped != condition and _SELF_ATTACKS_OR_BLOCKS_RE.fullmatch(stripped):
-                match = True  # sentinel: matched via self-reference, not `_ATTACKS_OR_BLOCKS_RE`
-                break
-    if match is not None:
-        return [
-            ability.model_copy(
-                update={"condition": f"this {kind} attacks", "event": TriggerEvent.ATTACKS}
-            ),
-            ability.model_copy(
-                update={"condition": f"this {kind} blocks", "event": TriggerEvent.BLOCKS}
-            ),
-        ]
-    group_match = _GROUP_ATTACKS_OR_BLOCKS_RE.fullmatch(condition)
-    if group_match is not None:
-        subject = group_match.group("subject")
-        quality = group_match.group("quality")
-        return [
-            ability.model_copy(
-                update={
-                    "condition": f"{subject} {quality} you control attacks",
-                    "event": TriggerEvent.ATTACKS,
-                }
-            ),
-            ability.model_copy(
-                update={
-                    "condition": f"{subject} {quality} you control blocks",
-                    "event": TriggerEvent.BLOCKS,
-                }
-            ),
-        ]
-    return [ability]
-
-
-#: "Whenever this creature enters or attacks, ..." - Primeval Titan's own
-#: condition, the same compound shape `_ATTACKS_OR_BLOCKS_RE` reads for
-#: "attacks or blocks": `_trigger_event` (`machines/abilities.py`) reads
-#: "enters?" ahead of "attacks?" in its own precedence order, so a compound
-#: "enters or attacks" condition is read as `TriggerEvent.ENTERS_THE_
-#: BATTLEFIELD` alone and the "or attacks" half is silently dropped - a real
-#: Primeval Titan that attacks without ever having triggered on entry (cast
-#: with haste, or already on the battlefield when this engine first sees it)
-#: would never see its own attack trigger. "this `<kind>`", the identical
-#: open read `_ATTACKS_OR_BLOCKS_RE` takes just above.
-#: A pair printed as one card says it in the plural - "Whenever Krang &
-#: Shredder enter or attack" - and the events are the same two.
-_ENTERS_OR_ATTACKS_RE = re.compile(r"^this (?P<kind>[a-z]+) enters? or attacks?$", re.IGNORECASE)
-
-#: "Whenever this creature enters or transforms into `<face>`, ..." - Brutal
-#: Cathar's and Huntmaster of the Fells' own condition. CR 603.1b: "A
-#: triggered ability may have more than one trigger condition";
-#: `_trigger_event` (`machines/abilities.py`) reads "enters" first and
-#: stops, so the CR 701.27e transform half was silently dropped.
-_ENTERS_OR_TRANSFORMS_INTO_RE = re.compile(
-    r"^this (?P<kind>[a-z]+) enters or (?P<transforms>transforms into .+)$", re.IGNORECASE
-)
-
-
-def _expand_enters_or_transforms_into(ability: TriggeredAbility) -> list[TriggeredAbility]:
-    """One "enters or transforms into `<face>`" ability becomes two: the
-    entering half (CR 603.6a) and the "transforms into" half (CR 701.27e),
-    each matched by its own existing `TriggerEvent` reader. Anything else
-    passes through unchanged, singleton-wrapped."""
-    match = _ENTERS_OR_TRANSFORMS_INTO_RE.match(ability.condition.strip())
-    if match is None:
-        return [ability]
-    kind = match.group("kind").lower()
-    return [
-        ability.model_copy(
-            update={
-                "condition": f"this {kind} enters",
-                "event": TriggerEvent.ENTERS_THE_BATTLEFIELD,
-            }
-        ),
-        ability.model_copy(
-            update={
-                "condition": f"this {kind} {match.group('transforms')}",
-                "event": TriggerEvent.TRANSFORMS,
-            }
-        ),
-    ]
-
-
-#: "Whenever this creature transforms into `<face>` and at the beginning of
-#: your first main phase, ..." - Ashling, Rimebound's own condition
-#: (`machines/abilities._transforms_into_face_and_first_main_boundary`
-#: already keeps this whole compound condition intact against the face's own
-#: internal comma). CR 603.1b: one triggered ability, two trigger
-#: conditions - CR 701.27e's transform and CR 505.1a's precombat main phase -
-#: each its own `TriggerEvent` `_trigger_event` cannot read as a pair, since
-#: it reads only the first event word and stops.
-_TRANSFORMS_AND_FIRST_MAIN_RE = re.compile(
-    r"^(?P<transform>this [a-z]+ transforms into .+?) and at "
-    r"(?P<first_main>the beginning of your first main phase)$",
-    re.IGNORECASE,
-)
-
-
-def _expand_transforms_and_first_main(ability: TriggeredAbility) -> list[TriggeredAbility]:
-    """One "transforms into `<face>` and at the beginning of your first main
-    phase" ability becomes two: CR 701.27e's transform half and CR 505.1a's
-    precombat-main-phase half, each a `TriggeredAbility` in its own right -
-    the same split every other `_expand_*` function in this module already
-    performs for its own compound condition.
-
-    Every other printed ability passes through unchanged, singleton-wrapped.
-    """
-    match = _TRANSFORMS_AND_FIRST_MAIN_RE.match(ability.condition.strip())
-    if match is None:
-        return [ability]
-    return [
-        ability.model_copy(
-            update={"condition": match.group("transform"), "event": TriggerEvent.TRANSFORMS}
-        ),
-        ability.model_copy(
-            update={
-                "condition": match.group("first_main"),
-                "event": TriggerEvent.BEGINNING_OF_STEP,
-            }
-        ),
-    ]
-
-
-def _expand_enters_or_attacks(
-    ability: TriggeredAbility, card_name: str | None = None, *, legendary: bool = True
-) -> list[TriggeredAbility]:
-    """One ability whose condition is `_ENTERS_OR_ATTACKS_RE`'s shape becomes
-    two: the same printed effect, once watching CR 603.6a's entering event and
-    once watching CR 508.3c's attack, each a `TriggeredAbility` in its own
-    right - the same split `_expand_attacks_or_blocks` already performs for
-    its own compound condition, reused here for a second one rather than
-    writing a second splitter.
-
-    Every other printed ability passes through unchanged, singleton-wrapped.
-    """
-    condition = ability.condition.strip()
-    match = _ENTERS_OR_ATTACKS_RE.match(condition)
-    if match is None and card_name is not None:
-        # CR 201.5: "Whenever Eluge enters or attacks" names itself - read as
-        # CR 700.7's "this permanent", the same rewrite
-        # `abilities.self_normalized_effect_text` gives an effect.
-        for name in self_reference_names(card_name, legendary=legendary):
-            condition = re.sub(self_reference_pattern(name), "this permanent", condition)
-        match = _ENTERS_OR_ATTACKS_RE.match(condition)
-    if match is None:
-        return [ability]
-    kind = match.group("kind").lower()
-    return [
-        ability.model_copy(
-            update={
-                "condition": f"this {kind} enters",
-                "event": TriggerEvent.ENTERS_THE_BATTLEFIELD,
-            }
-        ),
-        ability.model_copy(
-            update={"condition": f"this {kind} attacks", "event": TriggerEvent.ATTACKS}
-        ),
-    ]
-
-
-#: "When this artifact enters or leaves the battlefield, ..." -
-#: Sewer-veillance Cam's own condition, the third compound shape of the same
-#: family as `_ATTACKS_OR_BLOCKS_RE` and `_ENTERS_OR_ATTACKS_RE`. CR 603.1b: "A
-#: triggered ability may have more than one trigger condition"; `_trigger_
-#: event` (`machines/abilities.py`) reads "enters" first and stops, so the
-#: departure half - CR 603.6c's leaves-the-battlefield ability, which is the
-#: half a deck actually uses when the Cam is sacrificed to its own draw
-#: ability - was silently dropped.
-_ENTERS_OR_LEAVES_RE = re.compile(
-    r"^this (?P<kind>[a-z]+) enters or leaves the battlefield$", re.IGNORECASE
-)
-
-
-def _expand_enters_or_leaves(ability: TriggeredAbility) -> list[TriggeredAbility]:
-    """One ability whose condition is `_ENTERS_OR_LEAVES_RE`'s shape becomes
-    two: CR 603.6a's enters-the-battlefield ability and CR 603.6c's
-    leaves-the-battlefield one, each self-referential and each a
-    `TriggeredAbility` in its own right - the same split
-    `_expand_attacks_or_blocks` and `_expand_enters_or_attacks` already
-    perform for their own compound conditions.
-
-    Every other printed ability passes through unchanged, singleton-wrapped.
-    """
-    match = _ENTERS_OR_LEAVES_RE.match(ability.condition.strip())
-    if match is None:
-        return [ability]
-    kind = match.group("kind").lower()
-    return [
-        ability.model_copy(
-            update={
-                "condition": f"this {kind} enters",
-                "event": TriggerEvent.ENTERS_THE_BATTLEFIELD,
-            }
-        ),
-        ability.model_copy(
-            update={
-                "condition": f"this {kind} leaves the battlefield",
-                "event": TriggerEvent.LEAVES_THE_BATTLEFIELD,
-            }
-        ),
-    ]
-
-
-#: "When `<self>` enters or dies, ..." - Apex Witchstalker's own "When this
-#: creature enters or dies, you gain 2 life." (CR 700.7) and Aerid
-#: Konstrari's identically-shaped "When Aerid Konstrari enters or dies,
-#: create a Heartwood token." (CR 201.5c's own short/full-name self-
-#: reference, same as `_expand_enters_or_leaves` already reads for "this
-#: `<kind>`"). `_trigger_event` (`machines/abilities.py`) reads "enters"
-#: first and stops, so this compound condition parsed as
-#: `TriggerEvent.ENTERS_THE_BATTLEFIELD` alone and the "or dies" half - CR
-#: 603.10a's death trigger, which is the half that matters whenever either
-#: card actually dies rather than merely entering - was silently dropped.
-_ENTERS_OR_DIES_RE = re.compile(r"^(?P<subject>.+?) enters or dies$", re.IGNORECASE)
-
-
-def _expand_enters_or_dies(
-    ability: TriggeredAbility, card_name: str, *, legendary: bool = True
-) -> list[TriggeredAbility]:
-    """One ability whose condition is `_ENTERS_OR_DIES_RE`'s shape becomes
-    two: CR 603.6a's enters-the-battlefield ability and CR 700.4/603.10a's
-    dies one, each self-referential and each a `TriggeredAbility` in its own
-    right - the same split `_expand_attacks_or_blocks`, `_expand_enters_or_
-    attacks` and `_expand_enters_or_leaves` already perform for their own
-    compound conditions.
-
-    The subject has to be a genuine self-reference - CR 700.7's "this
-    `<noun>`" or one of `card_name`'s own CR 201.5/201.5c short forms
-    (`self_reference_names`) - not just any condition that happens to end in
-    "enters or dies"; nothing in this pool prints the compound any other
-    way, and requiring it keeps this from ever misreading two unrelated
-    clauses that merely share those two words.
-
-    Every other printed ability passes through unchanged, singleton-wrapped.
-    """
-    match = _ENTERS_OR_DIES_RE.match(ability.condition.strip())
-    if match is None:
-        return [ability]
-    subject = match.group("subject")
-    if not re.fullmatch(r"this [a-z]+", subject, re.IGNORECASE) and subject not in (
-        self_reference_names(card_name, legendary=legendary)
-    ):
-        return [ability]
-    return [
-        ability.model_copy(
-            update={"condition": f"{subject} enters", "event": TriggerEvent.ENTERS_THE_BATTLEFIELD}
-        ),
-        ability.model_copy(update={"condition": f"{subject} dies", "event": TriggerEvent.DIES}),
-    ]
-
-
-#: "Whenever `<self>` enters or deals combat damage to a player, ..." -
-#: Kitsune, Dragon's Daughter's own condition, and Tomebound Lich's "this
-#: creature" form. CR 603.1b: "A triggered ability may have more than one
-#: trigger condition"; `_trigger_event` (`machines/abilities.py`) reads
-#: "enters" first and stops, so the combat-damage half was silently dropped.
-_ENTERS_OR_DEALS_COMBAT_DAMAGE_RE = re.compile(
-    r"^(?P<subject>.+?) enters or deals combat damage to a player$", re.IGNORECASE
-)
-
-
-def _expand_enters_or_deals_combat_damage(
-    ability: TriggeredAbility, card_name: str, *, legendary: bool = True
-) -> list[TriggeredAbility]:
-    """One ability whose condition is `_ENTERS_OR_DEALS_COMBAT_DAMAGE_RE`'s
-    shape becomes two: CR 603.6a's enters-the-battlefield ability and the
-    "deals combat damage to a player" one (`TriggerEvent.DEALS_DAMAGE`,
-    whose own condition reader already tells combat damage to a player from
-    any other damage) - the split `_expand_enters_or_dies` performs, with
-    the same genuine-self-reference requirement on the subject.
-
-    Every other printed ability passes through unchanged, singleton-wrapped.
-    """
-    match = _ENTERS_OR_DEALS_COMBAT_DAMAGE_RE.match(ability.condition.strip())
-    if match is None:
-        return [ability]
-    subject = match.group("subject")
-    if not re.fullmatch(r"this [a-z]+", subject, re.IGNORECASE) and subject not in (
-        self_reference_names(card_name, legendary=legendary)
-    ):
-        return [ability]
-    return [
-        ability.model_copy(
-            update={"condition": f"{subject} enters", "event": TriggerEvent.ENTERS_THE_BATTLEFIELD}
-        ),
-        ability.model_copy(
-            update={
-                "condition": f"{subject} deals combat damage to a player",
-                "event": TriggerEvent.DEALS_DAMAGE,
-            }
-        ),
-    ]
-
-
-#: "Whenever `<self>` enters or becomes tapped, ..." - Champions of the
-#: Shoal's own condition (CR 603.1b, the same "more than one trigger
-#: condition" shape `_expand_enters_or_dies` already splits). `_trigger_
-#: event` (`machines/abilities.py`) reads "enters" first and stops, so the
-#: "becomes tapped" half - which is the half that matters on every turn
-#: after this permanent's own entrance - was silently dropped exactly the
-#: way `_expand_enters_or_dies`'s own docstring describes for "enters or
-#: dies".
-_ENTERS_OR_BECOMES_TAPPED_RE = re.compile(
-    r"^(?P<subject>.+?) enters or becomes tapped$", re.IGNORECASE
-)
-
-
-def _expand_enters_or_becomes_tapped(
-    ability: TriggeredAbility, card_name: str, *, legendary: bool = True
-) -> list[TriggeredAbility]:
-    """One ability whose condition is `_ENTERS_OR_BECOMES_TAPPED_RE`'s shape
-    becomes two: CR 603.6a's enters-the-battlefield ability and CR 701.26a's
-    own `TriggerEvent.BECOMES_TAPPED` one, each self-referential and each a
-    `TriggeredAbility` in its own right - the same split `_expand_enters_or_
-    dies`/`_expand_enters_or_deals_combat_damage` already perform for their
-    own compound conditions, with the same genuine-self-reference
-    requirement on the subject.
-
-    Every other printed ability passes through unchanged, singleton-wrapped.
-    """
-    match = _ENTERS_OR_BECOMES_TAPPED_RE.match(ability.condition.strip())
-    if match is None:
-        return [ability]
-    subject = match.group("subject")
-    if not re.fullmatch(r"this [a-z]+", subject, re.IGNORECASE) and subject not in (
-        self_reference_names(card_name, legendary=legendary)
-    ):
-        return [ability]
-    return [
-        ability.model_copy(
-            update={"condition": f"{subject} enters", "event": TriggerEvent.ENTERS_THE_BATTLEFIELD}
-        ),
-        ability.model_copy(
-            update={"condition": f"{subject} becomes tapped", "event": TriggerEvent.BECOMES_TAPPED}
-        ),
-    ]
-
-
-#: "When `<self>` enters and at the beginning of your upkeep, ..." -
-#: Gathering Stone's own condition (CR 603.1b: "A triggered ability may have
-#: more than one trigger condition, in which case it triggers when any of
-#: the events occurs"). `_trigger_event` (`machines/abilities.py`) reads
-#: "enters" first and stops, so the upkeep half - which is the one that
-#: matters on every turn after the permanent's own entrance - was silently
-#: dropped, the identical gap `_expand_enters_or_dies` already closes for
-#: "enters or dies".
-_ENTERS_AND_UPKEEP_RE = re.compile(
-    r"^(?P<subject>.+?) enters and at the beginning of your upkeep$", re.IGNORECASE
-)
-
-
-def _expand_enters_and_upkeep(
-    ability: TriggeredAbility, card_name: str, *, legendary: bool = True
-) -> list[TriggeredAbility]:
-    """One ability whose condition is `_ENTERS_AND_UPKEEP_RE`'s shape becomes
-    two: CR 603.6a's enters-the-battlefield ability and an ordinary "at the
-    beginning of your upkeep" one (`TriggerEvent.BEGINNING_OF_STEP`, whose
-    own `_step_matches` reads that printed condition text directly - no
-    further field needs setting) - the same split `_expand_enters_or_dies`
-    and `_expand_enters_or_deals_combat_damage` already perform for their
-    own compound conditions, with the same genuine-self-reference
-    requirement on the subject.
-
-    Every other printed ability passes through unchanged, singleton-wrapped.
-    """
-    match = _ENTERS_AND_UPKEEP_RE.match(ability.condition.strip())
-    if match is None:
-        return [ability]
-    subject = match.group("subject")
-    if not re.fullmatch(r"this [a-z]+", subject, re.IGNORECASE) and subject not in (
-        self_reference_names(card_name, legendary=legendary)
-    ):
-        return [ability]
-    return [
-        ability.model_copy(
-            update={"condition": f"{subject} enters", "event": TriggerEvent.ENTERS_THE_BATTLEFIELD}
-        ),
-        ability.model_copy(
-            update={
-                "condition": "at the beginning of your upkeep",
-                "event": TriggerEvent.BEGINNING_OF_STEP,
-            }
-        ),
-    ]
-
-
-#: `activated_abilities_of`'s memo, keyed on `(Card.id, face)` so two
-#: different printings - and the same printing asked about two different
-#: faces - can never collide. Sound for the same reason `_ability_cache` in
-#: `machines/abilities.py` is: `Card` is immutable (`frozen=True`), verified by
-#: `tests/test_card.py::test_card_is_immutable`.
-_activated_abilities_cache: dict[tuple[UUID, str | None], list[ActivatedAbility]] = {}
-
-
-def activated_abilities_of(card: Card, face: str | None = None) -> list[ActivatedAbility]:
-    """Every activated ability printed on a card (CR 113.3b, 602.1).
-
-    A basic land prints none of its own - its mana ability is reminder text,
-    which `parse_abilities` correctly does not treat as rules text - so a card
-    with the basic supertype and no printed activated ability falls back to
-    `intrinsic_land_ability` (CR 305.6). That is what lets `Game.activate_ability`
-    tap a Forest at all, not only pay a mana cost with it through the
-    `tap_for_mana` shortcut.
-
-    `face` narrows the list to the abilities printed on one face, and is how a
-    double-faced permanent's abilities follow the face that is up: CR 109.3
-    counts abilities among an object's characteristics and CR 712.8d/712.8e/
-    712.8f give such a permanent only the characteristics of the face that's
-    up, so a transformed Ajani, Nacatl Pariah has Ajani, Nacatl Avenger's three
-    loyalty abilities and none of his front face's, and an untransformed one has
-    neither. `CardState.up_face_name` is what callers pass; `None` - every
-    single-faced card - filters nothing.
-
-    Memoised on `(card.id, face)` - see `_activated_abilities_cache`.
-    """
-    key = (card.id, face)
-    cached = _activated_abilities_cache.get(key)
-    if cached is not None:
-        return cached
-    printed = [
-        ability
-        for ability in parse_abilities(card)
-        if isinstance(ability, ActivatedAbility)
-        and (face is None or ability.face == face)
-        # CR 721.2a: granted by the station symbol's static ability at N
-        # charge counters, and found then through `added_ability_lines`.
-        and ability.station_threshold is None
-    ]
-    result = printed or ([intrinsic] if (intrinsic := intrinsic_land_ability(card, face)) else [])
-    _activated_abilities_cache[key] = result
-    return result
-
-
-def granted_activated_abilities_of(texts: Sequence[str]) -> list[ActivatedAbility]:
-    """`CardState.granted_ability_texts`'s own activated lines, read the same
-    way `activated_abilities_of` reads a card's printed ones.
-
-    Urza's Saga's chapter II - "This Saga gains '{2}, {T}: Create a 0/0
-    colorless Construct artifact creature token ...'" - is the reason this
-    exists: without it, a granted activated ability would sit on `CardState.
-    granted_ability_texts` fully parsed and completely unreachable, since
-    `Game.activate_ability` only ever indexes `activated_abilities_of`'s own
-    printed-card list. Callers append this to that list (never replace it),
-    the same "additional to what is printed" convention `granted_mana_
-    abilities` documents for the mana half.
-    """
-    return [
-        ability
-        for ability in parse_granted_ability_lines(texts)
-        if isinstance(ability, ActivatedAbility)
-    ]
-
-
-def rewritten_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...] | None:
-    """This permanent's *computed* ability text when a continuous effect has
-    rewritten it away from the printed card, else None.
-
-    CR 613.5: "The application of continuous effects as described by the layer
-    system is continually and automatically performed by the game. All resulting
-    changes to an object's characteristics are instantaneous." CR 109.3 counts
-    abilities among an object's characteristics, so a permanent whose layer 1
-    (CR 613.2c, 707.2: "the copy acquires the copiable values of the original
-    object's characteristics") copy effect replaced its rules text has the
-    *copied* object's abilities and none of its own - a land that has become a
-    copy of Sol Ring can be tapped for `{C}{C}` and cannot be tapped for green.
-
-    Only a rewrite is reported, never a plain grant: if every printed line
-    survives into `Characteristics.abilities`, the callers' printed-plus-granted
-    list is already right and keeping it keeps every ability *index* stable.
-    Nothing is reported for a permanent the layer engine has not computed, or
-    for one that lost all its ability text - CR 613.1f removal is already
-    policed by `Game._still_has_ability`.
-    """
-    if permanent.zone is not Zone.BATTLEFIELD:
-        return None
-    try:
-        computed = game.characteristics_of(permanent)
-    except KeyError:
-        return None
-    lines = tuple(computed.abilities)
-    if not lines:
-        return None
-    printed = [line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()]
-    if all(line in lines for line in printed):
-        return None
-    return lines
-
-
-def added_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
-    """The ability lines a continuous effect *added* to this permanent on top of
-    everything it prints, in computed order.
-
-    The additive twin of `rewritten_ability_lines`, which reports only the case
-    where a printed line was taken *away*. A layer 4 effect that grants a basic
-    land type grants the intrinsic "{T}: Add [mana symbol]" that comes with it
-    (CR 305.6, CR 613.1d) - Urborg, Tomb of Yawgmoth's Swamp, Yavimaya, Cradle
-    of Growth's Forest, Dryad of the Ilysian Grove's all five - and every
-    printed line survives, so `rewritten_ability_lines` correctly answers None
-    and the caller keeps its printed list. That left the added mana ability
-    visible on the computed board (CR 613.5) and unusable: the Forest under an
-    Urborg could not actually be tapped for {B}.
-
-    Reported separately, rather than by widening `rewritten_ability_lines`, so
-    a caller can **append** these and keep every printed ability's index where
-    it was - the stability `Game.activated_abilities` depends on.
-
-    A line the permanent already carries in `granted_ability_texts` is left out,
-    since those are folded in by the callers themselves and would otherwise be
-    counted twice.
-
-    CR 603.10a: off the battlefield, this reads `CardState.abilities_as_it_
-    left` instead of the (now unrelated) live computed board - the identical
-    look-back snapshot `_had_as_it_left` already filters a *printed*
-    leaves-the-battlefield trigger against. Without this, a keyword a static
-    ability *grants* to another permanent (Isilu, Carrier of Twilight's own
-    "has persist") could never produce a leaves-the-battlefield trigger at
-    all: `triggered_abilities_on` builds its own candidate list from this
-    function's return, and CR 400.7 has already made the departing object a
-    new one with an empty `computed_characteristics` (`None`) by the time
-    that candidate list is asked for - not just an object CR 603.4 has to
-    look back from, but one this function used to see as having gained
-    nothing, ever.
-    """
-    if permanent.zone is not Zone.BATTLEFIELD:
-        lines = permanent.abilities_as_it_left
-        if lines is None:
-            return ()
-        printed = {
-            line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()
-        }
-        granted = set(permanent.granted_ability_texts)
-        # A grant `machines/layers._sync_stored_grant_ability_texts` had
-        # already reconciled onto `granted_ability_texts` before this
-        # permanent left - Rhys, the Evermore's own stored, one-shot "gains
-        # persist until end of turn" - is `triggered_abilities_on`'s own
-        # `source.granted_as_it_left` already, read at its own call site
-        # just above this one; counted here too it would double the
-        # ability the permanent's dies trigger produces.
-        already_covered = granted | set(permanent.granted_as_it_left)
-        return tuple(line for line in lines if line not in printed and line not in already_covered)
-    try:
-        computed = game.characteristics_of(permanent)
-    except KeyError:
-        return ()
-    printed = {line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()}
-    granted = set(permanent.granted_ability_texts)
-    return tuple(line for line in computed.abilities if line not in printed and line not in granted)
-
-
-def activated_abilities_from_lines(
-    lines: Sequence[str], card: Card, face: str | None = None
-) -> list[ActivatedAbility]:
-    """`rewritten_ability_lines`' output read as activated abilities (CR 602.1).
-
-    The same fallback `activated_abilities_of` applies: a basic land prints no
-    activated ability of its own (its mana ability is reminder text), so a
-    computed line list that parses to nothing falls back to
-    `intrinsic_land_ability` (CR 305.6).
-    """
-    abilities = [
-        ability
-        for ability in parse_granted_ability_lines(lines)
-        if isinstance(ability, ActivatedAbility)
-    ]
-    if abilities:
-        return abilities
-    intrinsic = intrinsic_land_ability(card, face)
-    return [intrinsic] if intrinsic is not None else []
-
-
-def granted_triggered_abilities_of(texts: Sequence[str]) -> list[TriggeredAbility]:
-    """`CardState.granted_ability_texts`' own triggered abilities, read the same
-    way `triggered_abilities_of` reads a card's printed ones.
-
-    Two sources, mirroring that function exactly:
-
-    - the granted lines that begin When, Whenever or At, expanded through the
-      same compound-condition splitters a printed line goes through;
-    - the granted lines that are a bare CR 702 keyword, written out by
-      `machines/keywords.granted_keyword_triggered_abilities`.
-
-    The second is what makes a *granted* evoke behave like a printed one.
-    CR 702.74a: "Evoke represents two abilities: a static ability that
-    functions in any zone from which the card with evoke can be cast and a
-    triggered ability that functions on the battlefield." `machines/casting.py`
-    executes the first when the keyword is announced; this is where the second
-    comes from once the permanent is on the battlefield, and CR 400.7b -
-    "effects from static abilities that grant an ability to a permanent spell
-    that functions on the battlefield continue to apply to the permanent that
-    spell becomes" - is why it is read off the object rather than off whatever
-    granted it, which may well be dead by then.
-    """
-    # Imported here rather than at the top for the same cycle
-    # `triggered_abilities_of` documents: `machines/keywords.py` imports this
-    # module for `AbilityOnStack`.
-    from .keywords import granted_keyword_triggered_abilities
-
-    granted = [
-        ability
-        for ability in parse_granted_ability_lines(texts)
-        if isinstance(ability, TriggeredAbility)
-        and (ability.event is not None or _unread_trigger_events(ability.condition))
-    ]
-    expanded: list[TriggeredAbility] = []
-    for ability in granted:
-        for split in _expand_attacks_or_blocks(ability):
-            for enters_split in _expand_enters_or_attacks(split):
-                for leaves_split in _expand_enters_or_leaves(enters_split):
-                    for transforms_split in _expand_enters_or_transforms_into(leaves_split):
-                        expanded.extend(_expand_transforms_and_first_main(transforms_split))
-    return expanded + granted_keyword_triggered_abilities(texts)
-
-
 def controller_of_source(game: "Game", source: CardState) -> str:
     """Whose "you" a trigger on `source` means (CR 109.5, 108.4, 108.4a).
 
@@ -7951,194 +5295,6 @@ def controller_of_source(game: "Game", source: CardState) -> str:
     return source.owner or source.controller or game.active_player.username
 
 
-def spell_grant_triggered_abilities(game: "Game", source: CardState) -> list[TriggeredAbility]:
-    """The triggered abilities another permanent's static grant gives a spell
-    on the stack or a card in hand (`machines/spell_grants.py`), and a cast
-    spell's own casualty triggers (CR 702.153a) - nothing for an object in
-    any other zone, which is every object most events ask about."""
-    if source.zone not in (Zone.STACK, Zone.HAND):
-        return []
-    # Imported here for the same cycle `granted_triggered_abilities_of`
-    # documents: `machines/keywords.py` imports this module.
-    from .spell_grants import granted_triggered_abilities_for
-
-    return granted_triggered_abilities_for(game, source)
-
-
-def triggered_abilities_on(game: "Game", source: CardState) -> list[TriggeredAbility]:
-    """Every triggered ability `source` has right now, printed and granted,
-    before any condition is read - the abilities `triggers_for` asks."""
-    # CR 400.7b / CR 611.3d: an ability granted to this object is had by
-    # this object, so it is asked here alongside the card's own printed
-    # ones. Never *instead* of them - a grant adds.
-    # CR 603.10a: a source that has just left the battlefield looks back at
-    # what it was granted as it left - `CardState.move_to` has emptied the
-    # live tuple (CR 400.7).
-    granted = granted_triggered_abilities_of(
-        (*source.granted_ability_texts, *source.granted_as_it_left)
-    )
-    # CR 613.5 / CR 707.2: a permanent whose computed ability text has been
-    # rewritten by a layer 1 copy effect has the *copied* object's triggers
-    # and not its own, so the printed card is the wrong thing to read.
-    # `rewritten_ability_lines` answers None whenever nothing was taken
-    # away, which is every ordinary permanent.
-    rewritten = rewritten_ability_lines(game, source)
-    if rewritten is not None:
-        from .sieges import copied_siege_triggered_abilities
-
-        # CR 310.12b: a Siege's defeat trigger is intrinsic, not printed text,
-        # so it never appears among the copied lines.
-        granted = granted_triggered_abilities_of(rewritten) + copied_siege_triggered_abilities(
-            game, source
-        )
-    else:
-        # CR 613.1f / CR 613.5: a layer 6 grant ("Other creatures you
-        # control are ... and have '...'") can add a triggered ability
-        # this object neither prints nor carries in
-        # `granted_ability_texts` - `layers.quoted_ability_grants` writes
-        # it onto the computed board only. `added_ability_lines` is the
-        # reader `Game.activated_abilities` already uses for the
-        # identical gap on the activated-ability side (the intrinsic mana
-        # ability a granted basic land type brings with it); mirrored
-        # here so a granted "Whenever ..." is actually found rather than
-        # granted invisibly.
-        granted = granted + granted_triggered_abilities_of(added_ability_lines(game, source))
-    # CR 604.2 / CR 611.3a: a permanent's "spells you cast have storm" or
-    # "cards in your hand have miracle" grant, read now off the board -
-    # `machines/spell_grants.py` - plus CR 702.153a's casualty trigger, one
-    # per casualty cost paid (CR 702.153b).
-    granted = granted + spell_grant_triggered_abilities(game, source)
-    granted_ids = {id(ability) for ability in granted}
-    printed_abilities = [] if rewritten is not None else triggered_abilities_of(source.card)
-    had: list[TriggeredAbility] = []
-    for ability in printed_abilities + granted:
-        up_face_name = source.up_face_name
-        if (
-            up_face_name is not None
-            # A granted line was never printed on any face (its `face` is
-            # the empty string), so the double-faced filter below is not
-            # a question that can be asked of it - CR 712.8d is about
-            # which of the *card's* two printed sides is up, and a grant
-            # is on neither.
-            and id(ability) not in granted_ids
-            and ability.face != up_face_name
-        ):
-            # CR 712.8d/712.8e/712.8f: a double-faced permanent has only
-            # the characteristics of the face that's up, and CR 109.3
-            # counts abilities among them. Witch-Blessed Meadow, played as
-            # a land (CR 712.12), has no "when this creature enters"
-            # trigger, because that line was printed on Witch Enchanter's
-            # face; a transformed Duskwatch Recruiter has Krallenhorde
-            # Howler's upkeep trigger and not its own (CR 701.27g), and an
-            # untransformed one has the mirror.
-            continue
-        if ability.class_level is not None and source.class_level < ability.class_level:
-            # CR 716.2a: "As long as this Class is level N or greater, it
-            # has [Abilities]" - a level-gated trigger printed under a
-            # bar the Class has not reached yet is not "in effect", the
-            # same way `CardState.class_ability_text` already keeps a
-            # static ability quiet until then.
-            continue
-        if id(ability) not in granted_ids and not _had_as_it_left(source, ability):
-            continue
-        had.append(ability)
-    return had
-
-
-def _had_as_it_left(source: CardState, ability: TriggeredAbility) -> bool:
-    """CR 603.10a: a leaves-the-battlefield ability looks back at the object
-    as it existed immediately before the event - so a printed one it had
-    lost by then (layer 6, CR 613.1f: Hellcat, Undying Vigilante returned
-    with no abilities) does not trigger. True for any object not just off
-    the battlefield, or with no look-back snapshot."""
-    if source.zone is Zone.BATTLEFIELD or ability.event not in _LOOK_BACK_EVENTS:
-        return True
-    lines = source.abilities_as_it_left
-    if lines is None:
-        return True
-    text = ability.raw or ability.text
-    return any(text in line or line in text for line in lines)
-
-
-def abilities_triggered_by(
-    game: "Game", event: GameEvent, sources: list[CardState]
-) -> list[tuple[CardState, TriggeredAbility, str]]:
-    """`(source, ability, controller)` for every ability of `sources` this
-    event would trigger (CR 603.2, CR 603.4), without triggering anything.
-
-    Changes nothing and mints nothing, so the payment search can ask what a
-    tap would set off (`machines/cost.triggered_mana_bonus`) as often as it
-    likes; `triggers_for` is this plus the once-per-turn bookkeeping and the
-    stack objects.
-
-    Every source is asked on one layered board (`snapshot.scan_pin`):
-    nothing moves while they are, and a mutating command that raises the event
-    would otherwise recompute the board once per source.
-    """
-    found: list[tuple[CardState, TriggeredAbility, str]] = []
-    with scan_pin(game):
-        for source in sources:
-            controller = controller_of_source(game, source)
-            for ability in triggered_abilities_on(game, source):
-                if not condition_matches(game, ability, source, controller, event):
-                    continue
-                if source.zone not in zones_ability_functions_in(ability, source, game):
-                    continue  # CR 113.6: doesn't function from the zone it's in.
-                if not event_qualifier_holds(game, ability, source, controller, event):
-                    continue  # CR 603.2: the event did not happen that way.
-                if not intervening_if_holds(game, ability, source, event):
-                    continue  # CR 603.4: it does not trigger at all.
-                found.append((source, ability, controller))
-    return found
-
-
-#: "one or more `<description>` attack[ `<defender>`]" - The Earth King's
-#: "one or more creatures you control with power 4 or greater attack" (no
-#: defender named) and Frenzied Gorespawn's/Garruk, Curse Breaker's own
-#: "one or more creatures attack one of your opponents" (CR 508.3a: "attacks
-#: [a player, planeswalker, or battle]" - the defender is part of the same
-#: printed condition, not a separate clause). CR 603.2c: "An ability triggers
-#: only once each time its trigger event occurs. However, it can trigger
-#: repeatedly if one event contains multiple occurrences" - the plural "one
-#: or more" is one trigger for the declaration, and how many of the
-#: attackers fit the description is the event's count, which a later "that
-#: many" reads (`machines/effects.that_many`).
-#: Flummoxed Cyclops' "two or more creatures your opponents control attack"
-#: is the same batched declaration with a minimum count: the trigger event
-#: still occurs once (CR 603.2c), and only when at least that many of the
-#: declared attackers fit the description.
-_ONE_OR_MORE_ATTACK_RE = re.compile(
-    r"^(?P<minimum>one|two|three|four|five) or more (?P<description>.+?) "
-    r"attack(?:\s+(?P<defender>.+))?$",
-    re.IGNORECASE,
-)
-_ONE_OR_MORE_ATTACK_YOURS = re.compile(r"\byou control\b", re.IGNORECASE)
-#: "creatures your opponents control" (Flummoxed Cyclops): attackers under
-#: the control of anyone but the ability's own controller.
-_ONE_OR_MORE_ATTACK_THEIRS = re.compile(
-    r"\s*\b(?:your opponents control|an opponent controls)\b", re.IGNORECASE
-)
-
-#: "one of your opponents[ or a planeswalker they control]" - Frenzied
-#: Gorespawn's own defender phrase and Frontier Warmonger's widened compound
-#: form (CR 508.3a's "a player, planeswalker, or battle", restricted to an
-#: opponent of the ability's controller). Both reduce to the identical
-#: runtime question - is the attack's defender controlled by anyone but this
-#: ability's own controller - since `GameEvent.defender_controller`/
-#: `_defender_controller_of` already resolve a planeswalker's defender down
-#: to its controller before either reader ever sees it.
-_DEFENDER_OPPONENT_RE = re.compile(
-    r"^one of your opponents(?:\s+or\s+a\s+planeswalker\s+they\s+control)?\.?$", re.IGNORECASE
-)
-
-
-#: Screaming Swarm's "you attack with one or more creatures" - the same
-#: batched declaration as "one or more creatures you control attack", said
-#: from the attacking player's side (CR 508.3d).
-_YOU_ATTACK_WITH_ONE_OR_MORE_RE = re.compile(
-    r"^you attack with one or more (?P<description>.+?)$", re.IGNORECASE
-)
-
 #: Desert Were-Worm: "you attack with creatures with total power 12 or
 #: greater" - the same CR 508.3d subject-less "you attack" declaration event
 #: `_YOU_ATTACK_WITH_ONE_OR_MORE_RE` reads, qualified instead by the summed
@@ -8166,54 +5322,13 @@ def total_power_attack_threshold(condition: str) -> int | None:
     return int(match.group("threshold"))
 
 
-def _batched_attack_match(condition: str) -> "re.Match[str] | None":
-    """`_ONE_OR_MORE_ATTACK_RE` over `condition`, with "you attack with one
-    or more X" read as its equivalent "one or more X you control attack"."""
-    text = condition.strip()
-    you_attack = _YOU_ATTACK_WITH_ONE_OR_MORE_RE.fullmatch(text)
-    if you_attack is not None:
-        text = f"one or more {you_attack.group('description')} you control attack"
-    return _ONE_OR_MORE_ATTACK_RE.fullmatch(text)
-
-
-def batched_attack_minimum(condition: str) -> int:
-    """How many fitting attackers a batched attack condition needs: the
-    "`<N>` or more" count (`_ONE_OR_MORE_ATTACK_RE`), 1 for anything else."""
-    match = _batched_attack_match(condition)
-    if match is None:
-        return 1
-    return parse_count(match.group("minimum")) or 1
-
-
-def is_batched_attack_condition(condition: str) -> bool:
-    """Whether `condition` is "one or more `<description>` attack[
-    `<defender>`]" (or "you attack with one or more `<description>`") - one
-    trigger for a whole declaration (`batched_attackers`)."""
-    return _batched_attack_match(condition) is not None
-
-
-def _defender_controller_of(game: "Game", attacker: CardState) -> str | None:
-    """The defending player for `attacker` (CR 508.5) - a player directly, a
-    planeswalker's controller, or a battle's protector - the same resolution
-    `Game._emit_attack_event` already does for `GameEvent.defender_
-    controller`, read here off `Game.combat` directly since a delayed or
-    printed group condition is checked before any one attacker's own event
-    exists yet."""
-    from .combat import defending_player
-
-    attack = game.combat.attack_by(attacker.id)
-    if attack is None:
-        return None
-    return defending_player(game, attack.defender)
-
-
 def _tapped_batch_matching(game: "Game", description: str, controller: str) -> list[CardState]:
     """The permanents of `Game.tapped_batch` a "one or more `<description>`
     become tapped" condition counts - the description read with the grammar
     a "target" phrase uses (`machines/targeting.permanent_description`), "you
     control" as the ability's own controller. Empty when the description does
     not read, so an unread qualifier fails closed."""
-    from .targeting import permanent_description
+    from ..targeting import permanent_description
 
     yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
     requirement = permanent_description(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip())
@@ -8227,62 +5342,6 @@ def _tapped_batch_matching(game: "Game", description: str, controller: str) -> l
         and requirement.rejects(permanent, controller, game) is None
     ]
 
-
-def batched_attackers(game: "Game", condition: str, controller: str) -> list[CardState] | None:
-    """The attacking creatures a "one or more `<description>` attack[
-    `<defender>`]" condition counts, or `None` when `condition` is not that
-    shape, its description does not read (`machines/targeting.
-    permanent_description`, the grammar a "target" phrase uses, with "you
-    control" read here as the attackers' own controller), or it names a
-    defender phrase this reader does not recognise (`_DEFENDER_OPPONENT_RE`)
-    - fail closed rather than ignore an unread qualifier."""
-    match = _batched_attack_match(condition)
-    if match is None:
-        return None
-    from .targeting import permanent_description
-
-    description = match.group("description")
-    yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
-    theirs = _ONE_OR_MORE_ATTACK_THEIRS.search(description) is not None
-    description = _ONE_OR_MORE_ATTACK_THEIRS.sub("", description)
-    requirement = permanent_description(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip())
-    if requirement is None:
-        return None
-    defender = match.group("defender")
-    opponent_only = False
-    if defender is not None:
-        if _DEFENDER_OPPONENT_RE.fullmatch(defender.strip()) is None:
-            return None
-        opponent_only = True
-    return [
-        attacker
-        for attacker in game.attacking_creatures()
-        if (not yours or game.controller_of(attacker).username == controller)
-        and (not theirs or game.controller_of(attacker).username != controller)
-        and requirement.rejects(attacker, controller, game) is None
-        and (
-            not opponent_only
-            or (
-                (defender_controller := _defender_controller_of(game, attacker)) is not None
-                and defender_controller != controller
-            )
-        )
-    ]
-
-
-#: "one or more `<description>` deal combat damage to `<recipient>`" - Jacob
-#: Frye's "one or more Assassins you control deal combat damage to a player",
-#: Invasion Tactics' "one or more Allies you control ...", Professional
-#: Face-Breaker's "one or more creatures you control ...". The plural "deal"
-#: is the batch: CR 603.2c's one trigger for the step's damage (see
-#: `ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS`), where the singular "a
-#: creature you control deals combat damage" is one trigger per creature
-#: (`TriggerEvent.DEALS_DAMAGE`).
-_ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE = re.compile(
-    r"^one or more (?P<description>.+?) deal combat damage to "
-    r"(?P<recipient>a player|an opponent|one of your opponents)$",
-    re.IGNORECASE,
-)
 
 #: A bare list of plural subtypes - "Assassins", "Allies", "Scouts, Pirates,
 #: and/or Rogues" - split on its own separators.
@@ -8320,253 +5379,12 @@ def _bare_subtype_list(description: str) -> frozenset[str] | None:
     return frozenset(item for item in singular if item is not None)
 
 
-def batched_combat_damage_sources(
-    game: "Game", condition: str, controller: str, event: GameEvent
-) -> list[UUID] | None:
-    """The sources a "one or more `<description>` deal combat damage to
-    `<recipient>`" condition counts in `event`'s combat damage step, or
-    `None` when `condition` is not that shape or its description does not
-    read (fail closed).
-
-    The step's records are the last `event.amount` entries of `Game.
-    combat_damage_to_players_this_turn` - the event is matched as it is
-    emitted, right after that step's damage was dealt (CR 510.2), so nothing
-    has been appended since. Each record holds the source's controller and
-    creature types *when it dealt the damage*; a bare subtype list
-    ("Assassins") is read off those, and any other description ("creatures
-    with flying", "non-Human creatures") through `machines/targeting.
-    permanent_description` against the source as it is now - still on the
-    battlefield, since state-based actions have not run yet (CR 510.2 is
-    followed by CR 704.3's check only once the step's triggers are
-    collected).
-    """
-    match = _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(condition.strip())
-    if match is None:
-        return None
-    if event.event is not ExtraTriggerEvent.COMBAT_DAMAGE_TO_PLAYERS or event.player is None:
-        return []
-    if match.group("recipient").lower() != "a player" and event.player == controller:
-        return []
-    description = match.group("description")
-    yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
-    remainder = " ".join(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).split())
-    if not yours and re.search(r"\bcontrols?\b", remainder, re.IGNORECASE):
-        return None
-    subtypes = _bare_subtype_list(remainder)
-    requirement = None
-    if subtypes is None:
-        from .targeting import permanent_description
-
-        requirement = permanent_description(remainder)
-        if requirement is None:
-            return None
-    records = game.combat_damage_to_players_this_turn
-    step_records = records[len(records) - (event.amount or 0) :] if event.amount else []
-    found: list[UUID] = []
-    for record in step_records:
-        if record.player != event.player or (yours and record.controller != controller):
-            continue
-        if subtypes is not None:
-            if not subtypes & {kind.lower() for kind in record.creature_types}:
-                continue
-        else:
-            source = game.find_by_id(record.source_id)
-            if not isinstance(source, CardState) or requirement is None:
-                continue
-            if requirement.rejects(source, controller, game) is not None:
-                continue
-        if record.source_id not in found:
-            found.append(record.source_id)
-    return found
-
-
-#: CR 603.2c's "one event contains multiple occurrences" for a discard: "you
-#: discard a card" (and CR 702.29d's "cycle or discard [another] card") is
-#: about each card, so one instruction discarding two cards is two
-#: occurrences. "one or more cards" is the batch itself and stays one.
-#: "discard a `<quality>` card" (Wharf Infiltrator's "a creature card",
-#: Invasion of Kaldheim's "a land card") narrows which discarded cards count
-#: at all - `quality` is one bare type/subtype word, read the identical way
-#: a search's own stated quality is (`machines.effects._quality_matcher`,
-#: imported locally below to avoid this module's own import cycle with
-#: `machines/effects.py`).
-_PER_CARD_DISCARD_CONDITION = re.compile(
-    r"\bdiscards? (?P<which>a card|another card|an? (?P<quality>[a-z]+) card)\b"
-)
-
-
-def discard_occurrences(
-    game: "Game", ability: TriggeredAbility, source: CardState, event: GameEvent
-) -> int:
-    """How many times a `DISCARDS_A_CARD` trigger fires off `event` (CR
-    603.2c): once per discarded card matching the condition's own quality
-    (if it has one) for a per-card condition - never counting the source
-    itself for "another card" (Curator of Mysteries, Archfiend of Ifnir) -
-    and once for anything else. A cycled card is one discard, so CR 702.29d's
-    "cycles or discards" counts it once.
-
-    A quality's card is looked up by id (`Game.find_by_id`) rather than read
-    off the event itself: `Game.discard_cards` moves each card to the
-    graveyard *before* emitting `DISCARDS_A_CARD` (CR 701.9a), so it is
-    already sitting there, with its own printed type line, by the time this
-    ever runs.
-    """
-    if ability.event is not TriggerEvent.DISCARDS_A_CARD:
-        return 1
-    match = _PER_CARD_DISCARD_CONDITION.search(ability.condition.lower())
-    if match is None or not event.discarded_ids:
-        return 1
-    ids = event.discarded_ids
-    if match.group("which") == "another card":
-        ids = tuple(card_id for card_id in ids if card_id != source.id)
-    quality = match.group("quality")
-    if quality is not None:
-        from .effects import _quality_matcher  # avoids effects<->triggers import cycle
-
-        matches = _quality_matcher(quality)
-        ids = tuple(
-            card_id
-            for card_id in ids
-            if (found := game.find_by_id(card_id)) is not None and matches(found)
-        )
-    return len(ids)
-
-
-def _event_for(
-    game: "Game", ability: TriggeredAbility, controller: str, event: GameEvent, source: CardState
-) -> GameEvent:
-    """The event this ability carries onto the stack: `event` itself, or -
-    for a batched "one or more `<description>` attack" trigger - a copy
-    whose `amount` is how many attackers fit the description, the count
-    this ability's own "that many" reads (CR 603.2c); or, for a
-    self-referential "`<name>` is put into a graveyard from anywhere"
-    (Emrakul, the Aeons Torn; Purity), a copy stamped with `source`'s own
-    identity and current `zone_change_stamp` - `PUT_INTO_GRAVEYARD`'s shared
-    batch event otherwise carries neither, which is fine for a batched "one
-    or more ... cards" condition (read straight off `Game.graveyard_batch`)
-    but leaves a consequence that finds the object by its event
-    (`machines/effects._dead_self_found`, CR 400.7e/608.2h) with nothing to
-    find: `source` here is already that object's current (graveyard)
-    incarnation, found the same way `Game.emit` widened its own `sources`
-    to offer every graveyard card in the first place."""
-    if event.event is ExtraTriggerEvent.PUT_INTO_GRAVEYARD and event.subject_id is None:
-        arrival = next((a for a in game.graveyard_batch if a.card_id == source.id), None)
-        if arrival is not None:
-            return event.model_copy(
-                update={
-                    "subject_id": source.id,
-                    "zone_change_stamp": source.zone_change_stamp,
-                    "player": arrival.player,
-                }
-            )
-    if ability.event is not TriggerEvent.ATTACKS or event.subject_id is not None:
-        return event
-    batch = batched_attackers(game, ability.condition, controller)
-    if batch is None:
-        return event
-    return event.model_copy(update={"amount": len(batch)})
-
-
-def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> list[AbilityOnStack]:
-    """Every ability `sources` have that this event triggers (CR 603.2).
-
-    The intervening *if* of CR 603.4 is checked here: an ability whose clause is
-    false does not trigger at all, which is a different thing from triggering and
-    then doing nothing.
-    """
-    triggered: list[AbilityOnStack] = []
-    for source, ability, controller in abilities_triggered_by(game, event, sources):
-        if ability.once_per_turn:
-            # CR 603.2h: "the ability triggers only if its source's
-            # controller has not yet taken the indicated action that
-            # turn" - Caretaker's Talent's own "This ability triggers
-            # only once each turn." `key` pairs the source with the
-            # ability's printed text, so a permanent with more than one
-            # once-per-turn trigger is tracked separately for each, while
-            # the conditions of one CR 603.1b compound (MACH-1's "When
-            # MACH-1 enters and whenever you gain life") - split into one
-            # `TriggeredAbility` each, all sharing that text - share one
-            # budget, because the restriction is on the ability.
-            key = f"{source.id}:{ability.text}"
-            fired = game.once_per_turn_triggers.get(key, 0)
-            if fired > 0:
-                continue
-            game.once_per_turn_triggers[key] = fired + 1
-        on_stack = AbilityOnStack(
-            kind=AbilityKind.TRIGGERED,
-            ability=ability,
-            source_id=source.id,
-            source_name=source.name,
-            controller=controller,
-            source_stamp=source.zone_change_stamp,
-            source_times_transformed=source.times_transformed,
-            event=_event_for(game, ability, controller, event, source),
-        )
-        triggered.append(on_stack)
-        # CR 603.2c: one discard instruction of several cards is several
-        # occurrences of a per-card "discard a card" condition.
-        for _ in range(discard_occurrences(game, ability, source, event) - 1):
-            triggered.append(on_stack.model_copy(update={"id": new_id()}, deep=True))
-        # CR 603.2d: "determine how many times it should trigger, then
-        # trigger it that many times" - Panharmonicon. Each extra time is a
-        # separate ability on the stack in its own right, with its own id.
-        for _ in range(additional_trigger_times(game, on_stack, source, event)):
-            triggered.append(on_stack.model_copy(update={"id": new_id()}, deep=True))
-    return triggered
-
-
-#: CR 603.2d's own shape, as Panharmonicon prints it: "If an artifact or
-#: creature entering causes a triggered ability of a permanent you control to
-#: trigger, that ability triggers an additional time."
-_ADDITIONAL_TRIGGER_RE = re.compile(
-    r"^if (?P<cause>.+?) causes a triggered ability of a permanent you control "
-    r"to trigger, that ability triggers an additional time\.?$",
-    re.IGNORECASE,
-)
-
-#: The gate half of `_ADDITIONAL_TRIGGER_RE`: "an artifact or creature
-#: entering" (Panharmonicon), "a permanent entering the battlefield" (Elesh
-#: Norn, Mother of Machines; Starfield Vocalist - WOTC's 2024 "enters" and the
-#: older "enters the battlefield" both print), "a land entering" (Ancient
-#: Greenwarden), "a Wizard you control entering" (Naban, Dean of Iteration).
-#: Each alternative is a card type, "permanent" (any of them), or a subtype;
-#: "you control" narrows the entering permanent to the multiplier's own
-#: controller's.
-_ENTERING_CAUSE_RE = re.compile(
-    r"^an? (?P<types>[a-z][a-z ]*?)(?P<yours> you control)? entering(?: the battlefield)?$",
-    re.IGNORECASE,
-)
-
-
-#: CR 603.2d's other shape, keyed by *whose* ability it is rather than by
-#: what caused it: "If a triggered ability of a Dwarf you control triggers,
-#: that ability triggers an additional time." (Bifur, Melodic Rider, behind
-#: its enduring-story gate), "... of a Shaman or another Wizard you control
-#: ..." (Harmonic Prodigy), "... of a legendary creature you control ..."
-#: (Annie Joins Up), "... of another Elemental you control triggers, it
-#: triggers ..." (Twinflame Travelers), "... of a permanent you control ..."
-#: (Fractured Realm - "permanent" is a word every permanent has), and "... of
-#: equipped creature ..." (Wizard's Staff, CR 301.5a's "equipped creature").
-_TYPED_ADDITIONAL_TRIGGER_RE = re.compile(
-    r"^if a triggered ability of (?P<whose>.+?) triggers, "
-    r"(?:that ability|it) triggers an additional time\.?$",
-    re.IGNORECASE,
-)
-
 #: One alternative of `_TYPED_ADDITIONAL_TRIGGER_RE`'s "whose": an article
 #: ("another" excludes the multiplier itself) and the words every one of which
 #: the ability's source has to have.
 _TYPED_WHOSE_ALTERNATIVE_RE = re.compile(
     r"^(?P<article>a|an|another)\s+(?P<words>.+)$", re.IGNORECASE
 )
-
-
-class _TypedWhose(NamedTuple):
-    """A parsed "whose": `equipped` for "equipped creature", else a list of
-    `(another, words)` alternatives among the multiplier controller's own."""
-
-    equipped: bool
-    alternatives: tuple[tuple[bool, tuple[str, ...]], ...]
 
 
 def _typed_whose(whose: str) -> _TypedWhose | None:
@@ -8596,28 +5414,6 @@ def _typed_whose(whose: str) -> _TypedWhose | None:
             return None
         alternatives.append((match["article"].lower() == "another", words))
     return _TypedWhose(equipped=False, alternatives=tuple(alternatives)) if alternatives else None
-
-
-def _multiplier_line(line: str) -> tuple[str, str | None]:
-    """A static line with its designation gate split off, and the gate."""
-    gated = split_as_long_as(line.strip())
-    if gated is None:
-        return line.strip(), None
-    condition, rest = gated
-    return rest, condition
-
-
-def is_additional_trigger_line(text: str) -> bool:
-    """Whether a static line is CR 603.2d's multiplier - an entering cause
-    `_entering_cause_matches` can read, or a source `_typed_whose` can - gated
-    on a designation or not: what `support.py` counts handled."""
-    line, _condition = _multiplier_line(text)
-    match = _ADDITIONAL_TRIGGER_RE.match(line)
-    if match is not None:
-        cause = _ENTERING_CAUSE_RE.match(match["cause"].strip())
-        return cause is not None and _cause_words(cause["types"]) is not None
-    typed = _TYPED_ADDITIONAL_TRIGGER_RE.match(line)
-    return typed is not None and _typed_whose(typed["whose"]) is not None
 
 
 def _typed_source_matches(
@@ -8665,18 +5461,6 @@ def _cause_words(types: str) -> tuple[str, ...] | None:
     return words or None
 
 
-def _computed_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
-    """This permanent's ability text as the layer system computes it (CR 613.5),
-    falling back to the printed lines for a permanent the engine has not
-    computed."""
-    try:
-        return tuple(game.characteristics_of(permanent).abilities)
-    except KeyError:
-        return tuple(
-            line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()
-        )
-
-
 def _entering_cause_matches(game: "Game", cause: str, event: GameEvent, controller: str) -> bool:
     """Whether this event is the entrance the multiplier names (CR 603.2d's
     own "an ability may state that a triggered ability triggers additional
@@ -8711,104 +5495,6 @@ def _entering_cause_matches(game: "Game", cause: str, event: GameEvent, controll
     return bool(set(wanted) & have)
 
 
-def additional_trigger_times(
-    game: "Game", ability: AbilityOnStack, source: CardState, event: GameEvent
-) -> int:
-    """How many *extra* times this ability triggers, by CR 603.2d.
-
-    CR 603.2d: "An ability may state that a triggered ability triggers
-    additional times. In this case, rather than simply determining that such an
-    ability has triggered, determine how many times it should trigger, then
-    trigger it that many times."
-
-    Two shapes are read: the entering cause below, and `_TYPED_ADDITIONAL_
-    TRIGGER_RE`'s "if a triggered ability of `<whose>` triggers" - Bifur,
-    Melodic Rider's Dwarfs, Harmonic Prodigy's Shamans and other Wizards,
-    Wizard's Staff's equipped creature - either behind a designation gate
-    ("As long as you have an enduring story, ...", `machines/designations.
-    py`) checked against the multiplier's controller.
-
-    Every permanent on the battlefield is asked whether one of its own static
-    ability lines is a multiplier of this shape, read off the *computed* text
-    (CR 613.5) - Panharmonicon, Elesh Norn, Mother of Machines, Starfield
-    Vocalist, Ancient Greenwarden, Naban, Dean of Iteration. Each one's own gate
-    is checked here rather than assumed: the ability's source has to be a
-    permanent the multiplier's controller controls, and the event has to be the
-    entrance its cause names (`_entering_cause_matches`).
-
-    Only what `triggers_for` builds from a *printed* ability is multiplied. A
-    delayed triggered ability (CR 603.7a) is created during the resolution of
-    the ability it belongs to and fired by `DelayedTriggers`, never by this
-    function - so doubling the ability that creates a delayed trigger does not
-    double the delayed trigger, which is DDR#981's whole point.
-    """
-    if source.zone is not Zone.BATTLEFIELD:
-        return 0
-    extra = 0
-    for permanent in list(game.battlefield):
-        controller = permanent.controller
-        if controller is None:
-            continue
-        # "a triggered ability of a permanent / a Dwarf **you** control" -
-        # every shape but "equipped creature", which names its object outright.
-        yours = controller == ability.controller
-        for printed in _computed_ability_lines(game, permanent):
-            line, condition = _multiplier_line(printed)
-            if condition is not None and not designation_holds(condition, game.player(controller)):
-                continue
-            if match := _ADDITIONAL_TRIGGER_RE.match(line):
-                if yours and _entering_cause_matches(game, match["cause"], event, controller):
-                    extra += 1
-                continue
-            typed = _TYPED_ADDITIONAL_TRIGGER_RE.match(line)
-            if typed is None:
-                continue
-            whose = _typed_whose(typed["whose"])
-            if (
-                whose is not None
-                and (whose.equipped or (yours and source.controller == controller))
-                and _typed_source_matches(game, whose, permanent, source)
-            ):
-                extra += 1
-    return extra
-
-
-#: CR 603.8's own shape: The Millennium Calendar's "When there are 1,000 or
-#: more time counters on The Millennium Calendar, sacrifice it and each
-#: opponent loses 1,000 life." and Mazemind Tome's "When there are four or more
-#: page counters on this artifact, ...". The count is any `numbers.COUNT` -
-#: digits with digit-group commas (which `machines/abilities._split_top_level`
-#: already refuses to read as the CR 603.1 condition/effect boundary) or a
-#: spelled-out word.
-_STATE_COUNTER_TRIGGER_RE = re.compile(
-    rf"^there are (?P<count>{COUNT}) or more (?P<kind>.+?) counters on (?P<subject>.+?)$",
-    re.IGNORECASE,
-)
-
-
-def _state_trigger_abilities(game: "Game", source: CardState) -> list[TriggeredAbility]:
-    """The CR 603.8 abilities this permanent has right now.
-
-    Read off the *computed* ability text (CR 613.5, CR 109.3: abilities are
-    characteristics) rather than the printed card, so a permanent that has lost
-    all abilities in layer 6 (CR 613.1f) has no state trigger left - which is
-    DDR#961's Tishana's Tidebinder exactly. A permanent the layer engine has
-    not computed falls back to its printed text.
-    """
-    try:
-        lines: Sequence[str] = tuple(game.characteristics_of(source).abilities)
-        parsed: list[Ability] = parse_granted_ability_lines(lines)
-    except KeyError:
-        parsed = parse_abilities(source.card)
-    return [
-        ability
-        for ability in parsed
-        if isinstance(ability, TriggeredAbility)
-        and ability.event is None
-        and _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
-    ]
-
-
 def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: CardState) -> bool:
     """Whether this permanent's game state matches its CR 603.8 condition."""
     match = _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
@@ -8829,77 +5515,47 @@ def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: Card
     return source.counters[match["kind"].strip().lower()] >= needed
 
 
-def state_triggers_for(game: "Game") -> list[AbilityOnStack]:
-    """Every CR 603.8 state trigger that has just become true.
-
-    CR 603.8: "Some triggered abilities trigger when a game state ... is true,
-    rather than triggering when an event occurs." CR 704.1a confirms these are
-    triggered abilities and not state-based actions, so what comes back here is
-    an ordinary `AbilityOnStack` that CR 603.3 puts on the stack the next time a
-    player would receive priority.
-
-    The rest of CR 603.8 is the latch: such an ability "doesn't trigger again
-    until it has left the stack". `Game.state_trigger_latches` holds, per source
-    and condition, the id of the ability that is currently holding it shut, and
-    the latch opens the moment that object is neither on the stack nor waiting
-    in `pending_triggers` - which is true whether it left by resolving or by
-    being countered (CR 701.6a: countering "means to cancel it, removing it from
-    the stack"). Countering therefore frees the trigger to fire again at once,
-    which is DDR#961's whole ruling.
-
-    Nothing is appended to `pending_triggers` here; the caller does that, the
-    same way `Game.emit` owns that step for event triggers.
-    """
-    live = {item.id for item in game.stack if isinstance(item, AbilityOnStack)}
-    live |= {item.id for item in game.pending_triggers}
-    for key, ability_id in list(game.state_trigger_latches.items()):
-        if ability_id not in live:
-            del game.state_trigger_latches[key]
-
-    # Read first, on one layered board (`snapshot.scan_pin`), and act
-    # after: the sweep asks every permanent while nothing moves, and the
-    # latch bookkeeping below is kept out of the read.
-    with scan_pin(game):
-        holding = [
-            (source, source.controller or game.active_player.username, ability)
-            for source in list(game.battlefield)
-            for ability in _state_trigger_abilities(game, source)
-            if _state_condition_holds(game, ability, source)
-        ]
-
-    triggered: list[AbilityOnStack] = []
-    for source, controller, ability in holding:
-        key = f"{source.id}:{ability.condition}"
-        if key in game.state_trigger_latches:
-            continue
-        on_stack = AbilityOnStack(
-            kind=AbilityKind.TRIGGERED,
-            ability=ability,
-            source_id=source.id,
-            source_name=source.name,
-            controller=controller,
-            source_stamp=source.zone_change_stamp,
-            source_times_transformed=source.times_transformed,
-        )
-        game.state_trigger_latches[key] = on_stack.id
-        triggered.append(on_stack)
-    return triggered
-
-
-def apnap_order(triggered: list[AbilityOnStack], turn_order: list[str]) -> list[AbilityOnStack]:
-    """Sort triggers into the order they are put on the stack (CR 603.3b).
-
-    "First, each player, in APNAP order, puts each triggered ability they
-    control on the stack in any order they choose." The active player goes
-    first, so the active player's trigger ends up at the *bottom* of the pile
-    and resolves last. This settles only which *player's* block goes on first -
-    CR 405.3's direction too, for objects an effect puts on the stack at once.
-    Within one player's set the order they triggered in is kept here, and
-    `Game._order_triggers_by_controller` is what then puts CR 603.3b's "in any
-    order they choose" to that player.
-
-    A stable sort, deliberately: one controller's abilities stay contiguous, so
-    the caller can walk the result and hand each run to its own controller.
-    """
-    rank = {username: index for index, username in enumerate(turn_order)}
-    return sorted(triggered, key=lambda item: rank.get(item.controller, len(rank)))
+from ._common import (  # noqa: E402
+    _ABILITY_ACTIVATED_CONDITION,
+    _CLASS_BECOMES_LEVEL_CONDITION,
+    _COUNTERS_PUT_CONDITION,
+    _COUNTERS_PUT_ON_DESCRIPTION_CONDITION,
+    _CRIME_COMMITTED_CONDITION,
+    _CYCLE_CONDITION,
+    _DOOR_UNLOCKED_CONDITION,
+    _ENLISTS_A_CREATURE_CONDITION,
+    _ENTERING_CAUSE_RE,
+    _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION,
+    _LAND_ADDED_CHOSEN_MANA_CONDITION,
+    _LAST_COUNTER_CONDITION,
+    _LAST_TIME_COUNTER_CONDITION,
+    _LEAVES_GRAVEYARD_CONDITION,
+    _LOSES_LIFE_CONDITION,
+    _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION,
+    _NTH_COUNTER_PUT_CONDITION,
+    _NTH_DRAW_CONDITION,
+    _ONE_OR_MORE_ATTACK_YOURS,
+    _ONE_OR_MORE_BECOME_TAPPED_CONDITION,
+    _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION,
+    _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE,
+    _OPPONENTS_ARE_ATTACKED_CONDITION,
+    _PLAY_A_CARD_EXILED_WITH_CONDITION,
+    _PLAY_A_LAND_OR_CAST_CONDITION,
+    _PLAYER_COUNTERS_PUT_CONDITION,
+    _PUT_INTO_LIBRARY_CONDITION,
+    _REVEALED_THIS_WAY_CONDITION,
+    _RING_TEMPTS_YOU_CONDITION,
+    _SEARCHES_LIBRARY_CONDITION,
+    _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION,
+    _STATE_COUNTER_TRIGGER_RE,
+    _UNTAPPED_DURING_UNTAP_STEP_CONDITION,
+    _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION,
+)
+from .collect import (  # noqa: E402
+    _unread_trigger_events,
+    batched_attack_minimum,
+    batched_attackers,
+    batched_combat_damage_sources,
+    discard_occurrences,
+)
+from .events import CastConditionNotice, InterveningIfNotice  # noqa: E402
