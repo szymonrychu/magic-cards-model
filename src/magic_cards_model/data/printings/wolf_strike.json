@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f",
+  "oracle_id": "34237f39-1db3-4b3d-b87b-5fd1fbd5462a",
+  "multiverse_ids": [
+    541097
+  ],
+  "mtgo_id": 94822,
+  "arena_id": 79045,
+  "tcgplayer_id": 253788,
+  "cardmarket_id": 583582,
+  "name": "Wolf Strike",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f",
+  "scryfall_uri": "https://scryfall.com/card/vow/228/wolf-strike?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:39:58Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.jpg?1783924798",
+    "normal": "https://cards.scryfall.io/normal/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.jpg?1783924798",
+    "large": "https://cards.scryfall.io/large/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.jpg?1783924798",
+    "png": "https://cards.scryfall.io/png/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.png?1783924798",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.jpg?1783924798",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.jpg?1783924798",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.webp?1783924798",
+    "grid": "https://cards.scryfall.io/grid/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.webp?1783924798",
+    "display": "https://cards.scryfall.io/display/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.webp?1783924798",
+    "art": "https://cards.scryfall.io/art/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.webp?1783924798",
+    "crop": "https://cards.scryfall.io/crop/front/0/2/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f.webp?1783924798"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Instant",
+  "oracle_text": "Target creature you control gets +2/+0 until end of turn if it's night. Then it deals damage equal to its power to target creature you don't control.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/02e9cd00-7ffd-44e1-aa0f-c94489ff4a0f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A34237f39-1db3-4b3d-b87b-5fd1fbd5462a&unique=prints",
+  "collector_number": "228",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Tovolar's howlpack had scattered, but the Dire-Strain survivors were still on the hunt.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wisnu Tan",
+  "artist_ids": [
+    "f2d36cdd-a4e9-43ba-b2ad-9d514f6706d4"
+  ],
+  "illustration_id": "e6bc4cd4-94f4-4c4c-9f26-65b2dd4c36d6",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17922,
+  "penny_rank": 14490,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/card-image-gallery/innistrad-crimson-vow",
+    "previewed_at": "2021-11-05"
+  },
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.30",
+    "usd_etched": null,
+    "eur": "0.02",
+    "eur_foil": "0.18",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=541097&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWolf%2BStrike",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWolf%2BStrike",
+    "edhrec": "https://edhrec.com/route/?cc=Wolf+Strike"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253788%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=583582&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94822?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

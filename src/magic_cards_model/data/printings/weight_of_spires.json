@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "d5f26a87-4562-450c-800b-7d4acc1ae17b",
+  "oracle_id": "722324de-3e77-4a22-aa07-7f8a21be76c2",
+  "multiverse_ids": [
+    107551
+  ],
+  "mtgo_id": 24285,
+  "mtgo_foil_id": 24286,
+  "tcgplayer_id": 13989,
+  "cardmarket_id": 13125,
+  "name": "Weight of Spires",
+  "lang": "en",
+  "released_at": "2006-05-05",
+  "uri": "https://api.scryfall.com/cards/d5f26a87-4562-450c-800b-7d4acc1ae17b",
+  "scryfall_uri": "https://scryfall.com/card/dis/78/weight-of-spires?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:50:16Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.jpg?1783943416",
+    "normal": "https://cards.scryfall.io/normal/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.jpg?1783943416",
+    "large": "https://cards.scryfall.io/large/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.jpg?1783943416",
+    "png": "https://cards.scryfall.io/png/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.png?1783943416",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.jpg?1783943416",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.jpg?1783943416",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.webp?1783943416",
+    "grid": "https://cards.scryfall.io/grid/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.webp?1783943416",
+    "display": "https://cards.scryfall.io/display/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.webp?1783943416",
+    "art": "https://cards.scryfall.io/art/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.webp?1783943416",
+    "crop": "https://cards.scryfall.io/crop/front/d/5/d5f26a87-4562-450c-800b-7d4acc1ae17b.webp?1783943416"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "Weight of Spires deals damage to target creature equal to the number of nonbasic lands that creature's controller controls.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "fdebeda1-b95f-4343-8a94-d125821e6b5c",
+  "set": "dis",
+  "set_name": "Dissension",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/fdebeda1-b95f-4343-8a94-d125821e6b5c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adis&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dis?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d5f26a87-4562-450c-800b-7d4acc1ae17b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A722324de-3e77-4a22-aa07-7f8a21be76c2&unique=prints",
+  "collector_number": "78",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Finally, a good use for an Azorius courthouse.\"\n\u2014Ghut Rak, Gruul guildmage",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Michael Sutfin",
+  "artist_ids": [
+    "5ce7b3bd-53d2-49e6-b504-37191e8e9b17"
+  ],
+  "illustration_id": "1fec6b28-8e80-4b7e-90f4-c1c7ff9fed03",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 22212,
+  "penny_rank": 14482,
+  "prices": {
+    "usd": "0.22",
+    "usd_foil": "1.81",
+    "usd_etched": null,
+    "eur": "0.25",
+    "eur_foil": "0.74",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=107551&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWeight%2Bof%2BSpires",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWeight%2Bof%2BSpires",
+    "edhrec": "https://edhrec.com/route/?cc=Weight+of+Spires"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F13989%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=13125&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/24285?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

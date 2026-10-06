@@ -12,6 +12,9 @@ Rules verified with `mise run rules:find`:
   triggered.
 - CR 505.1: "The precombat and postcombat main phases are individually and
   collectively known as the main phase."
+- CR 731.1: "Day and night are designations that the game itself can have.
+  The game starts with neither designation", so a game that has not yet
+  become day or night is neither (`Game.day_night` is `None`).
 - CR 506.1: the combat phase's five steps; a turn may have more than one
   combat phase (CR 500.8's additional phases), so "the first combat phase of
   the turn" is counted, not assumed (`Game.turn_count("combat_phases", ...)`).
@@ -123,7 +126,29 @@ def _cast_during_main_phase(context: "ConditionContext", match: re.Match[str]) -
     return record.cast_step in MAIN_PHASES and record.cast_during_turn_of == context.controller
 
 
+def _day_or_night(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "it's night" / "it's day" / "it's not night" / "it's neither day nor
+    night" (CR 731.1): the game's own designation as the condition is asked.
+    A claimed clause always answers (the C1 contract): with neither
+    designation yet, "it's night" and "it's day" are both false, and "it's
+    neither day nor night" is the one that holds."""
+    from ..turn import DayNight
+
+    designation = context.game.day_night
+    if match.group("neither"):
+        return designation is None
+    wanted = DayNight.NIGHT if match.group("which") == "night" else DayNight.DAY
+    return (designation is wanted) != bool(match.group("negated"))
+
+
 READERS: tuple[ConditionReader, ...] = (
+    ConditionReader(
+        re.compile(
+            r"it(?:'s| is) (?:(?P<neither>neither day nor night)|(?P<negated>not )?"
+            r"(?P<which>day|night))"
+        ),
+        _day_or_night,
+    ),
     ConditionReader(
         re.compile(r"it(?:'s| is) (?P<negated>not )?(?P<whose>your|their|an opponent's) turn"),
         _turn,
