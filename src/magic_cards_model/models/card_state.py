@@ -2859,14 +2859,17 @@ class CardState(EngineModel):
         that has moved on from the graveyard, or has come back, must not still
         be answering with what it was on the battlefield two zones ago.
 
-        Power and toughness are always recorded, counters included: the
-        counters do not survive the zone change (CR 122.2: "counters on an
+        Only what a *continuous effect* was contributing is recorded, which is
+        why each half is compared against `printed_power`/`printed_toughness`
+        and left `None` when they agree. The printing does not change on a
+        zone change, so it needs no snapshot to survive one; the
+        counters deliberately do not survive it (CR 122.2: "counters on an
         object are not retained if that object moves from one zone to another
-        ... they simply cease to exist"), so the printed value alone would
-        drop a +1/+1 counter, a -1/-1 counter or a pump the creature last had
-        (CR 608.2h, CR 113.7a). The colour, type and mana value snapshots
-        below are recorded only where a continuous effect made them differ
-        from what the object answers off the battlefield.
+        ... they simply cease to exist"), and a card in a graveyard reading
+        back the +1/+1 counters it died with would be wrong. What is left is
+        exactly the gap: an effect from a static ability (CR 604.2) or a
+        resolved one (CR 611.2) stops applying the instant the permanent is
+        not a permanent, and nothing else remembers it.
 
         `computed_characteristics` is the whole of CR 613, and answers `None`
         for an unbound `CardState` - which then has no continuous effect on it
@@ -2876,8 +2879,8 @@ class CardState(EngineModel):
         self._abilities_as_it_left = None if computed is None else tuple(computed.abilities)
         power = None if computed is None else computed.power
         toughness = None if computed is None else computed.toughness
-        self.last_known_power = power
-        self.last_known_toughness = toughness
+        self.last_known_power = None if power == self.printed_power else power
+        self.last_known_toughness = None if toughness == self.printed_toughness else toughness
         # The same snapshot for the qualities an ability's source is judged by
         # once it has gone (CR 608.2b, CR 702.11d) - recorded only where a
         # continuous effect made them differ from the printing.
@@ -2897,6 +2900,33 @@ class CardState(EngineModel):
         mana_value = None if computed is None else computed.mana_value
         self.last_known_mana_value = None if mana_value == self.mana_value else mana_value
         self.last_known_attachments = self._attachments_now()
+
+    def last_known_power_toughness(self) -> tuple[int | None, int | None]:
+        """Power and toughness as CR 608.2h reads them for an effect that
+        looks at this object after it left the battlefield (CR 113.7a).
+
+        The `last_known_*` snapshot keeps only what a continuous effect
+        contributed (see `remember_last_known_power_toughness`), and CR 122.2
+        ended the counters, which `last_known_counters` recorded. Neither
+        alone is the answer: the snapshot when one was taken (it already
+        includes the counters, being the computed value), otherwise the
+        printing plus the counters it left with. `power`/`toughness` stay
+        counter-free off the battlefield on purpose - a card in the graveyard
+        is a 0/0 Hangarback Walker, not a 4/4 one (CR 122.2).
+
+        On the battlefield, or for an object that never left it, this is just
+        `power`/`toughness`.
+        """
+        if self.zone is Zone.BATTLEFIELD or not self.last_left_the_battlefield:
+            return self.power, self.toughness
+        modifier = self.last_known_counters.power_toughness_modifier
+        power = self.last_known_power
+        if power is None and self.printed_power is not None:
+            power = self.printed_power + modifier
+        toughness = self.last_known_toughness
+        if toughness is None and self.printed_toughness is not None:
+            toughness = self.printed_toughness + modifier
+        return power, toughness
 
     def _attachments_now(self) -> tuple[AttachmentSnapshot, ...]:
         """Every permanent attached to this one right now, as the computed

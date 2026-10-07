@@ -506,17 +506,8 @@ def _left_with_the_event(context: "ConditionContext", state: "CardState") -> boo
 
 def _last_known_power_toughness(state: "CardState") -> tuple[int | None, int | None]:
     """Power and toughness as the object last existed on the battlefield (CR
-    608.2h): `CardState.last_known_power` when a continuous effect made it
-    differ, otherwise the printing plus the counters it left with (CR 122.1a
-    - `last_known_counters`, since CR 122.2 took the counters themselves)."""
-    modifier = state.last_known_counters.power_toughness_modifier
-    power = state.last_known_power
-    if power is None and state.printed_power is not None:
-        power = state.printed_power + modifier
-    toughness = state.last_known_toughness
-    if toughness is None and state.printed_toughness is not None:
-        toughness = state.printed_toughness + modifier
-    return power, toughness
+    608.2h): `CardState.last_known_power_toughness`."""
+    return state.last_known_power_toughness()
 
 
 #: A card quality one word can name: a colour (CR 105.1), a supertype (CR

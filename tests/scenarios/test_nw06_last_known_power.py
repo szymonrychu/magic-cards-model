@@ -9,6 +9,12 @@ damage equal to its power to target creature an opponent controls") reads it.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import TriggerEvent
+from magic_cards_model.machines.triggers import (
+    GameEvent,
+    event_subject_power,
+    event_subject_toughness,
+)
 
 from .harness import Scenario
 
@@ -44,8 +50,7 @@ def test_plus_counters_survive_death_in_the_damage_the_trigger_deals():
     scenario.game.add_counters(leaper, "+1/+1", 2)
     _die(scenario, leaper, giant)
     assert giant.damage == 3, "1 printed + 2 counters"
-    assert leaper.last_known_power == 3
-    assert leaper.last_known_toughness == 1 + 2
+    assert leaper.last_known_power_toughness() == (3, 3)
 
 
 def test_minus_counters_survive_death_too():
@@ -71,10 +76,37 @@ def test_pump_plus_counters_both_count():
 
 
 @pytest.mark.parametrize("how", ["destroy", "sacrifice", "exile_permanent", "return_to_hand"])
-def test_snapshot_is_taken_on_every_leave_path(how):
+def test_last_known_stats_are_right_on_every_leave_path(how):
     scenario = _board()
     leaper = scenario.creature("Goblin Fireleaper", "alice")
     scenario.game.add_counters(leaper, "+1/+1", 2)
     getattr(scenario.game, how)(leaper)
-    assert leaper.power == 3
-    assert leaper.toughness == 3
+    assert leaper.last_known_power_toughness() == (3, 3)
+
+
+def test_minus_counters_and_pump_in_the_last_known_stats():
+    scenario = _board()
+    leaper = scenario.creature("Goblin Fireleaper", "alice")
+    scenario.game.add_counters(leaper, "+1/+1", 3)
+    scenario.game.add_counters(leaper, "-1/-1", 1)
+    scenario.activate(leaper, *scenario.untapped_sources("Mountain", "Mountain"))
+    scenario.resolve_top()
+    scenario.game.destroy(leaper)
+    assert leaper.last_known_power_toughness() == (4, 3)
+
+
+def test_a_permanent_that_never_left_reads_its_live_stats():
+    scenario = _board()
+    leaper = scenario.creature("Goblin Fireleaper", "alice")
+    scenario.game.add_counters(leaper, "+1/+1", 2)
+    assert leaper.last_known_power_toughness() == (3, 3)
+
+
+def test_event_subject_readers_see_the_counters():
+    scenario = _board()
+    leaper = scenario.creature("Goblin Fireleaper", "alice")
+    scenario.game.add_counters(leaper, "+1/+1", 2)
+    scenario.game.destroy(leaper)
+    event = GameEvent(event=TriggerEvent.DIES, subject_id=leaper.id)
+    assert event_subject_power(scenario.game, event) == 3
+    assert event_subject_toughness(scenario.game, event) == 3

@@ -5378,7 +5378,7 @@ def event_subject_power(game: "Game", event: "GameEvent | None") -> int | None:
     subject = game.find_by_id(event.subject_id)
     if subject is None:
         return None
-    return subject.power
+    return subject.last_known_power_toughness()[0]
 
 
 def event_subject_toughness(game: "Game", event: "GameEvent | None") -> int | None:
@@ -5396,7 +5396,7 @@ def event_subject_toughness(game: "Game", event: "GameEvent | None") -> int | No
     subject = game.find_by_id(event.subject_id)
     if subject is None:
         return None
-    return subject.toughness
+    return subject.last_known_power_toughness()[1]
 
 
 def _fail_closed(game: "Game", ability: TriggeredAbility, source: CardState) -> bool:
