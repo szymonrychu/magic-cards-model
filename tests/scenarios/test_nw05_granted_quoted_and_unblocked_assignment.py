@@ -126,3 +126,76 @@ def test_it_dying_early_still_pays_out_its_last_known_mana_value():
     scenario.pass_until_resolved()  # its leaves-the-battlefield trigger
     assert giant.zone is Zone.GRAVEYARD
     assert bears.zone is Zone.GRAVEYARD
+
+
+
+
+# -- Carnage, Crimson Chaos: the same "It gains "<quoted>" and "<quoted>"" ----
+# after a return, on a triggered ability instead of a spell. Proof printing for
+# the put-then-gains reader (Scryfall, Modern/Pioneer legal, in no deck list).
+
+CARNAGE = "Carnage, Crimson Chaos"
+CARNAGE_GRANTS = (
+    "This creature attacks each combat if able",
+    "When this creature deals combat damage to a player, sacrifice it.",
+)
+
+
+def _carnage_board(*, graveyard=("Grizzly Bears",)):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[CARNAGE],
+            graveyard=list(graveyard),
+            battlefield=["Swamp", "Mountain", "Swamp", "Mountain"],
+        )
+        .player("bob", library=["Plains"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _enter_carnage(scenario, target):
+    scenario.cast_onto_stack(CARNAGE, auto=True)
+    scenario.choose_trigger_targets(CARNAGE, [target])
+    scenario.resolve_top()  # the creature spell
+    scenario.pass_until_resolved()  # the enters trigger
+
+
+def test_carnage_is_fully_handled():
+    bad = [c for c in card_support(card(CARNAGE)).clauses if c.outcome != "handled"]
+    assert not bad, bad
+
+
+def test_the_returned_creature_gains_both_quoted_abilities():
+    scenario = _carnage_board()
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    _enter_carnage(scenario, bears)
+    assert bears.zone is Zone.BATTLEFIELD
+    assert bears.granted_ability_texts == CARNAGE_GRANTS
+
+
+def test_a_creature_with_mana_value_over_three_is_not_a_legal_target():
+    scenario = _carnage_board(graveyard=("Serra Angel",))
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    scenario.cast_onto_stack(CARNAGE, auto=True)
+    scenario.resolve_top()
+    assert angel.zone is Zone.GRAVEYARD
+
+
+def test_the_granted_trigger_sacrifices_it_after_combat_damage_to_a_player():
+    scenario = _carnage_board()
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    _enter_carnage(scenario, bears)
+    bears.summoning_sick = False
+    while scenario.step is not Step.BEGINNING_OF_COMBAT:
+        scenario.advance()
+    scenario.advance()  # declare attackers
+    scenario.attack_with(bears)
+    while scenario.step is not Step.COMBAT_DAMAGE:
+        scenario.advance()
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 18
+    assert bears.zone is Zone.GRAVEYARD, "sacrificed by its own granted trigger"
