@@ -1924,7 +1924,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 129
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 125
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2173,14 +2173,13 @@ class Game(
     #: `colorless` and `not_controlled_by` (CR 609.7b, CR 105.2c);
     #: `ReflectedDamage` gained `optional` (CR 608.2d, CR 615.5); `CardState`
     #: gained `last_known_attacking` (CR 608.2h, "by attacking creatures").
-    #: 129 (NW04-T5): `ReflectedDamage` gained `to_source_controller`,
+    #: 125 (NW04-T5): `ReflectedDamage` gained `to_source_controller`,
     #: `source_quality`, `reflexive` and `draws` (CR 615.5, CR 603.12:
     #: Deflecting Palm, Honorable Passage, New Way Forward);
     #: `DamageRedirectReplacement` gained `amount_is_x`, `protects_yours`,
     #: `protected_types` and `redirect_player` (CR 614.9, CR 115.4: Harm's
     #: Way, Shining Shoal); `DelayedEffectSpec` gained the
-    #: `reflexive_prevented_damage_payoff` kind. 125-128 are reserved for the
-    #: other NW-04 tasks.
+    #: `reflexive_prevented_damage_payoff` kind.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
