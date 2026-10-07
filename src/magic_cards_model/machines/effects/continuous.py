@@ -2463,7 +2463,6 @@ def _parse_each_player_this_creature_attacked_loses_clause(
     return effect
 
 
-#: "that player loses the game" - Vraska, Scheming Gorgon's -10 grants
 #: "You may have creatures you control assign their combat damage this turn as
 #: though they weren't blocked." (Predatory Focus) - the permission Rhox's own
 #: line states (`machines/combat.ASSIGN_AS_THOUGH_UNBLOCKED_TEXT`), granted
@@ -2513,6 +2512,7 @@ def _parse_creatures_you_control_assign_as_though_unblocked_clause(
     return effect
 
 
+#: "that player loses the game" - Vraska, Scheming Gorgon's -10 grants
 #: "Whenever this creature deals damage to an opponent, that player loses the
 #: game." CR 104.3e's effect-stated loss, applied to the player the
 #: triggering event names (the damaged opponent), the same `event.player`
@@ -8230,7 +8230,9 @@ def _parse_put_onto_battlefield_then_it_gains_clauses(
     if match is None:
         return None
     grants = _split_put_then_it_gains_grants(match.group("grants"))
-    if grants is None:
+    if grants is None or any(is_leave_exile_line(grant) for grant in grants):
+        # The leave-the-battlefield replacement is a replacement effect, not a
+        # granted line: `_parse_put_then_grant_then_delayed_whole_text` owns it.
         return None
     first = _parse_mixed_clause(match.group("first"), for_spell=for_spell)
     if first is None:

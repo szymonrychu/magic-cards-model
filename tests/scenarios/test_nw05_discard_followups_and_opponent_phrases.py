@@ -179,6 +179,35 @@ def test_it_drains_every_opponent_not_just_one():
     assert scenario.player("alice").life == 23
 
 
+def test_everything_pizza_still_makes_every_opponent_discard_with_the_phrase_normalised():
+    """Regression for the one other pool printing carrying "each of your
+    opponents" (CR 102.2): its discard sentence already read before the
+    normaliser, and rewriting the phrase must leave it reading, for every
+    opponent."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Everything Pizza", "Grizzly Bears"]
+            + ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Plains"],
+            library=["Forest"] * 10,
+        )
+        .player("bob", hand=["Counterspell"], library=["Island"] * 10)
+        .player("carol", hand=["Counterspell"], library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    pizza = scenario.find("Everything Pizza", Zone.BATTLEFIELD, "alice")
+    sources = scenario.untapped_sources(
+        "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Plains"
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(pizza, *sources, sacrificing=[pizza], targets=[bears, "alice", bears])
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").hand == []
+    assert scenario.player("carol").hand == []
+
+
 # -- Mishra's Command: "They may discard up to X cards. Then they draw a card ---
 # -- for each card discarded this way." -----------------------------------------
 #
