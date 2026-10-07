@@ -1957,7 +1957,10 @@ class TargetRequirement(EngineModel):
         ):
             if target.protector == self.event_player:
                 return None
-            return f"{self.phrase} needs a battle {self.event_player} protects, and {target.name} is not"
+            return (
+                f"{self.phrase} needs a battle {self.event_player} protects, "
+                f"and {target.name} is not"
+            )
         if controller == self.event_player:
             return None
         return (
@@ -4297,7 +4300,9 @@ _EVENT_PLAYER_OR_PROTECTED_BATTLE_RE = re.compile(
 )
 
 
-def _event_player_or_protected_battle_profile(text: str, match: "re.Match[str]") -> TargetingProfile:
+def _event_player_or_protected_battle_profile(
+    text: str, match: "re.Match[str]"
+) -> TargetingProfile:
     rewritten = (
         text[: match.start()]
         + f"target {match.group('first')} or battle that player controls"

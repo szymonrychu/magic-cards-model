@@ -6117,6 +6117,7 @@ from .continuous import (  # noqa: E402
     suspect,
 )
 from .counters import _counter_kind, put_counters_on_ability_targets  # noqa: E402
+
 #: "`<source>` deals N damage to that player and you gain N life." (Oath of
 #: Kaya's attack trigger): CR 608.2c's two instructions in printed order - the
 #: damage to the player the trigger event named (`_parse_damage_that_player_
@@ -6187,10 +6188,10 @@ def _merge_self_clause_and_prevent_to_it_clauses(
 
 from .damage import (  # noqa: E402
     _lethal_amount_before_damage,
-    _parse_prevent_all_damage_to_self_this_turn_clause,
-    _parse_damage_that_player_clause,
     _parse_damage_each_filtered_clause,
     _parse_damage_each_group_clause,
+    _parse_damage_that_player_clause,
+    _parse_prevent_all_damage_to_self_this_turn_clause,
     _prevent_next_damage_from_target,
     card_types_among_spells_cast_reader,
 )

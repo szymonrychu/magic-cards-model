@@ -82,9 +82,9 @@ from ...machines.replacement import (
 )
 from ...machines.targeting import (
     RetargetScope,
-    announce_trigger_division,
     TargetingProfile,
     TargetRequirement,
+    announce_trigger_division,
     face_spell_profile,
     kicked_instead_target_text,
     per_kick_target_text,

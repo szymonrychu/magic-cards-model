@@ -39,6 +39,7 @@ from ..casting import (
 )
 from ..casting_restrictions import create_targeted_cant_cast_restriction
 from ..combat import has_keyword
+from ..damage_backrefs import newly_discarded, public_card_ids
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     DelayedTrigger,
@@ -72,7 +73,6 @@ from ..triggers import (
     ExtraTriggerEvent,
     is_ability,
 )
-from ..damage_backrefs import newly_discarded, public_card_ids
 from ..triggers.events import event_subject_or_source, object_stat_or_last_known
 
 if TYPE_CHECKING:
@@ -3629,7 +3629,8 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
             return
         if each_opponent:
             _deal_all(
-                game, [(source, opponent, amount) for opponent in _opponents(game, ability.controller)]
+                game,
+                [(source, opponent, amount) for opponent in _opponents(game, ability.controller)],
             )
             return
         _deal_all(game, [(source, target, amount) for target in game.resolve_targets(ability)])

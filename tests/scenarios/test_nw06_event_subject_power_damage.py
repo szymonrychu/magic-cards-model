@@ -514,3 +514,24 @@ def test_molten_psyche_metalcraft_condition_is_not_swallowed():
     )
 
     assert _life(scenario, "bob") == 20, "no metalcraft: no damage"
+
+
+def test_blazing_bomb_sacrificed_as_a_cost_deals_its_last_known_power():
+    """An activated ability has no trigger event: "it" is the source, which
+    the sacrifice cost already moved - its counters still count (CR 608.2h)."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Blazing Bomb"])
+        .player("bob", battlefield=["Giant Spider"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bomb = scenario.creature("Blazing Bomb", "alice")
+    bomb.summoning_sick = False  # staged: on the battlefield since alice's turn began
+    scenario.game.add_counters(bomb, "+1/+1", 2)
+    giant = scenario.creature("Giant Spider", "bob")
+    scenario.activate(bomb, sacrificing=[bomb], targets=[giant])
+    scenario.resolve_top()
+
+    assert giant.damage == 3, "1 printed + 2 counters, as it last existed"
+    assert set(_outcomes("Blazing Bomb")) == {"handled"}

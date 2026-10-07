@@ -1347,9 +1347,7 @@ def _opponent_attacks_your_planeswalker_holds(
         and Type.PLANESWALKER in game.characteristics_of(attacked).types
     ):
         return False
-    first = next(
-        (attack for attack in game.combat.attacks if attack.defender == defender), None
-    )
+    first = next((attack for attack in game.combat.attacks if attack.defender == defender), None)
     return first is not None and first.attacker_id == event.subject_id
 
 
