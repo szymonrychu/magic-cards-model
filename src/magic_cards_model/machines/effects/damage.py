@@ -470,6 +470,176 @@ def _parse_prevent_all_damage_to_self_this_turn_clause(
     return effect
 
 
+def _shield_object(
+    game: "Game",
+    stack_object: "StackObject",
+    obj: CardState,
+    *,
+    combat_only: bool,
+    to: bool,
+    by: bool,
+) -> None:
+    """CR 615.1a's "prevent all [combat] damage that would be dealt to [and
+    dealt by] `<obj>` this turn": one shield around the object and, for "dealt
+    by", a second one on damage it is the source of - two prevention effects
+    on one object. Both name it *as this object* (CR 400.7): the "to" shield
+    lasts only while this incarnation stays on the battlefield, and the "by"
+    shield holds its `zone_change_stamp` (a source that left and returned is a
+    new object the shield never named)."""
+    from ...models.game import PreventionShield, ShieldKind
+
+    if obj.zone is not Zone.BATTLEFIELD or obj.zone_change_stamp is None:
+        return
+    controller = game.controller_of(stack_object).username
+    word = "combat damage" if combat_only else "damage"
+    if to:
+        game.create_prevention_shield(
+            PreventionShield(
+                kind=ShieldKind.ALL,
+                label=f"prevent all {word} that would be dealt to {obj.name} this turn",
+                controller=controller,
+                card_id=obj.id,
+                combat_only=combat_only,
+                lasts_while=RemainsOnBattlefield(card_id=obj.id, stamp=obj.zone_change_stamp),
+            )
+        )
+    if by:
+        game.create_prevention_shield(
+            PreventionShield(
+                kind=ShieldKind.ALL,
+                label=f"prevent all {word} that would be dealt by {obj.name} this turn",
+                controller=controller,
+                source_id=obj.id,
+                source_stamp=obj.zone_change_stamp,
+                combat_only=combat_only,
+            )
+        )
+
+
+#: "Prevent all [combat] damage that would be dealt to and dealt by
+#: `<object>` this turn." - Moonlight Geist ("this creature"), Soratami Cloud
+#: Chariot ("target creature you control"), Ith, High Arcanist ("Untap target
+#: attacking creature. ... that creature"), Goblin Snowman ("it", read whole
+#: by `_parse_prevent_damage_to_it_whole_text`).
+_PREVENT_TO_AND_BY_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that would be dealt to and dealt by "
+    r"(?P<who>him|her|this creature|this permanent|that creature|target [^.]+?) this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _prevent_to_and_by_clause(sentence: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_PREVENT_TO_AND_BY_RE`'s sentence. A self-reference ("this creature",
+    "him") is an ability's own source; a target phrase - or "that creature",
+    CR 608.2c's anaphor back to the object's own earlier target - names each
+    target still legal as it resolves (CR 608.2b)."""
+    match = _PREVENT_TO_AND_BY_RE.fullmatch(" ".join(sentence.strip().split()))
+    if match is None:
+        return None
+    who = match.group("who").lower()
+    combat_only = match.group("combat") is not None
+    targeted = who.startswith("target ") or who == "that creature"
+    if who.startswith("target "):
+        if not _targets_understood(match.group("who"), count_agnostic=True):
+            return None
+    elif not targeted and for_spell:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if targeted:
+            objects = [t for t in game.resolve_targets(stack_object) if isinstance(t, CardState)]
+        else:
+            if not isinstance(stack_object, AbilityOnStack):
+                return
+            source = stack_object.source(game)
+            if source is None or stack_object.source_stamp not in (None, source.zone_change_stamp):
+                return
+            objects = [source]
+        for obj in objects:
+            _shield_object(game, stack_object, obj, combat_only=combat_only, to=True, by=True)
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s7", for_spell=FORWARD)
+def _parse_prevent_damage_to_and_by_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """One `_PREVENT_TO_AND_BY_RE` clause naming its own object ("that
+    creature" needs the sentence before it, `_parse_prevent_to_and_by_
+    sentence_clauses`)."""
+    if "dealt to and dealt by" not in clause.lower() or "that creature" in clause.lower():
+        return None
+    return _prevent_to_and_by_clause(clause, for_spell=for_spell)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_prevent_to_and_by_sentence_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """A text ending in `_PREVENT_TO_AND_BY_RE`'s sentence, read whole before
+    the clause splitter cuts its "to and dealt by" at the "and". Any sentences
+    before it are read by `_parse_mixed_clauses` and run first (CR 608.2c);
+    "that creature" is only read after such a sentence named a target."""
+    if "dealt to and dealt by" not in text.lower():
+        return None
+    sentences = _SENTENCE_BREAK_RE.split(" ".join(text.strip().split()))
+    last = sentences[-1]
+    head = " ".join(sentences[:-1])
+    if "that creature" in last.lower() and "target" not in head.lower():
+        return None
+    clause = _prevent_to_and_by_clause(last, for_spell=for_spell)
+    if clause is None:
+        return None
+    if not head:
+        return [clause]
+    head_clauses = _parse_mixed_clauses(head, for_spell=for_spell)
+    if head_clauses is None:
+        return None
+    return [*head_clauses, clause]
+
+
+#: An ability's whole text "Prevent all [combat] damage that would be dealt
+#: to [and dealt by] it this turn." (Goblin Snowman's block trigger): with
+#: no other instruction for "it" to point back to, it is the object the
+#: trigger event names (CR 603.2, `event_subject_or_source`) - the ability's
+#: own source when the condition is self-referential ("Whenever this
+#: creature blocks").
+_PREVENT_TO_IT_WHOLE_TEXT_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that would be dealt to (?P<by>and dealt by )?it "
+    r"this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_prevent_damage_to_it_whole_text(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_PREVENT_TO_IT_WHOLE_TEXT_RE`'s shape, on an ability's whole text only:
+    inside a longer text "it" may name an earlier target (Djeru's Resolve), so
+    a single clause is never read this way."""
+    if for_spell or "would be dealt to" not in text.lower():
+        return None
+    match = _PREVENT_TO_IT_WHOLE_TEXT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    combat_only = match.group("combat") is not None
+    by = match.group("by") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        referent = event_subject_or_source(game, ability)
+        if referent is None:
+            return
+        if (
+            ability.source_id is not None
+            and referent.id == ability.source_id
+            and ability.source_stamp not in (None, referent.zone_change_stamp)
+        ):
+            return  # CR 400.7: the source left and came back as a new object
+        _shield_object(game, ability, referent, combat_only=combat_only, to=True, by=by)
+
+    return effect
+
+
 def prevent_all_combat_damage_except(excluded: frozenset[str]) -> Effect:
     """Moonmist's second sentence: the Fog shield, minus the types it names.
 
@@ -532,6 +702,68 @@ def prevent_next_damage_to_target(amount: int) -> Effect:
                     f"to {getattr(target, 'name', None) or target.username} this turn",
                     controller=controller,
                     amount=amount,
+                    card_id=None if shielded is None else shielded.id,
+                    player=None if shielded is not None else target.username,
+                )
+            )
+
+    return effect
+
+
+#: "Prevent the next N damage that would be dealt this turn to any number of
+#: targets, divided as you choose." (Angel of Salvation): one CR 615.7
+#: shield per target, sized by the division announced with the targets (CR
+#: 601.2d, via CR 603.3d for a trigger - `targeting.announce_trigger_
+#: division`).
+_PREVENT_NEXT_DAMAGE_DIVIDED_RE = re.compile(
+    rf"^prevent the next (?P<n>{COUNT}) damage that would be dealt (?:this turn )?to any number "
+    r"of targets(?: this turn)?,? divided as you choose\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s6", for_spell=FORWARD)
+def _parse_prevent_next_damage_divided_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_PREVENT_NEXT_DAMAGE_DIVIDED_RE`'s shape.
+
+    Each target gets the share announced for it; a target illegal on
+    resolution loses its share, which is not handed to anyone else (CR
+    608.2b, and the card's ruling: "the effects that would have been created
+    for illegal targets aren't created at all"). Each shield lasts until it
+    is used up or the turn ends (CR 615.3, CR 615.7)."""
+    if "divided as you choose" not in clause.lower():
+        return None
+    match = _PREVENT_NEXT_DAMAGE_DIVIDED_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    total = parse_count(match.group("n"))
+    if total is None or total < 1:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from ...models.game import PreventionShield, ShieldKind
+
+        references = list(getattr(stack_object, "targets", ()) or ())
+        if not references:
+            return
+        shares = _divided_damage_shares(
+            total, len(references), getattr(stack_object, "division", None)
+        )
+        controller = game.controller_of(stack_object).username
+        for reference, share in zip(references, shares, strict=True):
+            target = game.legal_target(stack_object, reference)
+            if target is None or share <= 0:
+                continue
+            shielded = target if isinstance(target, CardState) else None
+            game.create_prevention_shield(
+                PreventionShield(
+                    kind=ShieldKind.AMOUNT,
+                    label=f"prevent the next {share} damage that would be dealt "
+                    f"to {getattr(target, 'name', None) or target.username} this turn",
+                    controller=controller,
+                    amount=share,
                     card_id=None if shielded is None else shielded.id,
                     player=None if shielded is not None else target.username,
                 )
@@ -643,6 +875,7 @@ class _FogSpec:
     choose_source: bool = False
     recipient_types: tuple[Type, ...] = ()
     recipient_yours: bool = False
+    recipient_subtypes: tuple[str, ...] = ()
     you_and_permanents: bool = False
     recipient_count: int = 1
     excluded_subtypes: tuple[str, ...] = ()
@@ -733,6 +966,7 @@ _FOG_TARGETS_RE = re.compile(
 #: earlier target ("Target creature gains flying until end of turn. Prevent
 #: all damage that would be dealt to that creature this turn.").
 _FOG_ANAPHOR_RE = re.compile(r"^(?:it|that creature)$")
+_FOG_SUBTYPE_YOU_CONTROL_RE = re.compile(r"^(?P<plural>[a-z][a-z'-]*s) you control$")
 
 
 def _fog_recipient_spec(phrase: str, *, for_spell: bool) -> dict[str, Any] | None:
@@ -746,6 +980,13 @@ def _fog_recipient_spec(phrase: str, *, for_spell: bool) -> dict[str, Any] | Non
         return {"you_and_permanents": True, "recipient_types": (Type.CREATURE,)}
     if lowered == "creatures you control":
         return {"recipient_types": (Type.CREATURE,), "recipient_yours": True}
+    if match := _FOG_SUBTYPE_YOU_CONTROL_RE.fullmatch(lowered):
+        # "Dogs you control" (Pack Leader): permanents of that creature type
+        # its controller controls as the damage would be dealt (CR 611.2c).
+        subtype = canonical_subtype(match.group("plural"))
+        if subtype is None or subtype.lower() not in {kind.lower() for kind in creature_types()}:
+            return None
+        return {"recipient_subtypes": (subtype.lower(),), "recipient_yours": True}
     *qualifiers, noun = lowered.split()
     if noun == "creatures" and all(word in _FOG_RECIPIENT_TYPE_WORDS for word in qualifiers):
         types = tuple(_FOG_RECIPIENT_TYPE_WORDS[word] for word in qualifiers)
@@ -930,6 +1171,8 @@ def _create_fog_shield(
         fields["recipient_types"] = spec.recipient_types
     if spec.recipient_yours:
         fields["recipient_controller"] = controller
+    if spec.recipient_subtypes:
+        fields["recipient_subtypes"] = spec.recipient_subtypes
     if spec.excluded_subtypes:
         fields["excluded_source_subtypes"] = frozenset(spec.excluded_subtypes)
     if spec.sources_not_yours:

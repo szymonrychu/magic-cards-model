@@ -2247,3 +2247,32 @@ def test_a_snapshot_written_before_the_redirect_to_enchanted_is_refused() -> Non
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW05_T2_REDIRECT_TO_ENCHANTED}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before NW06-T1: `PreventionShield` gained
+#: `recipient_subtypes` (Pack Leader's "to Dogs you control") and
+#: `TargetRequirement` gained `battles_protected_by_event_player` (Rampaging
+#: Raptor's "battle that player protects"). NW06-T1 bumped 130 -> 131, so the
+#: last shape without them is 130.
+_SCHEMA_VERSION_BEFORE_NW06_T1_RECIPIENT_SUBTYPES = 130
+
+
+def test_a_snapshot_written_before_the_recipient_subtypes_is_refused() -> None:
+    """A version-130 dump's shields carry no `recipient_subtypes` and its
+    targets no `battles_protected_by_event_player`: decoded as current, a
+    subtype-scoped shield would read as covering every permanent its player
+    controls. Refused instead."""
+    from magic_cards_model.machines.targeting import TargetRequirement
+    from magic_cards_model.models.game.records import PreventionShield
+
+    assert "recipient_subtypes" in PreventionShield.model_fields
+    assert "battles_protected_by_event_player" in TargetRequirement.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW06_T1_RECIPIENT_SUBTYPES
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW06_T1_RECIPIENT_SUBTYPES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW06_T1_RECIPIENT_SUBTYPES}",
+    ):
+        Game.model_validate(dumped)

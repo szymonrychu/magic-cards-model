@@ -422,6 +422,11 @@ def _strip_leading_article(text: str) -> str:
     return _LEADING_ARTICLE.sub(r"\1", text.strip())
 
 
+_THIS_OBJECT_RE = re.compile(
+    r"this (?:creature|permanent|artifact|enchantment|land|planeswalker)", re.IGNORECASE
+)
+
+
 def _cast_spell_targets_condition_holds(
     game: "Game", target_text: str, controller: str, event: GameEvent, source: CardState
 ) -> bool | None:
@@ -459,7 +464,11 @@ def _cast_spell_targets_condition_holds(
     # creature".
     target_text = re.sub(r"^one or more\s+", "", target_text.strip(), flags=re.IGNORECASE)
     stripped = _strip_leading_article(target_text).strip()
-    if stripped in self_reference_names(source.name, legendary=_is_legendary_source(source)):
+    # Heroic's own "a spell that targets this creature" (Favored Hoplite) -
+    # CR 201.5's "this creature" is the same self-reference as the name.
+    if stripped in self_reference_names(
+        source.name, legendary=_is_legendary_source(source)
+    ) or _THIS_OBJECT_RE.fullmatch(stripped):
         if event.subject_id is None:
             return False
         spell = game.find_by_id(event.subject_id)

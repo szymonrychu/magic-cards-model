@@ -6153,8 +6153,41 @@ def _merge_damage_that_player_and_gain_life_text(
     return effect
 
 
+#: "put a +1/+1 counter on this creature and prevent all damage that would be
+#: dealt to it this turn." (Favored Hoplite's heroic trigger): "it" is the
+#: object the first clause named about itself - the ability's own source
+#: (CR 608.2c) - so the second clause is the self-shield of `_parse_prevent_
+#: all_damage_to_self_this_turn_clause` (CR 615.1a).
+_SELF_CLAUSE_AND_PREVENT_TO_IT_RE = re.compile(
+    r"^(?P<first>[^.]*?\bthis (?P<noun>creature|permanent)\b[^.]*?) and "
+    r"(?P<second>prevent all (?:combat )?damage that would be dealt to) it this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _merge_self_clause_and_prevent_to_it_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """`_SELF_CLAUSE_AND_PREVENT_TO_IT_RE`'s pair, on an ability. A first
+    clause that also names a target is refused: "it" could be that target."""
+    if for_spell or "would be dealt to it this turn" not in text.lower():
+        return None
+    match = _SELF_CLAUSE_AND_PREVENT_TO_IT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or "target" in match.group("first").lower():
+        return None
+    first = _parse_mixed_clause(match.group("first"), for_spell=False)
+    second = _parse_prevent_all_damage_to_self_this_turn_clause(
+        f"{match.group('second')} this {match.group('noun').lower()} this turn.", for_spell=False
+    )
+    if first is None or second is None:
+        return None
+    return [first, second]
+
+
 from .damage import (  # noqa: E402
     _lethal_amount_before_damage,
+    _parse_prevent_all_damage_to_self_this_turn_clause,
     _parse_damage_that_player_clause,
     _parse_damage_each_filtered_clause,
     _parse_damage_each_group_clause,

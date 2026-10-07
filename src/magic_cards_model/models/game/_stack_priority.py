@@ -82,6 +82,7 @@ from ...machines.replacement import (
 )
 from ...machines.targeting import (
     RetargetScope,
+    announce_trigger_division,
     TargetingProfile,
     TargetRequirement,
     face_spell_profile,
@@ -1998,6 +1999,9 @@ class StackPriorityMixin:
                 # place, not that it goes on choosing nothing.
                 continue
             ability.targets = list(targets)
+            # CR 603.3d -> CR 601.2d: a divided effect's division is
+            # announced with the targets, as it goes on the stack.
+            announce_trigger_division(self, ability)
             self.stack.append(ability)
             self._emit_ability_becomes_target(ability)
             placed.append(ability)
