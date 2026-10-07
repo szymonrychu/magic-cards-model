@@ -1924,7 +1924,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 134
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 132
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2200,11 +2200,11 @@ class Game(
     #: `redirect_to_enchanted` (CR 614.9, CR 303.4b: Saving Grace's "is dealt
     #: to enchanted creature instead"); an older created redirect decoded
     #: without it would read its target index instead.
-    #: 134 (NW06-T4): `machines/abilities.TriggeredAbility` gained
+    #: 131 (NW06-T4): `machines/abilities.TriggeredAbility` gained
     #: `triggers_only_if` (Quakebringer's "This ability triggers only if ..."),
     #: reachable from `Game` through every `AbilityOnStack.ability`; an older
     #: dump's ability would decode without its restriction.
-    #: 131 (NW06-T1): `PreventionShield` gained `recipient_subtypes` (Pack
+    #: 132 (NW06-T1): `PreventionShield` gained `recipient_subtypes` (Pack
     #: Leader's "to Dogs you control", CR 611.2c) and `TargetRequirement`
     #: gained `battles_protected_by_event_player` (Rampaging Raptor's "battle
     #: that player protects", CR 310.9e); decoded as current, an older shield

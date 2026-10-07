@@ -2251,7 +2251,7 @@ def test_a_snapshot_written_before_the_redirect_to_enchanted_is_refused() -> Non
 
 #: The version stamped before NW06-T4: `TriggeredAbility` gained
 #: `triggers_only_if` (Quakebringer's "This ability triggers only if ...").
-#: NW06-T4 bumped 130 -> 134 (renumbered at integration), so the last shape
+#: NW06-T4 bumped 130 -> 131 (renumbered at integration), so the last shape
 #: without it is 130.
 _SCHEMA_VERSION_BEFORE_NW06_T4_TRIGGERS_ONLY_IF = 130
 
@@ -2276,13 +2276,13 @@ def test_a_snapshot_written_before_the_trigger_restriction_field_is_refused() ->
 #: The version stamped before NW06-T1: `PreventionShield` gained
 #: `recipient_subtypes` (Pack Leader's "to Dogs you control") and
 #: `TargetRequirement` gained `battles_protected_by_event_player` (Rampaging
-#: Raptor's "battle that player protects"). NW06-T1 bumped 130 -> 131, so the
-#: last shape without them is 130.
-_SCHEMA_VERSION_BEFORE_NW06_T1_RECIPIENT_SUBTYPES = 130
+#: Raptor's "battle that player protects"). NW06-T1 bumped 131 -> 132, so the
+#: last shape without them is 131.
+_SCHEMA_VERSION_BEFORE_NW06_T1_RECIPIENT_SUBTYPES = 131
 
 
 def test_a_snapshot_written_before_the_recipient_subtypes_is_refused() -> None:
-    """A version-130 dump's shields carry no `recipient_subtypes` and its
+    """A version-131 dump's shields carry no `recipient_subtypes` and its
     targets no `battles_protected_by_event_player`: decoded as current, a
     subtype-scoped shield would read as covering every permanent its player
     controls. Refused instead."""
