@@ -535,6 +535,32 @@ def _required_becomes_tapped_subtype(condition: str) -> tuple[str, ...] | None:
     return _parse_subtype_list(match.group("subtype"))
 
 
+#: "a `<Subtype>` you control deals [combat] damage" (Greatbow Doyen's own
+#: "Whenever an Archer you control deals damage to a creature") -
+#: `_ATTACKS_SUBTYPE`'s bare-subtype-subject shape for the dealer of a
+#: DEALS_DAMAGE event (CR 120.1: the object that deals damage is its source).
+_DEALS_DAMAGE_SUBTYPE = re.compile(
+    r"^(?:an?|another|one or more) (?:nontoken )?"
+    r"(?P<subtype>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,?\s+or\s+[A-Z][A-Za-z]*)?)"
+    r"(?: (?:artifact|creature|enchantment|land|planeswalker|permanent)s?)?"
+    r"(?: you control| an opponent controls)?"
+    r" deals? (?:combat |noncombat )?damage\b"
+)
+#: "... deals [combat] damage to a creature" - the recipient must be a
+#: creature (CR 120.3e's damage to a creature, `GameEvent.target_types`).
+_DEALS_DAMAGE_TO_A_CREATURE = re.compile(
+    r"\bdeals? (?:combat |noncombat )?damage to an? creature\b"
+)
+
+
+def _required_dealing_subtype(condition: str) -> tuple[str, ...] | None:
+    """The subtype(s) `_DEALS_DAMAGE_SUBTYPE` names, or `None`."""
+    match = _DEALS_DAMAGE_SUBTYPE.match(condition)
+    if match is None:
+        return None
+    return _parse_subtype_list(match.group("subtype"))
+
+
 #: "a `<Subtype>` you control attacks" (Defiant Thundermaw's own back face's
 #: "Whenever a Dragon you control attacks, it deals 2 damage to any
 #: target.") - `_BECOMES_TAPPED_SUBTYPE`'s own bare-subtype-subject shape
@@ -1272,6 +1298,52 @@ def _attacks_you_holds(
     return requirement.rejects(attacker, controller, game, None) is None
 
 
+#: "Whenever an opponent attacks a planeswalker you control with one or more
+#: creatures" (Oath of Kaya): one trigger for each of the controller's
+#: planeswalkers an opponent attacks (the card's ruling: "If an opponent
+#: attacks more than one planeswalker you control, the last ability of Oath
+#: of Kaya triggers once for each of those attacked planeswalkers"), however
+#: many creatures attack it (CR 508.3d's per-declaration reading, here per
+#: attacked planeswalker).
+_OPPONENT_ATTACKS_YOUR_PLANESWALKER_RE = re.compile(
+    r"^an opponent attacks (?:a|one or more) planeswalkers? you control with one or more "
+    r"creatures$"
+)
+
+
+def opponent_attacks_your_planeswalker_condition(condition: str) -> bool:
+    """Whether `condition` is `_OPPONENT_ATTACKS_YOUR_PLANESWALKER_RE`'s shape
+    - read off a real declared attack, which `support`'s synthetic board
+    never has."""
+    return _OPPONENT_ATTACKS_YOUR_PLANESWALKER_RE.fullmatch(condition.strip().lower()) is not None
+
+
+def _opponent_attacks_your_planeswalker_holds(
+    game: "Game", controller: str, event: GameEvent
+) -> bool:
+    """`_OPPONENT_ATTACKS_YOUR_PLANESWALKER_RE`'s match: an opponent's
+    attacker declared at one of `controller`'s planeswalkers (CR 508.1a), and
+    the first attacker declared at it, so each attacked planeswalker
+    triggers once."""
+    if event.subject_id is None or event.subject_controller in (None, controller):
+        return False
+    defender = event.defender
+    if defender is None or defender.card_id is None:
+        return False
+    attacked = game.find_by_id(defender.card_id)
+    if not (
+        isinstance(attacked, CardState)
+        and attacked.zone is Zone.BATTLEFIELD
+        and game.controller_of(attacked).username == controller
+        and Type.PLANESWALKER in game.characteristics_of(attacked).types
+    ):
+        return False
+    first = next(
+        (attack for attack in game.combat.attacks if attack.defender == defender), None
+    )
+    return first is not None and first.attacker_id == event.subject_id
+
+
 def _controller_clause_holds(
     condition: str, controller: str, subject_controller: str | None
 ) -> bool:
@@ -1935,6 +2007,8 @@ def _condition_matches(
         )
 
     if ability.event is TriggerEvent.ATTACKS:
+        if _OPPONENT_ATTACKS_YOUR_PLANESWALKER_RE.fullmatch(lowered.strip()):
+            return _opponent_attacks_your_planeswalker_holds(game, controller, event)
         threshold = total_power_attack_threshold(condition)
         if threshold is not None:
             # CR 508.3d: "you attack" is one trigger for the whole
@@ -2523,11 +2597,16 @@ def _condition_matches(
         elif not (
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)
+            and _subtype_matches(event.subject_subtypes, _required_dealing_subtype(condition))
         ):
             return False
         if not _subject_has_required_counter(condition, game, event.subject_id):
             return False
         if "combat damage" in lowered and not event.combat:
+            return False
+        if _DEALS_DAMAGE_TO_A_CREATURE.search(lowered) and (
+            event.target_id is None or Type.CREATURE not in (event.target_types or ())
+        ):
             return False
         if "to an opponent" in lowered:
             return event.player is not None and event.player != controller

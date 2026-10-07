@@ -536,6 +536,11 @@ class TargetRequirement(EngineModel):
     """`ControllerRestriction.EVENT_PLAYER` only: the player "that player"
     names, bound from the trigger's own event by
     `TargetingProfile.for_event_player`. `None` until then."""
+    battles_protected_by_event_player: bool = False
+    """"target planeswalker that player controls or battle that player
+    protects" (Rampaging Raptor): a battle target answers to its protector
+    (CR 310.9e), not its controller - the planeswalker half still answers to
+    `event_player` as its controller."""
     must_be_tapped: bool | None = None
     excludes_source: bool = False
     """True for "target *other* ..." / "*another* target ...": the permanent
@@ -1943,7 +1948,17 @@ class TargetRequirement(EngineModel):
         """`ControllerRestriction.EVENT_PLAYER`: the target must be controlled
         by the player the trigger event named, once `event_player` is bound;
         unbound, nothing is restricted (see the enum member's docstring)."""
-        if self.event_player is None or controller == self.event_player:
+        if self.event_player is None:
+            return None
+        if (
+            self.battles_protected_by_event_player
+            and isinstance(target, CardState)
+            and Type.BATTLE in target.types
+        ):
+            if target.protector == self.event_player:
+                return None
+            return f"{self.phrase} needs a battle {self.event_player} protects, and {target.name} is not"
+        if controller == self.event_player:
             return None
         return (
             f"{self.phrase} needs a permanent {self.event_player} controls, "
@@ -4187,7 +4202,42 @@ def profile_for_text(text: str) -> TargetingProfile:
     return_from_zone = _return_from_zone_to_destination_profile(text)
     if return_from_zone is not None:
         return return_from_zone
+    protected_battle = _EVENT_PLAYER_OR_PROTECTED_BATTLE_RE.search(text)
+    if protected_battle is not None:
+        return _event_player_or_protected_battle_profile(text, protected_battle)
     return _parse(_REMINDER.sub("", text), spell_only=False)
+
+
+#: "target `<type>` that player controls or battle that player protects"
+#: (Rampaging Raptor): one target (CR 115.1), either a permanent of the named
+#: type the event's player controls or a battle that player protects (CR
+#: 310.9e). Read as "target `<type>` or battle that player controls" - which
+#: `_parse` already reads with both types - with the battle half then
+#: answered by protector instead of controller.
+_EVENT_PLAYER_OR_PROTECTED_BATTLE_RE = re.compile(
+    r"\btarget (?P<first>[a-z]+(?: or [a-z]+)*) that player controls or battle that player "
+    r"protects\b",
+    re.IGNORECASE,
+)
+
+
+def _event_player_or_protected_battle_profile(text: str, match: "re.Match[str]") -> TargetingProfile:
+    rewritten = (
+        text[: match.start()]
+        + f"target {match.group('first')} or battle that player controls"
+        + text[match.end() :]
+    )
+    profile = _parse(_REMINDER.sub("", rewritten), spell_only=False)
+    return profile.model_copy(
+        update={
+            "requirements": tuple(
+                requirement.model_copy(update={"battles_protected_by_event_player": True})
+                if requirement.controller is ControllerRestriction.EVENT_PLAYER
+                else requirement
+                for requirement in profile.requirements
+            )
+        }
+    )
 
 
 #: "Return from your graveyard to the battlefield `<target phrase>`."

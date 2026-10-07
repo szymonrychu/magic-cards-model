@@ -62,7 +62,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import FORWARD, MIXED_CLAUSES, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _MANA_COST_LIST,
     _OWNER_PUTS_IT_INTO_LIBRARY_TAIL,
@@ -6117,8 +6117,45 @@ from .continuous import (  # noqa: E402
     suspect,
 )
 from .counters import _counter_kind, put_counters_on_ability_targets  # noqa: E402
+#: "`<source>` deals N damage to that player and you gain N life." (Oath of
+#: Kaya's attack trigger): CR 608.2c's two instructions in printed order - the
+#: damage to the player the trigger event named (`_parse_damage_that_player_
+#: clause`'s own referent: the attacking opponent), then the controller's
+#: life gain. The gain does not depend on the damage being dealt: a
+#: prevented damage event still leaves "you gain N life" to happen.
+_DAMAGE_THAT_PLAYER_AND_YOU_GAIN_RE = re.compile(
+    rf"^(?P<damage>[^.]*\bdeals? {COUNT} damage to (?:that player|them|that creature'?s "
+    rf"controller)) and you gain (?P<n>{COUNT}) life\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _merge_damage_that_player_and_gain_life_text(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_DAMAGE_THAT_PLAYER_AND_YOU_GAIN_RE`'s pair. Ability-only: "that
+    player" is the triggering event's (CR 603.2)."""
+    if for_spell or "and you gain" not in text.lower():
+        return None
+    match = _DAMAGE_THAT_PLAYER_AND_YOU_GAIN_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    damage = _parse_damage_that_player_clause(match.group("damage"), for_spell=False)
+    gained = parse_count(match.group("n"))
+    if damage is None or gained is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        damage(game, ability)
+        game.gain_life(game.controller_of(ability), gained)
+
+    return effect
+
+
 from .damage import (  # noqa: E402
     _lethal_amount_before_damage,
+    _parse_damage_that_player_clause,
     _parse_damage_each_filtered_clause,
     _parse_damage_each_group_clause,
     _prevent_next_damage_from_target,

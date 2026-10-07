@@ -734,3 +734,25 @@ def damage_then_player_rider_ability_effect(effect_text: str) -> Any:
             rider(game, player, ability.source_name, source_id_of(ability))
 
     return effect
+
+
+def public_card_ids(game: "Game") -> set[Any]:
+    """Every card id now in a graveyard or in exile - taken just before an
+    instruction that discards, so `newly_discarded` can tell what it moved."""
+    return {card.id for player in game.players for card in player.graveyard} | {
+        card.id for card in game.exile
+    }
+
+
+def newly_discarded(game: "Game", before: set[Any], username: str) -> list[CardState]:
+    """The cards `username` discarded since `before` was taken: CR 701.9a's
+    discard puts them in their owner's graveyard (or exile, for madness, CR
+    702.35a), marked `discarded_by`. "That card" in the next sentence is this
+    card (CR 608.2c), and its mana value is read off the card where it now is
+    (CR 202.3; a land has no mana cost, so 0 - CR 202.3a)."""
+    moved = [card for player in game.players for card in player.graveyard] + list(game.exile)
+    return [
+        card
+        for card in moved
+        if card.id not in before and card.discarded_by is not None and card.owner == username
+    ]

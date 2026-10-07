@@ -72,6 +72,7 @@ from ..triggers import (
     ExtraTriggerEvent,
     is_ability,
 )
+from ..damage_backrefs import newly_discarded, public_card_ids
 from ..triggers.events import event_subject_or_source, object_stat_or_last_known
 
 if TYPE_CHECKING:
@@ -2051,6 +2052,15 @@ _EVENT_RELATIVE_TARGET_RE = re.compile(
     r"\bthat (?:player|opponent)\b|\bthey\b|\btheir\b", re.IGNORECASE
 )
 
+#: The event-relative target phrases the target reader binds to the trigger
+#: event's player: "target `<type>` that player controls" and Rampaging
+#: Raptor's "target planeswalker that player controls or battle that player
+#: protects".
+_EVENT_PLAYER_TARGET_PHRASE_RE = re.compile(
+    r"^target [a-z ]+? that player controls(?: or battle that player protects)?$",
+    re.IGNORECASE,
+)
+
 #: "they can't gain life for the rest of the game" - the player half of
 #: `_DAMAGE_THAT_MUCH_RE`'s rider: CR 119.7's prohibition with CR 611.2a's
 #: stated duration, recorded as `Player.cannot_gain_life` on each player the
@@ -2081,10 +2091,17 @@ def _parse_damage_that_much_clause(text: str, *, for_spell: bool) -> AbilityEffe
     if match is None:
         return None
     phrase = match.group("phrase")
-    if _EVENT_RELATIVE_TARGET_RE.search(phrase) is not None:
-        # Questing Beast's "target planeswalker that player controls" is
-        # restricted by the triggering event, which the target reader cannot
-        # express - it would offer every planeswalker, so it stays unread.
+    if (
+        _EVENT_RELATIVE_TARGET_RE.search(phrase) is not None
+        and _EVENT_PLAYER_TARGET_PHRASE_RE.fullmatch(phrase.strip()) is None
+    ):
+        # "they control"/"their": a restriction the target reader cannot bind
+        # to the event's player - it would offer every object, so it stays
+        # unread. "that player controls" (Questing Beast, Satyr Firedancer)
+        # and Rampaging Raptor's "or battle that player protects" are bound
+        # to the event's player as the trigger goes on the stack (CR 603.3d,
+        # `TargetingProfile.for_event_player`) and rechecked on resolution
+        # (CR 608.2b).
         return None
     if not _targets_understood(phrase, allow_player_targets=True):
         return None
@@ -2108,6 +2125,120 @@ def _parse_damage_that_much_clause(text: str, *, for_spell: bool) -> AbilityEffe
             dealt = game.deal_damage(target, amount, source=source)
             if locks_life_gain and isinstance(target, Player) and dealt > 0:
                 target.cannot_gain_life = True
+
+    return effect
+
+
+#: "that Archer deals that much damage to that creature's controller."
+#: (Greatbow Doyen, after "Whenever an Archer you control deals damage to a
+#: creature"): the event's dealer deals the event's own amount to the
+#: controller of the creature it was dealt to.
+_THAT_DEALER_DEALS_THAT_MUCH_TO_RECIPIENTS_CONTROLLER_RE = re.compile(
+    r"^(?P<subject>it|that [a-z]+|this [a-z]+) deals that much damage to "
+    r"that (?:creature|permanent|planeswalker)'?s controller\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_dealer_deals_that_much_to_recipients_controller_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_THAT_DEALER_DEALS_THAT_MUCH_TO_RECIPIENTS_CONTROLLER_RE`'s shape.
+
+    "That Archer" is the trigger event's subject - the creature that dealt
+    the damage (CR 603.2, `event_subject_or_source`), which deals this damage
+    itself as it exists or last existed (CR 608.2h, CR 113.7a). "That much"
+    is the event's amount (the damage actually dealt, CR 615.6). "That
+    creature's controller" is read as this resolves: the controller of the
+    damaged permanent now, or as it last existed on the battlefield (CR
+    608.2h). Ability-only: a spell has no triggering event."""
+    if for_spell or "that much damage to that " not in text.lower():
+        return None
+    match = _THAT_DEALER_DEALS_THAT_MUCH_TO_RECIPIENTS_CONTROLLER_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    subject_word = match.group("subject").lower()
+    is_referent = not subject_word.startswith("this ")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.target_id is None:
+            return
+        amount = _that_many_or_notice(
+            game,
+            text,
+            source_id=ability.source_id,
+            source_name=ability.name,
+            stack_object=ability,
+        )
+        if amount is None or amount <= 0:
+            return
+        recipient = game.find_by_id(event.target_id)
+        if isinstance(recipient, CardState) and recipient.zone is Zone.BATTLEFIELD:
+            username: str | None = game.controller_of(recipient).username
+        else:
+            username = event.target_controller
+        if username is None or not game.is_in_game(username):
+            return
+        dealer = (
+            event_subject_or_source(game, ability)
+            if is_referent
+            else ability.source_or_last_known(game)
+        )
+        game.deal_damage(game.player(username), amount, source=dealer)
+
+    return effect
+
+
+#: "target player discards a card. This creature deals damage to that player
+#: equal to that card's mana value." (Hellhole Rats): CR 608.2c's "that card"
+#: is the card the first instruction discarded, "that player" the target who
+#: discarded it.
+_DISCARD_THEN_DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE = re.compile(
+    r"^(?P<head>target (?:player|opponent) discards a card)\.\s*"
+    r"(?P<subject>it|this [a-z]+) deals damage to that player equal to "
+    r"(?:that|the discarded) card'?s mana value\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_discard_then_damage_equal_to_that_cards_mana_value_text(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_DISCARD_THEN_DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE`'s pair.
+
+    The discard runs through its own reader; the card it moved (CR 701.9a,
+    or exile for madness, CR 702.35a) is found by `newly_discarded`, and its
+    mana value (CR 202.3) is the amount the source deals - as it exists or
+    last existed (CR 608.2h) - to the player who discarded it. A player with
+    no card to discard discards nothing and takes no damage; a land deals 0
+    (CR 202.3a). With the one target illegal the ability does not resolve at
+    all (CR 608.2b)."""
+    if for_spell or "card's mana value" not in text.lower():
+        return None
+    match = _DISCARD_THEN_DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE.fullmatch(
+        " ".join(text.strip().split())
+    )
+    if match is None:
+        return None
+    head = _parse_mixed_clause(match.group("head"), for_spell=False)
+    if head is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        players = [target for target in game.resolve_targets(ability) if isinstance(target, Player)]
+        if not players:
+            return
+        player = players[0]
+        before = public_card_ids(game)
+        head(game, ability)
+        discarded = newly_discarded(game, before, player.username)
+        amount = int(sum(card.mana_value for card in discarded))
+        if amount <= 0:
+            return
+        game.deal_damage(player, amount, source=ability.source_or_last_known(game))
 
     return effect
 

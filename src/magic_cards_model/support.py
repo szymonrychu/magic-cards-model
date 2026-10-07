@@ -208,6 +208,9 @@ from magic_cards_model.machines.triggers import (
     total_power_attack_threshold,
     triggers_only_off_the_stack,
 )
+from magic_cards_model.machines.triggers.conditions import (
+    opponent_attacks_your_planeswalker_condition,
+)
 from magic_cards_model.machines.triggers import (
     _POWER_OR_TOUGHNESS_QUALIFIER as _CONDITION_POWER_OR_TOUGHNESS_QUALIFIER_RE,
 )
@@ -2777,6 +2780,13 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     if ability.event is TriggerEvent.ATTACKS and is_batched_attack_condition(ability.condition):
         # "one or more <description> attack" counts a declared attack, which
         # this closure's synthetic board has none of - no occurrence to try.
+        return None
+    if ability.event is TriggerEvent.ATTACKS and opponent_attacks_your_planeswalker_condition(
+        ability.condition
+    ):
+        # "an opponent attacks a planeswalker you control with one or more
+        # creatures" (Oath of Kaya) needs a declared attack at a planeswalker
+        # - no occurrence to try on this closure's synthetic board.
         return None
     if (
         ability.event is TriggerEvent.ATTACKS
