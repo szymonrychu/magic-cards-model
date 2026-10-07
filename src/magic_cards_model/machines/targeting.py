@@ -4065,15 +4065,21 @@ def _up_to_one_of_each_card_type_profile() -> TargetingProfile:
 #: sentence's target now; the second belongs to the reflexive ability CR
 #: 603.3d creates later. `machines/effects.py`'s own
 #: `_EXILE_TARGET_REFLEXIVE_CREATURE_RE` has to agree on this same boundary.
+#: A third: "When this ability resolves for the third time this turn, ..."
+#: (Gimli, Mournful Avenger; `effects.modal._RESOLVES_FOR_NTH_TIME_RE`), a
+#: reflexive ability whose trigger event is the resolution itself.
 _REFLEXIVE_CLAUSE_TAIL = re.compile(
-    r"\bwhen you do,.*$|\bwhen [^,]+ this way,.*$", re.IGNORECASE | re.DOTALL
+    r"\bwhen you do,.*$|\bwhen [^,]+ this way,.*$"
+    r"|\bwhen this ability resolves for the [a-z]+ time this turn,.*$",
+    re.IGNORECASE | re.DOTALL,
 )
 
 #: The same two CR 603.12 templates as `_REFLEXIVE_CLAUSE_TAIL`, but capturing
 #: what comes *after* the comma instead of cutting it - the reflexively
 #: created ability's own words, read by `reflexive_consequence_text` below.
 _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
-    r"\bwhen you do,\s*(?P<consequence>.*)$|\bwhen [^,]+ this way,\s*(?P<consequence2>.*)$",
+    r"\bwhen you do,\s*(?P<consequence>.*)$|\bwhen [^,]+ this way,\s*(?P<consequence2>.*)$"
+    r"|\bwhen this ability resolves for the [a-z]+ time this turn,\s*(?P<consequence3>.*)$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -4120,7 +4126,12 @@ def reflexive_consequence_text(text: str) -> str | None:
     match = _REFLEXIVE_CLAUSE_CONSEQUENCE_RE.search(text)
     if match is None:
         return None
-    consequence = match.group("consequence") or match.group("consequence2") or ""
+    consequence = (
+        match.group("consequence")
+        or match.group("consequence2")
+        or match.group("consequence3")
+        or ""
+    )
     return consequence.strip()
 
 

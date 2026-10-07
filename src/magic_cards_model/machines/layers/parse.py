@@ -5597,6 +5597,54 @@ def _hand_size_power_cda_builder(sentence: str) -> EffectBuilder:
     return builder
 
 
+#: "This creature gets -1/-1 for each card in the chosen player's hand."
+#: (Nyxathid) - a self pump (sublayer 7c, CR 613.4c) scaled by the hand size
+#: (CR 402.1) of the player its CR 614.12a "as [this] enters, choose an
+#: opponent" named (`CardState.chosen_player`), re-read on every board
+#: computation the way `_hand_size_power_cda_builder` reads its own.
+_SELF_PUMP_PER_CARD_IN_CHOSEN_PLAYERS_HAND_RE = re.compile(
+    r"^this (?:creature|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each "
+    r"card in the chosen player'?s hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_pump_per_card_in_chosen_players_hand_builder(
+    power: int, toughness: int, sentence: str
+) -> EffectBuilder:
+    """`_SELF_PUMP_PER_CARD_IN_CHOSEN_PLAYERS_HAND_RE`'s shape. No chosen
+    player (it entered with none to choose) is no count, so no change."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if source.chosen_player is None:
+            return []
+        count = context.hand_size_of(source.chosen_player)
+        if count == 0:
+            return []
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {power * count:+d}/{toughness * count:+d} from "
+                    f"{count} card(s) in {source.chosen_player}'s hand"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, sentence),
+                selector=_only(source.id),
+                modification=modify_power_toughness(power * count, toughness * count),
+            )
+        ]
+
+    return builder
+
+
 #: "This permanent's power is equal to the number of basic land types among
 #: lands you control." (Fblthp, Knows the Way; Nishoba Brawler,
 #: `resolve_cards`-confirmed identical wording) - *domain*'s power-only twin:
@@ -6691,6 +6739,14 @@ _PLAYER_LIFE_COMPARISON_RE = re.compile(
 )
 
 
+#: "two or more creatures died under your control this turn" (Gimli,
+#: Mournful Avenger): CR 700.4's per-turn count for the source's controller,
+#: `LayerContext.creatures_died_under_control`.
+_CREATURES_DIED_UNDER_YOUR_CONTROL_RE = re.compile(
+    rf"^(?P<count>{COUNT}) or more creatures died under your control this turn$", re.IGNORECASE
+)
+
+
 def _opponents_of(controller: str | None, players: Iterable[str]) -> list[str]:
     return [player for player in players if player != controller]
 
@@ -6744,6 +6800,17 @@ def _self_static_gate(
             )
 
         return life_gate, "while the life total condition holds"
+    if match := _CREATURES_DIED_UNDER_YOUR_CONTROL_RE.fullmatch(text):
+        died_threshold = parse_count(match.group("count"), article=False)
+        if not died_threshold:
+            return None
+
+        def died_gate(source: CardState, context: LayerContext) -> bool:
+            controller = source.controller
+            died = context.creatures_died_under_control
+            return controller is not None and died.get(controller, 0) >= died_threshold
+
+        return died_gate, f"while {died_threshold}+ creatures died under your control this turn"
     if " and " in text:
         gates = [_self_static_gate(part) for part in text.split(" and ")]
         if all(gate is not None for gate in gates):
@@ -10954,6 +11021,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         if not subtypes or any(subtype is None for subtype in subtypes):
             return None
         return _creature_subtype_count_cda_builder(tuple(subtypes), line=sentence)
+    if match := _SELF_PUMP_PER_CARD_IN_CHOSEN_PLAYERS_HAND_RE.fullmatch(sentence):
+        return _self_pump_per_card_in_chosen_players_hand_builder(
+            int(match.group("power")), int(match.group("toughness")), sentence
+        )
     if _HAND_SIZE_POWER_CDA_RE.fullmatch(sentence):
         return _hand_size_power_cda_builder(sentence)
     if match := _COLOR_COUNT_CDA_RE.fullmatch(sentence):

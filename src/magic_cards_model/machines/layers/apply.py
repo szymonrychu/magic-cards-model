@@ -857,6 +857,12 @@ class LayerContext(EngineModel):
     #: battlefield under your control this turn."
     turn_counts: Mapping[str, Mapping[str, int]] = Field(default_factory=dict)
 
+    #: How many creatures died under each player's control this turn (CR
+    #: 700.4: put into a graveyard from the battlefield), judged as each last
+    #: existed - Gimli, Mournful Avenger's "as long as two or more creatures
+    #: died under your control this turn", off `Game.turn_history`.
+    creatures_died_under_control: Mapping[str, int] = Field(default_factory=dict)
+
     def turn_count(self, fact: str, player: str | None) -> int:
         """How many times `fact` has happened for `player` this turn, or 0
         for a player or fact this context knows nothing about - the same

@@ -1,3 +1,4 @@
+import hashlib
 import re
 from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING
@@ -24,11 +25,13 @@ from ...models.zone import Zone
 from ...numbers import (
     AMOUNT,
     COUNT,
+    ORDINAL,
     Quantity,
     QuantitySource,
     count_pattern,
     halve,
     parse_count,
+    parse_ordinal,
 )
 from ..abilities import (
     TriggerEvent,
@@ -3058,6 +3061,59 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
             controller=player.username,
             source_id=ability.source_id,
             source_name=source_name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
+#: "`<first>`. When this ability resolves for the third time this turn,
+#: `<consequence>`." (Gimli, Mournful Avenger): CR 603.12's reflexive ability,
+#: whose trigger event is this ability's own resolution - counted per object
+#: (CR 400.7: a permanent that returns is a new object) and per turn, and
+#: created only by the resolution that makes the count exactly the printed
+#: ordinal.
+_RESOLVES_FOR_NTH_TIME_RE = re.compile(
+    rf"^(?P<first>.+?\.)\s*when this ability resolves for the (?P<ordinal>{ORDINAL}) time "
+    r"this turn,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: `Game.turn_counts` key prefix for `_RESOLVES_FOR_NTH_TIME_RE`'s count.
+ABILITY_RESOLUTIONS_FACT = "ability_resolutions"
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_resolves_for_nth_time_reflexive_clause(text: str) -> AbilityEffect | None:
+    """`_RESOLVES_FOR_NTH_TIME_RE`'s shape. `<first>` resolves as ordinary
+    text; then this resolution is counted in `Game.turn_counts` (reset as
+    each turn begins) under a key naming the source object (its id and
+    zone-change stamp) and this ability's own text, and the resolution that
+    brings the count to the ordinal creates the reflexive ability (CR
+    603.12), whose targets are chosen as it goes on the stack (CR 603.3d)."""
+    if "when this ability resolves for the" not in text.lower():
+        return None
+    match = _RESOLVES_FOR_NTH_TIME_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    nth = parse_ordinal(match.group("ordinal"))
+    first = parse_mixed_effect(match.group("first"))
+    consequence = match.group("consequence").strip()
+    if nth is None or first is None or reflexive_consequence_effect(consequence) is None:
+        return None
+    fingerprint = hashlib.sha1(text.strip().lower().encode()).hexdigest()[:12]
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        first(game, ability)
+        key = f"{ABILITY_RESOLUTIONS_FACT}:{ability.source_id}:{ability.source_stamp}:{fingerprint}"
+        game.note_turn_count(key, ability.controller)
+        if game.turn_count(key, ability.controller) != nth:
+            return
+        game.create_reflexive_trigger(
+            text=consequence,
+            controller=ability.controller,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
             callback=ReflexiveConsequence(),
         )
 

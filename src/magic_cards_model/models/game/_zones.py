@@ -611,6 +611,12 @@ class ZonesMixin:
             card_state.transformed = transformed and card_state.card.back_face is not None
             stamp_on_the_stack = card_state.zone_change_stamp
             card_state.move_to(Zone.BATTLEFIELD, place_intrinsic_counters=False)
+            # CR 702.30a: a new object comes under its controller's control now.
+            entered_under = card_state.stored_controller or controller
+            card_state.controlled_since_upkeep = (
+                entered_under,
+                self.upkeeps_begun.get(entered_under, 0),
+            )
             # CR 306.5b / CR 310.4b / CR 714.3a: read off the face now up,
             # before anything else changes what the object is. A permanent
             # entering as a copy has the copied object's instead (CR 707.2),
@@ -1622,6 +1628,21 @@ class ZonesMixin:
 
         # -- revealing, and cards outside the game (CR 701.20, CR 400.11) --------
 
+    def _reveal_drawn_card(self: "Game", drawer: str, card: CardState) -> None:
+        """CR 701.20a for "The chosen player reveals each card they draw."
+        (Booby Trap): every permanent still showing that line whose chosen
+        player (`CardState.chosen_player`, CR 614.12a) is `drawer` has the
+        card shown as it is drawn, once per such permanent."""
+        for permanent in list(self.battlefield):
+            if permanent.chosen_player != drawer:
+                continue
+            for line in (permanent.card.oracle_text or "").splitlines():
+                text = line.strip()
+                if self._REVEALS_EACH_CARD_DRAWN_RE.fullmatch(
+                    text
+                ) is not None and self._still_has_static_line(permanent, text):
+                    self.reveal(card, source=permanent.name)
+
     def reveal(self: "Game", card_state: CardState, source: str | None = None) -> CardState:
         """Show one card to all players (CR 701.20a), and record that it was shown.
 
@@ -1912,6 +1933,7 @@ class ZonesMixin:
                         # you've drawn this turn" - asked here, mid-draw, and
                         # only for this one card (CR 121.2).
                         self._offer_miracle_reveal(drawer, card)
+                    self._reveal_drawn_card(drawer.username, card)
                     self.emit(
                         GameEvent(
                             event=TriggerEvent.DRAWS_A_CARD,

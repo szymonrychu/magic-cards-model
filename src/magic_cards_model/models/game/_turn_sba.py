@@ -1330,12 +1330,52 @@ class TurnSbaMixin:
                 effect for effect in self.casting_rule_effects if running(effect)
             ]
 
+    def note_control_changes(self: "Game") -> None:
+        """Stamp every permanent that has come under a new controller since it
+        was last looked at with that controller's upkeep count
+        (`CardState.controlled_since_upkeep`), for echo's "came under your
+        control since the beginning of your last upkeep" (CR 702.30a).
+
+        Control is a layer 2 answer (CR 613.1b), so a change of control has no
+        single place it happens; every point state-based actions are checked
+        is a point the game looks, and so is the beginning of each upkeep
+        (`_advance_past_checks`), before its triggers are looked for - which catches an
+        "until end of turn" control change that ended in the cleanup step."""
+        for permanent in self.battlefield:
+            current = permanent.controller
+            if current is None:
+                continue
+            record = permanent.controlled_since_upkeep
+            recorded = permanent.stored_controller if record is None else record[0]
+            if current != recorded:
+                permanent.controlled_since_upkeep = (current, self.upkeeps_begun.get(current, 0))
+
+    def came_under_control_since_last_upkeep(self: "Game", permanent: CardState) -> bool:
+        """CR 702.30a's intervening "if": this permanent came under its
+        controller's control since the beginning of that player's last upkeep.
+
+        Asked at the beginning of an upkeep (and again on resolution, CR
+        603.4), after `_advance_past_checks` has counted the upkeep now beginning, so
+        "your last upkeep" is the one before it: a stamp taken at or after that
+        one began (`upkeeps >= count - 1`) came under control since then. A
+        permanent never stamped has been under its controller's control since
+        before any upkeep began (stamp 0)."""
+        controller = permanent.controller
+        if controller is None:
+            return False
+        self.note_control_changes()
+        record = permanent.controlled_since_upkeep or (controller, 0)
+        if record[0] != controller:
+            return False
+        return record[1] >= self.upkeeps_begun.get(controller, 0) - 1
+
     def _check_state_based_actions_impl(self: "Game") -> list[CardState]:
         """The rest of `check_state_based_actions` - see its own docstring
         for why it is split out."""
         if self.is_over:
             return []
         self._drop_ended_while_source_rules()
+        self.note_control_changes()
         # CR 702.145c/d/f/g are not state-based actions - each "happens
         # immediately" any time its condition is true - but every point the
         # game checks state-based actions is a point it looks, so a permanent
@@ -2286,6 +2326,14 @@ class TurnSbaMixin:
             self.end_of_combat()
             self.begin_turn_for(self.turn.active_player)
             self._sync_player_control()  # CR 723.1
+
+        if step is Step.UPKEEP:
+            # CR 702.30a's clock: control changes made before this upkeep
+            # began are stamped against the count before it, then the count
+            # moves on.
+            self.note_control_changes()
+            active = self.turn.active_player
+            self.upkeeps_begun[active] = self.upkeeps_begun.get(active, 0) + 1
 
         # CR 500.6: "When a phase or step begins, any abilities that trigger 'at
         # the beginning of' that phase or step trigger."

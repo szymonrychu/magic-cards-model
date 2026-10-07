@@ -411,6 +411,11 @@ def executes(keyword: str) -> bool:
         # `_cumulative_upkeep_effect` adds the age counter and asks the one
         # pay-or-sacrifice question.
         "cumulative upkeep",
+        # CR 702.30a: `_echo_ability` writes the upkeep trigger out (from the
+        # keyword line, or from a "<this> has echo {X}, where X is ..." static
+        # line, `self_echo_lines`) and `_echo_effect` asks the one
+        # pay-or-sacrifice question.
+        "echo",
         # CR 701.57a-c, the same shape once more: `machines/keywords.discover`
         # performs it (cascade's own exile-until/free-cast/random-bottom
         # machinery, CR 702.85a, parameterised by N instead of the cascading
@@ -1177,6 +1182,83 @@ def _cumulative_upkeep_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+#: CR 702.30a's own intervening "if", written out by `_echo_ability` and read
+#: by `machines/triggers/conditions.intervening_if_answer` through
+#: `Game.came_under_control_since_last_upkeep`.
+ECHO_INTERVENING_IF = (
+    "this permanent came under your control since the beginning of your last upkeep"
+)
+
+
+def _echo_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.30a: "'Echo [cost]' means 'At the beginning of your upkeep, if
+    this permanent came under your control since the beginning of your last
+    upkeep, sacrifice it unless you pay [cost].'"
+
+    [cost] is the printed one: the space form ("Echo {2}{R}{R}",
+    `KeywordAbility.cost`) and the em-dash form ("Echo-Discard a card.",
+    `.cost` or `.parameter`), plus a "where X is `<expr>`" tail a static
+    "has echo {X}, where X is ..." line carries (`self_echo_lines`), which
+    `_echo_effect` evaluates as the cost is paid.
+    """
+    printed = (ability.cost or ability.parameter or "").strip().rstrip(".")
+    return _expansion(
+        ability,
+        keyword="echo",
+        word=TriggerWord.AT,
+        condition="the beginning of your upkeep",
+        intervening_if=ECHO_INTERVENING_IF,
+        effect=f"sacrifice it unless you pay {printed}",
+        event=TriggerEvent.BEGINNING_OF_STEP,
+    )
+
+
+#: "This creature has echo {X}, where X is your life total." (Volcano
+#: Hellion) - a static ability whose whole content is the keyword (CR 702.30a)
+#: on its own object, with CR 107.3's X defined by the text; the cost is a
+#: mana cost, the "where X is" tail kept on it for `_echo_effect`.
+_SELF_ECHO_LINE_RE = re.compile(
+    r"^this (?:creature|permanent) has echo (?P<cost>(?:\{[^}]+\})+)"
+    r"(?P<where>, where X is [^.]+)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def self_echo_lines(card: Card) -> list[KeywordAbility]:
+    """Every "`<this>` has echo `<cost>`[, where X is `<expr>`]" line of `card`,
+    as the keyword ability it states - read off the printed text since the
+    keyword parser sees a sentence, not a keyword line."""
+    found: list[KeywordAbility] = []
+    for line in (card.oracle_text or "").splitlines():
+        text = line.split("(")[0].strip()
+        match = _SELF_ECHO_LINE_RE.fullmatch(text)
+        if match is None:
+            continue
+        cost = match.group("cost") + (match.group("where") or "")
+        found.append(
+            KeywordAbility(
+                raw=line,
+                text=text,
+                face=card.name,
+                keyword="Echo",
+                canonical="Echo",
+                cost=cost,
+                cost_is_mana=True,
+            )
+        )
+    return found
+
+
+def is_self_echo_line(text: str) -> bool:
+    """Whether a static line is `_SELF_ECHO_LINE_RE`'s shape whose cost
+    `_echo_effect` can read - asked by `support._static_ability_category`."""
+    match = _SELF_ECHO_LINE_RE.fullmatch(text.split("(")[0].strip())
+    if match is None:
+        return False
+    printed = match.group("cost") + (match.group("where") or "")
+    return _echo_cost(printed, None, None, None) is not None
+
+
 def _mobilize_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.181a: "Mobilize N" means "Whenever this creature attacks, create N
     1/1 red Warrior creature tokens. Those tokens enter tapped and attacking.
@@ -1576,6 +1658,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "vanishing": _vanishing_abilities,
     "battle cry": _single(_battle_cry_ability),
     "cumulative upkeep": _single(_cumulative_upkeep_ability),
+    "echo": _single(_echo_ability),
     "partner with": _single(_partner_with_ability),
     "annihilator": _single(_annihilator_ability),
     "renown": _single(_renown_ability),
@@ -1600,7 +1683,7 @@ def keyword_triggered_abilities(card: Card) -> list[TriggeredAbility]:
     twice yields two abilities here.
     """
     built: list[TriggeredAbility] = []
-    for ability in keyword_abilities(card):
+    for ability in [*keyword_abilities(card), *self_echo_lines(card)]:
         expand = _TRIGGER_EXPANSIONS.get(ability.canonical.lower())
         if expand is not None:
             built.extend(expand(ability))
@@ -6390,6 +6473,90 @@ def _cumulative_upkeep_effect(game: Any, ability: AbilityOnStack) -> bool | None
     return False
 
 
+#: `_echo_ability`'s own effect text, read back for its [cost] and X.
+_ECHO_EFFECT_RE = re.compile(
+    r"^sacrifice it unless you pay (?P<cost>.+?)(?:, where X is (?P<x>.+))?$"
+)
+
+
+def _echo_cost(
+    printed: str, game: Any, controller: str | None, source: CardState | None
+) -> TotalCost | None:
+    """Echo's [cost] as one `TotalCost`, its X (CR 107.3: defined by the
+    text, so not chosen) evaluated now - "as the cost is paid" - against
+    `game`; `None` for a cost this engine cannot read or pay mid-resolution.
+    With no game (the support probe) X is read as 0, only to check the
+    shape reads."""
+    match = re.fullmatch(r"(?P<cost>.+?)(?:, where X is (?P<x>.+))?", printed.strip())
+    if match is None:
+        return None
+    cost = match.group("cost").strip()
+    if match.group("x") is not None:
+        from .effects import amount_expression
+
+        reader = amount_expression(match.group("x"))
+        if reader is None or "{X}" not in cost:
+            return None
+        value = 0 if game is None or controller is None else reader(game, controller, source, 0)
+        cost = cost.replace("{X}", f"{{{max(value, 0)}}}")
+    elif "{X}" in cost:
+        return None
+    read = total_cost_for_phrase(cost, controller)
+    if read is None or any(component.variable_count for component in read.components):
+        return None
+    return read
+
+
+def _echo_effect(game: Any, ability: AbilityOnStack) -> bool | None:
+    """CR 702.30a resolving: "sacrifice it unless you pay [cost]" - CR
+    118.12a's "unless", one `Game.may_pay_unless_cost` question, CR 118.3
+    leaving only the sacrifice when the cost cannot be paid in full.
+
+    The intervening "if" was checked as the upkeep began and is checked again
+    as this resolves (CR 603.4) by the trigger machinery itself. An X in
+    [cost] is evaluated now, as the cost is paid (Volcano Hellion's "where X
+    is your life total"). A [cost] this engine cannot read fails closed with
+    a notice - never a sacrifice the player could have avoided.
+
+    Returns True if paid, False if sacrificed, None if nothing happened.
+    """
+    source = ability.source(game)
+    if source is None or source.zone is not Zone.BATTLEFIELD:
+        return None
+    printed = ability.ability
+    match = (
+        _ECHO_EFFECT_RE.fullmatch(printed.effect or "")
+        if isinstance(printed, TriggeredAbility)
+        else None
+    )
+    controller = game.controller_of(source).username
+    cost = (
+        None
+        if match is None
+        else _echo_cost(
+            match.group("cost") + (f", where X is {match.group('x')}" if match.group("x") else ""),
+            game,
+            controller,
+            source,
+        )
+    )
+    if cost is None:
+        game._note_unread_trigger(ability)  # noqa: SLF001
+        return None
+    paid = game.may_pay_unless_cost(
+        controller,
+        cost,
+        source=ability.source_name,
+        source_id=source_id_of(ability),
+        prompt=f"pay {cost} for {source.name}'s echo, or sacrifice it",
+    )
+    if paid:
+        return True
+    if source.zone is Zone.BATTLEFIELD:
+        game.sacrifice(source)  # CR 701.21a
+    return False
+
+
 #: What one keyword's triggered ability does when it resolves, by keyword.
 #: `Game._effect_of` has to consult this before the card-name registry - see
 #: `docs/engine-coverage.md` for the hook.
@@ -6415,6 +6582,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "mobilize": _mobilize_effect,
     "battle cry": _battle_cry_effect,
     "cumulative upkeep": _cumulative_upkeep_effect,
+    "echo": _echo_effect,
     "annihilator": _annihilator_effect,
 }
 

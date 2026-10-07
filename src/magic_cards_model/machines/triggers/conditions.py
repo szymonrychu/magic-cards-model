@@ -2530,6 +2530,21 @@ def _condition_matches(
             game, event.player
         ):
             return False
+        if lowered.startswith("the chosen player "):
+            # Booby Trap's "When the chosen player draws a card with the
+            # chosen name": the player its CR 614.12a choice named
+            # (`CardState.chosen_player`), and "with the chosen name" the
+            # drawn card's name against the recorded card-name choice.
+            if event.player is None or event.player != source.chosen_player:
+                return False
+            if "with the chosen name" in lowered:
+                choice = source.choice
+                return (
+                    choice is not None
+                    and choice.kind is ChoiceKind.CARD_NAME
+                    and event.subject_name == choice.value
+                )
+            return True
         if "an opponent" in lowered:
             return event.player is not None and event.player != controller
         return _controller_clause_holds(condition, controller, event.player)
@@ -4394,6 +4409,12 @@ def intervening_if_answer(
         # by `machines/keywords._cumulative_upkeep_ability`: a zone question
         # (CR 400.1), fully readable, so False is a real answer.
         return source.zone is Zone.BATTLEFIELD
+
+    if clause == "this permanent came under your control since the beginning of your last upkeep":
+        # CR 702.30a's own intervening *if* for echo, written out by
+        # `machines/keywords._echo_ability`, read off the control stamp
+        # `Game.note_control_changes` keeps against `Game.upkeeps_begun`.
+        return source.zone is Zone.BATTLEFIELD and game.came_under_control_since_last_upkeep(source)
 
     if clause == "this permanent has a time counter on it":
         # CR 702.63a's second ability, written out by `machines/keywords.
