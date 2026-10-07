@@ -56,6 +56,7 @@ from ..layers import (
 )
 from ..triggers import (
     AbilityOnStack,
+    GameEvent,
     event_subject_power,
     has_self_reference_type_word,
 )
@@ -920,6 +921,18 @@ def _parse_distribute_counters_then_targets_gain_clause_pair(
                 )
 
     return effect
+
+
+def _departed_stat_with_counters(
+    game: "Game",
+    event: "GameEvent | None",
+    read_stat: Callable[["Game", "GameEvent | None"], int | None],
+) -> int | None:
+    """`read_stat`'s own answer. Kept as a facade name
+    (`scripts/split/surface/effects.json`): the event-subject readers now go
+    through `CardState.last_known_power_toughness`, which already includes a
+    departed subject's counters (CR 608.2h), so nothing is added here."""
+    return read_stat(game, event)
 
 
 def _distribute_counters_shares(
