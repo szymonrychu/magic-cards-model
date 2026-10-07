@@ -49,6 +49,8 @@ Rules verified with `mise run rules:find`:
 - **CR 608.2h** - the sacrificed creature's power is its last known power.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.effects import attach_permanent
 from magic_cards_model.models import Zone
@@ -238,6 +240,19 @@ def test_pain_for_all_enchanted_creature_bites_any_other_target():
     _drain(scenario)
     assert scenario.player("bob").life == 17
     assert giant.damage == 0
+
+
+def test_pain_for_all_any_other_target_excludes_the_enchanted_creature():
+    """ "enchanted creature deals damage ... to any other target": "other" is
+    other than the biter (CR 601.2c), so the host is never a legal
+    target of its own bite."""
+    scenario = _main(alice=["Hill Giant"], hand=["Pain for All"])
+    giant = scenario.creature("Hill Giant", "alice")
+    scenario.cast_onto_stack("Pain for All", targets=[giant], auto=True)
+    scenario.will_choose_targets(giant)
+    with pytest.raises(ValueError, match="not a legal target"):
+        scenario.resolve_top()
+        _drain(scenario)
 
 
 def test_pain_for_all_bite_is_dealt_by_the_creature_deathtouch_and_lifelink():
