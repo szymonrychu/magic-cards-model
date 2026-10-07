@@ -444,6 +444,36 @@ _TOKEN_TAIL_QUOTE_RE = re.compile(r"""^(?P<pre>.*?)["“'‘](?P<text>.+)["”'�
 _TOKEN_TAIL_KEYWORD_JOIN_RE = re.compile(r"(?:,?\s+and\s*|,\s*)$", re.IGNORECASE)
 
 
+#: One double-quoted ability of a token's tail. The "and"/comma between two of
+#: them is the only thing `_several_quoted_abilities` lets sit between.
+_TOKEN_TAIL_DOUBLE_QUOTED_RE = re.compile(r"[\"“](?P<text>[^\"”]+)[\"”]")
+_TOKEN_TAIL_QUOTE_GAP_RE = re.compile(r"^\s*(?:,\s*(?:and\s+)?|and\s+)?$", re.IGNORECASE)
+
+
+def _several_quoted_abilities(tail: str) -> tuple[str, str] | None:
+    """`(keyword_part, rules_text)` for a tail carrying two or more double-quoted
+    abilities - Relic Robber's "with "This token can't block" and "At the
+    beginning of your upkeep, this token deals 1 damage to you."" - each quoted
+    ability a rules line of its own (CR 111.3: a token has whatever abilities
+    its creating effect gives it), or `None` for one quote or none (the
+    single-quote readers handle those) and for anything but join words between
+    and after them."""
+    spans = list(_TOKEN_TAIL_DOUBLE_QUOTED_RE.finditer(tail))
+    if len(spans) < 2:
+        return None
+    for left, right in zip(spans, spans[1:], strict=False):
+        if not _TOKEN_TAIL_QUOTE_GAP_RE.fullmatch(tail[left.end() : right.start()]):
+            return None
+    if tail[spans[-1].end() :].strip():
+        return None
+    keyword_part = _TOKEN_TAIL_KEYWORD_JOIN_RE.sub("", tail[: spans[0].start()]).strip()
+    lines = [span.group("text").strip() for span in spans]
+    # The oracle prints the first of two quoted sentences with no full stop
+    # inside its quotes ("This token can't block"); each is a sentence of its
+    # own once it is a rules line, and the restriction readers need the stop.
+    return keyword_part, "\n".join(line if line[-1] in ".!?" else line + "." for line in lines)
+
+
 def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | None:
     """The "with <...>" part of a token's noun phrase, or `None` if this wave
     cannot read it.
@@ -488,7 +518,9 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
     tail = tail.strip()
     quoted_text: str | None = None
     keyword_part = tail
-    if quoted := _TOKEN_TAIL_QUOTE_RE.match(tail):
+    if (several := _several_quoted_abilities(tail)) is not None:
+        keyword_part, quoted_text = several
+    elif quoted := _TOKEN_TAIL_QUOTE_RE.match(tail):
         quoted_text = quoted.group("text")
         keyword_part = _TOKEN_TAIL_KEYWORD_JOIN_RE.sub("", quoted.group("pre")).strip()
     if not keyword_part:
@@ -721,6 +753,56 @@ def _parse_create_that_many_color_pip_tokens_clause(
         count = color_pip_count_named_by_trigger(stack_object)
         if count:
             create_tokens(game, definition, stack_object.controller, count, tapped=tapped)
+
+    return effect
+
+
+#: "that player creates a 0/1 colorless Goblin Construct artifact creature
+#: token with "This token can't block" and "At the beginning of your upkeep,
+#: this token deals 1 damage to you."" (Relic Robber), "that player creates a
+#: Blood token" (Bloodvial Purveyor) - CR 111.2: the player who creates a token
+#: is its owner and controller, and here that is the player the trigger's own
+#: event is about (CR 603.2: the one who took the combat damage, cast the
+#: spell), not the ability's controller. The creation itself is read exactly
+#: as "create ..." is; it just runs as the event player, so a quoted "you" in
+#: the token's own ability is that player's too (CR 113.6).
+_THAT_PLAYER_CREATES_RE = re.compile(
+    r"^that player creates (?P<rest>.+)$", re.IGNORECASE | re.DOTALL
+)
+
+#: Words that, outside a quoted ability, would be read relative to the player
+#: the creation is run as - "if you control a Vampire", "where X is your ..."
+#: - while they mean the ability's own controller. Those sentences are refused
+#: rather than read for the wrong player.
+_CREATOR_RELATIVE_WORD_RE = re.compile(
+    r"\b(?:if|unless|you|your|where|for each|equal|as long as|that many|that much)\b",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_that_player_creates_clause(text: str) -> AbilityEffect | None:
+    """`_THAT_PLAYER_CREATES_RE`'s shape, or `None`."""
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    if not whole.lower().startswith("that player creates "):
+        return None
+    match = _THAT_PLAYER_CREATES_RE.fullmatch(whole)
+    if match is None:
+        return None
+    rest = match.group("rest")
+    if _CREATOR_RELATIVE_WORD_RE.search(_QUOTED_SPAN_RE.sub("", rest)):
+        return None
+    created = parse_mixed_effect(f"create {rest}") or _ability_effect_or_notice(
+        f"you create {rest}"
+    )
+    if created is None or getattr(created, "__name__", "").endswith("notice_only"):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.player is None:
+            return
+        created(game, ability.model_copy(update={"controller": event.player}))
 
     return effect
 

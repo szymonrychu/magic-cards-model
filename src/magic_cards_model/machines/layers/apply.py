@@ -1178,6 +1178,13 @@ class ContinuousEffects(EngineModel):
         """
         running = [effect for effect in self.effects if effect.holds(game)]
         if game is not None and len(running) != len(self.effects):
+            # A "for as long as" grant of a quoted ability whose duration has
+            # stopped (CR 611.2b) takes its line back off the permanent now,
+            # not at cleanup: `_sync_stored_grant_ability_texts` only
+            # reconciles texts some *running* grant still names.
+            _ungrant_ended_stored_texts(
+                [effect for effect in self.effects if effect not in running], running, game
+            )
             self.effects = [
                 effect
                 for effect in self.effects

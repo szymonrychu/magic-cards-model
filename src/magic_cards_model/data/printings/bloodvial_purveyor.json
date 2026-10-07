@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "4889c58b-8b84-42af-a56c-e886655aa997",
+  "oracle_id": "7292272d-6511-466b-aadd-c4fe7ed8df09",
+  "multiverse_ids": [
+    540943
+  ],
+  "mtgo_id": 94514,
+  "arena_id": 78891,
+  "tcgplayer_id": 253459,
+  "cardmarket_id": 582108,
+  "name": "Bloodvial Purveyor",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/4889c58b-8b84-42af-a56c-e886655aa997",
+  "scryfall_uri": "https://scryfall.com/card/vow/98/bloodvial-purveyor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:41:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.jpg?1783924871",
+    "normal": "https://cards.scryfall.io/normal/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.jpg?1783924871",
+    "large": "https://cards.scryfall.io/large/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.jpg?1783924871",
+    "png": "https://cards.scryfall.io/png/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.png?1783924871",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.jpg?1783924871",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.jpg?1783924871",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.webp?1783924871",
+    "grid": "https://cards.scryfall.io/grid/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.webp?1783924871",
+    "display": "https://cards.scryfall.io/display/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.webp?1783924871",
+    "art": "https://cards.scryfall.io/art/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.webp?1783924871",
+    "crop": "https://cards.scryfall.io/crop/front/4/8/4889c58b-8b84-42af-a56c-e886655aa997.webp?1783924871"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Vampire",
+  "oracle_text": "Flying, trample\nWhenever an opponent casts a spell, that player creates a Blood token. (It's an artifact with \"{1}, {T}, Discard a card, Sacrifice this token: Draw a card.\")\nWhenever this creature attacks, it gets +1/+0 until end of turn for each Blood token defending player controls.",
+  "power": "5",
+  "toughness": "6",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Flying",
+    "Trample"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "a6f374bc-cd29-469f-808a-6a6c004ee8aa",
+      "component": "token",
+      "name": "Blood",
+      "type_line": "Token Artifact \u2014 Blood",
+      "uri": "https://api.scryfall.com/cards/a6f374bc-cd29-469f-808a-6a6c004ee8aa"
+    },
+    {
+      "object": "related_card",
+      "id": "c22e1e62-9862-4e14-b6fd-071f025cb867",
+      "component": "combo_piece",
+      "name": "Bloodvial Purveyor",
+      "type_line": "Creature \u2014 Vampire",
+      "uri": "https://api.scryfall.com/cards/c22e1e62-9862-4e14-b6fd-071f025cb867"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4889c58b-8b84-42af-a56c-e886655aa997/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7292272d-6511-466b-aadd-c4fe7ed8df09&unique=prints",
+  "collector_number": "98",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Fesbra",
+  "artist_ids": [
+    "420561e6-7613-4404-8653-d38503b49f8a"
+  ],
+  "illustration_id": "3d89a780-a592-484e-9e72-c077572e2abc",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12961,
+  "penny_rank": 5693,
+  "preview": {
+    "source": "Bajo",
+    "source_uri": "https://twitter.com/bajo/status/1455376193688162304",
+    "previewed_at": "2021-11-02"
+  },
+  "prices": {
+    "usd": "0.35",
+    "usd_foil": "0.38",
+    "usd_etched": null,
+    "eur": "0.19",
+    "eur_foil": "0.41",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=540943&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBloodvial%2BPurveyor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBloodvial%2BPurveyor",
+    "edhrec": "https://edhrec.com/route/?cc=Bloodvial+Purveyor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253459%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=582108&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94514?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

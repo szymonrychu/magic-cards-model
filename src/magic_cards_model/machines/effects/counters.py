@@ -2494,10 +2494,19 @@ def _parse_counter_on_subject_and_shared_type_clause(text: str) -> AbilityEffect
 #: sentences ahead of the counter (Treasure Map's "Scry 1.") are read by the
 #: ordinary clause reader first (CR 608.2c, in the order written). "It" is the
 #: permanent the counter was just put on - the source itself (CR 700.7).
+#:
+#: The counter instruction may be a "put" or a "remove" (Thing in the Ice's
+#: "remove an ice counter from this creature. Then if it has no ice counters
+#: on it, transform it."), and the check reads either "there are N or more"
+#: or "it has N or more" / "this `<noun>` has N or more" (The Emperor of
+#: Palamecia's "Then if it has three or more +1/+1 counters on it, transform
+#: it."), or "no" counters at all. The kind is a P/T pair or a word.
 _COUNTER_THRESHOLD_RE = re.compile(
     r"^(?P<pre>(?:[^.]+\.\s+)*?)"
-    rf"(?P<put>put (?P<n>{COUNT}) (?P<kind>[a-z]+) counters? on this (?P<noun>[a-z]+))\.\s*"
-    rf"then if there are (?P<threshold>{COUNT}) or more (?P=kind) counters on "
+    r"(?P<put>(?:put|remove) [^.]+? (?:on|from) this (?P<noun>[a-z]+))\.\s*"
+    r"then if (?:there (?:are|is)|(?:it|this (?P=noun)) has) "
+    rf"(?:(?P<threshold>{COUNT}) or more|(?P<none>no)) "
+    r"(?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counters? on "
     r"(?:it|this (?P=noun)), (?P<rest>[^.]+)\.?$",
     re.IGNORECASE | re.DOTALL,
 )
@@ -2580,9 +2589,17 @@ def _parse_counter_threshold_whole_text(text: str, *, for_spell: bool) -> Target
     if pre is None:
         return None
     put = _parse_mixed_clause(match.group("put"), for_spell=for_spell)
-    threshold = parse_count(match.group("threshold"))
-    if put is None or threshold is None:
+    threshold = 0 if match.group("none") else parse_count(match.group("threshold"))
+    # The counter instruction must be about the very kind the check counts.
+    if (
+        put is None
+        or threshold is None
+        or match.group("kind").lower() not in match.group("put").lower()
+    ):
         return None
+    reached: Callable[[int], bool] = (
+        (lambda found: found == 0) if match.group("none") else (lambda found: found >= threshold)
+    )
     kind = _counter_kind(match.group("kind"))
     rest = match.group("rest").strip()
     optional = rest.lower().startswith("you may ")
@@ -2615,7 +2632,7 @@ def _parse_counter_threshold_whole_text(text: str, *, for_spell: bool) -> Target
         # CR 608.2h: a source that left the battlefield is counted as it last
         # existed there - `last_known_counters`, snapshotted on the way out.
         found = known.counters[kind] if live is not None else known.last_known_counters[kind]
-        if found < threshold:
+        if not reached(found):
             return
         if optional:
             source = (

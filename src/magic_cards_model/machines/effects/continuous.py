@@ -73,13 +73,16 @@ from ..land_animation import (
 from ..layers import (
     CANT_ACTIVATE_ABILITIES_TEXT,
     KNOWN_KEYWORDS,
+    Condition,
     ContinuousEffect,
     ContinuousEffects,
     Duration,
     Layer,
     LayerContext,
     LayerNotice,
+    RemainsOnBattlefield,
     Sublayer,
+    YouStillControl,
     _only,
     _split_and_validate_keywords,
     add_subtype,
@@ -3485,6 +3488,87 @@ def _parse_layer_counter_instead_upgrade(
     return match.group("condition").strip(), amount, kind
 
 
+#: "target artifact you control gains "{T}: This artifact deals 2 damage to any
+#: target" for as long as you control this creature." (Quicksmith Rebel),
+#: "... gains "{T}: Draw a card" for as long as you control this creature."
+#: (Quicksmith Spy) - a layer 6 grant of a *quoted* ability (CR 613.1f) lasting
+#: CR 611.2b's "for as long as": the duration is the *source's* - here, that the
+#: ability's controller still controls this creature, or that this permanent
+#: remains on the battlefield - never the target's. The ability is a CR 113.1c
+#: object of its own once on the stack, so the grant is built off the resolving
+#: ability's source as it resolves: a source already gone (or one that left and
+#: came back, CR 400.7) means the duration never starts, and per CR 611.2b the
+#: effect then does nothing. The until-end-of-turn twin is
+#: `blight_effects.parse_target_gains_quoted_ability_until_eot_clause`.
+_TARGET_GAINS_QUOTED_FOR_AS_LONG_RE = re.compile(
+    r'^(?P<phrase>target .+?) gains ["“](?P<ability>[^"”]+)["”] for as long as '
+    r"(?:you control (?P<controls>this [a-z]+)|(?P<remains>this [a-z]+) remains on the battlefield)"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_target_gains_quoted_ability_for_as_long_as_clause(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """`_TARGET_GAINS_QUOTED_FOR_AS_LONG_RE`'s shape - see the banner above."""
+    stripped = " ".join(effect_text.split())
+    if " gains " not in stripped or "for as long as" not in stripped:
+        return None
+    match = _TARGET_GAINS_QUOTED_FOR_AS_LONG_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    granted_text = match.group("ability").strip()
+    if not granted_text or not _targets_understood(match.group("phrase"), count_agnostic=False):
+        return None
+    while_controlled = match.group("controls") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if (
+            source is None
+            or source.zone is not Zone.BATTLEFIELD
+            or source.zone_change_stamp is None
+            or (
+                ability.source_stamp is not None
+                and source.zone_change_stamp != ability.source_stamp
+            )
+        ):
+            return
+        condition: Condition
+        if while_controlled:
+            controller = source.controller
+            if controller is None:
+                return
+            condition = YouStillControl(
+                card_id=source.id, stamp=source.zone_change_stamp, controller=controller
+            )
+        else:
+            condition = RemainsOnBattlefield(card_id=source.id, stamp=source.zone_change_stamp)
+        store = continuous_effects(game)
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f'{source.name}: {target.name} gains "{granted_text}" '
+                        f"for as long as {match.group('controls') or match.group('remains')}"
+                    ),
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.FOR_AS_LONG_AS,
+                    condition=condition,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant_ability(granted_text),
+                ),
+                game,
+            )
+
+    return effect
+
+
 #: "That creature/permanent gets +N/+N[ and gains `<keyword>`] until end of
 #: turn." (or "it", CR 400.7's bare pronoun) with no "target" anywhere in the
 #: ability's own text - the plain anaphor back to the *triggering event's own
@@ -3562,6 +3646,40 @@ def _parse_event_subject_pump_clause(effect_text: str) -> AbilityEffect | None:
             layer_context_for(game, game.controller_of(ability)),
         ):
             effects.add(built, game)
+
+    return effect
+
+
+#: "it gets +2/+0 until end of turn and this enchantment deals 1 damage to
+#: you." (Anthem of Rakdos) - `_EVENT_SUBJECT_PUMP_RE`'s anaphoric pump of the
+#: trigger event's subject, then the source's own damage as a second
+#: instruction in the same sentence (CR 608.2c: in the order written). Only the
+#: source's own "this <noun>" may be the dealer - a bare "it" after "and" would
+#: name the pumped creature, which this reader does not guess.
+_EVENT_SUBJECT_PUMP_THEN_SELF_DEALS_RE = re.compile(
+    r"^(?P<pump>(?:that (?:creature|permanent)|the blocking creature|it) gets [^.]+?) and "
+    r"(?P<deal>this [a-z]+ deals [^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36", before=["continuous._parse_event_subject_pump_clause"])
+def _parse_event_subject_pump_then_self_damage_clause(effect_text: str) -> AbilityEffect | None:
+    """`_EVENT_SUBJECT_PUMP_THEN_SELF_DEALS_RE`'s shape - see the banner above."""
+    stripped = " ".join(effect_text.split())
+    if " deals " not in stripped or "target" in stripped.lower():
+        return None
+    match = _EVENT_SUBJECT_PUMP_THEN_SELF_DEALS_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    pump = _parse_event_subject_pump_clause(match.group("pump") + ".")
+    deal = parse_mixed_effect(match.group("deal") + ".")
+    if pump is None or deal is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        pump(game, ability)
+        deal(game, ability)
 
     return effect
 
@@ -5222,6 +5340,65 @@ def _parse_self_pump_for_each_clause(text: str) -> AbilityEffect | None:
                 duration=Duration.UNTIL_END_OF_TURN,
                 source_id=ability.source_id,
                 selector=only_this_incarnation(source, source.zone_change_stamp),
+                modification=modify_power_toughness(power * count, toughness * count),
+            )
+        )
+
+    return effect
+
+
+#: "Whenever this creature attacks, it gets +1/+0 until end of turn for each
+#: Blood token defending player controls." (Bloodvial Purveyor) - the same
+#: one-shot pump as `_SELF_ATTACK_PUMP_FOR_EACH_RE`, counting what the
+#: *defending player* controls (CR 508.5: the player the attacker is attacking,
+#: or the controller of the planeswalker it attacks) instead of what the pump's
+#: controller does. Counted once, as the ability resolves (CR 608.2h), by
+#: `permanent_description`'s own grammar so "Blood token", "creature with
+#: flying" and "artifact" all mean what a target phrase means.
+_SELF_ATTACK_PUMP_FOR_EACH_DEFENDING_RE = re.compile(
+    r"^it gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn "
+    r"for each (?P<each>.+?) (?:the )?defending player controls\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s18")
+def _parse_self_pump_for_each_defending_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_ATTACK_PUMP_FOR_EACH_DEFENDING_RE`'s shape; see the banner above."""
+    match = _SELF_ATTACK_PUMP_FOR_EACH_DEFENDING_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    requirement = permanent_description(match.group("each"))
+    if requirement is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        subject = _attack_trigger_pump_subject(game, ability)
+        defending = _defending_player_of_trigger(game, ability)
+        if subject is None or subject.zone is not Zone.BATTLEFIELD or defending is None:
+            return
+        count = sum(
+            1
+            for permanent in game.permanents_controlled_by(defending)
+            if requirement.rejects(permanent, defending, game) is None
+        )
+        if count <= 0:
+            return
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=(
+                    f"{subject.name}: gets {power * count:+d}/{toughness * count:+d} "
+                    "until end of turn"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                source_id=ability.source_id,
+                selector=only_this_incarnation(subject, subject.zone_change_stamp),
                 modification=modify_power_toughness(power * count, toughness * count),
             )
         )
@@ -11718,7 +11895,12 @@ from .amounts import (  # noqa: E402
 )
 from .control_copy import _mass_control_group  # noqa: E402
 from .counters import _counter_kind, _source_still_here  # noqa: E402
-from .damage import _fight, _resolve_bite_damage, damage_to_layer_target_rider  # noqa: E402
+from .damage import (  # noqa: E402
+    _defending_player_of_trigger,
+    _fight,
+    _resolve_bite_damage,
+    damage_to_layer_target_rider,
+)
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
     _parse_mixed_clause,
