@@ -78,7 +78,9 @@ _COLOR_WORDS: dict[str, Color] = {
 #: "Persist" line is on the computed board, which is what `machines/
 #: keywords.persist_return`'s own `keyword_confirmed` escape hatch is for -
 #: see that function's docstring.
-_GRANTABLE_TRIGGERED_KEYWORDS = frozenset({"prowess", "persist"})
+#: CR 702.93a's undying is persist's mirror and is granted the same way
+#: (Undying Evil's "Target creature gains undying until end of turn.").
+_GRANTABLE_TRIGGERED_KEYWORDS = frozenset({"prowess", "persist", "undying"})
 _KNOWN_KEYWORDS = (
     frozenset(keyword.value for keyword in Keyword)
     | KEYWORDS_OUTSIDE_COMBAT

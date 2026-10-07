@@ -92,6 +92,20 @@ _ENTERS_WITH = re.compile(
     r"(?:\s+if (?P<trailing_condition>.+?))?\.?$",
     re.IGNORECASE,
 )
+#: CR 702.138c: "An ability that reads "[This permanent] escapes with [one or
+#: more of a kind of counter]" means "If this permanent escaped, it enters
+#: with [those counters]"" - Chainweb Aracnir's "This creature escapes with
+#: three +1/+1 counters on it.", read as the `ENTERS_WITH` it means, gated on
+#: `ESCAPED_CONDITION` (`_escaped`, CR 702.138b).
+_ESCAPES_WITH = re.compile(
+    r"^(?P<subject>[^,]+?) escapes with (?P<what>.+?)(?:\s+on it)?\.?$", re.IGNORECASE
+)
+#: The condition text CR 702.138c's own expansion states.
+ESCAPED_CONDITION = "this permanent escaped"
+#: "for each time it was kicked" - `_read_counters` keeps the count phrase as
+#: the `amount_expression` "time it was kicked"; CR 702.33d's kick count is
+#: read off the spell's cast record as the permanent enters (`_kicked_count`).
+_TIMES_KICKED_RE = re.compile(r"^times? it was kicked$", re.IGNORECASE)
 _ENTERS_AS_COPY = re.compile(
     rf"^(?:You may have\s+)?(?P<subject>.+?) (?:{_ENTERS}|enter)(?P<tapped> tapped)?"
     r" as a copy of (?P<copy_of>.+?)(?:,\s*except\s+(?P<exception>.+?))?\.?$",
@@ -254,6 +268,53 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
             self_replacement=_refers_to_self(subject, names),
         )
     ]
+
+
+def _try_escapes_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    """CR 702.138c's "escapes with": an `ENTERS_WITH` whose condition is
+    "this permanent escaped" (CR 702.138b)."""
+    match = _ESCAPES_WITH.match(sentence)
+    if not match:
+        return []
+    subject = match.group("subject").strip()
+    what = match.group("what").strip()
+    counters = _read_counters(what)
+    if counters is None:
+        return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
+    amount, variable, counter_kind, expression, that_many_multiplier = counters
+    return [
+        _make(
+            ReplacementKind.ENTERS_WITH,
+            sentence,
+            subject=subject,
+            replacement=what,
+            amount=amount,
+            variable_amount=variable,
+            counter_kind=counter_kind,
+            amount_expression=expression,
+            that_many_multiplier=that_many_multiplier,
+            condition=ESCAPED_CONDITION,
+            self_replacement=_refers_to_self(subject, names),
+        )
+    ]
+
+
+def _escaped(game: "Game", entering: CardState) -> bool:
+    """CR 702.138b: "A spell or permanent "escaped" if that spell or the spell
+    that became that permanent as it resolved was cast from a graveyard with
+    an escape ability." Read off the resolving spell's own cast record, which
+    `Game.resolve_top` has not popped yet as the permanent enters; an object
+    arriving any other way has no record and did not escape."""
+    record = game.cast_record_of(entering)
+    return record is not None and (record.keyword or "").lower() == "escape"
+
+
+def _kicked_count(game: "Game", entering: CardState) -> int:
+    """CR 702.33d: how many times the spell that became `entering` was kicked
+    (`CastRecord.kicked`, fixed as it was cast). A permanent that was never
+    cast was never kicked."""
+    record = game.cast_record_of(entering)
+    return record.kicked if record is not None else 0
 
 
 # -- "if a [nontoken] creature would enter and it wasn't cast, exile it instead" --
@@ -1255,6 +1316,9 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
 
     if condition.strip().lower() in _revolt_clauses():
         return _revolt_active
+
+    if condition.strip().lower() == ESCAPED_CONDITION:
+        return _escaped
 
     return None
 
@@ -2342,6 +2406,15 @@ def _self_enters_modifiers(
             effect.kind is ReplacementKind.ENTERS_WITH
             and effect.counter_kind is not None
             and amount is None
+            and _TIMES_KICKED_RE.match(effect.amount_expression or "")
+        ):
+            # CR 702.33d / CR 122.6: "a +1/+1 counter on it for each time it
+            # was kicked" - the kicks the cast record holds, 0 when none.
+            amount = _kicked_count(game, card_state)
+        if (
+            effect.kind is ReplacementKind.ENTERS_WITH
+            and effect.counter_kind is not None
+            and amount is None
             and effect.variable_amount
             # CR 107.3m is "if an object's ... replacement effect **refers to
             # X**". A count stated as an expression instead - Ulamog, the
@@ -2727,6 +2800,8 @@ def self_enters_effects_read(card: Card, effects: Sequence[ReplacementEffect]) -
         if effect.amount is not None:
             continue
         if effect.amount_expression is not None:
+            if _TIMES_KICKED_RE.match(effect.amount_expression):
+                continue  # CR 702.33d: `_kicked_count`.
             if amount_expression(effect.amount_expression) is None:
                 return False
             continue

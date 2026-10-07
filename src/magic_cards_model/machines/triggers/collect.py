@@ -213,6 +213,15 @@ def zones_ability_functions_in(
         named = zones_the_source_names(ability.intervening_if, source)
         if named is not None:
             return named
+    # The same statement made by a "This ability triggers only if <source> is
+    # on the battlefield or if <source> is in your graveyard and ..." restriction
+    # (Quakebringer): every zone its alternatives name for the source.
+    if ability.triggers_only_if is not None:
+        from ..conditions.player import zones_the_source_names_any
+
+        named = zones_the_source_names_any(ability.triggers_only_if, source)
+        if named is not None:
+            return named
 
     # CR 113.6b again, off the trigger condition. A cast trigger's "from your graveyard" is not
     # that: "Whenever you cast a Dragon creature spell from your graveyard"
@@ -1605,6 +1614,14 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
     """
     triggered: list[AbilityOnStack] = []
     for source, ability, controller in abilities_triggered_by(game, event, sources):
+        if ability.triggers_only_if is not None and not game.condition_holds(
+            controller, ability.triggers_only_if, source
+        ):
+            # "This ability triggers only if ..." - asked as the event occurs
+            # (as CR 603.2h's and CR 702.169c's restrictions are), never on
+            # resolution; an unread clause (None) fails closed and does not
+            # trigger.
+            continue
         if ability.once_per_turn:
             # CR 603.2h: "the ability triggers only if its source's
             # controller has not yet taken the indicated action that

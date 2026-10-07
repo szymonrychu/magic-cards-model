@@ -2247,3 +2247,27 @@ def test_a_snapshot_written_before_the_redirect_to_enchanted_is_refused() -> Non
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW05_T2_REDIRECT_TO_ENCHANTED}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before NW06-T4: `TriggeredAbility` gained
+#: `triggers_only_if` (Quakebringer's "This ability triggers only if ...").
+#: NW06-T4 bumped 130 -> 134 (renumbered at integration), so the last shape
+#: without it is 130.
+_SCHEMA_VERSION_BEFORE_NW06_T4_TRIGGERS_ONLY_IF = 130
+
+
+def test_a_snapshot_written_before_the_trigger_restriction_field_is_refused() -> None:
+    """A version-130 dump's abilities carry no `triggers_only_if`: refused
+    rather than decoded as current."""
+    from magic_cards_model.machines.abilities import TriggeredAbility
+
+    assert "triggers_only_if" in TriggeredAbility.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW06_T4_TRIGGERS_ONLY_IF
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW06_T4_TRIGGERS_ONLY_IF
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW06_T4_TRIGGERS_ONLY_IF}",
+    ):
+        Game.model_validate(dumped)

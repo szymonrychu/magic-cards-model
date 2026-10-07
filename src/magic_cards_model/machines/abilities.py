@@ -2115,6 +2115,15 @@ class TriggeredAbility(BaseAbility):
     #: Caretaker's Talent's own token-enters trigger is the only printing in
     #: the pool with this restriction.
     once_per_turn: bool = False
+    #: A trailing "This ability triggers only if `<condition>`." (Quakebringer's
+    #: "... only if Quakebringer is on the battlefield or if Quakebringer is in
+    #: your graveyard and you control a Giant."), stripped out of `effect`. The
+    #: CR 603.2h / CR 702.169c restriction wording: checked as the trigger event
+    #: occurs (`machines/triggers.triggers_for`), not again on resolution, since
+    #: it is not CR 603.4's intervening "if". Where it names the source's own
+    #: zones it is also CR 113.6b's statement of where the ability functions
+    #: (`machines/triggers.zones_ability_functions_in`).
+    triggers_only_if: str | None = None
     #: CR 107.15a's `N`: the lore-counter threshold one `{rN}—` chapter symbol
     #: names, for a `TriggeredAbility` `_parse_chapter_line` synthesized off a
     #: Saga's own `I —` / `I, II —` / `III —` marker rather than read off any
@@ -3841,6 +3850,22 @@ _ONCE_PER_TURN_TRAILER = re.compile(
 )
 
 
+#: The trailing "This ability triggers only if `<condition>`." sentence -
+#: `TriggeredAbility.triggers_only_if`. Always the ability's last sentence.
+_TRIGGERS_ONLY_IF_TRAILER = re.compile(
+    r"\.\s*this ability triggers only if (?P<clause>[^.]+?)\.?\s*$", re.IGNORECASE
+)
+
+
+def _strip_triggers_only_if_trailer(text: str) -> tuple[str, str | None]:
+    """`text` with `_TRIGGERS_ONLY_IF_TRAILER` cut off (its sentence-ending
+    period kept), and the restriction's condition, or None."""
+    match = _TRIGGERS_ONLY_IF_TRAILER.search(text)
+    if match is None:
+        return text, None
+    return text[: match.start()] + ".", match.group("clause").strip()
+
+
 def _strip_once_per_turn_trailer(text: str) -> str:
     """`text` with `_ONCE_PER_TURN_TRAILER` cut off, its own closing quote
     mark (if any) put back - see that pattern's own docstring."""
@@ -4144,6 +4169,9 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
         once_per_turn = True
         rest = stripped
         printed_rest = _strip_once_per_turn_trailer(printed_rest).strip()
+    rest, triggers_only_if = _strip_triggers_only_if_trailer(rest)
+    if triggers_only_if is not None:
+        printed_rest = _strip_triggers_only_if_trailer(printed_rest)[0]
 
     abilities: list[TriggeredAbility] = []
     for half_word, half in _split_compound_condition(word, condition):
@@ -4191,6 +4219,7 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
                 effect=half_effect,
                 event=_trigger_event(half),
                 once_per_turn=once_per_turn,
+                triggers_only_if=triggers_only_if,
                 event_qualifier=event_qualifier,
             )
         )

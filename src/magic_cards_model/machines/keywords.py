@@ -130,6 +130,7 @@ class KeywordRule(StrEnum):
     STORM = "CR 702.40a"
     CASUALTY = "CR 702.153a"
     PERSIST = "CR 702.79a"
+    UNDYING = "CR 702.93a"
     DREDGE = "CR 702.52a"
     MOBILIZE = "CR 702.181a"
     MADNESS = "CR 702.35a"
@@ -212,6 +213,9 @@ def executes(keyword: str) -> bool:
         # `_conspire_effect` here, one per conspire cost paid.
         "conspire",
         "persist",
+        # CR 702.93a: `_undying_ability` (`_TRIGGER_EXPANSIONS`), resolved by
+        # `_undying_effect`.
+        "undying",
         "dredge",
         "mobilize",
         "indestructible",
@@ -508,6 +512,8 @@ def _keyword_cost(ability: KeywordAbility, payer: str) -> TotalCost | None:
 #   asked is the spell and not a permanent.
 # - **Persist** (CR 702.79a) - "Persist is a triggered ability", and its "if it
 #   had no -1/-1 counters on it" is an intervening *if* (CR 603.4).
+# - **Undying** (CR 702.93a) - "Undying is a triggered ability", persist's
+#   mirror: "if it had no +1/+1 counters on it" is the intervening *if*.
 # - **Mobilize** (CR 702.181a) - "Mobilize is a triggered ability."
 #
 # For contrast, and to make the point that this list is read rather than
@@ -736,6 +742,28 @@ def _persist_ability(ability: KeywordAbility) -> TriggeredAbility:
         intervening_if="it had no -1/-1 counters on it",
         effect=(
             "return it to the battlefield under its owner's control with a -1/-1 counter on it"
+        ),
+        event=TriggerEvent.DIES,
+    )
+
+
+def _undying_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.93a: "Undying" means "When this permanent is put into a graveyard
+    from the battlefield, if it had no +1/+1 counters on it, return it to the
+    battlefield under its owner's control with a +1/+1 counter on it.""
+
+    Persist's mirror (`_persist_ability`): the intervening *if* (CR 603.4) is
+    checked as it dies and again on resolution (CR 608.2a), which is what stops
+    a creature that came back with its counter from coming back again.
+    """
+    return _expansion(
+        ability,
+        keyword="undying",
+        word=TriggerWord.WHEN,
+        condition="this permanent is put into a graveyard from the battlefield",
+        intervening_if="it had no +1/+1 counters on it",
+        effect=(
+            "return it to the battlefield under its owner's control with a +1/+1 counter on it"
         ),
         event=TriggerEvent.DIES,
     )
@@ -1535,6 +1563,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "storm": _single(_storm_ability),
     "replicate": _single(_replicate_ability),
     "persist": _single(_persist_ability),
+    "undying": _single(_undying_ability),
     "mobilize": _single(_mobilize_ability),
     "offspring": _single(_offspring_ability),
     "firebending": _single(_firebending_ability),
@@ -5015,6 +5044,30 @@ def persist_return(
     return card
 
 
+def undying_return(game: Any, card: CardState) -> CardState | None:
+    """Perform an undying trigger (CR 702.93a): return the card from its
+    owner's graveyard under its owner's control with a +1/+1 counter on it.
+
+    The counter is given as it enters (CR 122.6: "an object that's given
+    counters as it enters the battlefield"), so the returned creature is never
+    on the battlefield without it - an "enters" trigger that reads its power
+    sees the counter. The intervening *if* was already asked twice (CR 603.4,
+    CR 608.2a); this reads `last_known_counters` once more only so a direct
+    call answers the same question. None when it does not return: the card
+    is no longer in a graveyard (CR 603.6 - it looks only where it went), or
+    it is a token, which ceased to exist as it left (CR 111.7).
+    """
+    if card.zone is not Zone.GRAVEYARD or card.token:
+        return None
+    if card.last_known_counters[Counter.PLUS_ONE]:
+        return None
+    owner = game.find_owner(card) or game.player(card.controller or game.active_player.username)
+    if card in owner.cards_in(Zone.GRAVEYARD):
+        owner.cards_in(Zone.GRAVEYARD).remove(card)
+    game.put_onto_battlefield(card, owner.username, counters={Counter.PLUS_ONE: 1})
+    return card
+
+
 # --------------------------------------------------------------------------
 # Rebound (CR 702.88)
 # --------------------------------------------------------------------------
@@ -5777,6 +5830,16 @@ def _persist_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     return persist_return(game, source, keyword_confirmed=True)
 
 
+def _undying_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
+    """CR 702.93a's effect: return it with a +1/+1 counter on it. Printed or
+    granted alike (a granted keyword functions as a printed one), so the
+    keyword is not looked up again here - dispatch already says it is undying."""
+    source = ability.source(game)
+    if source is None:
+        return None
+    return undying_return(game, source)
+
+
 def _evoke_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     """CR 702.74a's effect: "its controller sacrifices it".
 
@@ -6333,6 +6396,7 @@ def _cumulative_upkeep_effect(game: Any, ability: AbilityOnStack) -> bool | None
 KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "prowess": _prowess_effect,
     "persist": _persist_effect,
+    "undying": _undying_effect,
     "cascade": _cascade_effect,
     "storm": _storm_effect,
     "replicate": _replicate_effect,

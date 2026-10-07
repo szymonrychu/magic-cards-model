@@ -3790,6 +3790,20 @@ def _unread_intervening_if(printing: Card, ability: TriggeredAbility) -> str | N
     )
 
 
+def _unread_trigger_restriction(ability: TriggeredAbility) -> str | None:
+    """Why `ability` fails closed on its own "This ability triggers only if
+    ..." restriction (`TriggeredAbility.triggers_only_if`), or `None` when it
+    prints none or `Game.condition_holds` reads it: `machines/triggers.
+    triggers_for` lets an unread restriction trigger nothing."""
+    clause = (ability.triggers_only_if or "").strip()
+    if not clause or condition_is_readable(clause):
+        return None
+    return (
+        f'unread trigger restriction: "This ability triggers only if {clause}" - '
+        "the ability never triggers"
+    )
+
+
 def _unread_activation_instructions(printing: Card, ability: ActivatedAbility) -> str | None:
     """Why `ability` fails closed on its own activation instructions, or
     `None` when it prints none or the engine checks every one
@@ -4201,6 +4215,7 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             category, reason = _strict(
                 category,
                 _unread_intervening_if(printing, ability),
+                _unread_trigger_restriction(ability),
                 None
                 if modal_category is not None
                 else _remainder_finding(

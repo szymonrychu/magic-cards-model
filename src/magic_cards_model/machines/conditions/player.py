@@ -717,6 +717,33 @@ def zones_the_source_names(clause: str, source: "CardState") -> "frozenset[Zone]
     return None
 
 
+#: The alternatives of a disjunctive restriction: "X or if Y" / "X or Y".
+_ALTERNATIVE_JOINER = re.compile(r",? or (?:if )?")
+#: One alternative's leading "<self> is <place>", any "and ..." tail after it.
+_SELF_IN_PLACE_THEN = re.compile(rf"{_SELF} is (?:still )?(?P<place>{_PLACE})(?: and .+)?")
+
+
+def zones_the_source_names_any(clause: str, source: "CardState") -> "frozenset[Zone] | None":
+    """`zones_the_source_names` for a disjunction each of whose alternatives
+    opens by placing the source - Quakebringer's "Quakebringer is on the
+    battlefield or if Quakebringer is in your graveyard and you control a
+    Giant": CR 113.6b's zones are the union of the places named. None unless
+    every alternative names one."""
+    from ...models.game import _names_the_source
+
+    whole = zones_the_source_names(clause, source)
+    if whole is not None:
+        return whole
+    text = " ".join(clause.strip().rstrip(".").strip().split()).lower()
+    zones = set()
+    for alternative in _ALTERNATIVE_JOINER.split(text):
+        match = _SELF_IN_PLACE_THEN.fullmatch(alternative.strip())
+        if match is None or not _names_the_source(match.group("self"), source):
+            return None
+        zones.add(_place_zone(match.group("place")))
+    return frozenset(zones) if zones else None
+
+
 READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(

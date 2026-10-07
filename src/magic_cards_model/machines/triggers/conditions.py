@@ -4344,12 +4344,14 @@ def intervening_if_answer(
         # last-known field here is read).
         return not source.token
 
-    if clause == "it had no -1/-1 counters on it":
-        # CR 702.79a asks about the permanent as it last existed on the
-        # battlefield, and CR 122.2 has already destroyed its counters on the
-        # way to the graveyard. CR 704.8 and CR 603.10a are what make that
-        # question answerable at all, and `last_known_counters` is the answer.
-        return not source.last_known_counters[Counter.MINUS_ONE]
+    if clause in ("it had no -1/-1 counters on it", "it had no +1/+1 counters on it"):
+        # CR 702.79a (persist) and CR 702.93a (undying) ask about the
+        # permanent as it last existed on the battlefield, and CR 122.2 has
+        # already destroyed its counters on the way to the graveyard. CR 704.8
+        # and CR 603.10a are what make that question answerable at all, and
+        # `last_known_counters` is the answer.
+        kind = Counter.MINUS_ONE if "-1/-1" in clause else Counter.PLUS_ONE
+        return not source.last_known_counters[kind]
 
     match = re.match(r"you control no (\w+?)s? other than this \w+", clause)
     if match is not None:
