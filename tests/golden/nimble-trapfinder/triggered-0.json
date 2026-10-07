@@ -38,7 +38,50 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Blackbloom Rogue@alice#1": {
+        "granted": [
+          ["Indestructible"],
+          ["Indestructible", "Whenever this creature deals combat damage to a player, draw a card"]
+        ]
+      },
+      "Eccentric Apprentice@alice#1": {
+        "granted": [
+          ["Indestructible"],
+          ["Indestructible", "Whenever this creature deals combat damage to a player, draw a card"]
+        ]
+      },
+      "Icehide Golem@alice#1": {
+        "granted": [
+          ["Indestructible"],
+          ["Indestructible", "Whenever this creature deals combat damage to a player, draw a card"]
+        ]
+      },
+      "Infernal Vessel@alice#1": {
+        "granted": [
+          ["Indestructible"],
+          ["Indestructible", "Whenever this creature deals combat damage to a player, draw a card"]
+        ]
+      },
+      "Memnite@alice#1": {
+        "granted": [
+          ["Indestructible"],
+          ["Indestructible", "Whenever this creature deals combat damage to a player, draw a card"]
+        ]
+      },
+      "Nimble Trapfinder@alice#1": {
+        "granted": [
+          ["Indestructible"],
+          ["Indestructible", "Whenever this creature deals combat damage to a player, draw a card"]
+        ]
+      },
+      "Squad Commander@alice#1": {
+        "granted": [
+          ["Indestructible"],
+          ["Indestructible", "Whenever this creature deals combat damage to a player, draw a card"]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },
