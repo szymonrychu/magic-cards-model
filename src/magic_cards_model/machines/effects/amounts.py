@@ -1337,7 +1337,7 @@ def _amount_term(term: str) -> AmountReader | None:
         return read_object_counters
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
-    if _ITS_MANA_VALUE_RE.fullmatch(text):
+    if "mana value" in lowered and _ITS_MANA_VALUE_RE.fullmatch(text):
         # CR 202.3: the object's mana value, as it last existed if it has left
         # the battlefield (CR 603.10a looks back in time for a leaves trigger).
         return lambda _game, _controller, obj, _x: 0 if obj is None else int(obj.mana_value)
@@ -1461,7 +1461,7 @@ def _amount_term(term: str) -> AmountReader | None:
         if factor is None or inner is None:
             return None
         return lambda game, controller, obj, x: factor * inner(game, controller, obj, x)
-    if _DAMAGE_DEALT_TO_IT_THIS_TURN_RE.fullmatch(text):
+    if "damage dealt to" in lowered and _DAMAGE_DEALT_TO_IT_THIS_TURN_RE.fullmatch(text):
         # Tangled Colony's "X is the amount of damage dealt to it this turn":
         # `obj` is the resolving ability's source, which a dies trigger finds
         # in the graveyard - the ledger still answers (CR 608.2h).

@@ -2484,6 +2484,8 @@ def _parse_creatures_you_control_assign_as_though_unblocked_clause(
     """`_CREATURES_YOU_CONTROL_ASSIGN_AS_THOUGH_UNBLOCKED_RE`'s shape: one
     layer-6 grant (CR 613.1f) per creature, scoped to that very object (CR
     400.7), expiring in the cleanup step (CR 514.2)."""
+    if "as though they weren" not in clause.lower():
+        return None
     if _CREATURES_YOU_CONTROL_ASSIGN_AS_THOUGH_UNBLOCKED_RE.fullmatch(clause.strip()) is None:
         return None
 

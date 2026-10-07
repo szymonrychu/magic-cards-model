@@ -308,7 +308,9 @@ def test_the_if_guard_does_not_silence_gated_damage_to_each_opponent():
     assert card_support(card("Reckless Handling")).status == "handled"
     assert (
         effect_for(
-            "If the discarded card wasn't a land card, Grab the Prize deals 2 damage to each opponent."
+            "Grab the Prize",
+            "If the discarded card wasn't a land card, "
+            "Grab the Prize deals 2 damage to each opponent.",
         )
         is not None
     )
