@@ -9,13 +9,13 @@ damage equal to its power to target creature an opponent controls") reads it.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
 from magic_cards_model.machines.abilities import TriggerEvent
 from magic_cards_model.machines.triggers import (
     GameEvent,
     event_subject_power,
     event_subject_toughness,
 )
+from magic_cards_model.models import Zone
 
 from .harness import Scenario
 
