@@ -590,6 +590,10 @@ _SPEND_RESTRICTION_SIGNAL = re.compile(r"[Ss]pend this mana only")
 #: "pay cumulative upkeep costs" (Snowfall) - CR 702.24a's cost as the thing
 #: the mana may pay.
 _SPEND_CUMULATIVE_UPKEEP_CLAUSE = re.compile(r"^pay cumulative upkeep costs?$", re.IGNORECASE)
+#: "gain a Class level" (Sorcerer Class) - CR 716.2a: a Class gains a level
+#: only by activating its "[Cost]: Level N" bar, so this is an activation
+#: clause narrowed to level bars.
+_SPEND_CLASS_LEVEL_CLAUSE = re.compile(r"^gain an? Class level$", re.IGNORECASE)
 #: A trailing "with mana value N or greater" / "with {X} in its/their mana
 #: cost(s)" narrows the spell by CR 202.3's mana value or its printed cost
 #: (Helga, Skittish Seer).
@@ -653,6 +657,11 @@ _TYPE_LIST_JOINERS = {"and", "or", "and/or"}
 #: single clause. See `_spend_clauses`.
 #: "or" before "greater"/"less" is a mana value comparison, never a joiner.
 _SPEND_CLAUSE_SPLIT = re.compile(r" and/or | and | or (?!greater\b|less\b)")
+#: A joiner followed by a repeated "to" ("cast an instant or sorcery spell or
+#: to gain a Class level") can only join two whole clauses - a quality list
+#: never repeats the infinitive - so this boundary is cut before the generic
+#: split, which would also tear "instant or sorcery" apart.
+_SPEND_INFINITIVE_SPLIT = re.compile(r" (?:and/or|and|or) (?=to )")
 #: The verb a split "only to ..." phrase opens with, lent to a following
 #: phrase that elides it.
 _SPEND_VERB = re.compile(r"^(?:cast|activate|pay|unlock) ", re.IGNORECASE)
@@ -876,10 +885,20 @@ def _spend_clauses(what: str, chosen_type: str | None) -> list[SpendClause] | No
     if whole is not None:
         return [whole]
 
+    infinitives = _SPEND_INFINITIVE_SPLIT.split(what)
+    if len(infinitives) > 1:
+        clauses: list[SpendClause] = []
+        for infinitive in infinitives:
+            read = _spend_clauses(infinitive.strip().removeprefix("to "), chosen_type)
+            if read is None:
+                return None
+            clauses.extend(read)
+        return clauses
+
     alternatives = _SPEND_CLAUSE_SPLIT.split(what)
     if len(alternatives) == 1:
         return None
-    clauses: list[SpendClause] = []
+    clauses = []
     verb: str | None = None
     for alternative in alternatives:
         # "cast a Villain spell or to activate ...": the second phrase repeats
@@ -927,6 +946,8 @@ def _one_spend_clause(phrase: str, chosen_type: str | None) -> SpendClause | Non
         if activate.group("chosen") and chosen is None:
             return None
         return _spend_clause(activate.group("quality") or "", SpendPurpose.ACTIVATE_ABILITY, chosen)
+    if _SPEND_CLASS_LEVEL_CLAUSE.match(phrase):
+        return SpendClause(purpose=SpendPurpose.ACTIVATE_ABILITY, class_level=True)
     if _SPEND_CUMULATIVE_UPKEEP_CLAUSE.match(phrase):
         # CR 702.24a's cost, not a spell or an ability: no quality to read.
         return SpendClause(purpose=SpendPurpose.PAY_CUMULATIVE_UPKEEP)

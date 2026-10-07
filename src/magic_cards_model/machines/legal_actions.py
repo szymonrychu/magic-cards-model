@@ -1519,6 +1519,7 @@ def _battlefield_ability_actions(
         spend = ManaSpend.activating(
             board.of(permanent),
             any_color=game.spends_mana_as_any_color(permanent, ability, player),
+            class_level=getattr(ability, "class_level_target", None) is not None,
         )
         affordable, reason, pays_with = _cost_affordability(
             game, player, total, candidate_scan, spend=spend

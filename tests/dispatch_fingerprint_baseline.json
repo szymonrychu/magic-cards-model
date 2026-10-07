@@ -469,7 +469,7 @@
         "Add {U} or {B}. Activate only if this land entered this turn or if you control a basic land.": "<none>",
         "Add {U} or {R}.": "<none>",
         "Add {U} or {R}. Spend this mana only to cast a noncreature spell.": "parse_mixed_effect",
-        "Add {U} or {R}. Spend this mana only to cast an instant or sorcery spell or to gain a Class level.\"": "<none>",
+        "Add {U} or {R}. Spend this mana only to cast an instant or sorcery spell or to gain a Class level.\"": "parse_mixed_effect",
         "Add {U} or {R}. This land deals 1 damage to you.": "<none>",
         "Add {U}.": "_parse_mana_adding_trigger",
         "Add {U}. Activate only if you control a Plains or an Island.": "<none>",

@@ -595,6 +595,11 @@ class ManaSpend(EngineModel):
     is paid). `None` for an activation, which has no spell to ask about."""
     x_in_cost: bool = False
     """Whether the spell being cast has an {X} in its mana cost."""
+    class_level: bool = False
+    """Whether the ability being activated is a Class's level bar - CR 716.2a's
+    "[Cost]: Level N", an activated ability whose resolution is how a Class
+    gains a level. Sorcerer Class's "Spend this mana only to ... gain a Class
+    level" asks exactly this."""
 
     @classmethod
     def _of(
@@ -651,7 +656,9 @@ class ManaSpend(EngineModel):
         )
 
     @classmethod
-    def activating(cls, card: "HasCharacteristics", *, any_color: bool = False) -> "ManaSpend":
+    def activating(
+        cls, card: "HasCharacteristics", *, any_color: bool = False, class_level: bool = False
+    ) -> "ManaSpend":
         """Mana spent to activate an ability whose source is `card`.
 
         Unlike `casting`, the source of an activated ability is normally a
@@ -663,9 +670,11 @@ class ManaSpend(EngineModel):
         prints the same four names this reads, so no branch is needed here -
         only the type had to stop saying `Card`.
 
-        `any_color` is CR 609.4b's permission, see the field's own docstring.
+        `any_color` is CR 609.4b's permission and `class_level` says the
+        ability is a CR 716.2a level bar, see each field's own docstring.
         """
-        return cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None, any_color=any_color)
+        spend = cls._of(SpendPurpose.ACTIVATE_ABILITY, card, None, any_color=any_color)
+        return spend.model_copy(update={"class_level": True}) if class_level else spend
 
     @classmethod
     def paying_cumulative_upkeep(cls, card: "HasCharacteristics") -> "ManaSpend":
@@ -742,6 +751,9 @@ class SpendClause(EngineModel):
     the spell's CR 202.3 mana value must reach this. `None` asks nothing."""
     requires_x_in_cost: bool = False
     """Helga's "creature spells with {X} in their mana costs"."""
+    class_level: bool = False
+    """Sorcerer Class's "to gain a Class level": only a CR 716.2a level bar's
+    activation (`ManaSpend.class_level`)."""
 
     def accepts(self, spend: ManaSpend) -> bool:
         # `colorless` and `zone` are never alternatives: no printing offers
@@ -762,6 +774,8 @@ class SpendClause(EngineModel):
         ):
             return False
         if self.requires_x_in_cost and not spend.x_in_cost:
+            return False
+        if self.class_level and not spend.class_level:
             return False
         # CR 109.2: every negated type must be absent, independently of
         # `joined` and of whatever the positive qualities below ask - "not

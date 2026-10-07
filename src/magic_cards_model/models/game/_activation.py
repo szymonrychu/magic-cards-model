@@ -2549,6 +2549,7 @@ class ActivationMixin:
             spend=ManaSpend.activating(
                 source_characteristics,
                 any_color=self.spends_mana_as_any_color(permanent, ability, controller),
+                class_level=getattr(ability, "class_level_target", None) is not None,
             ),
         )
         payment.paying_for = "ability"

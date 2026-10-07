@@ -2221,7 +2221,10 @@ class Game(
     #: a player/an opponent"), `devoured` (CR 702.82b) and
     #: `controlled_since_upkeep`, and `Game` gained `upkeeps_begun` (echo, CR
     #: 702.30a); an older dump would decode with no chosen player, nothing
-    #: devoured and every permanent's echo due again.
+    #: devoured and every permanent's echo due again. The same (unreleased)
+    #: version also covers `SpendClause.class_level` on floating mana's CR
+    #: 106.6 restriction (NW-06 integration, Sorcerer Class's "to gain a Class
+    #: level", CR 716.2a).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
