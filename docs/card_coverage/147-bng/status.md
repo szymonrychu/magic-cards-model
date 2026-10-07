@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 10.6% |
+| Tested | 19 | 11.9% |
 | Works (untested) | 89 | 55.6% |
 | Partial (unaudited) | 8 | 5.0% |
-| Not working | 46 | 28.8% |
+| Not working | 44 | 27.5% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Brimaz, King of Oreskos | silent | Whenever Brimaz attacks, create a 1/1 white Cat Soldier creature token with vigilance that's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eidolon of Countless Battles | silent | This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ephara's Enlightenment | silent | When this Aura enters, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fall of the Hammer | silent | Target creature you control deals damage equal to its power to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Intervention | silent | Create two 3/3 green Centaur enchantment creature tokens. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Retribution | silent | Destroy all creatures and planeswalkers. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flame-Wreathed Phoenix | silent | When this creature enters, if tribute wasn't paid, it gains haste and "When this creature dies, return it to its owner's hand." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -45,7 +44,6 @@
 | God-Favored General | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{W}. If you do, create two 1/1 white Soldier enchantment creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hero of Leina Tower | silent | Heroic — Whenever you cast a spell that targets this creature, you may pay {X}. If you do, put X +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kiora, the Crashing Wave | silent | +1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lightning Volley | silent | Until end of turn, creatures you control gain "{T}: This creature deals 1 damage to any target." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis, God of Slaughter | silent | At the beginning of each opponent's upkeep, Mogis deals 2 damage to that player unless they sacrifice a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nessian Wilds Ravager | silent | When this creature enters, if tribute wasn't paid, you may have this creature fight another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oracle of Bones | silent | When this creature enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -173,16 +171,18 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>19 cards</summary>
 
 - Acolyte's Reward
 - Deepwater Hypnotist
 - Ephara, God of the Polis
+- Fall of the Hammer
 - Fate Unraveler
 - Felhide Brawler
 - Forgestoker Dragon
 - Heroes' Podium
 - Kiora's Follower
+- Lightning Volley
 - Ornitharch
 - Pain Seer
 - Satyr Wayfinder
@@ -226,9 +226,7 @@
 | tap up to two target creatures. those creatures don"..." next untap steps. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Sudden Storm | bng |
 | target creature gets +N/+N until end of turn, where N is your devotion to green. (each {M} in the mana costs of permanents you control counts toward your devoti | 1 | Aspect of Hydra | bng |
 | target creature gets -N/-N until end of turn. if it's a cyclops, destroy it. | 1 | Eye Gouge | bng |
-| target creature you control deals damage equal to its power to another target creature. | 1 | Fall of the Hammer | bng |
 | target creature you control gains protection from creatures your opponents control until end of turn. untap it. | 1 | Crypsis | bng |
-| until end of turn, creatures you control gain "..." | 1 | Lightning Volley | bng |
 | until end of turn, target creature gains "..." | 1 | Retraction Helix | bng |
 | when ~ enters, if tribute wasn"..."s hand." | 1 | Flame-Wreathed Phoenix | bng |
 | when ~ enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Oracle of Bones | bng |

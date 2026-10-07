@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 41.7% |
+| Tested | 11 | 45.8% |
 | Works (untested) | 10 | 41.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 4 | 16.7% |
+| Not working | 3 | 12.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Decree of Justice | silent | When you cycle this card, you may pay {X}. If you do, create X 1/1 white Soldier creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Final Punishment | silent | Target player loses life equal to the damage already dealt to that player this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frozen Solid | silent | When enchanted creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zealous Inquisitor | silent | {1}{W}: The next 1 damage that would be dealt to this creature this turn is dealt to target creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragon Mage | handled | Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -44,12 +43,13 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Call to the Grave
 - Carrion Feeder
 - Enrage
 - Fierce Empath
+- Final Punishment
 - Form of the Dragon
 - Goblin Brigand
 - Goblin Warchief
@@ -63,7 +63,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| target player loses life equal to the damage already dealt to that player ~. | 1 | Final Punishment | scg |
 | when enchanted creature is dealt damage, destroy it. | 1 | Frozen Solid | scg |
 | when you cycle ~, you may pay {M}. if you do, create N N/N white soldier creature tokens. | 1 | Decree of Justice | scg |
 | {M}{M}: the next N damage that would be dealt to ~ ~ is dealt to target creature instead. | 1 | Zealous Inquisitor | scg |

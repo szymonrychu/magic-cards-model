@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 31 | 12.1% |
-| Works (untested) | 135 | 52.7% |
+| Works (untested) | 136 | 53.1% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 79 | 30.9% |
+| Not working | 78 | 30.5% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Fade from History | silent | Each player who controls an artifact or enchantment creates a 2/2 green Bear creature token. Then destroy all artifacts and enchantments. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fallaji Dragon Engine | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fateful Handoff | silent | Draw cards equal to the mana value of target artifact or creature you control. An opponent gains control of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gnawing Vermin | silent | When this creature dies, target creature you don't control gets -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goring Warplow | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Great Desert Prospector | silent | When this creature enters, create a tapped Powerstone token for each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gurgling Anointer | silent | When this creature dies, return another target creature card with mana value less than or equal to this creature's power from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -160,6 +159,7 @@
 | Gixian Puppeteer | handled | Whenever you draw your second card each turn, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gixian Skullflayer | handled | At the beginning of your upkeep, if there are three or more creature cards in your graveyard, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gnarlroot Pallbearer | handled | When this creature enters, target creature gets +X/+X until end of turn, where X is the number of creature cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gnawing Vermin | handled | When this creature enters, target player mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Firebomb | handled | {7}, {T}, Sacrifice this artifact: Destroy target permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gruesome Realization | handled | Choose one — • You draw two cards and you lose 2 life. • Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gwenna, Eyes of Gaea | handled | Whenever you cast a creature spell with power 5 or greater, put a +1/+1 counter on Gwenna and untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -332,7 +332,6 @@
 | target opponent reveals their hand. you choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. exile the ch | 1 | Dreams of Steel and Oil | bro |
 | when ~ dies, add eight {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Su-Chi Cave Guard | bro |
 | when ~ dies, return another target creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Gurgling Anointer | bro |
-| when ~ dies, target creature you don't control gets -N/-N until end of turn. | 1 | Gnawing Vermin | bro |
 | when ~ dies, you may gain N life for each creature card in your graveyard. if you do, exile ~ from your graveyard. | 1 | Skyfisher Spider | bro |
 | when ~ enters, choose up to two other target creatures you control. for each {M}{M} spent to cast ~, put a +N/+N counter on each of them. | 1 | Clay Champion | bro |
 | when ~ enters, create a tapped powerstone token for each other creature you control. | 1 | Great Desert Prospector | bro |

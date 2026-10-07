@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 9.1% |
+| Tested | 23 | 9.5% |
 | Works (untested) | 137 | 56.8% |
 | Partial (unaudited) | 19 | 7.9% |
-| Not working | 63 | 26.1% |
+| Not working | 62 | 25.7% |
 
 ## Cards needing work
 
@@ -65,7 +65,6 @@
 | Neheb, the Worthy | silent | As long as you have one or fewer cards in hand, Minotaurs you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Steward of Elements | silent | 0: Look at the top card of your library. If it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on Nissa, y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oketra's Attendant | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Open into Wonder | silent | X target creatures can't be blocked this turn. Until end of turn, those creatures gain "Whenever this creature deals combat damage to a player, draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pursue Glory | silent | Attacking creatures get +2/+0 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quarry Hauler | silent | When this creature enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rags // Riches | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Each opponent chooses a creature they control. You gain control of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -249,7 +248,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Angler Drake
 - Archfiend of Ifnir
@@ -263,6 +262,7 @@
 - Harvest Season
 - Insult // Injury
 - Luxa River Shrine
+- Open into Wonder
 - Oracle's Vault
 - Sacred Excavation
 - Sandwurm Convergence
@@ -283,7 +283,6 @@
 | embalm | 13 | Angel of Sanctions, Anointer Priest, Aven Initiate, Aven Wind Guide, Heart-Piercer Manticore | akh |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 2 | Hooded Brawler, Nef-Crop Entangler | akh |
 | +N: untap all creatures you control. those creatures get +N/+N until end of turn. | 1 | Gideon, Martial Paragon | akh |
-| N target creatures can't be blocked ~. until end of turn, those creatures gain "..." | 1 | Open into Wonder | akh |
 | N: look at the top card of your library. if it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on nissa, y | 1 | Nissa, Steward of Elements | akh |
 | activated abilities of creature cards in your graveyard cost {M} less to activate. | 1 | Embalmer's Tools | akh |
 | aftermath (cast ~ only from your graveyard. then exile it.) all creatures able to block target creature ~ do so. | 1 | Destined // Lead | akh |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 13.0% |
+| Tested | 21 | 13.6% |
 | Works (untested) | 74 | 48.1% |
 | Partial (unaudited) | 5 | 3.2% |
-| Not working | 55 | 35.7% |
+| Not working | 54 | 35.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Alpha Brawl | silent | Target creature an opponent controls deals damage equal to its power to each other creature that player controls, then each of those creatures deals damage equa | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Archangel's Light | silent | You gain 2 life for each card in your graveyard, then shuffle your graveyard into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beguiler of Wills | silent | {T}: Gain control of target creature with power less than or equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Black Cat | silent | When this creature dies, target opponent discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -164,8 +163,9 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
+- Alpha Brawl
 - Avacyn's Collar
 - Break of Day
 - Chalice of Life // Chalice of Death
@@ -216,7 +216,6 @@
 | return all zombie creature cards from your graveyard to the battlefield tapped, then destroy all humans. | 1 | Zombie Apocalypse | dka |
 | reveal the top four cards of your library. put a creature card from among them into your hand and the rest into your graveyard. flashback {M}{M} (you may cast ~ | 1 | Tracker's Instincts | dka |
 | search your library for a card and put that card into your hand. if ~ was cast from a graveyard, instead search your library for two cards and put those cards i | 1 | Increasing Ambition | dka |
-| target creature an opponent controls deals damage equal to its power to each other creature that player controls, then each of those creatures deals damage equa | 1 | Alpha Brawl | dka |
 | target creature gains deathtouch until end of turn and must be blocked ~ if able. flashback {M} (you may cast ~ from your graveyard for its flashback cost. then | 1 | Deadly Allure | dka |
 | target permanent you control gains protection from the color of your choice until end of turn. fateful hour — if you have N or less life, instead you and each p | 1 | Faith's Shield | dka |
 | target player mills N cards. if ~ was cast from a graveyard, that player mills twice that many cards instead. flashback {M}{M} (you may cast ~ from your graveya | 1 | Increasing Confusion | dka |

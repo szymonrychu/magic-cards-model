@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 15.2% |
+| Tested | 34 | 16.2% |
 | Works (untested) | 97 | 46.2% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 66 | 31.4% |
+| Not working | 64 | 30.5% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Dead of Winter | silent | All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Face of Divinity | silent | As long as another Aura is attached to enchanted creature, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frostwalk Bastion | silent | Whenever this land deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Giver of Runes | silent | {T}: Another target creature you control gains protection from colorless or from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gluttonous Slug | silent | Evolve | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Champion | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Oriflamme | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -86,7 +85,6 @@
 | Kaya's Guile | notice | Choose two — • Each opponent sacrifices a creature of their choice. • Exile all opponents' graveyards. • Create a 1/1 white and black Spirit creature token with | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Murasa Behemoth | notice | This creature gets +3/+3 as long as there is a land card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Saddled Rimestag | notice | This creature gets +2/+2 as long as you had another creature enter the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Savage Swipe | notice | Target creature you control gets +2/+2 until end of turn if its power is 2. Then it fights target creature you don't control. (Each deals damage equal to its po | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Shatter Assumptions | notice | Choose one — • Target opponent reveals their hand and discards all colorless nonland cards. • Target opponent reveals their hand and discards all multicolored c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tribute Mage | notice | When this creature enters, you may search your library for an artifact card with mana value 2, reveal that card, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Twisted Reflection | notice | Choose one — • Target creature gets -6/-0 until end of turn. • Switch target creature's power and toughness until end of turn. Entwine {B} (Choose both if you p | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -208,7 +206,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>34 cards</summary>
 
 - Changeling Outcast
 - Collector Ouphe
@@ -220,6 +218,7 @@
 - Force of Despair
 - Force of Negation
 - Force of Vigor
+- Giver of Runes
 - Glacial Revelation
 - Goblin Engineer
 - Icehide Golem
@@ -230,6 +229,7 @@
 - Pyrophobia
 - Ranger-Captain of Eos
 - Return from Extinction
+- Savage Swipe
 - Seasoned Pyromancer
 - Silent Clearing
 - Sisay, Weatherlight Captain
@@ -289,7 +289,6 @@
 | sliver creatures you control have exalted. | 1 | First Sliver's Chosen | mh1 |
 | sliver creatures you control have first strike. | 1 | Lancer Sliver | mh1 |
 | sliver creatures you control have flying and haste. | 1 | Cloudshredder Sliver | mh1 |
-| target creature you control gets +N/+N until end of turn if its power is N. then it fights target creature you don't control. (each deals damage equal to its po | 1 | Savage Swipe | mh1 |
 | target player mills four cards. you shuffle up to four cards from your graveyard into your library. replicate {M}{M}{M} (when you cast ~, copy it for each time  | 1 | Stream of Thought | mh1 |
 | unblocked attacking ninjas you control have lifelink. | 1 | Throatseeker | mh1 |
 | until end of turn, creatures you control get +N/+N and gain all creature types. | 1 | Volatile Claws | mh1 |
@@ -309,7 +308,6 @@
 | whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 1 | Frostwalk Bastion | mh1 |
 | whenever ~ deals combat damage to a player, that player exiles the top two cards of their library. until end of turn, you may play those cards without paying th | 1 | Fallen Shinobi | mh1 |
 | you can't spend mana to cast ~. | 1 | Hogaak, Arisen Necropolis | mh1 |
-| {M}: another target creature you control gains protection from colorless or from the color of your choice until end of turn. | 1 | Giver of Runes | mh1 |
 | {M}: shuffle your library, then exile the top card. until end of turn, you may play that card without paying its mana cost. | 1 | Urza, Lord High Artificer | mh1 |
 | {M}: ~ can attack ~ as though it didn't have defender. | 1 | Wall of One Thousand Cuts | mh1 |
 | {M}{M}, exile ~ from your graveyard: search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Trustworthy Scout | mh1 |

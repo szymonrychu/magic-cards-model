@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 15.4% |
+| Tested | 27 | 16.0% |
 | Works (untested) | 61 | 36.1% |
 | Partial (unaudited) | 4 | 2.4% |
-| Not working | 78 | 46.2% |
+| Not working | 77 | 45.6% |
 
 ## Cards needing work
 
@@ -95,7 +95,6 @@
 | Vigean Intuition | silent | Choose a card type, then reveal the top four cards of your library. Put all cards of the chosen type revealed this way into your hand and the rest into your gra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wakestone Gargoyle | silent | {1}{W}: Creatures you control with defender can attack this turn as though they didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | War's Toll | silent | Whenever an opponent taps a land for mana, tap all lands that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Weight of Spires | silent | Weight of Spires deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Windreaver | silent | {U}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dread Slag | notice | This creature gets -4/-4 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Experiment Kraj | notice | Experiment Kraj has all activated abilities of each other creature with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -173,7 +172,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
@@ -200,6 +199,7 @@
 - Simic Growth Chamber
 - Spell Snare
 - Utopia Sprawl
+- Weight of Spires
 - Writ of Passage
 
 </details>
@@ -274,7 +274,6 @@
 | {M}{M}: move a +N/+N counter from target creature onto another target creature with the same controller. | 1 | Simic Guildmage | dis |
 | {M}{M}: until end of turn, target creature with a +N/+N counter on it gains "..." | 1 | Simic Basilisk | dis |
 | ~ deals N damage to each of two target creatures. hellbent — destroy those creatures instead if you have no cards in hand. | 1 | Twinstrike | dis |
-| ~ deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | 1 | Weight of Spires | dis |
 | ~ gets -N/-N for each card in your hand. | 1 | Dread Slag | dis |
 | ~ has all activated abilities of each other creature with a +N/+N counter on it. | 1 | Experiment Kraj | dis |
 

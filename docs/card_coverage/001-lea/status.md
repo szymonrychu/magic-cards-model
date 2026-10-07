@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 28.4% |
-| Works (untested) | 56 | 48.3% |
+| Tested | 35 | 30.2% |
+| Works (untested) | 59 | 50.9% |
 | Partial (unaudited) | 3 | 2.6% |
-| Not working | 24 | 20.7% |
+| Not working | 19 | 16.4% |
 
 ## Cards needing work
 
@@ -28,10 +28,6 @@
 |---|---|---|---|---|---|
 | Bad Moon | silent | Black creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blessing | silent | {W}: Enchanted creature gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Circle of Protection: Blue | silent | {1}: The next time a blue source of your choice would deal damage to you this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Circle of Protection: Green | silent | {1}: The next time a green source of your choice would deal damage to you this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Circle of Protection: Red | silent | {1}: The next time a red source of your choice would deal damage to you this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Circle of Protection: White | silent | {1}: The next time a white source of your choice would deal damage to you this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dingus Egg | silent | Whenever a land is put into a graveyard from the battlefield, this artifact deals 2 damage to that land's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Evil Presence | silent | Enchanted land is a Swamp. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Firebreathing | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -45,7 +41,6 @@
 | Lord of the Pit | silent | At the beginning of your upkeep, sacrifice a creature other than this creature. If you can't, this creature deals 7 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pirate Ship | silent | When you control no Islands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Regeneration | silent | {G}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Reverse Damage | silent | The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cockatrice | notice | Whenever this creature blocks or becomes blocked by a non-Wall creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Disintegrate | notice | Disintegrate deals X damage to any target. If it's a creature, it can't be regenerated this turn, and if it would die this turn, exile it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dragon Whelp | notice | {R}: This creature gets +1/+0 until end of turn. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of th | unparsed remainder: If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step. | Y/Y/- | not_working |
@@ -55,6 +50,9 @@
 | Lure | unaudited | All creatures able to block enchanted creature do so. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Air Elemental | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Bog Wraith | handled | Landwalk | no code needed | Y/-/- | not_tested |
+| Circle of Protection: Blue | handled | {1}: The next time a blue source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Circle of Protection: Green | handled | {1}: The next time a green source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Circle of Protection: White | handled | {1}: The next time a white source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crystal Rod | handled | Whenever a player casts a blue spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disenchant | handled | Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Drudge Skeletons | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -113,10 +111,11 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>35 cards</summary>
 
 - Birds of Paradise
 - Black Knight
+- Circle of Protection: Red
 - Clone
 - Counterspell
 - Craw Wurm
@@ -141,6 +140,7 @@
 - Plains
 - Psionic Blast
 - Raise Dead
+- Reverse Damage
 - Savannah Lions
 - Serra Angel
 - Shivan Dragon
@@ -167,17 +167,12 @@
 | enchanted land is a swamp. | 1 | Evil Presence | lea |
 | other goblins get +N/+N and have mountainwalk. | 1 | Goblin King | lea |
 | other merfolk get +N/+N and have islandwalk. | 1 | Lord of Atlantis | lea |
-| the next time a source of your choice would deal damage to you ~, prevent that damage. you gain life equal to the damage prevented ~. | 1 | Reverse Damage | lea |
 | when you control no islands, sacrifice ~. | 1 | Pirate Ship | lea |
 | whenever a land is put into a graveyard from the battlefield, ~ deals N damage to that land's controller. | 1 | Dingus Egg | lea |
 | whenever ~ blocks or becomes blocked by a non-wall creature, destroy that creature at end of combat. | 1 | Cockatrice | lea |
 | whenever ~ deals damage to an opponent, that player discards a card at random. | 1 | Hypnotic Specter | lea |
 | {M}: regenerate enchanted creature. | 1 | Regeneration | lea |
 | {M}: target creature you control with toughness less than ~ power gains flying until end of turn. destroy that creature at the beginning of the next end step. | 1 | Stone Giant | lea |
-| {M}: the next time a blue source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Blue | lea |
-| {M}: the next time a green source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Green | lea |
-| {M}: the next time a red source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Red | lea |
-| {M}: the next time a white source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: White | lea |
 | {M}: ~ becomes a N/N golem artifact creature until end of combat. activate only during combat. | 1 | Jade Statue | lea |
 | {M}: ~ gets +N/+N until end of turn. if ~ has been activated four or more times ~, sacrifice ~ at the beginning of the next end step. | 1 | Dragon Whelp | lea |
 | ~ deals N damage to any target. if it"..."t be regenerated ~, and if it would die ~, exile it instead. | 1 | Disintegrate | lea |

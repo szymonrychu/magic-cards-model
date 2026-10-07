@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 8.4% |
-| Works (untested) | 91 | 50.8% |
+| Works (untested) | 92 | 51.4% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 69 | 38.5% |
+| Not working | 68 | 38.0% |
 
 ## Cards needing work
 
@@ -58,7 +58,6 @@
 | Inundate | silent | Return all nonblue creatures to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leering Emblem | silent | Whenever you cast a spell, equipped creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Light from Within | silent | Chroma — Each creature you control gets +1/+1 for each white mana symbol in its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Loyal Gyrfalcon | silent | Whenever you cast a white spell, this creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindwrack Liege | silent | Other blue creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirror Sheen | silent | {1}{U/R}{U/R}: Copy target instant or sorcery spell that targets you. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Monstrify | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -139,6 +138,7 @@
 | Jawbone Skulkin | handled | {2}: Target red creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kithkin Spellduster | handled | {1}{W}, Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lingering Tormentor | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
+| Loyal Gyrfalcon | handled | Whenever you cast a white spell, this creature loses defender until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Marshdrinker Giant | handled | When this creature enters, destroy target Island or Swamp an opponent controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merrow Levitator | handled | {T}: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Necroskitter | handled | Whenever a creature an opponent controls with a -1/-1 counter on it dies, you may return that card to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -259,7 +259,6 @@
 | whenever ashling deals combat damage to a player, choose target creature that player controls. the player sacrifices that creature. | 1 | Ashling, the Extinguisher | eve |
 | whenever you cast a spell that"..."t be blocked ~. | 1 | Riverfall Mimic | eve |
 | whenever you cast a spell, equipped creature gets +N/+N until end of turn. | 1 | Leering Emblem | eve |
-| whenever you cast a white spell, ~ loses defender until end of turn. | 1 | Loyal Gyrfalcon | eve |
 | whenever ~ attacks, reveal the top card of your library. if it"..."s toughness, lose life equal to its power, then put it into your hand. | 1 | Sapling of Colfenor | eve |
 | whenever ~ deals combat damage to a player, that player discards that many cards. | 1 | Needle Specter | eve |
 | whenever ~ deals damage to a player, that player can't gain life for the rest of the game. | 1 | Stigma Lasher | eve |

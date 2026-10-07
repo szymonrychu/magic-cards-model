@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 11.9% |
+| Tested | 18 | 12.6% |
 | Works (untested) | 62 | 43.4% |
 | Partial (unaudited) | 12 | 8.4% |
-| Not working | 52 | 36.4% |
+| Not working | 51 | 35.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Adarkar Valkyrie | silent | {T}: When target creature other than this creature dies this turn, return that card to the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Adarkar Windform | silent | {1}{S}: Target creature loses flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcum Dagsson | silent | {T}: Target artifact creature's controller sacrifices it. That player may search their library for a noncreature artifact card, put it onto the battlefield, the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Balduvian Fallen | silent | Whenever this creature's cumulative upkeep is paid, it gets +1/+0 until end of turn for each {B} or {R} spent this way. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Balduvian Frostwaker | silent | {U}, {T}: Target snow land becomes a 2/2 blue Elemental creature with flying. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -156,8 +155,9 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
+- Adarkar Windform
 - Allosaurus Rider
 - Balduvian Warlord
 - Braid of Fire
@@ -230,7 +230,6 @@
 | {M}{M}, {M}: look at the top card of your library. if that card is snow, you may reveal it and put it into your hand. | 1 | Scrying Sheets | csp |
 | {M}{M}: snow creatures you control get +N/+N until end of turn. | 1 | Diamond Faerie | csp |
 | {M}{M}: target creature blocks target creature ~ if able. | 1 | Rimehorn Aurochs | csp |
-| {M}{M}: target creature loses flying until end of turn. | 1 | Adarkar Windform | csp |
 | ~ can't be the target of blue or black spells. | 1 | Karplusan Strider | csp |
 | ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |
 | ~'s power and toughness are each equal to the number of illusions on the battlefield. | 1 | Krovikan Mist | csp |

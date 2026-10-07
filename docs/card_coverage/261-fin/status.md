@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 12.5% |
-| Works (untested) | 128 | 42.1% |
+| Tested | 39 | 12.8% |
+| Works (untested) | 129 | 42.4% |
 | Partial (unaudited) | 15 | 4.9% |
-| Not working | 123 | 40.5% |
+| Not working | 121 | 39.8% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | Gilgamesh, Master-at-Arms | silent | Whenever Gilgamesh enters or attacks, look at the top six cards of your library. You may put any number of Equipment cards from among them onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gogo, Master of Mimicry | silent | {X}{X}, {T}: Copy target activated or triggered ability you control X times. You may choose new targets for the copies. This ability can't be copied and X can't | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gran Pulse Ochu | silent | {8}: Until end of turn, this creature gets +1/+1 for each permanent card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gysahl Greens | silent | Create a 2/2 green Bird creature token with "Whenever a land you control enters, this token gets +1/+0 until end of turn." Flashback {6}{G} (You may cast this c | the engine's reading came from quoted text, not this clause's own words | Y/Y/Y | not_working |
 | Hope Estheim | silent | At the beginning of your end step, each opponent mills X cards, where X is the amount of life you gained this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ignis Scientia | silent | I've Come Up with a New Recipe! — {1}{G}{U}, {T}: Exile target card from a graveyard. If a creature card was exiled this way, create a Food token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jenova, Ancient Calamity | silent | At the beginning of combat on your turn, put a number of +1/+1 counters equal to Jenova's power on up to one other target creature. That creature becomes a Muta | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -92,7 +91,6 @@
 | Samurai's Katana | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Scorpion Sentinel | silent | As long as you control seven or more lands, this creature gets +3/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Seifer Almasy | silent | Fire Cross — Whenever Seifer Almasy deals combat damage to a player, you may cast target instant or sorcery card with mana value 3 or less from your graveyard w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Self-Destruct | silent | Target creature you control deals X damage to any other target and X damage to itself, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sidequest: Catch a Fish // Cooking Campsite | silent | At the beginning of your upkeep, look at the top card of your library. If it's an artifact or creature card, you may reveal it and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sin, Spira's Punishment | silent | Whenever Sin enters or attacks, exile a permanent card from your graveyard at random, then create a tapped token that's a copy of that card. If the exiled card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stiltzkin, Moogle Merchant | silent | {2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -210,6 +208,7 @@
 | Gongaga, Reactor Town | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goobbue Gardener | handled |  |  | Y/Y/Y | not_tested |
 | Guadosalam, Farplane Gateway | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Gysahl Greens | handled | Create a 2/2 green Bird creature token with "Whenever a land you control enters, this token gets +1/+0 until end of turn." Flashback {6}{G} (You may cast this c | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hecteyes | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hill Gigas | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/Y | not_tested |
 | Ice Flan | handled | When this creature enters, tap target artifact or creature an opponent controls. Put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -296,7 +295,7 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>39 cards</summary>
 
 - Bartz and Boko
 - Blitzball
@@ -321,6 +320,7 @@
 - Retrieve the Esper
 - Rufus Shinra
 - Sazh's Chocobo
+- Self-Destruct
 - Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel
 - Shantotto, Tactician Magician
 - Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark
@@ -390,7 +390,6 @@
 | choose target creature you control and target equipment. gain control of that equipment until end of turn. attach it to the chosen creature. when you lose contr | 1 | Stolen Uniform | fin |
 | choose target creature you control. it deals damage equal to its power to each other creature. if ~ was cast from a graveyard, discard your hand and draw four c | 1 | Nibelheim Aflame | fin |
 | choose target spell. surveil N, then counter the chosen spell unless its controller pays {M} for each card in your graveyard. (to surveil N, look at the top two | 1 | Swallowed by Leviathan | fin |
-| create a N/N green bird creature token with "..." flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Gysahl Greens | fin |
 | create two tapped N/N black horror creature tokens. if ~ was cast from a graveyard, instead create N of those tokens, where N is the number of creature cards in | 1 | The Final Days | fin |
 | damage isn't removed from ~ during cleanup steps. | 1 | Ancient Adamantoise | fin |
 | destroy all artifacts and creatures. end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to the | 1 | Ultima | fin |
@@ -427,7 +426,6 @@
 | search your library for a vehicle card, reveal it, and put it into your hand. if ~ was cast from a graveyard, put that card onto the battlefield instead. then s | 1 | From Father to Son | fin |
 | search your library for up to two basic land cards and/or town cards with different names, put them onto the battlefield tapped, then shuffle. | 1 | Reach the Horizon | fin |
 | shuffle your library, then mill four cards. put each creature card milled ~ onto the battlefield. they gain haste. at the beginning of the next end step, return | 1 | Random Encounter | fin |
-| target creature you control deals N damage to any other target and N damage to itself, where N is its power. | 1 | Self-Destruct | fin |
 | the first legendary creature spell you cast each turn costs {M} less to cast. | 1 | Serah Farron // Crystallized Serah | fin |
 | tiered (choose one additional cost.) until end of turn, target creature you control gains "..." and has the chosen base power and toughness. • galian beast — {M | 1 | Vincent's Limit Break | fin |
 | tiered (choose one additional cost.) • blizzard — {M} — return target creature to its owner"..."s owner puts it on their choice of the top or bottom of their li | 1 | Ice Magic | fin |

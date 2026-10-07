@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 11.5% |
-| Works (untested) | 134 | 46.7% |
+| Tested | 34 | 11.8% |
+| Works (untested) | 136 | 47.4% |
 | Partial (unaudited) | 15 | 5.2% |
-| Not working | 105 | 36.6% |
+| Not working | 102 | 35.5% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Eradicator Valkyrie | silent | Boast — {1}{B}, Sacrifice a creature: Each opponent sacrifices a creature or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fall of the Impostor | silent | III — Exile a creature with the greatest power among creatures target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fire Giant's Fury | silent | Target Giant you control gets +2/+2 and gains trample until end of turn. Whenever it deals combat damage to a player this turn, exile that many cards from the t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Firja's Retribution | silent | II — Until end of turn, Angels you control gain "{T}: Destroy target creature with power less than this creature's power." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frenzied Raider | silent | Whenever you activate a boast ability, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Frost Augur | silent | {S}, {T}: Look at the top card of your library. If it's a snow card, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frostpyre Arcanist | silent | When this creature enters, search your library for an instant or sorcery card with the same name as a card in your graveyard, reveal it, put it into your hand,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -93,7 +92,6 @@
 | Rune of Sustenance | silent | As long as enchanted permanent is a creature, it has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Runed Crown | silent | When this Equipment enters, you may search your library, hand, and/or graveyard for a Rune card and put it onto the battlefield attached to this Equipment. If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarulf, Realm Eater | silent | At the beginning of your upkeep, if Sarulf has one or more +1/+1 counters on it, you may remove all of them. If you do, exile each other nonland permanent with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Skemfar Elderhall | silent | {2}{B}{B}{G}, {T}, Sacrifice this land: Up to one target creature you don't control gets -2/-2 until end of turn. Create two 1/1 green Elf Warrior creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skull Raid | silent | Target opponent discards two cards. If fewer than two cards were discarded this way, you draw cards equal to the difference. Foretell {1}{B} (During your turn,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smashing Success | silent | Destroy target artifact or land. If an artifact is destroyed this way, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Starnheim Unleashed | silent | Create a 4/4 white Angel Warrior creature token with flying and vigilance. If this spell was foretold, create X of those tokens instead. Foretell {X}{X}{W} (Dur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -126,7 +124,6 @@
 | Resplendent Marshal | notice | When this creature enters or dies, you may exile another creature card from your graveyard. When you do, put a +1/+1 counter on each creature you control other  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Return Upon the Tide | notice | Return target creature card from your graveyard to the battlefield. If it's an Elf, create two 1/1 green Elf Warrior creature tokens. Foretell {3}{B} (During yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Search for Glory | notice | Search your library for a snow permanent card, a legendary card, or a Saga card, reveal it, put it into your hand, then shuffle. You gain 1 life for each {S} sp | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Shackles of Treachery | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals damage, destroy targ | unparsed remainder: Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals damage, destroy target Equipment attached to it." | Y/Y/- | not_working |
 | Skemfar Shadowsage | notice | When this creature enters, choose one — • Each opponent loses X life, where X is the greatest number of creatures you control that have a creature type in commo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spirit of the Aldergard | notice | This creature gets +1/+0 for each other snow permanent you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Surtland Flinger | notice | Whenever this creature attacks, you may sacrifice another creature. When you do, this creature deals damage equal to the sacrificed creature's power to any targ | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -188,6 +185,7 @@
 | Fearless Liberator | handled | Boast — {2}{R}: Create a 2/1 red Dwarf Berserker creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fearless Pup | handled | Boast — {2}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Feed the Serpent | handled | Exile target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Firja's Retribution | handled | I — Create a 4/4 white Angel Warrior creature token with flying and vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Firja, Judge of Valor | handled | Whenever you cast your second spell each turn, look at the top three cards of your library. Put one of them into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frost Bite | handled | Frost Bite deals 2 damage to target creature or planeswalker. If you control three or more snow permanents, it deals 3 damage instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frostpeak Yeti | handled | {1}{S}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -256,6 +254,7 @@
 | Shimmerdrift Vale | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Showdown of the Skalds | handled | I — Exile the top four cards of your library. Until the end of your next turn, you may play those cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skemfar Avenger | handled | Whenever another nontoken Elf or Berserker you control dies, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Skemfar Elderhall | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Snowfield Sinkhole | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spectral Steel | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Squash | handled | This spell costs {3} less to cast if you control a Giant. Squash deals 6 damage to target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -284,7 +283,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Armed and Armored
 - Axgard Braggart
@@ -312,6 +311,7 @@
 - Raven Wings
 - Righteous Valkyrie
 - Saw It Coming
+- Shackles of Treachery
 - Sigrid, God-Favored
 - Snakeskin Veil
 - The Trickster-God's Heist
@@ -374,7 +374,6 @@
 | exile a creature with the greatest power among creatures target opponent controls. | 1 | Fall of the Impostor | khm |
 | exile target artifact, creature, or enchantment an opponent controls. that player may put a permanent card from their hand onto the battlefield. | 1 | Divine Gambit | khm |
 | foretelling cards from your hand costs {M} less and can be done on any player's turn. | 1 | Cosmos Charger | khm |
-| gain control of target creature until end of turn. untap that creature. until end of turn, it gains haste and "..." | 1 | Shackles of Treachery | khm |
 | if a nontoken creature an opponent controls would die, exile that card with an ice counter on it instead. | 1 | Draugr Necromancer | khm |
 | look at the top three cards of your library. put one of them into your hand and the rest on the bottom of your library in any order. as long as you control a gi | 1 | Glimpse the Cosmos | khm |
 | mill three cards, then return a land card or elf card from your graveyard to your hand. if you can't, draw a card. (to mill a card, put the top card of your lib | 1 | Roots of Wisdom | khm |
@@ -389,7 +388,6 @@
 | target opponent discards two cards. if fewer than two cards were discarded ~, you draw cards equal to the difference. foretell {M}{M} (during your turn, you may | 1 | Skull Raid | khm |
 | the next giant spell you cast ~ costs {M} less to cast. | 1 | Invasion of the Giants | khm |
 | treasures you control have "..." | 1 | Goldspan Dragon | khm |
-| until end of turn, angels you control gain "..." | 1 | Firja's Retribution | khm |
 | until end of turn, target creature gets +N/+N for each creature you control and gains trample. it must be blocked ~ if able. | 1 | King Harald's Revenge | khm |
 | when kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able. | 1 | Kardur, Doomscourge | khm |
 | when valki enters, each opponent reveals their hand. for each opponent, exile a creature card they revealed ~ until valki leaves the battlefield. | 1 | Valki, God of Lies // Tibalt, Cosmic Impostor | khm |
@@ -440,7 +438,6 @@
 | {M}{M}{M}: if ~ is a warrior, put a flying counter on it and it becomes a spirit warrior angel with base power and toughness N/N. | 1 | Ascendant Spirit | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: create a token that's a copy of target creature you control, except it enters with an additional +N/+N counter on it. activate o | 1 | Littjara Mirrorlake | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: search your library for an aura card and/or an equipment card, reveal them, put them into your hand, then shuffle. | 1 | Axgard Armory | khm |
-| {M}{M}{M}{M}, {M}, sacrifice ~: up to one target creature you don't control gets -N/-N until end of turn. create two N/N green elf warrior creature tokens. acti | 1 | Skemfar Elderhall | khm |
 | ~ crews vehicles using its toughness rather than its power. | 1 | Giant Ox | khm |
 | ~ deals N damage to target creature or planeswalker. add {M} for each {M} spent to cast ~. until end of turn, you don't lose ~ as steps and phases end. ({M} is  | 1 | Tundra Fumarole | khm |
 | ~ gets +N/+N for each other snow permanent you control. | 1 | Spirit of the Aldergard | khm |

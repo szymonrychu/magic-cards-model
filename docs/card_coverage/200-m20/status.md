@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 17.0% |
-| Works (untested) | 92 | 52.3% |
+| Works (untested) | 93 | 52.8% |
 | Partial (unaudited) | 5 | 2.8% |
-| Not working | 49 | 27.8% |
+| Not working | 48 | 27.3% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Scheming Symmetry | silent | Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scorch Spitter | silent | Whenever this creature attacks, it deals 1 damage to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin's Guide | silent | When this creature enters, you may search your library and/or graveyard for a card named Sorin, Vampire Lord, reveal it, and put it into your hand. If you searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sorin, Vampire Lord | silent | −8: Until end of turn, each Vampire you control gains "{T}: Gain control of target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tale's End | silent | Counter target activated ability, triggered ability, or legendary spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thought Distortion | silent | This spell can't be countered. Target opponent reveals their hand. Exile all noncreature, nonland cards from that player's hand and graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yanling's Harbinger | silent | When this creature enters, you may search your library and/or graveyard for a card named Mu Yanling, Celestial Wind, reveal it, and put it into your hand. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -157,6 +156,7 @@
 | Skyknight Vanguard | handled | Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sorcerer of the Fang | handled | {5}{B}, {T}: This creature deals 2 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sorin, Imperious Bloodlord | handled | +1: Target creature you control gains deathtouch and lifelink until end of turn. If it's a Vampire, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sorin, Vampire Lord | handled | +1: Up to one target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Starfield Mystic | handled | Enchantment spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Steadfast Sentry | handled | When this creature dies, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thicket Crasher | handled | Other Elementals you control have trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -267,7 +267,6 @@
 | ~ gets +N/+N as long as there are three or more land cards in your graveyard. | 1 | Elvish Reclaimer | m20 |
 | ~ gets +N/+N as long as you control a vivien planeswalker. | 1 | Vivien's Crocodile | m20 |
 | ~ gets +N/+N as long as you control a yanling planeswalker. | 1 | Celestial Messenger | m20 |
-| −N: until end of turn, each vampire you control gains "..." | 1 | Sorin, Vampire Lord | m20 |
 | −N: you may cast target instant or sorcery card with mana value N or less from your graveyard. if that spell would be put into your graveyard, exile it instead. | 1 | Chandra, Acolyte of Flame | m20 |
 
 ## Notes

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 7.4% |
+| Tested | 13 | 8.7% |
 | Works (untested) | 81 | 54.4% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 50 | 33.6% |
+| Not working | 48 | 32.2% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Bioplasm | silent | Whenever this creature attacks, exile the top card of your library. If it's a creature card, this creature gets +X/+Y until end of turn, where X is the exiled c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blind Hunter | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Conjurer's Ban | silent | Choose a card name. Until your next turn, spells with the chosen name can't be cast and lands with the chosen name can't be played. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Crash Landing | silent | Target creature with flying loses flying until end of turn. Crash Landing deals damage to that creature equal to the number of Forests you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cry of Contrition | silent | Target player discards a card. Haunt (When this spell card is put into a graveyard after resolving, exile it haunting target creature.) When the creature this c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Droning Bureaucrats | silent | {X}, {T}: Each creature with mana value X can't attack or block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dryad Sophisticate | silent | Nonbasic landwalk | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -73,7 +72,6 @@
 | Vedalken Plotter | silent | When this creature enters, exchange control of target land you control and target land an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vertigo Spawn | silent | Whenever this creature blocks a creature, tap that creature. That creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aetherplasm | notice | Whenever this creature blocks a creature, you may return this creature to its owner's hand. If you do, you may put a creature card from your hand onto the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Cerebral Vortex | notice | Target player draws two cards, then Cerebral Vortex deals damage to that player equal to the number of cards they've drawn this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ghostway | notice | Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thunderheads | notice | Replicate {2}{U} (When you cast this spell, copy it for each time you paid its replicate cost.) Create a 3/3 blue Weird creature token with defender and flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Battering Wurm | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -168,9 +166,11 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>13 cards</summary>
 
 - Burning-Tree Shaman
+- Cerebral Vortex
+- Crash Landing
 - Electrolyze
 - Gigadrowse
 - Godless Shrine
@@ -208,9 +208,7 @@
 | replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost. you may choose new targets for the copies.) choose target permanent an opp | 1 | Mimeofacture | gpt |
 | replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost. you may choose new targets for the copies.) target mountain becomes a N/N  | 1 | Siege of Towers | gpt |
 | replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost.) create a N/N blue weird creature token with defender and flying. exile it | 1 | Thunderheads | gpt |
-| target creature with flying loses flying until end of turn. ~ deals damage to that creature equal to the number of forests you control. | 1 | Crash Landing | gpt |
 | target player discards a card. haunt (when ~ card is put into a graveyard after resolving, exile it haunting target creature.) when the creature ~ haunts dies,  | 1 | Cry of Contrition | gpt |
-| target player draws two cards, then ~ deals damage to that player equal to the number of cards they've drawn ~. | 1 | Cerebral Vortex | gpt |
 | the next sorcery spell you cast ~ can be cast as though it had flash. (it can be cast any time you could cast an instant.) draw a card. | 1 | Quicken | gpt |
 | ulasht enters with a +N/+N counter on it for each other red creature you control and a +N/+N counter on it for each other green creature you control. | 1 | Ulasht, the Hate Seed | gpt |
 | when ~ enters or the creature it haunts dies, each other creature has base power and toughness N/N until end of turn. | 1 | Graven Dominator | gpt |

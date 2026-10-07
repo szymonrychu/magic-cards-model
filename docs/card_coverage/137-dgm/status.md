@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 12.6% |
+| Tested | 19 | 13.3% |
 | Works (untested) | 73 | 51.0% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 47 | 32.9% |
+| Not working | 46 | 32.2% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Renegade Krasis | silent | Whenever this creature evolves, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Restore the Peace | silent | Return each creature that dealt damage this turn to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scion of Vitu-Ghazi | silent | When this creature enters, if you cast it from your hand, create a 1/1 white Bird creature token with flying, then populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Showstopper | silent | Until end of turn, creatures you control gain "When this creature dies, it deals 2 damage to target creature an opponent controls." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sinister Possession | silent | Whenever enchanted creature attacks or blocks, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Species Gorger | silent | At the beginning of your upkeep, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teysa, Envoy of Ghosts | silent | Whenever a creature deals combat damage to you, destroy that creature. Create a 1/1 white and black Spirit creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -155,7 +154,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Aetherling
 - Beck // Call
@@ -172,6 +171,7 @@
 - Protect // Serve
 - Ready // Willing
 - Riot Control
+- Showstopper
 - Trostani's Summoner
 - Voice of Resurgence
 - Wear // Tear
@@ -216,7 +216,6 @@
 | return target creature card from your graveyard to your hand. ~ deals damage to any target equal to the power of the card returned ~. | 1 | Morgue Burst | dgm |
 | scavenge | 1 | Thrashing Mossdog | dgm |
 | target opponent reveals their hand. you choose up to N nonland cards from it and exile them. for each card exiled ~, search that player's graveyard, hand, and l | 1 | Reap Intellect | dgm |
-| until end of turn, creatures you control gain "..." | 1 | Showstopper | dgm |
 | until end of turn, target creature you control becomes a blue and red dragon with base power and toughness N/N, loses all abilities, and gains flying. overload  | 1 | Dragonshift | dgm |
 | when lavinia enters, detain each nonland permanent your opponents control with mana value N or less. | 1 | Lavinia of the Tenth | dgm |
 | when ~ enters, if you cast it from your hand, create a N/N white bird creature token with flying, then populate. | 1 | Scion of Vitu-Ghazi | dgm |

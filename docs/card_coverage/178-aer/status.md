@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 34 | 18.4% |
-| Works (untested) | 110 | 59.5% |
+| Works (untested) | 111 | 60.0% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 37 | 20.0% |
+| Not working | 36 | 19.5% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Natural Obsolescence | silent | Put target artifact on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peacewalker Colossus | silent | {1}{W}: Another target Vehicle you control becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peema Aether-Seer | silent | When this creature enters, you get an amount of {E} equal to the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Perilous Predicament | silent | Each opponent sacrifices an artifact creature and a nonartifact creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pia's Revolution | silent | Whenever a nontoken artifact is put into your graveyard from the battlefield, return that card to your hand unless target opponent has this enchantment deal 3 d | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Quicksmith Rebel | silent | When this creature enters, target artifact you control gains "{T}: This artifact deals 2 damage to any target" for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quicksmith Spy | silent | When this creature enters, target artifact you control gains "{T}: Draw a card" for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -138,6 +137,7 @@
 | Outland Boar | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pacification Array | handled | {2}, {T}: Tap target artifact or creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pendulum of Patterns | handled | When this artifact enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Perilous Predicament | handled | Each opponent sacrifices an artifact creature and a nonartifact creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Precise Strike | handled | Target creature gets +1/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prizefighter Construct | handled |  |  | Y/Y/- | not_tested |
 | Ravenous Intruder | handled | Sacrifice an artifact: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -235,7 +235,6 @@
 | destroy target artifact or enchantment. revolt — if a permanent left the battlefield under your control ~, you gain N life. | 1 | Decommission | aer |
 | each creature you control with a counter on it has "..." | 1 | Rishkar, Peema Renegade | aer |
 | each opponent sacrifices a creature or planeswalker of their choice, then discards a card. you return a creature or planeswalker card from your graveyard to you | 1 | Dark Intimations | aer |
-| each opponent sacrifices an artifact creature and a nonartifact creature of their choice. | 1 | Perilous Predicament | aer |
 | enchanted land has "..." | 1 | Unbridled Growth | aer |
 | exile target nonland card from your graveyard. search your library for any number of cards with the same name as that card, reveal them, put them into your hand | 1 | Secret Salvage | aer |
 | pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |

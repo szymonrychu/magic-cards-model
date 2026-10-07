@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 72 | 27.5% |
-| Works (untested) | 92 | 35.1% |
+| Works (untested) | 93 | 35.5% |
 | Partial (unaudited) | 18 | 6.9% |
-| Not working | 80 | 30.5% |
+| Not working | 79 | 30.2% |
 
 ## Cards needing work
 
@@ -94,7 +94,6 @@
 | The Hunger Tide Rises | silent | IV — Sacrifice any number of creatures. Search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Triton Wavebreaker | silent | As long as this permanent is a creature, it has prowess. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ugin's Binding | silent | Devoid (This card has no color.) Return target nonland permanent you don't control to its owner's hand. Whenever you cast a colorless spell with mana value 7 or | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Unfathomable Truths | silent | Devoid (This card has no color.) Draw three cards and create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}." | the engine's reading came from quoted text, not this clause's own words | Y/-/- | not_working |
 | Unstable Amulet | silent | {T}, Pay {E}{E}: Exile the top card of your library. You may play it until you exile another card with this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Volatile Stormdrake | silent | When this creature enters, exchange control of this creature and target creature an opponent controls. If you do, you get {E}{E}{E}{E}, then sacrifice that crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wheel of Potential | silent | You get {E}{E}{E} (three energy counters), then you may pay any amount of {E}. Each player may exile their hand and draw a number of cards equal to the amount o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -208,6 +207,7 @@
 | Trickster's Elk | handled | Enchanted creature loses all abilities and is a green Elk creature with base power and toughness 3/3. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Twisted Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Swamp, Mountain, or Forest card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Twisted Riddlekeeper | handled | When you cast this spell, tap up to two target permanents. Put a stun counter on each of them. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Unfathomable Truths | handled | Devoid (This card has no color.) Draw three cards and create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Urza's Cave | handled | {3}, {T}, Sacrifice this land: Search your library for a land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Warped Tusker | handled | When you cast or cycle Warped Tusker, create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Warren Soultrader | handled | Pay 1 life, Sacrifice another creature: Create a Treasure token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -322,7 +322,6 @@
 | creature tokens you control have evolve. | 1 | Propagator Drone | mh3 |
 | destroy target creature or planeswalker. you gain N life for each of its colors. | 1 | Breathe Your Last | mh3 |
 | destroy target land. its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. creatures without flying c | 1 | Sundering Eruption // Volcanic Fissure | mh3 |
-| devoid (~ has no color.) draw three cards and create a N/N colorless eldrazi spawn creature token with "..." | 1 | Unfathomable Truths | mh3 |
 | devoid (~ has no color.) exile target nonland permanent. you may cast that card for as long as it remains exiled, and you may spend colorless mana as though it  | 1 | Abstruse Appropriation | mh3 |
 | devoid (~ has no color.) return target nonland permanent you don"..."s hand. whenever you cast a colorless spell with mana value N or greater, you may exile ~ f | 1 | Ugin's Binding | mh3 |
 | draw two cards. then discard a card at random unless you pay {M}{M} (two energy counters). | 1 | Rush of Inspiration // Crackling Falls | mh3 |

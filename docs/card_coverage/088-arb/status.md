@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 9.1% |
+| Tested | 14 | 9.8% |
 | Works (untested) | 74 | 51.7% |
 | Partial (unaudited) | 9 | 6.3% |
-| Not working | 47 | 32.9% |
+| Not working | 46 | 32.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Anathemancer | silent | When this creature enters, it deals damage to target player equal to the number of nonbasic lands that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ardent Plea | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bant Sureblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crystallization | silent | When enchanted creature becomes the target of a spell or ability, exile that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -160,8 +159,9 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
+- Anathemancer
 - Architects of Will
 - Bloodbraid Elf
 - Dragon Appeasement
@@ -211,7 +211,6 @@
 | when enchanted creature becomes the target of a spell or ability, exile that creature. | 1 | Crystallization | arb |
 | when karrthus enters, gain control of all dragons, then untap all dragons. | 1 | Karrthus, Tyrant of Jund | arb |
 | when ~ enters, exile all creature cards from target player's graveyard, then create a N/N black zombie creature token for each card exiled ~. | 1 | Necromancer's Covenant | arb |
-| when ~ enters, it deals damage to target player equal to the number of nonbasic lands that player controls. | 1 | Anathemancer | arb |
 | when ~ enters, put a creature you control on top of its owner's library. | 1 | Nulltread Gargantuan | arb |
 | when ~ enters, target player discards a card at random. | 1 | Sanity Gnawers | arb |
 | when ~ enters, target player reveals a card at random from their hand, then loses life equal to that card's mana value. | 1 | Singe-Mind Ogre | arb |

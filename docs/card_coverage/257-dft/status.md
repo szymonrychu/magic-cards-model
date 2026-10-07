@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 29 | 11.3% |
-| Works (untested) | 125 | 48.8% |
+| Works (untested) | 127 | 49.6% |
 | Partial (unaudited) | 19 | 7.4% |
-| Not working | 83 | 32.4% |
+| Not working | 81 | 31.6% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Detention Chariot | silent | When this Vehicle enters, exile target artifact or creature an opponent controls until this Vehicle leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Diversion Unit | silent | {U}, Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dredger's Insight | silent | Whenever one or more artifact and/or creature cards leave your graveyard, you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Fang Guardian | silent | When this creature enters, another target creature or Vehicle you control gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Full Throttle | silent | After this main phase, there are two additional combat phases. At the beginning of each combat this turn, untap all creatures that attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gastal Raider | silent | Max speed — This creature gets +1/+1 and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gastal Thrillroller | silent | When this Vehicle enters, it becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -54,7 +53,6 @@
 | Guidelight Matrix | silent | {2}, {T}: Target Mount you control becomes saddled until end of turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guidelight Pathmaker | silent | When this Vehicle enters, you may search your library for an artifact card and reveal it. Put it onto the battlefield if its mana value is 2 or less. Otherwise, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Haunt the Network | silent | Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Howler's Heavy | silent | When you cycle this card, target creature or Vehicle an opponent controls gets -3/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Howlsquad Heavy | silent | At the beginning of combat on your turn, create a 1/1 red Goblin creature token. That token attacks this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kickoff Celebrations | silent | Max speed — Sacrifice this enchantment: Creatures and Vehicles you control gain haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kolodin, Triumph Caster | silent | Mounts and Vehicles you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -165,6 +163,7 @@
 | Endrider Spikespitter | handled | Max speed — At the beginning of your upkeep, exile the top card of your library. You may play that card this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Engine Rat | handled | {5}{B}: Each opponent loses 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Explosive Getaway | handled | Exile up to one target artifact or creature. Return it to the battlefield under its owner's control at the beginning of the next end step. Explosive Getaway dea | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Fang Guardian | handled | When this creature enters, another target creature or Vehicle you control gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Far Fortune, End Boss | handled | Whenever you attack, Far Fortune deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flood the Engine | handled | When this Aura enters, tap enchanted permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fuel the Flames | handled | Fuel the Flames deals 2 damage to each creature. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -181,6 +180,7 @@
 | Hazard of the Dunes | handled | Exhaust — {6}{G}: Put three +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hellish Sideswipe | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. Destroy target creature or Vehicle. If the sacrificed permanent was a Vehicle, draw | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hour of Victory | handled | When this enchantment enters, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Howler's Heavy | handled | When you cycle this card, target creature or Vehicle an opponent controls gets -3/-0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hulldrifter | handled | When this Vehicle enters, draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Intimidation Tactics | handled | Target opponent reveals their hand. You choose an artifact or creature card from it. Exile that card. Cycling {3} ({3}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Jibbirik Omnivore | handled |  |  | Y/Y/Y | not_tested |
@@ -333,8 +333,6 @@
 | when aatchik enters, create a N/N green insect creature token for each artifact and/or creature card in your graveyard. | 1 | Aatchik, Emerald Radian | dft |
 | when mu yanling enters, create a N/N colorless vehicle artifact token with crew N. | 1 | Mu Yanling, Wind Rider | dft |
 | when you cycle ~, create N N/N colorless pilot creature tokens with "..." | 1 | Valor's Flagship | dft |
-| when you cycle ~, target creature or vehicle an opponent controls gets -N/-N until end of turn. | 1 | Howler's Heavy | dft |
-| when ~ enters, another target creature or vehicle you control gets +N/+N until end of turn. | 1 | Fang Guardian | dft |
 | when ~ enters, each opponent sacrifices a creature or vehicle of their choice. each opponent who can't discards a card. | 1 | Momentum Breaker | dft |
 | when ~ enters, exile target artifact or creature an opponent controls until ~ leaves the battlefield. | 1 | Detention Chariot | dft |
 | when ~ enters, for each opponent, put up to one target nonland permanent that player controls into its owner's library third from the top. | 1 | Riptide Gearhulk | dft |

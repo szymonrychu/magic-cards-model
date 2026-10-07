@@ -19,8 +19,8 @@
 |---|---|---|
 | Tested | 17 | 7.3% |
 | Works (untested) | 135 | 57.9% |
-| Partial (unaudited) | 5 | 2.1% |
-| Not working | 76 | 32.6% |
+| Partial (unaudited) | 6 | 2.6% |
+| Not working | 75 | 32.2% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Darkblade Agent | silent | As long as you've surveilled this turn, this creature has deathtouch and "Whenever this creature deals combat damage to a player, you draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Direct Current | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Discovery // Dispersal | silent | Each opponent returns a nonland permanent they control with the greatest mana value among permanents they control to its owner's hand, then discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Enhanced Surveillance | silent | Exile this enchantment: Shuffle your graveyard into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Erratic Cyclops | silent | Whenever you cast an instant or sorcery spell, this creature gets +X/+0 until end of turn, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Expansion // Explosion | silent | Copy target instant or sorcery spell with mana value 4 or less. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Experimental Frenzy | silent | {3}{R}: Destroy this enchantment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -51,7 +50,7 @@
 | Glowspore Shaman | silent | When this creature enters, mill three cards. You may put a land card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Banneret | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Goblin Locksmith | silent | Whenever this creature attacks, creatures with defender can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gravitic Punch | silent | Target creature you control deals damage equal to its power to target player. Jump-start (You may cast this card from your graveyard by discarding a card in add | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Gravitic Punch | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Gruesome Menagerie | silent | Choose a creature card with mana value 1 in your graveyard, then do the same for creature cards with mana value 2 and 3. Return those cards to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guild Summit | silent | When this enchantment enters, you may tap any number of untapped Gates you control. Draw a card for each Gate tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hammer Dropper | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -104,6 +103,7 @@
 | Mnemonic Betrayal | notice | Exile all opponents' graveyards. You may cast spells from among those cards this turn, and mana of any type can be spent to cast them. At the beginning of the n | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crackling Drake | unaudited | Crackling Drake's power is equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Demotion | unaudited | Enchanted creature can't block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Enhanced Surveillance | unaudited | You may look at an additional two cards each time you surveil. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ochran Assassin | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Underrealm Lich | unaudited | If you would draw a card, instead look at the top three cards of your library, then put one into your hand and the rest into your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Urban Utopia | unaudited | Enchanted land has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -273,7 +273,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | mentor | 11 | Barging Sergeant, Blade Instructor, Boros Challenger, Goblin Banneret, Hammer Dropper | grn |
-| jump | 7 | Chemister's Insight, Direct Current, Maximize Altitude, Maximize Velocity, Quasiduplicate | grn |
+| jump | 8 | Chemister's Insight, Direct Current, Gravitic Punch, Maximize Altitude, Maximize Velocity | grn |
 | Undergrowth | 1 | Mausoleum Secrets | grn |
 | all creatures able to block ~ do so. | 1 | Ochran Assassin | grn |
 | as long as you"..."t have defender. | 1 | Piston-Fist Cyclops | grn |
@@ -296,14 +296,12 @@
 | enchanted land has "..." | 1 | Urban Utopia | grn |
 | equipped creature gets +N/+N for each gate you control and has vigilance and menace. | 1 | Glaive of the Guildpact | grn |
 | exile all opponents"..." graveyards. exile ~. | 1 | Mnemonic Betrayal | grn |
-| exile ~: shuffle your graveyard into your library. | 1 | Enhanced Surveillance | grn |
 | gain control of target creature with power N or less. | 1 | Connive // Concoct | grn |
 | if you would draw a card, instead look at the top three cards of your library, then put one into your hand and the rest into your graveyard. | 1 | Underrealm Lich | grn |
 | return N target creatures of the creature type of your choice to their owner's hand. | 1 | Selective Snare | grn |
 | search your library for up to two basic land cards and/or gate cards, put them onto the battlefield tapped, then shuffle. | 1 | Circuitous Route | grn |
 | surveil N, then choose an instant or sorcery card in your graveyard. you may cast it ~. if that spell would be put into your graveyard, exile it instead. (to su | 1 | Mission Briefing | grn |
 | switch the power and toughness of each of up to two target creatures until end of turn. | 1 | Invert // Invent | grn |
-| target creature you control deals damage equal to its power to target player. jump-start (you may cast ~ from your graveyard by discarding a card in addition to | 1 | Gravitic Punch | grn |
 | target opponent may have ~ deal N damage to them. if that player doesn't, you draw three cards. jump-start (you may cast ~ from your graveyard by discarding a c | 1 | Risk Factor | grn |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. | 1 | Never Happened | grn |
 | when ~ enters, each player sacrifices a creature or planeswalker of their choice. each player who can't discards a card. | 1 | Plaguecrafter | grn |
@@ -325,6 +323,7 @@
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Ledev Champion | grn |
 | whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Ornery Goblin | grn |
 | whenever ~ deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest into their grav | 1 | Thief of Sanity | grn |
+| you may look at an additional two cards each time you surveil. | 1 | Enhanced Surveillance | grn |
 | you may put two +N/+N counters on a creature you control. then all creatures get -N/-N until end of turn. | 1 | Find // Finality | grn |
 | {M}: ~ loses all abilities until end of turn. any player may activate ~. | 1 | Nullhide Ferox | grn |
 | {M}{M}, {M}: copy target instant or sorcery spell you control with mana value N. you may choose new targets for the copy. | 1 | League Guildmage | grn |

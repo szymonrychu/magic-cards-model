@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 12.2% |
-| Works (untested) | 57 | 58.2% |
+| Works (untested) | 58 | 59.2% |
 | Partial (unaudited) | 4 | 4.1% |
-| Not working | 25 | 25.5% |
+| Not working | 24 | 24.5% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Druidic Satchel | silent | {2}, {T}: Reveal the top card of your library. If it's a creature card, create a 1/1 green Saproling creature token. If it's a land card, put that card onto the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Bangchuckers | silent | {T}: Flip a coin. If you win the flip, this creature deals 2 damage to any target. If you lose the flip, this creature deals 2 damage to itself. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Griffin Rider | silent | As long as you control a Griffin creature, this creature gets +3/+3 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Guardians' Pledge | silent | White creatures you control get +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jace's Archivist | silent | {U}, {T}: Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jace, Memory Adept | silent | −7: Any number of target players each draw twenty cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lord of the Unreal | silent | Illusion creatures you control get +1/+1 and have hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -82,6 +81,7 @@
 | Gideon's Lawkeeper | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Fireslinger | handled | {T}: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greatsword | handled | Equipped creature gets +3/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Guardians' Pledge | handled | White creatures you control get +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hideous Visage | handled | Creatures you control gain intimidate until end of turn. (Each of those creatures can't be blocked except by artifact creatures and/or creatures that share a co | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jade Mage | handled | {2}{G}: Create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kite Shield | handled | Equipped creature gets +0/+3. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -156,7 +156,6 @@
 | whenever a creature without flying attacks you or a planeswalker you control, ~ deals N damage to that creature. | 1 | Circle of Flame | m12 |
 | whenever combat damage is dealt to you or a planeswalker you control, if ~ is in your graveyard, destroy target attacking creature, then put ~ on top of your li | 1 | Vengeful Pharaoh | m12 |
 | whenever you cast a vampire creature spell, it gains bloodthirst N. | 1 | Bloodlord of Vaasgoth | m12 |
-| white creatures you control get +N/+N until end of turn. | 1 | Guardians' Pledge | m12 |
 | {M}, {M}: each player discards their hand, then draws cards equal to the greatest number of cards a player discarded ~. | 1 | Jace's Archivist | m12 |
 | {M}, {M}: reveal the top card of your library. if it"..."s a land card, put that card onto the battlefield under your control. if it's a noncreature, nonland ca | 1 | Druidic Satchel | m12 |
 | {M}: choose one. activate only once each turn. | 1 | Skinshifter | m12 |

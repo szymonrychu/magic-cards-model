@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 17.1% |
+| Tested | 33 | 17.6% |
 | Works (untested) | 99 | 52.9% |
 | Partial (unaudited) | 12 | 6.4% |
-| Not working | 44 | 23.5% |
+| Not working | 43 | 23.0% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | Urban Retreat | silent | {2}, Return a tapped creature you control to its owner's hand: Put this card from your hand onto the battlefield. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vulture, Scheming Scavenger | silent | Whenever Vulture attacks, other Villains you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wall Crawl | silent | Spiders you control get +1/+1 and can't be blocked by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Wisecrack | silent | Target creature deals damage equal to its power to itself. If that creature is attacking, Wisecrack deals 2 damage to that creature's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | With Great Power . . . | silent | Enchanted creature gets +2/+2 for each Aura and Equipment attached to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Carnage, Crimson Chaos | notice | When Carnage enters, return target creature card with mana value 3 or less from your graveyard to the battlefield. It gains "This creature attacks each combat i | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Eddie Brock // Venom, Lethal Protector | notice | Whenever Venom attacks, you may sacrifice another creature. If you do, draw X cards, then you may put a permanent card with mana value X or less from your hand  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -185,7 +184,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>33 cards</summary>
 
 - Aunt May
 - Behold the Sinister Six!
@@ -219,6 +218,7 @@
 - The Soul Stone
 - Unstable Experiment
 - Villainous Wrath
+- Wisecrack
 
 </details>
 
@@ -251,7 +251,6 @@
 | put a +N/+N counter on target creature you control. it becomes a legendary spider hero in addition to its other types. | 1 | Origin of Spider-Man | spm |
 | put target creature on the bottom of its owner's library. you lose N life unless you control a villain. | 1 | The Spot's Portal | spm |
 | spiders you control get +N/+N and can't be blocked by creatures with defender. | 1 | Wall Crawl | spm |
-| target creature deals damage equal to its power to itself. if that creature is attacking, ~ deals N damage to that creature's controller. | 1 | Wisecrack | spm |
 | target creature gets +N/+N and gains flying until end of turn. if it's a spider, you gain N life. | 1 | Thwip! | spm |
 | target creature you control gets +N/+N until end of turn. it fights target creature an opponent controls. when excess damage is dealt to the creature an opponen | 1 | Rhino's Rampage | spm |
 | top of the food chain — kraven's power is equal to the greatest mana value among permanents you control. | 1 | Kraven, Proud Predator | spm |

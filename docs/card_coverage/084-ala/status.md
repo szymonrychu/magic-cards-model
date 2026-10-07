@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 8.1% |
+| Tested | 19 | 8.5% |
 | Works (untested) | 141 | 63.2% |
 | Partial (unaudited) | 7 | 3.1% |
-| Not working | 57 | 25.6% |
+| Not working | 56 | 25.1% |
 
 ## Cards needing work
 
@@ -71,7 +71,6 @@
 | Sigiled Paladin | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Skill Borrower | silent | As long as the top card of your library is an artifact or creature card, this creature has all activated abilities of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skullmulcher | silent | When this creature enters, draw a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soul's Fire | silent | Target creature you control deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Grace | silent | You gain life equal to target creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Might | silent | Put X +1/+1 counters on target creature, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx's Herald | silent | {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -235,7 +234,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Angelsong
 - Blightning
@@ -253,6 +252,7 @@
 - Rockcaster Platoon
 - Salvage Titan
 - Skeletonize
+- Soul's Fire
 - Thunder-Thrash Elder
 - Vein Drinker
 
@@ -286,7 +286,6 @@
 | reveal the top card of your library and put that card into your hand. you lose life equal to its mana value. you may repeat ~ any number of times. | 1 | Ad Nauseam | ala |
 | reveal the top three cards of your library. target opponent may choose to put those cards into your hand. if they don't, put those cards into your graveyard and | 1 | Covenant of Minds | ala |
 | skeletons you control and other zombies you control get +N/+N and have deathtouch. | 1 | Death Baron | ala |
-| target creature you control deals damage equal to its power to any target. | 1 | Soul's Fire | ala |
 | target opponent sacrifices a creature of their choice, discards three cards, then loses N life. you return a creature card from your graveyard to your hand, dra | 1 | Cruel Ultimatum | ala |
 | target player discards a card at random. cycling {M}{M}{M}{M} ({M}{M}{M}{M}, discard ~: draw a card.) when you cycle ~, target player discards two cards at rand | 1 | Resounding Scream | ala |
 | until end of turn, target creature you control gets +N/+N and other creatures you control get +N/+N. | 1 | Sigil Blessing | ala |

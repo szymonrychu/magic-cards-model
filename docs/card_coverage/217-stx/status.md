@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 40 | 14.6% |
-| Works (untested) | 149 | 54.4% |
+| Tested | 41 | 15.0% |
+| Works (untested) | 150 | 54.7% |
 | Partial (unaudited) | 5 | 1.8% |
-| Not working | 80 | 29.2% |
+| Not working | 78 | 28.5% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Deadly Brew | silent | Each player sacrifices a creature or planeswalker of their choice. If you sacrificed a permanent this way, you may return another permanent card from your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Detention Vortex | silent | {3}: Destroy this Aura. Only your opponents may activate this ability and only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Devastating Mastery | silent | You may pay {2}{W}{W} rather than pay this spell's mana cost. If the {2}{W}{W} cost was paid, an opponent chooses up to two nonland permanents they control and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Devouring Tendrils | silent | Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. When the permanent you don't control dies this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dina, Soul Steeper | silent | {1}, Sacrifice another creature: Dina gets +X/+0 until end of turn, where X is the sacrificed creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Double Major | silent | Copy target creature spell you control, except it isn't legendary if the spell is legendary. (A copy of a creature spell becomes a token.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Draconic Intervention | silent | As an additional cost to cast this spell, exile an instant or sorcery card from your graveyard. Draconic Intervention deals X damage to each non-Dragon creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -55,7 +54,6 @@
 | Ingenious Mastery | silent | You may pay {2}{U} rather than pay this spell's mana cost. If the {2}{U} cost was paid, you draw three cards, then an opponent creates two Treasure tokens and t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jadzi, Oracle of Arcavios // Journey to the Oracle | silent | You may put any number of land cards from your hand onto the battlefield. Then if you control eight or more lands, you may discard a card. If you do, return Jou | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kianne, Dean of Substance // Imbraham, Dean of Theory | silent | {T}: Exile the top card of your library. If it's a land card, put it into your hand. Otherwise, put a study counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lorehold Apprentice | silent | Magecraft — Whenever you cast or copy an instant or sorcery spell, until end of turn, Spirit creatures you control gain "{T}: This creature deals 1 damage to ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Maelstrom Muse | silent | Whenever this creature attacks, the next instant or sorcery spell you cast this turn costs {X} less to cast, where X is this creature's power as this ability re | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mage Hunters' Onslaught | silent | Destroy target creature or planeswalker. Whenever a creature blocks this turn, its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mavinda, Students' Advocate | silent | {0}: You may cast target instant or sorcery card from your graveyard this turn. If that spell doesn't target a creature you control, it costs {8} more to cast t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -179,6 +177,7 @@
 | Leonin Lightscribe | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Letter of Acceptance | handled | {2}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leyline Invocation | handled | Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it, where X is the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lorehold Apprentice | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, until end of turn, Spirit creatures you control gain "{T}: This creature deals 1 damage to ea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lorehold Campus | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lorehold Pledgemage | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mage Duel | handled | This spell costs {2} less to cast if you've cast another instant or sorcery spell this turn. Target creature you control gets +1/+2 until end of turn. Then it f | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -264,7 +263,7 @@
 ## Fully supported
 
 <details>
-<summary>40 cards</summary>
+<summary>41 cards</summary>
 
 - Academic Dispute
 - Bayou Groff
@@ -275,6 +274,7 @@
 - Cogwork Archivist
 - Crackle with Power
 - Culling Ritual
+- Devouring Tendrils
 - Divide by Zero
 - Dragon's Approach
 - Dueling Coach
@@ -313,7 +313,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Magecraft | 6 | Elemental Expressionist, Lorehold Apprentice, Prismari Apprentice, Prismari Pledgemage, Quandrix Apprentice | stx |
+| Magecraft | 5 | Elemental Expressionist, Prismari Apprentice, Prismari Pledgemage, Quandrix Apprentice, Symmetry Sage | stx |
 | Choose one | 2 | Academic Probation, Confront the Past | stx |
 | Choose two | 2 | Lorehold Command, Quandrix Command | stx |
 | +N: you may discard a card. if you do, draw a card. if a creature card was discarded ~, draw two cards instead. | 1 | Mila, Crafty Companion // Lukka, Wayward Bonder | stx |
@@ -353,7 +353,6 @@
 | search your library for a basic land card, put it onto the battlefield tapped, then shuffle. that land becomes a N/N green and blue fractal creature that's stil | 1 | Emergent Sequence | stx |
 | spells you cast that target a creature cost {M} less to cast. | 1 | Killian, Ink Duelist | stx |
 | target creature gets -N/-N until end of turn, where N is N minus the number of cards in that creature"..."s hand. | 1 | Flunk | stx |
-| target creature you control deals damage equal to its power to target creature or planeswalker you don"..."t control dies ~, you gain N life. | 1 | Devouring Tendrils | stx |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. put a +N/+N counter on a creature you control. | 1 | Humiliate | stx |
 | until end of turn, double target creature's power N times. | 1 | Exponential Growth | stx |
 | until end of turn, target nonland permanent loses all abilities and becomes your choice of a blue frog creature with base power and toughness N/N or a blue octo | 1 | Mercurial Transformation | stx |

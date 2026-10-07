@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 12.8% |
+| Tested | 37 | 13.2% |
 | Works (untested) | 133 | 47.3% |
 | Partial (unaudited) | 20 | 7.1% |
-| Not working | 92 | 32.7% |
+| Not working | 91 | 32.4% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Bag End Porter | silent | Whenever this creature attacks, it gets +X/+X until end of turn, where X is the number of legendary creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Battle-Scarred Goblin | silent | Whenever this creature becomes blocked, it deals 1 damage to each creature blocking it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Borne Upon a Wind | silent | You may cast spells this turn as though they had flash. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Breaking of the Fellowship | silent | Target creature an opponent controls deals damage equal to its power to another target creature that player controls. The Ring tempts you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Call of the Ring | silent | Whenever you choose a creature as your Ring-bearer, you may pay 2 life. If you do, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Celeborn the Wise | silent | Whenever you scry, Celeborn gets +1/+1 until end of turn for each card looked at while scrying this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Council's Deliberation | silent | Draw a card. Whenever you scry, if you control an Island, you may exile this card from your graveyard. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -275,10 +274,11 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Arwen, Mortal Queen
 - Bill the Pony
+- Breaking of the Fellowship
 - Butterbur, Bree Innkeeper
 - Claim the Precious
 - Delighted Halfling
@@ -360,7 +360,6 @@
 | sacrifice a land. search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. if you control a creature with power N | 1 | Entish Restoration | ltr |
 | sacrifice any number of lands. reveal the top N cards of your library, where N is the number of lands sacrificed ~. choose any number of artifact and/or land ca | 1 | Hew the Entwood | ltr |
 | scry N, then you may reveal the top card of your library. if a creature card is revealed ~, draw a card. | 1 | Elven Farsight | ltr |
-| target creature an opponent controls deals damage equal to its power to another target creature that player controls. the ring tempts you. | 1 | Breaking of the Fellowship | ltr |
 | the ring tempts you, then each player mills cards equal to your ring-bearer's power. | 1 | One Ring to Rule Them All | ltr |
 | the ring tempts you. search your library for a card that shares a color with a legendary creature you control, reveal it, put it into your hand, then shuffle. | 1 | Ringsight | ltr |
 | the ring tempts you. then reveal cards from the top of your library until you reveal N land cards, where N is the number of legendary creatures you control. put | 1 | The Ring Goes South | ltr |

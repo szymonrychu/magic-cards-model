@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 12.7% |
-| Works (untested) | 106 | 48.2% |
+| Tested | 29 | 13.2% |
+| Works (untested) | 107 | 48.6% |
 | Partial (unaudited) | 8 | 3.6% |
-| Not working | 78 | 35.5% |
+| Not working | 76 | 34.5% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Explosive Revelation | silent | Choose any target. Reveal cards from the top of your library until you reveal a nonland card. Explosive Revelation deals damage equal to that card's mana value  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gideon Jura | silent | +2: During target opponent's next turn, creatures that player controls attack Gideon Jura if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gravitational Shift | silent | Creatures with flying get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gravity Well | silent | Whenever a creature with flying attacks, it loses flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guul Draz Assassin | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hada Spy Patrol | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Halimar Wavewatch | silent | Level up {2} ({2}: Put a level counter on this. Level up only as a sorcery.) LEVEL 1-4 0/6 LEVEL 5+ 6/6 Islandwalk (This creature can't be blocked as long as de | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -103,7 +102,6 @@
 | Distortion Strike | notice | Target creature gets +1/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Induce Despair | notice | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Traitorous Instinct | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | unparsed remainder: Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | Y/Y/- | not_working |
 | Aura Gnarlid | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cast Through Time | unaudited | Instant and sorcery spells you control have rebound. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hedron Matrix | unaudited | Equipped creature gets +X/+X, where X is its mana value. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -213,6 +211,7 @@
 | Survival Cache | handled | You gain 2 life. Then if you have more life than an opponent, draw a card. Rebound (If you cast this spell from your hand, exile it as it resolves. At the begin | the engine reads this text and performs it | Y/-/- | not_tested |
 | Totem-Guide Hartebeest | handled | When this creature enters, you may search your library for an Aura card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Training Grounds | handled | Activated abilities of creatures you control cost {2} less to activate. This effect can't reduce the mana in that cost to less than one mana. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Traitorous Instinct | handled | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tuktuk the Explorer | handled | When Tuktuk the Explorer dies, create Tuktuk the Returned, a legendary 5/5 colorless Goblin Golem artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ulamog, the Infinite Gyre | handled | When you cast this spell, destroy target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Virulent Swipe | handled | Target creature gets +2/+0 and gains deathtouch until end of turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -222,7 +221,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -231,6 +230,7 @@
 - Eldrazi Temple
 - Emrakul, the Aeons Torn
 - Essence Feed
+- Gravity Well
 - Harmless Assault
 - Haze Frog
 - Hyena Umbra
@@ -287,7 +287,6 @@
 | enchanted land is a swamp. | 1 | Contaminated Ground | roe |
 | equipped creature gets +N/+N, where N is its mana value. | 1 | Hedron Matrix | roe |
 | exile N target cards from target player's graveyard. for each card exiled ~, that player loses N life and you gain N life. | 1 | Suffer the Past | roe |
-| gain control of target creature until end of turn. untap that creature. until end of turn, it gets +N/+N and gains haste. | 1 | Traitorous Instinct | roe |
 | if you control an eldrazi spawn, create three N/N colorless eldrazi spawn creature tokens. they have "..." otherwise, create one of those tokens. | 1 | Brood Birthing | roe |
 | instant and sorcery spells you control have rebound. | 1 | Cast Through Time | roe |
 | level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N first strike level N+ N/N double strike | 1 | Student of Warfare | roe |
@@ -312,7 +311,6 @@
 | when ~ enters, put a +N/+N counter on it for each card in your hand. if you do, discard your hand. | 1 | Thought Gorger | roe |
 | when ~ enters, put two level counters on each creature you control with level up. | 1 | Venerated Teacher | roe |
 | when ~ enters, you may tap any number of untapped creatures you control. you gain N life for each creature tapped ~. | 1 | Jaddi Lifestrider | roe |
-| whenever a creature with flying attacks, it loses flying until end of turn. | 1 | Gravity Well | roe |
 | whenever a creature you control with power N or less attacks, ~ deals N damage to the player or planeswalker that creature is attacking. | 1 | Raid Bombardment | roe |
 | whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | 1 | It That Betrays | roe |
 | whenever another creature you control enters, you may have ~ become a copy of that creature until end of turn. | 1 | Renegade Doppelganger | roe |

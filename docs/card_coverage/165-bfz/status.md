@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 11.9% |
-| Works (untested) | 157 | 69.5% |
+| Tested | 28 | 12.4% |
+| Works (untested) | 159 | 70.4% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 36 | 15.9% |
+| Not working | 33 | 14.6% |
 
 ## Cards needing work
 
@@ -28,9 +28,7 @@
 |---|---|---|---|---|---|
 | Bane of Bala Ged | silent | Whenever this creature attacks, defending player exiles two permanents they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Benthic Infiltrator | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Brilliant Spectrum | silent | Converge — Draw X cards, where X is the number of colors of mana spent to cast this spell. Then discard two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bring to Light | silent | Converge — Search your library for a creature, instant, or sorcery card with mana value less than or equal to the number of colors of mana spent to cast this sp | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Call the Scions | silent | Devoid (This card has no color.) Create two 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine's reading came from quoted text, not this clause's own words | Y/Y/- | not_working |
 | Crumble to Dust | silent | Devoid (This card has no color.) Exile target nonbasic land. Search its controller's graveyard, hand, and library for any number of cards with the same name as  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Culling Drone | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Drana, Liberator of Malakir | silent | Whenever Drana deals combat damage to a player, put a +1/+1 counter on each attacking creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -39,7 +37,6 @@
 | Fertile Thicket | silent | When this land enters, you may look at the top five cards of your library. If you do, reveal up to one basic land card from among them, then put that card on to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon, Ally of Zendikar | silent | +1: Until end of turn, Gideon becomes a 5/5 Human Soldier Ally creature with indestructible that's still a planeswalker. Prevent all damage that would be dealt  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grip of Desolation | silent | Devoid (This card has no color.) Exile target creature and target land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gruesome Slaughter | silent | Until end of turn, colorless creatures you control gain "{T}: This creature deals damage equal to its power to target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hedron Blade | silent | Whenever equipped creature becomes blocked by one or more colorless creatures, it gains deathtouch until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Infuse with the Elements | silent | Converge — Put X +1/+1 counters on target creature, where X is the number of colors of mana spent to cast this spell. That creature gains trample until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mist Intruder | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -85,10 +82,12 @@
 | Blighted Woodland | handled | {3}{G}, {T}, Sacrifice this land: Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodbond Vampire | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boiling Earth | handled | Boiling Earth deals 1 damage to each creature your opponents control. Awaken 4—{6}{R} (If you cast this spell for {6}{R}, also put four +1/+1 counters on target | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Brilliant Spectrum | handled | Converge — Draw X cards, where X is the number of colors of mana spent to cast this spell. Then discard two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brood Butcher | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brood Monitor | handled | When this creature enters, create three 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Broodhunter Wurm | handled |  |  | Y/Y/- | not_tested |
 | Brutal Expulsion | handled | Devoid (This card has no color.) Choose one or both — • Return target spell or creature to its owner's hand. • Brutal Expulsion deals 2 damage to target creatur | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Call the Scions | handled | Devoid (This card has no color.) Create two 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Carrier Thrall | handled | When this creature dies, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Catacomb Sifter | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chasm Guide | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -229,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Akoum Hellkite
 - Aligned Hedron Network
@@ -240,6 +239,7 @@
 - Dust Stalker
 - Encircling Fissure
 - Endless One
+- Gruesome Slaughter
 - Guul Draz Overseer
 - Kiora, Master of the Depths
 - Lithomancer's Focus
@@ -266,7 +266,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | ingest | 7 | Benthic Infiltrator, Culling Drone, Mist Intruder, Ruination Guide, Salvage Drone | bfz |
-| Converge | 4 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements | bfz |
+| Converge | 3 | Bring to Light, Exert Influence, Infuse with the Elements | bfz |
 | Landfall | 1 | Emeria Shepherd | bfz |
 | Rally | 1 | Munda, Ambush Leader | bfz |
 | +N: until end of turn, gideon becomes a N/N human soldier ally creature with indestructible that's still a planeswalker. prevent all damage that would be dealt  | 1 | Gideon, Ally of Zendikar | bfz |
@@ -275,14 +275,12 @@
 | as ~ enters, you may put two cards your opponents own from exile into their owners' graveyards. if you do, ~ enters with four +N/+N counters on it. | 1 | Ulamog's Despoiler | bfz |
 | at the beginning of your upkeep, sacrifice a creature. | 1 | Smothering Abomination | bfz |
 | colorless spells you cast cost {M} less to cast. | 1 | Herald of Kozilek | bfz |
-| devoid (~ has no color.) create two N/N colorless eldrazi scion creature tokens. they have "..." | 1 | Call the Scions | bfz |
 | devoid (~ has no color.) exile target creature and target land. | 1 | Grip of Desolation | bfz |
 | devoid (~ has no color.) exile target nonbasic land. search its controller's graveyard, hand, and library for any number of cards with the same name as that lan | 1 | Crumble to Dust | bfz |
 | devoid (~ has no color.) target creature you control fights target creature an opponent controls. if the creature an opponent controls would die ~, exile it ins | 1 | Unnatural Aggression | bfz |
 | devoid (~ has no color.) target player reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Transgress the Mind | bfz |
 | enchanted creature gets -N/-N and loses flying. | 1 | Tightening Coils | bfz |
 | if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove a +N/+N counter from ~. | 1 | Undergrowth Champion | bfz |
-| until end of turn, colorless creatures you control gain "..." | 1 | Gruesome Slaughter | bfz |
 | when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Skyline Cascade | bfz |
 | when ~ enters, you may look at the top five cards of your library. if you do, reveal up to one basic land card from among them, then put that card on top of you | 1 | Fertile Thicket | bfz |

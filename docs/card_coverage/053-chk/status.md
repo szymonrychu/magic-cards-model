@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 26 | 9.2% |
-| Works (untested) | 131 | 46.3% |
+| Works (untested) | 132 | 46.6% |
 | Partial (unaudited) | 14 | 4.9% |
-| Not working | 112 | 39.6% |
+| Not working | 111 | 39.2% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Burr Grafter | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bushi Tenderfoot // Kenzo the Hardhearted | silent | When a creature dealt damage by this creature this turn dies, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cage of Hands | silent | {1}{W}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Call to Glory | silent | Untap all creatures you control. Samurai creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Callous Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +1/+0 and gains flying until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cranial Extraction | silent | Choose a nonland card name. Search target player's graveyard, hand, and library for all cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cursed Ronin | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -83,7 +82,7 @@
 | Mothrider Samurai | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Myojin of Cleansing Fire | silent | Remove a divinity counter from Myojin of Cleansing Fire: Destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myojin of Night's Reach | silent | Remove a divinity counter from Myojin of Night's Reach: Each opponent discards their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Nagao, Bound by Honor | silent | Whenever Nagao attacks, Samurai creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Nagao, Bound by Honor | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Nature's Will | silent | Whenever one or more creatures you control deal combat damage to a player, tap all lands that player controls and untap all lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nezumi Graverobber // Nighteyes the Desecrator | silent | {1}{B}: Exile target card from an opponent's graveyard. If no cards are in that graveyard, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nezumi Ronin | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -160,6 +159,7 @@
 | Blood Rites | handled | {1}{R}, Sacrifice a creature: This enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blood Speaker | handled | At the beginning of your upkeep, you may sacrifice this creature. If you do, search your library for a Demon card, reveal that card, put it into your hand, then | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boseiju, Who Shelters All | handled | Boseiju enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Call to Glory | handled | Untap all creatures you control. Samurai creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cleanfall | handled | Destroy all enchantments. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cloudcrest Lake | handled |  |  | Y/-/- | not_tested |
 | Consuming Vortex | handled | Return target creature to its owner's hand. Splice onto Arcane {3}{U} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice c | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -322,7 +322,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| bushido | 12 | Battle-Mad Ronin, Cursed Ronin, Devoted Retainer, Kitsune Blademaster, Konda, Lord of Eiganjo | chk |
+| bushido | 13 | Battle-Mad Ronin, Cursed Ronin, Devoted Retainer, Kitsune Blademaster, Konda, Lord of Eiganjo | chk |
 | soulshift | 12 | Burr Grafter, Gibbering Kami, He Who Hungers, Hundred-Talon Kami, Kami of Lunacy | chk |
 | whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 4 | Kashi-Tribe Reaver, Kashi-Tribe Warriors, Matsu-Tribe Decoy, Orochi Ranger | chk |
 | ~ enters with a divinity counter on it if you cast it from your hand. | 3 | Myojin of Infinite Rage, Myojin of Life's Web, Myojin of Seeing Winds | chk |
@@ -371,7 +371,6 @@
 | tapped creatures you control can block as though they were untapped. | 1 | Masako the Humorless | chk |
 | target opponent reveals their hand. that player exiles a card from it, then you exile a card from it. repeat ~ until all cards in that hand have been exiled. th | 1 | Struggle for Sanity | chk |
 | target permanent's controller sacrifices it. if the player does, they reveal cards from the top of their library until they reveal a permanent card that shares  | 1 | Reweave | chk |
-| untap all creatures you control. samurai creatures you control get +N/+N until end of turn. | 1 | Call to Glory | chk |
 | untap target nonlegendary creature and gain control of it until end of turn. that creature gains haste until end of turn. | 1 | Blind with Anger | chk |
 | up to three target creatures can't block ~. | 1 | Unearthly Blizzard | chk |
 | when a creature dealt damage by ~ ~ dies, flip ~. | 1 | Bushi Tenderfoot // Kenzo the Hardhearted | chk |
@@ -390,7 +389,6 @@
 | whenever equipped creature deals damage to a blocking creature, ~ deals that much damage to each other creature defending player controls. | 1 | Kusari-Gama | chk |
 | whenever equipped creature dies, return that card to the battlefield under your control if it's a samurai card. | 1 | Oathkeeper, Takeno's Daisho | chk |
 | whenever godo attacks for the first time each turn, untap it and all samurai you control. after ~, there is an additional combat phase. | 1 | Godo, Bandit Warlord | chk |
-| whenever nagao attacks, samurai creatures you control get +N/+N until end of turn. | 1 | Nagao, Bound by Honor | chk |
 | whenever one or more creatures block, flip a coin. if you win the flip, each blocking creature is sacrificed by its controller. if you lose the flip, each block | 1 | Tide of War | chk |
 | whenever one or more creatures you control deal combat damage to a player, tap all lands that player controls and untap all lands you control. | 1 | Nature's Will | chk |
 | whenever you cast a spirit or arcane spell, you may exile hikari. if you do, return it to the battlefield under its owner's control at the beginning of the next | 1 | Hikari, Twilight Guardian | chk |

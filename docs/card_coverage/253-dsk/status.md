@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 16.2% |
+| Tested | 44 | 16.6% |
 | Works (untested) | 108 | 40.8% |
 | Partial (unaudited) | 14 | 5.3% |
-| Not working | 100 | 37.7% |
+| Not working | 99 | 37.4% |
 
 ## Cards needing work
 
@@ -102,7 +102,6 @@
 | Victor, Valgavoth's Seneschal | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, surveil 2 if this is the first time this ability has resolved this turn | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vile Mutilator | silent | When this creature enters, each opponent sacrifices a nontoken enchantment of their choice, then sacrifices a nontoken creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Walk-In Closet // Forgotten Cellar | silent | When you unlock this door, you may cast spells from your graveyard this turn, and if a card would be put into your graveyard from anywhere this turn, exile it i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Waltz of Rage | silent | Target creature you control deals damage equal to its power to each other creature. Until end of turn, whenever a creature you control dies, exile the top card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wildfire Wickerfolk | silent | Delirium — This creature gets +1/+1 and has trample as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Zimone, All-Questioning | silent | At the beginning of your end step, if a land entered the battlefield under your control this turn and you control a prime number of lands, create Primo, the Ind | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Anthropede | notice | When this creature enters, you may discard a card or pay {2}. When you do, destroy target Room. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -252,7 +251,7 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>44 cards</summary>
 
 - Abhorrent Oculus
 - Balustrade Wurm
@@ -297,6 +296,7 @@
 - Unidentified Hovership
 - Unwanted Remake
 - Violent Urge
+- Waltz of Rage
 
 </details>
 
@@ -336,7 +336,6 @@
 | other permanents you control have hexproof. | 1 | Restricted Office // Lecture Hall | dsk |
 | search your library for a demon card, reveal it, put it into your hand, then shuffle. delirium — if there are four or more card types among cards in your gravey | 1 | Demonic Counsel | dsk |
 | target creature gets +N/+N until end of turn. when it dies ~, manifest dread. (look at the top two cards of your library. put one onto the battlefield face down | 1 | Turn Inside Out | dsk |
-| target creature you control deals damage equal to its power to each other creature. until end of turn, whenever a creature you control dies, exile the top card  | 1 | Waltz of Rage | dsk |
 | the owner of target artifact or enchantment an opponent controls shuffles it into their library. you may shuffle up to four target cards from your graveyard int | 1 | Cathartic Parting | dsk |
 | unlock costs you pay cost {M} less. | 1 | Inquisitive Glimmer | dsk |
 | untap each creature you control during each other player's untap step. | 1 | Dazzling Theater // Prop Room | dsk |

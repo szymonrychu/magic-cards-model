@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 13.5% |
-| Works (untested) | 94 | 52.8% |
+| Tested | 27 | 15.2% |
+| Works (untested) | 93 | 52.2% |
 | Partial (unaudited) | 10 | 5.6% |
-| Not working | 50 | 28.1% |
+| Not working | 48 | 27.0% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Induced Amnesia | silent | When this enchantment enters, target player exiles all cards from their hand face down, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Journey to Eternity // Atzal, Cave of Eternity | silent | When enchanted creature dies, return it to the battlefield under your control, then return this card to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kumena's Awakening | silent | At the beginning of your upkeep, each player draws a card. If you have the city's blessing, instead only you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mutiny | silent | Target creature an opponent controls deals damage equal to its power to another target creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Path of Mettle // Metzali, Tower of Triumph | silent | When Path of Mettle enters, it deals 1 damage to each creature that doesn't have first strike, double strike, vigilance, or haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Legs | silent | Enchanted creature gets +0/+2 as long as it's a Pirate. Otherwise, it gets -2/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silent Gravestone | silent | {4}, {T}: Exile this artifact and all cards from all graveyards. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,7 +61,6 @@
 | Tilonalli's Crown | silent | When this Aura enters, it deals 1 damage to enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Twilight Prophet | silent | At the beginning of your upkeep, if you have the city's blessing, reveal the top card of your library and put it into your hand. Each opponent loses X life and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vona's Hunger | silent | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Each opponent sacrifices a creature of their choice. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vraska, Scheming Gorgon | silent | −10: Until end of turn, creatures you control gain deathtouch and "Whenever this creature deals damage to an opponent, that player loses the game." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warkite Marauder | silent | Whenever this creature attacks, target creature defending player controls loses all abilities and has base power and toughness 0/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angrath's Ambusher | notice | This creature gets +2/+0 as long as you control an Angrath planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dusk Charger | notice | This creature gets +2/+2 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -162,7 +160,6 @@
 | Storm the Vault // Vault of Catlacan | handled | Whenever one or more creatures you control deal combat damage to a player, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strength of the Pack | handled | Put two +1/+1 counters on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sun Sentinel | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
-| Sun-Collared Raptor | handled | {2}{R}: This creature gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sun-Crested Pterodon | handled | This creature has vigilance as long as you control another Dinosaur. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swift Warden | handled | When this creature enters, target Merfolk you control gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sworn Guardian | handled |  |  | Y/Y/- | not_tested |
@@ -184,7 +181,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>27 cards</summary>
 
 - Arch of Orazca
 - Crafty Cutpurse
@@ -198,6 +195,7 @@
 - Jadelight Ranger
 - Mastermind's Acquisition
 - Mausoleum Harpy
+- Mutiny
 - Needletooth Raptor
 - Orazca Relic
 - Paladin of Atonement
@@ -209,7 +207,9 @@
 - Secrets of the Golden City
 - See Red
 - Stampeding Horncrest
+- Sun-Collared Raptor
 - Swab Goblin
+- Vraska, Scheming Gorgon
 
 </details>
 
@@ -240,7 +240,6 @@
 | if ~ would deal combat damage to a player, it deals double that damage to that player instead. | 1 | Charging Tuskodon | rix |
 | players can"..." loyalty abilities. | 1 | The Immortal Sun | rix |
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
-| target creature an opponent controls deals damage equal to its power to another target creature that player controls. | 1 | Mutiny | rix |
 | when azor enters, each opponent can"..."s next turn. | 1 | Azor, the Lawbringer | rix |
 | when enchanted creature dies, exile cards equal to its power from the top of its owner's library. you may cast spells from among those cards for as long as they | 1 | Dead Man's Chest | rix |
 | when enchanted creature dies, return it to the battlefield under your control, then return ~ to the battlefield transformed under your control. | 1 | Journey to Eternity // Atzal, Cave of Eternity | rix |
@@ -272,7 +271,6 @@
 | ~'s power and toughness are each equal to the number of differently named lands you control. | 1 | Awakened Amalgam | rix |
 | −N: destroy all creatures target opponent controls. angrath deals damage to that player equal to their total power. | 1 | Angrath, Minotaur Pirate | rix |
 | −N: each opponent loses life equal to the number of cards in their graveyard. | 1 | Angrath, the Flame-Chained | rix |
-| −N: until end of turn, creatures you control gain deathtouch and "..." | 1 | Vraska, Scheming Gorgon | rix |
 
 ## Notes
 

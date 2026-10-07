@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 10.2% |
-| Works (untested) | 158 | 64.5% |
+| Works (untested) | 159 | 64.9% |
 | Partial (unaudited) | 14 | 5.7% |
-| Not working | 48 | 19.6% |
+| Not working | 47 | 19.2% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Gishath, Sun's Avatar | silent | Whenever Gishath deals combat damage to a player, reveal that many cards from the top of your library. Put any number of Dinosaur creature cards from among them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Grasping Current | silent | Return up to two target creatures to their owner's hand. Search your library and/or graveyard for a card named Jace, Ingenious Mind-Mage, reveal it, and put it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grim Captain's Call | silent | Return a Pirate card from your graveyard to your hand, then do the same for Vampire, Dinosaur, and Merfolk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Huatli, Dinosaur Knight | silent | −3: Target Dinosaur you control deals damage equal to its power to target creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace's Sentinel | silent | As long as you control a Jace planeswalker, this creature gets +1/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, Cunning Castaway | silent | +1: Whenever one or more creatures you control deal combat damage to a player this turn, draw a card, then discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Legion Conquistador | silent | When this creature enters, you may search your library for any number of cards named Legion Conquistador, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -149,6 +148,7 @@
 | Hierophant's Chalice | handled | When this artifact enters, target opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Huatli's Snubhorn | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Huatli's Spurring | handled | Target creature gets +2/+0 until end of turn. If you control a Huatli planeswalker, that creature gets +4/+0 until end of turn instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Huatli, Dinosaur Knight | handled | +2: Put two +1/+1 counters on up to one target Dinosaur you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Imperial Aerosaur | handled | When this creature enters, another target creature you control gets +1/+1 and gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Imperial Lancer | handled | This creature has double strike as long as you control a Dinosaur. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspiring Cleric | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -343,7 +343,6 @@
 | ~ enters with a +N/+N counter on it for each creature that died ~. | 1 | Bloodcrazed Paladin | xln |
 | ~ gets +N/+N as long as you control a dinosaur. | 1 | Drover of the Mighty | xln |
 | ~ gets +N/+N as long as you control another merfolk or an island. | 1 | Kumena's Speaker | xln |
-| −N: target dinosaur you control deals damage equal to its power to target creature you don't control. | 1 | Huatli, Dinosaur Knight | xln |
 
 ## Notes
 

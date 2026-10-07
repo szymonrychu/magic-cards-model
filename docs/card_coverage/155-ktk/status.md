@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 10.7% |
+| Tested | 26 | 11.6% |
 | Works (untested) | 161 | 71.6% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 31 | 13.8% |
+| Not working | 29 | 12.9% |
 
 ## Cards needing work
 
@@ -30,8 +30,6 @@
 | Ashcloud Phoenix | silent | When this creature dies, return it to the battlefield face down under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Avalanche Tusker | silent | Whenever this creature attacks, target creature defending player controls blocks it this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bellowing Saddlebrute | silent | Raid — When this creature enters, you lose 4 life unless you attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cranial Archive | silent | {2}, Exile this artifact: Target player shuffles their graveyard into their library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Deflecting Palm | silent | The next time a source of your choice would deal damage to you this turn, prevent that damage. If damage is prevented this way, Deflecting Palm deals that much  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragon's Eye Savants | silent | When this creature is turned face up, look at target opponent's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Duneblast | silent | Choose up to one creature. Destroy the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | End Hostilities | silent | Destroy all creatures and all permanents attached to creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -231,7 +229,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>26 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
@@ -241,8 +239,10 @@
 - Burn Away
 - Clever Impersonator
 - Crackling Doom
+- Cranial Archive
 - Crater's Claws
 - Death Frenzy
+- Deflecting Palm
 - Feat of Resistance
 - Hardened Scales
 - Hooting Mandrills
@@ -285,7 +285,6 @@
 | reveal the top eight cards of your library. you may put a creature card from among them onto the battlefield. put the rest into your graveyard. ferocious — if y | 1 | See the Unwritten | ktk |
 | tap N target creatures. ferocious — if you control a creature with power N or greater, those creatures don"..." next untap steps. | 1 | Icy Blast | ktk |
 | target opponent exiles the top N cards of their library. you may cast any number of spells with mana value N or less from among them without paying their mana c | 1 | Villainous Wealth | ktk |
-| the next time a source of your choice would deal damage to you ~, prevent that damage. if damage is prevented ~, ~ deals that much damage to that source's contr | 1 | Deflecting Palm | ktk |
 | untap each creature you control with a +N/+N counter on it during each other player's untap step. | 1 | Ivorytusk Fortress | ktk |
 | when you next cast an instant or sorcery spell ~, copy that spell. you may choose new targets for the copy. raid — if you attacked ~, when you next cast an inst | 1 | Howl of the Horde | ktk |
 | when ~ dies, return it to the battlefield face down under your control. | 1 | Ashcloud Phoenix | ktk |
@@ -298,7 +297,6 @@
 | whenever ~ attacks, target creature defending player controls blocks it ~ if able. | 1 | Avalanche Tusker | ktk |
 | whenever ~ or another creature you control is turned face up, untap that creature. | 1 | Pine Walker | ktk |
 | you may look at the top card of your library and at face-down creatures you don't control any time. | 1 | Lens of Clarity | ktk |
-| {M}, exile ~: target player shuffles their graveyard into their library. draw a card. | 1 | Cranial Archive | ktk |
 | {M}{M}: look at target face-down creature. | 1 | Smoke Teller | ktk |
 | ~ equip ability costs {M} less to activate if it targets a colorless creature. | 1 | Ghostfire Blade | ktk |
 | ~ gets +N/+N for each other creature you control with a +N/+N counter on it. | 1 | High Sentinels of Arashin | ktk |

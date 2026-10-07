@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 11.8% |
-| Works (untested) | 131 | 62.1% |
+| Works (untested) | 132 | 62.6% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 47 | 22.3% |
+| Not working | 46 | 21.8% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Shipwreck Singer | silent | {1}{B}, {T}: Attacking creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steam Augury | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stoneshock Giant | silent | When this creature becomes monstrous, creatures without flying your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Stormbreath Dragon | silent | When this creature becomes monstrous, it deals damage to each opponent equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tormented Hero | silent | Heroic — Whenever you cast a spell that targets this creature, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Triton Tactics | silent | Up to two target creatures each get +0/+3 until end of turn. Untap those creatures. At this turn's next end of combat, tap each creature that was blocked by one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Underworld Cerberus | silent | When this creature dies, exile it and each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -185,6 +184,7 @@
 | Spear of Heliod | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spearpoint Oread | handled | Enchanted creature gets +2/+2 and has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Staunch-Hearted Warrior | handled | Heroic — Whenever you cast a spell that targets this creature, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Stormbreath Dragon | handled | {5}{R}{R}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stymied Hopes | handled | Counter target spell unless its controller pays {1}. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sylvan Caryatid | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | Temple of Abandon | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -272,7 +272,6 @@
 | when enchanted creature dies, return that card to the battlefield under its owner's control. return ~ to the battlefield attached to that creature at the beginn | 1 | Gift of Immortality | ths |
 | when hythonia becomes monstrous, destroy all non-gorgon creatures. | 1 | Hythonia the Cruel | ths |
 | when ~ becomes monstrous, creatures without flying your opponents control can't block ~. | 1 | Stoneshock Giant | ths |
-| when ~ becomes monstrous, it deals damage to each opponent equal to the number of cards in that player's hand. | 1 | Stormbreath Dragon | ths |
 | when ~ becomes monstrous, target land becomes an island in addition to its other types. | 1 | Sealock Monster | ths |
 | when ~ dies, exile it and each player returns all creature cards from their graveyard to their hand. | 1 | Underworld Cerberus | ths |
 | when ~ enters, an opponent gains control of it. | 1 | Akroan Horse | ths |

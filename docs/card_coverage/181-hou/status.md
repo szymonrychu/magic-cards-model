@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 9.3% |
-| Works (untested) | 96 | 52.5% |
+| Tested | 18 | 9.8% |
+| Works (untested) | 97 | 53.0% |
 | Partial (unaudited) | 5 | 2.7% |
-| Not working | 65 | 35.5% |
+| Not working | 63 | 34.4% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Cunning Survivor | silent | Whenever you cycle or discard a card, this creature gets +1/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dagger of the Worthy | silent | Equipped creature gets +2/+0 and has afflict 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dreamstealer | silent | Whenever this creature deals combat damage to a player, that player discards that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Driven // Despair | silent | Until end of turn, creatures you control gain trample and "Whenever this creature deals combat damage to a player, draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Earthshaker Khenra | silent | When this creature enters, target creature with power less than or equal to this creature's power can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eternal of Harsh Truths | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fraying Sanity | silent | At the beginning of each end step, enchanted player mills X cards, where X is the number of cards put into their graveyard from anywhere this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -68,7 +67,6 @@
 | Sifter Wurm | silent | When this creature enters, scry 3, then reveal the top card of your library. You gain life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spellweaver Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Steadfast Sentinel | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Struggle // Survive | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Each player shuffles their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunscourge Champion | silent | When this creature enters, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tenacious Hunter | silent | As long as a creature has a -1/-1 counter on it, this creature has vigilance and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torment of Hailfire | silent | Repeat the following process X times. Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -181,6 +179,7 @@
 | Shefet Dunes | handled | {2}{W}{W}, {T}, Sacrifice a Desert: Creatures you control get +1/+1 until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sinuous Striker | handled | {U}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Steward of Solidarity | handled | {T}, Exert this creature: Create a 1/1 white Warrior creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Struggle // Survive | handled | Struggle deals damage to target creature equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunset Pyramid | handled | This artifact enters with three brick counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Supreme Will | handled | Choose one — • Counter target spell unless its controller pays {3}. • Look at the top four cards of your library. Put one of them into your hand and the rest on | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Survivors' Encampment | handled |  |  | Y/Y/- | not_tested |
@@ -196,13 +195,14 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Abrade
 - Blur of Blades
 - Chandra's Defeat
 - Claim // Fame
 - Desert of the True
+- Driven // Despair
 - Endless Sands
 - Hollow One
 - Hour of Devastation
@@ -227,7 +227,6 @@
 | Choose one | 1 | Doomfall | hou |
 | +N: each opponent exiles two cards from their hand. | 1 | Nicol Bolas, God-Pharaoh | hou |
 | +N: untap up to two target creatures and up to two target lands. | 1 | Nissa, Genesis Mage | hou |
-| aftermath (cast ~ only from your graveyard. then exile it.) each player shuffles their graveyard into their library. | 1 | Struggle // Survive | hou |
 | aftermath (cast ~ only from your graveyard. then exile it.) look at the top card of your library. you may put it onto the battlefield if it"..."t, put it into y | 1 | Reason // Believe | hou |
 | as long as a creature has a -N/-N counter on it, ~ has vigilance and deathtouch. | 1 | Tenacious Hunter | hou |
 | as long as you control a desert or there is a desert card in your graveyard, ~ gets +N/+N and has trample. | 1 | Sidewinder Naga | hou |
@@ -253,7 +252,6 @@
 | search your library for up to N creature cards with different names that each have mana value N, reveal them, put them into your hand, then shuffle. | 1 | Uncage the Menagerie | hou |
 | shuffle your library, then exile the top four cards. you may cast any number of spells with mana value N or less from among them without paying their mana costs | 1 | Hazoret's Undying Fury | hou |
 | untap target creature. it gets +N/+N until end of turn and can block an additional creature ~. | 1 | Act of Heroism | hou |
-| until end of turn, creatures you control gain trample and "..." | 1 | Driven // Despair | hou |
 | when you cycle ~, counter target activated or triggered ability you don't control. | 1 | Nimble Obstructionist | hou |
 | when ~ enters, all damage that would be dealt ~ to you and permanents you control is dealt to enchanted creature instead. | 1 | Saving Grace | hou |
 | when ~ enters, it deals N damage to each other creature. | 1 | Chaos Maw | hou |

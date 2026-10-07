@@ -18,15 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 0 | 0.0% |
-| Works (untested) | 0 | 0.0% |
+| Works (untested) | 1 | 100.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 1 | 100.0% |
+| Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Circle of Protection: Black | silent | {1}: The next time a black source of your choice would deal damage to you this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Circle of Protection: Black | handled | {1}: The next time a black source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
@@ -38,9 +38,7 @@
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| {M}: the next time a black source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Black | leb |
+None.
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 13.3% |
+| Tested | 36 | 14.5% |
 | Works (untested) | 125 | 50.2% |
 | Partial (unaudited) | 15 | 6.0% |
-| Not working | 76 | 30.5% |
+| Not working | 73 | 29.3% |
 
 ## Cards needing work
 
@@ -61,11 +61,9 @@
 | Mask of Griselbrand | silent | Whenever equipped creature dies, you may pay X life, where X is its power. If you do, draw X cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moonveil Regent | silent | Whenever you cast a spell, you may discard your hand. If you do, draw a card for each of that spell's colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mourning Patrol // Morning Apparition | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Neonate's Rush | silent | This spell costs {1} less to cast if you control a Vampire. Neonate's Rush deals 1 damage to target creature and 1 damage to its controller. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overwhelmed Archivist // Archive Haunt | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Path to the Festival | silent | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Then if there are three or more basic land types among lands | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Primal Adversary | silent | When this creature enters, you may pay {1}{G} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Seize the Storm | silent | Create a red Elemental creature token with trample and "This token's power and toughness are each equal to the number of instant and sorcery cards in your grave | the engine's reading came from quoted text, not this clause's own words | Y/Y/- | not_working |
 | Sigarda's Splendor | silent | At the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for this enchantment. Then note your life  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siphon Insight | silent | Look at the top two cards of target opponent's library. Exile one of them face down and put the other on the bottom of that library. You may play the exiled car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slogurk, the Overslime | silent | Whenever a land card is put into your graveyard from anywhere, put a +1/+1 counter on Slogurk. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -95,7 +93,6 @@
 | Heirloom Mirror // Inherited Fiend | notice | {1}, {T}, Pay 1 life, Discard a card: Draw a card, mill a card, then put a ritual counter on this artifact. Then if it has three or more ritual counters on it,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hungry for More | notice | Create a 3/1 black and red Vampire creature token with trample, lifelink, and haste. Sacrifice it at the beginning of the next end step. Flashback {1}{B}{R} (Yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Light Up the Night | notice | Light Up the Night deals X damage to any target. It deals X plus 1 damage instead if that target is a creature or planeswalker. Flashback—{3}{R}, Remove X loyal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Olivia's Midnight Ambush | notice | Target creature gets -2/-2 until end of turn. If it's night, that creature gets -13/-13 until end of turn instead. | unparsed remainder: If it's night, that creature gets -13/-13 until end of turn instead. | Y/Y/- | not_working |
 | Purifying Dragon | notice | Whenever this creature attacks, it deals 1 damage to target creature defending player controls. If that creature is a Zombie, this creature deals 2 damage to it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Stolen Vitality | notice | Target creature gets +3/+1 until end of turn. If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of tu | unparsed remainder: If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of turn. | Y/Y/- | not_working |
 | Unnatural Moonrise | notice | It becomes night. Until end of turn, target creature gets +1/+0 and gains trample and "Whenever this creature deals combat damage to a player, draw a card." Fla | unparsed remainder: It becomes night. | Y/Y/- | not_working |
@@ -187,7 +184,6 @@
 | Lunar Frenzy | handled | Target creature you control gets +X/+0 and gains first strike and trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memory Deluge | handled | Look at the top X cards of your library, where X is the amount of mana spent to cast this spell. Put two of them into your hand and the rest on the bottom of yo | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Might of the Old Ways | handled | Target creature gets +2/+2 until end of turn. Coven — Then if you control three or more creatures with different powers, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Moonrager's Slash | handled | This spell costs {2} less to cast if it's night. Moonrager's Slash deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Morbid Opportunist | handled | Whenever one or more other creatures die, draw a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Morkrut Behemoth | handled | As an additional cost to cast this spell, sacrifice a creature or pay {1}{B}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mysterious Tome // Chilling Chronicle | handled | {2}, {T}: Draw a card. Transform this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -214,6 +210,7 @@
 | Rootcoil Creeper | handled | {G}{U}, {T}, Exile this creature: Return target card with flashback you own from exile to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rotten Reunion | handled | Exile up to one target card from a graveyard. Create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at end of co | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sacred Fire | handled | Sacred Fire deals 2 damage to any target and you gain 2 life. Flashback {4}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Seize the Storm | handled | Create a red Elemental creature token with trample and "This token's power and toughness are each equal to the number of instant and sorcery cards in your grave | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shadowbeast Sighting | handled | Create a 4/4 green Beast creature token. Flashback {6}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shady Traveler // Stalking Predator | handled | Transform | no code needed | Y/Y/- | not_tested |
 | Shipwreck Sifters | handled | When this creature enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,7 +243,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>36 cards</summary>
 
 - Blood Pact
 - Bounding Wolf
@@ -267,8 +264,11 @@
 - Haunted Ridge
 - Hedgewitch's Mask
 - Jadar, Ghoulcaller of Nephalia
+- Moonrager's Slash
 - Moonsilver Key
+- Neonate's Rush
 - Old Stickfingers
+- Olivia's Midnight Ambush
 - Otherworldly Gaze
 - Overgrown Farmland
 - Play with Fire
@@ -308,7 +308,6 @@
 | choose up to two target creature cards in your graveyard. an opponent chooses one of them. return that card to your hand. return the other to the battlefield un | 1 | Wake to Slaughter | mid |
 | create N N/N black zombie creature tokens with decayed, where N is half the number of creature cards in your graveyard, rounded up. (a creature with decayed can | 1 | Ghoulcaller's Harvest | mid |
 | create a N/N black and red vampire creature token with trample, lifelink, and haste. sacrifice it at the beginning of the next end step. flashback {M}{M}{M} (yo | 1 | Hungry for More | mid |
-| create a red elemental creature token with trample and "..." flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Seize the Storm | mid |
 | creature tokens you control lose all abilities and have base power and toughness N/N. | 1 | Poppet Stitcher // Poppet Factory | mid |
 | destroy target artifact, enchantment, or land. if a land was destroyed ~, its controller may search their library for up to two basic land cards, put them onto  | 1 | Dire-Strain Rampage | mid |
 | destroy target creature or planeswalker. its controller investigates. (they create a clue token. it's an artifact with "...") | 1 | Fateful Absence | mid |
@@ -330,7 +329,6 @@
 | spells with the chosen name enchanted player casts cost {M} more to cast. | 1 | Curse of Silence | mid |
 | target creature gets +N/+N until end of turn. if it"..."s attacking. a creature with first strike deals combat damage before creatures without first strike.) | 1 | Stolen Vitality | mid |
 | target creature gets +N/+N until end of turn. if it's a human, instead it gets +N/+N and gains indestructible until end of turn. | 1 | Flare of Faith | mid |
-| target creature gets -N/-N until end of turn. if it's night, that creature gets -N/-N until end of turn instead. | 1 | Olivia's Midnight Ambush | mid |
 | target creature you control gets +N/+N and gains lifelink until end of turn. when that creature dies ~, create a N/N white spirit creature token with flying. | 1 | Blessed Defiance | mid |
 | up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Abandon the Post | mid |
 | when ~ dies, return it to the battlefield transformed under your control attached to target creature or planeswalker an opponent controls. | 1 | Vengeful Strangler // Strangling Grasp | mid |
@@ -361,7 +359,6 @@
 | {M}, {M}, pay N life, discard a card: draw a card, mill a card, then put a ritual counter on ~. then if it has three or more ritual counters on it, remove them  | 1 | Heirloom Mirror // Inherited Fiend | mid |
 | {M}, {M}: if it's night, it becomes day. otherwise, it becomes night. activate only as a sorcery. | 1 | The Celestus | mid |
 | ~ costs {M} less to cast for each creature you attacked with ~. | 1 | Search Party Captain | mid |
-| ~ costs {M} less to cast if you control a vampire. ~ deals N damage to target creature and N damage to its controller. draw a card. | 1 | Neonate's Rush | mid |
 | ~ deals N damage to any target. it deals N plus N damage instead if that target is a creature or planeswalker. flashback—{M}{M}, remove N loyalty counters from  | 1 | Light Up the Night | mid |
 | ~ enters with a +N/+N counter on it for each creature that died ~. | 1 | Grizzly Ghoul | mid |
 | ~ enters with a +N/+N counter on it if an opponent lost life ~. | 1 | Mounted Dreadknight | mid |

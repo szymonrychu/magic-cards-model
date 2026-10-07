@@ -54,7 +54,7 @@
 | Hand of Cruelty | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hand of Honor | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Homura, Human Ascendant // Homura's Essence | silent | When Homura dies, return it to the battlefield flipped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Iizuka the Ruthless | silent | {2}{R}, Sacrifice a Samurai: Samurai creatures you control gain double strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Iizuka the Ruthless | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Infernal Kirin | silent | Whenever you cast a Spirit or Arcane spell, target player reveals their hand and discards all cards with that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inner Fire | silent | Add {R} for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inner-Chamber Guard | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -204,7 +204,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| bushido | 8 | Araba Mothrider, Hand of Cruelty, Hand of Honor, Inner-Chamber Guard, Kitsune Dawnblade | sok |
+| bushido | 9 | Araba Mothrider, Hand of Cruelty, Hand of Honor, Iizuka the Ruthless, Inner-Chamber Guard | sok |
 | soulshift | 6 | Deathknell Kami, Elder Pine of Jukai, Kami of Empty Graves, Nightsoil Kami, Promised Kannushi | sok |
 | Sweep | 4 | Barrel Down Sokenzan, Charge Across the Araba, Plow Through Reito, Sink into Takenuma | sok |
 | whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 2 | Kashi-Tribe Elite, Matsu-Tribe Birdstalker | sok |
@@ -277,7 +277,6 @@
 | {M}: prevent all combat damage that would be dealt to and dealt by target creature you control ~. | 1 | Soratami Cloud Chariot | sok |
 | {M}: target creature gets +N/+N until end of turn, where N is its power. sacrifice ~ at the beginning of the next end step. | 1 | Wine of Blood and Iron | sok |
 | {M}: untap enchanted creature. | 1 | Freed from the Real | sok |
-| {M}{M}, sacrifice a samurai: samurai creatures you control gain double strike until end of turn. | 1 | Iizuka the Ruthless | sok |
 | {M}{M}, {M}: counter target spell unless its controller pays {M}. | 1 | Ghost-Lit Warder | sok |
 | {M}{M}: look at the top N cards of your library, where N is the number of cards in your hand, then put them back in any order. | 1 | Descendant of Soramaro | sok |
 | ~ can be attached only to a creature with power N or greater. | 1 | O-Naginata | sok |

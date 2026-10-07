@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 8.6% |
+| Tested | 25 | 9.7% |
 | Works (untested) | 119 | 46.3% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 99 | 38.5% |
+| Not working | 96 | 37.4% |
 
 ## Cards needing work
 
@@ -107,7 +107,6 @@
 | Bruenor Battlehammer | notice | Each creature you control gets +2/+0 for each Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cleric Class | notice | When this Class becomes level 3, return target creature card from your graveyard to the battlefield. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Compelled Duel | notice | Target creature gets +3/+3 until end of turn and must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Devour Intellect | notice | Target opponent discards a card. If mana from a Treasure was spent to cast this spell, instead that player reveals their hand, you choose a nonland card from it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Divine Smite | notice | Target creature or planeswalker an opponent controls phases out. If that permanent is black, exile it instead. (If it phases out, treat it and anything attached | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dragon's Fire | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand or choose a Dragon you control. Dragon's Fire deals 3 damage to target cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feign Death | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -115,9 +114,7 @@
 | Nadaar, Selfless Paladin | notice | Other creatures you control get +1/+1 as long as you've completed a dungeon. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Orcus, Prince of Undeath | notice | When Orcus enters, choose one — • Each other creature gets -X/-X until end of turn. You lose X life. • Return up to X target creature cards with total mana valu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Paladin Class | notice | Spells your opponents cast during your turn cost {1} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Price of Loyalty | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If mana from a Treasure was spent to cast this spell,  | unparsed remainder: Untap that creature. It gains haste until end of turn. If mana from a Treasure was spent to cast this spell, that creature gets +2/+0 until end of turn. | Y/Y/- | not_working |
 | Ray of Enfeeblement | notice | Target creature gets -4/-1 until end of turn. If that creature is white, it gets -4/-4 until end of turn instead. | unparsed remainder: If that creature is white, it gets -4/-4 until end of turn instead. | Y/Y/- | not_working |
-| Spoils of the Hunt | notice | Target creature you control gets +1/+0 until end of turn for each mana from a Treasure that was spent to cast this spell. Then that creature deals damage equal  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Book of Exalted Deeds | notice | {W}{W}{W}, {T}, Exile The Book of Exalted Deeds: Put an enlightened counter on target Angel. It gains "You can't lose the game and your opponents can't win the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Tarrasque | notice | The Tarrasque has haste and ward {10} as long as it was cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tiger-Tribe Hunter | notice | Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, you may sacrifice another creature. Whe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -265,13 +262,14 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>25 cards</summary>
 
 - Bar the Gate
 - Boots of Speed
 - Burning Hands
 - Choose Your Weapon
 - Den of the Bugbear
+- Devour Intellect
 - Drizzt Do'Urden
 - Dungeon Map
 - Eccentric Apprentice
@@ -283,6 +281,8 @@
 - Mordenkainen's Polymorph
 - Ochre Jelly
 - Orb of Dragonkind
+- Price of Loyalty
+- Spoils of the Hunt
 - Tasha's Hideous Laughter
 - Thieves' Tools
 - Veteran Dungeoneer
@@ -344,7 +344,6 @@
 | enchanted land has "..." | 1 | Find the Path | afr |
 | enchanted permanent is a treasure artifact with "..." and it loses all other abilities. | 1 | Minimus Containment | afr |
 | equip {M}. activate only once each turn. | 1 | Leather Armor | afr |
-| gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if mana from a treasure was spent to cast ~, that crea | 1 | Price of Loyalty | afr |
 | if you would create one or more treasure tokens, instead create those tokens plus an additional treasure token. | 1 | Xorn | afr |
 | iymrith has ward {M} as long as it's untapped. | 1 | Iymrith, Desert Doom | afr |
 | legendary creatures you control enter with an additional +N/+N counter on them. | 1 | Bard Class | afr |
@@ -358,8 +357,6 @@
 | target creature gets +N/+N until end of turn and must be blocked ~ if able. | 1 | Compelled Duel | afr |
 | target creature gets -N/-N until end of turn. if that creature is white, it gets -N/-N until end of turn instead. | 1 | Ray of Enfeeblement | afr |
 | target creature or planeswalker an opponent controls phases out. if that permanent is black, exile it instead. (if it phases out, treat it and anything attached | 1 | Divine Smite | afr |
-| target creature you control gets +N/+N until end of turn for each mana from a treasure that was spent to cast ~. then that creature deals damage equal to its po | 1 | Spoils of the Hunt | afr |
-| target opponent discards a card. if mana from a treasure was spent to cast ~, instead that player reveals their hand, you choose a nonland card from it, then th | 1 | Devour Intellect | afr |
 | target opponent reveals their hand. you choose a nonland card from it. exile that card. if an instant card or a card with flash is exiled ~, they lose N life. o | 1 | Check for Traps | afr |
 | until end of turn, target creature gains "..." | 1 | Feign Death | afr |
 | when equipped creature dies, you may have ~ become a N/N construct artifact creature with flying and ward {M}. if you do, it isn't an equipment. | 1 | Dancing Sword | afr |

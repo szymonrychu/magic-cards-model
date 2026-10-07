@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 15.3% |
+| Tested | 18 | 16.2% |
 | Works (untested) | 65 | 58.6% |
 | Partial (unaudited) | 8 | 7.2% |
-| Not working | 21 | 18.9% |
+| Not working | 20 | 18.0% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Capricious Efreet | silent | At the beginning of your upkeep, choose target nonland permanent you control and up to two target nonland permanents you don't control. Destroy one of them at r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Captain of the Watch | silent | Other Soldier creatures you control get +1/+1 and have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Chieftain | silent | Other Goblin creatures you control get +1/+1 and have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Harm's Way | silent | The next 2 damage that a source of your choice would deal to you and/or permanents you control this turn is dealt to any target instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hive Mind | silent | Whenever a player casts an instant or sorcery spell, each other player copies that spell. Each of those players may choose new targets for their copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Honor of the Pure | silent | White creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ice Cage | silent | When enchanted creature becomes the target of a spell or ability, destroy this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -124,7 +123,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Acidic Slime
 - Act of Treason
@@ -136,6 +135,7 @@
 - Essence Scatter
 - Goblin Artillery
 - Great Sable Stag
+- Harm's Way
 - Lifelink
 - Runeclaw Bear
 - Safe Passage
@@ -163,7 +163,6 @@
 | other soldier creatures you control have first strike. | 1 | Rhox Pikemaster | m10 |
 | put target creature card from a graveyard onto the battlefield under your control. that creature is a black zombie in addition to its other colors and types. | 1 | Rise from the Grave | m10 |
 | return all artifact and enchantment cards from all graveyards to the battlefield under their owners' control. (auras with nothing to enchant remain in graveyard | 1 | Open the Vaults | m10 |
-| the next N damage that a source of your choice would deal to you and/or permanents you control ~ is dealt to any target instead. | 1 | Harm's Way | m10 |
 | when enchanted creature becomes the target of a spell or ability, destroy ~. | 1 | Ice Cage | m10 |
 | when ~ enters, target forest becomes a N/N green treefolk creature for as long as ~ remains on the battlefield. it's still a land. | 1 | Awakener Druid | m10 |
 | whenever a +N/+N counter is removed from ~, put two +N/+N counters on it at the beginning of the next end step. | 1 | Protean Hydra | m10 |

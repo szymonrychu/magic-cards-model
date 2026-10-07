@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 32 | 14.5% |
-| Works (untested) | 118 | 53.6% |
+| Works (untested) | 119 | 54.1% |
 | Partial (unaudited) | 7 | 3.2% |
-| Not working | 63 | 28.6% |
+| Not working | 62 | 28.2% |
 
 ## Cards needing work
 
@@ -75,7 +75,6 @@
 | Sadistic Sacrament | silent | Kicker {7} (You may pay an additional {7} as you cast this spell.) Search target player's library for up to three cards, exile them, then that player shuffles.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scythe Tiger | silent | When this creature enters, sacrifice it unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seascape Aerialist | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shoal Serpent | silent | Landfall — Whenever a land you control enters, this creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spreading Seas | silent | Enchanted land is an Island. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tajuru Archer | silent | Whenever this creature or another Ally you control enters, you may have this creature deal damage to target creature with flying equal to the number of Allies y | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trapfinder's Trick | silent | Target player reveals their hand and discards all Trap cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -182,6 +181,7 @@
 | Shatterskull Giant | handled |  |  | Y/-/- | not_tested |
 | Shepherd of the Lost | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Shieldmate's Blessing | handled | Prevent the next 3 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shoal Serpent | handled | Landfall — Whenever a land you control enters, this creature loses defender until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sky Ruin Drake | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Slaughter Cry | handled | Target creature gets +3/+0 and gains first strike until end of turn. (It deals combat damage before creatures without first strike.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soaring Seacliff | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -259,7 +259,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Landfall | 6 | Adventuring Gear, Eternity Vessel, Ob Nixilis, the Fallen, Roil Elemental, Shoal Serpent | zen |
+| Landfall | 5 | Adventuring Gear, Eternity Vessel, Ob Nixilis, the Fallen, Roil Elemental, Turntimber Basilisk | zen |
 | +N: search your library for a card named nissa's chosen, put it onto the battlefield, then shuffle. | 1 | Nissa Revane | zen |
 | as long as ~ has seven or more quest counters on it, creatures you control get +N/+N. | 1 | Beastmaster Ascension | zen |
 | as long as ~ has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into your hand, then  | 1 | Archmage Ascension | zen |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 62 | 22.8% |
+| Tested | 65 | 23.9% |
 | Works (untested) | 98 | 36.0% |
 | Partial (unaudited) | 6 | 2.2% |
-| Not working | 106 | 39.0% |
+| Not working | 103 | 37.9% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Consuming Aetherborn | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Converter Beast | silent | When this creature enters, incubate 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corruption of Towashi | silent | When this enchantment enters, incubate 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cosmic Hunger | silent | Target creature you control deals damage equal to its power to another target creature, planeswalker, or battle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cragsmasher Yeti | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Djeru and Hazoret | silent | As long as you have one or fewer cards in hand, Djeru and Hazoret has vigilance and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Doomskar Warrior | silent | Whenever this creature deals combat damage to a player or battle, look at that many cards from the top of your library. You may reveal a creature or land card f | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -112,11 +111,9 @@
 | Zephyr Singer | silent | When this creature enters, put a flying counter on each creature that convoked it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zimone and Dina | silent | {T}, Sacrifice another creature: Draw a card. You may put a land card from your hand onto the battlefield tapped. If you control eight or more lands, repeat thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zurgo and Ojutai | silent | Whenever one or more Dragons you control deal combat damage to a player or battle, look at the top three cards of your library. Put one of them into your hand a | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Angelic Intervention | notice | Target creature or planeswalker you control gains protection from colorless or from the color of your choice until end of turn. If it's a creature, put a +1/+1  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ayara, Widow of the Realm // Ayara, Furnace Queen | notice | {T}, Sacrifice another creature or artifact: Ayara deals X damage to target opponent or battle and you gain X life, where X is the sacrificed permanent's mana v | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Etched Host Doombringer | notice | When this creature enters, choose one — • Target opponent loses 2 life and you gain 2 life. • Choose target battle. If an opponent protects it, remove three def | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flitting Guerrilla | notice | When this creature dies, each player mills two cards. Then you may exile this card. When you do, put target creature or battle card from your graveyard on top o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Furnace Reins | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals combat damage to a p | unparsed remainder: Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals combat damage to a player or battle, create a Treasure token." | Y/Y/- | not_working |
 | Ghalta and Mavren | notice | Whenever you attack, choose one — • Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other atta | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Halo Forager | notice | When this creature enters, you may pay {X}. When you do, you may cast target instant or sorcery card with mana value X from a graveyard without paying its mana  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | notice | Spells you cast cost {1} less to cast for each card your opponents have drawn this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -240,15 +237,18 @@
 ## Fully supported
 
 <details>
-<summary>62 cards</summary>
+<summary>65 cards</summary>
 
+- Angelic Intervention
 - Archangel Elspeth
 - Borborygmos and Fblthp
 - Botanical Brawler
+- Cosmic Hunger
 - Drana and Linvala
 - Etali, Primal Conqueror // Etali, Primal Sickness
 - Faerie Mastermind
 - Flywheel Racer
+- Furnace Reins
 - Glistening Deluge
 - Ichor Shade
 - Inga and Esika
@@ -333,7 +333,6 @@
 | enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Realmbreaker's Grasp | mom |
 | exile all creatures. incubate N, where N is the number of creatures exiled ~. (create an incubator token with N +N/+N counters on it and "..." it transforms int | 1 | Sunfall | mom |
 | exile target creature. incubate N. (create an incubator token with three +N/+N counters on it and "..." it transforms into a N/N phyrexian artifact creature.) | 1 | Merciless Repurposing | mom |
-| gain control of target creature until end of turn. untap that creature. until end of turn, it gains haste and "..." (it's an artifact with "...") | 1 | Furnace Reins | mom |
 | incubate N twice, where N is the number of lands you control. (to incubate N, create an incubator token with N +N/+N counters on it and "..." it transforms into | 1 | Glistening Dawn | mom |
 | incubate N. (create an incubator token with three +N/+N counters on it and "..." it transforms into a N/N phyrexian artifact creature.) draw a card. | 1 | Eyes of Gitaxias | mom |
 | look at the top three cards of your library. put one of those cards into your hand, one into your graveyard, and one on the bottom of your library. | 1 | Moment of Truth | mom |
@@ -341,8 +340,6 @@
 | put all creature cards from all graveyards onto the battlefield under your control. exile ~, then return it to the battlefield . | 1 | Sheoldred // The True Scriptures | mom |
 | spells you cast cost {M} less to cast for each card your opponents have drawn ~. | 1 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | mom |
 | target creature or land you control becomes a N/N elemental creature with haste in addition to its other types until end of turn. it must be blocked ~ if able. | 1 | Vengeant Earth | mom |
-| target creature or planeswalker you control gains protection from colorless or from the color of your choice until end of turn. if it"..."t be blocked, targeted | 1 | Angelic Intervention | mom |
-| target creature you control deals damage equal to its power to another target creature, planeswalker, or battle. | 1 | Cosmic Hunger | mom |
 | target opponent reveals their hand. you may choose a creature or battle card from it. if you do, that player discards that card. if you don't, incubate N. (crea | 1 | Traumatic Revelation | mom |
 | target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. put two +N/+N counters on up to one target artif | 1 | Fertilid's Favor | mom |
 | triple | 1 | City on Fire | mom |

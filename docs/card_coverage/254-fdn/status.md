@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 13.9% |
-| Works (untested) | 87 | 60.4% |
+| Works (untested) | 88 | 61.1% |
 | Partial (unaudited) | 2 | 1.4% |
-| Not working | 35 | 24.3% |
+| Not working | 34 | 23.6% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Bulk Up | silent | Double target creature's power until end of turn. Flashback {4}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dread Summons | silent | Each player mills X cards. For each creature card put into a graveyard this way, you create a tapped 2/2 black Zombie creature token. (To mill a card, a player  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dropkick Bomber | silent | {R}: Until end of turn, another target Goblin you control gains flying and "When this creature deals combat damage, sacrifice it." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Electroduplicate | silent | Create a token that's a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token." Flashback {2}{R}{ | the engine's reading came from quoted text, not this clause's own words | Y/Y/Y | not_working |
 | Exemplar of Light | silent | Whenever you put one or more +1/+1 counters on this creature, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Faebloom Trick | silent | Create two 1/1 blue Faerie creature tokens with flying. When you do, tap target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fiendish Panda | silent | When this creature dies, return another target non-Bear creature card with mana value less than or equal to this creature's power from your graveyard to the bat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -93,6 +92,7 @@
 | Drake Hatcher | handled | Whenever this creature deals combat damage to a player, put that many incubation counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dreadwing Scavenger | handled | Whenever this creature enters or attacks, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eager Trufflesnout | handled | Whenever this creature deals combat damage to a player, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Electroduplicate | handled | Create a token that's a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token." Flashback {2}{R}{ | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elementalist Adept | handled | Prowess | machines/keywords.py | Y/Y/Y | not_tested |
 | Elfsworn Giant | handled | Landfall — Whenever a land you control enters, create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elvish Regrower | handled | When this creature enters, return target permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -187,7 +187,6 @@
 | Morbid | 1 | Tragic Banshee | fdn |
 | +N: add {M}{M}{M}. exile the top three cards of your library. choose one. you may play that card ~. | 1 | Chandra, Flameshaper | fdn |
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
-| create a token that's a copy of target creature you control, except it has haste and "..." flashback {M}{M}{M} (you may cast ~ from your graveyard for its flash | 1 | Electroduplicate | fdn |
 | create two N/N blue faerie creature tokens with flying. when you do, tap target creature an opponent controls. | 1 | Faebloom Trick | fdn |
 | creatures you control of the chosen type get +N/+N for each fellowship counter on ~. | 1 | Banner of Kinship | fdn |
 | double target creature's power until end of turn. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Bulk Up | fdn |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 20.6% |
-| Works (untested) | 128 | 50.8% |
+| Tested | 53 | 21.0% |
+| Works (untested) | 129 | 51.2% |
 | Partial (unaudited) | 12 | 4.8% |
-| Not working | 60 | 23.8% |
+| Not working | 58 | 23.0% |
 
 ## Cards needing work
 
@@ -54,8 +54,6 @@
 | Mardu Siegebreaker | silent | Whenever this creature attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. At the beginning of your next | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Molten Exhale | silent | You may cast this spell as though it had flash if you behold a Dragon as an additional cost to cast it. (To behold a Dragon, choose a Dragon you control or reve | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Narset's Rebuke | silent | Narset's Rebuke deals 5 damage to target creature. Add {U}{R}{W}. If that creature would die this turn, exile it instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Narset, Jeskai Waymaster | silent | At the beginning of your end step, you may discard your hand. If you do, draw cards equal to the number of spells you've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| New Way Forward | silent | The next time a source of your choice would deal damage to you this turn, prevent that damage. When damage is prevented this way, New Way Forward deals that muc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Perennation | silent | Return target permanent card from your graveyard to the battlefield with a hexproof counter and an indestructible counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Reverberating Summons | silent | At the beginning of each combat, if you've cast two or more spells this turn, this enchantment becomes a 3/3 Monk creature with haste in addition to its other t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rite of Renewal | silent | Return up to two target permanent cards from your graveyard to your hand. Target player shuffles up to four target cards from their graveyard into their library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -164,6 +162,7 @@
 | Meticulous Artisan | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Monastery Messenger | handled | When this creature enters, put up to one target noncreature, nonland card from your graveyard on top of your library. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mox Jasper | handled |  |  | Y/Y/Y | not_tested |
+| Narset, Jeskai Waymaster | handled | At the beginning of your end step, you may discard your hand. If you do, draw cards equal to the number of spells you've cast this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nightblade Brigade | handled | When this creature enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Osseous Exhale | handled | As an additional cost to cast this spell, you may behold a Dragon. (You may choose a Dragon you control or reveal a Dragon card from your hand.) Osseous Exhale  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Overwhelming Surge | handled | Choose one or both — • Overwhelming Surge deals 3 damage to target creature. • Destroy target noncreature artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -230,7 +229,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>53 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
@@ -263,6 +262,7 @@
 - Marang River Regent // Coil and Catch
 - Mistrise Village
 - Nature's Rhythm
+- New Way Forward
 - Purging Stormbrood // Absorb Essence
 - Roamer's Routine
 - Rot-Curse Rakshasa
@@ -299,7 +299,6 @@
 | as ~ enters, choose temur or sultai. | 1 | Glacierwood Siege | tdm |
 | at the beginning of each combat, if you've cast two or more spells ~, ~ becomes a N/N monk creature with haste in addition to its other types until end of turn. | 1 | Reverberating Summons | tdm |
 | at the beginning of your end step, if creatures you control have total toughness N or greater, draw a card. then if creatures you control have total toughness N | 1 | Betor, Kin to All | tdm |
-| at the beginning of your end step, you may discard your hand. if you do, draw cards equal to the number of spells you've cast ~. | 1 | Narset, Jeskai Waymaster | tdm |
 | at the beginning of your upkeep, for each color, put a +N/+N counter on a dragon you control of that color. if you put +N/+N counters on five dragons ~, you win | 1 | Call the Spirit Dragons | tdm |
 | at the beginning of your upkeep, mill three cards. then if your library has no cards in it, exile ~ and put five cards from your graveyard on top of your librar | 1 | Stillness in Motion | tdm |
 | at the beginning of your upkeep, return up to two target creature cards with power N or less from your graveyard to the battlefield. put a +N/+N counter on each | 1 | Smile at Death | tdm |
@@ -320,7 +319,6 @@
 | search your library for up to two basic forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (also shuffle | 1 | Bloomvine Regent // Claim Territory | tdm |
 | tap target creature. put three stun counters on it. (if a permanent with a stun counter would become untapped, remove one from it instead.) exile the top two ca | 1 | Riverwheel Sweep | tdm |
 | target creature gets +N/-N until end of turn. when it dies under your control ~, draw two cards. | 1 | Desperate Measures | tdm |
-| the next time a source of your choice would deal damage to you ~, prevent that damage. when damage is prevented ~, ~ deals that much damage to that source's con | 1 | New Way Forward | tdm |
 | the second spell you cast each turn costs {M} less to cast. | 1 | Highspire Bell-Ringer | tdm |
 | untapped dragons you control have hexproof. | 1 | Dragonologist | tdm |
 | when shiko enters, exile target nonland card with mana value N or less from your graveyard. copy it, then you may cast the copy without paying its mana cost. | 1 | Shiko, Paragon of the Way | tdm |

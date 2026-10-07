@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 9.0% |
-| Works (untested) | 127 | 54.5% |
+| Tested | 22 | 9.4% |
+| Works (untested) | 128 | 54.9% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 74 | 31.8% |
+| Not working | 72 | 30.9% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Assault Formation | silent | {G}: Target creature with defender can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aven Tactician | silent | When this creature enters, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Belltoll Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blood-Chin Rager | silent | Whenever this creature attacks, Warrior creatures you control gain menace until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crater Elemental | silent | Formidable — {2}{R}: This creature has base power 8 until end of turn. Activate only if creatures you control have total power 8 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dance of the Skywise | silent | Until end of turn, target creature you control becomes a blue Dragon Illusion with base power and toughness 4/4, loses all abilities, and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadly Wanderings | silent | As long as you control exactly one creature, that creature gets +2/+0 and has deathtouch and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -58,7 +57,6 @@
 | Herdchaser Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusory Gains | silent | Whenever a creature an opponent controls enters, attach this Aura to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kolaghan Aspirant | silent | Whenever this creature becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Learn from the Past | silent | Target player shuffles their graveyard into their library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Living Lore | silent | Living Lore's power and toughness are each equal to the exiled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Magmatic Chasm | silent | Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Minister of Pain | silent | When this creature exploits a creature, creatures your opponents control get -1/-1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -121,6 +119,7 @@
 | Atarka Pummeler | handled | Formidable — {3}{R}{R}: Creatures you control gain menace until end of turn. Activate only if creatures you control have total power 8 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aven Sunstriker | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Berserkers' Onslaught | handled | Attacking creatures you control have double strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Blood-Chin Rager | handled | Whenever this creature attacks, Warrior creatures you control gain menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boltwing Marauder | handled | Whenever another creature you control enters, target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Champion of Arashin | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Circle of Elders | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
@@ -242,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Ambuscade Shaman
 - Anticipate
@@ -258,6 +257,7 @@
 - Epic Confrontation
 - Impact Tremors
 - Kolaghan's Command
+- Learn from the Past
 - Marang River Skeleton
 - Myth Realized
 - Pristine Skywise
@@ -303,7 +303,6 @@
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Taigam's Strike | dtk |
 | target opponent loses N life for each attacking creature you control. you gain that much life. | 1 | Foul-Tongue Shriek | dtk |
 | target opponent sacrifices a green or white creature of their choice. if that player does, they lose N life. | 1 | Self-Inflicted Wound | dtk |
-| target player shuffles their graveyard into their library. draw a card. | 1 | Learn from the Past | dtk |
 | until end of turn, target creature you control becomes a blue dragon illusion with base power and toughness N/N, loses all abilities, and gains flying. | 1 | Dance of the Skywise | dtk |
 | when sidisi exploits a creature, you may search your library for a card, put it into your hand, then shuffle. | 1 | Sidisi, Undead Vizier | dtk |
 | when ~ dies, you may put it on your choice of the top or bottom of its owner's library. | 1 | Arashin Sovereign | dtk |
@@ -331,7 +330,6 @@
 | whenever ~ attacks, add {M}{M}{M}{M}{M}{M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Savage Ventmaw | dtk |
 | whenever ~ attacks, bolster N. | 1 | Dromoka Captain | dtk |
 | whenever ~ attacks, the next spell you cast ~ costs {M} less to cast. | 1 | Hardened Berserker | dtk |
-| whenever ~ attacks, warrior creatures you control gain menace until end of turn. | 1 | Blood-Chin Rager | dtk |
 | whenever ~ becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Kolaghan Aspirant | dtk |
 | whenever ~ deals combat damage to a player, you may pay {M}. if you do, create a N/N black zombie creature token and each opponent mills two cards. | 1 | Necromaster Dragon | dtk |
 | you may cast ~ from your graveyard if you pay {M} more to cast it for each other creature card in your graveyard. | 1 | Risen Executioner | dtk |

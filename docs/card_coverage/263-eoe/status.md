@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 51 | 20.2% |
-| Works (untested) | 134 | 53.2% |
+| Tested | 52 | 20.6% |
+| Works (untested) | 135 | 53.6% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 60 | 23.8% |
+| Not working | 58 | 23.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Adagia, Windswept Bastion | silent | {3}{W}, {T}: Create a token that's a copy of target artifact or enchantment you control, except it's legendary. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| All-Fates Scroll | silent | {7}, {T}, Sacrifice this artifact: Draw X cards, where X is the number of differently named lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Alpharael, Stonechosen | silent | Void — Whenever Alpharael attacks, if a nonland permanent left the battlefield this turn or a spell was warped this turn, defending player loses half their life | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Anticausal Vestige | silent | When this creature leaves the battlefield, draw a card, then you may put a permanent card with mana value less than or equal to the number of lands you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Atomic Microsizer | silent | Whenever equipped creature attacks, choose up to one target creature. That creature can't be blocked this turn and has base power and toughness 1/1 until end of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -38,7 +37,6 @@
 | Cloudsculpt Technician | silent | As long as you control an artifact, this creature gets +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Command Bridge | silent | When this land enters, sacrifice it unless you tap an untapped permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cryoshatter | silent | When enchanted creature becomes tapped or is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Cut Propulsion | silent | Target creature deals damage to itself equal to its power. If that creature has flying, it deals twice that much damage to itself instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dawnstrike Vanguard | silent | At the beginning of your end step, if you control two or more tapped creatures, put a +1/+1 counter on each creature you control other than this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Debris Field Crusher | silent | {1}{R}: This Spacecraft gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dyadrine, Synthesis Amalgam | silent | Whenever you attack, you may remove a +1/+1 counter from each of two creatures you control. If you do, draw a card and create a 2/2 colorless Robot artifact cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -93,6 +91,7 @@
 | Luxknight Breacher | unaudited | This creature enters with a +1/+1 counter on it for each other creature and/or artifact you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Tapestry Warden | unaudited | Each creature you control with toughness greater than its power stations permanents using its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Uthros Psionicist | unaudited | The second spell you cast each turn costs {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| All-Fates Scroll | handled | {7}, {T}, Sacrifice this artifact: Draw X cards, where X is the number of differently named lands you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | All-Fates Stalker | handled | When this creature enters, exile up to one target non-Assassin creature until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Alpharael, Dreaming Acolyte | handled | When Alpharael enters, draw two cards. Then discard two cards unless you discard an artifact card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Astelli Reclaimer | handled | When this creature enters, return target noncreature, nonland permanent card with mana value X or less from your graveyard to the battlefield, where X is the am | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -231,7 +230,7 @@
 ## Fully supported
 
 <details>
-<summary>51 cards</summary>
+<summary>52 cards</summary>
 
 - Archenemy's Charm
 - Biotech Specialist
@@ -240,6 +239,7 @@
 - Codecracker Hound
 - Consult the Star Charts
 - Cryogen Relic
+- Cut Propulsion
 - Dockworker Drone
 - Elegy Acolyte
 - Evendo, Waking Haven
@@ -313,7 +313,6 @@
 | if one or more counters would be put on a creature, spacecraft, or planet you control, twice that many of each of those kinds of counters are put on it instead. | 1 | Loading Zone | eoe |
 | return target nonland permanent to its owner's hand. if it was attacking, create a N/N colorless drone artifact creature token with flying and "..." | 1 | Desculpting Blast | eoe |
 | surveil N, then you draw a card and lose N life. (to surveil N, look at the top card of your library. you may put it into your graveyard.) void — if a nonland p | 1 | Hymn of the Faller | eoe |
-| target creature deals damage to itself equal to its power. if that creature has flying, it deals twice that much damage to itself instead. | 1 | Cut Propulsion | eoe |
 | target creature gets -N/-N until end of turn. then if that creature's power is N or less, destroy it. | 1 | Depressurize | eoe |
 | target creature you control gains double strike until end of turn. if it has a +N/+N counter on it, draw a card. | 1 | Dual-Sun Technique | eoe |
 | target creature you control gets +N/+N until end of turn. if that creature was cast for its warp cost, it also gains trample and haste until end of turn. | 1 | Full Bore | eoe |
@@ -345,7 +344,6 @@
 | {M}, sacrifice another artifact: exile the top N cards of your library, where N is one plus the mana value of the sacrificed artifact. you may play those cards  | 1 | Memorial Vault | eoe |
 | {M}, sacrifice ~: it deals N damage to any target. target player draws three cards and gains N life. ~ costs {M} less to activate, where N is the number of diff | 1 | Survey Mechan | eoe |
 | {M}, {M}, sacrifice ~: destroy target nonland permanent. ~ costs {M} less to activate if you attacked with a spacecraft ~. | 1 | Thaumaton Torpedo | eoe |
-| {M}, {M}, sacrifice ~: draw N cards, where N is the number of differently named lands you control. | 1 | All-Fates Scroll | eoe |
 | {M}: add N mana of any one color, where N is the number of charge counters on ~. | 1 | The Eternity Elevator | eoe |
 | {M}: return target creature card from your graveyard to the battlefield. it's a skeleton in addition to its other types and has no abilities. activate only as a | 1 | Xu-Ifit, Osteoharmonist | eoe |
 | {M}: until end of turn, target creature gains "..." that creature's controller may have ~ deal N damage to it. activate only as a sorcery. | 1 | Requiem Monolith | eoe |

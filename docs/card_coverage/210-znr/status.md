@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 36 | 14.1% |
-| Works (untested) | 123 | 48.2% |
+| Works (untested) | 124 | 48.6% |
 | Partial (unaudited) | 21 | 8.2% |
-| Not working | 75 | 29.4% |
+| Not working | 74 | 29.0% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Nissa of Shadowed Boughs | silent | −5: You may put a creature card with mana value less than or equal to the number of lands you control onto the battlefield from your hand or graveyard with two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oran-Rief Ooze | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pelakka Predation // Pelakka Caverns | silent | Target opponent reveals their hand. You choose a card from it with mana value 3 or greater. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Phylath, World Sculptor | silent | When Phylath enters, create a 0/1 green Plant creature token for each basic land you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ravager's Mace | silent | Equipped creature gets +1/+0 for each creature in your party and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reclaim the Wastes | silent | Kicker {3} (You may pay an additional {3} as you cast this spell.) Search your library for a basic land card, reveal it, put it into your hand, then shuffle. If | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Relic Robber | silent | Whenever this creature deals combat damage to a player, that player creates a 0/1 colorless Goblin Construct artifact creature token with "This token can't bloc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -197,6 +196,7 @@
 | Ondu Inversion // Ondu Skyruins | handled | Destroy all nonland permanents. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Orah, Skyclave Hierophant | handled | Whenever Orah or another Cleric you control dies, return target Cleric card with lesser mana value from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Paired Tactician | handled | Whenever this creature and at least one other Warrior attack, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Phylath, World Sculptor | handled | When Phylath enters, create a 0/1 green Plant creature token for each basic land you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prowling Felidar | handled | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relic Amulet | handled | Whenever you cast an instant, sorcery, or Wizard spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relic Axe | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -339,7 +339,6 @@
 | target opponent reveals their hand. you choose a card from it with mana value N or greater. that player discards that card. | 1 | Pelakka Predation // Pelakka Caverns | znr |
 | the first kicked spell you cast each turn costs {M} less to cast. | 1 | Vine Gecko | znr |
 | when jace enters, if jace was kicked, create a token that"..."s not legendary and its starting loyalty is N. | 1 | Jace, Mirror Mage | znr |
-| when phylath enters, create a N/N green plant creature token for each basic land you control. | 1 | Phylath, World Sculptor | znr |
 | when yasharn enters, search your library for a basic forest card and a basic plains card, reveal those cards, put them into your hand, then shuffle. | 1 | Yasharn, Implacable Earth | znr |
 | when ~ dies, you may pay any amount of {M}. when you do, it deals that much damage to any target. | 1 | Leyline Tyrant | znr |
 | when ~ enters, add {M} for each creature in your party. | 1 | Ardent Electromancer | znr |

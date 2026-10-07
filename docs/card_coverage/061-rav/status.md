@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 13.4% |
-| Works (untested) | 120 | 48.6% |
+| Tested | 35 | 14.2% |
+| Works (untested) | 122 | 49.4% |
 | Partial (unaudited) | 17 | 6.9% |
-| Not working | 77 | 31.2% |
+| Not working | 73 | 29.6% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Drake Familiar | silent | When this creature enters, sacrifice it unless you return an enchantment to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Empty the Catacombs | silent | Each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eye of the Storm | silent | Whenever a player casts an instant or sorcery card, exile it. Then that player copies each instant or sorcery card exiled with this enchantment. For each copy,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Flame Fusillade | silent | Until end of turn, permanents you control gain "{T}: This permanent deals 1 damage to any target." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Followed Footsteps | silent | At the beginning of your upkeep, create a token that's a copy of enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gleancrawler | silent | At the beginning of your end step, return to your hand all creature cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Golgari Brownscale | silent | When this card is put into your hand from your graveyard, you gain 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -54,7 +53,6 @@
 | Master Warcraft | silent | Cast this spell only before attackers are declared. You choose which creatures attack this turn. You choose which creatures block this turn and how those creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindleech Mass | silent | Whenever this creature deals combat damage to a player, you may look at that player's hand. If you do, you may cast a spell from among those cards without payin | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindmoil | silent | Whenever you cast a spell, put the cards in your hand on the bottom of your library in any order, then draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mnemonic Nexus | silent | Each player shuffles their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moonlight Bargain | silent | Look at the top five cards of your library. For each card, put that card into your graveyard unless you pay 2 life. Then put the rest into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mortipede | silent | {2}{G}: All creatures able to block this creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Necroplasm | silent | At the beginning of your end step, destroy each creature with mana value equal to the number of +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -81,8 +79,6 @@
 | Telling Time | silent | Look at the top three cards of your library. Put one of those cards into your hand, one on top of your library, and one on the bottom of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Terraformer | silent | {1}: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughtpicker Witch | silent | {1}, Sacrifice a creature: Look at the top two cards of target opponent's library, then exile one of them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Tidewater Minion | silent | {4}: This creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Torpid Moloch | silent | Sacrifice three lands: This creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tunnel Vision | silent | Choose a card name. Target player reveals cards from the top of their library until a card with that name is revealed. If it is, that player puts the rest of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vindictive Mob | silent | When this creature enters, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vulturous Zombie | silent | Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -229,6 +225,8 @@
 | Surveilling Sprite | handled | When this creature dies, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tattered Drake | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thundersong Trumpeter | handled | {T}: Target creature can't attack or block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Tidewater Minion | handled | {4}: This creature loses defender until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Torpid Moloch | handled | Sacrifice three lands: This creature loses defender until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trophy Hunter | handled | {1}{G}: This creature deals 1 damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Undercity Shade | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Veteran Armorer | handled | Other creatures you control get +0/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -244,7 +242,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>35 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
@@ -259,6 +257,7 @@
 - Dryad's Caress
 - Festival of the Guildpact
 - Firemane Angel
+- Flame Fusillade
 - Golgari Thug
 - Greater Mossdog
 - Hammerfist Giant
@@ -267,6 +266,7 @@
 - Life from the Loam
 - Lightning Helix
 - Mausoleum Turnkey
+- Mnemonic Nexus
 - Muddle the Mixture
 - Netherborn Phalanx
 - Overgrown Tomb
@@ -311,7 +311,6 @@
 | each player chooses three permanents they control, then sacrifices the rest. | 1 | Razia's Purification | rav |
 | each player returns all creature cards from their graveyard to their hand. | 1 | Empty the Catacombs | rav |
 | each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. each player puts all artifact, crea | 1 | Warp World | rav |
-| each player shuffles their graveyard into their library. | 1 | Mnemonic Nexus | rav |
 | enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Faith's Fetters | rav |
 | if a source would deal damage to a permanent or player, it deals half that damage, rounded down, to that permanent or player instead. | 1 | Ghosts of the Innocent | rav |
 | if damage would be dealt to ~, put that many +N/+N counters on it instead. | 1 | Phytohydra | rav |
@@ -325,13 +324,11 @@
 | prevent all damage that ~ would deal to red creatures. | 1 | Indentured Oaf | rav |
 | return target creature card from your graveyard to the battlefield. if {M} was spent to cast ~, that creature enters with an additional +N/+N counter on it. | 1 | Vigor Mortis | rav |
 | return target creature you control and target creature you don"..." hands. | 1 | Peel from Reality | rav |
-| sacrifice three lands: ~ loses defender until end of turn. | 1 | Torpid Moloch | rav |
 | search your library for up to three creature cards, reveal them, then shuffle and put those cards on top in any order. | 1 | Congregation at Dawn | rav |
 | target creature becomes the color or colors of your choice until end of turn. draw a card. | 1 | Quickchange | rav |
 | target player draws three cards. then that player discards two cards unless they discard a land card. | 1 | Compulsive Research | rav |
 | target player sacrifices a creature of their choice. you draw cards equal to that creature's power. | 1 | Twisted Justice | rav |
 | untap target creature and gain control of it until end of turn. that creature gains haste until end of turn. if {M} was spent to cast ~, the creature gains "... | 1 | Flash Conscription | rav |
-| until end of turn, permanents you control gain "..." | 1 | Flame Fusillade | rav |
 | until end of turn, you may cast target instant or sorcery card from your graveyard without paying its mana cost. if that spell would be put into your graveyard, | 1 | Sins of the Past | rav |
 | when enchanted creature deals combat damage to a player, sacrifice it and attach ~ to a creature you control. if you do, untap all creatures you control and aft | 1 | Breath of Fury | rav |
 | when ~ dies, each player puts a card from their hand on top of their library. | 1 | Sadistic Augermage | rav |
@@ -364,7 +361,6 @@
 | {M}: prevent the next N damage that would be dealt to ~ ~. | 1 | Ordruun Commando | rav |
 | {M}: regenerate enchanted creature. | 1 | Strands of Undeath | rav |
 | {M}: target creature can't block ~ ~. | 1 | Screeching Griffin | rav |
-| {M}: ~ loses defender until end of turn. | 1 | Tidewater Minion | rav |
 | {M}{M}, sacrifice ~: regenerate each creature you control. | 1 | Loxodon Hierarch | rav |
 | {M}{M}, unattach ~: search your library for a red or white instant card with mana value N or less and cast that card without paying its mana cost. then shuffle. | 1 | Sunforger | rav |
 | {M}{M}: all creatures able to block ~ ~ do so. | 1 | Mortipede | rav |

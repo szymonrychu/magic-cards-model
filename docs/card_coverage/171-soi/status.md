@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.0% |
+| Tested | 22 | 8.4% |
 | Works (untested) | 172 | 65.9% |
 | Partial (unaudited) | 10 | 3.8% |
-| Not working | 58 | 22.2% |
+| Not working | 57 | 21.8% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Sorin, Grim Nemesis | silent | +1: Reveal the top card of your library and put that card into your hand. Each opponent loses life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Startled Awake // Persistent Nightmare | silent | {3}{U}{U}: Put this card from your graveyard onto the battlefield transformed. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Gitrog Monster | silent | At the beginning of your upkeep, sacrifice The Gitrog Monster unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| To the Slaughter | silent | Target player sacrifices a creature or planeswalker of their choice. Delirium — If there are four or more card types among cards in your graveyard, instead that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vessel of Nascency | silent | {1}{G}, Sacrifice this enchantment: Reveal the top four cards of your library. You may put an artifact, creature, enchantment, land, or planeswalker card from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Welcome to the Fold | silent | Madness {X}{U}{U} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Gain control of ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wolf of Devil's Breach | silent | Whenever this creature attacks, you may pay {1}{R} and discard a card. If you do, this creature deals damage to target creature or planeswalker equal to the dis | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -270,7 +269,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
@@ -293,6 +292,7 @@
 - Slayer's Plate
 - Tenacity
 - Thraben Inspector
+- To the Slaughter
 
 </details>
 
@@ -333,7 +333,6 @@
 | reveal the top five cards of your library. put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | 1 | Pieces of the Puzzle | soi |
 | search your library for up to two basic land cards and reveal them. put one into your hand and the other into your graveyard. then shuffle. | 1 | Fork in the Road | soi |
 | target opponent reveals their hand. you choose a nonland card from it and exile that card. delirium — if there are four or more card types among cards in your g | 1 | Pick the Brain | soi |
-| target player sacrifices a creature or planeswalker of their choice. delirium — if there are four or more card types among cards in your graveyard, instead that | 1 | To the Slaughter | soi |
 | when enchanted creature dies, return ~ to the battlefield transformed under your control. | 1 | Skin Invasion // Skin Shedder | soi |
 | when equipped creature transforms, transform ~. | 1 | Neglected Heirloom // Ashmouth Blade | soi |
 | when ~ dies, return it to the battlefield transformed under your control attached to target opponent. | 1 | Accursed Witch // Infectious Curse | soi |

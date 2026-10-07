@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 13.5% |
+| Tested | 30 | 14.0% |
 | Works (untested) | 126 | 58.6% |
 | Partial (unaudited) | 8 | 3.7% |
-| Not working | 52 | 24.2% |
+| Not working | 51 | 23.7% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Engulfing Slagwurm | silent | Whenever this creature blocks or becomes blocked by a creature, destroy that creature. You gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Exsanguinate | silent | Each opponent loses X life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ezuri's Brigade | silent | Metalcraft — As long as you control three or more artifacts, this creature gets +4/+4 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ezuri, Renegade Leader | silent | {2}{G}{G}{G}: Elf creatures you control get +3/+3 and gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fulgent Distraction | silent | Choose two target creatures. Tap those creatures, then unattach all Equipment from them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genesis Wave | silent | Reveal the top X cards of your library. You may put any number of permanent cards with mana value X or less from among them onto the battlefield. Then put all c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Geth, Lord of the Vault | silent | {X}{B}: Put target artifact or creature card with mana value X from an opponent's graveyard onto the battlefield tapped under your control. Then that player mil | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -216,7 +215,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
@@ -225,6 +224,7 @@
 - Carrion Call
 - Darkslick Shores
 - Darksteel Myr
+- Ezuri, Renegade Leader
 - Galvanic Blast
 - Koth of the Hammer
 - Kuldotha Phoenix
@@ -303,7 +303,6 @@
 | {M}: until end of turn, ~ becomes a construct artifact creature with "..." | 1 | Chimeric Mass | som |
 | {M}{M}: destroy target artifact. ~ gets +N/+N until end of turn, where N is that artifact's mana value. | 1 | Hoard-Smelter Dragon | som |
 | {M}{M}: put target artifact or creature card with mana value N from an opponent's graveyard onto the battlefield tapped under your control. then that player mil | 1 | Geth, Lord of the Vault | som |
-| {M}{M}{M}{M}: elf creatures you control get +N/+N and gain trample until end of turn. | 1 | Ezuri, Renegade Leader | som |
 | ~ deals N damage to target creature. destroy all equipment attached to that creature. | 1 | Turn to Slag | som |
 | −N: creatures can't be blocked ~. | 1 | Venser, the Sojourner | som |
 | −N: destroy all other permanents except for lands and tokens. | 1 | Elspeth Tirel | som |

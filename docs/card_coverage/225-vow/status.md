@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 11.5% |
-| Works (untested) | 95 | 37.5% |
+| Tested | 31 | 12.3% |
+| Works (untested) | 96 | 37.9% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 119 | 47.0% |
+| Not working | 116 | 45.8% |
 
 ## Cards needing work
 
@@ -71,7 +71,6 @@
 | Henrika Domnathi // Henrika, Infernal Seer | silent | {1}{B}{B}: Each creature you control with flying, deathtouch, and/or lifelink gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hiveheart Shaman | silent | Whenever this creature attacks, you may search your library for a basic land card that doesn't share a land type with a land you control, put that card onto the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hopeful Initiate | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Howling Moon | silent | At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hungry Ridgewolf | silent | As long as you control another Wolf or Werewolf, this creature gets +1/+0 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Innocent Traveler // Malicious Invader | silent | At the beginning of your upkeep, any opponent may sacrifice a creature of their choice. If no one does, transform this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inspired Idea | silent | Cleave {3}{U}{U} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Draw three cards. [Your maximum hand size is red | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -139,12 +138,10 @@
 | Edgar, Charmed Groom // Edgar Markov's Coffin | notice | At the beginning of your upkeep, create a 1/1 white and black Vampire creature token with lifelink and put a bloodline counter on Edgar Markov's Coffin. Then if | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Geralf, Visionary Stitcher | notice | {U}, {T}, Sacrifice another nontoken creature: Create an X/X blue Zombie creature token, where X is the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Manaform Hellkite | notice | Whenever you cast a noncreature spell, create an X/X red Dragon Illusion creature token with flying and haste, where X is the amount of mana spent to cast that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Markov Retribution | notice | Choose one or both — • Creatures you control get +1/+0 until end of turn. • Target Vampire you control deals damage equal to its power to another target creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oakshade Stalker // Moonlit Ambusher | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reclusive Taxidermist | notice | This creature gets +3/+2 as long as there are four or more creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spiked Ripsaw | notice | Whenever equipped creature attacks, you may sacrifice a Forest. If you do, that creature gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Undying Malice | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Wolf Strike | notice | Target creature you control gets +2/+0 until end of turn if it's night. Then it deals damage equal to its power to target creature you don't control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ascendant Packleader | unaudited | This creature enters with a +1/+1 counter on it if you control a permanent with mana value 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Avabruck Caretaker // Hollowhenge Huntmaster | unaudited | Other permanents you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Eruth, Tormented Prophet | unaudited | If you would draw a card, exile the top two cards of your library instead. You may play those cards this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -199,6 +196,7 @@
 | Heron-Blessed Geist | handled | {3}{W}, Exile this card from your graveyard: Create two 1/1 white Spirit creature tokens with flying. Activate only if you control an enchantment and only as a  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Honored Heirloom | handled | {2}, {T}: Exile target card from a graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hookhand Mariner // Riphook Raider | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Howling Moon | handled | At the beginning of combat on your turn, target Wolf or Werewolf you control gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Howlpack Piper // Wildsong Howler | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hullbreaker Horror | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ill-Tempered Loner // Howlpack Avenger | handled | Whenever this creature is dealt damage, it deals that much damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,7 +252,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>31 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
@@ -273,6 +271,7 @@
 - Honeymoon Hearse
 - Infestation Expert // Infested Werewolf
 - Lacerate Flesh
+- Markov Retribution
 - Patchwork Crawler
 - Reckless Impulse
 - Rending Flame
@@ -285,6 +284,7 @@
 - Stormcarved Coast
 - Sundown Pass
 - Voltaic Visionary // Volt-Charged Berserker
+- Wolf Strike
 
 </details>
 
@@ -297,7 +297,6 @@
 | cleave | 6 | Alchemist's Retrieval, Fierce Retribution, Lunar Rejection, Parasitic Grasp, Wash Away | vow |
 | when ~ enters, exile a card from a graveyard. | 2 | Cemetery Gatekeeper, Cemetery Protector | vow |
 | whenever ~ enters or attacks, exile a card from a graveyard. | 2 | Cemetery Illuminator, Cemetery Prowler | vow |
-| Choose one or both | 1 | Markov Retribution | vow |
 | +N: exile the top card of your library. if it's red, you may cast it ~. | 1 | Chandra, Dressed to Kill | vow |
 | as long as enchanted permanent is a creature, it gets +N/+N. | 1 | Nature's Embrace | vow |
 | as long as you control another wolf or werewolf, ~ gets +N/+N and has trample. | 1 | Hungry Ridgewolf | vow |
@@ -306,7 +305,6 @@
 | as long as ~ has three or more judgment counters on it, it can attack as though it didn't have defender. | 1 | Faithbound Judge // Sinner's Judgment | vow |
 | at the beginning of combat on your turn, choose up to one — • tap target creature. • target creature doesn"..."s next untap step. | 1 | Dreamshackle Geist | vow |
 | at the beginning of combat on your turn, put a +N/+N counter on target creature you control. then if that creature has toughness N or greater, transform ~. | 1 | Dormant Grove // Gnarled Grovestrider | vow |
-| at the beginning of combat on your turn, target wolf or werewolf you control gets +N/+N until end of turn. | 1 | Howling Moon | vow |
 | at the beginning of each end step, put a slime counter on each creature you don't control. | 1 | Toxrill, the Corrosive | vow |
 | at the beginning of your end step, if there are three or more omen counters on ~, untap it, then transform it. | 1 | Foreboding Statue // Forsaken Thresher | vow |
 | at the beginning of your end step, put an invitation counter on ~. if you attacked with two or more creatures ~, draw a card. otherwise, create a N/N white huma | 1 | Wedding Announcement // Wedding Festivity | vow |
@@ -338,7 +336,6 @@
 | other permanents you control have hexproof. | 1 | Avabruck Caretaker // Hollowhenge Huntmaster | vow |
 | return up to one target creature card and up to one target noncreature permanent card from your graveyard to your hand. exile ~. | 1 | Retrieve | vow |
 | sacrifice ~: target creature you control with a +N/+N counter on it gains lifelink and indestructible until end of turn. | 1 | Ollenbock Escort | vow |
-| target creature you control gets +N/+N until end of turn if it"..."t control. | 1 | Wolf Strike | vow |
 | target player shuffles up to four target cards from their graveyard into their library. you look at the top four cards of your library, then put one of those ca | 1 | Witness the Future | vow |
 | until end of turn, target creature gains "..." | 1 | Undying Malice | vow |
 | until end of turn, target creature gets +N/+N, up to one other target creature gets +N/+N, and up to one other target creature gets +N/+N. those creatures gain  | 1 | Arm the Cathars | vow |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 7.4% |
-| Works (untested) | 79 | 48.8% |
+| Works (untested) | 80 | 49.4% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 61 | 37.7% |
+| Not working | 60 | 37.0% |
 
 ## Cards needing work
 
@@ -84,7 +84,6 @@
 | Pulse of the Forge | notice | Pulse of the Forge deals 4 damage to target player or planeswalker. Then if that player or that planeswalker's controller has more life than you, return Pulse o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Second Sight | notice | Choose one — • Look at the top five cards of target opponent's library, then put them back in any order. • Look at the top five cards of your library, then put  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Shriveling Rot | notice | Choose one — • Until end of turn, whenever a creature is dealt damage, destroy it. • Until end of turn, whenever a creature dies, that creature's controller los | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Stir the Pride | notice | Choose one — • Creatures you control get +2/+2 until end of turn. • Until end of turn, creatures you control gain "Whenever this creature deals damage, you gain | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tears of Rage | notice | Cast this spell only during the declare attackers step. Attacking creatures you control get +X/+0 until end of turn, where X is the number of attacking creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unforge | notice | Destroy target Equipment. If that Equipment was attached to a creature, Unforge deals 2 damage to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Darksteel Colossus | unaudited | If Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -160,6 +159,7 @@
 | Spincrusher | handled | Whenever this creature blocks, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spire Golem | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Steelshaper Apprentice | handled | {W}, {T}, Return this creature to its owner's hand: Search your library for an Equipment card, reveal that card, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stir the Pride | handled | Choose one — • Creatures you control get +2/+2 until end of turn. • Until end of turn, creatures you control gain "Whenever this creature deals damage, you gain | the engine reads this text and performs it | Y/-/- | not_tested |
 | Surestrike Trident | handled | Equipped creature has first strike and "{T}, Unattach Surestrike Trident: This creature deals damage equal to its power to target player or planeswalker." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sword of Light and Shadow | handled | Equipped creature gets +2/+2 and has protection from white and from black. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Synod Artificer | handled | {X}, {T}: Tap X target noncreature artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -202,7 +202,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | modular | 9 | Arcbound Bruiser, Arcbound Crusher, Arcbound Hybrid, Arcbound Lancer, Arcbound Ravager | dst |
-| Choose one | 3 | Second Sight, Shriveling Rot, Stir the Pride | dst |
+| Choose one | 2 | Second Sight, Shriveling Rot | dst |
 | Imprint | 1 | Panoptic Mirror | dst |
 | all creatures able to block equipped creature do so. | 1 | Nemesis Mask | dst |
 | all permanents are artifacts in addition to their other types. | 1 | Mycosynth Lattice | dst |

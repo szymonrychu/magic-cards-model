@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 16.3% |
+| Tested | 43 | 16.7% |
 | Works (untested) | 122 | 47.3% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 82 | 31.8% |
+| Not working | 81 | 31.4% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Asmoranomardicadaistinaculdacar | silent | When Asmoranomardicadaistinaculdacar enters, you may search your library for a card named The Underworld Cookbook, reveal it, put it into your hand, then shuffl | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bannerhide Krushok | silent | Scavenge | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Batterbone | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Blessed Respite | silent | Target player shuffles their graveyard into their library. Prevent all combat damage that would be dealt this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bottle Golems | silent | When this creature dies, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Break Ties | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Break the Ice | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -246,11 +245,12 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>43 cards</summary>
 
 - Abiding Grace
 - Archon of Cruelty
 - Blazing Rootwalla
+- Blessed Respite
 - Blossoming Calm
 - Breathless Knight
 - Chatterfang, Squirrel General
@@ -347,7 +347,6 @@
 | target noncreature artifact you control becomes a N/N artifact creature. put four +N/+N counters on each artifact that became a creature ~. overload {M}{M}{M} ( | 1 | Rise and Shine | mh2 |
 | target opponent reveals their hand. you choose a card from it. that player discards that card, then discards a card at random. | 1 | Tourach's Canticle | mh2 |
 | target permanent gains hexproof and indestructible until end of turn. if it's an artifact creature, it gets +N/+N until end of turn. | 1 | Blacksmith's Skill | mh2 |
-| target player shuffles their graveyard into their library. prevent all combat damage that would be dealt ~. | 1 | Blessed Respite | mh2 |
 | when tourach enters, if it was kicked, target opponent discards two cards at random. | 1 | Tourach, Dread Cantor | mh2 |
 | when ~ dies, you gain life equal to its power. | 1 | Bottle Golems | mh2 |
 | when ~ enters, create a number of N/N green squirrel creature tokens equal to your devotion to black. | 1 | Underworld Hermit | mh2 |

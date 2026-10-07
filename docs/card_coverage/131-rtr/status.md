@@ -48,7 +48,7 @@
 | Desecration Demon | silent | At the beginning of each combat, any opponent may sacrifice a creature of their choice. If a player does, tap this creature and put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Detention Sphere | silent | When this enchantment leaves the battlefield, return the exiled cards to the battlefield under their owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Doorkeeper | silent | {2}{U}, {T}: Target player mills X cards, where X is the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Downsize | silent | Target creature you don't control gets -4/-0 until end of turn. Overload {2}{U} (You may cast this spell for its overload cost. If you do, change "target" in it | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Downsize | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Drudge Beetle | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Druid's Deliverance | silent | Prevent all combat damage that would be dealt to you this turn. Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dynacharge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -263,8 +263,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
+| overload | 10 | Blustersquall, Counterflux, Cyclonic Rift, Downsize, Dynacharge | rtr |
 | unleash | 10 | Bloodfray Giant, Carnival Hellsteed, Chaos Imps, Dead Reveler, Gore-House Chainwalker | rtr |
-| overload | 9 | Blustersquall, Counterflux, Cyclonic Rift, Dynacharge, Electrickery | rtr |
 | scavenge | 9 | Deadbridge Goliath, Drudge Beetle, Golgari Decoy, Korozda Monitor, Sewer Shambler | rtr |
 | enchanted land has "..." | 4 | Racecourse Fury, Security Blockade, Underworld Connections, Urban Burgeoning | rtr |
 | when ~ enters, detain target creature an opponent controls. | 3 | Azorius Arrester, Isperia's Skywatch, Soulsworn Spirit | rtr |
@@ -302,7 +302,6 @@
 | search your library for up to two creature cards and reveal them. put one into your hand and the other into your graveyard. then shuffle. | 1 | Jarad's Orders | rtr |
 | shuffle all cards from your graveyard into your library. target player mills that many cards. | 1 | Psychic Spiral | rtr |
 | target creature you don't control gets -N/-N until end of turn and attacks ~ if able. overload {M}{M}{M} (you may cast ~ for its overload cost. if you do, chang | 1 | Chemister's Trick | rtr |
-| target creature you don't control gets -N/-N until end of turn. overload {M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its text to ". | 1 | Downsize | rtr |
 | target player reveals their hand. you gain life equal to the number of cards in that player's hand. | 1 | Search Warrant | rtr |
 | when ~ enters, detain target nonland permanent an opponent controls. | 1 | Lyev Skyknight | rtr |
 | when ~ enters, detain up to two target creatures your opponents control. | 1 | Azorius Justiciar | rtr |

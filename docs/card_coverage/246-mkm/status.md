@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 48 | 17.9% |
+| Tested | 49 | 18.3% |
 | Works (untested) | 111 | 41.4% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 99 | 36.9% |
+| Not working | 98 | 36.6% |
 
 ## Cards needing work
 
@@ -90,7 +90,6 @@
 | Repulsive Mutation | silent | Put X +1/+1 counters on target creature you control. Then counter up to one target spell unless its controller pays mana equal to the greatest power among creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rot Farm Mortipede | silent | Whenever one or more creature cards leave your graveyard, this creature gets +1/+0 and gains menace and lifelink until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Slime Against Humanity | silent | Create a 0/0 green Ooze creature token with trample. Put X +1/+1 counters on it, where X is two plus the total number of cards you own in exile and in your grav | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Slimy Dualleech | silent | At the beginning of combat on your turn, target creature you control with power 2 or less gets +1/+0 and gains deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Soul Enervation | silent | Whenever one or more creature cards leave your graveyard, each opponent loses 1 life and you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Soul Search | silent | Target opponent reveals their hand. You choose a nonland card from it. Exile that card. If the card's mana value is 1 or less, create a 1/1 white and black Spir | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Steamcore Scholar | silent | When this creature enters, draw two cards. Then discard two cards unless you discard an instant or sorcery card or a creature card with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -250,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>48 cards</summary>
+<summary>49 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
@@ -292,6 +291,7 @@
 - Rubblebelt Braggart
 - Shadowy Backstreet
 - Sharp-Eyed Rookie
+- Slimy Dualleech
 - Sudden Setback
 - Teysa, Opulent Oligarch
 - Thundering Falls
@@ -319,7 +319,6 @@
 | as ~ enters or is turned face up, put N +N/+N counters on it, where N is the number of other creatures you control. | 1 | Crowd-Control Warden | mkm |
 | as ~ is turned face up, put four +N/+N counters on it. | 1 | Bubble Smuggler | mkm |
 | at the beginning of combat on your turn, create a N/N colorless thopter artifact creature token with flying. it gains haste until end of turn. sacrifice it at t | 1 | Harried Dronesmith | mkm |
-| at the beginning of combat on your turn, target creature you control with power N or less gets +N/+N and gains deathtouch until end of turn. | 1 | Slimy Dualleech | mkm |
 | at the beginning of combat on your turn, you may collect evidence N. | 1 | Evidence Examiner | mkm |
 | at the beginning of your end step, target opponent may sacrifice two nonland, nontoken permanents of their choice. if they don't, you draw two cards. | 1 | Rakdos, Patron of Chaos | mkm |
 | at the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. | 1 | Wojek Investigator | mkm |

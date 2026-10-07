@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 8.2% |
+| Tested | 21 | 9.1% |
 | Works (untested) | 117 | 50.4% |
 | Partial (unaudited) | 8 | 3.4% |
-| Not working | 88 | 37.9% |
+| Not working | 86 | 37.1% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Dying Wish | silent | When enchanted creature dies, target player loses X life and you gain X life, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elusive Krasis | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Enter the Infinite | silent | Draw cards equal to the number of cards in your library, then put a card from your hand on top of your library. You have no maximum hand size until your next tu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Executioner's Swing | silent | Target creature that dealt damage this turn gets -5/-5 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Experiment One | silent | Remove two +1/+1 counters from this creature: Regenerate it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fathom Mage | silent | Whenever a +1/+1 counter is put on this creature, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Forced Adaptation | silent | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -93,7 +92,6 @@
 | Soul Ransom | silent | Discard two cards: This Aura's controller sacrifices it, then draws two cards. Only your opponents may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spell Rupture | silent | Counter target spell unless its controller pays {X}, where X is the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stolen Identity | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Structural Collapse | silent | Target player sacrifices an artifact and a land of their choice. Structural Collapse deals 2 damage to that player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thrull Parasite | silent | {T}, Pay 2 life: Remove a counter from target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Undercity Informer | silent | {1}, Sacrifice a creature: Target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Undercity Plague | silent | Target player loses 1 life, discards a card, then sacrifices a permanent of their choice. Cipher (Then you may exile this spell card encoded on a creature you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -243,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>21 cards</summary>
 
 - Aerial Maneuver
 - Aurelia's Fury
@@ -251,6 +249,7 @@
 - Boros Guildgate
 - Boros Reckoner
 - Dimir Guildgate
+- Executioner's Swing
 - Glaring Spotlight
 - Gruul Guildgate
 - Hindervines
@@ -263,6 +262,7 @@
 - Shielded Passage
 - Simic Guildgate
 - Skullcrack
+- Structural Collapse
 - Syndic of Tithes
 
 </details>
@@ -309,12 +309,10 @@
 | sacrifice ~: counter target spell with {M} in its mana cost unless its controller pays {M}. | 1 | Frontline Medic | gtc |
 | search your library for three creature cards and reveal them. if you reveal three cards with different names, choose one of them at random and put that card int | 1 | Signal the Clans | gtc |
 | shuffle your library, then reveal the top card. if it"..."s a land card, you may put it onto the battlefield and return ~ to its owner's hand. | 1 | Unexpected Results | gtc |
-| target creature that dealt damage ~ gets -N/-N until end of turn. | 1 | Executioner's Swing | gtc |
 | target land becomes a N/N elemental creature with flying until end of turn. it's still a land. | 1 | Hydroform | gtc |
 | target player loses N life, discards a card, then sacrifices a permanent of their choice. cipher (then you may exile ~ card encoded on a creature you control. w | 1 | Undercity Plague | gtc |
 | target player mills four cards. you draw a card for each creature card put into their graveyard ~. | 1 | Coerced Confession | gtc |
 | target player sacrifices a creature of their choice, then gains life equal to that creature's toughness. | 1 | Devour Flesh | gtc |
-| target player sacrifices an artifact and a land of their choice. ~ deals N damage to that player. | 1 | Structural Collapse | gtc |
 | when enchanted creature dies, target player loses N life and you gain N life, where N is its power. | 1 | Dying Wish | gtc |
 | when ~ enters, for each opponent, destroy target noncreature permanent that player controls. search your library for up to N forest cards, where N is the number | 1 | Sylvan Primordial | gtc |
 | when ~ enters, for each opponent, gain control of up to one target creature that player controls until end of turn. untap those creatures. they gain haste until | 1 | Molten Primordial | gtc |

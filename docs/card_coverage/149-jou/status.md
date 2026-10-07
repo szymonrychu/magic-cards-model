@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 6.2% |
-| Works (untested) | 98 | 60.9% |
+| Tested | 11 | 6.8% |
+| Works (untested) | 97 | 60.2% |
 | Partial (unaudited) | 6 | 3.7% |
 | Not working | 47 | 29.2% |
 
@@ -164,7 +164,6 @@
 | Starfall | handled | Starfall deals 3 damage to target creature. If that creature is an enchantment, Starfall deals 3 damage to that creature's controller. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strength from the Fallen | handled | Constellation — Whenever this enchantment or another enchantment you control enters, target creature gets +X/+X until end of turn, where X is the number of crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Supply-Line Cranes | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Temple of Epiphany | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Temple of Malady | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tethmos High Priest | handled | Heroic — Whenever you cast a spell that targets this creature, return target creature card with mana value 2 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thassa's Devourer | handled | Constellation — Whenever this creature or another enchantment you control enters, target player mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -181,7 +180,7 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Aegis of the Gods
 - Aerial Formation
@@ -193,6 +192,7 @@
 - Master of the Feast
 - Setessan Tactics
 - Solidarity of Heroes
+- Temple of Epiphany
 
 </details>
 

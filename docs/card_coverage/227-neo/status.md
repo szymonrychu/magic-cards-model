@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 12.0% |
+| Tested | 33 | 12.4% |
 | Works (untested) | 120 | 44.9% |
 | Partial (unaudited) | 11 | 4.1% |
-| Not working | 104 | 39.0% |
+| Not working | 103 | 38.6% |
 
 ## Cards needing work
 
@@ -93,7 +93,6 @@
 | Short Circuit | silent | As long as enchanted permanent is a creature, it gets -3/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Simian Sling | silent | Whenever this creature or equipped creature becomes blocked, it deals 1 damage to defending player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sokenzan Smelter | silent | At the beginning of combat on your turn, you may pay {1} and sacrifice an artifact. If you do, create a 3/1 red Construct artifact creature token with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spinning Wheel Kick | silent | Target creature you control deals damage equal to its power to each of X target creatures and/or planeswalkers. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spirit-Sister's Call | silent | At the beginning of your end step, choose target permanent card in your graveyard. You may sacrifice a permanent that shares a card type with the chosen card. I | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Suit Up | silent | Until end of turn, target creature or Vehicle becomes an artifact creature with base power and toughness 4/5. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tatsunari, Toad Rider | silent | {1}{G/U}: Tatsunari and target Frog you control can't be blocked this turn except by creatures with flying or reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -265,7 +264,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>33 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
@@ -293,6 +292,7 @@
 - Otawara, Soaring City
 - Reality Heist
 - Roaring Earth
+- Spinning Wheel Kick
 - Takenuma, Abandoned Mire
 - Tameshi, Reality Architect
 - Tamiyo, Compleated Sage
@@ -355,7 +355,6 @@
 | target creature gets +N/+N until end of turn, where N is the greatest mana value among permanents you control. untap it. | 1 | Boon of Boseiju | neo |
 | target creature gets +N/+N until end of turn. if it's an enchantment creature or legendary creature, instead put a +N/+N counter on it and it gets +N/+N until e | 1 | Regent's Authority | neo |
 | target creature gets -N/-N until end of turn. it gets an additional -N/-N until end of turn for each modified creature you controlled as you cast ~. (equipment, | 1 | Lethal Exploit | neo |
-| target creature you control deals damage equal to its power to each of N target creatures and/or planeswalkers. | 1 | Spinning Wheel Kick | neo |
 | target opponent reveals their hand. you may choose a nonland card from it. if you do, that player discards that card. if you don't, put two +N/+N counters on a  | 1 | Reckoner Shakedown | neo |
 | target opponent sacrifices a creature of their choice. if they can't, they lose N life and you draw a card. then repeat ~ for an enchantment and a planeswalker. | 1 | Invoke Despair | neo |
 | target player discards two cards. ninjas and rogues you control gain menace until end of turn. (they can't be blocked except by two or more creatures.) | 1 | Kaito's Pursuit | neo |

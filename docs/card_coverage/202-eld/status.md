@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 17.1% |
-| Works (untested) | 139 | 51.7% |
+| Tested | 47 | 17.5% |
+| Works (untested) | 138 | 51.3% |
 | Partial (unaudited) | 24 | 8.9% |
 | Not working | 60 | 22.3% |
 
@@ -128,7 +128,6 @@
 | Castle Garenbrig | handled | This land enters tapped unless you control a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Castle Vantress | handled | This land enters tapped unless you control an Island. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chulane, Teller of Tales | handled | Whenever you cast a creature spell, draw a card, then you may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Command Tower | handled |  |  | Y/Y/- | not_tested |
 | Corridor Monitor | handled | When this creature enters, untap target artifact or creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crashing Drawbridge | handled | {T}: Creatures you control gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crystal Slipper | handled | Equipped creature gets +1/+0 and has haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -253,7 +252,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>47 cards</summary>
 
 - Banish into Fable
 - Bartered Cow
@@ -264,6 +263,7 @@
 - Charmed Sleep
 - Claim the Firstborn
 - Clockwork Servant
+- Command Tower
 - Deafening Silence
 - Drown in the Loch
 - Dwarven Mine

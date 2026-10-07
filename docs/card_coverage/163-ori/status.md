@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 11.0% |
+| Tested | 21 | 11.6% |
 | Works (untested) | 103 | 56.9% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 51 | 28.2% |
+| Not working | 50 | 27.6% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Acolyte of the Inferno | silent | Whenever this creature becomes blocked by a creature, it deals 2 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Animist's Awakening | silent | Reveal the top X cards of your library. Put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood-Cursed Knight | silent | As long as you control an enchantment, this creature gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chandra's Ignition | silent | Target creature you control deals damage equal to its power to each other creature and each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | silent | −7: Chandra deals 6 damage to each opponent. Each player dealt damage this way gets an emblem with "At the beginning of your upkeep, this emblem deals 3 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consul's Lieutenant | silent | Whenever this creature attacks, if it's renowned, other attacking creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Dabbling | silent | Regenerate target creature. Draw a card. (The next time the creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -191,10 +190,11 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Alhammarret's Archive
 - Boggart Brute
+- Chandra's Ignition
 - Day's Undoing
 - Deep-Sea Terror
 - Enshrouding Mist
@@ -251,7 +251,6 @@
 | scry N, then reveal the top card of your library. if it's a creature card, you draw cards equal to its power and you gain life equal to its toughness. | 1 | Nissa's Revelation | ori |
 | search your library for up to two basic forest cards, reveal those cards, and put one onto the battlefield tapped and the rest into your hand. then shuffle. spe | 1 | Nissa's Pilgrimage | ori |
 | tap up to two target creatures. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, those creatures don"..." next untap ste | 1 | Send to Sleep | ori |
-| target creature you control deals damage equal to its power to each other creature and each opponent. | 1 | Chandra's Ignition | ori |
 | target creature you control gets +N/+N and gains deathtouch until end of turn. whenever a creature dealt damage by that creature dies ~, its controller loses N  | 1 | Touch of Moonglove | ori |
 | target opponent reveals the top seven cards of their library. you may cast an instant or sorcery spell from among them without paying its mana cost. then that p | 1 | Talent of the Telepath | ori |
 | target opponent reveals their hand. you may choose a nonland card from it. if you do, that player discards that card. if you don't, that player discards two car | 1 | Nightsnare | ori |

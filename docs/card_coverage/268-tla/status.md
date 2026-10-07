@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 62 | 22.4% |
-| Works (untested) | 124 | 44.8% |
+| Tested | 65 | 23.5% |
+| Works (untested) | 125 | 45.1% |
 | Partial (unaudited) | 12 | 4.3% |
-| Not working | 79 | 28.5% |
+| Not working | 75 | 27.1% |
 
 ## Cards needing work
 
@@ -67,16 +67,12 @@
 | Rabaroo Troop | silent | Landfall — Whenever a land you control enters, this creature gains flying until end of turn and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ran and Shaw | silent | When Ran and Shaw enter, if you cast them and there are three or more Dragon and/or Lesson cards in your graveyard, create a token that's a copy of Ran and Shaw | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Raven Eagle | silent | Whenever this creature enters or attacks, exile up to one target card from a graveyard. If a creature card is exiled this way, create a Clue token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ruinous Waterbending | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Secret Tunnel | silent | {4}, {T}: Two target creatures you control that share a creature type can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Secret of Bloodbending | silent | As an additional cost to cast this spell, you may waterbend {10}. You control target opponent during their next combat phase. If this spell's additional cost wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Seismic Sense | silent | Look at the top X cards of your library, where X is the number of lands you control. You may reveal a creature or land card from among them and put it into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sokka, Lateral Strategist | silent | Whenever Sokka and at least one other creature attack, draw a card. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
-| Sozin's Comet | silent | Each creature you control gains firebending 5 until end of turn. (Whenever it attacks, add {R}{R}{R}{R}{R}. This mana lasts until end of combat.) Foretell {2}{R | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sparring Dummy | silent | {T}: Mill a card. You may put a land card milled this way into your hand. You gain 2 life if a Lesson card is milled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Spirit Water Revival | silent | As an additional cost to cast this spell, you may waterbend {6}. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Boulder, Ready to Rumble | silent | Whenever The Boulder attacks, earthbend X, where X is the number of creatures you control with power 4 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Last Agni Kai | silent | Target creature you control fights target creature an opponent controls. If the creature the opponent controls is dealt excess damage this way, add that much {R | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Legend of Kyoshi // Avatar Kyoshi | silent | II — Earthbend X, where X is the number of cards in your hand. That land becomes an Island in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Legend of Yangchen // Avatar Yangchen | silent | I — Starting with you, each player chooses up to one permanent with mana value 3 or greater from among permanents your opponents control. Exile those permanents | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Rise of Sozin // Fire Lord Sozin | silent | II — Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -210,6 +206,7 @@
 | Sokka, Tenacious Tactician | handled | Other Allies you control have menace and prowess. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | South Pole Voyager | handled | Whenever this creature or another Ally you control enters, you gain 1 life. If this is the second time this ability has resolved this turn, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Southern Air Temple | handled | When Southern Air Temple enters, put X +1/+1 counters on each creature you control, where X is the number of Shrines you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sozin's Comet | handled | Each creature you control gains firebending 5 until end of turn. (Whenever it attacks, add {R}{R}{R}{R}{R}. This mana lasts until end of combat.) Foretell {2}{R | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Suki, Courageous Rescuer | handled | Other creatures you control get +1/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Suki, Kyoshi Warrior | handled | Suki's power is equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sun Warriors | handled | {5}: Create a 1/1 white Ally creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -245,7 +242,7 @@
 ## Fully supported
 
 <details>
-<summary>62 cards</summary>
+<summary>65 cards</summary>
 
 - Aang, Swift Savior // Aang and La, Ocean's Fury
 - Aang, at the Crossroads // Aang, Destined Savior
@@ -297,11 +294,14 @@
 - Realm of Koh
 - Redirect Lightning
 - Rockalanche
+- Ruinous Waterbending
 - Shared Roots
 - Solstice Revelations
+- Spirit Water Revival
 - Team Avatar
 - Teo, Spirited Glider
 - The Earth King
+- The Last Agni Kai
 - The Legend of Roku // Avatar Roku
 - Toph, the First Metalbender
 - Ty Lee, Chi Blocker
@@ -316,12 +316,11 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| waterbend | 4 | Benevolent River Spirit, Foggy Swamp Visions, North Pole Patrol, Ruinous Waterbending | tla |
+| waterbend | 3 | Benevolent River Spirit, Foggy Swamp Visions, North Pole Patrol | tla |
 | Exhaust | 2 | Jeong Jeong, the Deserter, Mai, Jaded Edge | tla |
 | Landfall | 1 | Rabaroo Troop | tla |
 | Raid | 1 | Cruel Administrator | tla |
 | as an additional cost to cast ~, waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays for {M}.) tap up | 1 | Crashing Wave | tla |
-| as an additional cost to cast ~, you may waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays for {M}. | 1 | Spirit Water Revival | tla |
 | as an additional cost to cast ~, you may waterbend {M}. you control target opponent during their next combat phase. if ~ additional cost was paid, you control t | 1 | Secret of Bloodbending | tla |
 | as long as there is a lesson card in your graveyard, ~ can attack as though it didn't have defender. | 1 | Platypus-Bear | tla |
 | as long as you've drawn two or more cards ~, ~ has lifelink and menace. | 1 | Foggy Swamp Hunters | tla |
@@ -334,7 +333,6 @@
 | creatures you control with flying get +N/+N. | 1 | Air Nomad Legacy | tla |
 | draw a card if there's a creature or lesson card in your graveyard. | 1 | Leaves from the Vine | tla |
 | draw three cards. then discard a card unless you waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays  | 1 | Waterbending Lesson | tla |
-| each creature you control gains firebending N until end of turn. (whenever it attacks, add {M}{M}{M}{M}{M}. ~ lasts until end of combat.) foretell {M}{M} (durin | 1 | Sozin's Comet | tla |
 | each land and ally you control has "..." | 1 | Great Divide Guide | tla |
 | each non-human creature you control gets +N/+N for each of its creature types, to a maximum of N. | 1 | Diligent Zookeeper | tla |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Destined Confrontation | tla |
@@ -356,7 +354,6 @@
 | sacrifice a land. search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | 1 | Cycle of Renewal | tla |
 | search your library for up to four land cards with different names and reveal them. an opponent chooses two of those cards. put the chosen cards into your grave | 1 | Elemental Teachings | tla |
 | starting with you, each player chooses up to one permanent with mana value N or greater from among permanents your opponents control. exile those permanents. | 1 | The Legend of Yangchen // Avatar Yangchen | tla |
-| target creature you control fights target creature an opponent controls. if the creature the opponent controls is dealt excess damage ~, add that much {M}. unti | 1 | The Last Agni Kai | tla |
 | target creature you control gets +N/+N until end of turn. if that creature is an ally, it also gains flying until end of turn. | 1 | Yip Yip! | tla |
 | toph's power is equal to the number of +N/+N counters on lands you control. | 1 | Toph, the Blind Bandit | tla |
 | untap one or two target creatures. they each get +N/+N until end of turn. | 1 | Fancy Footwork | tla |

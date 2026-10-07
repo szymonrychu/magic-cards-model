@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 21 | 8.5% |
-| Works (untested) | 134 | 54.5% |
+| Works (untested) | 135 | 54.9% |
 | Partial (unaudited) | 27 | 11.0% |
-| Not working | 64 | 26.0% |
+| Not working | 63 | 25.6% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | One with the Stars | silent | Enchanted permanent is an enchantment and loses all other card types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Protean Thaumaturge | silent | Constellation — Whenever an enchantment you control enters, you may have this creature become a copy of another target creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reverent Hoplite | silent | When this creature enters, create a number of 1/1 white Human Soldier creature tokens equal to your devotion to white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Satyr's Cunning | silent | Create a 1/1 red Satyr creature token with "This token can't block." Escape—{2}{R}, Exile two other cards from your graveyard. (You may cast this card from your | the engine's reading came from quoted text, not this clause's own words | Y/Y/- | not_working |
 | Shatter the Sky | silent | Each player who controls a creature with power 4 or greater draws a card. Then destroy all creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siona, Captain of the Pyleas | silent | Whenever an Aura you control becomes attached to a creature you control, create a 1/1 white Human Soldier creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Skola Grovedancer | silent | Whenever a land card is put into your graveyard from anywhere, you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -213,6 +212,7 @@
 | Rise to Glory | handled | Choose one or both — • Return target creature card from your graveyard to the battlefield. • Return target Aura card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rumbling Sentry | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sage of Mysteries | handled | Constellation — Whenever an enchantment you control enters, target player mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Satyr's Cunning | handled | Create a 1/1 red Satyr creature token with "This token can't block." Escape—{2}{R}, Exile two other cards from your graveyard. (You may cast this card from your | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scavenging Harpy | handled | When this creature enters, exile target card from an opponent's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sea God's Scorn | handled | Return up to three target creatures and/or enchantments to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sentinel's Eyes | handled | Enchanted creature gets +1/+1 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -296,7 +296,6 @@
 | at the beginning of your end step, if you control a creature with power N or greater, exile the top card of your library. you may play that card until you exile | 1 | Furious Rise | thb |
 | at the beginning of your end step, you may pay {M}{M} and sacrifice a nonland permanent. if you do, reveal cards from the top of your library until you reveal a | 1 | Dreamshaper Shaman | thb |
 | callaphe's power is equal to your devotion to blue. | 1 | Callaphe, Beloved of the Sea | thb |
-| create a N/N red satyr creature token with "..." escape—{M}{M}, exile two other cards from your graveyard. (you may cast ~ from your graveyard for its escape co | 1 | Satyr's Cunning | thb |
 | creatures you control get +N/+N until end of turn, where N is your devotion to green. (each {M} in the mana costs of permanents you control counts toward your d | 1 | Klothys's Design | thb |
 | daxos's toughness is equal to your devotion to white. | 1 | Daxos, Blessed by the Sun | thb |
 | during turns other than yours, spells you cast cost {M} less to cast. | 1 | Naiad of Hidden Coves | thb |

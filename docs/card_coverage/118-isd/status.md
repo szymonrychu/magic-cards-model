@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 12.1% |
+| Tested | 30 | 12.6% |
 | Works (untested) | 143 | 59.8% |
 | Partial (unaudited) | 14 | 5.9% |
-| Not working | 53 | 22.2% |
+| Not working | 52 | 21.8% |
 
 ## Cards needing work
 
@@ -69,7 +69,6 @@
 | Tree of Redemption | silent | {T}: Exchange your life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trepanation Blade | silent | Whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. The creature gets +1/+0 until en | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Undead Alchemist | silent | Whenever a creature card is put into an opponent's graveyard from their library, exile that card and create a 2/2 black Zombie creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Vampiric Fury | silent | Vampire creatures you control get +2/+0 and gain first strike until end of turn. (They deal combat damage before creatures without first strike.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victim of Night | silent | Destroy target non-Vampire, non-Werewolf, non-Zombie creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Witchbane Orb | silent | When this artifact enters, destroy all Curses attached to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wooden Stake | silent | Whenever equipped creature blocks or becomes blocked by a Vampire, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -240,7 +239,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -270,6 +269,7 @@
 - Snapcaster Mage
 - Stony Silence
 - Typhoid Rats
+- Vampiric Fury
 - Walking Corpse
 
 </details>
@@ -315,7 +315,6 @@
 | target opponent sacrifices a creature of their choice. you gain life equal to that creature's toughness. | 1 | Tribute to Hunger | isd |
 | target player shuffles up to three target cards from their graveyard into their library. flashback {M} (you may cast ~ from your graveyard for its flashback cos | 1 | Memory's Journey | isd |
 | up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Nightbird's Clutches | isd |
-| vampire creatures you control get +N/+N and gain first strike until end of turn. (they deal combat damage before creatures without first strike.) | 1 | Vampiric Fury | isd |
 | werewolf creatures you control get +N/+N and have trample. | 1 | Full Moon's Rise | isd |
 | when garruk has two or fewer loyalty counters on him, transform him. | 1 | Garruk Relentless // Garruk, the Veil-Cursed | isd |
 | when ~ dies, exile it, then return two creature cards at random from your graveyard to the battlefield. | 1 | Moldgraf Monstrosity | isd |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 12.7% |
-| Works (untested) | 128 | 49.4% |
+| Tested | 35 | 13.5% |
+| Works (untested) | 129 | 49.8% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 91 | 35.1% |
+| Not working | 88 | 34.0% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Arid Archway | silent | When this land enters, return a land you control to its owner's hand. If another Desert was returned this way, surveil 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Assimilation Aegis | silent | When this Equipment enters, exile up to one target creature until this Equipment leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | At Knifepoint | silent | During your turn, outlaws you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Betrayal at the Vault | silent | Target creature you control deals damage equal to its power to each of two other target creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Binding Negotiation | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, they discard it. Otherwise, you may put a face-up exiled card they own int | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Boneyard Desecrator | silent | {1}{B}, Sacrifice another creature: Put a +1/+1 counter on this creature. If an outlaw was sacrificed this way, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bonny Pall, Clearcutter | silent | Whenever you attack, draw a card, then you may put a land card from your hand or graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -75,11 +74,9 @@
 | Raucous Entertainer | silent | {1}, {T}: Put a +1/+1 counter on each creature you control that entered this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Resilient Roadrunner | silent | {3}: This creature can't be blocked this turn except by creatures with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Shackle Slinger | silent | Whenever you cast your second spell each turn, choose target creature an opponent controls. If it's tapped, put a stun counter on it. Otherwise, tap it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Spring Splasher | silent | Whenever this creature attacks, target creature defending player controls gets -3/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stubborn Burrowfiend | silent | Whenever this creature becomes saddled for the first time each turn, mill two cards, then this creature gets +X/+X until end of turn, where X is the number of c | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Taii Wakeen, Perfect Shot | silent | Whenever a source you control deals noncombat damage to a creature equal to that creature's toughness, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | The Key to the Vault | silent | Whenever equipped creature deals combat damage to a player, look at that many cards from the top of your library. You may exile a nonland card from among them.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Thunder Salvo | silent | Thunder Salvo deals X damage to target creature, where X is 2 plus the number of other spells you've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tinybones Joins Up | silent | Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tinybones, the Pickpocket | silent | Whenever Tinybones deals combat damage to a player, you may cast target nonland permanent card from that player's graveyard, and mana of any type can be spent t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vadmir, New Blood | silent | As long as Vadmir has four or more +1/+1 counters on it, it has menace and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -229,6 +226,7 @@
 | Soured Springs | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spinewoods Armadillo | handled | {1}{G}, Discard this card: Search your library for a basic land card or a Desert card, reveal it, put it into your hand, then shuffle. You gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spinewoods Paladin | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spring Splasher | handled | Whenever this creature attacks, target creature defending player controls gets -3/-0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stagecoach Security | handled | When this creature enters, creatures you control get +1/+1 and gain vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sterling Hound | handled | When this creature enters, surveil 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sterling Keykeeper | handled | {2}, {T}: Tap target non-Mount creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -256,9 +254,10 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>35 cards</summary>
 
 - Armored Armadillo
+- Betrayal at the Vault
 - Drover Grizzly
 - Final Showdown
 - Forsaken Miner
@@ -291,6 +290,7 @@
 - Step Between Worlds
 - Three Steps Ahead
 - Throw from the Saddle
+- Thunder Salvo
 
 </details>
 
@@ -327,7 +327,6 @@
 | spree (choose one or more additional costs.) + {M}{M} — untap all creatures you control. if it's your combat phase, there is an additional combat phase after ~. | 1 | Great Train Heist | otj |
 | target creature gets -N/-N until end of turn. it gets -N/-N until end of turn instead if you control an outlaw. (assassins, mercenaries, pirates, rogues, and wa | 1 | Take the Fall | otj |
 | target creature gets -N/-N until end of turn. it gets an additional -N/-N until end of turn for each desert you control. | 1 | Desert's Due | otj |
-| target creature you control deals damage equal to its power to each of two other target creatures. | 1 | Betrayal at the Vault | otj |
 | target creature you control gains hexproof until end of turn. untap that creature. until end of turn, it becomes a copy of up to one other target creature. | 1 | Fleeting Reflection | otj |
 | target creature you control gets +N/+N and gains first strike until end of turn. creatures target opponent controls lose first strike and double strike until en | 1 | Quick Draw | otj |
 | target opponent reveals their hand. you may choose a nonland card from it. if you do, they discard it. otherwise, you may put a face-up exiled card they own int | 1 | Binding Negotiation | otj |
@@ -376,7 +375,6 @@
 | whenever ~ attacks while saddled, put a +N/+N counter on each other creature you control. you gain N life for each of those creatures. | 1 | Bounding Felidar | otj |
 | whenever ~ attacks, create a treasure token for each creature that crewed it ~. | 1 | Luxurious Locomotive | otj |
 | whenever ~ attacks, reveal the top card of your library and put it into your hand. you lose life equal to that card"..."t saddled. otherwise, each opponent lose | 1 | Caustic Bronco | otj |
-| whenever ~ attacks, target creature defending player controls gets -N/-N until end of turn. | 1 | Spring Splasher | otj |
 | whenever ~ becomes saddled for the first time each turn, mill two cards, then ~ gets +N/+N until end of turn, where N is the number of creature cards in your gr | 1 | Stubborn Burrowfiend | otj |
 | whenever ~ deals combat damage to a player, target instant or sorcery card in your graveyard gains flashback until end of turn. the flashback cost is equal to i | 1 | Archmage's Newt | otj |
 | you can't cast ~ during your first, second, or third turns of the game. | 1 | Jace Reawakened | otj |
@@ -386,7 +384,6 @@
 | {M}, {M}: put a +N/+N counter on each creature you control that entered ~. | 1 | Raucous Entertainer | otj |
 | {M}: ~ can't be blocked ~ except by creatures with haste. | 1 | Resilient Roadrunner | otj |
 | {M}{M}, sacrifice another creature: put a +N/+N counter on ~. if an outlaw was sacrificed ~, create a treasure token. | 1 | Boneyard Desecrator | otj |
-| ~ deals N damage to target creature, where N is N plus the number of other spells you've cast ~. | 1 | Thunder Salvo | otj |
 | ~ enters with a +N/+N counter on it plus an additional +N/+N counter on it for each other creature you control. | 1 | Sheriff of Safe Passage | otj |
 | ~ enters with two +N/+N counters on it if it wasn't cast or no mana was spent to cast it. | 1 | Freestrider Commando | otj |
 | ~ gets -N/-N for each card in your hand. | 1 | Stingerback Terror | otj |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 28 | 11.4% |
-| Works (untested) | 149 | 60.6% |
+| Works (untested) | 150 | 61.0% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 62 | 25.2% |
+| Not working | 61 | 24.8% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Accomplished Automaton | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Aetherborn Marauder | silent | When this creature enters, move any number of +1/+1 counters from other permanents you control onto this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aetherflux Reservoir | silent | Whenever you cast a spell, you gain 1 life for each spell you've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aethersquall Ancient | silent | Pay eight {E}: Return all other creatures to their owners' hands. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aetherworks Marvel | silent | Whenever a permanent you control is put into a graveyard, you get {E} . | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ambitious Aetherborn | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -100,6 +99,7 @@
 | Aether Hub | handled | When this land enters, you get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aether Meltdown | handled | When this Aura enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aether Theorist | handled | When this creature enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Aetherflux Reservoir | handled | Whenever you cast a spell, you gain 1 life for each spell you've cast this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aethertorch Renegade | handled | When this creature enters, you get {E}{E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Appetite for the Unnatural | handled | Destroy target artifact or enchantment. You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aradara Express | handled | Crew | machines/keywords.py | Y/Y/- | not_tested |
@@ -325,7 +325,6 @@
 | when ~ enters, you may return another permanent you control to its owner's hand. | 1 | Aviary Mechanic | kld |
 | whenever a permanent you control is put into a graveyard, you get {M} . | 1 | Aetherworks Marvel | kld |
 | whenever an opponent casts a spell, if it has a single target, change the target to enchanted creature if able. | 1 | Captured by the Consulate | kld |
-| whenever you cast a spell, you gain N life for each spell you've cast ~. | 1 | Aetherflux Reservoir | kld |
 | whenever you cast an instant or sorcery spell, create an N/N colorless construct artifact creature token, where N is that spell's mana value. | 1 | Metallurgic Summonings | kld |
 | whenever you cast your first spell each turn, reveal the top card of your library. you may cast it without paying its mana cost if it"..."t cast it, put it into | 1 | Rashmi, Eternities Crafter | kld |
 | whenever ~ attacks, exile the top card of your library face down. | 1 | Bomat Courier | kld |

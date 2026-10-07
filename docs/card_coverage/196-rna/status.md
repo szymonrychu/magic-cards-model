@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 13.4% |
+| Tested | 34 | 14.2% |
 | Works (untested) | 137 | 57.3% |
 | Partial (unaudited) | 9 | 3.8% |
-| Not working | 61 | 25.5% |
+| Not working | 59 | 24.7% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Cavalcade of Calamity | silent | Whenever a creature you control with power 1 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Charging War Boar | silent | As long as you control a Domri planeswalker, this creature gets +1/+1 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Clan Guildmage | silent | {2}{G}, {T}: Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Clear the Mind | silent | Target player shuffles their graveyard into their library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Combine Guildmage | silent | {1}{G}, {T}: This turn, each creature you control enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consecrate // Consume | silent | Target player sacrifices a creature with the greatest power among creatures they control. You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dagger Caster | silent | When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,7 +71,6 @@
 | Silhana Wayfinder | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature or land card from among them and put it on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sky Tether | silent | Enchanted creature has defender and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smothering Tithe | silent | Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spire Mangler | silent | When this creature enters, target creature you control with flying gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spirit of the Spires | silent | Other creatures you control with flying get +0/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Syndicate Messenger | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Thought Collapse | silent | Counter target spell. Its controller mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -237,12 +235,13 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>34 cards</summary>
 
 - Angel of Grace
 - Awaken the Erstwhile
 - Captive Audience
 - Carnival // Carnage
+- Clear the Mind
 - Consign to the Pit
 - Cry of the Carnarium
 - Dovin, Grand Arbiter
@@ -267,6 +266,7 @@
 - Skarrgan Hellkite
 - Skewer the Critics
 - Sphinx of the Guildpact
+- Spire Mangler
 - Unbreakable Formation
 - Verity Circle
 - Zegana, Utopian Speaker
@@ -307,14 +307,12 @@
 | search your library for a basic land card or gate card, reveal it, put it into your hand, then shuffle. | 1 | Open the Gates | rna |
 | target creature gets -N/-N until end of turn. draw a card. addendum — if you cast ~ during your main phase, tap that creature and it doesn"..."s next untap step | 1 | Code of Constraint | rna |
 | target player sacrifices a creature with the greatest power among creatures they control. you gain life equal to its power. | 1 | Consecrate // Consume | rna |
-| target player shuffles their graveyard into their library. draw a card. | 1 | Clear the Mind | rna |
 | when rakdos enters, flip a coin for each creature that isn't a demon, devil, or imp. destroy each creature whose coin comes up tails. | 1 | Rakdos, the Showstopper | rna |
 | when ~ enters, count the number of +N/+N counters on creatures you control. creatures your opponents control with power less than or equal to that number can't  | 1 | Rumbling Ruin | rna |
 | when ~ enters, exile any number of other nontoken creatures you control until it leaves the battlefield. | 1 | Lumbering Battlement | rna |
 | when ~ enters, exile target nonland permanent an opponent controls and all other nonland permanents that player controls with the same name as that permanent un | 1 | Deputy of Detention | rna |
 | when ~ enters, it deals N damage to each opponent and N damage to each creature your opponents control. | 1 | Dagger Caster | rna |
 | when ~ enters, look at the top four cards of your library. you may reveal a creature or land card from among them and put it on top of your library. put the res | 1 | Silhana Wayfinder | rna |
-| when ~ enters, target creature you control with flying gets +N/+N until end of turn. | 1 | Spire Mangler | rna |
 | when ~ enters, until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Forbidding Spirit | rna |
 | when ~ enters, you may remove any number of +N/+N counters from among creatures you control. if you do, put twice that many +N/+N counters on ~. | 1 | Galloping Lizrog | rna |
 | when ~ enters, you may search your library and/or graveyard for a card named domri, city smasher, reveal it, and put it into your hand. if you search your libra | 1 | Domri's Nodorog | rna |

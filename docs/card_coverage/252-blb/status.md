@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 16.7% |
-| Works (untested) | 116 | 45.0% |
+| Tested | 45 | 17.4% |
+| Works (untested) | 118 | 45.7% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 92 | 35.7% |
+| Not working | 88 | 34.1% |
 
 ## Cards needing work
 
@@ -69,7 +69,6 @@
 | Osteomancer Adept | silent | {T}: Until end of turn, you may cast creature spells from your graveyard by foraging in addition to paying their other costs. If you cast a spell this way, that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Persistent Marshstalker | silent | Threshold — Whenever you attack with one or more Rats, if there are seven or more cards in your graveyard, you may pay {2}{B}. If you do, return this card from  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Reptilian Recruiter | silent | When this creature enters, choose target creature. If that creature's power is 2 or less or if you control another Lizard, gain control of that creature until e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Rockface Village | silent | {R}, {T}: Target Lizard, Mouse, Otter, or Raccoon you control gets +1/+0 and gains haste until end of turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roughshod Duo | silent | Whenever you expend 4, target creature you control gets +1/+1 and gains trample until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Sazacap's Brew | silent | Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other eff | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Season of Gathering | silent | Choose up to five {P} worth of modes. You may choose the same mode more than once. {P} — Put a +1/+1 counter on a creature you control. It gains vigilance and t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -77,14 +76,11 @@
 | Season of Weaving | silent | Choose up to five {P} worth of modes. You may choose the same mode more than once. {P} — Draw a card. {P}{P} — Choose an artifact or creature you control. Creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Season of the Bold | silent | Choose up to five {P} worth of modes. You may choose the same mode more than once. {P} — Create a tapped Treasure token. {P}{P} — Exile the top two cards of you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Season of the Burrow | silent | Choose up to five {P} worth of modes. You may choose the same mode more than once. {P} — Create a 1/1 white Rabbit creature token. {P}{P} — Exile target nonland | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Seedpod Squire | silent | Whenever this creature attacks, target creature you control without flying gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Star Charter | silent | At the beginning of your end step, if you gained or lost life this turn, look at the top four cards of your library. You may reveal a creature card with power 3 | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Starfall Invocation | silent | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Destroy all creatures. If the gif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Starforged Sword | silent | Equipped creature gets +3/+3 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stargaze | silent | Look at twice X cards from the top of your library. Put X cards from among them into your hand and the rest into your graveyard. You lose X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Starseer Mentor | silent | At the beginning of your end step, if you gained or lost life this turn, target opponent loses 3 life unless they sacrifice a nonland permanent of their choice  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sunspine Lynx | silent | When this creature enters, it deals damage to each player equal to the number of nonbasic lands that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Take Out the Trash | silent | Take Out the Trash deals 3 damage to target creature or planeswalker. If you control a Raccoon, you may discard a card. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Teapot Slinger | silent | Whenever you expend 4, this creature deals 2 damage to each opponent. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | The Infamous Cruelclaw | silent | Whenever The Infamous Cruelclaw deals combat damage to a player, exile cards from the top of your library until you exile a nonland card. You may cast that card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thornplate Intimidator | silent | When this creature enters, target opponent loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -206,12 +202,14 @@
 | Ral, Crackling Wit | handled | Whenever you cast a noncreature spell, put a loyalty counter on Ral. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ravine Raider | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Repel Calamity | handled | Destroy target creature with power or toughness 4 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Rockface Village | handled | {R}, {T}: Target Lizard, Mouse, Otter, or Raccoon you control gets +1/+0 and gains haste until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rust-Shield Rampager | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ruthless Negotiation | handled | Target opponent exiles a card from their hand. If this spell was cast from a graveyard, draw a card. Flashback {4}{B} (You may cast this card from your graveyar | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Savor | handled | Target creature gets -2/-2 until end of turn. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.") | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scales of Shale | handled | Affinity for Lizards (This spell costs {1} less to cast for each Lizard you control.) Target creature gets +2/+0 and gains lifelink and indestructible until end | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scrapshooter | handled | When this creature enters, if the gift was promised, destroy target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Seedglaive Mentor | handled | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Seedpod Squire | handled | Whenever this creature attacks, target creature you control without flying gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shoreline Looter | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Short Bow | handled | Equipped creature gets +1/+1 and has reach and vigilance. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shrike Force | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
@@ -245,7 +243,7 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>45 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
@@ -285,6 +283,8 @@
 - Starscape Cleric
 - Stocking the Pantry
 - Stormchaser's Talent
+- Sunspine Lynx
+- Take Out the Trash
 - Thundertrap Trainer
 - Vinereap Mentor
 - Wildfire Howl
@@ -340,7 +340,6 @@
 | when ~ enters, choose target opponent. if they lost life ~, they reveal their hand, you choose a nonland card from it, and they discard that card. otherwise, th | 1 | Thought-Stalker Warlock | blb |
 | when ~ enters, each opponent discards two cards unless they discard a nonland card. | 1 | Bandit's Talent | blb |
 | when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. if that creature had power N or less, put a +N/+N counter on ~. | 1 | Driftgloom Coyote | blb |
-| when ~ enters, it deals damage to each player equal to the number of nonbasic lands that player controls. | 1 | Sunspine Lynx | blb |
 | when ~ enters, mill three cards. when you do, target creature an opponent controls gets -N/-N until end of turn, where N is the greatest mana value among cards  | 1 | Wick's Patrol | blb |
 | when ~ enters, put a +N/+N counter on it for each other squirrel and/or food you control. | 1 | Honored Dreyleader | blb |
 | when ~ enters, tap enchanted creature. if the gift wasn't promised, put three stun counters on it. | 1 | Kitnap | blb |
@@ -375,7 +374,6 @@
 | whenever ~ attacks, add {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Brazen Collector | blb |
 | whenever ~ attacks, defending player loses N life and you gain N life. | 1 | Agate-Blade Assassin | blb |
 | whenever ~ attacks, each opponent loses N life and you gain N life, where N is the number of other squirrels, bats, lizards, and rats you control. | 1 | Valley Rotcaller | blb |
-| whenever ~ attacks, target creature you control without flying gets +N/+N until end of turn. | 1 | Seedpod Squire | blb |
 | whenever ~ attacks, up to one target artifact, creature, or planeswalker an opponent controls loses all abilities until your next turn. if it's a creature, it a | 1 | Azure Beastbinder | blb |
 | whenever ~ deals combat damage to a player, exile cards from the top of your library until you exile a nonland card. you may cast that card by discarding a card | 1 | The Infamous Cruelclaw | blb |
 | whenever ~ or another bird you control enters, exile up to one target creature you control without flying. return it to the battlefield under its owner's contro | 1 | Salvation Swan | blb |
@@ -383,11 +381,9 @@
 | {M}, {M}: choose a color. add an amount of mana of that color equal to the number of creatures you control of the chosen type. | 1 | Three Tree City | blb |
 | {M}, {M}: draw a card. for each mana in ~ activation cost, you may tap an untapped creature you control rather than pay that mana. activate only as a sorcery. | 1 | Heirloom Epic | blb |
 | {M}, {M}: put a +N/+N counter on each frog, rabbit, raccoon, or squirrel you control that entered the battlefield ~. | 1 | Oakhollow Village | blb |
-| {M}, {M}: target lizard, mouse, otter, or raccoon you control gets +N/+N and gains haste until end of turn. activate only as a sorcery. | 1 | Rockface Village | blb |
 | {M}: put a coin counter on ~. when you do, you may cast target instant or sorcery card with mana value equal to the number of coin counters on ~ from your grave | 1 | Wishing Well | blb |
 | {M}: until end of turn, you may cast creature spells from your graveyard by foraging in addition to paying their other costs. if you cast a spell ~, that creatu | 1 | Osteomancer Adept | blb |
 | ~ costs {M} less to cast for each creature card you own in exile and in your graveyard. | 1 | Huskburster Swarm | blb |
-| ~ deals N damage to target creature or planeswalker. if you control a raccoon, you may discard a card. if you do, draw a card. | 1 | Take Out the Trash | blb |
 
 ## Notes
 

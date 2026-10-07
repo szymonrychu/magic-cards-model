@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 13.5% |
-| Works (untested) | 68 | 38.2% |
+| Tested | 25 | 14.0% |
+| Works (untested) | 69 | 38.8% |
 | Partial (unaudited) | 18 | 10.1% |
-| Not working | 68 | 38.2% |
+| Not working | 66 | 37.1% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Angel of Salvation | silent | When this creature enters, prevent the next 5 damage that would be dealt this turn to any number of targets, divided as you choose. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcanum Wings | silent | Aura Swap | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Baru, Fist of Krosa | silent | Whenever a Forest enters, green creatures you control get +1/+1 and gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bitter Ordeal | silent | Search target player's library for a card and exile it. Then that player shuffles. Gravestorm (When you cast this spell, copy it for each permanent put into a g | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Boldwyr Intimidator | silent | {R}: Target creature becomes a Coward until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bridge from Below | silent | Whenever a nontoken creature is put into your graveyard from the battlefield, if this card is in your graveyard, create a 2/2 black Zombie creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -90,7 +89,6 @@
 | Wrap in Vigor | silent | Regenerate each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dust of Moments | notice | Choose one — • Remove two time counters from each permanent and each suspended card. • Put two time counters on each permanent with a time counter on it and eac | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Grave Peril | notice | When a nonblack creature enters, sacrifice this enchantment. If you do, destroy that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Intervention Pact | notice | The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way. At the begi | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Saltskitter | notice | Whenever another creature enters, exile this creature. Return this creature to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Shivan Sand-Mage | notice | When this creature enters, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permanent with a t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sword of the Meek | notice | Whenever a 1/1 creature you control enters, you may return this card from your graveyard to the battlefield, then attach it to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -115,6 +113,7 @@
 | Augur il-Vec | handled | Sacrifice this creature: You gain 4 life. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aven Augur | handled | Sacrifice this creature: Return up to two target creatures to their owners' hands. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barren Glory | handled | At the beginning of your upkeep, if you control no permanents other than this enchantment and have no cards in hand, you win the game. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Baru, Fist of Krosa | handled | Whenever a Forest enters, green creatures you control get +1/+1 and gain trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blade of the Sixth Pride | handled |  |  | Y/-/- | not_tested |
 | Blind Phantasm | handled |  |  | Y/-/- | not_tested |
 | Bogardan Lancer | handled | Flanking | machines/keywords.py | Y/-/- | not_tested |
@@ -184,7 +183,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Akroma's Memorial
 - Arc Blade
@@ -199,6 +198,7 @@
 - Grave Scrabbler
 - Grove of the Burnwillows
 - Horizon Canopy
+- Intervention Pact
 - Keldon Megaliths
 - Llanowar Empath
 - Logic Knot
@@ -257,7 +257,6 @@
 | spend only mana produced by basic lands to cast ~. | 1 | Imperiosaur | fut |
 | target player reveals their hand. you choose a nonland card from it. that player puts that card into their library third from the top. | 1 | Lost Hours | fut |
 | the next creature card you play ~ can be played as though it had flash. draw a card. | 1 | Scout's Warning | fut |
-| the next time a source of your choice would deal damage to you ~, prevent that damage. you gain life equal to the damage prevented ~. at the beginning of your n | 1 | Intervention Pact | fut |
 | transfigure | 1 | Fleshwrither | fut |
 | until your next turn, creatures can't attack you. exile ~ with three time counters on it. suspend N—{M}{M} (rather than cast ~ from your hand, you may pay {M}{M | 1 | Chronomantic Escape | fut |
 | when a nonblack creature enters, sacrifice ~. if you do, destroy that creature. | 1 | Grave Peril | fut |
@@ -274,7 +273,6 @@
 | when ~ is turned face up, put two time counters on it and it gains vanishing. | 1 | Maelstrom Djinn | fut |
 | whenever a N/N creature you control enters, you may return ~ from your graveyard to the battlefield, then attach it to that creature. | 1 | Sword of the Meek | fut |
 | whenever a card is put into an opponent's graveyard from anywhere, if ~ is suspended, you may remove a time counter from ~. | 1 | Nihilith | fut |
-| whenever a forest enters, green creatures you control get +N/+N and gain trample until end of turn. | 1 | Baru, Fist of Krosa | fut |
 | whenever a nontoken creature is put into your graveyard from the battlefield, if ~ is in your graveyard, create a N/N black zombie creature token. | 1 | Bridge from Below | fut |
 | whenever a player casts a noncreature spell, each of that player's opponents may draw a card. | 1 | Heartwood Storyteller | fut |
 | whenever another creature enters, exile ~. return ~ to the battlefield under its owner's control at the beginning of the next end step. | 1 | Saltskitter | fut |

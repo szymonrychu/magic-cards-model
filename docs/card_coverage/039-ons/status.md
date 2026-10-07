@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 31.0% |
+| Tested | 19 | 32.8% |
 | Works (untested) | 32 | 55.2% |
 | Partial (unaudited) | 2 | 3.4% |
-| Not working | 6 | 10.3% |
+| Not working | 5 | 8.6% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Head Games | silent | Target opponent puts the cards from their hand on top of their library. Search that player's library for that many cards. The player puts those cards into their | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mobilization | silent | Soldier creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Patriarch's Bidding | silent | Each player chooses a creature type. Each player returns all creature cards of a type chosen this way from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Reminisce | silent | Target player shuffles their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sea's Claim | silent | Enchanted land is an Island. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cover of Darkness | unaudited | Creatures of the chosen type have fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Future Sight | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -70,7 +69,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Annex
 - Biorhythm
@@ -83,6 +82,7 @@
 - Gratuitous Violence
 - Krosan Tusker
 - Polluted Delta
+- Reminisce
 - Severed Legion
 - Skirk Prospector
 - Threaten
@@ -104,7 +104,6 @@
 | soldier creatures have vigilance. | 1 | Mobilization | ons |
 | target opponent puts the cards from their hand on top of their library. search that player's library for that many cards. the player puts those cards into their | 1 | Head Games | ons |
 | target player reveals three cards from their hand and you choose one of them. that player discards that card. | 1 | Blackmail | ons |
-| target player shuffles their graveyard into their library. | 1 | Reminisce | ons |
 
 ## Notes
 

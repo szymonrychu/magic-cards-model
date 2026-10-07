@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 14.3% |
-| Works (untested) | 105 | 41.7% |
+| Tested | 41 | 16.3% |
+| Works (untested) | 106 | 42.1% |
 | Partial (unaudited) | 9 | 3.6% |
-| Not working | 102 | 40.5% |
+| Not working | 96 | 38.1% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Eye of Malcator | silent | Whenever another artifact you control enters, this artifact becomes a 4/4 Phyrexian Eye artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ezuri, Stalker of Spheres | silent | When Ezuri enters, you may pay {3}. If you do, proliferate twice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Feed the Infection | silent | You draw three cards and you lose 3 life. Corrupted — Each opponent who has three or more poison counters loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Flensing Raptor | silent | When this creature enters, another target creature you control with toxic gets +1/+1 and gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Font of Progress | silent | {3}, {T}: Target player mills X cards, where X is the number of oil counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Furnace Punisher | silent | At the beginning of each player's upkeep, this creature deals 2 damage to that player unless they control two or more basic lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gitaxian Anatomist | silent | When this creature enters, you may tap it. If you do, proliferate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -60,8 +59,6 @@
 | Ichormoon Gauntlet | silent | Whenever you cast a noncreature spell, choose a counter on target permanent. Put an additional counter of that kind on that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ichorplate Golem | silent | Creatures you control with oil counters on them get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Indoctrination Attendant | silent | When this creature enters, you may return another permanent you control to its owner's hand. If you do, create a 1/1 colorless Phyrexian Mite artifact creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Infectious Bite | silent | Target creature you control deals damage equal to its power to target creature you don't control. Each opponent gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Infectious Inquiry | silent | You draw two cards and you lose 2 life. Each opponent gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infested Fleshcutter | silent | Whenever equipped creature attacks, create a 1/1 colorless Phyrexian Mite artifact creature token with toxic 1 and "This token can't block." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, the Perfected Mind | silent | +1: Until your next turn, up to one target creature gets -3/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jor Kadeen, First Goldwarden | silent | Whenever Jor Kadeen attacks, it gets +X/+X until end of turn, where X is the number of equipped creatures you control. Then if Jor Kadeen's power is 4 or greate | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -86,8 +83,6 @@
 | Necrogen Rotpriest | silent | Whenever a creature you control with toxic deals combat damage to a player, that player gets an additional poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ovika, Enigma Goliath | silent | Whenever you cast a noncreature spell, create X 1/1 red Phyrexian Goblin creature tokens, where X is the mana value of that spell. They gain haste until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Phyrexian Atlas | silent | Corrupted — Whenever this artifact becomes tapped, each opponent who has three or more poison counters loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Plague Nurse | silent | {2}{G}: Each other creature you control with toxic gains toxic 1 until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Prologue to Phyresis | silent | Each opponent gets a poison counter. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reject Imperfection | silent | Counter target spell. If that spell's mana value was 3 or less, proliferate. (Choose any number of permanents and/or players, then give each another counter of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rhuk, Hexgold Nabber | silent | Whenever an equipped creature you control other than Rhuk attacks or dies, you may attach all Equipment attached to that creature to Rhuk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ria Ivor, Bane of Bladehold | silent | At the beginning of combat on your turn, the next time target creature would deal combat damage to one or more players this combat, prevent that damage. If dama | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -112,7 +107,6 @@
 | Zopandrel, Hunger Dominus | silent | At the beginning of each combat, double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anoint with Affliction | notice | Exile target creature if it has mana value 3 or less. Corrupted — Exile that creature instead if its controller has three or more poison counters. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Armored Scrapgorger | notice | This creature gets +3/+0 as long as it has three or more oil counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Aspirant's Ascent | notice | Until end of turn, target creature gets +1/+3 and gains flying and toxic 1. (Players dealt combat damage by that creature also get a poison counter.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Atraxa's Skitterfang | notice | At the beginning of combat on your turn, you may remove an oil counter from this creature. When you do, target creature you control gains your choice of flying, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Awaken the Sleeper | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attach | unparsed remainder: Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attached to that creature. | Y/Y/- | not_working |
 | Carnivorous Canopy | notice | Destroy target artifact, enchantment, or creature with flying. If that permanent's mana value was 3 or less, proliferate. (Choose any number of permanents and/o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -163,6 +157,7 @@
 | Dune Mover | handled | When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Escaped Experiment | handled | Whenever this creature attacks, target creature an opponent controls gets -X/-0 until end of turn, where X is the number of artifacts you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Experimental Augury | handled | Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. Proliferate. (Choose any nu | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Flensing Raptor | handled | When this creature enters, another target creature you control with toxic gets +1/+1 and gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fleshless Gladiator | handled | Corrupted — {2}{B}: Return this card from your graveyard to the battlefield tapped. You lose 1 life. Activate only if an opponent has three or more poison count | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Free from Flesh | handled | Target creature gets +2/+2 until end of turn. Put two oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Furnace Skullbomb | handled | {1}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,10 +241,11 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>41 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
+- Aspirant's Ascent
 - Atraxa, Grand Unifier
 - Bilious Skulldweller
 - Blazing Crescendo
@@ -262,6 +258,8 @@
 - Geth, Thane of Contracts
 - Hazardous Blast
 - Hexgold Slash
+- Infectious Bite
+- Infectious Inquiry
 - Koth, Fire of Resistance
 - Malcator, Purity Overseer
 - Mindsplice Apparatus
@@ -269,6 +267,8 @@
 - Nahiri, the Unforgiving
 - Nissa, Ascended Animist
 - Noxious Assault
+- Plague Nurse
+- Prologue to Phyresis
 - Prosthetic Injector
 - Rebel Salvo
 - Sheoldred's Edict
@@ -320,7 +320,6 @@
 | destroy up to N target artifacts. if N is N or more, for each artifact destroyed ~, create a token that's a copy of it. those tokens gain haste. exile them at t | 1 | Red Sun's Twilight | one |
 | during your turn, creature tokens you control get +N/+N and have first strike. | 1 | Mite Overseer | one |
 | during your turn, equipped creature has first strike and trample. | 1 | Hexgold Halberd | one |
-| each opponent gets a poison counter. draw a card. | 1 | Prologue to Phyresis | one |
 | enchanted permanent can"..."t be activated. | 1 | Planar Disruption | one |
 | exile melira: choose another target creature or artifact. when it"..."s control. | 1 | Melira, the Living Cure | one |
 | exile target creature if it has mana value N or less. corrupted — exile that creature instead if its controller has three or more poison counters. | 1 | Anoint with Affliction | one |
@@ -338,13 +337,10 @@
 | return target nonland permanent to its owner's hand. if that permanent had mana value N or less, proliferate. (choose any number of permanents and/or players, t | 1 | Serum Snare | one |
 | reveal the top N plus one cards of your library. choose a creature card and/or a land card from among them. put those cards into your hand and the rest on the b | 1 | Green Sun's Twilight | one |
 | target creature gets +N/+N until end of turn. equipped creatures you control gain indestructible until end of turn. (damage and effects that say "..." don't des | 1 | Resistance Reunited | one |
-| target creature you control deals damage equal to its power to target creature you don't control. each opponent gets a poison counter. | 1 | Infectious Bite | one |
 | target creature you control gets +N/+N until end of turn. if that creature has toxic, draw a card. | 1 | Compleat Devotion | one |
 | thrun can't be the target of nongreen spells your opponents control or abilities from nongreen sources your opponents control. | 1 | Thrun, Breaker of Silence | one |
-| until end of turn, target creature gets +N/+N and gains flying and toxic N. (players dealt combat damage by that creature also get a poison counter.) | 1 | Aspirant's Ascent | one |
 | when ezuri enters, you may pay {M}. if you do, proliferate twice. | 1 | Ezuri, Stalker of Spheres | one |
 | when you proliferate, return ~ from your graveyard to your hand. | 1 | Voidwing Hybrid | one |
-| when ~ enters, another target creature you control with toxic gets +N/+N and gains flying until end of turn. | 1 | Flensing Raptor | one |
 | when ~ enters, create two N/N colorless phyrexian mite artifact creature tokens with toxic N and "..." | 1 | Basilica Shepherd | one |
 | when ~ enters, create two N/N green phyrexian beast creature tokens with toxic N. | 1 | Goliath Hatchery | one |
 | when ~ enters, exile three cards at random from your graveyard. choose a noncreature, nonland card from among them and copy it. you may cast the copy without pa | 1 | Capricious Hellraiser | one |
@@ -375,7 +371,6 @@
 | whenever ~ becomes attached to a creature, for as long as ~ remains attached to it, you may have that creature become a copy of another target creature you cont | 1 | Blade of Shared Souls | one |
 | whenever ~ deals combat damage to a player, you may remove two oil counters from it. if you do, when you next cast an instant or sorcery spell ~, copy that spel | 1 | Mercurial Spelldancer | one |
 | you draw three cards and you lose N life. corrupted — each opponent who has three or more poison counters loses N life. | 1 | Feed the Infection | one |
-| you draw two cards and you lose N life. each opponent gets a poison counter. | 1 | Infectious Inquiry | one |
 | you gain N life. create N N/N colorless phyrexian mite artifact creature tokens with toxic N and "..." if N is N or more, destroy all other creatures. (players  | 1 | White Sun's Twilight | one |
 | {M}, {M}: choose a color. another target creature you control gains toxic N and hexproof from that color until end of turn. it can't be blocked by creatures of  | 1 | Skrelv, Defector Mite | one |
 | {M}, {M}: create a N/N colorless phyrexian mite artifact creature token with toxic N and "..." | 1 | Mirrex | one |
@@ -383,7 +378,6 @@
 | {M}: choose target nonland permanent card in your graveyard. if you haven"..."t cast additional spells ~. activate only as a sorcery. | 1 | Conduit of Worlds | one |
 | {M}: until end of turn, target creature you control becomes a blue artifact in addition to its other colors and types. activate only as a sorcery. | 1 | Unctus, Grand Metatect | one |
 | {M}: ~ becomes a N/N phyrexian construct artifact creature, loses all abilities, and gains indestructible and toxic N. activate only if there are nine or more l | 1 | Monument to Perfection | one |
-| {M}{M}: each other creature you control with toxic gains toxic N until end of turn. activate only once each turn. | 1 | Plague Nurse | one |
 | ~ costs {M} less to cast for each permanent you control with oil counters on it. | 1 | Cinderslash Ravager | one |
 | ~ costs {M} more to cast if it targets a creature. exile target nonland permanent. | 1 | Vanish into Eternity | one |
 | ~ gets +N/+N as long as it has three or more oil counters on it. | 1 | Armored Scrapgorger | one |

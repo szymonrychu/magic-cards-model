@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 13.9% |
-| Works (untested) | 142 | 53.4% |
+| Tested | 39 | 14.7% |
+| Works (untested) | 141 | 53.0% |
 | Partial (unaudited) | 8 | 3.0% |
-| Not working | 79 | 29.7% |
+| Not working | 78 | 29.3% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Bespoke Battlegarb | silent | Celebration — At the beginning of combat on your turn, if two or more nonland permanents entered the battlefield under your control this turn, attach this Equip | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brave the Wilds | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) If this spell was bargained, target land you control becomes a 3/3 Elemen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Break the Spell | silent | Destroy target enchantment. If a permanent you controlled or a token was destroyed this way, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Callous Sell-Sword // Burn Together | silent | Target creature you control deals damage equal to its power to any other target. Then sacrifice it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Charging Hooligan | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each attacking creature. If a Rat is attacking, this creature gains trample until end of tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Charmed Clothier | silent | When this creature enters, create a Royal Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cruel Somnophage // Can't Wake Up | silent | Cruel Somnophage's power and toughness are each equal to the number of creature cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -125,7 +124,6 @@
 | Bestial Bloodline | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bitter Chill | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Blossoming Tortoise | handled | Whenever this creature enters or attacks, mill three cards, then return a land card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Boundary Lands Ranger | handled | At the beginning of combat on your turn, if you control a creature with power 4 or greater, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Candy Grapple | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Target creature gets -3/-3 until end of turn. If this spell was bargained | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Chancellor of Tales | handled | Whenever you cast an Adventure spell, you may copy it. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Charming Scoundrel | handled | When this creature enters, choose one — • Discard a card, then draw a card. • Create a Treasure token. • Create a Wicked Role token attached to target creature  | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -259,12 +257,14 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>39 cards</summary>
 
 - Agatha's Champion
 - Agatha's Soul Cauldron
 - Archive Dragon
+- Boundary Lands Ranger
 - Bramble Familiar // Fetch Quest
+- Callous Sell-Sword // Burn Together
 - Candy Trail
 - Curse of the Werefox
 - Cut In
@@ -337,7 +337,6 @@
 | return all creatures to their owners' hands. for each opponent who controlled a creature returned ~, you create two N/N blue faerie creature tokens with flying  | 1 | Faerie Slumber Party | woe |
 | return the exiled card to the battlefield under its owner's control. | 1 | The Princess Takes Flight | woe |
 | sacrifice any number of artifacts, enchantments, and/or tokens. return that many creature cards from your graveyard to the battlefield. | 1 | Lich-Knights' Conquest | woe |
-| target creature you control deals damage equal to its power to any other target. then sacrifice it. | 1 | Callous Sell-Sword // Burn Together | woe |
 | target creature you control gets +N/+N until end of turn. it can't be blocked by creatures with power N or greater ~. | 1 | Cheeky House-Mouse // Squeak By | woe |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. if you don't control a faerie, exile a card from your han | 1 | Ego Drain | woe |
 | the second spell you cast each turn costs {M} less to cast. | 1 | Raging Battle Mouse | woe |

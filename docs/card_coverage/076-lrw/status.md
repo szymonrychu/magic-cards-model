@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 37 | 13.2% |
-| Works (untested) | 137 | 48.9% |
+| Works (untested) | 138 | 49.3% |
 | Partial (unaudited) | 16 | 5.7% |
-| Not working | 90 | 32.1% |
+| Not working | 89 | 31.8% |
 
 ## Cards needing work
 
@@ -114,7 +114,6 @@
 | Lowland Oaf | notice | {T}: Target Goblin creature you control gets +1/+0 and gains flying until end of turn. Sacrifice that creature at the beginning of the next end step. | unparsed remainder: Sacrifice that creature at the beginning of the next end step. | Y/-/- | not_working |
 | Makeshift Mannequin | notice | Return target creature card from your graveyard to the battlefield with a mannequin counter on it. For as long as that creature has a mannequin counter on it, i | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Nameless Inversion | notice | Changeling (This card is every creature type.) Target creature gets +3/-3 and loses all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Primal Command | notice | Choose two — • Target player gains 7 life. • Put target noncreature permanent on top of its owner's library. • Target player shuffles their graveyard into their | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Warren Pilferers | notice | When this creature enters, return target creature card from your graveyard to your hand. If that card is a Goblin card, this creature gains haste until end of t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dolmen Gate | unaudited | Prevent all combat damage that would be dealt to attacking creatures you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Doran, the Siege Tower | unaudited | Each creature assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -231,6 +230,7 @@
 | Oakgnarl Warrior | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Pestermite | handled | When this creature enters, you may tap or untap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Plover Knights | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Primal Command | handled | Choose two — • Target player gains 7 life. • Put target noncreature permanent on top of its owner's library. • Target player shuffles their graveyard into their | the engine reads this text and performs it | Y/-/- | not_tested |
 | Profane Command | handled | Choose two — • Target player loses X life. • Return target creature card with mana value X or less from your graveyard to the battlefield. • Target creature get | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rootgrapple | handled | Destroy target noncreature permanent. If you control a Treefolk, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scarred Vinebreeder | handled | {2}{B}, Exile an Elf card from your graveyard: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -323,7 +323,6 @@
 | when ~ enters, clash with an opponent. if you win, put a +N/+N counter on ~. | 5 | Adder-Staff Boggart, Bog Hoodlums, Nath's Elite, Oaken Brawler, Paperfin Rascal | lrw |
 | ~ enters tapped with two charge counters on it. | 5 | Vivid Crag, Vivid Creek, Vivid Grove, Vivid Marsh, Vivid Meadow | lrw |
 | clash | 2 | Fistful of Force, Whirlpool Whelm | lrw |
-| Choose two | 1 | Primal Command | lrw |
 | as long as a creature card with flying is in a graveyard, ~ has flying. the same is true for fear, first strike, double strike, deathtouch, haste, landwalk, lif | 1 | Cairn Wanderer | lrw |
 | as long as you control a faerie, ~ gets +N/+N and has flying. | 1 | Boggart Sprite-Chaser | lrw |
 | as long as you control a giant, ~ gets +N/+N and has first strike. | 1 | Kithkin Greatheart | lrw |

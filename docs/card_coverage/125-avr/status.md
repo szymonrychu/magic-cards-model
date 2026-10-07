@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 8.8% |
-| Works (untested) | 107 | 49.3% |
+| Tested | 20 | 9.2% |
+| Works (untested) | 108 | 49.8% |
 | Partial (unaudited) | 16 | 7.4% |
-| Not working | 75 | 34.6% |
+| Not working | 73 | 33.6% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Fettergeist | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {1} for each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Galvanic Alchemist | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Geist Trappers | silent | As long as this creature is paired with another creature, both creatures have reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ghostform | silent | Up to two target creatures can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ghoulflesh | silent | Enchanted creature gets -1/-1 and is a black Zombie in addition to its other colors and types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guise of Fire | silent | Enchanted creature gets +1/-1 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hanweir Lancer | silent | As long as this creature is paired with another creature, both creatures have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -73,7 +72,6 @@
 | Outwit | silent | Counter target spell that targets a player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pathbreaker Wurm | silent | As long as this creature is paired with another creature, both creatures have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primal Surge | silent | Exile the top card of your library. If it's a permanent card, you may put it onto the battlefield. If you do, repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Riot Ringleader | silent | Whenever this creature attacks, Human creatures you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rite of Ruin | silent | Choose an order for artifacts, creatures, and lands. Each player sacrifices one permanent of their choice of the first type, sacrifices two of their choice of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Silverblade Paladin | silent | As long as this creature is paired with another creature, both creatures have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Somberwald Vigilante | silent | Whenever this creature becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -190,6 +188,7 @@
 | Renegade Demon | handled |  |  | Y/-/- | not_tested |
 | Restoration Angel | handled | When this creature enters, you may exile target non-Angel creature you control, then return that card to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Righteous Blow | handled | Righteous Blow deals 2 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Riot Ringleader | handled | Whenever this creature attacks, Human creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rotcrown Ghoul | handled | When this creature dies, target player mills five cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scalding Devil | handled | {2}{R}: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scroll of Avacyn | handled | {1}, Sacrifice this artifact: Draw a card. If you control an Angel, you gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -228,7 +227,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Aggravate
 - Blood Artist
@@ -238,6 +237,7 @@
 - Demonic Rising
 - Divine Deflection
 - Entreat the Angels
+- Ghostform
 - Griselbrand
 - Leap of Faith
 - Lone Revenant
@@ -315,7 +315,6 @@
 | target player mills N cards, where N is the number of lands you control. | 1 | Dreadwaters | avr |
 | untapped creatures you control get +N/+N. | 1 | Builder's Blessing | avr |
 | until end of turn, target creature gets +N/+N and gains trample, and all creatures able to block it ~ do so. miracle {M} (you may cast ~ for its miracle cost wh | 1 | Revenge of the Hunted | avr |
-| up to two target creatures can't be blocked ~. | 1 | Ghostform | avr |
 | when ~ dies, you may have target creature get -N/-N until end of turn. | 1 | Undead Executioner | avr |
 | when ~ enters attached to a creature, each other nontoken creature you control becomes a copy of that creature. | 1 | Infinite Reflection | avr |
 | when ~ enters from a graveyard, target opponent gains control of it. | 1 | Treacherous Pit-Dweller | avr |
@@ -328,7 +327,6 @@
 | whenever a creature you control enters, you may have ~ become a N/N white angel artifact creature with flying until end of turn. | 1 | Angel's Tomb | avr |
 | whenever an opponent loses life, you gain that much life. | 1 | Exquisite Blood | avr |
 | whenever bruna attacks or blocks, you may attach to it any number of auras on the battlefield and you may put onto the battlefield attached to it any number of  | 1 | Bruna, Light of Alabaster | avr |
-| whenever ~ attacks, human creatures you control get +N/+N until end of turn. | 1 | Riot Ringleader | avr |
 | whenever ~ attacks, return another creature you control to its owner's hand. | 1 | Havengul Skaab | avr |
 | whenever ~ becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Somberwald Vigilante | avr |
 | you may cast ~ from exile. | 1 | Misthollow Griffin | avr |

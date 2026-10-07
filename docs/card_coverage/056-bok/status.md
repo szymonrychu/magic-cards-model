@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 5.7% |
-| Works (untested) | 73 | 45.9% |
+| Tested | 10 | 6.3% |
+| Works (untested) | 74 | 46.5% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 67 | 42.1% |
+| Not working | 65 | 40.9% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Genju of the Realm | silent | {2}: Enchanted land becomes a legendary 8/12 Spirit creature with trample until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genju of the Spires | silent | {2}: Enchanted Mountain becomes a 6/1 red Spirit creature until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Harbinger of Spring | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Heartless Hidetsugu | silent | {T}: Heartless Hidetsugu deals damage to each player equal to half that player's life total, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Heed the Mists | silent | Mill a card, then draw cards equal to the milled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hired Muscle // Scarmaker | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hokori, Dust Drinker | silent | At the beginning of each player's upkeep, that player untaps a land they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -75,7 +74,6 @@
 | Ronin Warclub | silent | Whenever a creature you control enters, attach this Equipment to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sakura-Tribe Springcaller | silent | At the beginning of your upkeep, add {G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimmering Glasskite | silent | Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shining Shoal | silent | You may exile a white card with mana value X from your hand rather than pay this spell's mana cost. The next X damage that a source of your choice would deal to | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shinka Gatekeeper | silent | Whenever this creature is dealt damage, it deals that much damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shirei, Shizo's Caretaker | silent | Whenever a creature with power 1 or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the ne | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Shizuko, Caller of Autumn | silent | At the beginning of each player's upkeep, that player adds {G}{G}{G}. Until end of turn, they don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -120,6 +118,7 @@
 | Frostling | handled | Sacrifice this creature: It deals 1 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnarled Mass | handled |  |  | Y/-/- | not_tested |
 | Gods' Eye, Gate to the Reikai | handled | When Gods' Eye is put into a graveyard from the battlefield, create a 1/1 colorless Spirit creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Heartless Hidetsugu | handled | {T}: Heartless Hidetsugu deals damage to each player equal to half that player's life total, rounded down. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hero's Demise | handled | Destroy target legendary creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Higure, the Still Wind | handled | Whenever Higure deals combat damage to a player, you may search your library for a Ninja card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Horobi's Whisper | handled | If you control a Swamp, destroy target nonblack creature. Splice onto Arcane—Exile four cards from your graveyard. (As you cast an Arcane spell, you may reveal  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -180,7 +179,7 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Aura Barbs
 - Bile Urchin
@@ -190,6 +189,7 @@
 - Kami of False Hope
 - Nourishing Shoal
 - Sakiko, Mother of Summer
+- Shining Shoal
 - Sway of the Stars
 
 </details>
@@ -238,7 +238,6 @@
 | whenever ~ is dealt damage, it deals that much damage to you. | 1 | Shinka Gatekeeper | bok |
 | whenever ~ is dealt damage, you gain that much life. | 1 | Kami of the Honored Dead | bok |
 | you and target opponent each gain control of all creatures the other controls until end of turn. untap those creatures. those creatures gain haste until end of  | 1 | Twist Allegiance | bok |
-| you may exile a white card with mana value N from your hand rather than pay ~ mana cost. the next N damage that a source of your choice would deal to you and/or | 1 | Shining Shoal | bok |
 | {M}, discard a spirit or arcane card: ~ becomes an N/N cat artifact creature until end of turn, where N is the discarded card's mana value. | 1 | Slumbering Tora | bok |
 | {M}, remove N ki counters from ~: for each counter removed, ~ gets +N/+N until end of turn. | 1 | Blademane Baku | bok |
 | {M}: enchanted forest becomes a N/N green spirit creature until end of turn. it's still a land. | 1 | Genju of the Cedars | bok |
@@ -251,7 +250,6 @@
 | {M}: untap all forests and all green creatures. activate only once each turn. | 1 | Patron of the Orochi | bok |
 | {M}: until end of turn, enchanted plains becomes a N/N white spirit creature with "..." it's still a land. | 1 | Genju of the Fields | bok |
 | {M}: until end of turn, enchanted swamp becomes a N/N black spirit creature with "..." it's still a land. | 1 | Genju of the Fens | bok |
-| {M}: ~ deals damage to each player equal to half that player's life total, rounded down. | 1 | Heartless Hidetsugu | bok |
 | {M}{M}: switch each creature's power and toughness until end of turn. | 1 | Mannichi, the Fevered Dream | bok |
 | {M}{M}: the next N damage that would be dealt to enchanted creature ~ is dealt to any target instead. | 1 | Ward of Piety | bok |
 | ~ can"..."ve cast a creature spell ~. | 1 | Goblin Cohort | bok |

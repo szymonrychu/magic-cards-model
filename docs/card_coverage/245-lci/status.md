@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 63 | 22.9% |
+| Tested | 65 | 23.6% |
 | Works (untested) | 136 | 49.5% |
 | Partial (unaudited) | 13 | 4.7% |
-| Not working | 63 | 22.9% |
+| Not working | 61 | 22.2% |
 
 ## Cards needing work
 
@@ -73,7 +73,6 @@
 | The Everflowing Well // The Myriad Pools | silent | Whenever you cast a permanent spell using mana produced by The Myriad Pools, up to one other target permanent you control becomes a copy of that spell until end | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Skullspore Nexus | silent | Whenever one or more nontoken creatures you control die, create a green Fungus Dinosaur creature token with base power and toughness each equal to the total pow | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Throne of the Grim Captain // The Grim Captain | silent | Whenever The Grim Captain attacks, each opponent sacrifices a nonland permanent of their choice. Then you may put an exiled creature card used to craft The Grim | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Triumphant Chomp | silent | Triumphant Chomp deals damage to target creature equal to 2 or the greatest power among Dinosaurs you control, whichever is greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Twists and Turns // Mycoid Maze | silent | {3}{G}, {T}: Look at the top four cards of your library. You may reveal a creature card from among them and put that card into your hand. Put the rest on the bo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Unstable Glyphbridge // Sandswirl Wanderglyph | silent | When this artifact enters, if you cast it, for each player, choose a creature with power 2 or less that player controls. Then destroy all creatures except creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wail of the Forgotten | silent | Descend 8 — Choose one. If there are eight or more permanent cards in your graveyard as you cast this spell, choose one or more instead. • Return target nonland | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -84,7 +83,6 @@
 | Brackish Blunder | notice | Return target creature to its owner's hand. If it was tapped, create a Map token. (It's an artifact with "{1}, {T}, Sacrifice this token: Target creature you co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Disturbed Slumber | notice | Until end of turn, target land you control becomes a 4/4 Dinosaur creature with reach and haste. It's still a land. It must be blocked this turn if able. | unparsed remainder: It must be blocked this turn if able. | Y/Y/Y | not_working |
 | Grasping Shadows // Shadows' Lair | notice | Whenever a creature you control attacks alone, it gains deathtouch and lifelink until end of turn. Put a dread counter on this enchantment. Then if there are th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Itzquinth, Firstborn of Gishath | notice | When Itzquinth enters, you may pay {2}. When you do, target Dinosaur you control deals damage equal to its power to another target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kutzil's Flanker | notice | When this creature enters, choose one — • Put a +1/+1 counter on this creature for each creature that left the battlefield under your control this turn. • You g | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Quintorius Kand | notice | −6: Exile any number of target cards from your graveyard. Add {R} for each card exiled this way. You may play those cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Scampering Surveyor | notice | When this creature enters, search your library for a basic land card or Cave card, put it onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -242,7 +240,7 @@
 ## Fully supported
 
 <details>
-<summary>63 cards</summary>
+<summary>65 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
@@ -273,6 +271,7 @@
 - Ghalta, Stampede Tyrant
 - Glimpse the Core
 - Greedy Freebooter
+- Itzquinth, Firstborn of Gishath
 - Malamet Battle Glyph
 - Malicious Eclipse
 - Market Gnome
@@ -302,6 +301,7 @@
 - Threefold Thunderhulk
 - Tishana's Tidebinder
 - Tithing Blade // Consuming Sepulcher
+- Triumphant Chomp
 - Trumpeting Carnosaur
 - Vanguard of the Rose
 - Visage of Dread // Dread Osseosaur
@@ -345,7 +345,6 @@
 | until end of turn, target artifact or creature becomes a dinosaur artifact creature with base power and toughness N/N in addition to its other types. | 1 | Relic's Roar | lci |
 | until end of turn, target land you control becomes a N/N dinosaur creature with reach and haste. it's still a land. it must be blocked ~ if able. | 1 | Disturbed Slumber | lci |
 | up to three target creatures can't block ~. discover N. (exile cards from the top of your library until you exile a nonland card with mana value N or less. cast | 1 | Daring Discovery | lci |
-| when itzquinth enters, you may pay {M}. when you do, target dinosaur you control deals damage equal to its power to another target creature. | 1 | Itzquinth, Firstborn of Gishath | lci |
 | when ~ enters, choose one — • put a +N/+N counter on ~ for each creature that left the battlefield under your control ~. • you gain N life and scry N. • exile t | 1 | Kutzil's Flanker | lci |
 | when ~ enters, create a N/N black bat creature token with flying for each mana from a cave spent to cast it. | 1 | Bat Colony | lci |
 | when ~ enters, for each player, choose up to one other target artifact or creature that player controls. for as long as ~ remains on the battlefield, the chosen | 1 | Kitesail Larcenist | lci |
@@ -382,7 +381,6 @@
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Cavern Stomper | lci |
 | {M}{M}{M}: draw a card, then discard a card. when you discard a card ~, target player mills cards equal to its mana value. | 1 | The Ancient One | lci |
 | ~ can't be blocked except by three or more creatures. | 1 | Rampaging Ceratops | lci |
-| ~ deals damage to target creature equal to N or the greatest power among dinosaurs you control, whichever is greater. | 1 | Triumphant Chomp | lci |
 | ~ is the chosen type in addition to its other types. | 1 | Roaming Throne | lci |
 | −N: exile any number of target cards from your graveyard. add {M} for each card exiled ~. you may play those cards ~. | 1 | Quintorius Kand | lci |
 
