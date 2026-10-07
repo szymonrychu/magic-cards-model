@@ -336,6 +336,17 @@ _COUNT_NONTOKEN_CREATURES_DIED_UNDER_CONTROL_RE = re.compile(
     r"^(?:the number of )?nontoken creatures? that died under your control this turn$",
     re.IGNORECASE,
 )
+#: "creature[s] that died under your control this turn" - Callous
+#: Sell-Sword's "for each creature that died under your control this turn",
+#: Liliana's Standard Bearer's "the number of creatures that died under your
+#: control this turn". CR 700.4: "dies" is put into a graveyard from the
+#: battlefield - a token dies too - and "under your control" is who
+#: controlled it as it died (CR 603.10a), both read off `Game.turn_history`'s
+#: "to_graveyard" entries.
+_COUNT_CREATURES_DIED_UNDER_CONTROL_RE = re.compile(
+    r"^(?:the number of )?creatures? that died under your control this turn$",
+    re.IGNORECASE,
+)
 #: "the number of cards you've drawn this turn" - Fractal Anomaly's own X.
 #: `Game.cards_drawn_this_turn` is EC4's own per-player running total,
 #: already read by `machines/conditions/history._drew`'s "you drew two or
@@ -925,6 +936,20 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return game.nontoken_creatures_died_under_control_this_turn.get(controller, 0)
 
         return nontoken_creatures_died_under_control
+
+    if _COUNT_CREATURES_DIED_UNDER_CONTROL_RE.fullmatch(stripped):
+
+        def creatures_died_under_control(game: "Game", controller: str) -> int:
+            return sum(
+                1
+                for entry in game.turn_history
+                if entry.kind == "to_graveyard"
+                and entry.player == controller
+                and entry.characteristics is not None
+                and Type.CREATURE in entry.characteristics.types
+            )
+
+        return creatures_died_under_control
 
     if _COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE.fullmatch(stripped):
 

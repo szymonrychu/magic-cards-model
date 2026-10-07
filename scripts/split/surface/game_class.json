@@ -410,6 +410,7 @@
     "create_prevention_shield",
     "create_reflexive_trigger",
     "damage_cant_be_prevented",
+    "damage_source_is_object",
     "deal_damage",
     "deal_damage_to_player",
     "declare_attacker",

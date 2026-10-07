@@ -2096,3 +2096,32 @@ def test_a_snapshot_written_before_the_nw03_t7_shields_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW03_T7_SHIELDS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before NW04-T5: `ReflectedDamage` gained
+#: `to_source_controller` (Deflecting Palm's "deals that much damage to that
+#: source's controller") and `DamageRedirectReplacement` gained
+#: `protects_yours` (Harm's Way's "you and/or permanents you control").
+#: 125-128 are reserved for the other NW-04 tasks, so the last shape without
+#: the fields is 124.
+_SCHEMA_VERSION_BEFORE_NW04_T5_PAYOFFS = 124
+
+
+def test_a_snapshot_written_before_the_nw04_t5_payoffs_is_refused() -> None:
+    """A version-124 dump's reflected damage carries no `to_source_controller`:
+    decoded as current, a Deflecting Palm shield would prevent the damage and
+    deal nothing back. Refused instead."""
+    from magic_cards_model.machines.damage_modification import DamageRedirectReplacement
+    from magic_cards_model.models.game.records import ReflectedDamage
+
+    assert "to_source_controller" in ReflectedDamage.model_fields
+    assert "protects_yours" in DamageRedirectReplacement.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW04_T5_PAYOFFS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW04_T5_PAYOFFS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW04_T5_PAYOFFS}",
+    ):
+        Game.model_validate(dumped)

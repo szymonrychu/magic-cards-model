@@ -27,6 +27,7 @@ loading.
 """
 
 import re
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal
 from uuid import UUID
 
@@ -38,6 +39,7 @@ from ..snapshot import EngineModel
 
 if TYPE_CHECKING:
     from ..models.game import Game
+    from ..models.player import Player
     from .replacement import CardReplacement, ReplaceableEvent, ReplacementEffect
 
 #: "it deals that much damage plus X, where X is `<name>`'s power" - the
@@ -310,6 +312,15 @@ class DamageRedirectReplacement(EngineModel):
 
     `amount` is "the next N damage" (CR 615.7's twin for a redirection): N is
     what is left to redirect, spent as damage is redirected; None is "all".
+    `amount_is_x` reads N as the creating spell's announced X (CR 107.3a) as
+    it binds (Shining Shoal).
+
+    `protects_yours` is "you and/or permanents [creatures] you control" (Harm's
+    Way, Shining Shoal): the controller, and every permanent they control
+    with `protected_types` as the damage would be dealt - one counted shield
+    across all of them. The redirect target may be "any target" (CR 115.4),
+    so a player as well as a permanent; a player who has left the game takes
+    nothing and the damage stays where it was going (CR 614.9).
     """
 
     kind: Literal["damage_redirect"] = "damage_redirect"
@@ -319,6 +330,9 @@ class DamageRedirectReplacement(EngineModel):
     redirect_target: int = 0
     choose_source: bool = False
     amount: int | None = None
+    amount_is_x: bool = False
+    protects_yours: bool = False
+    protected_types: tuple[str, ...] = ()
 
     bound: bool = False
     protected_id: UUID | None = None
@@ -326,6 +340,7 @@ class DamageRedirectReplacement(EngineModel):
     protected_player: str | None = None
     redirect_id: UUID | None = None
     redirect_stamp: UUID | None = None
+    redirect_player: str | None = None
     source_id: UUID | None = None
     source_stamp: UUID | None = None
 
@@ -340,16 +355,32 @@ class DamageRedirectReplacement(EngineModel):
             found = game.legal_target(stack_object, targets[index])
             return found if isinstance(found, CardState) else None
 
-        redirect = legal(self.redirect_target)
-        if redirect is None:
-            return None  # CR 608.2b: no legal target left to redirect to.
+        from ..models.player import Player
+
+        redirect_found = (
+            game.legal_target(stack_object, targets[self.redirect_target])
+            if self.redirect_target < len(targets)
+            else None
+        )
         controller = game.controller_of(stack_object).username
-        update: dict[str, Any] = {
-            "bound": True,
-            "redirect_id": redirect.id,
-            "redirect_stamp": redirect.zone_change_stamp,
-        }
-        if self.protected_target is None:
+        update: dict[str, Any] = {"bound": True}
+        if isinstance(redirect_found, CardState):
+            update["redirect_id"] = redirect_found.id
+            update["redirect_stamp"] = redirect_found.zone_change_stamp
+        elif isinstance(redirect_found, Player):
+            update["redirect_player"] = redirect_found.username
+        else:
+            return None  # CR 608.2b: no legal target left to redirect to.
+        if self.amount_is_x:
+            x_value = (
+                game.cast_record(stack_object).x_value
+                if isinstance(stack_object, CardState)
+                else getattr(stack_object, "x_value", None)
+            )
+            if not x_value:
+                return None  # the next 0 damage: nothing to redirect
+            update["amount"] = x_value
+        if self.protects_yours or self.protected_target is None:
             update["protected_player"] = controller
         else:
             protected = legal(self.protected_target)
@@ -369,9 +400,13 @@ class DamageRedirectReplacement(EngineModel):
             )
         return self.model_copy(update=update)
 
-    def _redirect_to(self, game: "Game") -> CardState | None:
+    def _redirect_to(self, game: "Game") -> "CardState | Player | None":
         from ..models.card import Type
 
+        if self.redirect_player is not None:
+            if not game.is_in_game(self.redirect_player):
+                return None  # CR 614.9: a player who has left the game
+            return game.player(self.redirect_player)
         if self.redirect_id is None:
             return None
         found = game.find_by_id(self.redirect_id)
@@ -391,7 +426,10 @@ class DamageRedirectReplacement(EngineModel):
             return False
         if self.combat_only and not event.combat:
             return False
-        if self.protected_player is not None:
+        if self.protects_yours:
+            if not self._protects(game, event):
+                return False
+        elif self.protected_player is not None:
             if event.player is None or event.player.username != self.protected_player:
                 return False
         elif (
@@ -404,9 +442,24 @@ class DamageRedirectReplacement(EngineModel):
             source = event.source
             if source is None or source.id != self.source_id:
                 return False
-            if self.source_stamp is not None and source.zone_change_stamp != self.source_stamp:
+            if self.source_stamp is not None and not game.damage_source_is_object(
+                source, self.source_id, self.source_stamp
+            ):
                 return False
         return self._redirect_to(game) is not None
+
+    def _protects(self, game: "Game", event: "ReplaceableEvent") -> bool:
+        """ "you and/or permanents [creatures] you control", read as the damage
+        would be dealt."""
+        if event.player is not None:
+            return event.player.username == self.protected_player
+        card = event.card
+        if card is None or card.zone is not Zone.BATTLEFIELD:
+            return False
+        if game.controller_of(card).username != self.protected_player:
+            return False
+        types = {str(kind).lower() for kind in game.characteristics_of(card).types}
+        return all(kind in types for kind in self.protected_types)
 
     def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
         """The same stand-in `replacement._redirect_damage_to_the_source` uses:
@@ -424,20 +477,29 @@ class DamageRedirectReplacement(EngineModel):
         event.amount -= moved
         source = event.source
         dealt = game.deal_damage(target, moved, source=source)
-        if source is not None and dealt > 0:
+        if source is not None and dealt > 0 and isinstance(target, CardState):
             game._noncombat_deathtouch_and_lifelink(source, target, dealt)
             if event.combat:
                 game.combat_damage_dealt_this_turn_by.add(source.id)
 
 
-def _choose_a_source(game: "Game", controller: str, stack_object: Any) -> CardState | None:
+def _choose_a_source(
+    game: "Game",
+    controller: str,
+    stack_object: Any,
+    *,
+    eligible: Callable[[CardState], bool] | None = None,
+) -> CardState | None:
     """CR 609.7a's "a source of your choice": a permanent or a spell on the
     stack (the objects this engine can name as a damage source), chosen by
-    the controller as the effect is created."""
+    the controller as the effect is created. `eligible` narrows the choice to
+    a printed property ("a red source of your choice", CR 609.7b)."""
     from .decisions import Decision, DecisionKind, source_id_of
 
     candidates = [state for state in game.battlefield if isinstance(state, CardState)]
     candidates.extend(state for state in game.stack if isinstance(state, CardState))
+    if eligible is not None:
+        candidates = [candidate for candidate in candidates if eligible(candidate)]
     if not candidates:
         return None
     answer = game.ask(

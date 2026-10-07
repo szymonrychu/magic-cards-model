@@ -1331,10 +1331,23 @@ def _parse_prevent_next_damage_to_you_and_permanents_text(text: str) -> Effect |
 # the shield prevents damage.
 
 _NEXT_N_SHIELD_RE = re.compile(
-    rf"^prevent the next (?:(?P<x>x)|{count_pattern('n', article=False)}) damage that would be "
-    r"dealt to (?P<recipient>you|any target|target [^.,]+?) this turn"
+    rf"^prevent the next (?:(?P<x>x)|{count_pattern('n', article=False)}) damage that "
+    r"(?:would be dealt to (?P<recipient>you|any target|target [^.,]+?) this turn"
     r"(?:, where x is (?P<where_x>[^.]+?))?"
-    r"(?P<choice> by a source of your choice)?\.?$",
+    r"(?P<choice> by a source of your choice)?"
+    r"|(?P<chosen>a source of your choice) would deal to (?P<chosen_recipient>you) this turn)"
+    r"\.?$",
+    re.IGNORECASE,
+)
+#: "The next time a [<colour>] source of your choice would deal damage [to
+#: <you | any target>] this turn, prevent that damage." (Deflecting Palm,
+#: Honorable Passage, Circle of Protection: Red, Sanctum Guardian) - CR
+#: 615.8's next-instance shield, keyed to the source chosen as it resolves
+#: (CR 609.7a); a colour word is CR 609.7b's property, required of the
+#: choice and rechecked as the damage would be dealt.
+_NEXT_TIME_SOURCE_OF_CHOICE_RE = re.compile(
+    r"^the next time an? (?:(?P<color>white|blue|black|red|green) )?source of your choice "
+    r"would deal damage(?: to (?P<recipient>you|any target))? this turn, prevent that damage\.?$",
     re.IGNORECASE,
 )
 #: "Prevent all [combat] damage target <...> spell would deal this turn."
@@ -1351,6 +1364,18 @@ _PAYOFF_COUNTERS_RE = re.compile(
 )
 _PAYOFF_LIFE_RE = re.compile(
     r"^you gain life equal to the damage prevented this way\.?$", re.IGNORECASE
+)
+#: "If|When damage [from a <colour> source] is prevented this way, <self>
+#: deals that much damage to that|the source's controller[ and you draw that
+#: many cards]." (Deflecting Palm, Honorable Passage, New Way Forward) - CR
+#: 615.5's payoff with no target: the recipient is whoever controls the
+#: source whose damage was prevented. "When" is CR 603.12's reflexive
+#: trigger, which uses the stack; "If" is performed immediately.
+_PAYOFF_SOURCE_CONTROLLER_RE = re.compile(
+    r"^(?P<word>if|when) damage (?:from an? (?P<color>white|blue|black|red|green) source )?"
+    r"is prevented this way, (?P<name>[^.]+?) deals that much damage to "
+    r"(?:that|the) source's controller(?P<draw> and you draw that many cards)?\.?$",
+    re.IGNORECASE,
 )
 #: The `<self>` of "<self> deals that much damage": the object whose text
 #: this is - "this creature", "this spell", or its own (capitalised) name.
@@ -1380,6 +1405,11 @@ class _ShieldSentence:
     """The sentence alone is already read by an older reader (Bandage's
     fixed next-N to a target, a plain fog to a target creature): claimed
     here only together with a payoff."""
+    next_instance: bool = False
+    """CR 615.8's "the next time ... would deal damage": one whole instance."""
+    source_quality: str | None = None
+    """"a red source of your choice": the chosen source's property (CR
+    609.7b)."""
 
 
 @dataclass(frozen=True)
@@ -1388,6 +1418,14 @@ class _ShieldPayoff:
     reflect_optional: bool = False
     counters: str | None = None
     gains_life: bool = False
+    to_source_controller: bool = False
+    """"deals that much damage to that source's controller"."""
+    source_quality: str | None = None
+    """"If damage from a red source is prevented this way"."""
+    reflexive: bool = False
+    """"When damage is prevented this way" (CR 603.12)."""
+    draws: bool = False
+    """"... and you draw that many cards"."""
 
     @property
     def targets(self) -> int:
@@ -1397,10 +1435,37 @@ class _ShieldPayoff:
 def _read_shield_sentence(sentence: str) -> _ShieldSentence | None:
     text = " ".join(sentence.strip().split())
     lowered = text.lower()
+    if lowered.startswith("the next time "):
+        match = _NEXT_TIME_SOURCE_OF_CHOICE_RE.fullmatch(text)
+        if match is None:
+            return None
+        recipient = (match.group("recipient") or "").lower()
+        color = match.group("color")
+        return _ShieldSentence(
+            text=text.rstrip("."),
+            targets=1 if recipient == "any target" else 0,
+            to_you=recipient == "you",
+            choose_source=True,
+            next_instance=True,
+            source_quality=color.lower() if color else None,
+        )
     if lowered.startswith("prevent the next "):
         match = _NEXT_N_SHIELD_RE.fullmatch(text)
         if match is None:
             return None
+        if match.group("chosen") is not None:
+            is_x = match.group("x") is not None
+            fixed = None if is_x else parse_count(match.group("n"), article=False)
+            if not is_x and fixed is None:
+                return None
+            return _ShieldSentence(
+                text=text.rstrip("."),
+                targets=0,
+                fixed=fixed,
+                x_from_cost=is_x,
+                to_you=True,
+                choose_source=True,
+            )
         recipient = match.group("recipient")
         where_phrase = match.group("where_x")
         is_x = match.group("x") is not None
@@ -1453,6 +1518,21 @@ def _read_shield_payoff(sentence: str, shield: _ShieldSentence) -> _ShieldPayoff
         # "that creature" is the shielded creature - only a shield that
         # protects one has a referent (CR 608.2c).
         return _ShieldPayoff(counters=match.group("kind")) if shield.names_a_creature else None
+    if match := _PAYOFF_SOURCE_CONTROLLER_RE.fullmatch(text):
+        # "that source" is the shield's own chosen source (CR 608.2c): only a
+        # shield keyed to one has a referent.
+        name = match.group("name").strip()
+        if not shield.choose_source or _ANAPHOR_SUBJECT_RE.match(name):
+            return None
+        if not _PAYOFF_SELF_RE.fullmatch(name):
+            return None
+        color = match.group("color")
+        return _ShieldPayoff(
+            to_source_controller=True,
+            source_quality=color.lower() if color else None,
+            reflexive=match.group("word").lower() == "when",
+            draws=match.group("draw") is not None,
+        )
     if match := _FOG_REFLECT_RIDER_RE.fullmatch(text):
         name = match.group("name").strip()
         if _ANAPHOR_SUBJECT_RE.match(name) or not _PAYOFF_SELF_RE.fullmatch(name):
@@ -1479,6 +1559,17 @@ def _reflected_damage(
     the effect still happens without it)."""
     from ...models.game import ReflectedDamage
 
+    if payoff.to_source_controller:
+        source = _resolving_source(game, stack_object)
+        if source is None:
+            return None
+        return ReflectedDamage(
+            source_id=source.id,
+            to_source_controller=True,
+            source_quality=payoff.source_quality,
+            reflexive=payoff.reflexive,
+            draws=payoff.draws,
+        )
     refs = list(getattr(stack_object, "targets", ()) or ())
     if payoff.reflect_target is None or index >= len(refs):
         return None
@@ -1529,6 +1620,9 @@ def _create_payoff_shield(
             )
         return
     controller = game.controller_of(stack_object).username
+    if shield.next_instance:
+        _create_next_instance_shield(game, stack_object, shield, fields, controller)
+        return
     if where_x is not None:
         source = _resolving_source(game, stack_object)
         if source is None:
@@ -1572,6 +1666,63 @@ def _create_payoff_shield(
             "this turn",
             controller=controller,
             amount=amount,
+            **fields,
+        )
+    )
+
+
+def _create_next_instance_shield(
+    game: "Game",
+    stack_object: "StackObject",
+    shield: _ShieldSentence,
+    fields: dict[str, Any],
+    controller: str,
+) -> None:
+    """CR 615.8's shield for "the next time a [<colour>] source of your choice
+    would deal damage [to you | to any target] this turn": the source is
+    chosen as it resolves among those with the printed property (CR 609.7a),
+    and the shield prevents that source's next instance of damage to the
+    protected recipient - "any target" is any player or permanent - however
+    much it is, then is used up. The property is rechecked as the damage
+    would be dealt (CR 609.7b, `PreventionShield.source_quality`). "Any
+    target" is the spell's own target (CR 115.4), a player or a permanent,
+    rechecked on resolution (CR 608.2b)."""
+    from ...models.game import PreventionShield, ShieldKind
+    from ..damage_modification import _choose_a_source
+
+    quality = shield.source_quality
+    protected = ""
+    if shield.to_you:
+        fields["player"] = controller
+        protected = f"to {controller} "
+    elif shield.targets:
+        refs = list(getattr(stack_object, "targets", ()) or ())
+        target = game.legal_target(stack_object, refs[0]) if refs else None
+        if isinstance(target, CardState):
+            fields["card_id"] = target.id
+            protected = f"to {target.name} "
+        elif isinstance(target, Player):
+            fields["player"] = target.username
+            protected = f"to {target.username} "
+        else:
+            return  # CR 608.2b
+
+    def eligible(candidate: CardState) -> bool:
+        return quality is None or game.source_has_quality(candidate, quality)
+
+    chosen = _choose_a_source(game, controller, stack_object, eligible=eligible)
+    if chosen is None:
+        return
+    game.create_prevention_shield(
+        PreventionShield(
+            kind=ShieldKind.NEXT_INSTANCE,
+            label=f"prevent the next damage {chosen.name} would deal {protected}this turn",
+            controller=controller,
+            source_id=chosen.id,
+            # CR 609.7a: a permanent spell chosen on the stack also covers the
+            # permanent it becomes, so only a permanent is held to its stamp.
+            source_stamp=chosen.zone_change_stamp if chosen.zone is Zone.BATTLEFIELD else None,
+            source_quality=quality,
             **fields,
         )
     )
@@ -4159,6 +4310,57 @@ def _parse_bite_damage_clause(clause: str, *, for_spell: bool) -> TargetedClause
     return group_effect
 
 
+#: "Then sacrifice it." after a bite (Burn Together): "it" is the biter.
+_THEN_SACRIFICE_BITER_RE = re.compile(r"^then sacrifice (?:it|that creature)\.?$", re.IGNORECASE)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_bite_then_sacrifice_biter_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """ "Target creature you control deals damage equal to its power to any
+    other target. Then sacrifice it." (Burn Together): `_parse_bite_damage_
+    clause`'s targeted bite, then the biter is sacrificed (CR 701.21a) - even
+    when it dealt no damage or its victim is gone (CR 608.2b skips only the
+    illegal victim). A biter that is itself an illegal target is neither the
+    source of the damage nor "it" (CR 608.2b), and only a permanent its
+    controller still controls can be sacrificed (CR 701.21a)."""
+    lowered = text.lower()
+    if "then sacrifice" not in lowered or "deals damage equal to its" not in lowered:
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
+    if len(sentences) != 2 or _THEN_SACRIFICE_BITER_RE.fullmatch(sentences[1].strip()) is None:
+        return None
+    bite = sentences[0].strip().rstrip(".").strip()
+    match = _BITE_DAMAGE_RE.fullmatch(bite)
+    if match is None or match.group("retaliate") is not None:
+        return None
+    subject = match.group("subject").strip()
+    if not subject.lower().endswith(" you control"):
+        return None  # only a permanent you control can be sacrificed (CR 701.21a)
+    if not _targets_understood(subject, count_agnostic=False):
+        return None
+    targeted = _TARGETED_VICTIMS_RE.fullmatch(match.group("object").strip())
+    if targeted is None or not _targets_understood(
+        targeted.group("phrase"), count_agnostic=True, allow_player_targets=True
+    ):
+        return None
+    slots = _bite_slots(bite, subject, for_spell=for_spell)
+    if slots is None or len(slots.profile.requirements) != 2:
+        return None
+    stat = match.group("stat").lower()
+
+    def clause(game: "Game", stack_object: "StackObject") -> None:
+        biter = _resolve_bite_damage(game, stack_object, stat, slots=slots)
+        if biter is None or biter.zone is not Zone.BATTLEFIELD:
+            return
+        if game.controller_of(biter).username != game.controller_of(stack_object).username:
+            return
+        game.sacrifice(biter)
+
+    return [clause]
+
+
 #: One part of an untargeted bite group: "opponent", "player", or a creature
 #: group ("other creature", "creature you don't control", "other creature
 #: that player controls").
@@ -4348,6 +4550,68 @@ def _parse_bite_damage_clause_pair(
 # splitter cuts a sentence like "deals 1 damage to any target, 2 damage to
 # another target, and 3 damage to a third target" at its commas and bare
 # "and"s into fragments no per-clause reader can put back together.
+
+
+#: "<self> deals damage to that creature equal to <amount>." / "<self> deals
+#: N damage to that creature." after a layer sentence naming one target
+#: (Crash Landing) - CR 608.2c's "that creature" is that target.
+_DAMAGE_TO_LAYER_TARGET_RE = re.compile(
+    rf"^(?P<name>[^.]+?) deals (?:{count_pattern('n', article=False)} damage to "
+    r"(?:that creature|it)|damage to (?:that creature|it) equal to (?P<amount>[^.]+?))\.?$",
+    re.IGNORECASE,
+)
+
+
+def damage_to_layer_target_rider(text: str) -> TargetedClause | None:
+    """`_DAMAGE_TO_LAYER_TARGET_RE`'s rider, read by `continuous._layer_
+    remainder_or_composed` only after a layer sentence with exactly one
+    "target": the damage goes to that target if it is still a legal creature
+    on the battlefield (CR 608.2b), from the object whose text this is (CR
+    120.1). The amount is read once, as the damage is dealt (CR 608.2h)."""
+    body = " ".join(text.strip().split())
+    if " deals " not in body.lower():
+        return None
+    match = _DAMAGE_TO_LAYER_TARGET_RE.fullmatch(body)
+    if match is None:
+        return None
+    name = match.group("name").strip()
+    if _ANAPHOR_SUBJECT_RE.match(name) or not _PAYOFF_SELF_RE.fullmatch(name):
+        return None
+    reader: AmountReader | None = None
+    fixed: int | None = None
+    if match.group("amount") is not None:
+        reader = amount_expression(match.group("amount"))
+        if reader is None:
+            return None
+    else:
+        fixed = parse_count(match.group("n"), article=False)
+        if fixed is None:
+            return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = _resolving_source(game, stack_object)
+        controller = game.controller_of(stack_object).username
+        # CR 608.2b checks the target once, as the spell starts to resolve;
+        # the layer sentence before this one may already have changed what
+        # made it legal (Crash Landing's target no longer has flying), so the
+        # object is followed by its stamp rather than re-judged (CR 400.7).
+        for ref in list(getattr(stack_object, "targets", ()) or ()):
+            target = game.resolve_target(ref)
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            if ref.zone_change_stamp is not None and (
+                target.zone_change_stamp != ref.zone_change_stamp
+            ):
+                continue
+            amount = (
+                fixed
+                if reader is None
+                else reader(game, controller, source, _announced_x(game, stack_object))
+            )
+            if amount and amount > 0:
+                game.deal_damage(target, amount, source=source)
+
+    return effect
 
 
 def _resolving_source(game: "Game", stack_object: "StackObject") -> CardState | None:

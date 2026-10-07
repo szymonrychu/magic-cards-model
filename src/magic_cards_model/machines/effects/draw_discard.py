@@ -167,6 +167,15 @@ def _parse_discard_then_draw_token_per_nonland_clause(text: str) -> AbilityEffec
     return effect
 
 
+#: "Draw X cards, where X is `<count>`." - the same instruction as "Draw cards
+#: equal to `<count>`" in its X form (Liliana's Standard Bearer's "draw X
+#: cards, where X is the number of creatures that died under your control this
+#: turn"). Only a `count_expression` the amounts family reads is accepted, so
+#: an X naming something else ("the number of cards discarded this way") still
+#: falls to its own reader.
+_DRAW_X_WHERE_X_IS_RE = re.compile(r"^draw x cards, where x is (?P<expr>.+?)$", re.IGNORECASE)
+
+
 @MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
 def _parse_draw_cards_equal_to_count_clause(
     clause: str, *, for_spell: bool
@@ -177,7 +186,8 @@ def _parse_draw_cards_equal_to_count_clause(
     ones Rise of the Deathbringer's own paired reader already uses; the
     amount is read once, as the instruction is applied (CR 608.2h), and an
     empty group is 0 (CR 107.2) - no draw at all."""
-    match = _DRAW_CARDS_EQUAL_TO_RE.fullmatch(clause.strip().rstrip(".").strip())
+    text = clause.strip().rstrip(".").strip()
+    match = _DRAW_CARDS_EQUAL_TO_RE.fullmatch(text) or _DRAW_X_WHERE_X_IS_RE.fullmatch(text)
     if match is None:
         return None
     counter = count_expression(match.group("expr"))

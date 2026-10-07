@@ -1519,6 +1519,29 @@ class ReflexiveWhenYouDoConsequence(DelayedEffectSpecBase):
             consequence(game, ability)
 
 
+class ReflexivePreventedDamagePayoff(DelayedEffectSpecBase):
+    """ "When damage is prevented this way, `<spell>` deals that much damage
+    to that source's controller and you draw that many cards." (CR 603.12,
+    CR 615.5) - New Way Forward's payoff, created by `Game.
+    _deal_reflected_damage` the moment its shield prevents damage. The amount
+    prevented and the source's controller are fixed then (CR 608.2h) and
+    carried here as data; the spell that made the shield deals the damage
+    from wherever it now is, as it last existed (CR 113.7a, CR 608.2h)."""
+
+    kind: Literal["reflexive_prevented_damage_payoff"] = "reflexive_prevented_damage_payoff"
+    amount: int
+    player: str
+    draws: bool = False
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        source = game.find_by_id(trigger.source_id) if trigger.source_id is not None else None
+        dealer = source if isinstance(source, CardState) else None
+        if game.is_in_game(self.player):
+            game.deal_damage(game.player(self.player), self.amount, source=dealer)
+        if self.draws and game.is_in_game(trigger.controller):
+            game.draw_cards(trigger.controller, self.amount)
+
+
 class ReflexiveExileCopiedCard(DelayedEffectSpecBase):
     """Superior Spider-Man's "When you do, exile that card." (CR 603.12,
     `machines/replacement.py`'s `_choose_a_quality`-adjacent copy-choice
@@ -2277,6 +2300,7 @@ DelayedEffectSpec = Annotated[
     | ReflexiveDamageEqualToSubjectPowerConsequence
     | ReflexiveWhenYouDoConsequence
     | ReflexiveExileCopiedCard
+    | ReflexivePreventedDamagePayoff
     | RevokeGrantedAbility
     | AddManaWhenLandTapped
     | PumpEventSubject

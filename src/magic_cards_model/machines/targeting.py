@@ -4557,6 +4557,19 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
             requirement = requirement.model_copy(
                 update={"excludes_source": False, "distinct_from_prior_requirement": True}
             )
+        elif (
+            requirement.excludes_source
+            and requirements
+            and position > 0
+            and _ANY_OTHER_TARGET.search(text[max(0, match.start() - 10) : match.end()])
+            and not re.search(r"[.;]", text[scan[position - 1].end() : match.start()])
+        ):
+            # Burn Together, Self-Destruct: "Target creature you control deals
+            # ... to any other target" - an instant/sorcery face read whole
+            # (`profile_for_text`) still names "other" against the target the
+            # same sentence chose first (CR 115.3), so the biter cannot be its
+            # own victim. The source exclusion stays for an ability's source.
+            requirement = requirement.model_copy(update={"distinct_from_prior_requirement": True})
         if (
             requirement.controller is ControllerRestriction.EVENT_PLAYER
             and position > 0

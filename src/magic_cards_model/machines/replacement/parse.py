@@ -4089,9 +4089,17 @@ _REDIRECT_ALL_RE = re.compile(
     re.IGNORECASE,
 )
 _REDIRECT_NEXT_RE = re.compile(
-    rf"^the next (?P<n>{COUNT}) damage that would be dealt to (?P<protected>.+?) this turn "
+    rf"^the next (?:(?P<x>x)|(?P<n>{COUNT})) damage that "
+    r"(?:would be dealt to (?P<protected>.+?)"
+    r"|(?P<source>a source of your choice) would deal to (?P<protected_by>.+?)) this turn "
     r"is dealt to (?P<new>.+?) instead\.$",
     re.IGNORECASE,
+)
+#: "you and/or permanents you control" / "you and/or creatures you control"
+#: (Harm's Way, Shining Shoal): the controller and every permanent of theirs
+#: (with that card type) as the damage would be dealt.
+_REDIRECT_YOU_AND_YOURS_RE = re.compile(
+    r"^you and/or (?P<what>permanents|creatures) you control$", re.IGNORECASE
 )
 #: A targeted damage recipient: a creature, planeswalker or battle (CR 614.9's
 #: own list), "another" one included.
@@ -4131,30 +4139,42 @@ def _read_turn_damage_sentence(sentence: str, offset: int, *, grouped: bool) -> 
             )
     redirect = _REDIRECT_ALL_RE.fullmatch(sentence)
     amount: int | None = None
+    amount_is_x = False
     if redirect is None:
         redirect = _REDIRECT_NEXT_RE.fullmatch(sentence)
         if redirect is None:
             return None
-        amount = parse_count(redirect.group("n"))
-        if amount is None:
-            return None
+        if redirect.group("x") is not None:
+            amount_is_x = True  # CR 107.3a: the announced X, read on resolution
+        else:
+            amount = parse_count(redirect.group("n"))
+            if amount is None:
+                return None
     elif not (redirect.group("early") or redirect.group("late")):
         return None  # no stated duration (CR 611.2a): not this shape.
     new = redirect.group("new")
-    if _REDIRECT_TARGET_PHRASE_RE.fullmatch(new) is None:
+    # CR 115.4: "any target" - a creature, player, planeswalker or battle.
+    if new.lower() != "any target" and _REDIRECT_TARGET_PHRASE_RE.fullmatch(new) is None:
         return None
-    protected = redirect.group("protected")
+    group = "protected" if redirect.groupdict().get("protected") else "protected_by"
+    protected = redirect.group(group)
     protected_target: int | None = None
-    if protected.lower() != "you":
+    yours_types: tuple[str, ...] | None = None
+    if (yours := _REDIRECT_YOU_AND_YOURS_RE.fullmatch(protected)) is not None:
+        yours_types = ("creature",) if yours.group("what").lower() == "creatures" else ()
+    elif protected.lower() != "you":
         if _REDIRECT_TARGET_PHRASE_RE.fullmatch(protected) is None:
             return None
-        protected_target = _target_index(sentence, redirect.start("protected"), offset)
+        protected_target = _target_index(sentence, redirect.start(group), offset)
     return DamageRedirectReplacement(
         combat_only=bool(redirect.groupdict().get("combat")),
         protected_target=protected_target,
         redirect_target=_target_index(sentence, redirect.start("new"), offset),
         choose_source=bool(redirect.groupdict().get("source")),
         amount=amount,
+        amount_is_x=amount_is_x,
+        protects_yours=yours_types is not None,
+        protected_types=yours_types or (),
     )
 
 

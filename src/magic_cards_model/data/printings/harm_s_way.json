@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "9c59d43e-0e07-4601-b6df-178010ea909f",
+  "oracle_id": "4c34a882-3786-4d3c-9ca4-04fa85d5e51b",
+  "multiverse_ids": [
+    243440
+  ],
+  "mtgo_id": 40102,
+  "mtgo_foil_id": 40103,
+  "tcgplayer_id": 46835,
+  "cardmarket_id": 245750,
+  "name": "Harm's Way",
+  "lang": "en",
+  "released_at": "2011-04-01",
+  "uri": "https://api.scryfall.com/cards/9c59d43e-0e07-4601-b6df-178010ea909f",
+  "scryfall_uri": "https://scryfall.com/card/ddg/23/harms-way?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:15:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.jpg?1783941346",
+    "normal": "https://cards.scryfall.io/normal/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.jpg?1783941346",
+    "large": "https://cards.scryfall.io/large/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.jpg?1783941346",
+    "png": "https://cards.scryfall.io/png/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.png?1783941346",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.jpg?1783941346",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.jpg?1783941346",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.webp?1783941346",
+    "grid": "https://cards.scryfall.io/grid/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.webp?1783941346",
+    "display": "https://cards.scryfall.io/display/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.webp?1783941346",
+    "art": "https://cards.scryfall.io/art/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.webp?1783941346",
+    "crop": "https://cards.scryfall.io/crop/front/9/c/9c59d43e-0e07-4601-b6df-178010ea909f.webp?1783941346"
+  },
+  "mana_cost": "{W}",
+  "cmc": 1.0,
+  "type_line": "Instant",
+  "oracle_text": "The next 2 damage that a source of your choice would deal to you and/or permanents you control this turn is dealt to any target instead.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "cf842e69-7a05-48e2-adac-fd177087caf5",
+  "set": "ddg",
+  "set_name": "Duel Decks: Knights vs. Dragons",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/cf842e69-7a05-48e2-adac-fd177087caf5",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addg&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddg?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9c59d43e-0e07-4601-b6df-178010ea909f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4c34a882-3786-4d3c-9ca4-04fa85d5e51b&unique=prints",
+  "collector_number": "23",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Even when fate is already written, there's always time to change the names.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Dan Murayama Scott",
+  "artist_ids": [
+    "f852fa13-137e-40f2-bbc1-0f01df09c0e0"
+  ],
+  "illustration_id": "975381ef-bd84-42c2-9434-5865b75da4ba",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 28330,
+  "penny_rank": 4829,
+  "prices": {
+    "usd": "0.10",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": null,
+    "tix": "0.22"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=243440&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHarm%2527s%2BWay",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHarm%2527s%2BWay",
+    "edhrec": "https://edhrec.com/route/?cc=Harm%27s+Way"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F46835%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=245750&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/40102?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

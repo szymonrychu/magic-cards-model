@@ -26,6 +26,7 @@ from ...machines.replacement import (
     apply_replacements,
 )
 from ...machines.triggers import (
+    AbilityOnStack,
     GameEvent,
 )
 from ..card import (
@@ -669,8 +670,8 @@ class DamageLifeMixin:
             event.source is None or event.source.id != shield.source_id
         ):
             return False
-        if shield.source_stamp is not None and (
-            event.source is None or event.source.zone_change_stamp != shield.source_stamp
+        if shield.source_stamp is not None and not self.damage_source_is_object(
+            event.source, shield.source_id, shield.source_stamp
         ):
             return False  # CR 400.7: a new object the shield never named
         if shield.lasts_while is not None and not shield.lasts_while.holds_in(self):
@@ -698,6 +699,28 @@ class DamageLifeMixin:
                 event.source is None
                 or not self.source_has_quality(event.source, shield.source_quality)
             )
+        )
+
+    def damage_source_is_object(
+        self: "Game", source: "CardState | None", source_id: UUID | None, stamp: UUID
+    ) -> bool:
+        """Whether `source` is the object a shield or redirection named by id
+        and `zone_change_stamp` (CR 400.7). An ability whose source left the
+        battlefield after it was activated still deals its damage as that
+        object, by last known information (CR 113.7a): Walking Ballista
+        removing its last counter is still the Ballista that was chosen, though
+        the card itself is in the graveyard with a new stamp by the time the
+        ability resolves."""
+        if source is None:
+            return False
+        if source.zone_change_stamp == stamp:
+            return True
+        resolving = self.resolving
+        return (
+            isinstance(resolving, AbilityOnStack)
+            and source.id == source_id
+            and resolving.source_id == source_id
+            and resolving.source_stamp == stamp
         )
 
     def apply_prevention_shield(
@@ -755,20 +778,66 @@ class DamageLifeMixin:
                 event.card, shield.counters_when_prevented, prevented, putter=shield.controller
             )
         if prevented > 0 and shield.reflects is not None:
-            self._deal_reflected_damage(shield.reflects, prevented, shield.controller)
+            self._deal_reflected_damage(
+                shield.reflects, prevented, shield.controller, prevented_from=event.source
+            )
 
     def _deal_reflected_damage(
-        self: "Game", reflects: ReflectedDamage, amount: int, controller: str
+        self: "Game",
+        reflects: ReflectedDamage,
+        amount: int,
+        controller: str,
+        *,
+        prevented_from: "CardState | None" = None,
     ) -> None:
         """CR 615.5's "If damage is prevented this way, `<spell>` deals that
         much damage to any target": dealt immediately after the prevention, by
         the spell that made the shield (CR 120.1, by last known information
-        once it has left the stack), to the target it was cast with. A
-        permanent target that is gone, or a new object (CR 400.7), or a
-        player who has left, is dealt nothing. "You may have `<spell>` deal
+        once it has left the stack, CR 608.2h), to the target it was cast
+        with. A permanent target that is gone, or a new object (CR 400.7), or
+        a player who has left, is dealt nothing. "You may have `<spell>` deal
         ..." (Channel Harm) is asked of the shield's controller each time
-        (CR 608.2d)."""
+        (CR 608.2d).
+
+        `prevented_from` is the source whose damage was just prevented: "that
+        source's controller" (Deflecting Palm) is its controller now, and
+        "from a red source" (Honorable Passage) is its quality as the damage
+        would have been dealt (CR 609.7b). A reflexive payoff ("When damage
+        is prevented this way", New Way Forward) is a CR 603.12 triggered
+        ability put on the stack instead of performed here."""
+        if reflects.source_quality is not None and (
+            prevented_from is None
+            or not self.source_has_quality(prevented_from, reflects.source_quality)
+        ):
+            return
         source = self.find_by_id(reflects.source_id)
+        if reflects.to_source_controller:
+            if prevented_from is None:
+                return
+            recipient = self.controller_of(prevented_from).username
+            if reflects.reflexive:
+                from ...machines.delayed import ReflexivePreventedDamagePayoff
+
+                name = getattr(source, "name", "the spell")
+                draw = f" and you draw {amount} cards" if reflects.draws else ""
+                self.create_reflexive_trigger(
+                    text=(
+                        f"When damage is prevented this way, {name} deals {amount} damage "
+                        f"to {recipient}{draw}."
+                    ),
+                    controller=controller,
+                    source_id=reflects.source_id,
+                    source_name=name,
+                    callback=ReflexivePreventedDamagePayoff(
+                        amount=amount, player=recipient, draws=reflects.draws
+                    ),
+                )
+                return
+            if self.is_in_game(recipient):
+                self.deal_damage(self.player(recipient), amount, source=source)
+            if reflects.draws:
+                self.draw_cards(controller, amount)
+            return
         if reflects.optional and not self.may(
             controller,
             f"Have {getattr(source, 'name', 'the spell')} deal {amount} damage?",
