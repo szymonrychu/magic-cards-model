@@ -177,3 +177,130 @@ def test_it_drains_every_opponent_not_just_one():
     assert scenario.player("bob").life == 17
     assert scenario.player("carol").life == 17
     assert scenario.player("alice").life == 23
+
+
+# -- Mishra's Command: "They may discard up to X cards. Then they draw a card ---
+# -- for each card discarded this way." -----------------------------------------
+#
+# CR 107.3a (X comes from the cast), CR 107.1c ("up to" is zero or more),
+# CR 701.9b (the discarding player chooses), CR 608.2c ("this way" counts what
+# was actually discarded). No other legal printing carries this template
+# (Scryfall o: searches, 2026-10-07); Cathartic Pyre's "Discard up to two
+# cards, then draw that many cards." proves the shared discard-and-count path.
+
+from magic_cards_model.support import card_support  # noqa: E402
+from tests.cards import card  # noqa: E402
+
+MISHRAS_COMMAND = "Mishra's Command"
+
+
+def _command_board(*, bob_hand=("Shock", "Grizzly Bears", "Opt"), bob_battlefield=("Hill Giant",)):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=[MISHRAS_COMMAND],
+            battlefield=["Mountain"] * 6,
+        )
+        .player(
+            "bob",
+            hand=list(bob_hand),
+            battlefield=list(bob_battlefield),
+            library=["Plains"] * 6,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _discard_mode(scenario, player, x_value):
+    """Mode 1 on `player`, paired with mode 4 on Hill Giant (a command needs two modes)."""
+    giant = scenario.creature("Hill Giant", "bob")
+    _cast_command(scenario, [1, 4], [player, giant], x_value)
+    return giant
+
+
+def _cast_command(scenario, modes, targets, x_value):
+    casting = scenario.cast(MISHRAS_COMMAND)
+    casting.choose_modes(modes, x_value=x_value)
+    casting.choose_targets(targets)
+    casting.determine_cost(x_value=x_value)
+    sources = scenario.untapped_sources(*["Mountain"] * (x_value + 1))
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+
+def test_mishras_command_is_fully_handled():
+    bad = [c for c in card_support(card(MISHRAS_COMMAND)).clauses if c.outcome != "handled"]
+    assert not bad, bad
+
+
+def test_the_target_discards_what_they_choose_and_draws_that_many():
+    scenario = _command_board()
+    shock = scenario.find("Shock", Zone.HAND, "bob")
+    opt = scenario.find("Opt", Zone.HAND, "bob")
+    scenario.will_discard(shock, opt, username="bob")
+    _discard_mode(scenario, "bob", 3)
+    assert shock.zone is Zone.GRAVEYARD and opt.zone is Zone.GRAVEYARD
+    # one card left in hand plus two drawn
+    assert len(scenario.player("bob").hand) == 3
+
+
+def test_discarding_zero_cards_draws_nothing():
+    scenario = _command_board()
+    scenario.will_discard(username="bob")
+    _discard_mode(scenario, "bob", 2)
+    assert [c.name for c in scenario.player("bob").hand] == ["Shock", "Grizzly Bears", "Opt"]
+
+
+def test_the_ceiling_is_x_even_when_the_hand_is_bigger():
+    scenario = _command_board()
+    shock = scenario.find("Shock", Zone.HAND, "bob")
+    scenario.will_discard(shock, username="bob")
+    _discard_mode(scenario, "bob", 1)
+    assert shock.zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 3  # 3 - 1 + 1
+
+
+def test_a_hand_smaller_than_x_discards_what_it_has_and_draws_that_many():
+    scenario = _command_board(bob_hand=("Shock",))
+    shock = scenario.find("Shock", Zone.HAND, "bob")
+    scenario.will_discard(shock, username="bob")
+    _discard_mode(scenario, "bob", 4)
+    assert shock.zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 1
+
+
+def test_an_empty_hand_does_nothing():
+    scenario = _command_board(bob_hand=())
+    _discard_mode(scenario, "bob", 2)
+    assert scenario.player("bob").hand == []
+
+
+def test_alice_can_target_herself_and_an_empty_hand_does_nothing():
+    scenario = _command_board()
+    _discard_mode(scenario, "alice", 2)  # the cast left alice with no hand
+    assert scenario.player("alice").hand == []
+    assert len(scenario.player("bob").hand) == 3
+
+
+def test_the_damage_and_pump_modes_still_read_and_resolve():
+    scenario = _command_board()
+    giant = scenario.creature("Hill Giant", "bob")
+    _cast_command(scenario, [2, 4], [giant, giant], 2)
+    assert giant.power == 5, "+2/+0 from mode 4 on a 3/3"
+    assert giant.damage == 2, "2 damage from mode 2"
+
+
+def test_the_planeswalker_damage_mode_pairs_with_the_discard_mode():
+    scenario = _command_board(bob_battlefield=("Jace Beleren",))
+    jace = scenario.find("Jace Beleren", Zone.BATTLEFIELD, "bob")
+    loyalty_before = jace.loyalty
+    shock = scenario.find("Shock", Zone.HAND, "bob")
+    scenario.will_discard(shock, username="bob")
+    _cast_command(scenario, [1, 3], ["bob", jace], 1)
+    assert jace.loyalty == loyalty_before - 1
+    assert shock.zone is Zone.GRAVEYARD
