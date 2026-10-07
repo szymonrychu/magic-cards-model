@@ -1063,23 +1063,15 @@ class ConditionsMixin:
 
     def _last_known_stat(self: "Game", card_id: UUID, stat: str) -> int | None:
         """A departed permanent's power or toughness as CR 608.2h reads it:
-        the snapshot taken as it left the battlefield when a continuous effect
-        made it differ, otherwise the printing plus the counters it left with
-        (CR 122.1a via `last_known_counters` - CR 122.2 took the counters
-        themselves, so the object's own `power` no longer has them). `None`
+        `CardState.last_known_power_toughness`. `None`
         for an id nothing finds or a non-numeric (`*`) value."""
         state = self.find_by_id(card_id)
         if state is None:
             return None
         if state.zone is Zone.BATTLEFIELD:
             return getattr(state, stat)
-        snapshot = getattr(state, f"last_known_{stat}")
-        if snapshot is not None:
-            return snapshot
-        printed = getattr(state, f"printed_{stat}")
-        if printed is None:
-            return None
-        return printed + state.last_known_counters.power_toughness_modifier
+        power, toughness = state.last_known_power_toughness()
+        return power if stat == "power" else toughness
 
     def last_known_mana_value(self: "Game", card: "CardState | UUID") -> float:
         """An object's mana value as CR 608.2h reads it (CR 202.3): the

@@ -56,7 +56,6 @@ from ..layers import (
 )
 from ..triggers import (
     AbilityOnStack,
-    GameEvent,
     event_subject_power,
     has_self_reference_type_word,
 )
@@ -3686,23 +3685,6 @@ def _parse_put_self_counter_for_each_opponent_creature_then_attach_clause(
             attach_permanent(game, source, creature)
 
     return effect
-
-
-def _departed_stat_with_counters(
-    game: "Game",
-    event: "GameEvent | None",
-    read_stat: Callable[["Game", "GameEvent | None"], int | None],
-) -> int | None:
-    """`read_stat`'s own answer, plus a departed subject's own counters
-    (CR 122.1a) - see `_parse_create_tokens_equal_to_event_subject_stat_
-    clause`'s docstring for why `read_stat` alone leaves those out."""
-    value = read_stat(game, event)
-    if value is None or event is None or event.subject_id is None:
-        return value
-    subject = game.find_by_id(event.subject_id)
-    if subject is None or subject.zone is Zone.BATTLEFIELD:
-        return value
-    return value + subject.last_known_counters.power_toughness_modifier
 
 
 #: "put `<n>` `<kind>` counters on him/her/it/this `<noun>`. Then draw half

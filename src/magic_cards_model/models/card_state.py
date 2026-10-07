@@ -2941,6 +2941,33 @@ class CardState(EngineModel):
         self.last_known_mana_value = None if mana_value == self.mana_value else mana_value
         self.last_known_attachments = self._attachments_now()
 
+    def last_known_power_toughness(self) -> tuple[int | None, int | None]:
+        """Power and toughness as CR 608.2h reads them for an effect that
+        looks at this object after it left the battlefield (CR 113.7a).
+
+        The `last_known_*` snapshot keeps only what a continuous effect
+        contributed (see `remember_last_known_power_toughness`), and CR 122.2
+        ended the counters, which `last_known_counters` recorded. Neither
+        alone is the answer: the snapshot when one was taken (it already
+        includes the counters, being the computed value), otherwise the
+        printing plus the counters it left with. `power`/`toughness` stay
+        counter-free off the battlefield on purpose - a card in the graveyard
+        is a 0/0 Hangarback Walker, not a 4/4 one (CR 122.2).
+
+        On the battlefield, or for an object that never left it, this is just
+        `power`/`toughness`.
+        """
+        if self.zone is Zone.BATTLEFIELD or not self.last_left_the_battlefield:
+            return self.power, self.toughness
+        modifier = self.last_known_counters.power_toughness_modifier
+        power = self.last_known_power
+        if power is None and self.printed_power is not None:
+            power = self.printed_power + modifier
+        toughness = self.last_known_toughness
+        if toughness is None and self.printed_toughness is not None:
+            toughness = self.printed_toughness + modifier
+        return power, toughness
+
     def _attachments_now(self) -> tuple[AttachmentSnapshot, ...]:
         """Every permanent attached to this one right now, as the computed
         board sees it (CR 613.5) - `last_known_attachments`' snapshot."""

@@ -4046,22 +4046,9 @@ def _parse_create_tokens_equal_to_event_subject_stat_clause(
     shape with two different trigger events.
 
     `event_subject_power`/`event_subject_toughness` (`machines/triggers.py`)
-    read `CardState.power`/`.toughness` off the event's own subject: live and
-    layer-computed (CR 613.5) while the subject is still a permanent, the CR
-    608.2h last-known snapshot the instant it is not - but that snapshot is
-    deliberately *counters-exclusive* (see that function's own docstring and
-    `intervening_if_holds`'s identical split): CR 122.2 has already cleared
-    `CardState.counters` by the time this trigger resolves, and what a
-    *continuous effect* contributed is all `last_known_power` keeps. A
-    departed subject's counters survive only in `last_known_counters`
-    (`Game._note_left_battlefield`), the same source every other dies-
-    trigger reader here reads for exactly this reason
-    (`hangarback_dies`'s own "counters if on the battlefield else
-    last_known_counters"). `_departed_stat_with_counters` below adds that
-    contribution back in only when the subject has actually left the
-    battlefield, so a still-alive Threefold Thunderhulk (whose counters the
-    layer engine already folds into the live `.power` this reads) is not
-    double-counted.
+    read `CardState.last_known_power_toughness` off the event's own subject:
+    the live characteristic while it is still a permanent, CR 608.2h's last
+    known information (counters included) once it is not.
 
     Ability-only: nothing in the pool prints this on a spell, and there is
     no `AbilityOnStack.event` to read one off.
@@ -4080,7 +4067,7 @@ def _parse_create_tokens_equal_to_event_subject_stat_clause(
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         assert isinstance(stack_object, AbilityOnStack)
-        amount = _departed_stat_with_counters(game, stack_object.event, read_stat)
+        amount = read_stat(game, stack_object.event)
         for _ in range(max(amount or 0, 0)):
             template(game, stack_object)
 
@@ -4567,7 +4554,7 @@ from .control_copy import (  # noqa: E402
     _parse_copy_added_ability_lines,
     _read_copy_exception_list,
 )
-from .counters import _counter_kind, _departed_stat_with_counters  # noqa: E402
+from .counters import _counter_kind  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
     _parse_mixed_clauses,

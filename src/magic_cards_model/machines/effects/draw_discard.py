@@ -77,9 +77,8 @@ def _source_characteristic(game: "Game", source: CardState | None, characteristi
     if source.zone is Zone.BATTLEFIELD:
         value = game.power_of(source) if characteristic == "power" else game.toughness_of(source)
     else:
-        value = (
-            source.last_known_power if characteristic == "power" else source.last_known_toughness
-        )
+        power, toughness = source.last_known_power_toughness()
+        value = power if characteristic == "power" else toughness
     return max(value or 0, 0)
 
 
