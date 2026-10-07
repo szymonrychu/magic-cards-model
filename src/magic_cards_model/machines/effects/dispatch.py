@@ -1420,7 +1420,8 @@ _DIVIDED_DAMAGE_RE = re.compile(
 #: is the number of Dragons you control", would otherwise be silent purely
 #: for lacking a fixed digit.
 _DAMAGE_EACH_OPPONENT_RE = re.compile(
-    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to each opponent{where_x_pattern()}\.?$", re.IGNORECASE
+    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to each opponent{where_x_pattern()}\.?$",
+    re.IGNORECASE,
 )
 #: "<Source> deals N damage to itself." (CR 119.3, 120.2b) - Goblin
 #: Kaboomist's own coin-flip loser. Same `.*\bdeals?` source-agnostic prefix
@@ -1449,7 +1450,8 @@ _DAMAGE_EACH_PLAYER_RE = re.compile(
 #: battlefield, not something chosen or a player group. Same X/where-X
 #: widening as `_DAMAGE_EACH_OPPONENT_RE` just above.
 _DAMAGE_EACH_CREATURE_RE = re.compile(
-    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to each creature{where_x_pattern()}\.?$", re.IGNORECASE
+    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to each creature{where_x_pattern()}\.?$",
+    re.IGNORECASE,
 )
 #: "Prevent all combat damage that would be dealt this turn." (Fog, Angelsong)
 #: - CR 615.1a's prevention effect naming neither a permanent nor a player, so

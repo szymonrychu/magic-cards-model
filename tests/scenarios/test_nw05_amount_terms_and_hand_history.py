@@ -95,9 +95,7 @@ def test_cycling_ability_count_phrase_reads_through_count_expression():
 
 
 def _rats(scenario, username="alice"):
-    return [
-        p for p in scenario.game.permanents_controlled_by(username) if p.name == "Rat Token"
-    ]
+    return [p for p in scenario.game.permanents_controlled_by(username) if p.name == "Rat Token"]
 
 
 def _colony_board(*, hand=("Lightning Bolt",), mountains=2):

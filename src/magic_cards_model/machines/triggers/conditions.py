@@ -535,6 +535,13 @@ def _required_becomes_tapped_subtype(condition: str) -> tuple[str, ...] | None:
     return _parse_subtype_list(match.group("subtype"))
 
 
+#: "a player attacks with five or more creatures" (Aurelia, the Law Above):
+#: the attacking player's declared count, read once per declaration.
+_PLAYER_ATTACKS_WITH_N_OR_MORE_RE = re.compile(
+    rf"^(?P<who>a player|you|an opponent) attacks? with (?P<n>{COUNT}) or more creatures$"
+)
+
+
 #: "a `<Subtype>` you control attacks" (Defiant Thundermaw's own back face's
 #: "Whenever a Dragon you control attacks, it deals 2 damage to any
 #: target.") - `_BECOMES_TAPPED_SUBTYPE`'s own bare-subtype-subject shape
@@ -1950,6 +1957,26 @@ def _condition_matches(
                 if game.controller_of(attacker).username == controller
             )
             return total_power >= threshold
+        attacks_with = _PLAYER_ATTACKS_WITH_N_OR_MORE_RE.fullmatch(lowered.strip())
+        if attacks_with is not None:
+            # CR 508.3d: "Whenever a player attacks with five or more creatures"
+            # (Aurelia, the Law Above) is one trigger for the whole declaration,
+            # read off `Game.declare_attackers`' own subject-less event - never
+            # once per attacker - and only when that player declared enough.
+            who = attacks_with.group("who")
+            needed = parse_count(attacks_with.group("n"))
+            if event.subject_id is not None or event.player is None or needed is None:
+                return False
+            if (who == "you") != (event.player == controller) and who != "a player":
+                return False
+            return (
+                sum(
+                    1
+                    for attacker in game.attacking_creatures()
+                    if game.controller_of(attacker).username == event.player
+                )
+                >= needed
+            )
         batch = batched_attackers(game, condition, controller)
         if batch is not None:
             # CR 603.2c: "one or more <description> attack" is one trigger

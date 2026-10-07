@@ -5,6 +5,10 @@
   damage that was actually dealt to a player (CR 120.3a; prevented damage is
   never dealt, CR 615.6), never a creature or planeswalker target.
 
+- Aurelia, the Law Above: "deals 3 damage to each of your opponents" is the
+  same instruction as "each opponent" (CR 102.2), and the three-or-more
+  sibling trigger keeps reading.
+
 CR numbers checked with `mise run rules:find` (rules effective 2026-09-25).
 """
 
@@ -99,3 +103,77 @@ def test_fully_prevented_damage_is_not_dealt_so_nobody_discards_but_the_life_is_
     assert scenario.player("bob").life == 20
     assert scenario.player("alice").life == 22
     assert [c.name for c in scenario.player("bob").hand] == ["Grizzly Bears"]
+
+
+# -- Aurelia, the Law Above: "each of your opponents" --------------------------
+
+
+def _aurelia_board(*, attackers_alice=5, third_player=False):
+    creatures = ["Grizzly Bears"] * attackers_alice
+    builder = (
+        Scenario()
+        .player("alice", battlefield=["Aurelia, the Law Above", *creatures], library=["Plains"] * 5)
+        .player("bob", library=["Plains"] * 5)
+    )
+    if third_player:
+        builder = builder.player("carol", library=["Plains"] * 5)
+    scenario = builder.build()
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+    return scenario
+
+
+def _attack_with_the_bears(scenario, count, defending=None):
+    bears = scenario.creatures(*["Grizzly Bears"] * count, username="alice")
+    for creature in bears:
+        creature.summoning_sick = False
+    scenario.advance()  # declare attackers step
+    scenario.attack_with(*bears, defending=defending)
+    return bears
+
+
+def test_five_attackers_drain_each_of_your_opponents_for_three():
+    scenario = _aurelia_board()
+    _attack_with_the_bears(scenario, 5)
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 17
+    assert scenario.player("alice").life == 23
+
+
+def test_three_attackers_only_draw_a_card_and_do_not_drain():
+    scenario = _aurelia_board(attackers_alice=3)
+    _attack_with_the_bears(scenario, 3)
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 20
+    assert scenario.player("alice").life == 20
+    assert len(scenario.player("alice").hand) == 1
+
+
+def test_fewer_than_three_attackers_trigger_neither_ability():
+    """The count is part of the trigger event (CR 508.3d), not decoration."""
+    scenario = _aurelia_board(attackers_alice=2)
+    _attack_with_the_bears(scenario, 2)
+    assert scenario.stack_names() == []
+    assert scenario.player("bob").life == 20
+
+
+def test_five_attackers_trigger_each_ability_once_not_once_per_attacker():
+    scenario = _aurelia_board()
+    _attack_with_the_bears(scenario, 5)
+    assert len(scenario.stack_names()) == 2
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 17
+    assert scenario.player("alice").life == 23
+    assert len(scenario.player("alice").hand) == 1
+
+
+def test_it_drains_every_opponent_not_just_one():
+    scenario = _aurelia_board(third_player=True)
+    _attack_with_the_bears(scenario, 5, defending="bob")
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 17
+    assert scenario.player("carol").life == 17
+    assert scenario.player("alice").life == 23
