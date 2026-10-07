@@ -66,6 +66,7 @@
                 "restriction": {
                   "clauses": [
                     {
+                      "class_level": false,
                       "colorless": false,
                       "excluded_types": ["creature"],
                       "joined": false,
