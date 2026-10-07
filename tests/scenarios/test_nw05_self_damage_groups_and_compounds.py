@@ -41,6 +41,8 @@ Rules verified with `mise run rules:find`:
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import TriggerEvent
+from magic_cards_model.machines.effects.registries import trigger_effect_for
 from magic_cards_model.machines.targeting import profile_for_text
 from magic_cards_model.models import Zone
 from magic_cards_model.support import card_support
@@ -572,3 +574,39 @@ def test_volatile_arsonist_slots_are_three_optional_ones():
 
 def test_volatile_arsonist_both_faces_read_handled():
     assert set(_outcomes("Volatile Arsonist // Dire-Strain Anarchist")) == {"handled"}
+
+
+# -- a sentence's own condition is never swallowed, and "other" needs a dealer -
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "it deals 1 damage to each other creature if the moon is full.",
+        "it deals 1 damage to each creature defending player controls unless you control a Dragon.",
+        "it deals 1 damage to defending player if the moon is full.",
+        "it deals 1 damage to each of up to one target creature, up to one target player, "
+        "and/or up to one target planeswalker if the moon is full.",
+        "it deals 1 damage to each opponent and 1 damage to you if the moon is full.",
+    ],
+)
+def test_a_trailing_condition_is_not_dropped_by_the_new_readers(text):
+    """The new readers refuse a sentence carrying an "if"/"unless" rather than
+    deal its damage unconditionally."""
+    assert trigger_effect_for("Some Card", TriggerEvent.ATTACKS, text) is None
+
+
+def test_an_equipments_each_other_creature_is_not_read_as_other_than_the_equipment():
+    """Kusari-Gama's "this Equipment deals that much damage to each other
+    creature defending player controls": "other" means other than the blocking
+    creature the sentence before it named, which this reader cannot know, so it
+    stays unread instead of hitting that creature too."""
+    text = "this Equipment deals that much damage to each other creature defending player controls."
+    assert trigger_effect_for("Some Card", TriggerEvent.DEALS_DAMAGE, text) is None
+
+
+def test_a_printed_name_never_reads_an_event_referent():
+    """A spell's "<name> deals 2 damage to defending player" has no trigger
+    event to name a player; only an ability's own "it"/"this <noun>" does."""
+    text = "Another Card deals 1 damage to each creature defending player controls."
+    assert trigger_effect_for("Some Card", TriggerEvent.ATTACKS, text) is None

@@ -4065,6 +4065,11 @@ class _GroupReading(NamedTuple):
     #: The group is read off the trigger's own event (a named player, a
     #: combatant): only the ability's own "it"/"this <noun>" may deal it.
     uses_event: bool
+    #: "other" was printed: relative to the dealer, so only meaningful when the
+    #: dealer is itself a member of the group. The group's own words, for that
+    #: check.
+    other: bool
+    base: str
 
 
 def _event_group_reader(phrase: str, *, ability: bool) -> _GroupReading | None:
@@ -4140,7 +4145,7 @@ def _event_group_reader(phrase: str, *, ability: bool) -> _GroupReading | None:
             and member(game, permanent, controller)
         ]
 
-    return _GroupReading(read, other or kind is not None, kind is not None)
+    return _GroupReading(read, other or kind is not None, kind is not None, other, text)
 
 
 class _GroupDamage(NamedTuple):
@@ -4154,6 +4159,19 @@ _DAMAGE_EACH_EVENT_GROUP_RE = re.compile(
     rf"{where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
+
+
+def _dealer_is_in_group(subject: str, base: str) -> bool:
+    """Whether "each other `<group>`" can be read as "other than the dealer": a
+    bare pronoun is the creature the event is about, and "this `<noun>`" is a
+    member of the group only when the group names that noun - an Equipment's
+    "each other creature" is other than some creature the sentence before it
+    named, which this reader cannot know."""
+    subject = _HAVE_PREFIX_RE.sub("", subject.strip())
+    if subject.lower() in _BARE_PRONOUNS:
+        return True
+    noun = subject.split()[-1].lower()
+    return re.search(rf"\b{re.escape(noun)}s?\b", base, re.IGNORECASE) is not None
 
 
 def _damage_group_reading(clause: str, *, ability: bool) -> _GroupDamage | None:
@@ -4173,6 +4191,8 @@ def _damage_group_reading(clause: str, *, ability: bool) -> _GroupDamage | None:
         return None
     reading = _event_group_reader(group, ability=ability)
     if reading is None or (reading.uses_event and _this_subject(match.group("subject")) is None):
+        return None
+    if reading.other and not _dealer_is_in_group(match.group("subject"), reading.base):
         return None
     amount_text = match.group("n")
     if amount_text.lower() == "that much":
@@ -4587,10 +4607,14 @@ def _parse_damage_two_recipients_spell(text: str) -> TargetedClause | None:
 #: Strain Anarchist): one optional target slot per kind (CR 115.1, CR 601.2c
 #: via CR 603.3d), each chosen target dealt the whole amount, an illegal one
 #: skipped as the rest still are (CR 608.2b).
+_OPTIONAL_SLOT = (
+    r"up to one target (?:creature|player|opponent|planeswalker|battle|permanent|artifact"
+    r"|enchantment|land)"
+)
 _DAMAGE_EACH_OF_OPTIONAL_SLOTS_RE = re.compile(
     rf"^(?P<subject>.+?)\s+deals? (?P<n>{COUNT}) damage to each of "
-    r"(?P<slots>up to one target [a-z ]+?(?:, (?:and/or )?up to one target [a-z ]+?)+"
-    r"|up to one target [a-z ]+? and/or up to one target [a-z ]+?)\.?$",
+    rf"(?P<slots>{_OPTIONAL_SLOT}(?:, (?:and/or )?{_OPTIONAL_SLOT})+"
+    rf"|{_OPTIONAL_SLOT} and/or {_OPTIONAL_SLOT})\.?$",
     re.IGNORECASE,
 )
 
