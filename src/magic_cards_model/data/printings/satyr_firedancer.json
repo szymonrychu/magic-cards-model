@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "7fc6a735-cbf5-4af2-b15c-7ced82f0d9da",
+  "oracle_id": "b30edff0-3716-4dbb-b445-5329b08e36f4",
+  "multiverse_ids": [
+    378480
+  ],
+  "mtgo_id": 51729,
+  "mtgo_foil_id": 51730,
+  "tcgplayer_id": 79090,
+  "cardmarket_id": 265888,
+  "name": "Satyr Firedancer",
+  "lang": "en",
+  "released_at": "2014-02-07",
+  "uri": "https://api.scryfall.com/cards/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da",
+  "scryfall_uri": "https://scryfall.com/card/bng/108/satyr-firedancer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:45:42Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.jpg?1783939542",
+    "normal": "https://cards.scryfall.io/normal/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.jpg?1783939542",
+    "large": "https://cards.scryfall.io/large/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.jpg?1783939542",
+    "png": "https://cards.scryfall.io/png/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.png?1783939542",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.jpg?1783939542",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.jpg?1783939542",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.webp?1783939542",
+    "grid": "https://cards.scryfall.io/grid/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.webp?1783939542",
+    "display": "https://cards.scryfall.io/display/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.webp?1783939542",
+    "art": "https://cards.scryfall.io/art/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.webp?1783939542",
+    "crop": "https://cards.scryfall.io/crop/front/7/f/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da.webp?1783939542"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Enchantment Creature \u2014 Satyr",
+  "oracle_text": "Whenever an instant or sorcery spell you control deals damage to an opponent, this creature deals that much damage to target creature that player controls.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "50a80fe4-a757-408f-ad23-52c5cc5f45cc",
+  "set": "bng",
+  "set_name": "Born of the Gods",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/50a80fe4-a757-408f-ad23-52c5cc5f45cc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abng&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bng?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/7fc6a735-cbf5-4af2-b15c-7ced82f0d9da/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab30edff0-3716-4dbb-b445-5329b08e36f4&unique=prints",
+  "collector_number": "108",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "His heart, the coal; his eye, the spark; his hand, the whirling flame.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rahn",
+  "artist_ids": [
+    "7742047e-0f80-4c0f-a530-d07460165e86"
+  ],
+  "illustration_id": "1e863bae-1e82-494c-8e36-38df927bd69f",
+  "border_color": "black",
+  "frame": "2003",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16511,
+  "penny_rank": 7064,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "0.55",
+    "usd_etched": null,
+    "eur": "0.23",
+    "eur_foil": "1.17",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=378480&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSatyr%2BFiredancer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSatyr%2BFiredancer",
+    "edhrec": "https://edhrec.com/route/?cc=Satyr+Firedancer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F79090%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=265888&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/51729?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

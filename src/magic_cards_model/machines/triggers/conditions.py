@@ -2653,11 +2653,24 @@ def _condition_matches(
         # is not - it watches every permanent its controller turns face up,
         # not only itself, the same self-vs-general split every other event
         # branch in this function reads off `mine` rather than hardcoding.
-        if mine:
-            return event.subject_id == source.id
+        if event.subject_id == source.id and mine:
+            return True
+        # Pyrotechnic Performer's "Whenever this creature or another
+        # creature you control is turned face up" names itself *and* every
+        # other creature its controller turns up - the DIES branch's own
+        # "another"/"or a" reading of a self-referential condition.
+        if mine and "another" not in lowered and _SELF_OR_A_SUBJECT_RE.search(lowered) is None:
+            return False
+        subject_types = event.subject_types
+        if subject_types is None and event.subject_id is not None:
+            # The event carries no types: the permanent as it is now, just
+            # turned up (CR 708.8: it is the same permanent, face up).
+            turned = game.find_by_id(event.subject_id)
+            if isinstance(turned, CardState) and turned.zone is Zone.BATTLEFIELD:
+                subject_types = tuple(game.characteristics_of(turned).types)
         return _controller_clause_holds(
             condition, controller, event.subject_controller
-        ) and _types_match(event.subject_types, condition)
+        ) and _types_match(subject_types, condition)
 
     if ability.event is TriggerEvent.DISCARDS_A_CARD:
         # Titanbones, Towering Heart's own "When you discard this card, ..."

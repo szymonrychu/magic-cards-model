@@ -1053,6 +1053,54 @@ class AbilityOnStack(EngineModel):
         return self.source(game) or self.source_last_known
 
 
+def event_subject_or_source(game: "Game", ability: AbilityOnStack) -> CardState | None:
+    """The object a triggered ability's own pronoun subject names - "it deals
+    damage equal to its power" (Stalking Vengeance's dying creature), "that
+    creature deals ..." (Pyrotechnic Performer's creature turned face up),
+    "that Archer deals ..." (Greatbow Doyen's damage dealer).
+
+    CR 603.2: the trigger event is what the effect refers back to, so the
+    referent is the event's subject - which is the ability's own source only
+    when the condition is self-referential ("When this creature dies, it
+    deals ..."). A subject still on the stack is the spell a cast trigger
+    watched (heroic's "a spell that targets this creature"), never what a
+    damage-dealing pronoun names, so that falls back to the source, as does
+    an ability with no event (an activation) or a subject that cannot be
+    found. The object is returned in whatever zone it is now; CR 608.2h's
+    last-known read of it is `object_stat_or_last_known`'s job.
+    """
+    event = ability.event
+    if event is not None and event.subject_id is not None:
+        subject = game.find_by_id(event.subject_id)
+        if isinstance(subject, CardState) and subject.zone is not Zone.STACK:
+            return subject
+    return ability.source_or_last_known(game)
+
+
+def object_stat_or_last_known(game: "Game", obj: CardState, stat: str) -> int:
+    """`obj`'s power or toughness as an effect is applied (CR 608.2h): through
+    the layer system while it is on the battlefield (CR 613.5), otherwise its
+    last known information, which `CardState.power`/`.toughness` fall back to
+    once it has left (CR 113.7a). A negative value reads as 0 (CR 107.1b).
+
+    `CardState.remember_last_known_power_toughness` keeps no snapshot when
+    the computed value equalled the printing *plus its counters*, and the
+    counters are gone after the zone change - so a creature whose only
+    boost was +1/+1 counters (Heartfire Hero dying with three) would read
+    back its bare printing. The counters it left with
+    (`last_known_counters`) are added back in exactly that case."""
+    if obj.zone is Zone.BATTLEFIELD:
+        value = game.power_of(obj) if stat == "power" else game.toughness_of(obj)
+    else:
+        value = obj.power if stat == "power" else obj.toughness
+        snapshot = obj.last_known_power if stat == "power" else obj.last_known_toughness
+        if value is not None and snapshot is None and obj.last_left_the_battlefield:
+            value += obj.last_known_counters.power_toughness_modifier - (
+                obj.counters.power_toughness_modifier
+            )
+    return max(value or 0, 0)
+
+
 def tapped_for_mana_event(
     source: CardState,
     game: "Game | None" = None,

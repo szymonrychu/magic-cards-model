@@ -58,6 +58,7 @@ from ..triggers import (
     is_ability,
     triggers_only_off_the_stack,
 )
+from ..triggers.events import object_stat_or_last_known
 from ..turn import Step
 
 if TYPE_CHECKING:
@@ -1953,6 +1954,22 @@ _DAMAGE_SOURCE_PREFIX_RE = re.compile(
 )
 
 
+def _last_attached_object(game: "Game", stack_object: "StackObject") -> CardState | None:
+    """The object the resolving ability's source was last attached to, in
+    whatever zone it is now - `_attached_object`'s own lookup without its
+    battlefield requirement (CR 303.4b, CR 608.2h)."""
+    if not isinstance(stack_object, AbilityOnStack):
+        return None
+    source = stack_object.source_or_last_known(game)
+    if source is None:
+        return None
+    attached_id = (
+        source.attached_to if source.zone is Zone.BATTLEFIELD else source.last_known_attached_to
+    )
+    found = None if attached_id is None else game.find_by_id(attached_id)
+    return found if isinstance(found, CardState) else None
+
+
 def _referent_reader(first: str) -> ReferentReader | None:
     """How to find "it"/"they" for an antecedent clause reading `first`, or
     `None` when this wave cannot say - in which case the pair is refused and
@@ -1998,6 +2015,12 @@ def _referent_reader(first: str) -> ReferentReader | None:
 
         def from_attached(game: "Game", stack_object: "StackObject") -> list[CardState]:
             attached = _attached_object(game, stack_object)
+            if attached is None:
+                # CR 608.2h: the object it was last attached to, as it most
+                # recently existed - every rider checks the battlefield for
+                # itself, so only a rider that may act off last known
+                # information (damage it deals) does anything with it.
+                attached = _last_attached_object(game, stack_object)
             return [] if attached is None else [attached]
 
         return from_attached
@@ -2242,8 +2265,12 @@ _RIDER_DAMAGE_HOLDER_PHRASE = (
 #: ability's source. Not fight (CR 701.14b): the antecedent's damage still
 #: happens off the source's last known power (CR 608.2h) if it has left, and
 #: then "this creature" names nothing to damage (CR 400.7).
+#: "It deals damage to you equal to its power." - Bind the Monster's rider
+#: after "tap enchanted creature": the same instruction, recipient printed
+#: before the amount.
 _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_TO_YOU_RE = re.compile(
-    rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to you$", re.IGNORECASE
+    rf"^{_OBJECT_ANAPHOR} deals damage (?:equal to its power to you|to you equal to its power)$",
+    re.IGNORECASE,
 )
 _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to "
@@ -2656,12 +2683,17 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
         def deals_damage_equal_to_its_power_to_you(
             game: "Game", referents: list[CardState], stack_object: "StackObject"
         ) -> None:
-            dealers = [referent for referent in referents if referent.zone is Zone.BATTLEFIELD]
-            if not dealers:
+            # CR 608.2h: "it's the object as it exists - or as it most
+            # recently existed - that does it". A referent that has left the
+            # battlefield still deals its last known power (Bind the
+            # Monster's ruling: "Damage is dealt even if that creature is
+            # also not on the battlefield at that time").
+            if not referents:
                 return
-            amount = game.power_of(dealers[0]) or 0
+            dealer = referents[0]
+            amount = object_stat_or_last_known(game, dealer, "power")
             if amount > 0:
-                game.deal_damage(game.controller_of(stack_object), amount, source=dealers[0])
+                game.deal_damage(game.controller_of(stack_object), amount, source=dealer)
 
         return deals_damage_equal_to_its_power_to_you
 

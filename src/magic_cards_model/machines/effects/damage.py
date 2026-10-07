@@ -72,6 +72,7 @@ from ..triggers import (
     ExtraTriggerEvent,
     is_ability,
 )
+from ..triggers.events import event_subject_or_source, object_stat_or_last_known
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
@@ -3162,10 +3163,18 @@ def _record_bending(game: "Game", fact: str, event: ExtraTriggerEvent, player: s
 #: same expression grammar, just reached from a "deals damage equal to ..."
 #: opening instead of a "for each" one.
 _SELF_DAMAGE_EQUAL_TO_COUNT_RE = re.compile(
-    r"^(?P<subject>it|he|she|this [a-z]+) deals damage equal to (?P<expr>.+?) to "
-    r"(?P<recipient>any (?:other )?target|each opponent)\.?$",
+    r"^(?P<subject>it|he|she|this [a-z]+|that creature) deals damage "
+    r"(?:equal to (?P<expr>.+?) to (?P<recipient>any (?:other )?target|each opponent|"
+    r"[^.]*?\btarget\b[^.]*?)|to each opponent equal to (?P<expr_after>.+?))\.?$",
     re.IGNORECASE,
 )
+#: "its power"/"its toughness" (and a legend's "his"/"her"): the dealer's own
+#: characteristic, read off the pronoun's referent (CR 208.1, CR 608.2h).
+_DEALER_STAT_RE = re.compile(r"^(?:its|his|her) (?P<stat>power|toughness)$", re.IGNORECASE)
+#: A per-player count ("the number of cards in that player's hand", Stormbreath
+#: Dragon) belongs to `_parse_damage_each_player_equal_to_their_count_clause`,
+#: which evaluates it once for each opponent.
+_PER_PLAYER_EXPR_RE = re.compile(r"\b(?:that player|they|their|them)\b", re.IGNORECASE)
 
 
 @MIXED_CLAUSE.rung("s19", for_spell=FORWARD)
@@ -3176,61 +3185,68 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
     permanent's own ability, the same restriction `_parse_damage_that_much_
     clause` already holds itself to for the identical reason.
 
-    A bare pronoun ("it"/"he"/"she") is CR 400.7's ordinary anaphora back to
-    whichever object the trigger's own *condition* clause named as having
-    done something (CR 603.2's "subject" of the event) - Smaug the
-    Magnificent's and Eivor's own "Whenever `<self>` attacks, `<pronoun>`
-    deals damage ..." happens to name the source itself only because the
-    condition is *also* self-referential ("Smaug attacks"); Champion of the
-    Path's "Whenever another Elemental you control enters, it deals damage
-    equal to its power to each opponent" names a genuinely different
-    object - CR 208.1's own "its power" is the entering Elemental's, not
-    Champion's. `event_subject_power`/`ability.event.subject_id` already
-    name exactly that antecedent for *any* of these event kinds (including
-    the purely self-referential ones, where the event's own subject and the
-    ability's source are simply the same object), so a bare-pronoun subject
-    reads through it uniformly rather than defaulting to the source - a
-    printed "this `<noun>`" subject is left alone (the source is genuinely
-    what that phrasing names, CR 201.5).
+    A bare pronoun ("it"/"he"/"she") or "that creature" is CR 400.7's
+    ordinary anaphora back to whichever object the trigger's own *condition*
+    clause named as having done something (CR 603.2's subject of the event):
+    Smaug's and Eivor's "Whenever `<self>` attacks, `<pronoun>` deals ..."
+    name the source only because the condition is self-referential; Stalking
+    Vengeance's "Whenever another creature you control dies, it deals damage
+    equal to its power" and Pyrotechnic Performer's "that creature deals
+    damage equal to its power to each opponent" name a different object, and
+    CR 208.1's "its power" is that object's. `event_subject_or_source` names
+    the antecedent for every event kind; a printed "this `<noun>`" subject is
+    the source itself (CR 201.5). Its power is read as the effect applies, or
+    by last known information once it has left the battlefield (CR 608.2h,
+    CR 113.7a: a dies trigger's creature still deals the damage).
+
+    "to each opponent equal to `<expr>`" (Meria's Outrider, Fanatic of Mogis)
+    is the same instruction with the amount printed after the recipient: one
+    amount, read once (CR 608.2h), dealt to each opponent at the same time
+    (CR 120.3). A count naming "that player" is a per-opponent amount and is
+    left to its own reader. A new target phrase is read only for a pronoun
+    subject: "this `<noun>` deals damage equal to its power to target ..." is
+    `_SELF_DEALS_DAMAGE_EQUAL_TO_ITS_STAT_RE`'s.
     """
     if for_spell:
         return None
     match = _SELF_DAMAGE_EQUAL_TO_COUNT_RE.fullmatch(text.strip())
     if match is None:
         return None
-    is_bare_pronoun = match.group("subject").lower() in ("it", "he", "she")
-    expr = match.group("expr")
-    counted = count_expression(expr)
-    # "its power"/"his power"/"her power" (Iron Fist, Living Weapon's own
-    # granted "{T}: this permanent deals damage equal to his power to any
-    # other target") is `amount_expression`'s own vocabulary (CR 208.1's
-    # power/toughness), not `count_expression`'s ("the number of `<quality>`
-    # you control") - tried second, since `count_expression`'s own
-    # "the number of ... power ..." phrasings (none in the pool) would
-    # otherwise never get a chance to match first.
+    subject_word = match.group("subject").lower()
+    is_referent = not subject_word.startswith("this ")
+    expr = match.group("expr") or match.group("expr_after")
+    if match.group("expr_after") is not None and _PER_PLAYER_EXPR_RE.search(expr):
+        return None
+    recipient = (match.group("recipient") or "each opponent").lower()
+    each_opponent = recipient == "each opponent"
+    plain_any_target = recipient in ("any target", "any other target")
+    if not each_opponent and not plain_any_target and not is_referent:
+        return None
+    if not each_opponent and not _targets_understood(recipient, allow_player_targets=True):
+        return None
+    stat_match = _DEALER_STAT_RE.fullmatch(expr.strip())
+    stat = stat_match.group("stat").lower() if stat_match is not None else None
+    counted = count_expression(expr) if stat is None else None
     # Red Hulk's reflexive "... equal to the number of +1/+1 counters on him"
     # - an amount read off the dealer itself (CR 608.2h), not a count of
     # something its controller controls.
     magnitude = (
         amount_expression(re.sub(r"\bon (?:him|her)\b", "on it", expr, flags=re.IGNORECASE))
-        if counted is None
+        if stat is None and counted is None
         else None
     )
-    if counted is None and magnitude is None:
-        return None
-    recipient = match.group("recipient").lower()
-    each_opponent = recipient == "each opponent"
-    if not each_opponent and not _targets_understood(recipient, allow_player_targets=True):
+    if stat is None and counted is None and magnitude is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source_or_last_known(game)
-        if is_bare_pronoun:
-            event = ability.event
-            subject = game.find_by_id(event.subject_id) if event is not None else None
-            if isinstance(subject, CardState):
-                source = subject
-        if counted is not None:
+        source = (
+            event_subject_or_source(game, ability)
+            if is_referent
+            else ability.source_or_last_known(game)
+        )
+        if stat is not None:
+            amount = 0 if source is None else object_stat_or_last_known(game, source, stat)
+        elif counted is not None:
             amount = counted(game, ability.controller)
         else:
             assert magnitude is not None
@@ -3238,11 +3254,11 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
         if amount <= 0:
             return
         if each_opponent:
-            for opponent in _opponents(game, ability.controller):
-                game.deal_damage(opponent, amount, source=source)
+            _deal_all(
+                game, [(source, opponent, amount) for opponent in _opponents(game, ability.controller)]
+            )
             return
-        for target in game.resolve_targets(ability):
-            game.deal_damage(target, amount, source=source)
+        _deal_all(game, [(source, target, amount) for target in game.resolve_targets(ability)])
 
     return effect
 
