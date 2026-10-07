@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "3ccfebf1-add1-4f62-bffa-9023dea5b7c4",
+  "oracle_id": "69ae219e-bf97-4626-9b16-7901f51f0343",
+  "multiverse_ids": [
+    535005
+  ],
+  "resource_id": "5312B687C2F337F85B3A2A2E1DB44FD932C636C6F99AEAC0911A71402AF801BC",
+  "mtgo_id": 93424,
+  "arena_id": 78576,
+  "tcgplayer_id": 248146,
+  "cardmarket_id": 574888,
+  "name": "Can't Stay Away",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/3ccfebf1-add1-4f62-bffa-9023dea5b7c4",
+  "scryfall_uri": "https://scryfall.com/card/mid/213/cant-stay-away?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:52:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.jpg?1783925566",
+    "normal": "https://cards.scryfall.io/normal/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.jpg?1783925566",
+    "large": "https://cards.scryfall.io/large/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.jpg?1783925566",
+    "png": "https://cards.scryfall.io/png/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.png?1783925566",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.jpg?1783925566",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.jpg?1783925566",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.webp?1783925566",
+    "grid": "https://cards.scryfall.io/grid/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.webp?1783925566",
+    "display": "https://cards.scryfall.io/display/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.webp?1783925566",
+    "art": "https://cards.scryfall.io/art/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.webp?1783925566",
+    "crop": "https://cards.scryfall.io/crop/front/3/c/3ccfebf1-add1-4f62-bffa-9023dea5b7c4.webp?1783925566"
+  },
+  "mana_cost": "{W}{B}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Return target creature card with mana value 3 or less from your graveyard to the battlefield. It gains \"If this creature would die, exile it instead.\"\nFlashback {3}{W}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "colors": [
+    "B",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [
+    "Flashback"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3ccfebf1-add1-4f62-bffa-9023dea5b7c4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A69ae219e-bf97-4626-9b16-7901f51f0343&unique=prints",
+  "collector_number": "213",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Death is no impediment to dinner.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Milivoj \u0106eran",
+  "artist_ids": [
+    "1eced451-4da5-42bc-b49d-70c41246581f"
+  ],
+  "illustration_id": "65794525-4704-4741-b853-3574fee68752",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17024,
+  "penny_rank": 1993,
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.29",
+    "eur_foil": "0.42",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=535005&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCan%2527t%2BStay%2BAway",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCan%2527t%2BStay%2BAway",
+    "edhrec": "https://edhrec.com/route/?cc=Can%27t+Stay+Away"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248146%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574888&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/93424?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1292,6 +1292,13 @@ _DAMAGE_DEALT_TO_IT_THIS_TURN_RE = re.compile(
 )
 
 
+#: "its mana value" / "this permanent's mana value" - the object the
+#: expression is evaluated for (Terminal Velocity's granted leaves trigger).
+_ITS_MANA_VALUE_RE = re.compile(
+    r"^(?:its|this (?:creature|permanent|artifact|token)(?:'|\u2019)s) mana value$", re.IGNORECASE
+)
+
+
 def _amount_term(term: str) -> AmountReader | None:
     """One term of `amount_expression`, or `None` when it is not readable."""
     text = term.strip()
@@ -1330,6 +1337,10 @@ def _amount_term(term: str) -> AmountReader | None:
         return read_object_counters
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
+    if _ITS_MANA_VALUE_RE.fullmatch(text):
+        # CR 202.3: the object's mana value, as it last existed if it has left
+        # the battlefield (CR 603.10a looks back in time for a leaves trigger).
+        return lambda _game, _controller, obj, _x: 0 if obj is None else int(obj.mana_value)
     if lowered == "the difference between its power and toughness":
         # Doran, Besieged by Time's own X: "it gets +X/+X until end of turn,
         # where X is the difference between its power and toughness." Every
@@ -3188,6 +3199,54 @@ _TARGET_CONTROLLER_REFERENCES = (
 #: damage equal to its power to each of ..." (bite) - is not the spell
 #: dealing damage, and is left to the readers built for it.
 _TARGETED_SUBJECT_RE = re.compile(r"\btarget\b|\bthat creature\b", re.IGNORECASE)
+
+
+#: "`<it|this permanent>` deals damage equal to `<expr>` to each `<type>`
+#: [and each `<type>`]." - non-targeted, simultaneous damage (CR 120.1,
+#: CR 608.2c) whose amount is an `amount_expression` read once as the ability
+#: resolves (CR 608.2h) off the source's last known information (CR 603.10a).
+_EQUAL_TO_DAMAGE_TO_EACH_GROUP_RE = re.compile(
+    r"^(?:it|this (?:creature|permanent|artifact)) deals damage equal to (?P<expr>[^.]+?) to "
+    r"each (?P<groups>[a-z]+(?: and each [a-z]+)*)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s35", for_spell=FORWARD)
+def _parse_expression_damage_to_each_group_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EQUAL_TO_DAMAGE_TO_EACH_GROUP_RE`'s shape. Ability-only: the subject is
+    the ability's own source, which a spell's "it" never is."""
+    if for_spell or "deals damage equal to" not in clause.lower():
+        return None
+    match = _EQUAL_TO_DAMAGE_TO_EACH_GROUP_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+    types: set[Type] = set()
+    for word in re.split(r"\s+and each\s+", match.group("groups")):
+        card_type = _singular_card_type(word)
+        if card_type is None:
+            return None
+        types.add(card_type)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        source = stack_object.source_or_last_known(game)
+        amount = reader(game, stack_object.controller, source, stack_object.x_value or 0)
+        board = game.computed_board()
+        recipients = [
+            permanent
+            for permanent in list(game.battlefield)
+            if types & set(board.of(permanent).types)
+        ]
+        for permanent in recipients:
+            game.deal_damage(permanent, amount, source=source)
+
+    return effect
 
 
 def _announced_x(game: "Game", stack_object: "StackObject") -> int:
