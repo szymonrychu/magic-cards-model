@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 18.4% |
+| Tested | 37 | 20.0% |
 | Works (untested) | 111 | 60.0% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 36 | 19.5% |
+| Not working | 33 | 17.8% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Ajani's Aid | silent | When this enchantment enters, you may search your library and/or graveyard for a card named Ajani, Valiant Protector, reveal it, and put it into your hand. If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baral, Chief of Compliance | silent | Whenever a spell or ability you control counters a spell, you may draw a card. If you do, discard a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Dark Intimations | silent | Each opponent sacrifices a creature or planeswalker of their choice, then discards a card. You return a creature or planeswalker card from your graveyard to you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Decommission | silent | Destroy target artifact or enchantment. Revolt — If a permanent left the battlefield under your control this turn, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fourth Bridge Prowler | silent | When this creature enters, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gonti's Machinations | silent | Pay {E}{E}, Sacrifice this enchantment: Each opponent loses 3 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Greenbelt Rampager | silent | When this creature enters, pay {E}{E} . If you can't, return this creature to its owner's hand and you get {E}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -47,8 +46,6 @@
 | Peacewalker Colossus | silent | {1}{W}: Another target Vehicle you control becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peema Aether-Seer | silent | When this creature enters, you get an amount of {E} equal to the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pia's Revolution | silent | Whenever a nontoken artifact is put into your graveyard from the battlefield, return that card to your hand unless target opponent has this enchantment deal 3 d | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Quicksmith Rebel | silent | When this creature enters, target artifact you control gains "{T}: This artifact deals 2 damage to any target" for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Quicksmith Spy | silent | When this creature enters, target artifact you control gains "{T}: Draw a card" for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Restoration Specialist | silent | {W}, Sacrifice this creature: Return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Salvage Scuttler | silent | Whenever this creature attacks, return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrap Trawler | silent | Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -181,7 +178,7 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>37 cards</summary>
 
 - Aether Chaser
 - Aether Swooper
@@ -195,6 +192,7 @@
 - Consulate Crackdown
 - Consulate Dreadnought
 - Daredevil Dragster
+- Decommission
 - Exquisite Archangel
 - Fatal Push
 - Fen Hauler
@@ -208,6 +206,8 @@
 - Merchant's Dockhand
 - Metallic Rebuke
 - Monstrous Onslaught
+- Quicksmith Rebel
+- Quicksmith Spy
 - Renegade Rallier
 - Rishkar's Expertise
 - Scrounging Bandar
@@ -225,14 +225,12 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | as long as enchanted permanent is a vehicle, it's a creature in addition to its other types. | 2 | Aerial Modification, Siege Modification | aer |
-| when ~ enters, target artifact you control gains "..." for as long as you control ~. | 2 | Quicksmith Rebel, Quicksmith Spy | aer |
 | Choose one | 1 | Destructive Tampering | aer |
 | +N: reveal the top three cards of your library. put all nonland permanent cards revealed ~ into your hand and the rest on the bottom of your library in any orde | 1 | Ajani Unyielding | aer |
 | at the beginning of your end step, ~ deals N damage to enchanted artifact's controller. | 1 | Gremlin Infestation | aer |
 | at the beginning of your upkeep, create a token that's a copy of enchanted artifact. then if you control eight or more artifacts with the same name as one anoth | 1 | Mechanized Production | aer |
 | creatures you control get +N/+N for each unity counter on ~. | 1 | Call for Unity | aer |
 | destroy N target artifacts and/or creatures. for each permanent destroyed ~, its controller reveals cards from the top of their library until an artifact or cre | 1 | Indomitable Creativity | aer |
-| destroy target artifact or enchantment. revolt — if a permanent left the battlefield under your control ~, you gain N life. | 1 | Decommission | aer |
 | each creature you control with a counter on it has "..." | 1 | Rishkar, Peema Renegade | aer |
 | each opponent sacrifices a creature or planeswalker of their choice, then discards a card. you return a creature or planeswalker card from your graveyard to you | 1 | Dark Intimations | aer |
 | enchanted land has "..." | 1 | Unbridled Growth | aer |

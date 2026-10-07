@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 11.0% |
-| Works (untested) | 159 | 64.9% |
+| Tested | 28 | 11.4% |
+| Works (untested) | 158 | 64.5% |
 | Partial (unaudited) | 14 | 5.7% |
 | Not working | 45 | 18.4% |
 
@@ -184,7 +184,6 @@
 | Queen's Bay Soldier | handled |  |  | Y/Y/- | not_tested |
 | Queen's Commission | handled | Create two 1/1 white Vampire creature tokens with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raiders' Wake | handled | Whenever an opponent discards a card, that player loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Rampaging Ferocidon | handled | Players can't gain life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raptor Companion | handled |  |  | Y/Y/- | not_tested |
 | Raptor Hatchling | handled | Enrage — Whenever this creature is dealt damage, create a 3/3 green Dinosaur creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ravenous Daggertooth | handled | Enrage — Whenever this creature is dealt damage, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -248,7 +247,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Admiral Beckett Brass
 - Arguel's Blood Fast // Temple of Aclazotz
@@ -267,6 +266,7 @@
 - Merfolk Branchwalker
 - Raging Swordtooth
 - Rallying Roar
+- Rampaging Ferocidon
 - Ranging Raptors
 - Search for Azcanta // Azcanta, the Sunken Ruin
 - Settle the Wreckage

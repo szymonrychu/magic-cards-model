@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 10.8% |
+| Tested | 30 | 11.2% |
 | Works (untested) | 156 | 58.0% |
 | Partial (unaudited) | 8 | 3.0% |
-| Not working | 76 | 28.3% |
+| Not working | 75 | 27.9% |
 
 ## Cards needing work
 
@@ -66,7 +66,6 @@
 | Quicksilver Elemental | silent | {U}: This creature gains all activated abilities of target creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quicksilver Fountain | silent | At the beginning of each player's upkeep, that player puts a flood counter on target non-Island land they control of their choice. That land is an Island for as | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reiver Demon | silent | When this creature enters, if you cast it from your hand, destroy all nonartifact, nonblack creatures. They can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rust Elemental | silent | At the beginning of your upkeep, sacrifice another artifact. If you can't, tap this creature and you lose 4 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scythe of the Wretched | silent | Whenever a creature dealt damage by equipped creature this turn dies, return that card to the battlefield under your control. Attach this Equipment to that crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Second Sunrise | silent | Each player returns to the battlefield all artifact, creature, enchantment, and land cards in their graveyard that were put there from the battlefield this turn | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skyhunter Cub | silent | As long as this creature is equipped, it gets +1/+1 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -270,7 +269,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
@@ -294,6 +293,7 @@
 - Platinum Angel
 - Raise the Alarm
 - Rule of Law
+- Rust Elemental
 - Seat of the Synod
 - Solemn Simulacrum
 - Sylvan Scrying
@@ -324,7 +324,6 @@
 | at the beginning of each player's upkeep, that player puts a flood counter on target non-island land they control of their choice. that land is an island for as | 1 | Quicksilver Fountain | mrd |
 | at the beginning of each upkeep, each player exiles the top card of their library. the player who exiled the card with the greatest mana value takes an extra tu | 1 | Timesifter | mrd |
 | at the beginning of your end step, target opponent gains control of ~ and puts a charge counter on it. | 1 | Jinxed Choker | mrd |
-| at the beginning of your upkeep, sacrifice another artifact. if you can't, tap ~ and you lose N life. | 1 | Rust Elemental | mrd |
 | at the beginning of your upkeep, the player with the lowest life total gains control of ~. if two or more players are tied for lowest life total, you choose one | 1 | Loxodon Peacekeeper | mrd |
 | choose a card name. reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. exile all other cards r | 1 | Spoils of the Vault | mrd |
 | counter target spell unless its controller pays {M} for each artifact you control. | 1 | Override | mrd |

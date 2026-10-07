@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 11.7% |
-| Works (untested) | 66 | 40.7% |
+| Tested | 20 | 12.3% |
+| Works (untested) | 69 | 42.6% |
 | Partial (unaudited) | 12 | 7.4% |
-| Not working | 65 | 40.1% |
+| Not working | 61 | 37.7% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Fa'adiyah Seer | silent | {T}: Draw a card and reveal it. If it isn't a land card, discard it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Firefright Mage | silent | {1}{R}, {T}, Discard a card: Target creature can't be blocked this turn except by artifact creatures and/or red creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fungal Behemoth | silent | Fungal Behemoth's power and toughness are each equal to the number of +1/+1 counters on creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hammerheim Deadeye | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hunting Wilds | silent | Kicker {3}{G} (You may pay an additional {3}{G} as you cast this spell.) Search your library for up to two Forest cards, put them onto the battlefield tapped, t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Imp's Mischief | silent | Change the target of target spell with a single target. You lose life equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Intet, the Dreamer | silent | Whenever Intet deals combat damage to a player, you may pay {2}{U}. If you do, exile the top card of your library face down. You may look at that card for as lo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -72,18 +71,15 @@
 | Sophic Centaur | silent | {2}{G}{G}, {T}, Discard a card: You gain 2 life for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spellshift | silent | Counter target instant or sorcery spell. Its controller reveals cards from the top of their library until they reveal an instant or sorcery card. That player ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spitting Sliver | silent | All Sliver creatures have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stingscourger | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Stonecloaker | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stormfront Riders | silent | When this creature enters, return two creatures you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sulfur Elemental | silent | White creatures get +1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Synchronous Sliver | silent | All Sliver creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tidewalker | silent | Tidewalker's power and toughness are each equal to the number of time counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Timbermare | silent | When this creature enters, tap all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Uktabi Drake | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Vampiric Link | silent | Whenever enchanted creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Veiling Oddity | silent | When the last time counter is removed from this card while it's exiled, creatures can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Venarian Glimmer | silent | Target player reveals their hand. You choose a nonland card with mana value X or less from it. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Volcano Hellion | silent | When this creature enters, it deals an amount of damage of your choice to you and target creature. The damage can't be prevented. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Pair | silent | Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fatal Frenzy | notice | Until end of turn, target creature you control gains trample and gets +X/+0, where X is its power. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hedge Troll | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -128,6 +124,7 @@
 | Giant Dustwasp | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Gossamer Phantasm | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Groundbreaker | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hammerheim Deadeye | handled | When this creature enters, destroy target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Healing Leaves | handled | Choose one — • Target player gains 3 life. • Prevent the next 3 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heroes Remembered | handled | You gain 20 life. Suspend 10—{W} (Rather than cast this card from your hand, you may pay {W} and exile it with ten time counters on it. At the beginning of your | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kavu Predator | handled | Whenever an opponent gains life, put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -161,9 +158,11 @@
 | Shade of Trokair | handled | {W}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shivan Meteor | handled | Shivan Meteor deals 13 damage to target creature. Suspend 2—{1}{R}{R} (Rather than cast this card from your hand, you may pay {1}{R}{R} and exile it with two ti | the engine reads this text and performs it | Y/-/- | not_tested |
 | Simian Spirit Guide | handled |  |  | Y/-/- | not_tested |
+| Stingscourger | handled | When this creature enters, return target creature an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Teneb, the Harvester | handled | Whenever Teneb deals combat damage to a player, you may pay {2}{B}. If you do, put target creature card from a graveyard onto the battlefield under your control | the engine reads this text and performs it | Y/-/- | not_tested |
 | Timebender | handled | When this creature is turned face up, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permane | the engine reads this text and performs it | Y/-/- | not_tested |
 | Torchling | handled | {R}: Untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Uktabi Drake | handled | Echo | machines/keywords.py | Y/-/- | not_tested |
 | Utopia Vow | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vitaspore Thallid | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vorosh, the Hunter | handled | Whenever Vorosh deals combat damage to a player, you may pay {2}{G}. If you do, put six +1/+1 counters on Vorosh. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -173,7 +172,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Aether Membrane
 - Ana Battlemage
@@ -194,6 +193,7 @@
 - Sunlance
 - Temporal Extortion
 - Urborg, Tomb of Yawgmoth
+- Volcano Hellion
 
 </details>
 
@@ -202,7 +202,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | all slivers have "..." | 5 | Cautery Sliver, Darkheart Sliver, Frenetic Sliver, Necrotic Sliver, Poultice Sliver | plc |
-| echo | 3 | Hammerheim Deadeye, Stingscourger, Uktabi Drake | plc |
 | Choose one | 1 | Timecrafting | plc |
 | all creatures have "..." | 1 | Magus of the Tabernacle | plc |
 | all forests and all saprolings are N/N green saproling creatures and forest lands in addition to their other types. | 1 | Life and Limb | plc |
@@ -243,7 +242,6 @@
 | when the last time counter is removed from ~ while it's exiled, create a N/N black knight creature token with flanking, protection from white, and haste. | 1 | Riftmarked Knight | plc |
 | when you control no swamps, sacrifice ~. | 1 | Bog Serpent | plc |
 | when ~ enters, any player may sacrifice a land of their choice. if a player does, put ~ on top of its owner's library. | 1 | Shivan Wumpus | plc |
-| when ~ enters, it deals an amount of damage of your choice to you and target creature. the damage can't be prevented. | 1 | Volcano Hellion | plc |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Stonecloaker | plc |
 | when ~ enters, return three creatures you control to their owner's hand. | 1 | Dust Elemental | plc |
 | when ~ enters, return two creatures you control to their owner's hand. | 1 | Stormfront Riders | plc |

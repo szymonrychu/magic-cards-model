@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 16.0% |
+| Tested | 30 | 17.8% |
 | Works (untested) | 61 | 36.1% |
 | Partial (unaudited) | 4 | 2.4% |
-| Not working | 77 | 45.6% |
+| Not working | 74 | 43.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Aethermage's Touch | silent | Reveal the top four cards of your library. You may put a creature card from among them onto the battlefield. It gains "At the beginning of your end step, return | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Anthem of Rakdos | silent | Whenever a creature you control attacks, it gets +2/+0 until end of turn and this enchantment deals 1 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aquastrand Spider | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Avatar of Discord | silent | When this creature enters, sacrifice it unless you discard two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Biomantic Mastery | silent | Draw a card for each creature target player controls, then draw a card for each creature another target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -98,8 +97,6 @@
 | Windreaver | silent | {U}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dread Slag | notice | This creature gets -4/-4 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Experiment Kraj | notice | Experiment Kraj has all activated abilities of each other creature with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Flame-Kin War Scout | notice | When another creature enters, sacrifice this creature. If you do, this creature deals 4 damage to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Hellhole Rats | notice | When this creature enters, target player discards a card. This creature deals damage to that player equal to that card's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ignorant Bliss | notice | Exile all cards from your hand face down. At the beginning of the next end step, return those cards to your hand, then draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Infernal Tutor | notice | Reveal a card from your hand. Search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. Hellbent — If you  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Might of the Nephilim | notice | Target creature gets +2/+2 until end of turn for each of its colors. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -172,8 +169,9 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>30 cards</summary>
 
+- Anthem of Rakdos
 - Azorius Aethermage
 - Azorius Guildmage
 - Azorius Ploy
@@ -185,10 +183,12 @@
 - Coiling Oracle
 - Demonfire
 - Enemy of the Guildpact
+- Flame-Kin War Scout
 - Ghost Quarter
 - Grand Arbiter Augustin IV
 - Guardian of the Guildpact
 - Hallowed Fountain
+- Hellhole Rats
 - Palliation Accord
 - Prahv, Spires of Order
 - Pride of the Clouds
@@ -243,16 +243,13 @@
 | target creature gets +N/+N until end of turn for each of its colors. | 1 | Might of the Nephilim | dis |
 | until end of turn, all creatures become black and all lands become swamps. | 1 | Nightcreep | dis |
 | when a player other than ~ owner controls it, that player sacrifices it. if the player does, ~ deals N damage to the player. | 1 | Bronze Bombshell | dis |
-| when another creature enters, sacrifice ~. if you do, ~ deals N damage to that creature. | 1 | Flame-Kin War Scout | dis |
 | when ~ dies, search your library for any number of creature cards with total mana value N or less, put them onto the battlefield, then shuffle. | 1 | Protean Hulk | dis |
 | when ~ enters, each player puts a creature card with mana value N or less from their graveyard onto the battlefield. | 1 | Crypt Champion | dis |
 | when ~ enters, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Cytoplast Root-Kin | dis |
 | when ~ enters, sacrifice it unless you discard a noncreature card. | 1 | Drekavac | dis |
 | when ~ enters, sacrifice it unless you discard two cards. | 1 | Avatar of Discord | dis |
-| when ~ enters, target player discards a card. ~ deals damage to that player equal to that card's mana value. | 1 | Hellhole Rats | dis |
 | when ~ enters, target player shuffles any number of target cards from their graveyard into their library. | 1 | Loaming Shaman | dis |
 | when ~ enters, you may pay {M}. if you do, target creature gets +N/+N until end of turn. | 1 | Squealing Devil | dis |
-| whenever a creature you control attacks, it gets +N/+N until end of turn and ~ deals N damage to you. | 1 | Anthem of Rakdos | dis |
 | whenever a player casts a noncreature spell, counter that spell. that player creates N N/N white and blue bird creature tokens with flying, where N is the spell | 1 | Dovescape | dis |
 | whenever an opponent is dealt N or more damage by a single source, that player discards a card. | 1 | Pain Magnification | dis |
 | whenever an opponent taps a land for mana, tap all lands that player controls. | 1 | War's Toll | dis |

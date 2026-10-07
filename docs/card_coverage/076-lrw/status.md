@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 13.2% |
+| Tested | 38 | 13.6% |
 | Works (untested) | 138 | 49.3% |
 | Partial (unaudited) | 16 | 5.7% |
-| Not working | 89 | 31.8% |
+| Not working | 88 | 31.4% |
 
 ## Cards needing work
 
@@ -94,7 +94,6 @@
 | Sylvan Echoes | silent | Whenever you clash and win, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Thorntooth Witch | silent | Whenever you cast a Treefolk spell, you may have target creature get +3/-3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughtweft Trio | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Thundercloud Shaman | silent | When this creature enters, it deals damage equal to the number of Giants you control to each non-Giant creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tideshaper Mystic | silent | {T}: Target land becomes the basic land type of your choice until end of turn. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Triclopean Sight | silent | When this Aura enters, untap enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Turtleshell Changeling | silent | {1}{U}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -273,7 +272,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>38 cards</summary>
 
 - Amoeboid Changeling
 - Aquitect's Will
@@ -310,6 +309,7 @@
 - Thorn of Amethyst
 - Thoughtseize
 - Thousand-Year Elixir
+- Thundercloud Shaman
 - Warren-Scourge Elf
 - Wings of Velis Vel
 
@@ -364,7 +364,6 @@
 | when a faerie is championed with ~, tap all lands target player controls. | 1 | Mistbind Clique | lrw |
 | when ~ dies, clash with an opponent. if you win, return ~ to its owner's hand. | 1 | Ringskipper | lrw |
 | when ~ enters, exile the top seven cards of your library face down. | 1 | Colfenor's Plans | lrw |
-| when ~ enters, it deals damage equal to the number of giants you control to each non-giant creature. | 1 | Thundercloud Shaman | lrw |
 | when ~ enters, return target creature card from your graveyard to your hand. if that card is a goblin card, ~ gains haste until end of turn. | 1 | Warren Pilferers | lrw |
 | when ~ enters, untap enchanted creature. | 1 | Triclopean Sight | lrw |
 | when ~ enters, untap target goat and gain control of it until end of turn. it gains haste until end of turn. | 1 | Goatnapper | lrw |

@@ -49,7 +49,7 @@
 | Gastal Raider | silent | Max speed — This creature gets +1/+1 and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gastal Thrillroller | silent | When this Vehicle enters, it becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gastal Thrillseeker | silent | Max speed — This creature has deathtouch and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gonti, Night Minister | silent | Whenever a player casts a spell they don't own, that player creates a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Gonti, Night Minister | silent | Whenever a creature deals combat damage to one of your opponents, its controller looks at the top card of that opponent's library and exiles it face down. They  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guidelight Matrix | silent | {2}, {T}: Target Mount you control becomes saddled until end of turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guidelight Pathmaker | silent | When this Vehicle enters, you may search your library for an artifact card and reveal it. Put it onto the battlefield if its mana value is 2 or less. Otherwise, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Haunt the Network | silent | Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -350,7 +350,7 @@
 | when ~ enters, you may search your library for an artifact card and reveal it. put it onto the battlefield if its mana value is N or less. otherwise, put it int | 1 | Guidelight Pathmaker | dft |
 | when ~ enters, you may search your library for an artifact card with mana value N or N, reveal it, put it into your hand, then shuffle. | 1 | Transit Mage | dft |
 | when ~ enters, you may search your library for up to two artifact, creature, and/or enchantment cards with mana value N or less, reveal them, put them into your | 1 | Brightglass Gearhulk | dft |
-| whenever a player casts a spell they don't own, that player creates a treasure token. | 1 | Gonti, Night Minister | dft |
+| whenever a creature deals combat damage to one of your opponents, its controller looks at the top card of that opponent's library and exiles it face down. they  | 1 | Gonti, Night Minister | dft |
 | whenever daretti enters or attacks, choose target artifact card in your graveyard. you may sacrifice an artifact. if you do, return the chosen card to the battl | 1 | Daretti, Rocketeer Engineer | dft |
 | whenever one or more artifact and/or creature cards leave your graveyard, you gain N life. | 1 | Dredger's Insight | dft |
 | whenever you activate an exhaust ability, create a N/N colorless thopter artifact creature token with flying. | 1 | Rangers' Aetherhive | dft |

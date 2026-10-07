@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 15.7% |
-| Works (untested) | 70 | 39.3% |
+| Tested | 29 | 16.3% |
+| Works (untested) | 73 | 41.0% |
 | Partial (unaudited) | 18 | 10.1% |
-| Not working | 62 | 34.8% |
+| Not working | 58 | 32.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Angel of Salvation | silent | When this creature enters, prevent the next 5 damage that would be dealt this turn to any number of targets, divided as you choose. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcanum Wings | silent | Aura Swap | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bitter Ordeal | silent | Search target player's library for a card and exile it. Then that player shuffles. Gravestorm (When you cast this spell, copy it for each permanent put into a g | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Boldwyr Intimidator | silent | {R}: Target creature becomes a Coward until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -36,7 +35,6 @@
 | Coalition Relic | silent | At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for each charge counter removed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cutthroat il-Dal | silent | Hellbent — This creature has shadow as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Darksteel Garrison | silent | Fortify | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Deepcavern Imp | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Epochrasite | silent | When this creature dies, exile it with three time counters on it and it gains suspend. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fleshwrither | silent | Transfigure | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Flowstone Embrace | silent | {T}: Enchanted creature gets +2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -44,7 +42,6 @@
 | Goldmeadow Lookout | silent | {W}, {T}, Discard a card: Create a 1/1 white Kithkin Soldier creature token named Goldmeadow Harrier. It has "{W}, {T}: Tap target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Haze of Rage | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Heartwood Storyteller | silent | Whenever a player casts a noncreature spell, each of that player's opponents may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Henchfiend of Ukor | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Imperial Mask | silent | When this enchantment enters, if it's not a token, each of your teammates creates a token that's a copy of this enchantment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jhoira of the Ghitu | silent | {2}, Exile a nonland card from your hand: Put four time counters on the exiled card. If it doesn't have suspend, it gains suspend. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Judge Unworthy | silent | Choose target attacking or blocking creature. Scry 3, then reveal the top card of your library. Judge Unworthy deals damage equal to that card's mana value to t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -75,7 +72,6 @@
 | Shapeshifter's Marrow | silent | At the beginning of each opponent's upkeep, that player reveals the top card of their library. If it's a creature card, the player puts the card into their grav | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimian Specter | silent | Whenever this creature deals combat damage to a player, that player reveals their hand. You choose a nonland card from it. Search that player's graveyard, hand, | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skirk Ridge Exhumer | silent | {B}, {T}, Discard a card: Create a 1/1 black Zombie Goblin creature token named Festering Goblin. It has "When this token dies, target creature gets -1/-1 until | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Skizzik Surger | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sliver Legion | silent | All Sliver creatures get +1/+1 for each other Sliver on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sparkspitter | silent | {R}, {T}, Discard a card: Create a 3/1 red Elemental creature token named Spark Elemental. It has trample, haste, and "At the beginning of the end step, sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spellweaver Volute | silent | Whenever you cast a sorcery spell, copy the enchanted instant card. You may cast the copy without paying its mana cost. If you do, exile the enchanted card and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -121,6 +117,7 @@
 | Cyclical Evolution | handled | Target creature gets +3/+3 until end of turn. Exile Cyclical Evolution with three time counters on it. Suspend 3—{2}{G} (Rather than cast this card from your ha | the engine reads this text and performs it | Y/-/- | not_tested |
 | Daybreak Coronet | handled | Enchanted creature gets +3/+3 and has first strike, vigilance, and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Death Rattle | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Destroy target nongreen creature. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Deepcavern Imp | handled | Echo | machines/keywords.py | Y/-/- | not_tested |
 | Edge of Autumn | handled | If you control four or fewer lands, search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Cycling—Sacrifice a land. (Sacr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emberwilde Augur | handled | Sacrifice this creature: It deals 3 damage to target player or planeswalker. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emblem of the Warmind | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -131,6 +128,7 @@
 | Gift of Granite | handled | Enchanted creature gets +0/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Graven Cairns | handled |  |  | Y/-/- | not_tested |
 | Grinning Ignus | handled |  |  | Y/Y/- | not_tested |
+| Henchfiend of Ukor | handled | {B/R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ichor Slick | handled | Target creature gets -3/-3 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) Madness {3}{B} (If you discard this card, discard it into exile | the engine reads this text and performs it | Y/-/- | not_tested |
 | Infiltrator il-Kor | handled | Shadow | machines/combat.py | Y/-/- | not_tested |
 | Knight of Sursi | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -158,6 +156,7 @@
 | River of Tears | handled |  |  | Y/-/- | not_tested |
 | Sarcomite Myr | handled | {2}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shivan Sand-Mage | handled | When this creature enters, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permanent with a t | the engine reads this text and performs it | Y/-/- | not_tested |
+| Skizzik Surger | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Slaughter Pact | handled | Destroy target nonblack creature. At the beginning of your next upkeep, pay {2}{B}. If you don't, you lose the game. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sliversmith | handled | {1}, {T}, Discard a card: Create a 1/1 colorless Sliver artifact creature token named Metallic Sliver. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soultether Golem | handled | Whenever another creature you control enters, put a time counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -180,9 +179,10 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Akroma's Memorial
+- Angel of Salvation
 - Arc Blade
 - Augur of Skulls
 - Bloodshot Trainee
@@ -219,7 +219,6 @@
 |---|---|---|---|
 | Hellbent | 3 | Cutthroat il-Dal, Gathan Raiders, Gibbering Descent | fut |
 | buyback | 3 | Haze of Rage, Mystic Speculation, Sprout Swarm | fut |
-| echo | 3 | Deepcavern Imp, Henchfiend of Ukor, Skizzik Surger | fut |
 | Grandeur | 2 | Linessa, Zephyr Mage, Oriss, Samite Guardian | fut |
 | Choose one | 1 | Dust of Moments | fut |
 | Chroma | 1 | Phosphorescent Feast | fut |
@@ -264,7 +263,6 @@
 | when ~ echo cost is paid, each opponent may draw up to three cards. | 1 | Shah of Naar Isle | fut |
 | when ~ enters, choose target face-up exiled card. its owner shuffles it into their library. | 1 | Riftsweeper | fut |
 | when ~ enters, if it"..."s a copy of ~. | 1 | Imperial Mask | fut |
-| when ~ enters, prevent the next N damage that would be dealt ~ to any number of targets, divided as you choose. | 1 | Angel of Salvation | fut |
 | when ~ enters, scry N, then reveal the top card of your library. ~ gets -N/-N until end of turn, where N is that card's mana value. | 1 | Putrid Cyclops | fut |
 | when ~ is put into your graveyard from your library, you may put it onto the battlefield. | 1 | Narcomoeba | fut |
 | when ~ is turned face up, put two time counters on it and it gains vanishing. | 1 | Maelstrom Djinn | fut |

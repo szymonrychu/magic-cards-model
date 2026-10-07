@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 12.6% |
-| Works (untested) | 98 | 38.7% |
+| Tested | 34 | 13.4% |
+| Works (untested) | 99 | 39.1% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 113 | 44.7% |
+| Not working | 110 | 43.5% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Archghoul of Thraben | silent | Whenever this creature or another Zombie you control dies, look at the top card of your library. If it's a Zombie card, you may reveal it and put it into your h | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Binding Geist // Spectral Binding | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Bloodtithe Harvester | silent | {T}, Sacrifice this creature: Target creature gets -X/-X until end of turn, where X is twice the number of Blood tokens you control. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bloodvial Purveyor | silent | Whenever an opponent casts a spell, that player creates a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boarded Window | silent | Creatures attacking you get -1/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brine Comber // Brinebound Gift | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | By Invitation Only | silent | Choose a number between 0 and 13. Each player sacrifices that many creatures of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -128,7 +127,6 @@
 | Arm the Cathars | notice | Until end of turn, target creature gets +3/+3, up to one other target creature gets +2/+2, and up to one other target creature gets +1/+1. Those creatures gain  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Biolume Egg // Biolume Serpent | notice | When you sacrifice this creature, return it to the battlefield transformed under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Petal Celebrant | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Bloodcrazed Socialite | notice | Whenever this creature attacks, you may sacrifice a Blood token. If you do, it gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cemetery Desecrator | notice | When this creature enters or dies, exile another card from a graveyard. When you do, choose one — • Remove X counters from target permanent, where X is the mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dormant Grove // Gnarled Grovestrider | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has toughness 6 or greater, transform this en | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dreamshackle Geist | notice | At the beginning of combat on your turn, choose up to one — • Tap target creature. • Target creature doesn't untap during its controller's next untap step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -137,7 +135,6 @@
 | Manaform Hellkite | notice | Whenever you cast a noncreature spell, create an X/X red Dragon Illusion creature token with flying and haste, where X is the amount of mana spent to cast that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oakshade Stalker // Moonlit Ambusher | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reclusive Taxidermist | notice | This creature gets +3/+2 as long as there are four or more creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Spiked Ripsaw | notice | Whenever equipped creature attacks, you may sacrifice a Forest. If you do, that creature gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Undying Malice | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Ascendant Packleader | unaudited | This creature enters with a +1/+1 counter on it if you control a permanent with mana value 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Avabruck Caretaker // Hollowhenge Huntmaster | unaudited | Other permanents you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -156,6 +153,7 @@
 | Blood Fountain | handled | When this artifact enters, create a Blood token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood Hypnotist | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood Servitor | handled | When this creature enters, create a Blood token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bloodcrazed Socialite | handled | When this creature enters, create a Blood token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodsworn Squire // Bloodsworn Knight | handled | {1}{B}, Discard a card: This creature gains indestructible until end of turn. Tap it. Then if there are four or more creature cards in your graveyard, transform | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloody Betrayal | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Blood token. (It's an artifact with "{1}, {T} | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bramble Wurm | handled | When this creature enters, you gain 5 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -223,6 +221,7 @@
 | Sheltering Boughs | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sigarda's Imprisonment | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skywarp Skaab | handled | When this creature enters, you may exile two creature cards from your graveyard. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Spiked Ripsaw | handled | Equipped creature gets +3/+3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spore Crawler | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stensia Uprising | handled | At the beginning of your end step, create a 1/1 red Human creature token. Then if you control exactly thirteen permanents, you may sacrifice this enchantment. W | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stormchaser Drake | handled | Whenever this creature becomes the target of a spell you control, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -243,7 +242,6 @@
 | Weaver of Blossoms // Blossom-Clad Werewolf | handled | Transform | no code needed | Y/Y/- | not_tested |
 | Wedding Invitation | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wedding Security | handled | Whenever this creature attacks, you may sacrifice a Blood token. If you do, put a +1/+1 counter on this creature and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Welcoming Vampire | handled | Whenever one or more other creatures you control with power 2 or less enter, draw a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whispering Wizard | handled | Whenever you cast a noncreature spell, create a 1/1 white Spirit creature token with flying. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Witch's Web | handled | Target creature gets +3/+3 and gains reach until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wolfkin Outcast // Wedding Crasher | handled | This spell costs {2} less to cast if you control a Wolf or Werewolf. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -251,12 +249,13 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>34 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
 - Ballista Watcher // Ballista Wielder
 - Bleed Dry
+- Bloodvial Purveyor
 - Cartographer's Survey
 - Catapult Fodder // Catapult Captain
 - Chill of the Grave
@@ -284,6 +283,7 @@
 - Sundown Pass
 - Volatile Arsonist // Dire-Strain Anarchist
 - Voltaic Visionary // Volt-Charged Berserker
+- Welcoming Vampire
 - Wolf Strike
 
 </details>
@@ -363,14 +363,11 @@
 | whenever a nontoken zombie you control enters, create a token that's a copy of that creature. | 1 | Necroduality | vow |
 | whenever a permanent card is put into your graveyard from your library, exile it with a croak counter on it. | 1 | Grolnok, the Omnivore | vow |
 | whenever an enchantment you control enters, ~ can attack ~ as though it didn't have defender. | 1 | Steelclad Spirit | vow |
-| whenever an opponent casts a spell, that player creates a blood token. | 1 | Bloodvial Purveyor | vow |
-| whenever equipped creature attacks, you may sacrifice a forest. if you do, that creature gains trample until end of turn. | 1 | Spiked Ripsaw | vow |
 | whenever you cast a creature spell, create a N/N green and white human soldier creature token with training. | 1 | Torens, Fist of the Angels | vow |
 | whenever you cast a noncreature spell, create an N/N red dragon illusion creature token with flying and haste, where N is the amount of mana spent to cast that  | 1 | Manaform Hellkite | vow |
 | whenever you create a blood token, if you control five or more blood tokens, transform ~. | 1 | Voldaren Bloodcaster // Bloodbat Summoner | vow |
 | whenever you sacrifice a blood token, you may have ~ become a N/N vampire artifact creature with haste until end of turn. | 1 | Sanguine Statuette | vow |
 | whenever ~ attacks, defending player loses N life and you gain N life. | 1 | Ragged Recluse // Odious Witch | vow |
-| whenever ~ attacks, you may sacrifice a blood token. if you do, it gets +N/+N until end of turn. | 1 | Bloodcrazed Socialite | vow |
 | whenever ~ attacks, you may search your library for a basic land card that doesn't share a land type with a land you control, put that card onto the battlefield | 1 | Hiveheart Shaman | vow |
 | whenever ~ deals damage to a vampire, destroy that creature. | 1 | Vampire Slayer | vow |
 | whenever ~ or another zombie you control dies, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard | 1 | Archghoul of Thraben | vow |

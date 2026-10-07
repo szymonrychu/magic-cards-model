@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 15.8% |
-| Works (untested) | 32 | 56.1% |
+| Tested | 11 | 19.3% |
+| Works (untested) | 31 | 54.4% |
 | Partial (unaudited) | 4 | 7.0% |
-| Not working | 12 | 21.1% |
+| Not working | 11 | 19.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Boil | silent | Destroy all Islands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Booby Trap | silent | When the chosen player draws a card with the chosen name, sacrifice this artifact. If you do, this artifact deals 10 damage to that player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Death Pits of Rath | silent | Whenever a creature is dealt damage, destroy it. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elvish Fury | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Jinxed Idol | silent | Sacrifice a creature: Target opponent gains control of this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -51,7 +50,6 @@
 | Fighting Drake | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Harrow | handled | As an additional cost to cast this spell, sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jet Medallion | handled | Black spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Knight of Dusk | handled | {B}{B}: Destroy target creature blocking this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lightning Blast | handled | Lightning Blast deals 4 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lightning Elemental | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Master Decoy | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -78,12 +76,14 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>11 cards</summary>
 
+- Booby Trap
 - Dauthi Slayer
 - Diabolic Edict
 - Furnace of Rath
 - Goblin Bombardment
+- Knight of Dusk
 - Mogg Fanatic
 - Reflecting Pool
 - Ruby Medallion
@@ -104,7 +104,6 @@
 | sacrifice a creature: target opponent gains control of ~. | 1 | Jinxed Idol | tmp |
 | sacrifice a creature: target player mills cards equal to the sacrificed creature's power. | 1 | Altar of Dementia | tmp |
 | target player takes an extra turn after ~. | 1 | Time Warp | tmp |
-| when the chosen player draws a card with the chosen name, sacrifice ~. if you do, ~ deals N damage to that player. | 1 | Booby Trap | tmp |
 | when ~ enters, sacrifice it unless you sacrifice two mountains. | 1 | Rathi Dragon | tmp |
 | whenever a creature is dealt damage, destroy it. it can't be regenerated. | 1 | Death Pits of Rath | tmp |
 | {M}: gain control of target creature for as long as that creature is enchanted. | 1 | Rootwater Matriarch | tmp |

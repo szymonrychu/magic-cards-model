@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 10.2% |
-| Works (untested) | 144 | 59.0% |
-| Partial (unaudited) | 16 | 6.6% |
-| Not working | 59 | 24.2% |
+| Tested | 26 | 10.7% |
+| Works (untested) | 145 | 59.4% |
+| Partial (unaudited) | 15 | 6.1% |
+| Not working | 58 | 23.8% |
 
 ## Cards needing work
 
@@ -62,7 +62,6 @@
 | Neheb, Dreadhorde Champion | silent | Whenever Neheb deals combat damage to a player or planeswalker, you may discard any number of cards. If you do, draw that many cards and add that much {R}. Unti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Triumph | silent | Search your library for up to two basic Forest cards. If you control a Nissa planeswalker, instead search your library for up to three land cards. Reveal those  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Niv-Mizzet Reborn | silent | When Niv-Mizzet enters, reveal the top ten cards of your library. For each color pair, choose a card that's exactly those colors from among them. Put the chosen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Oath of Kaya | silent | Whenever an opponent attacks a planeswalker you control with one or more creatures, Oath of Kaya deals 2 damage to that player and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Price of Betrayal | silent | Remove up to five counters from target artifact, creature, planeswalker, or opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ravnica at War | silent | Exile all multicolored permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Roalesk, Apex Hybrid | silent | When Roalesk dies, proliferate, then proliferate again. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -98,7 +97,6 @@
 | Mowu, Loyal Companion | unaudited | If one or more +1/+1 counters would be put on Mowu, that many plus one +1/+1 counters are put on it instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Raging Kronch | unaudited | This creature can't attack alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rescuer Sphinx | unaudited | As this creature enters, you may return a nonland permanent you control to its owner's hand. If you do, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Tibalt, Rakish Instigator | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Tomik, Distinguished Advokist | unaudited | Lands on the battlefield and land cards in graveyards can't be the targets of spells or abilities your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ugin's Conjurant | unaudited | If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove that many +1/+1 counters from this creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ahn-Crop Invader | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -232,6 +230,7 @@
 | Thunder Drake | handled | Whenever you cast your second spell each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thundering Ceratok | handled | When this creature enters, other creatures you control gain trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tibalt's Rager | handled | When this creature dies, it deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tibalt, Rakish Instigator | handled | Your opponents can't gain life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tithebearer Giant | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Toll of the Invasion | handled | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. Amass Zombies 1. (Put a +1/+1 counter on an Army you cont | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Trusted Pegasus | handled | Whenever this creature attacks, target attacking creature without flying gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -249,7 +248,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Arboreal Grazer
 - Ashiok, Dream Render
@@ -269,6 +268,7 @@
 - Narset, Parter of Veils
 - Neoform
 - Nissa, Who Shakes the World
+- Oath of Kaya
 - Parhelion II
 - Saheeli, Sublime Artificer
 - Solar Blaze
@@ -329,7 +329,6 @@
 | when ~ enters, look at the top card of target opponent's library. | 1 | Saheeli's Silverwing | war |
 | when ~ enters, sacrifice any number of other permanents, then draw that many cards. | 1 | God-Eternal Bontu | war |
 | whenever a creature attacks you or a planeswalker you control, each dragon you control deals N damage to that creature. | 1 | Sarkhan the Masterless | war |
-| whenever an opponent attacks a planeswalker you control with one or more creatures, ~ deals N damage to that player and you gain N life. | 1 | Oath of Kaya | war |
 | whenever krenko attacks, put a +N/+N counter on it, then create a number of N/N red goblin creature tokens equal to krenko's power. | 1 | Krenko, Tin Street Kingpin | war |
 | whenever neheb deals combat damage to a player or planeswalker, you may discard any number of cards. if you do, draw that many cards and add that much {M}. unti | 1 | Neheb, Dreadhorde Champion | war |
 | whenever one or more loyalty counters are removed from chandra, she deals that much damage to target opponent or planeswalker. | 1 | Chandra, Fire Artisan | war |
@@ -341,7 +340,6 @@
 | you may have ~ enter as a copy of a creature or planeswalker you control, except it enters with an additional +N/+N counter on it if it"..."s a planeswalker, an | 1 | Spark Double | war |
 | you may play lands and cast spells from the top of your library. if you cast a spell ~, pay life equal to its mana value rather than pay its mana cost. | 1 | Bolas's Citadel | war |
 | you may reveal the first card you draw each turn as you draw it. whenever you reveal an instant or sorcery card ~, copy that card and you may cast the copy. tha | 1 | God-Eternal Kefnet | war |
-| your opponents can't gain life. | 1 | Tibalt, Rakish Instigator | war |
 | zombie tokens you control have deathtouch. | 1 | Vizier of the Scorpion | war |
 | zombie tokens you control have flying. | 1 | Eternal Skylord | war |
 | zombie tokens you control have hexproof and menace. | 1 | Gleaming Overseer | war |

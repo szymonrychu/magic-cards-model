@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 67 | 24.6% |
+| Tested | 68 | 25.0% |
 | Works (untested) | 98 | 36.0% |
 | Partial (unaudited) | 6 | 2.2% |
-| Not working | 101 | 37.1% |
+| Not working | 100 | 36.8% |
 
 ## Cards needing work
 
@@ -120,7 +120,6 @@
 | Kroxa and Kunoros | notice | Whenever Kroxa and Kunoros enters or attacks, you may exile five cards from your graveyard. When you do, return target creature card from your graveyard to the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mutagen Connoisseur | notice | This creature gets +1/+0 for each transformed permanent you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oracle of Tragedy | notice | When this creature enters or dies, choose one — • Draw a card, then discard a card. • Shuffle up to four target cards with mana value 3 or greater from your gra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rampaging Raptor | notice | Whenever this creature deals combat damage to an opponent, it deals that much damage to target planeswalker that player controls or battle that player protects. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Seedpod Caretaker | notice | When this creature enters, choose one — • Put a +1/+1 counter on target artifact or creature you control. • Transform target Incubator token you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | notice | Whenever this creature attacks, create a tapped and attacking token that's a copy of it. Put a +1/+1 counter on that token for each +1/+1 counter on this creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swordsworn Cavalier | notice | This creature has first strike as long as another Knight entered the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -235,7 +234,7 @@
 ## Fully supported
 
 <details>
-<summary>67 cards</summary>
+<summary>68 cards</summary>
 
 - Angelic Intervention
 - Archangel Elspeth
@@ -291,6 +290,7 @@
 - Omnath, Locus of All
 - Orthion, Hero of Lavabrink
 - Rampaging Geoderm
+- Rampaging Raptor
 - Rankle and Torbran
 - Sandstalker Moloch
 - See Double
@@ -371,7 +371,6 @@
 | whenever ~ attacks, you may pay {M}{M}. when you do, return target creature card from your graveyard to the battlefield. it's a phyrexian in addition to its oth | 1 | Terror of Towashi | mom |
 | whenever ~ deals combat damage to a player or battle, look at that many cards from the top of your library. you may reveal a creature or land card from among th | 1 | Doomskar Warrior | mom |
 | whenever ~ deals combat damage to a player or battle, transform up to one target incubator token you control. | 1 | Attentive Skywarden | mom |
-| whenever ~ deals combat damage to an opponent, it deals that much damage to target planeswalker that player controls or battle that player protects. | 1 | Rampaging Raptor | mom |
 | whenever ~ enters or attacks, you may exile five cards from your graveyard. when you do, return target creature card from your graveyard to the battlefield. | 1 | Kroxa and Kunoros | mom |
 | whenever ~ or another phyrexian you control enters, incubate N. | 1 | Essence of Orthodoxy | mom |
 | you may cast spells with flash or flying from the top of your library. | 1 | Errant and Giada | mom |

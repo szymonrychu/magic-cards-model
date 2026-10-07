@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 8.4% |
-| Works (untested) | 92 | 51.4% |
+| Tested | 17 | 9.5% |
+| Works (untested) | 93 | 52.0% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 68 | 38.0% |
+| Not working | 65 | 36.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aerie Ouphes | silent | Sacrifice this creature: It deals damage equal to its power to target creature with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Altar Golem | silent | Altar Golem's power and toughness are each equal to the number of creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Balefire Liege | silent | Other red creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloom Tender | silent | Vivid — {T}: For each color among permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -52,7 +51,6 @@
 | Gilder Bairn | silent | {2}{G/U}, {Q}: Double the number of each kind of counter on target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glamerdye | silent | Change the text of target spell or permanent by replacing all instances of one color word with another. Retrace (You may cast this card from your graveyard by d | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hag Hedge-Mage | silent | When this creature enters, if you control two or more Swamps, you may have target player discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Heartlash Cinder | silent | Chroma — When this creature enters, it gets +X/+0 until end of turn, where X is the number of red mana symbols in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Impelled Giant | silent | Tap an untapped red creature you control other than this creature: This creature gets +X/+0 until end of turn, where X is the power of the creature tapped this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Indigo Faerie | silent | {U}: Target permanent becomes blue in addition to its other colors until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inundate | silent | Return all nonblue creatures to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -67,7 +65,6 @@
 | Nightmare Incursion | silent | Search target player's library for up to X cards, where X is the number of Swamps you control, and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nobilis of War | silent | Attacking creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oona's Grace | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Outrage Shaman | silent | Chroma — When this creature enters, it deals damage to target creature equal to the number of red mana symbols in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Overbeing of Myth | silent | Overbeing of Myth's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primalcrux | silent | Chroma — This creature's power and toughness are each equal to the number of green mana symbols in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pyrrhic Revival | silent | Each player returns each creature card from their graveyard to the battlefield with an additional -1/-1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -98,6 +95,7 @@
 | Hotheaded Giant | unaudited | This creature enters with two -1/-1 counters on it unless you've cast another red spell this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Talara's Battalion | unaudited | Cast this spell only if you've cast another green spell this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ward of Bones | unaudited | Each opponent who controls more creatures than you can't cast creature spells. The same is true for artifacts and enchantments. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Aerie Ouphes | handled | Sacrifice this creature: It deals damage equal to its power to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Archon of Justice | handled | When this creature dies, exile target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ballynock Trapper | handled | {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battlegate Mimic | handled | Whenever you cast a spell that's both red and white, this creature has base power and toughness 4/2 until end of turn and gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -194,7 +192,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>17 cards</summary>
 
 - Antler Skulkin
 - Batwing Brume
@@ -206,9 +204,11 @@
 - Figure of Destiny
 - Flickerwisp
 - Flooded Grove
+- Heartlash Cinder
 - Helix Pinnacle
 - Kithkin Zealot
 - Merrow Bonegnawer
+- Outrage Shaman
 - Shorecrasher Mimic
 - Soul Snuffers
 
@@ -219,7 +219,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | retrace | 10 | Call the Skybreaker, Cenn's Enlistment, Flame Jab, Monstrify, Oona's Grace | eve |
-| Chroma | 8 | Fiery Bombardment, Heartlash Cinder, Light from Within, Outrage Shaman, Primalcrux | eve |
+| Chroma | 6 | Fiery Bombardment, Light from Within, Primalcrux, Sanity Grinding, Springjack Shepherd | eve |
 | Vivid | 1 | Bloom Tender | eve |
 | as long as enchanted creature is black, it gets +N/+N and has deathtouch. | 1 | Gift of the Deity | eve |
 | as long as enchanted creature is blue, it gets +N/+N and has shroud. | 1 | Clout of the Dominus | eve |
@@ -245,7 +245,6 @@
 | other red creatures you control get +N/+N. | 1 | Balefire Liege | eve |
 | other white creatures you control get +N/+N. | 1 | Deathbringer Liege | eve |
 | return all nonblue creatures to their owners' hands. | 1 | Inundate | eve |
-| sacrifice ~: it deals damage equal to its power to target creature with flying. | 1 | Aerie Ouphes | eve |
 | search target player's library for up to N cards, where N is the number of swamps you control, and exile them. then that player shuffles. | 1 | Nightmare Incursion | eve |
 | tap an untapped red creature you control other than ~: ~ gets +N/+N until end of turn, where N is the power of the creature tapped ~. | 1 | Impelled Giant | eve |
 | target opponent reveals their hand. you choose a green or white creature card from it. you gain life equal to that creature card's toughness, then that player d | 1 | Talara's Bane | eve |

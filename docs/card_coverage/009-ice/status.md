@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 22.9% |
+| Tested | 9 | 25.7% |
 | Works (untested) | 18 | 51.4% |
 | Partial (unaudited) | 2 | 5.7% |
-| Not working | 7 | 20.0% |
+| Not working | 6 | 17.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Enduring Renewal | silent | Whenever a creature is put into your graveyard from the battlefield, return it to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Goblin Snowman | silent | Whenever this creature blocks, prevent all combat damage that would be dealt to and dealt by it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jester's Cap | silent | {2}, {T}, Sacrifice this artifact: Search target player's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kjeldoran Royal Guard | silent | {T}: All combat damage that would be dealt to you by unblocked creatures this turn is dealt to this creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merieke Ri Berit | silent | {T}: Gain control of target creature for as long as you control Merieke Ri Berit. When Merieke Ri Berit leaves the battlefield or becomes untapped, destroy that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -57,8 +56,9 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
+- Goblin Snowman
 - Incinerate
 - Karplusan Forest
 - Karplusan Yeti
@@ -77,7 +77,6 @@
 | players play with their hands revealed. | 1 | Zur's Weirding | ice |
 | when ~ enters, tap all red creatures. | 1 | Wrath of Marit Lage | ice |
 | whenever a creature is put into your graveyard from the battlefield, return it to your hand. | 1 | Enduring Renewal | ice |
-| whenever ~ blocks, prevent all combat damage that would be dealt to and dealt by it ~. | 1 | Goblin Snowman | ice |
 | {M}, {M}, sacrifice ~: search target player's library for three cards and exile them. then that player shuffles. | 1 | Jester's Cap | ice |
 | {M}, {M}: look at the top eight cards of your library. exile four of them at random, then put the rest on top of your library in any order. | 1 | Orcish Librarian | ice |
 | {M}: all combat damage that would be dealt to you by unblocked creatures ~ is dealt to ~ instead. | 1 | Kjeldoran Royal Guard | ice |

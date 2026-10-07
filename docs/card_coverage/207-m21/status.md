@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 12.1% |
-| Works (untested) | 100 | 54.9% |
+| Tested | 23 | 12.6% |
+| Works (untested) | 102 | 56.0% |
 | Partial (unaudited) | 11 | 6.0% |
-| Not working | 49 | 26.9% |
+| Not working | 46 | 25.3% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Gloom Sower | silent | Whenever this creature becomes blocked by a creature, that creature's controller loses 2 life and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gnarled Sage | silent | As long as you've drawn two or more cards this turn, this creature gets +0/+2 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goremand | silent | When this creature enters, each opponent sacrifices a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Heartfire Immolator | silent | {R}, Sacrifice this creature: It deals damage equal to its power to target creature or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hooded Blightfang | silent | Whenever a creature you control with deathtouch deals damage to a planeswalker, destroy that planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Idol of Endurance | silent | When this artifact enters, exile all creature cards with mana value 3 or less from your graveyard until this artifact leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kaervek, the Spiteful | silent | Other creatures get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -54,7 +53,6 @@
 | Liliana, Death Mage | silent | −7: Target opponent loses 2 life for each creature card in their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Malefic Scythe | silent | Equipped creature gets +1/+1 for each soul counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necromentia | silent | Choose a card name other than a basic land card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pack Leader | silent | Whenever this creature attacks, prevent all combat damage that would be dealt this turn to Dogs you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasoned Hallowblade | silent | Discard a card: Tap this creature. It gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | See the Truth | silent | Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. If this spell was ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Striker | silent | Whenever this creature attacks, you may tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -67,7 +65,6 @@
 | Alchemist's Gift | notice | Target creature gets +1/+1 and gains your choice of deathtouch or lifelink until end of turn. (Any amount of damage a creature with deathtouch deals to a creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Carrion Grub | notice | This creature gets +X/+0, where X is the greatest power among creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crypt Lurker | notice | When this creature enters, you may sacrifice a creature or discard a creature card. If you do, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Dire Fleet Warmonger | notice | At the beginning of combat on your turn, you may sacrifice another creature. If you do, this creature gets +2/+2 and gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Niambi, Esteemed Speaker | notice | When Niambi enters, you may return another target creature you control to its owner's hand. If you do, you gain life equal to that creature's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pestilent Haze | notice | Choose one — • All creatures get -2/-2 until end of turn. • Remove two loyalty counters from each planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Predatory Wurm | notice | This creature gets +2/+2 as long as you control a Garruk planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -104,6 +101,7 @@
 | Caged Zombie | handled | {1}{B}, {T}: Each opponent loses 2 life. Activate only if a creature died this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chandra's Magmutt | handled | {T}: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daybreak Charger | handled | When this creature enters, target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dire Fleet Warmonger | handled | At the beginning of combat on your turn, you may sacrifice another creature. If you do, this creature gets +2/+2 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Double Vision | handled | Whenever you cast your first instant or sorcery spell each turn, copy that spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eliminate | handled | Destroy target creature or planeswalker with mana value 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Falconer Adept | handled | Whenever this creature attacks, create a 1/1 white Bird creature token with flying that's tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -119,6 +117,7 @@
 | Ghostly Pilferer | handled | Whenever this creature becomes untapped, you may pay {2}. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Wizardry | handled | Create two 1/1 red Goblin Wizard creature tokens with prowess. (Whenever you cast a noncreature spell, they get +1/+1 until end of turn.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Havoc Jester | handled | Whenever you sacrifice a permanent, this creature deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Heartfire Immolator | handled | {R}, Sacrifice this creature: It deals damage equal to its power to target creature or planeswalker. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hellkite Punisher | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Historian of Zhalfir | handled | Whenever this creature attacks, if you control a Teferi planeswalker, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hobblefiend | handled | {1}, Sacrifice another creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -190,7 +189,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -204,6 +203,7 @@
 - Liliana's Standard Bearer
 - Liliana, Waker of the Dead
 - Mazemind Tome
+- Pack Leader
 - Peer into the Abyss
 - Pursued Whale
 - Sanctum of Fruitful Harvest
@@ -225,7 +225,6 @@
 | +N: discard your hand, then exile the top three cards of your library. until end of turn, you may play cards exiled ~. | 1 | Chandra, Heart of Fire | m21 |
 | as long as you control a creature with power N or greater, ~ can attack as though it didn't have defender. | 1 | Drowsing Tyrannodon | m21 |
 | as long as you've drawn two or more cards ~, ~ gets +N/+N and has vigilance. | 1 | Gnarled Sage | m21 |
-| at the beginning of combat on your turn, you may sacrifice another creature. if you do, ~ gets +N/+N and gains trample until end of turn. | 1 | Dire Fleet Warmonger | m21 |
 | at the beginning of each end step, if a creature died ~, you may put a loyalty counter on a liliana planeswalker you control. | 1 | Liliana's Scrounger | m21 |
 | at the beginning of your end step, create a treasure token for each nontoken creature that died ~. | 1 | Gadrak, the Crown-Scourge | m21 |
 | attacking creatures you control get +N/+N. | 1 | Warded Battlements | m21 |
@@ -261,7 +260,6 @@
 | whenever a source you control deals noncombat damage to an opponent, ~ deals that much damage to target creature or planeswalker that player controls. | 1 | Chandra's Incinerator | m21 |
 | whenever a source you control deals noncombat damage to an opponent, ~ gets +N/+N and gains double strike until end of turn. | 1 | Chandra's Pyreling | m21 |
 | whenever another creature you control enters, ~ deals damage equal to that creature's power to any target. | 1 | Terror of the Peaks | m21 |
-| whenever ~ attacks, prevent all combat damage that would be dealt ~ to dogs you control. | 1 | Pack Leader | m21 |
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Siege Striker | m21 |
 | whenever ~ becomes blocked by a creature, that creature's controller loses N life and you gain N life. | 1 | Gloom Sower | m21 |
 | whenever ~ deals combat damage to a player or planeswalker, look at that many cards from the top of your library. you may reveal a creature card or garruk plane | 1 | Garruk's Harbinger | m21 |
@@ -270,7 +268,6 @@
 | you may cast ~ from your graveyard by paying N life and discarding a card in addition to paying its other costs. | 1 | Demonic Embrace | m21 |
 | you may look at the top card of your library any time, and you may play lands from the top of your library. | 1 | Radha, Heart of Keld | m21 |
 | you may spend mana as though it were mana of any color. | 1 | Chromatic Orrery | m21 |
-| {M}, sacrifice ~: it deals damage equal to its power to target creature or planeswalker. | 1 | Heartfire Immolator | m21 |
 | ~ can block only creatures with flying. | 1 | Shacklegeist | m21 |
 | ~ costs {M}{M} less to cast if you've cast an instant or sorcery spell ~. | 1 | Stormwing Entity | m21 |
 | ~ gets +N/+N as long as you control a garruk planeswalker. | 1 | Predatory Wurm | m21 |

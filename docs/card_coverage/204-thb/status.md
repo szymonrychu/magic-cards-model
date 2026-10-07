@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 8.9% |
-| Works (untested) | 135 | 54.9% |
-| Partial (unaudited) | 27 | 11.0% |
-| Not working | 62 | 25.2% |
+| Tested | 25 | 10.2% |
+| Works (untested) | 141 | 57.3% |
+| Partial (unaudited) | 19 | 7.7% |
+| Not working | 61 | 24.8% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Blight-Breath Catoblepas | silent | When this creature enters, target creature an opponent controls gets -X/-X until end of turn, where X is your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bronzehide Lion | silent | When this creature dies, return it to the battlefield. It's an Aura enchantment with enchant creature you control and "{G}{W}: Enchanted creature gains indestru | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Calix, Destiny's Hand | silent | +1: Look at the top four cards of your library. You may reveal an enchantment card from among them and put that card into your hand. Put the rest on the bottom  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chainweb Aracnir | silent | When this creature enters, it deals damage equal to its power to target creature with flying an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dalakos, Crafter of Wonders | silent | Equipped creatures you control have flying and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Destiny Spinner | silent | {3}{G}: Target land you control becomes an X/X Elemental creature with trample and haste until end of turn, where X is the number of enchantments you control. I | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Devourer of Memory | silent | Whenever one or more cards are put into your graveyard from your library, this creature gets +1/+1 until end of turn and can't be blocked this turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -98,11 +97,7 @@
 | Haktos the Unscarred | unaudited | As Haktos enters, choose 2, 3, or 4 at random. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Incendiary Oracle | unaudited | If a creature dealt damage by this creature this turn would die, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ironscale Hydra | unaudited | If a creature would deal combat damage to this creature, prevent that damage and put a +1/+1 counter on this creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Loathsome Chimera | unaudited | This creature escapes with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ox of Agonas | unaudited | This creature escapes with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Pharika's Spawn | unaudited | This creature escapes with two +1/+1 counters on it. When it enters this way, each opponent sacrifices a non-Gorgon creature of their choice. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Phoenix of Ash | unaudited | This creature escapes with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Polukranos, Unchained | unaudited | If damage would be dealt to Polukranos while it has a +1/+1 counter on it, prevent that damage and remove that many +1/+1 counters from it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Polukranos, Unchained | unaudited | Polukranos enters with six +1/+1 counters on it. It escapes with twelve +1/+1 counters on it instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Renata, Called to the Hunt | unaudited | Renata's power is equal to your devotion to green. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Serpent of Yawning Depths | unaudited | Krakens, Leviathans, Octopuses, and Serpents you control can't be blocked except by Krakens, Leviathans, Octopuses, and Serpents. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Temple Thief | unaudited | This creature can't be blocked by enchanted creatures or enchantment creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -110,11 +105,7 @@
 | Treeshaker Chimera | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Tymaret, Chosen from Death | unaudited | Tymaret's toughness is equal to your devotion to black. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Underworld Breach | unaudited | Each nonland card in your graveyard has escape. The escape cost is equal to the card's mana cost plus exile three other cards from your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Underworld Charger | unaudited | This creature escapes with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Underworld Rage-Hound | unaudited | This creature escapes with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Voracious Typhon | unaudited | This creature escapes with three +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Warden of the Chained | unaudited | This creature can't attack unless you control another creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Woe Strider | unaudited | This creature escapes with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Acolyte of Affliction | handled | When this creature enters, mill two cards, then you may return a permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alseid of Life's Bounty | handled | {1}, Sacrifice this creature: Target creature or enchantment you control gains protection from the color of your choice until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aphemia, the Cacophony | handled | At the beginning of your end step, you may exile an enchantment card from your graveyard. If you do, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -175,6 +166,7 @@
 | Irreverent Revelers | handled | When this creature enters, choose one — • Destroy target artifact. • This creature gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lampad of Death's Vigil | handled | {1}, Sacrifice a creature: Each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leonin of the Lost Pride | handled | When this creature dies, exile target card from an opponent's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Loathsome Chimera | handled | This creature escapes with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mantle of the Wolf | handled | Enchanted creature gets +4/+4. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memory Drain | handled | Counter target spell. Scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mindwrack Harpy | handled | At the beginning of combat on your turn, each player mills three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -201,9 +193,12 @@
 | Omen of the Sea | handled | When this enchantment enters, scry 2, then draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Omen of the Sun | handled | When this enchantment enters, create two 1/1 white Human Soldier creature tokens and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oread of Mountain's Blaze | handled | {2}{R}, Discard a card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ox of Agonas | handled | When this creature enters, discard your hand, then draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phalanx Tactics | handled | Target creature you control gets +2/+1 until end of turn. Each other creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pharika's Libation | handled | Choose one — • Target opponent sacrifices a creature of their choice. • Target opponent sacrifices an enchantment of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pharika's Spawn | handled | This creature escapes with two +1/+1 counters on it. When it enters this way, each opponent sacrifices a non-Gorgon creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pheres-Band Brawler | handled | When this creature enters, it fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Phoenix of Ash | handled | {2}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pious Wayfarer | handled | Constellation — Whenever an enchantment you control enters, target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rage-Scarred Berserker | handled | When this creature enters, target creature you control gets +1/+0 and gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relentless Pursuit | handled | Reveal the top four cards of your library. You may put a creature card and/or a land card from among them into your hand. Put the rest into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -244,9 +239,11 @@
 | Treacherous Blessing | handled | When this enchantment enters, draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Triton Waverider | handled | Constellation — Whenever an enchantment you control enters, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Triumphant Surge | handled | Destroy target creature with power 4 or greater. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Underworld Charger | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Venomous Hierophant | handled | When this creature enters, mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vexing Gull | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Victory's Envoy | handled | At the beginning of your upkeep, put a +1/+1 counter on each other creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Voracious Typhon | handled | This creature escapes with three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wavebreak Hippocamp | handled | Whenever you cast your first spell during each opponent's turn, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Witness of Tomorrows | handled | {3}{U}: Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wolfwillow Haven | handled | Whenever enchanted land is tapped for mana, its controller adds an additional {G}. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,8 +251,9 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>25 cards</summary>
 
+- Chainweb Aracnir
 - Cling to Dust
 - Dawn Evangel
 - Dryad of the Ilysian Grove
@@ -276,8 +274,10 @@
 - Thassa, Deep-Dwelling
 - The Akroan War
 - Underworld Fires
+- Underworld Rage-Hound
 - Uro, Titan of Nature's Wrath
 - Warbriar Blessing
+- Woe Strider
 
 </details>
 
@@ -285,10 +285,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| ~ escapes with a +N/+N counter on it. | 4 | Loathsome Chimera, Ox of Agonas, Phoenix of Ash, Underworld Rage-Hound | thb |
 | Choose one | 3 | Heliod's Intervention, Nylea's Intervention, Thassa's Intervention | thb |
 | Constellation | 2 | Nessian Wanderer, Protean Thaumaturge | thb |
-| ~ escapes with two +N/+N counters on it. | 2 | Underworld Charger, Woe Strider | thb |
 | +N: look at the top four cards of your library. you may reveal an enchantment card from among them and put that card into your hand. put the rest on the bottom  | 1 | Calix, Destiny's Hand | thb |
 | alirios doesn't untap during your untap step if you control a reflection. | 1 | Alirios, Enraptured | thb |
 | all creatures able to block ~ do so. | 1 | Treeshaker Chimera | thb |
@@ -309,12 +307,12 @@
 | gain control of target permanent an opponent controls. untap it. | 1 | Kiora Bests the Sea God | thb |
 | if a creature dealt damage by ~ ~ would die, exile it instead. | 1 | Incendiary Oracle | thb |
 | if a creature would deal combat damage to ~, prevent that damage and put a +N/+N counter on ~. | 1 | Ironscale Hydra | thb |
-| if damage would be dealt to polukranos while it has a +N/+N counter on it, prevent that damage and remove that many +N/+N counters from it. | 1 | Polukranos, Unchained | thb |
 | krakens, leviathans, octopuses, and serpents you control can't be blocked except by krakens, leviathans, octopuses, and serpents. | 1 | Serpent of Yawning Depths | thb |
 | loyalty abilities of planeswalkers your opponents control cost {M} more to activate. | 1 | Eidolon of Obstruction | thb |
 | mill three cards. then you may exile a creature or enchantment card from your graveyard. if you do, create a N/N black zombie creature token. | 1 | Tymaret Calls the Dead | thb |
 | noncreature spells your opponents cast cost {M} more to cast until your next turn. | 1 | Elspeth Conquers Death | thb |
 | pegasus creatures you control have lifelink. | 1 | Archon of Sun's Grace | thb |
+| polukranos enters with six +N/+N counters on it. it escapes with twelve +N/+N counters on it instead. | 1 | Polukranos, Unchained | thb |
 | prevent all combat damage that would be dealt ~ except combat damage that would be dealt by enchanted creatures and enchantment creatures. scry N. | 1 | Inspire Awe | thb |
 | put target enchantment on the bottom of its owner's library. | 1 | Mystic Repeal | thb |
 | renata's power is equal to your devotion to green. | 1 | Renata, Called to the Hunt | thb |
@@ -331,7 +329,6 @@
 | when ~ dies, return it to the battlefield. it's an aura enchantment with enchant creature you control and "..." and it loses all other abilities. | 1 | Bronzehide Lion | thb |
 | when ~ enters, create a number of N/N white human soldier creature tokens equal to your devotion to white. | 1 | Reverent Hoplite | thb |
 | when ~ enters, each opponent mills ten cards. | 1 | Sphinx Mindbreaker | thb |
-| when ~ enters, it deals damage equal to its power to target creature with flying an opponent controls. | 1 | Chainweb Aracnir | thb |
 | when ~ enters, look at the top N cards of your library, where N is your devotion to blue. put up to one of them on top of your library and the rest on the botto | 1 | Thassa's Oracle | thb |
 | when ~ enters, put a +N/+N counter on enchanted creature. | 1 | Hydra's Growth | thb |
 | when ~ enters, return any number of aura cards from your graveyard to the battlefield attached to creatures you control. exile those auras at the beginning of y | 1 | Storm Herald | thb |
@@ -360,8 +357,6 @@
 | {M}{M}: you may put a red creature card or an artifact creature card from your hand onto the battlefield. sacrifice it at the beginning of the next end step. | 1 | Purphoros, Bronze-Blooded | thb |
 | ~ can't attack unless you control another creature with power N or greater. | 1 | Warden of the Chained | thb |
 | ~ can't be blocked by enchanted creatures or enchantment creatures. | 1 | Temple Thief | thb |
-| ~ escapes with three +N/+N counters on it. | 1 | Voracious Typhon | thb |
-| ~ escapes with two +N/+N counters on it. when it enters ~, each opponent sacrifices a non-gorgon creature of their choice. | 1 | Pharika's Spawn | thb |
 | ~ gets +N/+N as long as there are ten or more cards in a single graveyard. | 1 | Swimmer in Nightmares | thb |
 | ~ gets +N/+N as long as you control an elspeth planeswalker. | 1 | Sunlit Hoplite | thb |
 | ~ gets -N/-N for each card in your opponents' hands. | 1 | Enemy of Enlightenment | thb |

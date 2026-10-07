@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 8.4% |
-| Works (untested) | 173 | 66.3% |
+| Tested | 24 | 9.2% |
+| Works (untested) | 174 | 66.7% |
 | Partial (unaudited) | 10 | 3.8% |
-| Not working | 56 | 21.5% |
+| Not working | 53 | 20.3% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Equestrian Skill | silent | As long as enchanted creature is a Human, it has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Erdwal Illuminator | silent | Whenever you investigate for the first time each turn, investigate an additional time. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ever After | silent | Return up to two target creature cards from your graveyard to the battlefield. Each of those creatures is a black Zombie in addition to its other colors and typ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fevered Visions | silent | At the beginning of each player's end step, that player draws a card. If the player is your opponent and has four or more cards in hand, this enchantment deals  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flameblade Angel | silent | Whenever a source an opponent controls deals damage to you or a permanent you control, you may have this creature deal 1 damage to that source's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fork in the Road | silent | Search your library for up to two basic land cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | From Under the Floorboards | silent | Madness {X}{B}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Create three tappe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -55,7 +54,6 @@
 | Manic Scribe | silent | When this creature enters, each opponent mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moldgraf Scavenger | silent | Delirium — This creature gets +3/+0 as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moorland Drifter | silent | Delirium — This creature has flying as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Morkrut Necropod | silent | Whenever this creature attacks or blocks, sacrifice another creature or land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Neglected Heirloom // Ashmouth Blade | silent | When equipped creature transforms, transform this Equipment. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Not Forgotten | silent | Put target card from a graveyard on your choice of the top or bottom of its owner's library. Create a 1/1 white Spirit creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Olivia, Mobilized for War | silent | Whenever another creature you control enters, you may discard a card. If you do, put a +1/+1 counter on that creature, it gains haste until end of turn, and it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -80,7 +78,6 @@
 | Essence Flux | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If it's a Spirit, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Geralf's Masterpiece | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Malevolent Whispers | notice | Gain control of target creature until end of turn. Untap that creature. It gets +2/+0 and gains haste until end of turn. Madness {3}{R} (If you discard this car | unparsed remainder: Untap that creature. It gets +2/+0 and gains haste until end of turn. | Y/Y/- | not_working |
-| Thing in the Ice // Awoken Horror | notice | Whenever you cast an instant or sorcery spell, remove an ice counter from this creature. Then if it has no ice counters on it, transform it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Triskaidekaphobia | notice | At the beginning of your upkeep, choose one — • Each player with exactly 13 life loses the game, then each player gains 1 life. • Each player with exactly 13 li | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bound by Moonsilver | unaudited | Enchanted creature can't attack, block, or transform. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Falkenrath Gorger | unaudited | Each Vampire creature card you own that isn't on the battlefield has madness. The madness cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -183,6 +180,7 @@
 | Merciless Resolve | handled | As an additional cost to cast this spell, sacrifice a creature or land. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Might Beyond Reason | handled | Put two +1/+1 counters on target creature. Delirium — Put three +1/+1 counters on that creature instead if there are four or more card types among cards in your | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Militant Inquisitor | handled | This creature gets +1/+0 for each Equipment you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Morkrut Necropod | handled | Whenever this creature attacks or blocks, sacrifice another creature or land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murderer's Axe | handled | Equipped creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murderous Compulsion | handled | Destroy target tapped creature. Madness {1}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your g | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nagging Thoughts | handled | Look at the top two cards of your library. Put one of them into your hand and the other into your graveyard. Madness {1}{U} (If you discard this card, discard i | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -269,7 +267,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
@@ -282,6 +280,7 @@
 - Diregraf Colossus
 - Dual Shot
 - Duskwatch Recruiter // Krallenhorde Howler
+- Fevered Visions
 - Gryff's Boon
 - Moonlight Hunt
 - Nahiri, the Harbinger
@@ -291,6 +290,7 @@
 - Rabid Bite
 - Slayer's Plate
 - Tenacity
+- Thing in the Ice // Awoken Horror
 - Thraben Inspector
 - To the Slaughter
 
@@ -306,7 +306,6 @@
 | as long as enchanted creature is a human, it has trample. | 1 | Equestrian Skill | soi |
 | as long as equipped creature is a human, it gets an additional +N/+N. | 1 | True-Faith Censer | soi |
 | as long as equipped creature is a human, it has menace. | 1 | Harvest Hand // Scrounged Scythe | soi |
-| at the beginning of each player's end step, that player draws a card. if the player is your opponent and has four or more cards in hand, ~ deals N damage to tha | 1 | Fevered Visions | soi |
 | at the beginning of your upkeep, choose one — • each player with exactly N life loses the game, then each player gains N life. • each player with exactly N life | 1 | Triskaidekaphobia | soi |
 | at the beginning of your upkeep, each player discards a card. each opponent who discarded a card that shares a card type with the card you discarded loses N lif | 1 | Creeping Dread | soi |
 | at the beginning of your upkeep, reveal the top card of your library. any opponent may have you put that card into your graveyard. if a player does, ~ deals dam | 1 | Sin Prodder | soi |
@@ -342,10 +341,8 @@
 | whenever a werewolf you control enters, you may transform it. | 1 | Geier Reach Bandit // Vildin-Pack Alpha | soi |
 | whenever another creature you control enters, you may discard a card. if you do, put a +N/+N counter on that creature, it gains haste until end of turn, and it  | 1 | Olivia, Mobilized for War | soi |
 | whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | 1 | Harness the Storm | soi |
-| whenever you cast an instant or sorcery spell, remove an ice counter from ~. then if it has no ice counters on it, transform it. | 1 | Thing in the Ice // Awoken Horror | soi |
 | whenever you investigate for the first time each turn, investigate an additional time. | 1 | Erdwal Illuminator | soi |
 | whenever ~ attacks and isn't blocked, you may pay {M}{M}. if you do, transform it. | 1 | Elusive Tormentor // Insidious Mist | soi |
-| whenever ~ attacks or blocks, sacrifice another creature or land. | 1 | Morkrut Necropod | soi |
 | whenever ~ attacks, you may pay {M}{M} and discard a card. if you do, ~ deals damage to target creature or planeswalker equal to the discarded card's mana value | 1 | Wolf of Devil's Breach | soi |
 | you and humans you control have hexproof. | 1 | Sigarda, Heron's Grace | soi |
 | you may cast spirit spells as though they had flash. | 1 | Rattlechains | soi |

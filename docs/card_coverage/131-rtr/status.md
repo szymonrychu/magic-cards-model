@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 10.3% |
-| Works (untested) | 101 | 45.1% |
+| Tested | 24 | 10.7% |
+| Works (untested) | 100 | 44.6% |
 | Partial (unaudited) | 10 | 4.5% |
 | Not working | 90 | 40.2% |
 
@@ -64,7 +64,7 @@
 | Grim Roustabout | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Growing Ranks | silent | At the beginning of your upkeep, populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guild Feud | silent | At the beginning of your upkeep, target opponent reveals the top three cards of their library, may put a creature card from among them onto the battlefield, the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hellhole Flailer | silent | {2}{B}{R}, Sacrifice this creature: It deals damage equal to its power to target player or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Hellhole Flailer | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Horncaller's Chant | silent | Create a 4/4 green Rhino creature token with trample, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inaction Injunction | silent | Detain target creature an opponent controls. (Until your next turn, that creature can't attack or block and its activated abilities can't be activated.) Draw a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Isperia's Skywatch | silent | When this creature enters, detain target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -132,7 +132,6 @@
 | Archweaver | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Armada Wurm | handled | When this creature enters, create a 5/5 green Wurm creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Armory Guard | handled | This creature has vigilance as long as you control a Gate. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Ash Zealot | handled | Whenever a player casts a spell from a graveyard, this creature deals 3 damage to that player. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Auger Spree | handled | Target creature gets +4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Avenging Arrow | handled | Destroy target creature that dealt damage this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Axebane Stag | handled |  |  | Y/Y/- | not_tested |
@@ -231,9 +230,10 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Abrupt Decay
+- Ash Zealot
 - Axebane Guardian
 - Azorius Guildgate
 - Batterhorn
@@ -263,8 +263,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
+| unleash | 11 | Bloodfray Giant, Carnival Hellsteed, Chaos Imps, Dead Reveler, Gore-House Chainwalker | rtr |
 | overload | 10 | Blustersquall, Counterflux, Cyclonic Rift, Downsize, Dynacharge | rtr |
-| unleash | 10 | Bloodfray Giant, Carnival Hellsteed, Chaos Imps, Dead Reveler, Gore-House Chainwalker | rtr |
 | scavenge | 9 | Deadbridge Goliath, Drudge Beetle, Golgari Decoy, Korozda Monitor, Sewer Shambler | rtr |
 | enchanted land has "..." | 4 | Racecourse Fury, Security Blockade, Underworld Connections, Urban Burgeoning | rtr |
 | when ~ enters, detain target creature an opponent controls. | 3 | Azorius Arrester, Isperia's Skywatch, Soulsworn Spirit | rtr |
@@ -325,7 +325,6 @@
 | {M}: exile target land card from a graveyard. add one mana of any color. | 1 | Deathrite Shaman | rtr |
 | {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Doorkeeper | rtr |
 | {M}{M}: target player who lost life ~ loses N life. | 1 | Rix Maadi Guildmage | rtr |
-| {M}{M}{M}, sacrifice ~: it deals damage equal to its power to target player or planeswalker. | 1 | Hellhole Flailer | rtr |
 | {M}{M}{M}, {M}: populate. | 1 | Trostani, Selesnya's Voice | rtr |
 | {M}{M}{M}: detain target nonland permanent an opponent controls. | 1 | New Prahv Guildmage | rtr |
 | {M}{M}{M}: populate. | 1 | Vitu-Ghazi Guildmage | rtr |

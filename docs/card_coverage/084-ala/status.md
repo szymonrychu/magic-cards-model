@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 9.0% |
+| Tested | 21 | 9.4% |
 | Works (untested) | 143 | 64.1% |
 | Partial (unaudited) | 7 | 3.1% |
-| Not working | 53 | 23.8% |
+| Not working | 52 | 23.3% |
 
 ## Cards needing work
 
@@ -68,7 +68,6 @@
 | Sigil of Distinction | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sigiled Paladin | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Skill Borrower | silent | As long as the top card of your library is an artifact or creature card, this creature has all activated abilities of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Skullmulcher | silent | When this creature enters, draw a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Might | silent | Put X +1/+1 counters on target creature, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx's Herald | silent | {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tar Fiend | silent | When this creature enters, target player discards a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -233,7 +232,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Angelsong
 - Blightning
@@ -251,6 +250,7 @@
 - Rockcaster Platoon
 - Salvage Titan
 - Skeletonize
+- Skullmulcher
 - Soul's Fire
 - Soul's Grace
 - Thunder-Thrash Elder
@@ -289,7 +289,6 @@
 | until end of turn, target creature you control gets +N/+N and other creatures you control get +N/+N. | 1 | Sigil Blessing | ala |
 | when enchanted creature dies, that creature's controller loses life equal to its toughness. | 1 | Banewasp Affliction | ala |
 | when there are no cards in your graveyard, you lose the game. | 1 | Immortal Coil | ala |
-| when ~ enters, draw a card for each creature it devoured. | 1 | Skullmulcher | ala |
 | when ~ enters, return all other nonland permanents to their owners' hands. | 1 | Kederekt Leviathan | ala |
 | when ~ enters, target player discards a card for each creature it devoured. | 1 | Tar Fiend | ala |
 | when ~ leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | 1 | Realm Razer | ala |

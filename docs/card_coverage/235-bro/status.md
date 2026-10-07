@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 32 | 12.5% |
-| Works (untested) | 137 | 53.5% |
+| Works (untested) | 138 | 53.9% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 76 | 29.7% |
+| Not working | 75 | 29.3% |
 
 ## Cards needing work
 
@@ -93,7 +93,6 @@
 | Feldon, Ronom Excavator | notice | Whenever Feldon is dealt damage, exile that many cards from the top of your library. Choose one of them. Until the end of your next turn, you may play that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gix's Command | notice | Choose two — • Put two +1/+1 counters on up to one creature. It gains lifelink until end of turn. • Destroy each creature with power 2 or less. • Return up to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kayla's Command | notice | Choose two — • Create a 2/2 colorless Construct artifact creature token. • Put a +1/+1 counter on a creature you control. It gains double strike until end of tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Kill-Zone Acrobat | notice | Whenever this creature attacks, you may sacrifice another creature or artifact. If you do, this creature gains flying until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lay Down Arms | notice | Exile target creature with mana value less than or equal to the number of Plains you control. Its controller gains 3 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Legions to Ashes | notice | Exile target nonland permanent an opponent controls and all tokens that player controls with the same name as that permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Meticulous Excavation | notice | {2}{W}: Return target permanent you control to its owner's hand. If it has unearth, instead exile it, then return that card to its owner's hand. Activate only d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -168,6 +167,7 @@
 | Involuntary Cooldown | handled | Tap up to two target artifacts and/or creatures. Put two stun counters on each of them. (If a permanent with a stun counter would become untapped, remove one fr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Junkyard Genius | handled | When this creature enters, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keeper of the Cadence | handled | {3}: Put target artifact, instant, or sorcery card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kill-Zone Acrobat | handled | Whenever this creature attacks, you may sacrifice another creature or artifact. If you do, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Koilos Roc | handled | When this creature enters, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lat-Nam Adept | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Levitating Statue | handled | Whenever you cast a noncreature spell, put a +1/+1 counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -350,7 +350,6 @@
 | whenever you discard one or more artifact cards, add {M}{M}. ~ triggers only once each turn. | 1 | Mishra, Excavation Prodigy | bro |
 | whenever you discard one or more artifact cards, create a tapped powerstone token. ~ triggers only once each turn. | 1 | Urza, Powerstone Prodigy | bro |
 | whenever ~ attacks, defending player mills half their library, rounded up. | 1 | Terisian Mindbreaker | bro |
-| whenever ~ attacks, you may sacrifice another creature or artifact. if you do, ~ gains flying until end of turn. | 1 | Kill-Zone Acrobat | bro |
 | you may cast colorless spells and artifact spells as though they had flash. | 1 | Liberator, Urza's Battlethopter | bro |
 | {M}, {M}, exile ~: you gain protection from everything until your next turn. | 1 | The Stasis Coffin | bro |
 | {M}, {M}, sacrifice ~: exile the top two cards of your library. choose one of them. until the end of your next turn, you may play that card. | 1 | Mishra's Research Desk | bro |

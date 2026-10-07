@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 10.5% |
+| Tested | 16 | 11.2% |
 | Works (untested) | 74 | 51.7% |
 | Partial (unaudited) | 9 | 6.3% |
-| Not working | 45 | 31.5% |
+| Not working | 44 | 30.8% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Knight of New Alara | silent | Each other multicolored creature you control gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich Lord of Unx | silent | {U}{U}{B}{B}: Target player loses X life and mills X cards, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lord of Extinction | silent | Lord of Extinction's power and toughness are each equal to the number of cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Marrow Chomper | silent | When this creature enters, you gain 2 life for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Funeral | silent | Target opponent reveals cards from the top of their library until four land cards are revealed. That player puts all cards revealed this way into their graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Morbid Bloom | silent | Exile target creature card from a graveyard, then create X 1/1 green Saproling creature tokens, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Naya Hushblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -158,7 +157,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Anathemancer
 - Architects of Will
@@ -170,6 +169,7 @@
 - Maelstrom Nexus
 - Maelstrom Pulse
 - Mage Slayer
+- Marrow Chomper
 - Predatory Advantage
 - Putrid Leech
 - Sigil Captain
@@ -214,7 +214,6 @@
 | when ~ enters, put a creature you control on top of its owner's library. | 1 | Nulltread Gargantuan | arb |
 | when ~ enters, target player discards a card at random. | 1 | Sanity Gnawers | arb |
 | when ~ enters, target player reveals a card at random from their hand, then loses life equal to that card's mana value. | 1 | Singe-Mind Ogre | arb |
-| when ~ enters, you gain N life for each creature it devoured. | 1 | Marrow Chomper | arb |
 | when ~ enters, you may have target creature block it ~ if able. | 1 | Giant Ambush Beetle | arb |
 | when ~ is put into your graveyard from the battlefield, put it into your library third from the top. | 1 | Enigma Sphinx | arb |
 | whenever a creature dealt damage by equipped creature ~ dies, you may exile that card. if you do, create a N/N black zombie creature token. | 1 | Unscythe, Killer of Kings | arb |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 14.5% |
+| Tested | 38 | 14.9% |
 | Works (untested) | 125 | 49.0% |
 | Partial (unaudited) | 21 | 8.2% |
-| Not working | 72 | 28.2% |
+| Not working | 71 | 27.8% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Pelakka Predation // Pelakka Caverns | silent | Target opponent reveals their hand. You choose a card from it with mana value 3 or greater. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ravager's Mace | silent | Equipped creature gets +1/+0 for each creature in your party and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reclaim the Wastes | silent | Kicker {3} (You may pay an additional {3} as you cast this spell.) Search your library for a basic land card, reveal it, put it into your hand, then shuffle. If | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Relic Robber | silent | Whenever this creature deals combat damage to a player, that player creates a 0/1 colorless Goblin Construct artifact creature token with "This token can't bloc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ruin Crab | silent | Landfall — Whenever a land you control enters, each opponent mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scourge of the Skyclaves | silent | Scourge of the Skyclaves's power and toughness are each equal to 20 minus the highest life total among players. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Gate Stormcaller | silent | When this creature enters, copy the next instant or sorcery spell with mana value 2 or less you cast this turn when you cast it. If this creature was kicked, co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -248,7 +247,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>38 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
@@ -275,6 +274,7 @@
 - Nimble Trapfinder
 - Omnath, Locus of Creation
 - Practiced Tactics
+- Relic Robber
 - Resolute Strike
 - Riverglide Pathway // Lavaglide Pathway
 - Roiling Vortex
@@ -362,7 +362,6 @@
 | whenever ~ attacks, it gets +N/+N until end of turn for each creature in your party. | 1 | Grotag Bug-Catcher | znr |
 | whenever ~ attacks, put a +N/+N counter on each attacking creature with a +N/+N counter on it. | 1 | Oran-Rief Ooze | znr |
 | whenever ~ attacks, target creature an opponent controls with power less than or equal to the number of warriors you control can't block ~. | 1 | Goma Fada Vanguard | znr |
-| whenever ~ deals combat damage to a player, that player creates a N/N colorless goblin construct artifact creature token with "..." and "..." | 1 | Relic Robber | znr |
 | {M}, {M}: copy target permanent spell you control. | 1 | Lithoform Engine | znr |
 | {M}: put two +N/+N counters on ~. then you may have it become a N/N elemental creature until end of turn. it's still a land. | 1 | Crawling Barrens | znr |
 | {M}: the next instant or sorcery spell you cast ~ costs {M} less to cast, where N is the number of wizards you control as ~ resolves. | 1 | Kaza, Roil Chaser | znr |

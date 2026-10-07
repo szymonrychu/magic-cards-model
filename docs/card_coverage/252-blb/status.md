@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 45 | 17.4% |
-| Works (untested) | 118 | 45.7% |
+| Tested | 46 | 17.8% |
+| Works (untested) | 117 | 45.3% |
 | Partial (unaudited) | 7 | 2.7% |
 | Not working | 88 | 34.1% |
 
@@ -156,7 +156,6 @@
 | Hazel's Nocturne | handled | Return up to two target creature cards from your graveyard to your hand. Each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Head of the Homestead | handled | When this creature enters, create two 1/1 white Rabbit creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Heaped Harvest | handled | When this artifact enters and when you sacrifice it, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Heartfire Hero | handled | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hearthborn Battler | handled | Whenever a player casts their second spell each turn, this creature deals 2 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hidden Grotto | handled | When this land enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | High Stride | handled | Target creature gets +1/+3 and gains reach until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -243,7 +242,7 @@
 ## Fully supported
 
 <details>
-<summary>45 cards</summary>
+<summary>46 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
@@ -263,6 +262,7 @@
 - Essence Channeler
 - Fecund Greenshell
 - Fountainport
+- Heartfire Hero
 - Helga, Skittish Seer
 - Hop to It
 - Innkeeper's Talent

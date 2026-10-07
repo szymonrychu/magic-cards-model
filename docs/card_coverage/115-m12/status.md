@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 12.2% |
-| Works (untested) | 58 | 59.2% |
+| Tested | 13 | 13.3% |
+| Works (untested) | 57 | 58.2% |
 | Partial (unaudited) | 4 | 4.1% |
 | Not working | 24 | 24.5% |
 
@@ -110,13 +110,12 @@
 | Trollhide | handled | Enchanted creature gets +2/+2 and has "{1}{G}: Regenerate this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vampire Outcasts | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Wall of Torches | handled | Defender | machines/combat.py | Y/-/- | not_tested |
-| Warstorm Surge | handled | Whenever a creature you control enters, it deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wring Flesh | handled | Target creature gets -3/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Aegis Angel
 - Crown of Empires
@@ -130,6 +129,7 @@
 - Sundial of the Infinite
 - Throne of Empires
 - Turn to Frog
+- Warstorm Surge
 
 </details>
 

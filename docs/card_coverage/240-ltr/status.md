@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 13.9% |
-| Works (untested) | 133 | 47.3% |
-| Partial (unaudited) | 20 | 7.1% |
-| Not working | 89 | 31.7% |
+| Tested | 41 | 14.6% |
+| Works (untested) | 134 | 47.7% |
+| Partial (unaudited) | 19 | 6.8% |
+| Not working | 87 | 31.0% |
 
 ## Cards needing work
 
@@ -50,10 +50,8 @@
 | Frodo, Sauron's Bane | silent | {B}{B}{B}: If Frodo is a Scout, it becomes a Halfling Rogue with "Whenever this creature deals combat damage to a player, that player loses the game if the Ring | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Galadriel of Lothlórien | silent | Whenever you scry, you may reveal the top card of your library. If a land card is revealed this way, put it onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gimli's Axe | silent | As long as equipped creature is legendary, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gimli, Mournful Avenger | silent | Whenever another creature you control dies, put a +1/+1 counter on Gimli. When this ability resolves for the third time this turn, Gimli fights up to one target | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glamdring | silent | Equipped creature has first strike and gets +1/+0 for each instant and sorcery card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glorfindel, Dauntless Rescuer | silent | Whenever you scry, choose one and Glorfindel gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Goblin Fireleaper | silent | When this creature dies, it deals damage equal to its power to target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goldberry, River-Daughter | silent | {T}: Move a counter of each kind not on Goldberry from another target permanent you control onto Goldberry. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gollum, Scheming Guide | silent | Whenever Gollum attacks, look at the top two cards of your library, put them back in any order, then choose land or nonland. An opponent guesses whether the top | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hew the Entwood | silent | Sacrifice any number of lands. Reveal the top X cards of your library, where X is the number of lands sacrificed this way. Choose any number of artifact and/or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -122,7 +120,6 @@
 | Frodo Baggins | unaudited | As long as Frodo Baggins is your Ring-bearer, it must be blocked if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gandalf the White | unaudited | You may cast legendary spells and artifact spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gandalf, Friend of the Shire | unaudited | You may cast sorcery spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Gríma Wormtongue | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mauhúr, Uruk-hai Captain | unaudited | If one or more +1/+1 counters would be put on an Army, Goblin, or Orc you control, that many plus one +1/+1 counters are put on it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Minas Tirith | unaudited | Minas Tirith enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mines of Moria | unaudited | Mines of Moria enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -181,6 +178,7 @@
 | Gothmog, Morgul Lieutenant | handled | When Gothmog enters, amass Orcs 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Great Hall of the Citadel | handled |  |  | Y/-/- | not_tested |
 | Grey Havens Navigator | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gríma Wormtongue | handled | Your opponents can't gain life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gwaihir the Windlord | handled | This spell costs {2} less to cast as long as you've drawn two or more cards this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Haradrim Spearmaster | handled | At the beginning of combat on your turn, another target creature you control gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Haunt of the Dead Marshes | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -272,7 +270,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>41 cards</summary>
 
 - Arwen, Mortal Queen
 - Battle-Scarred Goblin
@@ -294,7 +292,9 @@
 - Generous Ent
 - Gimli's Fury
 - Gimli, Counter of Kills
+- Gimli, Mournful Avenger
 - Glóin, Dwarf Emissary
+- Goblin Fireleaper
 - Gollum, Patient Plotter
 - Grond, the Gatebreaker
 - Last March of the Ents
@@ -369,7 +369,6 @@
 | when grishnákh enters, amass orcs N. when you do, until end of turn, gain control of target nonlegendary creature an opponent controls with power less than or e | 1 | Grishnákh, Brash Instigator | ltr |
 | when lobelia enters, exile target creature card from an opponent"..."s power. | 1 | Lobelia Sackville-Baggins | ltr |
 | when samwise enters, choose up to one target permanent card in your graveyard that was put there from the battlefield ~. return it to your hand. then the ring t | 1 | Samwise the Stouthearted | ltr |
-| when ~ dies, it deals damage equal to its power to target creature an opponent controls. | 1 | Goblin Fireleaper | ltr |
 | when ~ enters, create a food token. when you do, target creature you control gets +N/+N until end of turn for each food you control. | 1 | Eastfarthing Farmer | ltr |
 | when ~ enters, each opponent sacrifices a creature of their choice. create a food token for each creature sacrificed ~. | 1 | Voracious Fell Beast | ltr |
 | when ~ enters, if you cast it, you gain protection from everything until your next turn. | 1 | The One Ring | ltr |
@@ -381,7 +380,6 @@
 | whenever a creature an opponent controls is dealt excess noncombat damage, amass orcs N, where N is that excess damage. | 1 | Fall of Cair Andros | ltr |
 | whenever a goblin or orc you control deals combat damage to a player, you may sacrifice it. when you do, choose one — • draw a card. • create a treasure token. | 1 | Gorbag of Minas Morgul | ltr |
 | whenever another creature dealt damage ~ by a spider you controlled dies, create a token that"..."s a food artifact with "..." and it loses all other card types | 1 | Shelob, Child of Ungoliant | ltr |
-| whenever another creature you control dies, put a +N/+N counter on gimli. when ~ resolves for the third time ~, gimli fights up to one target creature you don't | 1 | Gimli, Mournful Avenger | ltr |
 | whenever another creature you control dies, put a +N/+N counter on uglúk. if that creature was a goblin or orc, put two +N/+N counters on uglúk instead. | 1 | Uglúk of the White Hand | ltr |
 | whenever bill ferny becomes blocked, choose one — • create a treasure token. • target opponent gains control of target horse you control. if they do, remove bil | 1 | Bill Ferny, Bree Swindler | ltr |
 | whenever equipped creature attacks, create two tapped N/N white spirit creature tokens with flying. if that creature is legendary, instead create two of those t | 1 | Andúril, Flame of the West | ltr |
@@ -416,7 +414,6 @@
 | you may cast sorcery spells as though they had flash. | 1 | Gandalf, Friend of the Shire | ltr |
 | you may cast spells ~ as though they had flash. draw a card. | 1 | Borne Upon a Wind | ltr |
 | you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Pippin's Bravery | ltr |
-| your opponents can't gain life. | 1 | Gríma Wormtongue | ltr |
 | {M}: another target creature you control gains protection from the card type of your choice until end of turn. | 1 | Pippin, Guard of the Citadel | ltr |
 | {M}: move a counter of each kind not on goldberry from another target permanent you control onto goldberry. | 1 | Goldberry, River-Daughter | ltr |
 | {M}{M}{M}, {M}, sacrifice ~ and a legendary artifact: choose up to two creatures, then destroy the rest. activate only as a sorcery. | 1 | Mount Doom | ltr |

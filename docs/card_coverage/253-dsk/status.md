@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 45 | 17.0% |
+| Tested | 46 | 17.4% |
 | Works (untested) | 107 | 40.4% |
 | Partial (unaudited) | 14 | 5.3% |
-| Not working | 99 | 37.4% |
+| Not working | 98 | 37.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Acrobatic Cheerleader | silent | Survival — At the beginning of your second main phase, if this creature is tapped, put a flying counter on it. This ability triggers only once. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Arabella, Abandoned Doll | silent | Whenever Arabella attacks, it deals X damage to each opponent and you gain X life, where X is the number of creatures you control with power 2 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Balemurk Leech | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, each opponent loses 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Broodspinner | silent | {4}{B}{G}, {T}, Sacrifice this creature: Create a number of 1/1 black and green Insect creature tokens with flying equal to the number of card types among cards | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cathartic Parting | silent | The owner of target artifact or enchantment an opponent controls shuffles it into their library. You may shuffle up to four target cards from your graveyard int | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -250,9 +249,10 @@
 ## Fully supported
 
 <details>
-<summary>45 cards</summary>
+<summary>46 cards</summary>
 
 - Abhorrent Oculus
+- Arabella, Abandoned Doll
 - Balustrade Wurm
 - Bashful Beastie
 - Beastie Beatdown
@@ -355,7 +355,6 @@
 | when ~ leaves the battlefield, put each card exiled with it into its owner's hand. | 1 | Fear of Abduction | dsk |
 | whenever a creature you control becomes blocked, you may exile it. you may play that card from exile ~. | 1 | Norin, Swift Survivalist | dsk |
 | whenever a creature you control dies, you may pay N life. if you do, return that card under your control with a finality counter on it. | 1 | Meathook Massacre II | dsk |
-| whenever arabella attacks, it deals N damage to each opponent and you gain N life, where N is the number of creatures you control with power N or less. | 1 | Arabella, Abandoned Doll | dsk |
 | whenever enchanted player is dealt damage, they lose half their life, rounded up. | 1 | Grievous Wound | dsk |
 | whenever equipped creature attacks, you may sacrifice a permanent other than that creature or ~. if you do, draw a card. | 1 | Saw | dsk |
 | whenever one or more cards leave your graveyard, create a N/N black horror enchantment creature token. ~ triggers only once each turn. | 1 | Defiled Crypt // Cadaver Lab | dsk |

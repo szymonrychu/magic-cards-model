@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 17.1% |
-| Works (untested) | 122 | 47.3% |
+| Tested | 45 | 17.4% |
+| Works (untested) | 123 | 47.7% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 80 | 31.0% |
+| Not working | 78 | 30.2% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Dihada's Ploy | silent | Jump | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Discerning Taste | silent | Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. You gain life equal to the greatest power among cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Esper Sentinel | silent | Whenever an opponent casts their first noncreature spell each turn, draw a card unless that player pays {X}, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Flametongue Yearling | silent | When this creature enters, it deals damage equal to its power to target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Foul Watcher | silent | Delirium — This creature gets +1/+0 as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fractured Sanity | silent | Each opponent mills fourteen cards. Cycling {1}{U} ({1}{U}, Discard this card: Draw a card.) When you cycle this card, each opponent mills four cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gaea's Will | silent | Suspend 4—{G} Until end of turn, you may play lands and cast spells from your graveyard. If a card would be put into your graveyard from anywhere this turn, exi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -78,7 +77,6 @@
 | Out of Time | silent | When this enchantment enters, untap all creatures, then those creatures phase out until this enchantment leaves the battlefield. Put a time counter on this ench | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Piru, the Volatile | silent | At the beginning of your upkeep, sacrifice Piru unless you pay {R}{W}{B}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Power Depot | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Rakdos Headliner | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rise and Shine | silent | Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on each artifact that became a creature this way. Overload {4}{ | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scour the Desert | silent | Exile target creature card from your graveyard. Create X 1/1 white Bird creature tokens with flying, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scurry Oak | silent | Evolve | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -192,6 +190,7 @@
 | Piercing Rays | handled | Exile target tapped creature. Forecast — {2}{W}, Reveal this card from your hand: Tap target untapped creature. (Activate this ability only during your upkeep a | the engine reads this text and performs it | Y/-/- | not_tested |
 | Priest of Fell Rites | handled | {T}, Pay 3 life, Sacrifice this creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Profane Tutor | handled | Suspend 2—{1}{B} (Rather than cast this card from your hand, pay {1}{B} and exile it with two time counters on it. At the beginning of your upkeep, remove a tim | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rakdos Headliner | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Ravenous Squirrel | handled | Whenever you sacrifice an artifact or creature, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Raving Visionary | handled | {U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razortide Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -244,7 +243,7 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>45 cards</summary>
 
 - Abiding Grace
 - Archon of Cruelty
@@ -259,6 +258,7 @@
 - Echoing Return
 - Endurance
 - Fae Offering
+- Flametongue Yearling
 - Gilt-Blade Prowler
 - Glorious Enforcer
 - Gouged Zealot
@@ -319,7 +319,6 @@
 | each opponent mills fourteen cards. cycling {M}{M} ({M}{M}, discard ~: draw a card.) when you cycle ~, each opponent mills four cards. | 1 | Fractured Sanity | mh2 |
 | each other creature you control without a +N/+N counter on it has outlast {M}. | 1 | Arcus Acolyte | mh2 |
 | each spell you cast that's red or green costs {M} less to cast. | 1 | Goblin Anarchomancer | mh2 |
-| echo | 1 | Rakdos Headliner | mh2 |
 | equipped creature gets +N/+N and has artifact landwalk. | 1 | Vectis Gloves | mh2 |
 | equipped creature gets +N/+N and has first strike, trample, indestructible, haste, and "..." | 1 | Kaldra Compleat | mh2 |
 | equipped creature gets +N/+N for each artifact and/or enchantment you control. | 1 | Nettlecyst | mh2 |
@@ -351,7 +350,6 @@
 | when ~ dies, you gain life equal to its power. | 1 | Bottle Golems | mh2 |
 | when ~ enters, create a number of N/N green squirrel creature tokens equal to your devotion to black. | 1 | Underworld Hermit | mh2 |
 | when ~ enters, if it was kicked, target land becomes an island for as long as ~ remains on the battlefield. | 1 | Tide Shaper | mh2 |
-| when ~ enters, it deals damage equal to its power to target creature. | 1 | Flametongue Yearling | mh2 |
 | when ~ enters, put a +N/+N counter on each other artifact creature you control. | 1 | Arcbound Shikari | mh2 |
 | when ~ enters, put target card from an opponent's graveyard on the bottom of their library. | 1 | Landscaper Colos | mh2 |
 | when ~ enters, reveal the top two cards of your library. put one of them into your hand and the other into your graveyard. if you put an artifact card into your | 1 | Chrome Courier | mh2 |

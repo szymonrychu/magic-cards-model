@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 9.5% |
+| Tested | 15 | 10.1% |
 | Works (untested) | 57 | 38.5% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 70 | 47.3% |
+| Not working | 69 | 46.6% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Fire Juggler | silent | Whenever this creature becomes blocked, clash with an opponent. If you win, this creature deals 4 damage to each creature blocking it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Floodchaser | silent | {U}, Remove a +1/+1 counter from this creature: Target land becomes an Island until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graceful Reprieve | silent | When target creature dies this turn, return that card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Greatbow Doyen | silent | Whenever an Archer you control deals damage to a creature, that Archer deals that much damage to that creature's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grimoire Thief | silent | Whenever this creature becomes tapped, exile the top three cards of target opponent's library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hunting Triad | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ink Dissolver | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -164,11 +163,12 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Deglamer
 - Distant Melody
 - Forfend
+- Greatbow Doyen
 - Indomitable Ancients
 - Latchkey Faerie
 - Maralen of the Mornsong
@@ -233,7 +233,6 @@
 | whenever a creature you control becomes blocked, it gets +N/+N until end of turn. | 1 | Unstoppable Ash | mor |
 | whenever a creature you control enters, you may look at the top N cards of your library, where N is that creature's power. if you do, put one of those cards on  | 1 | Cream of the Crop | mor |
 | whenever a goblin or rogue you control deals combat damage to a player, if ~ is in your graveyard, you may return ~ to your hand. | 1 | Auntie's Snitch | mor |
-| whenever an archer you control deals damage to a creature, that archer deals that much damage to that creature's controller. | 1 | Greatbow Doyen | mor |
 | whenever another treefolk creature you control enters, you may gain life equal to that creature's toughness. | 1 | Orchard Warden | mor |
 | whenever ~ attacks, you may put a soldier creature card from your hand onto the battlefield tapped and attacking. | 1 | Preeminent Captain | mor |
 | whenever ~ becomes blocked, clash with an opponent. if you win, ~ deals N damage to each creature blocking it. | 1 | Fire Juggler | mor |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 12.5% |
+| Tested | 21 | 13.1% |
 | Works (untested) | 89 | 55.6% |
 | Partial (unaudited) | 8 | 5.0% |
-| Not working | 43 | 26.9% |
+| Not working | 42 | 26.2% |
 
 ## Cards needing work
 
@@ -68,7 +68,6 @@
 | Fated Return | notice | Put target creature card from a graveyard onto the battlefield under your control. It gains indestructible. If it's your turn, scry 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ragemonger | notice | Minotaur spells you cast cost {B}{R} less to cast. This effect reduces only the amount of colored mana you pay. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Retraction Helix | notice | Until end of turn, target creature gains "{T}: Return target nonland permanent to its owner's hand." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Satyr Firedancer | notice | Whenever an instant or sorcery spell you control deals damage to an opponent, this creature deals that much damage to target creature that player controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Archetype of Endurance | unaudited | Creatures your opponents control lose hexproof and can't have or gain hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Courser of Kruphix | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Floodtide Serpent | unaudited | This creature can't attack unless you return an enchantment you control to its owner's hand. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -170,7 +169,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Acolyte's Reward
 - Deepwater Hypnotist
@@ -185,6 +184,7 @@
 - Nessian Wilds Ravager
 - Ornitharch
 - Pain Seer
+- Satyr Firedancer
 - Satyr Wayfinder
 - Searing Blood
 - Skyreaping
@@ -231,7 +231,6 @@
 | when ~ enters, if tribute wasn"..."s hand." | 1 | Flame-Wreathed Phoenix | bng |
 | when ~ enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Oracle of Bones | bng |
 | when ~ enters, put a +N/+N counter on enchanted creature. | 1 | Ephara's Enlightenment | bng |
-| whenever an instant or sorcery spell you control deals damage to an opponent, ~ deals that much damage to target creature that player controls. | 1 | Satyr Firedancer | bng |
 | whenever an opponent casts a spell, you may exchange control of ~ and that spell. if you do, you may choose new targets for the spell. | 1 | Perplexing Chimera | bng |
 | whenever brimaz attacks, create a N/N white cat soldier creature token with vigilance that's attacking. | 1 | Brimaz, King of Oreskos | bng |
 | whenever enchanted creature attacks, it gets +N/+N until end of turn, where N is your devotion to red. | 1 | Thunderous Might | bng |

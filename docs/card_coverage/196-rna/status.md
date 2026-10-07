@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 36 | 15.1% |
-| Works (untested) | 138 | 57.7% |
+| Works (untested) | 139 | 58.2% |
 | Partial (unaudited) | 9 | 3.8% |
-| Not working | 56 | 23.4% |
+| Not working | 55 | 23.0% |
 
 ## Cards needing work
 
@@ -75,7 +75,6 @@
 | Tin Street Dodger | silent | {R}: This creature can't be blocked this turn except by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tithe Taker | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Windstorm Drake | silent | Other creatures you control with flying get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bloodmist Infiltrator | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Code of Constraint | notice | Target creature gets -4/-0 until end of turn. Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap duri | unparsed remainder: Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap during its controller's next untap step. | Y/Y/- | not_working |
 | Deputy of Detention | notice | When this creature enters, exile target nonland permanent an opponent controls and all other nonland permanents that player controls with the same name as that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror March | notice | Whenever a nontoken creature you control enters, flip a coin until you lose a flip. For each flip you won, create a token that's a copy of that creature. Those  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -109,6 +108,7 @@
 | Biogenic Ooze | handled | When this creature enters, create a 2/2 green Ooze creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blade Juggler | handled | When this creature enters, it deals 1 damage to you and you draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bladebrand | handled | Target creature gains deathtouch until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bloodmist Infiltrator | handled | Whenever this creature attacks, you may sacrifice another creature. If you do, this creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bolrac-Clan Crusher | handled | {T}, Remove a +1/+1 counter from a creature you control: This creature deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bring to Trial | handled | Exile target creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burn Bright | handled | Creatures you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -319,7 +319,6 @@
 | whenever an opponent draws a card, that player may pay {M}. if the player doesn't, you create a treasure token. | 1 | Smothering Tithe | rna |
 | whenever one or more +N/+N counters are put on ~, you may search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Growth-Chamber Guardian | rna |
 | whenever you pay life, put that many blood counters on ~. | 1 | Font of Agonies | rna |
-| whenever ~ attacks, you may sacrifice another creature. if you do, ~ can't be blocked ~. | 1 | Bloodmist Infiltrator | rna |
 | whenever ~ becomes blocked, each creature blocking it gets -N/-N until end of turn. | 1 | Plague Wight | rna |
 | you can't cast noncreature spells. | 1 | Nikya of the Old Ways | rna |
 | you may reveal ~ from your opening hand. if you do, scry N at the beginning of your first upkeep. | 1 | Sphinx of Foresight | rna |

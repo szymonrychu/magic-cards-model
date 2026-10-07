@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 17.5% |
+| Tested | 47 | 18.7% |
 | Works (untested) | 109 | 43.3% |
 | Partial (unaudited) | 9 | 3.6% |
-| Not working | 90 | 35.7% |
+| Not working | 87 | 34.5% |
 
 ## Cards needing work
 
@@ -58,13 +58,11 @@
 | Ichorplate Golem | silent | Creatures you control with oil counters on them get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Indoctrination Attendant | silent | When this creature enters, you may return another permanent you control to its owner's hand. If you do, create a 1/1 colorless Phyrexian Mite artifact creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, the Perfected Mind | silent | +1: Until your next turn, up to one target creature gets -3/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jor Kadeen, First Goldwarden | silent | Whenever Jor Kadeen attacks, it gets +X/+X until end of turn, where X is the number of equipped creatures you control. Then if Jor Kadeen's power is 4 or greate | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kaito, Dancing Shadow | silent | Whenever one or more creatures you control deal combat damage to a player, you may return one of them to its owner's hand. If you do, you may activate loyalty a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karumonix, the Rat King | silent | Other Rats you control have toxic 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kaya, Intangible Slayer | silent | 0: You draw two cards. Then each opponent may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kemba, Kha Enduring | silent | Whenever Kemba or another Cat you control enters, attach up to one target Equipment you control to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kinzu of the Bleak Coven | silent | Whenever another nontoken creature you control dies, you may pay 2 life and exile it. If you do, create a token that's a copy of that creature, except it's 1/1  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kuldotha Cackler | silent | Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the number of permanents you control with oil counters on them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lattice-Blade Mantis | silent | Whenever this creature attacks, you may remove an oil counter from it. If you do, untap it and it gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Leonin Lightbringer | silent | As long as this creature is equipped, it gets +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lukka, Bound to Ruin | silent | −4: Lukka deals X damage divided as you choose among any number of target creatures and/or planeswalkers, where X is the greatest power among creatures you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -89,7 +87,6 @@
 | The Seedcore | silent | Corrupted — {T}: Target 1/1 creature gets +2/+1 until end of turn. Activate only if an opponent has three or more poison counters. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unctus's Retrofitter | silent | When this creature enters, up to one target artifact you control becomes an artifact creature with base power and toughness 4/4 for as long as this creature rem | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unctus, Grand Metatect | silent | {U/P}: Until end of turn, target creature you control becomes a blue artifact in addition to its other colors and types. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Urabrask's Anointer | silent | When this creature enters, it deals X damage to any target, where X is the number of permanents you control with oil counters on them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vanish into Eternity | silent | This spell costs {3} more to cast if it targets a creature. Exile target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Venser, Corpse Puppet | silent | Whenever you proliferate, choose one — • If you don't control a creature named The Hollow Sentinel, create The Hollow Sentinel, a legendary 3/3 colorless Phyrex | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Viral Spawning | silent | Create a 3/3 green Phyrexian Beast creature token with toxic 1. (Players dealt combat damage by it also get a poison counter.) Corrupted — As long as an opponen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -238,7 +235,7 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>47 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
@@ -259,7 +256,9 @@
 - Hexgold Slash
 - Infectious Bite
 - Infectious Inquiry
+- Jor Kadeen, First Goldwarden
 - Koth, Fire of Resistance
+- Kuldotha Cackler
 - Malcator, Purity Overseer
 - Mindsplice Apparatus
 - Myr Convert
@@ -281,6 +280,7 @@
 - The Filigree Sylex
 - The Mycosynth Gardens
 - Tyvar, Jubilant Brawler
+- Urabrask's Anointer
 - Venerated Rotpriest
 - Vindictive Flamestoker
 - Vivisection Evangelist
@@ -340,7 +340,6 @@
 | when ezuri enters, you may pay {M}. if you do, proliferate twice. | 1 | Ezuri, Stalker of Spheres | one |
 | when you proliferate, return ~ from your graveyard to your hand. | 1 | Voidwing Hybrid | one |
 | when ~ enters, exile three cards at random from your graveyard. choose a noncreature, nonland card from among them and copy it. you may cast the copy without pa | 1 | Capricious Hellraiser | one |
-| when ~ enters, it deals N damage to any target, where N is the number of permanents you control with oil counters on them. | 1 | Urabrask's Anointer | one |
 | when ~ enters, look at the top four cards of your library. you may reveal a land card from among them and put it into your hand. put the rest on the bottom of y | 1 | Contagious Vorrac | one |
 | when ~ enters, scry N. then each opponent may scry N. | 1 | Myr Custodian | one |
 | when ~ enters, up to one target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Unctus's Retrofitter | one |
@@ -352,7 +351,6 @@
 | whenever an equipped creature you control other than rhuk attacks or dies, you may attach all equipment attached to that creature to rhuk. | 1 | Rhuk, Hexgold Nabber | one |
 | whenever another artifact you control enters, ~ becomes a N/N phyrexian eye artifact creature until end of turn. | 1 | Eye of Malcator | one |
 | whenever another nontoken creature you control dies, you may pay N life and exile it. if you do, create a token that"..."s N/N and has toxic N. | 1 | Kinzu of the Bleak Coven | one |
-| whenever jor kadeen attacks, it gets +N/+N until end of turn, where N is the number of equipped creatures you control. then if jor kadeen's power is N or greate | 1 | Jor Kadeen, First Goldwarden | one |
 | whenever kemba or another cat you control enters, attach up to one target equipment you control to that creature. | 1 | Kemba, Kha Enduring | one |
 | whenever one or more creatures you control deal combat damage to a player, you may return one of them to its owner's hand. if you do, you may activate loyalty a | 1 | Kaito, Dancing Shadow | one |
 | whenever you cast a noncreature spell, choose a counter on target permanent. put an additional counter of that kind on that permanent. | 1 | Ichormoon Gauntlet | one |
@@ -360,7 +358,6 @@
 | whenever you proliferate, choose one — • if you don't control a creature named the hollow sentinel, create the hollow sentinel, a legendary N/N colorless phyrex | 1 | Venser, Corpse Puppet | one |
 | whenever you proliferate, each opponent loses N life and you gain N life. | 1 | Scheming Aspirant | one |
 | whenever you put one or more counters on a permanent or player, ~ deals that much damage to target opponent, creature an opponent controls, or planeswalker an o | 1 | All Will Be One | one |
-| whenever ~ attacks, it gets +N/+N until end of turn, where N is the number of permanents you control with oil counters on them. | 1 | Kuldotha Cackler | one |
 | whenever ~ attacks, you may remove an oil counter from it. if you do, untap it and it gets +N/+N until end of turn. | 1 | Lattice-Blade Mantis | one |
 | whenever ~ attacks, you may remove two oil counters from it. when you do, target creature can't block ~. | 1 | Forgehammer Centurion | one |
 | whenever ~ becomes attached to a creature, for as long as ~ remains attached to it, you may have that creature become a copy of another target creature you cont | 1 | Blade of Shared Souls | one |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 7.3% |
+| Tested | 14 | 8.5% |
 | Works (untested) | 60 | 36.4% |
 | Partial (unaudited) | 11 | 6.7% |
-| Not working | 82 | 49.7% |
+| Not working | 80 | 48.5% |
 
 ## Cards needing work
 
@@ -79,7 +79,6 @@
 | Overwhelming Intellect | silent | Counter target creature spell. Draw cards equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pain's Reward | silent | Each player may bid life. You start the bidding with a bid of any number. In turn order, each player may top the high bid. The bidding ends if the high bid stan | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Presence of the Wise | silent | You gain 2 life for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Promise of Bunrei | silent | When a creature you control dies, sacrifice this enchantment. If you do, create four 1/1 colorless Spirit creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Promised Kannushi | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Pure Intentions | silent | Whenever a spell or ability an opponent controls causes you to discard cards this turn, return those cards from your graveyard to your hand. When a spell or abi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rally the Horde | silent | Exile the top card of your library. Exile the top card of your library. Exile the top card of your library. If the last card exiled isn't a land card, repeat th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -96,7 +95,6 @@
 | Sokenzan Renegade | silent | At the beginning of your upkeep, if a player has more cards in hand than each other player, the player who has the most cards in hand gains control of this crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sokenzan Spellblade | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Soramaro, First to Dream | silent | Soramaro's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soratami Cloud Chariot | silent | {2}: Prevent all combat damage that would be dealt to and dealt by target creature you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stampeding Serow | silent | At the beginning of your upkeep, return a green creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughts of Ruin | silent | Each player sacrifices a land of their choice for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Torii Watchward | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -183,7 +181,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>14 cards</summary>
 
 - Burning-Eye Zubera
 - Evermind
@@ -193,9 +191,11 @@
 - Kitsune Bonesetter
 - Miren, the Moaning Well
 - Pithing Needle
+- Promise of Bunrei
 - Reverence
 - Rushing-Tide Zubera
 - Sakura-Tribe Scout
+- Soratami Cloud Chariot
 - Tomb of Urami
 
 </details>
@@ -259,7 +259,6 @@
 | search target player"..."t cast spells. at the beginning of each of your upkeeps, copy ~ except for its epic ability. you may choose a new target for the copy.) | 1 | Neverending Torment | sok |
 | soramaro's power and toughness are each equal to the number of cards in your hand. | 1 | Soramaro, First to Dream | sok |
 | target opponent chooses a number. you may have that player lose that much life. if you don't, that player sacrifices all but that many permanents of their choic | 1 | Choice of Damnations | sok |
-| when a creature you control dies, sacrifice ~. if you do, create four N/N colorless spirit creature tokens. | 1 | Promise of Bunrei | sok |
 | when homura dies, return it to the battlefield flipped. | 1 | Homura, Human Ascendant // Homura's Essence | sok |
 | when you have N or more life, flip rune-tail. | 1 | Rune-Tail, Kitsune Ascendant // Rune-Tail's Essence | sok |
 | whenever a land enters, its controller creates a N/N green snake creature token. | 1 | Seed the Land | sok |
@@ -274,7 +273,6 @@
 | you gain N life for each card in your hand. | 1 | Presence of the Wise | sok |
 | your maximum hand size is increased by one. | 1 | Minamo Scrollkeeper | sok |
 | {M}, return a land you control to its owner's hand: target land becomes the basic land type of your choice until end of turn. | 1 | Moonbow Illusionist | sok |
-| {M}: prevent all combat damage that would be dealt to and dealt by target creature you control ~. | 1 | Soratami Cloud Chariot | sok |
 | {M}: target creature gets +N/+N until end of turn, where N is its power. sacrifice ~ at the beginning of the next end step. | 1 | Wine of Blood and Iron | sok |
 | {M}: untap enchanted creature. | 1 | Freed from the Real | sok |
 | {M}{M}, {M}: counter target spell unless its controller pays {M}. | 1 | Ghost-Lit Warder | sok |

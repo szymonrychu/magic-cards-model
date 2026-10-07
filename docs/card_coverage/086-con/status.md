@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 11.3% |
+| Tested | 18 | 12.8% |
 | Works (untested) | 77 | 54.6% |
-| Partial (unaudited) | 5 | 3.5% |
-| Not working | 43 | 30.5% |
+| Partial (unaudited) | 4 | 2.8% |
+| Not working | 42 | 29.8% |
 
 ## Cards needing work
 
@@ -55,7 +55,6 @@
 | Unstable Frontier | silent | {T}: Target land you control becomes the basic land type of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vectis Agents | silent | {U}{B}: This creature gets -2/-0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Voices from the Void | silent | Domain — Target player discards a card for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Voracious Dragon | silent | When this creature enters, it deals damage to any target equal to twice the number of Goblins it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wall of Reverence | silent | At the beginning of your end step, you may gain life equal to the power of target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wandering Goblins | silent | Domain — {3}: This creature gets +1/+0 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Leotau | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -71,7 +70,6 @@
 | View from Above | notice | Target creature gains flying until end of turn. If you control a white permanent, return View from Above to its owner's hand. | unparsed remainder: If you control a white permanent, return View from Above to its owner's hand. | Y/-/- | not_working |
 | Apocalypse Hydra | unaudited | This creature enters with X +1/+1 counters on it. If X is 5 or more, it enters with an additional X +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aven Trailblazer | unaudited | Domain — Aven Trailblazer's toughness is equal to the number of basic land types among lands you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Nyxathid | unaudited | As this creature enters, choose an opponent. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Progenitus | unaudited | If Progenitus would be put into a graveyard from anywhere, reveal Progenitus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Worldheart Phoenix | unaudited | You may cast this card from your graveyard by paying {W}{U}{B}{R}{G} rather than paying its mana cost. If you do, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Absorb Vis | handled | Target player loses 4 life and you gain 4 life. Basic landcycling {1}{B} ({1}{B}, Discard this card: Search your library for a basic land card, reveal it, put i | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -155,7 +153,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>18 cards</summary>
 
 - Aerie Mystics
 - Ancient Ziggurat
@@ -167,12 +165,14 @@
 - Ignite Disorder
 - Magister Sphinx
 - Mark of Asylum
+- Nyxathid
 - Path to Exile
 - Reliquary Tower
 - Skyward Eye Prophets
 - Suicidal Charge
 - Thornling
 - Volcanic Fallout
+- Voracious Dragon
 
 </details>
 
@@ -184,7 +184,6 @@
 | Domain | 4 | Aven Trailblazer, Manaforce Mace, Voices from the Void, Wandering Goblins | con |
 | {M}: target land you control becomes the basic land type of your choice until end of turn. | 2 | Grixis Illusionist, Unstable Frontier | con |
 | as long as you control a red permanent, ~ gets +N/+N and has first strike. | 1 | Ember Weaver | con |
-| as ~ enters, choose an opponent. | 1 | Nyxathid | con |
 | at the beginning of your end step, you may gain life equal to the power of target creature you control. | 1 | Wall of Reverence | con |
 | at the beginning of your upkeep, each player loses N life. put a +N/+N counter on ~ for each N life lost ~. | 1 | Blood Tyrant | con |
 | at the beginning of your upkeep, return an artifact you control to its owner's hand. | 1 | Esperzoa | con |
@@ -201,7 +200,6 @@
 | when ~ attacks or blocks, sacrifice it at the beginning of the next end step. | 1 | Brackwater Elemental | con |
 | when ~ dies, destroy all nonland permanents. they can't be regenerated. | 1 | Child of Alara | con |
 | when ~ enters, discard your hand. each opponent sacrifices a creature of their choice for each card discarded ~. | 1 | Malfegor | con |
-| when ~ enters, it deals damage to any target equal to twice the number of goblins it devoured. | 1 | Voracious Dragon | con |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Rupture Spire | con |
 | when ~ enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | 1 | Sphinx Summoner | con |
 | whenever another creature leaves the battlefield, you may have target player mill two cards. | 1 | Extractor Demon | con |

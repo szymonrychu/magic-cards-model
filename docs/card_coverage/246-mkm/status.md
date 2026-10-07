@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 51 | 19.0% |
+| Tested | 53 | 19.8% |
 | Works (untested) | 111 | 41.4% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 96 | 35.8% |
+| Not working | 94 | 35.1% |
 
 ## Cards needing work
 
@@ -76,13 +76,11 @@
 | Lost in the Maze | silent | When this enchantment enters, tap X target creatures. Put a stun counter on each of those creatures you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lumbering Laundry | silent | {2}: Until end of turn, you may look at face-down creatures you don't control any time. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Magnetic Snuffler | silent | When this creature enters, return target Equipment card from your graveyard to the battlefield attached to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Niv-Mizzet, Guildpact | silent | Whenever Niv-Mizzet deals combat damage to a player, it deals X damage to any target, target player draws X cards, and you gain X life, where X is the number of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | No Witnesses | silent | Each player who controls the most creatures investigates. Then destroy all creatures. (To investigate, create a Clue token. It's an artifact with "{2}, Sacrific | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Officious Interrogation | silent | This spell costs {W}{U} more to cast for each target beyond the first. Choose any number of target players. Investigate X times, where X is the total number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Outrageous Robbery | silent | Target opponent exiles the top X cards of their library face down. You may look at and play those cards for as long as they remain exiled. If you cast a spell t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Polygraph Orb | silent | {2}, {T}, Collect evidence 3: Each opponent loses 3 life unless they discard a card or sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Public Thoroughfare | silent | When this land enters, sacrifice it unless you tap an untapped artifact or land you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Pyrotechnic Performer | silent | Whenever this creature or another creature you control is turned face up, that creature deals damage equal to its power to each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rakdos, Patron of Chaos | silent | At the beginning of your end step, target opponent may sacrifice two nonland, nontoken permanents of their choice. If they don't, you draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Relive the Past | silent | Return up to one target artifact card, up to one target land card, and up to one target non-Aura enchantment card from your graveyard to the battlefield. They a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Repulsive Mutation | silent | Put X +1/+1 counters on target creature you control. Then counter up to one target spell unless its controller pays mana equal to the greatest power among creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -247,7 +245,7 @@
 ## Fully supported
 
 <details>
-<summary>51 cards</summary>
+<summary>53 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
@@ -282,10 +280,12 @@
 - Melek, Reforged Researcher
 - Meticulous Archive
 - Mistway Spy
+- Niv-Mizzet, Guildpact
 - No More Lies
 - Person of Interest
 - Pick Your Poison
 - Proft's Eidetic Memory
+- Pyrotechnic Performer
 - Raucous Theater
 - Rope
 - Rubblebelt Braggart
@@ -377,7 +377,6 @@
 | whenever izoni enters or attacks, you may collect evidence N. if you do, create two N/N black and green spider creature tokens with reach and menace. | 1 | Izoni, Center of the Web | mkm |
 | whenever kellan attacks, destroy up to one target artifact. if you controlled that permanent, draw a card. | 1 | Kellan, Inquisitive Prodigy // Tail the Suspect | mkm |
 | whenever kylox attacks, sacrifice any number of other creatures, then exile the top N cards of your library, where N is their total power. you may cast any numb | 1 | Kylox, Visionary Inventor | mkm |
-| whenever niv-mizzet deals combat damage to a player, it deals N damage to any target, target player draws N cards, and you gain N life, where N is the number of | 1 | Niv-Mizzet, Guildpact | mkm |
 | whenever one or more creature cards leave your graveyard, create a N/N green plant creature token, then put a +N/+N counter on each plant you control. | 1 | Insidious Roots | mkm |
 | whenever one or more creature cards leave your graveyard, create a N/N white and blue detective creature token, then investigate. | 1 | Chalk Outline | mkm |
 | whenever one or more creature cards leave your graveyard, each opponent loses N life and you gain N life. | 1 | Soul Enervation | mkm |
@@ -392,7 +391,6 @@
 | whenever ~ attacks, you may collect evidence N. when you do, put a +N/+N counter on target creature you control. | 1 | Sample Collector | mkm |
 | whenever ~ deals combat damage to a player, you may collect evidence N. when you do, ~ deals N damage to each creature and planeswalker that player controls. | 1 | Incinerator of the Guilty | mkm |
 | whenever ~ is dealt N or more damage, investigate. | 1 | Innocent Bystander | mkm |
-| whenever ~ or another creature you control is turned face up, that creature deals damage equal to its power to each opponent. | 1 | Pyrotechnic Performer | mkm |
 | you may collect evidence N rather than pay the mana cost for spells you cast. | 1 | Conspiracy Unraveler | mkm |
 | {M}, {M}, collect evidence N: each opponent loses N life unless they discard a card or sacrifice a creature. | 1 | Polygraph Orb | mkm |
 | {M}: until end of turn, you may look at face-down creatures you don't control any time. | 1 | Lumbering Laundry | mkm |

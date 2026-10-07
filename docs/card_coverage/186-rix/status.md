@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 29 | 16.3% |
-| Works (untested) | 93 | 52.2% |
+| Works (untested) | 94 | 52.8% |
 | Partial (unaudited) | 10 | 5.6% |
-| Not working | 46 | 25.8% |
+| Not working | 45 | 25.3% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Blazing Hope | silent | Exile target creature with power greater than or equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brass's Bounty | silent | For each land you control, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Captain's Hook | silent | Equipped creature gets +2/+0, has menace, and is a Pirate in addition to its other creature types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Champion of Dusk | silent | When this creature enters, you draw X cards and you lose X life, where X is the number of Vampires you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cherished Hatchling | silent | When this creature dies, you may cast Dinosaur spells this turn as though they had flash, and whenever you cast a Dinosaur spell this turn, it gains "When this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crashing Tide | silent | This spell has flash as long as you control a Merfolk. Return target creature to its owner's hand. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dead Man's Chest | silent | When enchanted creature dies, exile cards equal to its power from the top of its owner's library. You may cast spells from among those cards for as long as they | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -92,6 +91,7 @@
 | Buccaneer's Bravado | handled | Choose one — • Target creature gets +1/+1 and gains first strike until end of turn. • Target Pirate gets +1/+1 and gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cacophodon | handled | Enrage — Whenever this creature is dealt damage, untap target permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Canal Monitor | handled |  |  | Y/Y/- | not_tested |
+| Champion of Dusk | handled | When this creature enters, you draw X cards and you lose X life, where X is the number of Vampires you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cleansing Ray | handled | Choose one — • Destroy target Vampire. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crested Herdcaller | handled | When this creature enters, create a 3/3 green Dinosaur creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daring Buccaneer | handled | As an additional cost to cast this spell, reveal a Pirate card from your hand or pay {2}. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,7 +246,6 @@
 | when tetzimoc enters, destroy each creature your opponents control with a prey counter on it. | 1 | Tetzimoc, Primal Death | rix |
 | when ~ dies, you may cast dinosaur spells ~ as though they had flash, and whenever you cast a dinosaur spell ~, it gains "..." | 1 | Cherished Hatchling | rix |
 | when ~ enters, target player exiles all cards from their hand face down, then draws that many cards. | 1 | Induced Amnesia | rix |
-| when ~ enters, you draw N cards and you lose N life, where N is the number of vampires you control. | 1 | Champion of Dusk | rix |
 | when ~ enters, you lose N life unless you control another pirate. | 1 | Fathom Fleet Boarder | rix |
 | whenever etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana cos | 1 | Etali, Primal Storm | rix |
 | whenever ~ attacks, target creature defending player controls loses all abilities and has base power and toughness N/N until end of turn. | 1 | Warkite Marauder | rix |

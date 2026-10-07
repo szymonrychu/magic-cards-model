@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 9.2% |
+| Tested | 27 | 9.5% |
 | Works (untested) | 133 | 47.0% |
 | Partial (unaudited) | 15 | 5.3% |
-| Not working | 109 | 38.5% |
+| Not working | 108 | 38.2% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Devoted Retainer | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Devouring Greed | silent | As an additional cost to cast this spell, you may sacrifice any number of Spirits. Target player loses 2 life plus 2 life for each Spirit sacrificed this way. Y | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dripping-Tongue Zubera | silent | When this creature dies, create a 1/1 colorless Spirit creature token for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ember-Fist Zubera | silent | When this creature dies, it deals damage to any target equal to the number of Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Feral Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +2/+2 and gains trample until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Field of Reality | silent | {1}{U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Floating-Dream Zubera | silent | When this creature dies, draw a card for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -287,7 +286,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Azusa, Lost but Seeking
 - Ben-Ben, Akki Hermit
@@ -295,6 +294,7 @@
 - Commune with Nature
 - Desperate Ritual
 - Distress
+- Ember-Fist Zubera
 - Ethereal Haze
 - Ghostly Prison
 - Glacial Ray
@@ -376,7 +376,6 @@
 | when yosei dies, target player skips their next untap step. tap up to five target permanents that player controls. | 1 | Yosei, the Morning Star | chk |
 | when ~ dies, create a N/N colorless spirit creature token for each zubera that died ~. | 1 | Dripping-Tongue Zubera | chk |
 | when ~ dies, draw a card for each zubera that died ~. | 1 | Floating-Dream Zubera | chk |
-| when ~ dies, it deals damage to any target equal to the number of zubera that died ~. | 1 | Ember-Fist Zubera | chk |
 | when ~ dies, target opponent discards a card for each zubera that died ~. | 1 | Ashen-Skin Zubera | chk |
 | when ~ dies, you gain N life for each zubera that died ~. | 1 | Silent-Chant Zubera | chk |
 | when ~ has flying, flip it. | 1 | Student of Elements // Tobita, Master of Winds | chk |

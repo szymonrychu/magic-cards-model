@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 72 | 27.5% |
+| Tested | 73 | 27.9% |
 | Works (untested) | 93 | 35.5% |
-| Partial (unaudited) | 18 | 6.9% |
+| Partial (unaudited) | 17 | 6.5% |
 | Not working | 79 | 30.2% |
 
 ## Cards needing work
@@ -56,7 +56,6 @@
 | Grim Servant | silent | When this creature enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grist, Voracious Larva // Grist, the Plague Swarm | silent | Whenever Grist or another creature you control enters, if it entered from your graveyard or you cast it from your graveyard, you may pay {G}. If you do, exile G | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horrid Shadowspinner | silent | Whenever this creature attacks, you may draw cards equal to its power. If you do, discard that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Imskir Iron-Eater | silent | When Imskir enters, you draw X cards and you lose X life, where X is half the number of artifacts you control, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Indebted Spirit | silent | Enchanted creature gets +1/+1 and has afterlife 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infernal Captor | silent | When this creature exploits a creature, gain control of target artifact or creature until end of turn. Untap that permanent. It gains haste until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Invert Polarity | silent | Choose target spell, then flip a coin. If you win the flip, gain control of that spell and you may choose new targets for it. If you lose the flip, counter that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -102,10 +101,10 @@
 | Estrid's Invocation | notice | You may have this enchantment enter as a copy of an enchantment you control, except it has "At the beginning of your upkeep, you may exile this enchantment. If  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Etched Slith | notice | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. When you do, you may remove a counter from another target permanent or oppone | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Glimpse the Impossible | notice | Exile the top three cards of your library. You may play those cards this turn. At the beginning of the next end step, if any of those cards remain exiled, put t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Imskir Iron-Eater | notice | {3}{R}, Sacrifice an artifact: Imskir deals damage equal to the sacrificed artifact's mana value to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Obstinate Gargoyle | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Propagator Drone | notice | Creature tokens you control have evolve. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pyretic Rebirth | notice | Return target artifact or creature card from your graveyard to your hand. Pyretic Rebirth deals damage equal to that card's mana value to up to one target creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Aether Revolt | unaudited | Revolt — As long as a permanent left the battlefield under your control this turn, if a source you control would deal noncombat damage to an opponent or a perma | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Corrupted Shapeshifter | unaudited | As this creature enters, it becomes your choice of a 3/3 creature with flying, a 2/5 creature with vigilance, or a 0/12 creature with defender. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cursed Wombat | unaudited | Permanents you control have "Whenever one or more +1/+1 counters are put on this permanent, put an additional +1/+1 counter on it. This ability triggers only on | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dog Umbra | unaudited | As long as another player controls enchanted creature, it can't attack or block. Otherwise, this Aura has umbra armor. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -220,8 +219,9 @@
 ## Fully supported
 
 <details>
-<summary>72 cards</summary>
+<summary>73 cards</summary>
 
+- Aether Revolt
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
 - Archway of Innovation
 - Arena of Glory
@@ -304,7 +304,6 @@
 | living weapon | 4 | Colossal Dreadmask, Cranial Ram, Drossclaw, Mandibular Kite | mh3 |
 | Landfall | 3 | Reckless Pyrosurfer, Springheart Nantuko, Territory Culler | mh3 |
 | Morbid | 1 | Muster the Departed | mh3 |
-| Revolt | 1 | Aether Revolt | mh3 |
 | as an additional cost to cast ~, sacrifice a creature or sacrifice a modified creature. (equipment, auras you control, and counters are modifications.) destroy  | 1 | Lethal Throwdown | mh3 |
 | as long as another player controls enchanted creature, it can't attack or block. otherwise, ~ has umbra armor. | 1 | Dog Umbra | mh3 |
 | as long as ~ is a creature, it has prowess. | 1 | Triton Wavebreaker | mh3 |
@@ -355,7 +354,6 @@
 | sacrifice any number of creatures. search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures sacrif | 1 | The Hunger Tide Rises | mh3 |
 | search your library for a card, exile it face down, then shuffle. | 1 | The Creation of Avacyn | mh3 |
 | until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |
-| when imskir enters, you draw N cards and you lose N life, where N is half the number of artifacts you control, rounded down. | 1 | Imskir Iron-Eater | mh3 |
 | when rosheen enters, mill six cards. you may put a card with {M} in its mana cost from among them into your hand. | 1 | Rosheen, Roaring Prophet | mh3 |
 | when ~ enters, create two N/N red gremlin creature tokens. then you get an amount of {M} equal to the number of creatures you control. | 1 | Scurry of Gremlins | mh3 |
 | when ~ enters, exchange control of ~ and target creature an opponent controls. if you do, you get {M}{M}{M}{M}, then sacrifice that creature unless you pay an a | 1 | Volatile Stormdrake | mh3 |
@@ -388,6 +386,7 @@
 | {M}, {M}: move a counter from target permanent you control onto a second target permanent. activate only as a sorcery. | 1 | Nesting Grounds | mh3 |
 | {M}, {M}: target creature you control connives N, where N is the number of creatures that died ~. | 1 | Spymaster's Vault | mh3 |
 | {M}: return another target permanent you control and all auras you control attached to it to their owner's hand. activate only during your turn. | 1 | Essence Reliquary | mh3 |
+| {M}{M}, sacrifice an artifact: imskir deals damage equal to the sacrificed artifact's mana value to any target. | 1 | Imskir Iron-Eater | mh3 |
 | {M}{M}: each opponent loses N life and you gain N life. ~ costs {M}{M} less to activate if you've drawn three or more cards ~. activate only once each turn. | 1 | Kami of Jealous Thirst | mh3 |
 | ~ can block only creatures with flying. | 1 | Etherium Pteramander | mh3 |
 | ~ costs {M} less to cast for each N life your opponents have lost ~. target opponent exiles the top three cards of their library. until the end of your next tur | 1 | Bloodsoaked Insight // Sanguine Morass | mh3 |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 65 | 23.5% |
-| Works (untested) | 127 | 45.8% |
+| Tested | 66 | 23.8% |
+| Works (untested) | 129 | 46.6% |
 | Partial (unaudited) | 12 | 4.3% |
-| Not working | 73 | 26.4% |
+| Not working | 70 | 25.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aang's Iceberg | silent | Waterbend {3}: Sacrifice this enchantment. If you do, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aang's Journey | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Search your library for a basic land card. If this spell was kicked, instead search your libr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Accumulate Wisdom | silent | Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. Put each of those ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Air Nomad Legacy | silent | Creatures you control with flying get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -70,7 +69,6 @@
 | Seismic Sense | silent | Look at the top X cards of your library, where X is the number of lands you control. You may reveal a creature or land card from among them and put it into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sokka, Lateral Strategist | silent | Whenever Sokka and at least one other creature attack, draw a card. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
 | Sparring Dummy | silent | {T}: Mill a card. You may put a land card milled this way into your hand. You gain 2 life if a Lesson card is milled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Boulder, Ready to Rumble | silent | Whenever The Boulder attacks, earthbend X, where X is the number of creatures you control with power 4 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Legend of Kyoshi // Avatar Kyoshi | silent | II — Earthbend X, where X is the number of cards in your hand. That land becomes an Island in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Legend of Yangchen // Avatar Yangchen | silent | I — Starting with you, each player chooses up to one permanent with mana value 3 or greater from among permanents your opponents control. Exile those permanents | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Rise of Sozin // Fire Lord Sozin | silent | II — Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -82,7 +80,6 @@
 | Water Tribe Rallier | silent | Waterbend {5}: Look at the top four cards of your library. You may reveal a creature card with power 3 or less from among them and put it into your hand. Put th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Waterbending Lesson | silent | Draw three cards. Then discard a card unless you waterbend {2}. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Watery Grasp | silent | Waterbend {5}: Enchanted creature's owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| White Lotus Tile | silent | {T}: Add X mana of any one color, where X is the greatest number of creatures you control that have a creature type in common. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Yue, the Moon Spirit | silent | Waterbend {5}, {T}: You may cast a noncreature spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Zhao, the Moon Slayer | silent | As long as Zhao has a conqueror counter on him, nonbasic lands are Mountains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Earth Rumble Wrestlers | notice | This creature gets +1/+0 and has trample as long as you control a land creature or a land entered the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -211,6 +208,7 @@
 | Suki, Kyoshi Warrior | handled | Suki's power is equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sun Warriors | handled | {5}: Create a 1/1 white Ally creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sun-Blessed Peak | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| The Boulder, Ready to Rumble | handled | Whenever The Boulder attacks, earthbend X, where X is the number of creatures you control with power 4 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | The Cave of Two Lovers | handled | I — Create two 1/1 white Ally creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | The Fire Nation Drill | handled | When The Fire Nation Drill enters, you may tap it. When you do, destroy target creature with power 4 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | The Legend of Kuruk // Avatar Kuruk | handled | I, II — Scry 2, then draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -233,6 +231,7 @@
 | Waterbender Ascension | handled | Whenever a creature you control deals combat damage to a player, put a quest counter on this enchantment. Then if it has four or more quest counters on it, draw | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | White Lotus Hideout | handled |  |  | Y/Y/Y | not_tested |
 | White Lotus Reinforcements | handled | Other Allies you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| White Lotus Tile | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wolfbat | handled | Whenever you draw your second card each turn, you may pay {B}. If you do, return this card from your graveyard to the battlefield with a finality counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Yuyan Archers | handled | When this creature enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Zhao, Ruthless Admiral | handled | Whenever you sacrifice another permanent, creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -242,8 +241,9 @@
 ## Fully supported
 
 <details>
-<summary>65 cards</summary>
+<summary>66 cards</summary>
 
+- Aang's Iceberg
 - Aang, Swift Savior // Aang and La, Ocean's Fury
 - Aang, at the Crossroads // Aang, Destined Savior
 - Abandon Attachments
@@ -360,7 +360,6 @@
 | waterbend {M}, {M}: you may cast a noncreature spell from your hand without paying its mana cost. | 1 | Yue, the Moon Spirit | tla |
 | waterbend {M}: enchanted creature's owner shuffles it into their library. | 1 | Watery Grasp | tla |
 | waterbend {M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Water Tribe Rallier | tla |
-| waterbend {M}: sacrifice ~. if you do, scry N. | 1 | Aang's Iceberg | tla |
 | when azula enters, target opponent exiles a nontoken creature they control, then they exile a nonland card from their graveyard. | 1 | Azula, Cunning Usurper | tla |
 | when bumi enters, choose up to N, where N is the number of lesson cards in your graveyard — • put three +N/+N counters on bumi. • target player scries N. • eart | 1 | Bumi, King of Three Trials | tla |
 | when hama enters, target opponent mills three cards. exile up to one noncreature, nonland card from that player's graveyard. for as long as you control hama, yo | 1 | Hama, the Bloodbender | tla |
@@ -375,7 +374,6 @@
 | whenever bumi deals combat damage to a player, untap all lands you control. after ~, there is an additional combat phase. only land creatures can attack during  | 1 | Bumi, Unleashed | tla |
 | whenever hei bai enters or attacks, you may sacrifice another creature or artifact. if you do, put two +N/+N counters on hei bai. | 1 | Hei Bai, Spirit of Balance | tla |
 | whenever sokka and at least one other creature attack, draw a card. | 1 | Sokka, Lateral Strategist | tla |
-| whenever the boulder attacks, earthbend N, where N is the number of creatures you control with power N or greater. | 1 | The Boulder, Ready to Rumble | tla |
 | whenever you cast a spell, earthbend N. if that spell is a lesson, put an additional +N/+N counter on that land. | 1 | Toph, Hardheaded Teacher | tla |
 | whenever you draw your second card each turn, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Otter-Penguin | tla |
 | whenever you put one or more +N/+N counters on a creature, you may gain that much life. do ~ once each turn. | 1 | Earth Kingdom General | tla |
@@ -386,7 +384,6 @@
 | whenever ~ becomes tapped, target player mills N cards, where N is the number of lesson cards in your graveyard. | 1 | Master Pakku | tla |
 | whenever ~ enters or attacks, exile up to one target card from a graveyard. if a creature card is exiled ~, create a clue token. | 1 | Raven Eagle | tla |
 | {M}, {M}: two target creatures you control that share a creature type can't be blocked ~. | 1 | Secret Tunnel | tla |
-| {M}: add N mana of any one color, where N is the greatest number of creatures you control that have a creature type in common. | 1 | White Lotus Tile | tla |
 | {M}: mill a card. you may put a land card milled ~ into your hand. you gain N life if a lesson card is milled ~. | 1 | Sparring Dummy | tla |
 | {M}: until end of turn, ~ has base power N and gains trample. | 1 | Turtle-Duck | tla |
 | {M}{M}, {M}: target creature you control gains firebending N until end of turn. | 1 | Fire Nation Palace | tla |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 12.3% |
+| Tested | 14 | 13.2% |
 | Works (untested) | 35 | 33.0% |
 | Partial (unaudited) | 6 | 5.7% |
-| Not working | 52 | 49.1% |
+| Not working | 51 | 48.1% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Loyal Inventor | silent | When this creature enters, you may search your library for an artifact card, reveal it, then shuffle. Put that card into your hand if you control an Assassin. O | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mary Read and Anne Bonny | silent | Whenever you discard an Island, Pirate, or Vehicle card, create a tapped Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Merciless Harlequin | silent | Freerunning | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Mjölnir, Storm Hammer | silent | Whenever equipped creature attacks, tap target creature defending player controls and put a stun counter on it. Then Mjölnir deals damage to each opponent equal | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Monastery Raid | silent | Freerunning {X}{R} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Exile the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Overpowering Attack | silent | Freerunning {2}{R} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Untap all  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Palazzo Archers | silent | Whenever a creature with flying attacks you or a planeswalker you control, this creature deals damage equal to its power to that creature. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
@@ -123,7 +122,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Abstergo Entertainment
 - Adrestia
@@ -137,6 +136,7 @@
 - Jacob Frye
 - Labyrinth Adversary
 - Misthios's Fury
+- Mjölnir, Storm Hammer
 - Smoke Bomb
 
 </details>
@@ -189,7 +189,6 @@
 | whenever a creature you control with deathtouch deals combat damage to a player, put that many +N/+N counters on that creature. | 1 | Aveline de Grandpré | acr |
 | whenever altaïr attacks, exile up to one target assassin creature card from your graveyard with a memory counter on it. then for each creature card you own in e | 1 | Altaïr Ibn-La'Ahad | acr |
 | whenever eivor deals combat damage to a player, you mill that many cards. you may put a saga card and/or a land card from among them onto the battlefield. | 1 | Eivor, Wolf-Kissed | acr |
-| whenever equipped creature attacks, tap target creature defending player controls and put a stun counter on it. then mjölnir deals damage to each opponent equal | 1 | Mjölnir, Storm Hammer | acr |
 | whenever you discard an island, pirate, or vehicle card, create a tapped treasure token. | 1 | Mary Read and Anne Bonny | acr |
 | whenever ~ deals combat damage to a player, surveil N, where N is the amount of damage it dealt to that player. | 1 | Desmond Miles | acr |
 | you may play historic lands and cast historic spells from the top of your library. | 1 | Crystal Skull, Isu Spyglass | acr |

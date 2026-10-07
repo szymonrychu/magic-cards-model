@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 32 | 14.5% |
-| Works (untested) | 121 | 55.0% |
+| Works (untested) | 122 | 55.5% |
 | Partial (unaudited) | 7 | 3.2% |
-| Not working | 60 | 27.3% |
+| Not working | 59 | 26.8% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Chandra Ablaze | silent | −7: Cast any number of red instant and/or sorcery cards from your graveyard without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Conqueror's Pledge | silent | Kicker {6} (You may pay an additional {6} as you cast this spell.) Create six 1/1 white Kor Soldier creature tokens. If this spell was kicked, create twelve of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cosi's Trickster | silent | Whenever an opponent shuffles their library, you may put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Electropotence | silent | Whenever a creature you control enters, you may pay {2}{R}. If you do, that creature deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eternity Vessel | silent | Landfall — Whenever a land you control enters, you may have your life total become the number of charge counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gigantiform | silent | Enchanted creature has base power and toughness 8/8 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gomazoa | silent | {T}: Put this creature and each creature it's blocking on top of their owners' libraries, then those players shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -107,6 +106,7 @@
 | Devout Lightcaster | handled | When this creature enters, exile target black permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disfigure | handled | Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eldrazi Monument | handled | Creatures you control get +1/+1 and have flying and indestructible. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Electropotence | handled | Whenever a creature you control enters, you may pay {2}{R}. If you do, that creature deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emeria Angel | handled | Landfall — Whenever a land you control enters, you may create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Explorer's Scope | handled | Whenever equipped creature attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feast of Blood | handled | Cast this spell only if you control two or more Vampires. Destroy target creature. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -297,7 +297,6 @@
 | whenever a card is put into an opponent's graveyard from anywhere, if ~ has three or more quest counters on it, you may have that player lose N life. if you do, | 1 | Bloodchief Ascension | zen |
 | whenever a card is put into your graveyard from anywhere, you may put a quest counter on ~. | 1 | Quest for Ancient Secrets | zen |
 | whenever a creature an opponent controls enters, you may have that player lose N life. | 1 | Blood Seeker | zen |
-| whenever a creature you control enters, you may pay {M}{M}. if you do, that creature deals damage equal to its power to any target. | 1 | Electropotence | zen |
 | whenever a spell or ability you control counters a spell, you may create a N/N blue merfolk creature token. | 1 | Lullmage Mentor | zen |
 | whenever an opponent shuffles their library, you may put a +N/+N counter on ~. | 1 | Cosi's Trickster | zen |
 | whenever enchanted creature deals combat damage to a player, double its controller's life total. | 1 | Celestial Mantle | zen |

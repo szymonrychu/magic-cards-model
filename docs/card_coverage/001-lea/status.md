@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 30.2% |
+| Tested | 36 | 31.0% |
 | Works (untested) | 59 | 50.9% |
 | Partial (unaudited) | 3 | 2.6% |
-| Not working | 19 | 16.4% |
+| Not working | 18 | 15.5% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Hypnotic Specter | silent | Whenever this creature deals damage to an opponent, that player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jade Statue | silent | {2}: This artifact becomes a 3/6 Golem artifact creature until end of combat. Activate only during combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lord of Atlantis | silent | Other Merfolk get +1/+1 and have islandwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lord of the Pit | silent | At the beginning of your upkeep, sacrifice a creature other than this creature. If you can't, this creature deals 7 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pirate Ship | silent | When you control no Islands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Regeneration | silent | {G}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cockatrice | notice | Whenever this creature blocks or becomes blocked by a non-Wall creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -111,7 +110,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>36 cards</summary>
 
 - Birds of Paradise
 - Black Knight
@@ -136,6 +135,7 @@
 - Karma
 - Lightning Bolt
 - Llanowar Elves
+- Lord of the Pit
 - Mountain
 - Plains
 - Psionic Blast
@@ -158,7 +158,6 @@
 | {M}: enchanted creature gets +N/+N until end of turn. | 2 | Blessing, Firebreathing | lea |
 | all creatures able to block enchanted creature do so. | 1 | Lure | lea |
 | as long as ~ isn't attacking, its power and toughness are each equal to the number of forests you control. as long as ~ is attacking, its power and toughness ar | 1 | Gaea's Liege | lea |
-| at the beginning of your upkeep, sacrifice a creature other than ~. if you can't, ~ deals N damage to you. | 1 | Lord of the Pit | lea |
 | at the beginning of your upkeep, ~ deals N damage to you unless you pay {M}{M}{M}{M}. | 1 | Force of Nature | lea |
 | black creatures get +N/+N. | 1 | Bad Moon | lea |
 | destroy all plains. | 1 | Flashfires | lea |

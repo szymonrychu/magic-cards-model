@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 48 | 17.8% |
-| Works (untested) | 138 | 51.3% |
+| Works (untested) | 139 | 51.7% |
 | Partial (unaudited) | 24 | 8.9% |
-| Not working | 59 | 21.9% |
+| Not working | 58 | 21.6% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Gluttonous Troll | silent | When this creature enters, create a number of Food tokens equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Irencrag Feat | silent | Add seven {R}. You can cast only one more spell this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Knights' Charge | silent | {6}{W}{B}, Sacrifice this enchantment: Return all Knight creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Korvold, Fae-Cursed King | silent | Whenever Korvold enters or attacks, sacrifice another permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mace of the Valiant | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Memory Theft | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. You may put a card that has an Adventure that player owns | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Midnight Clock | silent | When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -168,6 +167,7 @@
 | Jousting Dummy | handled | {3}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keeper of Fables | handled | Whenever one or more non-Human creatures you control deal combat damage to a player, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Knight of the Keep | handled |  |  | Y/Y/- | not_tested |
+| Korvold, Fae-Cursed King | handled | Whenever Korvold enters or attacks, sacrifice another permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lash of Thorns | handled | Target creature gets +2/+1 and gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Linden, the Steadfast Queen | handled | Whenever a white creature you control attacks, you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Loch Dragon | handled | Whenever this creature enters or attacks, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -358,7 +358,6 @@
 | whenever a creature attacks you or a planeswalker you control, that creature's controller loses N life and you gain N life. | 1 | Revenge of Ravens | eld |
 | whenever another green creature you control enters, put a +N/+N counter on yorvo. then if that creature"..."s power, put another +N/+N counter on yorvo. | 1 | Yorvo, Lord of Garenbrig | eld |
 | whenever another non-human creature you control enters, you may pay {M}. when you do, put N +N/+N counters on ~. | 1 | Wildborn Preserver | eld |
-| whenever korvold enters or attacks, sacrifice another permanent. | 1 | Korvold, Fae-Cursed King | eld |
 | whenever ~ attacks, create a number of N/N white knight creature tokens with vigilance equal to the number of opponents you have. | 1 | Silverwing Squadron | eld |
 | whenever ~ attacks, if defending player has more cards in hand than you, exile the top card of their library. during any turn you attacked with a rogue, you may | 1 | Robber of the Rich | eld |
 | whenever ~ attacks, other knights you control get +N/+N until end of turn. | 1 | Belle of the Brawl | eld |

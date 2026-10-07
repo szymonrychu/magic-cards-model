@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.7% |
-| Works (untested) | 118 | 48.4% |
-| Partial (unaudited) | 18 | 7.4% |
-| Not working | 82 | 33.6% |
+| Tested | 28 | 11.5% |
+| Works (untested) | 119 | 48.8% |
+| Partial (unaudited) | 17 | 7.0% |
+| Not working | 80 | 32.8% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | King Darien XLVIII | silent | {3}{G}{W}: Put a +1/+1 counter on King Darien and create a 1/1 white Soldier creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Llanowar Loamspeaker | silent | {T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Love Song of Night and Day | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Meria's Outrider | silent | Domain — When this creature enters, it deals damage to each opponent equal to the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Micromancer | silent | When this creature enters, you may search your library for an instant or sorcery card with mana value 1, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Monstrous War-Leech | silent | Monstrous War-Leech's power and toughness are each equal to the greatest mana value among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nael, Avizoa Aeronaut | silent | Domain — Whenever Nael deals combat damage to a player, look at the top X cards of your library, where X is the number of basic land types among lands you contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -100,7 +99,6 @@
 | Jodah, the Unifier | notice | Legendary creatures you control get +X/+X, where X is the number of legendary creatures you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Keldon Strike Team | notice | As long as this creature entered this turn, creatures you control have haste. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Llanowar Greenwidow | notice | Domain — {7}{G}: Return this card from your graveyard to the battlefield tapped. It gains "If this permanent would leave the battlefield, exile it instead of pu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ragefire Hellkite | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, this creature gains double strike until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rona's Vortex | notice | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Return target creature or planeswalker you don't control to its owner's hand. If this s | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sheoldred's Restoration | notice | Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Return target creature card from your graveyard to the battlefield. If this spell was k | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sol'Kanar the Tainted | notice | At the beginning of your end step, choose one that hasn't been chosen — • Draw a card. • Each opponent loses 2 life and you gain 2 life. • Sol'Kanar deals 3 dam | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -117,7 +115,6 @@
 | Defiler of Vigor | unaudited | As an additional cost to cast green permanent spells, you may pay 2 life. Those spells cost {G} less to cast if you paid life this way. This effect reduces only | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Haughty Djinn | unaudited | Haughty Djinn's power is equal to the number of instant and sorcery cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Karn's Sylex | unaudited | Players can't pay life to cast spells or to activate abilities that aren't mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Knight of Dusk's Shadow | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rona, Sheoldred's Faithful | unaudited | You may cast this card from your graveyard by discarding two cards in addition to paying its other costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Serra Paragon | unaudited | Once during each of your turns, you may play a land from your graveyard or cast a permanent spell with mana value 3 or less from your graveyard. If you do, it g | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shalai's Acolyte | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -202,6 +199,7 @@
 | Queen Allenal of Ruadach | handled | Queen Allenal of Ruadach's power and toughness are each equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Radha, Coalition Warlord | handled | Domain — Whenever Radha becomes tapped, another target creature you control gets +X/+X until end of turn, where X is the number of basic land types among lands  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Radiant Grove | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ragefire Hellkite | handled | Whenever this creature attacks, you may sacrifice another creature. If you do, this creature gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relic of Legends | handled |  |  | Y/Y/- | not_tested |
 | Resolute Reinforcements | handled | When this creature enters, create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Runic Shot | handled | Kicker {U} (You may pay an additional {U} as you cast this spell.) Destroy target tapped creature. If this spell was kicked, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -248,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>28 cards</summary>
 
 - Aggressive Sabotage
 - Ajani, Sleeper Agent
@@ -262,8 +260,10 @@
 - Guardian of New Benalia
 - Heroic Charge
 - Ivy, Gleeful Spellthief
+- Knight of Dusk's Shadow
 - Lagomos, Hand of Hatred
 - Leyline Binding
+- Meria's Outrider
 - Nemata, Primeval Warden
 - Nishoba Brawler
 - Prayer of Binding
@@ -283,7 +283,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Domain | 12 | Bortuk Bonerattle, Drag to the Bottom, Llanowar Greenwidow, Meria's Outrider, Nael, Avizoa Aeronaut | dmu |
+| Domain | 11 | Bortuk Bonerattle, Drag to the Bottom, Llanowar Greenwidow, Nael, Avizoa Aeronaut, Shadow Prophecy | dmu |
 | read ahead | 4 | Love Song of Night and Day, The Cruelty of Gix, The Elder Dragon War, The Weatherseed Treaty | dmu |
 | if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Shalai's Acolyte, Viashino Branchrider | dmu |
 | Choose one | 1 | Twinferno | dmu |
@@ -346,14 +346,12 @@
 | whenever ~ attacks, exile each creature that crewed it ~. return them to the battlefield tapped under their owner's control at the beginning of the next end ste | 1 | Golden Argosy | dmu |
 | whenever ~ attacks, look at the top N cards of your library, where N is ~ power. you may exile an instant or sorcery card with mana value N or less from among t | 1 | Keldon Flamesage | dmu |
 | whenever ~ attacks, target creature defending player controls with power less than ~ power can't block ~. | 1 | Radha's Firebrand | dmu |
-| whenever ~ attacks, you may sacrifice another creature. if you do, ~ gains double strike until end of turn. | 1 | Ragefire Hellkite | dmu |
 | whenever ~ enters or attacks, you may put a land card from a graveyard onto the battlefield tapped under your control. | 1 | Soul of Windgrace | dmu |
 | whenever ~ or another goblin you control dies, exile the top card of your library. if it's a goblin creature card, you may cast that card until the end of your  | 1 | Rundvelt Hordemaster | dmu |
 | you may cast an instant or sorcery spell with mana value N or N from your hand without paying its mana cost. | 1 | Founding the Third Path | dmu |
 | you may cast ~ as though it had flash if N is N or less. draw N cards. | 1 | Silver Scrutiny | dmu |
 | you may cast ~ from your graveyard by discarding two cards in addition to paying its other costs. | 1 | Rona, Sheoldred's Faithful | dmu |
 | you may cast ~ from your graveyard by paying {M}{M} and exiling four other cards from your graveyard rather than paying its mana cost. | 1 | Squee, Dubious Monarch | dmu |
-| your opponents can't gain life. | 1 | Knight of Dusk's Shadow | dmu |
 | {M}, {M}, sacrifice ~: reveal the top five cards of your library. put a land card from among them into your hand and the rest on the bottom of your library in a | 1 | Inscribed Tablet | dmu |
 | {M}: put two ingenuity counters on jhoira, then you may put an artifact card with mana value N or less from your hand onto the battlefield, where N is the numbe | 1 | Jhoira, Ageless Innovator | dmu |
 | {M}: target land you control becomes a N/N elemental creature with haste until end of turn. it's still a land. activate only as a sorcery. | 1 | Llanowar Loamspeaker | dmu |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 13.9% |
+| Tested | 38 | 14.2% |
 | Works (untested) | 128 | 47.9% |
 | Partial (unaudited) | 12 | 4.5% |
-| Not working | 90 | 33.7% |
+| Not working | 89 | 33.3% |
 
 ## Cards needing work
 
@@ -89,7 +89,6 @@
 | The Dragon-Kami Reborn // Dragon-Kami's Egg | silent | I, II — You gain 2 life. Look at the top three cards of your library. Exile one of them face down with a hatching counter on it, then put the rest on the bottom | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Fall of Lord Konda // Fragment of Konda | silent | II — Each player gains control of all permanents they own. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Long Reach of Night // Animus of Night's Reach | silent | I, II — Each opponent sacrifices a creature of their choice unless they discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Thundering Raiju | silent | Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tribute to Horobi // Echo of Death's Wail | silent | When this creature enters, gain control of all Rat tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Twisted Embrace | silent | As long as enchanted permanent is a creature, it gets +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Weaver of Harmony | silent | Other enchantment creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -260,7 +259,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>38 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
@@ -298,6 +297,7 @@
 - Tamiyo, Compleated Sage
 - The Wandering Emperor
 - Thousand-Faced Shadow
+- Thundering Raiju
 - Touch the Spirit Realm
 
 </details>
@@ -380,7 +380,6 @@
 | whenever you activate a ninjutsu ability, look at the top three cards of your library. put one of them into your hand and the rest on the bottom of your library | 1 | Satoru Umezawa | neo |
 | whenever ~ attacks, choose one — • exile target creature card from a graveyard. when you do, create a N/N colorless spirit creature token. • exile target noncre | 1 | Teachings of the Kirin // Kirin-Touched Orochi | neo |
 | whenever ~ attacks, defending player chooses a nonland card in your graveyard. return that card to your hand. ~ gets +N/+N until end of turn, where N is the man | 1 | The Kami War // O-Kagachi Made Manifest | neo |
-| whenever ~ attacks, put a +N/+N counter on target creature you control. then ~ deals N damage to each opponent, where N is the number of modified creatures you  | 1 | Thundering Raiju | neo |
 | whenever ~ becomes attached to a creature, tap that creature. | 1 | Enormous Energy Blade | neo |
 | whenever ~ becomes blocked, untap up to three lands you control. | 1 | Azusa's Many Journeys // Likeness of the Seeker | neo |
 | whenever ~ becomes crewed for the first time each turn, until end of turn, ~ becomes a copy of target nonlegendary creature that crewed it ~, except it"..."s a  | 1 | Mindlink Mech | neo |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.1% |
+| Tested | 27 | 10.5% |
 | Works (untested) | 119 | 46.3% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 95 | 37.0% |
+| Not working | 94 | 36.6% |
 
 ## Cards needing work
 
@@ -84,7 +84,6 @@
 | Rogue Class | silent | Whenever a creature you control deals combat damage to a player, exile the top card of that player's library face down. You may look at it for as long as it rem | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scion of Stygia | silent | Cone of Cold — When this creature enters, choose target creature an opponent controls, then roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skeletal Swarming | silent | Each Skeleton you control has trample, attacks each combat if able, and gets +X/+0, where X is the number of other Skeletons you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sorcerer Class | silent | Whenever you cast an instant or sorcery spell, that spell deals damage to each opponent equal to the number of instant and sorcery spells you've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphere of Annihilation | silent | At the beginning of your upkeep, exile this artifact, all creatures and planeswalkers with mana value less than or equal to the number of void counters on it, a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spiked Pit Trap | silent | {5}, {T}, Sacrifice this artifact: Choose target creature, then roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Split the Party | silent | Choose target player. Return half the creatures they control to their owner's hand, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -261,7 +260,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Bar the Gate
 - Boots of Speed
@@ -281,6 +280,7 @@
 - Ochre Jelly
 - Orb of Dragonkind
 - Price of Loyalty
+- Sorcerer Class
 - Spoils of the Hunt
 - Tasha's Hideous Laughter
 - Thieves' Tools
@@ -374,7 +374,6 @@
 | whenever barrowin attacks, return up to one creature card with mana value N or less from your graveyard to the battlefield if you've completed a dungeon. | 1 | Barrowin of Clan Undurr | afr |
 | whenever delina attacks, choose target creature you control, then roll a dN. | 1 | Delina, Wild Mage | afr |
 | whenever equipped creature attacks alone, defending player loses N life and you gain N life. | 1 | Reaper's Talisman | afr |
-| whenever you cast an instant or sorcery spell, that spell deals damage to each opponent equal to the number of instant and sorcery spells you've cast ~. | 1 | Sorcerer Class | afr |
 | whenever you complete a dungeon, create a N/N green wolf creature token. | 1 | Varis, Silverymoon Ranger | afr |
 | whenever you complete a dungeon, you may return ~ from your graveyard to your hand. | 1 | Dungeon Crawler | afr |
 | whenever you roll one or more dice, create a N/N blue faerie dragon creature token with flying. | 1 | Feywild Trickster | afr |

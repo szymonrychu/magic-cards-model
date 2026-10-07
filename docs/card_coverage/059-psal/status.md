@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 3.8% |
+| Tested | 4 | 5.1% |
 | Works (untested) | 51 | 64.6% |
 | Partial (unaudited) | 4 | 5.1% |
-| Not working | 21 | 26.6% |
+| Not working | 20 | 25.3% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Martyr of Frost | silent | {2}, Reveal X blue cards from your hand, Sacrifice this creature: Counter target spell unless its controller pays {X}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sanguine Praetor | silent | {B}, Sacrifice a creature: Destroy each creature with the same mana value as the sacrificed creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seht's Tiger | silent | When this creature enters, you gain protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stalking Vengeance | silent | Whenever another creature you control dies, it deals damage equal to its power to target player or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thelonite Hermit | silent | All Saprolings get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tolsimir Wolfblood | silent | Other green creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Undying Rage | silent | Enchanted creature gets +2/+2 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -106,11 +105,12 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>4 cards</summary>
 
 - Arctic Nishoba
 - Frenzied Goblin
 - Selesnya Sanctuary
+- Stalking Vengeance
 
 </details>
 
@@ -136,7 +136,6 @@
 | when ~ enters, you gain protection from the color of your choice until end of turn. | 1 | Seht's Tiger | psal |
 | whenever a source deals damage to ~, that source's controller mills that many cards. | 1 | Belltower Sphinx | psal |
 | whenever an aura becomes attached to ~, create two N/N green saproling creature tokens. | 1 | Bramble Elemental | psal |
-| whenever another creature you control dies, it deals damage equal to its power to target player or planeswalker. | 1 | Stalking Vengeance | psal |
 | whenever jedit ojanen attacks or blocks, create a N/N green cat warrior creature token with forestwalk. | 1 | Jedit Ojanen of Efrava | psal |
 | {M}, reveal N blue cards from your hand, sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Martyr of Frost | psal |
 | {M}, sacrifice a creature: destroy each creature with the same mana value as the sacrificed creature. | 1 | Sanguine Praetor | psal |

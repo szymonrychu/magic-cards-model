@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 21 | 9.1% |
-| Works (untested) | 117 | 50.4% |
+| Works (untested) | 118 | 50.9% |
 | Partial (unaudited) | 8 | 3.4% |
-| Not working | 86 | 37.1% |
+| Not working | 85 | 36.6% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Domri Rade | silent | +1: Look at the top card of your library. If it's a creature card, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Duskmantle Guildmage | silent | {1}{U}{B}: Whenever a card is put into an opponent's graveyard from anywhere this turn, that player loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Duskmantle Seer | silent | At the beginning of your upkeep, each player reveals the top card of their library, loses life equal to that card's mana value, then puts it into their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dying Wish | silent | When enchanted creature dies, target player loses X life and you gain X life, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elusive Krasis | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Enter the Infinite | silent | Draw cards equal to the number of cards in your library, then put a card from your hand on top of your library. You have no maximum hand size until your next tu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Experiment One | silent | Remove two +1/+1 counters from this creature: Regenerate it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -147,6 +146,7 @@
 | Disciple of the Old Ways | handled | {R}: This creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drakewing Krasis | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Dutiful Thrull | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dying Wish | handled | When enchanted creature dies, target player loses X life and you gain X life, where X is its power. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Firefist Striker | handled | Battalion — Whenever this creature and at least two other creatures attack, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Firemane Avenger | handled | Battalion — Whenever this creature and at least two other creatures attack, this creature deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Five-Alarm Fire | handled | Whenever a creature you control deals combat damage, put a blaze counter on this enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -313,7 +313,6 @@
 | target player loses N life, discards a card, then sacrifices a permanent of their choice. cipher (then you may exile ~ card encoded on a creature you control. w | 1 | Undercity Plague | gtc |
 | target player mills four cards. you draw a card for each creature card put into their graveyard ~. | 1 | Coerced Confession | gtc |
 | target player sacrifices a creature of their choice, then gains life equal to that creature's toughness. | 1 | Devour Flesh | gtc |
-| when enchanted creature dies, target player loses N life and you gain N life, where N is its power. | 1 | Dying Wish | gtc |
 | when ~ enters, for each opponent, destroy target noncreature permanent that player controls. search your library for up to N forest cards, where N is the number | 1 | Sylvan Primordial | gtc |
 | when ~ enters, for each opponent, gain control of up to one target creature that player controls until end of turn. untap those creatures. they gain haste until | 1 | Molten Primordial | gtc |
 | when ~ enters, for each opponent, you may cast up to one target instant or sorcery card from that player's graveyard without paying its mana cost. if a spell ca | 1 | Diluvian Primordial | gtc |

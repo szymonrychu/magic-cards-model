@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 34 | 16.2% |
-| Works (untested) | 99 | 47.1% |
+| Works (untested) | 101 | 48.1% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 62 | 29.5% |
+| Not working | 60 | 28.6% |
 
 ## Cards needing work
 
@@ -45,10 +45,8 @@
 | Iceberg Cancrix | silent | Whenever another snow permanent you control enters, you may have target player mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Igneous Elemental | silent | This spell costs {2} less to cast if there is a land card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lancer Sliver | silent | Sliver creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Marit Lage's Slumber | silent | At the beginning of your upkeep, if you control ten or more snow permanents, sacrifice Marit Lage's Slumber. If you do, create Marit Lage, a legendary 20/20 bla | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Rake | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Morophon, the Boundless | silent | Other creatures you control of the chosen type get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Orcish Hellraiser | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Phantasmal Form | silent | Until end of turn, up to two target creatures each have base power and toughness 3/3, gain flying, and become blue Illusions in addition to their other colors a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Plague Engineer | silent | Creatures of the chosen type your opponents control get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quakefoot Cyclops | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -145,6 +143,7 @@
 | Lightning Skelemental | handled | Whenever this creature deals combat damage to a player, that player discards two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Llanowar Tribe | handled |  |  | Y/-/- | not_tested |
 | Magmatic Sinkhole | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Magmatic Sinkhole deals 5 damage to target creature or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Marit Lage's Slumber | handled | Whenever Marit Lage's Slumber or another snow permanent you control enters, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mist-Syndicate Naga | handled | Whenever this creature deals combat damage to a player, create a token that's a copy of this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mob | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Destroy tar | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moonblade Shinobi | handled | Whenever this creature deals combat damage to a player, create a 1/1 blue Illusion creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -155,6 +154,7 @@
 | Ninja of the New Moon | handled | Ninjutsu | machines/keywords.py | Y/-/- | not_tested |
 | On Thin Ice | handled | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oneirophage | handled | Whenever you draw a card, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Orcish Hellraiser | handled | When this creature dies, it deals 2 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ore-Scale Guardian | handled | This spell costs {1} less to cast for each land card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pashalik Mons | handled | Whenever Pashalik Mons or another Goblin you control dies, Pashalik Mons deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phantom Ninja | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -261,14 +261,12 @@
 | as long as you've drawn two or more cards ~, ~ has double strike. | 1 | Spinehorn Minotaur | mh1 |
 | as ~ enters, choose mirran or phyrexian. | 1 | Mirrodin Besieged | mh1 |
 | at the beginning of your first main phase, you may sacrifice a creature. when you do, choose a nonland card name, then target player reveals their hand and disc | 1 | Cabal Therapist | mh1 |
-| at the beginning of your upkeep, if you control ten or more snow permanents, sacrifice ~. if you do, create marit lage, a legendary N/N black avatar creature to | 1 | Marit Lage's Slumber | mh1 |
 | attacking creatures you control get +N/+N. | 1 | Goblin Oriflamme | mh1 |
 | buyback | 1 | Recruit the Worthy | mh1 |
 | choose creature or land. reveal the top four cards of your library. put all cards of the chosen type revealed ~ into your hand and the rest into your graveyard. | 1 | Winding Way | mh1 |
 | creatures of the chosen type your opponents control get -N/-N. | 1 | Plague Engineer | mh1 |
 | each land card in your hand has cycling {M}. | 1 | Tectonic Reformation | mh1 |
 | each sliver creature card in your graveyard has unearth {M}. | 1 | Dregscape Sliver | mh1 |
-| echo | 1 | Orcish Hellraiser | mh1 |
 | enchanted creature gets +N/+N and assigns combat damage equal to its toughness rather than its power. | 1 | Treefolk Umbra | mh1 |
 | equipped creature gets +N/+N and is every creature type. | 1 | Amorphous Axe | mh1 |
 | evolve | 1 | Gluttonous Slug | mh1 |

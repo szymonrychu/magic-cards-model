@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 13.5% |
+| Tested | 46 | 15.1% |
 | Works (untested) | 129 | 42.4% |
 | Partial (unaudited) | 15 | 4.9% |
-| Not working | 119 | 39.1% |
+| Not working | 114 | 37.5% |
 
 ## Cards needing work
 
@@ -31,10 +31,8 @@
 | Astrologian's Planisphere | silent | Equipped creature is a Wizard in addition to its other types and has "Whenever you cast a noncreature spell and whenever you draw your third card each turn, put | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Auron's Inspiration | silent | Attacking creatures get +2/+0 until end of turn. Flashback {2}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bard's Bow | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Barret Wallace | silent | Whenever Barret Wallace attacks, it deals damage equal to the number of equipped creatures you control to defending player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beatrix, Loyal General | silent | At the beginning of combat on your turn, you may attach any number of Equipment you control to target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Black Mage's Rod | silent | Equipped creature gets +1/+0, has "Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent," and is a Wizard in addition to its oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Blazing Bomb | silent | Blow Up — {T}, Sacrifice this creature: It deals damage equal to its power to target creature. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Buster Sword | silent | Whenever equipped creature deals combat damage to a player, draw a card, then you may cast a spell from your hand with mana value less than or equal to that dam | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Choco, Seeker of Paradise | silent | Whenever one or more Birds you control attack, look at that many cards from the top of your library. You may put one of them into your hand. Then put any number | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Chocobo Kick | silent | Kicker—Return a land you control to its owner's hand. (You may return a land you control to its owner's hand in addition to any other costs as you cast this spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -95,16 +93,13 @@
 | Sin, Spira's Punishment | silent | Whenever Sin enters or attacks, exile a permanent card from your graveyard at random, then create a tapped token that's a copy of that card. If the exiled card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stiltzkin, Moogle Merchant | silent | {2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stolen Uniform | silent | Choose target creature you control and target Equipment. Gain control of that Equipment until end of turn. Attach it to the chosen creature. When you lose contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Summon: Bahamut | silent | IV — Mega Flare — This creature deals damage equal to the total mana value of other permanents you control to each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: Brynhildr | silent | I — Chain — Exile the top card of your library. During any turn you put a lore counter on this Saga, you may play that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Summon: Esper Ramuh | silent | I — Judgment Bolt — This creature deals damage equal to the number of noncreature, nonland cards in your graveyard to target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: Fenrir | silent | II — Heavenward Howl — When you next cast a creature spell this turn, that creature enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: G.F. Cerberus | silent | III — Triple — When you next cast an instant or sorcery spell this turn, copy it twice. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: Leviathan | silent | I — Return each creature that isn't a Kraken, Leviathan, Merfolk, Octopus, or Serpent to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summoner's Grimoire | silent | Equipped creature is a Shaman in addition to its other types and has "Whenever this creature attacks, you may put a creature card from your hand onto the battle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Swallowed by Leviathan | silent | Choose target spell. Surveil 2, then counter the chosen spell unless its controller pays {1} for each card in your graveyard. (To surveil 2, look at the top two | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terra, Magical Adept // Esper Terra | silent | IV — Add {W}{W}, {U}{U}, {B}{B}, {R}{R}, and {G}{G}. Exile Esper Terra, then return it to the battlefield . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Emperor of Palamecia // The Lord Master of Hell | silent | Starfall — Whenever The Lord Master of Hell attacks, it deals X damage to each opponent, where X is the number of noncreature, nonland cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Final Days | silent | Create two tapped 2/2 black Horror creature tokens. If this spell was cast from a graveyard, instead create X of those tokens, where X is the number of creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Gold Saucer | silent | {2}, {T}: Flip a coin. If you win the flip, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Masamune | silent | As long as equipped creature is attacking, it has first strike and must be blocked if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -293,9 +288,11 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>46 cards</summary>
 
+- Barret Wallace
 - Bartz and Boko
+- Blazing Bomb
 - Blitzball
 - Cactuar
 - Cargo Ship
@@ -327,10 +324,13 @@
 - Snow Villiers
 - Sorceress's Schemes
 - Starting Town
+- Summon: Bahamut
+- Summon: Esper Ramuh
 - Summon: Fat Chocobo
 - Summon: Knights of Round
 - Summon: Primal Garuda
 - Tellah, Great Sage
+- The Emperor of Palamecia // The Lord Master of Hell
 - The Fire Crystal
 - Thunder Magic
 - Traveling Chocobo
@@ -349,7 +349,6 @@
 | Angelo Cannon | 1 | Rinoa Heartilly | fin |
 | Bad Breath | 1 | Malboro | fin |
 | Blessing of Light | 1 | Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal | fin |
-| Blow Up | 1 | Blazing Bomb | fin |
 | Blue Magic | 1 | Quistis Trepe | fin |
 | Choose one | 1 | Aerith Rescue Mission | fin |
 | Dragonfire Dive | 1 | Dion, Bahamut's Dominant // Bahamut, Warden of Light | fin |
@@ -360,7 +359,6 @@
 | My First Friend | 1 | Zenos yae Galvus // Shinryu, Transcendent Rival | fin |
 | Particle Beam | 1 | Cloud of Darkness | fin |
 | Stagger | 1 | Lightning, Army of One | fin |
-| Starfall | 1 | The Emperor of Palamecia // The Lord Master of Hell | fin |
 | Starscourge | 1 | Ardyn, the Usurper | fin |
 | The Minstrel's Ballad | 1 | The Wandering Minstrel | fin |
 | Wave Cannon | 1 | Omega, Heartless Evolution | fin |
@@ -412,9 +410,7 @@
 | heavenward howl — when you next cast a creature spell ~, that creature enters with an additional +N/+N counter on it. | 1 | Summon: Fenrir | fin |
 | i've come up with a new recipe! — {M}{M}{M}, {M}: exile target card from a graveyard. if a creature card was exiled ~, create a food token. | 1 | Ignis Scientia | fin |
 | if a nontoken creature an opponent controls would die, instead exile it and you gain N life. | 1 | The Darkness Crystal | fin |
-| judgment bolt — ~ deals damage equal to the number of noncreature, nonland cards in your graveyard to target creature an opponent controls. | 1 | Summon: Esper Ramuh | fin |
 | kicker—return a land you control to its owner"..."s hand in addition to any other costs as you cast ~.) target creature you control deals damage equal to its po | 1 | Chocobo Kick | fin |
-| mega flare — ~ deals damage equal to the total mana value of other permanents you control to each opponent. | 1 | Summon: Bahamut | fin |
 | neo exdeath's power is equal to the number of permanent cards in your graveyard. | 1 | Exdeath, Void Warlock // Neo Exdeath, Dimension's End | fin |
 | other permanents you control have "..." | 1 | A Realm Reborn | fin |
 | return each creature that isn"..."s hand. | 1 | Summon: Leviathan | fin |
@@ -449,7 +445,6 @@
 | whenever sin enters or attacks, exile a permanent card from your graveyard at random, then create a tapped token that's a copy of that card. if the exiled card  | 1 | Sin, Spira's Punishment | fin |
 | whenever you cast your first human creature spell each turn, that creature enters with an additional +N/+N counter on it for each dog and/or wolf you control. | 1 | Torgal, A Fine Hound | fin |
 | whenever you tap a land for {M}, add an additional {M}. | 1 | Ultima, Origin of Oblivion | fin |
-| whenever ~ attacks, it deals damage equal to the number of equipped creatures you control to defending player. | 1 | Barret Wallace | fin |
 | whenever ~ attacks, you may transform it. | 1 | Vincent Valentine // Galian Beast | fin |
 | whenever ~ deals combat damage to a player, exile the top card of that player's library. then you may sacrifice another creature or artifact. if you do, you may | 1 | Reno and Rude | fin |
 | xande gets +N/+N for each noncreature, nonland card in your graveyard. | 1 | Xande, Dark Mage | fin |

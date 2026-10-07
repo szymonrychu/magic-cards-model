@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 11.8% |
+| Tested | 28 | 13.3% |
 | Works (untested) | 133 | 63.0% |
-| Partial (unaudited) | 8 | 3.8% |
-| Not working | 45 | 21.3% |
+| Partial (unaudited) | 7 | 3.3% |
+| Not working | 43 | 20.4% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Curse of the Swine | silent | Exile X target creatures. For each creature exiled this way, its controller creates a 2/2 green Boar creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Decorated Griffin | silent | {1}{W}: Prevent the next 1 combat damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evangel of Heliod | silent | When this creature enters, create a number of 1/1 white Soldier creature tokens equal to your devotion to white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fanatic of Mogis | silent | When this creature enters, it deals damage to each opponent equal to your devotion to red. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fate Foretold | silent | When enchanted creature dies, its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fleshmad Steed | silent | Whenever another creature dies, tap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hammer of Purphoros | silent | {2}{R}, {T}, Sacrifice a land: Create a 3/3 colorless Golem enchantment artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -67,11 +66,9 @@
 | Boon of Erebos | notice | Target creature gets +2/+0 until end of turn. Regenerate it. You lose 2 life. | unparsed remainder: Regenerate it. You lose 2 life. | Y/Y/- | not_working |
 | Daxos of Meletis | notice | Whenever Daxos deals combat damage to a player, exile the top card of that player's library. You gain life equal to that card's mana value. Until end of turn, y | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos's Emissary | notice | Discard a creature card: This creature gets +2/+2 until end of turn. If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | unparsed remainder: If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | Y/Y/- | not_working |
-| Favored Hoplite | notice | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature and prevent all damage that would be dealt to it this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gift of Immortality | notice | When enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rage of Purphoros | notice | Rage of Purphoros deals 4 damage to target creature. It can't be regenerated this turn. Scry 1. (Look at the top card of your library. You may put that card on  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rescue from the Underworld | notice | As an additional cost to cast this spell, sacrifice a creature. Choose target creature card in your graveyard. Return that card and the sacrificed card to the b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Erebos, God of the Dead | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Medomai the Ageless | unaudited | Medomai can't attack during extra turns. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nighthowler | unaudited | This creature and enchanted creature each get +X/+X, where X is the number of creature cards in all graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Prophet of Kruphix | unaudited | Untap all creatures and lands you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -116,6 +113,7 @@
 | Dragon Mantle | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ember Swallower | handled | {5}{R}{R}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ephara's Warden | handled | {T}: Tap target creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Erebos, God of the Dead | handled | As long as your devotion to black is less than five, Erebos isn't a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fabled Hero | handled | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fade into Antiquity | handled | Exile target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Felhide Minotaur | handled |  |  | Y/Y/- | not_tested |
@@ -184,7 +182,6 @@
 | Spear of Heliod | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spearpoint Oread | handled | Enchanted creature gets +2/+2 and has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Staunch-Hearted Warrior | handled | Heroic — Whenever you cast a spell that targets this creature, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Stormbreath Dragon | handled | {5}{R}{R}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stymied Hopes | handled | Counter target spell unless its controller pays {1}. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sylvan Caryatid | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | Temple of Abandon | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -216,7 +213,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>28 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
@@ -225,6 +222,8 @@
 - Dauntless Onslaught
 - Defend the Hearth
 - Elspeth, Sun's Champion
+- Fanatic of Mogis
+- Favored Hoplite
 - Fleecemane Lion
 - Gods Willing
 - Gray Merchant of Asphodel
@@ -238,6 +237,7 @@
 - Purphoros, God of the Forge
 - Pyxis of Pandemonium
 - Reverent Hunter
+- Stormbreath Dragon
 - Swan Song
 - Time to Feed
 - Warriors' Lesson
@@ -250,7 +250,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Heroic | 4 | Anthousa, Setessan Hero, Artisan of Forms, Favored Hoplite, Tormented Hero | ths |
+| Heroic | 3 | Anthousa, Setessan Hero, Artisan of Forms, Tormented Hero | ths |
 | as an additional cost to cast ~, sacrifice a creature. choose target creature card in your graveyard. return that card and the sacrificed card to the battlefiel | 1 | Rescue from the Underworld | ths |
 | as long as ~ is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | 1 | Hundred-Handed One | ths |
 | as long as ~ is monstrous, it has trample and can attack as though it didn't have defender. | 1 | Colossus of Akros | ths |
@@ -278,11 +278,9 @@
 | when ~ enters, create a number of N/N black harpy creature tokens with flying equal to your devotion to black. | 1 | Abhorrent Overlord | ths |
 | when ~ enters, create a number of N/N blue elemental creature tokens equal to your devotion to blue. | 1 | Master of Waves | ths |
 | when ~ enters, create a number of N/N white soldier creature tokens equal to your devotion to white. | 1 | Evangel of Heliod | ths |
-| when ~ enters, it deals damage to each opponent equal to your devotion to red. | 1 | Fanatic of Mogis | ths |
 | when ~ enters, up to N target creatures each gain intimidate and haste until end of turn, where N is your devotion to black. | 1 | Mogis's Marauder | ths |
 | whenever another creature dies, tap ~. | 1 | Fleshmad Steed | ths |
 | whenever daxos deals combat damage to a player, exile the top card of that player"..."s mana value. until end of turn, you may cast that card and you may spend  | 1 | Daxos of Meletis | ths |
-| your opponents can't gain life. | 1 | Erebos, God of the Dead | ths |
 | {M}{M}, {M}, sacrifice a land: create a N/N colorless golem enchantment artifact creature token. | 1 | Hammer of Purphoros | ths |
 | {M}{M}, {M}: attacking creatures get -N/-N until end of turn. | 1 | Shipwreck Singer | ths |
 | {M}{M}, {M}: creatures your opponents control attack ~ if able. | 1 | Bident of Thassa | ths |
