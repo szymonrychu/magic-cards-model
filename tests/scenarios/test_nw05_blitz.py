@@ -88,6 +88,7 @@ CLUBBER = ["Swamp", "Swamp", "Swamp"]
         ("Night Clubber", "{2}{B}"),
         ("Girder Goons", "{3}{B}"),
         ("Caldaia Strongarm", "{3}{G}"),
+        ("Mayhem Patrol", "{1}{R}"),
     ],
 )
 def test_blitz_is_a_way_to_cast_from_hand_for_its_cost(name, cost):
@@ -242,6 +243,22 @@ def test_caldaia_strongarm_blitzed_resolves_its_enters_trigger_and_has_haste():
     assert bears.counter_count("+1/+1") == 2
 
 
+def test_mayhem_patrol_blitzed_for_its_own_mana_cost_still_gains_haste():
+    """Mayhem Patrol's blitz cost {1}{R} equals its mana cost: still an
+    alternative cost (CR 118.9), and it is what grants haste."""
+    lands = ["Mountain"] * 2
+    scenario = board("Mayhem Patrol", lands).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    patrol = cast_it(scenario, "Mayhem Patrol", blitz=True, lands=lands)
+
+    assert scenario.game.was_cast_with(patrol, "Blitz")
+    assert has_keyword(patrol, Keyword.HASTE, scenario.game)
+    assert has_keyword(patrol, Keyword.MENACE, scenario.game)
+
+    to_end_step(scenario)
+    assert patrol.zone is Zone.GRAVEYARD
+
+
 def test_pugnacious_pugilist_blitzed_attacks_the_turn_it_is_cast():
     lands = ["Mountain"] * 4
     scenario = board("Pugnacious Pugilist", lands).build()
@@ -266,7 +283,8 @@ def test_blitz_is_executed_by_the_casting_machine():
 
 
 @pytest.mark.parametrize(
-    "name", ["Pugnacious Pugilist", "Night Clubber", "Girder Goons", "Caldaia Strongarm"]
+    "name",
+    ["Pugnacious Pugilist", "Night Clubber", "Girder Goons", "Caldaia Strongarm", "Mayhem Patrol"],
 )
 def test_the_blitz_keyword_clause_reads_handled(name):
     (clause,) = [
@@ -275,7 +293,9 @@ def test_the_blitz_keyword_clause_reads_handled(name):
     assert clause.outcome == "handled"
 
 
-@pytest.mark.parametrize("name", ["Night Clubber", "Girder Goons", "Caldaia Strongarm"])
+@pytest.mark.parametrize(
+    "name", ["Night Clubber", "Girder Goons", "Caldaia Strongarm", "Mayhem Patrol"]
+)
 def test_the_proof_blitz_printings_read_handled_on_every_clause(name):
     support = card_support(card(name))
     assert support.status == "handled", [

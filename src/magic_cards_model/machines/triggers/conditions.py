@@ -2043,9 +2043,21 @@ def _condition_matches(
         )
 
     if ability.event is TriggerEvent.BLOCKS:
+        # CR 301.5a: "equipped creature becomes blocked" is the creature this
+        # Equipment is attached to (Simian Sling's "this creature or equipped
+        # creature becomes blocked" - attached through reconfigure, CR
+        # 702.151a, the Sling itself is no creature and never blocked).
+        equipped_blocked = (
+            "equipped creature becomes blocked" in lowered
+            and not _AN_EQUIPPED_CREATURE_RE.search(lowered)
+            and source.attached_to is not None
+            and event.related_id == source.attached_to
+        )
         if mine:
             blocks = "blocks" in lowered and event.subject_id == source.id
-            blocked = "becomes blocked" in lowered and event.related_id == source.id
+            blocked = "becomes blocked" in lowered and (
+                event.related_id == source.id or equipped_blocked
+            )
             if blocked:
                 # Flanking's own "... by a creature without `<keyword>`"
                 # (CR 702.25a) - checked against the blocker, `event.
@@ -2060,6 +2072,8 @@ def _condition_matches(
         # blocks" (CR 509.1a) - the subject is the blocker, not the source,
         # so the controller/type/subtype clause is read the same general
         # way `ATTACKS`'s own non-self branch reads an attacker.
+        if equipped_blocked:
+            return True
         if "blocks" not in lowered:
             return False
         if not (

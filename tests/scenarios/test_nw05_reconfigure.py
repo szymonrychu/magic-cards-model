@@ -310,3 +310,59 @@ def test_the_proof_reconfigure_printings_read_handled_on_every_clause(name):
     assert support.status == "handled", [
         (c.text, c.outcome) for c in support.clauses if c.outcome != "handled"
     ]
+
+
+# --------------------------------------------------------------------------
+# Simian Sling's "this creature or equipped creature becomes blocked"
+# --------------------------------------------------------------------------
+
+
+def _sling_triggers(scenario) -> list:
+    scenario.game.put_triggers_on_stack()
+    return [
+        item
+        for item in [*scenario.pending_triggers, *scenario.game.stack]
+        if getattr(item, "source_name", None) == "Simian Sling"
+    ]
+
+
+def test_simian_slings_trigger_fires_when_the_sling_itself_becomes_blocked():
+    scenario, sling, _bears = setup("Simian Sling")
+    sling.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(sling)
+    scenario.game.put_triggers_on_stack()
+
+    scenario.block(sling, scenario.creature("Llanowar Elves", "bob"))
+
+    (trigger,) = _sling_triggers(scenario)
+    assert trigger.source_id == sling.id
+
+
+def test_simian_slings_trigger_fires_when_the_equipped_creature_becomes_blocked():
+    """Attached, the Sling is no creature and is not in combat - the trigger
+    is its own (its source is the Sling, CR 113.7) off the equipped
+    creature's block (CR 301.5a's "equipped creature")."""
+    scenario, sling, bears = setup("Simian Sling")
+    attach(scenario, sling, bears)
+    bears.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    scenario.game.put_triggers_on_stack()
+
+    scenario.block(bears, scenario.creature("Llanowar Elves", "bob"))
+
+    (trigger,) = _sling_triggers(scenario)
+    assert trigger.source_id == sling.id
+
+
+def test_simian_slings_trigger_ignores_an_unequipped_creatures_block():
+    scenario, sling, bears = setup("Simian Sling")
+    bears.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    scenario.game.put_triggers_on_stack()
+
+    scenario.block(bears, scenario.creature("Llanowar Elves", "bob"))
+
+    assert _sling_triggers(scenario) == []

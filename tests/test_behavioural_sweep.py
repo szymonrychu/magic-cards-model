@@ -1600,6 +1600,11 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     level = getattr(ability, "class_level", None)
     if level is not None:
         source.class_level = level
+    band = getattr(ability, "level_band", None)
+    if band is not None and source.zone is Zone.BATTLEFIELD:
+        # A leveler striation's ability exists only while the level counters
+        # are in its band (CR 711.2a/b) - staged at the band's lowest level.
+        source.counters.set("level", band[0])
     _attach(scenario, source)
     if getattr(ability, "ability_word", None) == "∞":
         # An Infinity ability functions only while its source is harnessed
