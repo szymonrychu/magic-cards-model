@@ -1142,6 +1142,11 @@ class TurnHistoryEntry(EngineModel):
     603.4's recheck reads the same answer after the permanent has left -
     Satoru, the Infiltrator's "if none of them were cast or no mana was spent
     to cast them"."""
+    damage_baseline: int = 0
+    """For "entered", the damage `Game.damage_dealt_this_turn` already held
+    for this object's id as it entered: a card that dies and returns in one
+    turn is a new object (CR 400.7), so the damage dealt to *it* is the
+    ledger's total for the id less this baseline."""
 
 
 class SchemaVersionMismatch(RuntimeError):

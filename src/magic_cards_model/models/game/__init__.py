@@ -2188,6 +2188,9 @@ class Game(
     #: reachable from `Game` through a pending `AbilityOnStack.ability`; a
     #: leveler's striated ability decoded without it would read as one the
     #: permanent has at every level.
+    #: 130 (nw-05-t4): `TurnHistoryEntry` gained `damage_baseline` (CR 120.1,
+    #: CR 400.7: the damage already marked when a permanent entered, so "the
+    #: amount of damage dealt to it this turn" counts only this incarnation).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

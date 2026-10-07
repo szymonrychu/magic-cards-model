@@ -50,7 +50,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import AbilityEffect, ClauseEffect, Effect, TargetedClause
 
 
@@ -102,6 +102,17 @@ _DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE = re.compile(
     r"(?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+?))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
+
+
+@ABILITY_TEXT.rung("s16")
+def _parse_discard_after_damage_dealt_this_way_ability(text: str) -> AbilityEffect | None:
+    """Sonic Shrieker's whole enters-the-battlefield trigger: a damage head,
+    then "If a player is dealt damage this way, they discard a card." - read by
+    `damage_backrefs.damage_then_player_rider_ability_effect`, which owns the
+    head and what damage actually reached."""
+    from ..damage_backrefs import damage_then_player_rider_ability_effect
+
+    return damage_then_player_rider_ability_effect(text)
 
 
 @ABILITY_TEXT.rung("s16")
@@ -745,6 +756,54 @@ def _parse_discard_unless_condition_clause(clause: str) -> ClauseEffect | None:
             discard(game, player, source, source_id)
 
     return discard_unless
+
+
+#: "Choose target player. They may discard up to X cards. Then they draw a card
+#: for each card discarded this way." (Mishra's Command, mode 1) - the target
+#: player, not the controller, discards and draws.
+_TARGET_PLAYER_MAY_DISCARD_UP_TO_THEN_DRAW_RE = re.compile(
+    rf"^(?:choose )?target player\.? they may discard up to (?P<n>x|{COUNT}) cards?\.? "
+    r"then they draw a card for each card discarded this way\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_target_player_may_discard_up_to_then_draw_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """`_TARGET_PLAYER_MAY_DISCARD_UP_TO_THEN_DRAW_RE`'s whole instruction. The
+    ceiling is a printed count (a modal spell's X is already substituted into
+    the mode text, CR 107.3a) or, unsubstituted, X from the cast record; the
+    target chooses zero up to that many of their own cards (CR 107.1c, CR
+    701.9b) and draws exactly as many as were discarded (CR 608.2c's "this
+    way")."""
+    if "discarded this way" not in text.lower():
+        return None
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _TARGET_PLAYER_MAY_DISCARD_UP_TO_THEN_DRAW_RE.fullmatch(whole)
+    if match is None or not _targets_understood("target player", allow_player_targets=True):
+        return None
+    x_ceiling = match.group("n").lower() == "x"
+    printed = None if x_ceiling else parse_count(match.group("n"))
+    if printed is None and not x_ceiling:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ceiling = (
+            game.cast_record(stack_object).x_value if printed is None else printed  # type: ignore[arg-type]
+        )
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            discarded = _discard_cards(
+                game, target, ceiling, source, source_id=source_id_of(stack_object), exact=False
+            )
+            if discarded:
+                game.draw_cards(target.username, len(discarded))
+
+    return [effect]
 
 
 #: "each opponent draws a card" (Armor Wars' chapter I) - CR 121.2's draw by

@@ -1431,8 +1431,11 @@ _DAMAGE_TO_ITSELF_RE = re.compile(
 )
 #: "<Source> deals N damage to you." (CR 119.3, 120.2b) - Mana Crypt's own
 #: coin-flip loser. Same source-agnostic prefix as the two patterns above.
+#: The `(?!if\b)` keeps a leading "If <condition>, " from being swallowed as
+#: part of the source (Mindstorm Crown's "If you had a card in hand, this
+#: artifact deals 1 damage to you." is a gated clause, never an unconditional one).
 _DAMAGE_TO_CONTROLLER_RE = re.compile(
-    rf".*\bdeals? (?P<n>{AMOUNT}) damage to you{where_x_pattern()}\.?$", re.IGNORECASE
+    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to you{where_x_pattern()}\.?$", re.IGNORECASE
 )
 #: "<Source> deals N damage to each player." (Cast Away Doubt) - CR 102.1's
 #: whole player set, the caster included - `_DAMAGE_EACH_OPPONENT_RE`'s own

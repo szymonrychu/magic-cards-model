@@ -41,7 +41,12 @@ from ..casting import (
     once_per_turn_key,
 )
 from ..casting_restrictions import create_targeted_cant_cast_restriction
-from ..combat import KEYWORDS_OUTSIDE_COMBAT, Keyword, has_keyword
+from ..combat import (
+    ASSIGN_AS_THOUGH_UNBLOCKED_TEXT,
+    KEYWORDS_OUTSIDE_COMBAT,
+    Keyword,
+    has_keyword,
+)
 from ..converge import colors_of_mana_spent
 from ..cost import (
     cost_announces_x,
@@ -67,6 +72,7 @@ from ..land_animation import (
 )
 from ..layers import (
     CANT_ACTIVATE_ABILITIES_TEXT,
+    KNOWN_KEYWORDS,
     ContinuousEffect,
     ContinuousEffects,
     Duration,
@@ -2457,12 +2463,63 @@ def _parse_each_player_this_creature_attacked_loses_clause(
     return effect
 
 
+#: "You may have creatures you control assign their combat damage this turn as
+#: though they weren't blocked." (Predatory Focus) - the permission Rhox's own
+#: line states (`machines/combat.ASSIGN_AS_THOUGH_UNBLOCKED_TEXT`), granted
+#: until end of turn to the creatures its controller has as this resolves (CR
+#: 611.2c) and still asked of that controller creature by creature when each
+#: blocked attacker assigns (CR 608.2d).
+_CREATURES_YOU_CONTROL_ASSIGN_AS_THOUGH_UNBLOCKED_RE = re.compile(
+    r"^you may have creatures you control assign their combat damage this turn "
+    r"as though they weren'?t blocked\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s4", for_spell=FORWARD)
+def _parse_creatures_you_control_assign_as_though_unblocked_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_CREATURES_YOU_CONTROL_ASSIGN_AS_THOUGH_UNBLOCKED_RE`'s shape: one
+    layer-6 grant (CR 613.1f) per creature, scoped to that very object (CR
+    400.7), expiring in the cleanup step (CR 514.2)."""
+    if "as though they weren" not in clause.lower():
+        return None
+    if _CREATURES_YOU_CONTROL_ASSIGN_AS_THOUGH_UNBLOCKED_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        store = continuous_effects(game)
+        for permanent in list(game.permanents_controlled_by(controller)):
+            if not game.characteristics_of(permanent).is_creature:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{permanent.name}: may assign its combat damage as though it "
+                        "weren't blocked this turn"
+                    ),
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                    modification=grant_ability(ASSIGN_AS_THOUGH_UNBLOCKED_TEXT),
+                ),
+                game,
+            )
+
+    return effect
+
+
 #: "that player loses the game" - Vraska, Scheming Gorgon's -10 grants
 #: "Whenever this creature deals damage to an opponent, that player loses the
 #: game." CR 104.3e's effect-stated loss, applied to the player the
 #: triggering event names (the damaged opponent), the same `event.player`
 #: referent every other triggered "that player ..." clause reads.
-_THAT_PLAYER_LOSES_THE_GAME_RE = re.compile(r"^that player loses the game\.?$", re.IGNORECASE)
+_THAT_PLAYER_LOSES_THE_GAME_RE = re.compile(
+    r"^(?:that player loses|they lose) the game\.?$", re.IGNORECASE
+)
 
 
 @MIXED_CLAUSE.rung("s4", for_spell=FORWARD)
@@ -8120,6 +8177,97 @@ def _parse_bare_self_pump_until_eot_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "`<put or return one object onto the battlefield>`. `<It|That permanent>`
+#: gains `<keywords and "quoted abilities">`." (Terminal Velocity, Can't Stay
+#: Away) - the second sentence's "it" is the permanent the first sentence put
+#: onto the battlefield (CR 608.2c, CR 400.7j), and the quoted abilities are
+#: whole granted lines (CR 113.10), stored verbatim like every other grant of
+#: `CardState.granted_ability_texts`. The quote is cut out before sentences are
+#: split because its own full stop sits inside the closing quote.
+_PUT_THEN_IT_GAINS_RE = re.compile(
+    r'^(?P<first>[^"]+?\.)\s+(?:it|that (?:permanent|creature|artifact|card)) gains '
+    r"(?P<grants>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+_QUOTED_GRANT_RE = re.compile(r'"([^"]+)"')
+
+
+def _split_put_then_it_gains_grants(raw: str) -> list[str] | None:
+    """Each grant of "haste, "quoted," and "quoted."", keywords capitalised
+    (and checked against `KNOWN_KEYWORDS`), quoted lines stripped of the comma
+    their list position adds inside the quote; `None` if any piece is neither."""
+    grants: list[str] = []
+    rest = raw
+    for quoted in _QUOTED_GRANT_RE.finditer(raw):
+        line = quoted.group(1).strip().rstrip(",")
+        if not line:
+            return None
+        grants.append(line)
+        rest = rest.replace(quoted.group(0), "|", 1)
+    keywords: list[str] = []
+    for part in re.split(r"\s*(?:,|\band\b)\s*", rest):
+        part = part.strip(" |")
+        if part:
+            if part.lower() not in KNOWN_KEYWORDS:
+                return None
+            keywords.append(part.capitalize())
+    return [*keywords, *grants] or None
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_put_onto_battlefield_then_it_gains_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """`_PUT_THEN_IT_GAINS_RE`'s pair: the first sentence runs through the
+    ordinary reader, and whatever permanents it brought onto the battlefield
+    (read off the battlefield before and after, CR 400.7: each is a new
+    object) gain the listed grants. A first sentence that put nothing (the
+    "may" declined, no legal card) leaves nothing to gain them (CR 608.2c)."""
+    lowered = text.lower()
+    if '"' not in text or " gains " not in lowered or "battlefield" not in lowered:
+        return None
+    match = _PUT_THEN_IT_GAINS_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
+    if match is None:
+        return None
+    grants = _split_put_then_it_gains_grants(match.group("grants"))
+    if grants is None or any(is_leave_exile_line(grant) for grant in grants):
+        # The leave-the-battlefield replacement is a replacement effect, not a
+        # granted line: `_parse_put_then_grant_then_delayed_whole_text` owns it.
+        return None
+    first = _parse_mixed_clause(match.group("first"), for_spell=for_spell)
+    if first is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        before = {(state.id, state.zone_change_stamp) for state in game.battlefield}
+        first(game, stack_object)
+        for permanent in list(game.battlefield):
+            if (permanent.id, permanent.zone_change_stamp) in before:
+                continue
+            for granted_text in grants:
+                if granted_text.lower() in KNOWN_KEYWORDS:
+                    # A keyword is a layer-6 grant (CR 613.1f) scoped to this
+                    # object alone (CR 400.7).
+                    store = continuous_effects(game)
+                    store.add(
+                        ContinuousEffect(
+                            description=f"{permanent.name}: gains {granted_text}",
+                            layer=Layer.ABILITY,
+                            timestamp=store.tick(),
+                            selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                            modification=grant_ability(granted_text),
+                        ),
+                        game,
+                    )
+                elif granted_text not in permanent.granted_ability_texts:
+                    permanent.granted_ability_texts = (
+                        *permanent.granted_ability_texts,
+                        granted_text,
+                    )
+
+    return [effect]
+
+
 #: "It gains "<ability>"." - Rivaz of the Claw's "Whenever you cast a Dragon
 #: creature spell from your graveyard, it gains "When this creature dies,
 #: exile it."" "It" is the spell whose casting triggered this, as
@@ -11573,6 +11721,7 @@ from .counters import _counter_kind, _source_still_here  # noqa: E402
 from .damage import _fight, _resolve_bite_damage, damage_to_layer_target_rider  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
+    _parse_mixed_clause,
     _parse_mixed_clauses,
     _parse_targeted_clause,
     _spell_effect_or_notice,

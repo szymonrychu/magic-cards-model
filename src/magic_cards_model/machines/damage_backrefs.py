@@ -294,6 +294,12 @@ _FOLLOW_DISCARD_RE = re.compile(
     rf"(?P<n>{COUNT}|[xX]) cards?$",
     re.IGNORECASE,
 )
+_PLAYER_DEALT_DAMAGE_THIS_WAY_RE = re.compile(
+    r"^if a player is dealt damage this way, (?P<rider>.+)$", re.IGNORECASE
+)
+_THEY_DISCARD_RE = re.compile(
+    rf"^(?:they|that player) discards? (?P<n>{COUNT}) cards?$", re.IGNORECASE
+)
 _FOLLOW_MAY_DISCARD_RE = re.compile(
     r"^if (?P<cond>.+?), (?P<rest>you may discard .+)$", re.IGNORECASE
 )
@@ -336,6 +342,27 @@ def _followup_controller(match: "re.Match[str]", head_source: str) -> _Followup 
         needs_permanent=True,
         kind="controller",
     )
+
+
+def damaged_player_rider(rider: str) -> Any:
+    """`(game, player, source name, source id) -> None` for the rider of "If a
+    player is dealt damage this way, `<rider>`" - Sonic Shrieker's "they
+    discard a card" - run on the player the damage actually reached (CR 120.3a,
+    CR 615.6: prevented damage is not dealt), or None when the rider is not a
+    shape read here."""
+    text = rider.strip().rstrip(".").strip()
+    if match := _THEY_DISCARD_RE.fullmatch(text):
+        count = parse_count(match.group("n"))
+        if count is None:
+            return None
+
+        def discard(game: "Game", player: Any, source_name: str, source_id: Any) -> None:
+            from .effects import _discard_cards
+
+            _discard_cards(game, player, count, source_name, source_id=source_id)
+
+        return discard
+    return None
 
 
 def _followup_for(sentence: str, head_source: str) -> _Followup | None:
@@ -384,6 +411,18 @@ def _followup_for(sentence: str, head_source: str) -> _Followup | None:
             )
 
         return _Followup(after=discard, needs_player=True)
+    if (dealt := _PLAYER_DEALT_DAMAGE_THIS_WAY_RE.fullmatch(text)) is not None:
+        rider = damaged_player_rider(dealt.group("rider"))
+        if rider is None:
+            return None
+
+        def after_player_dealt_damage(run: _Run) -> None:
+            from .decisions import source_id_of
+
+            if run.dealt > 0 and not isinstance(run.target, CardState) and run.target is not None:
+                rider(run.game, run.target, run.spell.name, source_id_of(run.spell))
+
+        return _Followup(after=after_player_dealt_damage, needs_player=True)
     return None
 
 
@@ -633,3 +672,65 @@ def _conditional_pair_followup(predicate: Any, pair_effect: Any) -> _Followup:
             pair_effect(run.game, run.spell)
 
     return _Followup(referent_predicate=(after, predicate), after=after, needs_permanent=True)
+
+
+# ---------------------------------------------------------------------------
+# The same sequence on a triggered or activated ability
+# ---------------------------------------------------------------------------
+#
+# "When this creature enters, it deals 2 damage to any target and you gain 2
+# life. If a player is dealt damage this way, they discard a card." (Sonic
+# Shrieker). The head and the optional "and you gain N life" tail are one
+# instruction (CR 608.2c); the rider asks what the head actually did to its
+# target (CR 120.3a, CR 615.6), so a creature or planeswalker target, a
+# prevented hit and an empty hand all end the sequence there.
+
+_ABILITY_HEAD_RE = re.compile(
+    rf"^(?P<src>[^.]+?) deals (?P<n>{COUNT}) damage to "
+    rf"(?P<phrase>any target|target [^.]+?)(?: and you gain (?P<gain>{COUNT}) life)?$",
+    re.IGNORECASE,
+)
+
+
+def damage_then_player_rider_ability_effect(effect_text: str) -> Any:
+    """`_ABILITY_HEAD_RE`'s sentence plus "If a player is dealt damage this
+    way, `<rider>`" as one ability effect, or None."""
+    from .effects import (
+        _plain_resolution_sentences,
+        _strip_non_effect_preamble,
+        _targets_understood,
+    )
+
+    if "dealt damage this way" not in effect_text.lower():
+        return None
+    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(effect_text))
+    if len(sentences) != 2:
+        return None
+    head = _ABILITY_HEAD_RE.fullmatch(sentences[0].strip().rstrip("."))
+    follow = _PLAYER_DEALT_DAMAGE_THIS_WAY_RE.fullmatch(sentences[1].strip().rstrip("."))
+    if head is None or follow is None:
+        return None
+    amount = parse_count(head.group("n"))
+    gain = parse_count(head.group("gain")) if head.group("gain") is not None else 0
+    rider = damaged_player_rider(follow.group("rider"))
+    if amount is None or gain is None or rider is None:
+        return None
+    if not _targets_understood(head.group("phrase"), allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        from ..models.player import Player
+
+        source = ability.source_or_last_known(game)
+        dealt_to: list[Player] = []
+        for target in game.resolve_targets(ability):
+            if game.deal_damage(target, amount, source=source) > 0 and isinstance(target, Player):
+                dealt_to.append(target)
+        if gain:
+            game.gain_life(ability.controller, gain)
+        from .decisions import source_id_of
+
+        for player in dealt_to:
+            rider(game, player, ability.source_name, source_id_of(ability))
+
+    return effect

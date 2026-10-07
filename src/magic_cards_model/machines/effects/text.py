@@ -1329,6 +1329,14 @@ def _strip_ability_word_labels(text: str) -> str:
     return "\n".join(stripped)
 
 
+#: "each of your opponents" is the one group "each opponent" names (CR 102.2:
+#: an opponent is a player in the game other than you), so every reader keyed
+#: on "each opponent" reads it - Aurelia, the Law Above's "deals 3 damage to
+#: each of your opponents". A possessive ("each of your opponents' ...") is
+#: left alone.
+_EACH_OF_YOUR_OPPONENTS_RE = re.compile(r"\beach of your opponents\b(?!['’])", re.IGNORECASE)
+
+
 @functools.lru_cache(maxsize=16384)
 def _strip_non_effect_preamble(text: str) -> str:
     """Sentences that describe the spell but are not part of resolving it.
@@ -1356,7 +1364,10 @@ def _strip_non_effect_preamble(text: str) -> str:
     # CR 207.2c: an ability word is a label, not an instruction (see
     # `_ABILITY_WORDS`). Last, so it sees the same already-shape-checked
     # lines `_strip_keyword_ability_lines` did.
-    return _strip_ability_word_labels(text)
+    text = _strip_ability_word_labels(text)
+    if "each of your opponents" in text.lower():
+        text = _EACH_OF_YOUR_OPPONENTS_RE.sub("each opponent", text)
+    return text
 
 
 #: A plain sentence boundary - a full stop (or ! or ?) followed by

@@ -1950,6 +1950,26 @@ def _condition_matches(
                 if game.controller_of(attacker).username == controller
             )
             return total_power >= threshold
+        attacks_with = PLAYER_ATTACKS_WITH_N_OR_MORE_RE.fullmatch(lowered.strip())
+        if attacks_with is not None:
+            # CR 508.3d: "Whenever a player attacks with five or more creatures"
+            # (Aurelia, the Law Above) is one trigger for the whole declaration,
+            # read off `Game.declare_attackers`' own subject-less event - never
+            # once per attacker - and only when that player declared enough.
+            who = attacks_with.group("who")
+            needed = parse_count(attacks_with.group("n"))
+            if event.subject_id is not None or event.player is None or needed is None:
+                return False
+            if (who == "you") != (event.player == controller) and who != "a player":
+                return False
+            return (
+                sum(
+                    1
+                    for attacker in game.attacking_creatures()
+                    if game.controller_of(attacker).username == event.player
+                )
+                >= needed
+            )
         batch = batched_attackers(game, condition, controller)
         if batch is not None:
             # CR 603.2c: "one or more <description> attack" is one trigger
@@ -5578,6 +5598,7 @@ from ._common import (  # noqa: E402
     _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION,
 )
 from .collect import (  # noqa: E402
+    PLAYER_ATTACKS_WITH_N_OR_MORE_RE,
     _unread_trigger_events,
     batched_attack_minimum,
     batched_attackers,

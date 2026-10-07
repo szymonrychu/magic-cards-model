@@ -78,6 +78,11 @@ if TYPE_CHECKING:
 #: `Game.turn_counts` key for CR 603.10a's cards leaving a graveyard, per the
 #: graveyard's owner.
 CARDS_LEFT_GRAVEYARD = "cards_left_graveyard"
+#: Each player's hand size as the turn began (`Game.untap_step`, CR 502.1,
+#: the first thing a turn does), kept in `Game.turn_counts` so it rolls with
+#: every other per-turn ledger - Mindstorm Crown's "if you had no cards in
+#: hand at the beginning of this turn".
+HAND_SIZE_AT_TURN_START = "hand_size_at_turn_start"
 #: `Game.turn_counts` key for cards put into exile, per the card's owner.
 CARDS_PUT_INTO_EXILE = "cards_put_into_exile"
 #: `Game.turn_counts` keys for the life a player lost and gained during a
@@ -165,8 +170,32 @@ def _record_entered(game: "Game", event: "GameEvent") -> None:
             characteristics=_light_characteristics(event, state, controller),
             face_down=bool(state is not None and state.face_down),
             cast_mana_spent=_cast_mana_spent(game, state),
+            damage_baseline=_ledger_damage_to(game, event.subject_id),
         )
     )
+
+
+def _ledger_damage_to(game: "Game", object_id: "UUID | None") -> int:
+    """Everything `Game.damage_dealt_this_turn` holds for `object_id`."""
+    if object_id is None:
+        return 0
+    return sum(
+        record.amount for record in game.damage_dealt_this_turn if record.recipient_id == object_id
+    )
+
+
+def damage_dealt_to_object_this_turn(game: "Game", object_id: "UUID | None") -> int:
+    """The damage dealt to the object `object_id` names this turn (CR 120.1),
+    counted for the incarnation that last entered the battlefield: it is
+    read off the ledger, which outlives a zone change, so it still answers
+    for a creature that has died (CR 608.2h's last-known information). A
+    card that came back this turn is a new object (CR 400.7) and does not
+    inherit what its previous self was dealt."""
+    total = _ledger_damage_to(game, object_id)
+    for entry in reversed(game.turn_history):
+        if entry.kind == "entered" and entry.object_id == object_id:
+            return max(total - entry.damage_baseline, 0)
+    return total
 
 
 def _cast_mana_spent(game: "Game", state: "CardState | None") -> int | None:
@@ -2016,3 +2045,21 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(re.compile(r"none of them (?:were|was) cast"), _none_of_them_cast),
     ConditionReader(re.compile(r"no mana was spent to cast them"), _no_mana_spent_to_cast_them),
 )
+
+
+def note_hand_sizes_at_turn_start(game: "Game") -> None:
+    """Record every player's hand size as the turn begins - overwritten, not
+    added, so a step run twice cannot double it."""
+    sizes = game.turn_counts.setdefault(HAND_SIZE_AT_TURN_START, {})
+    for player in game.players_in_game:
+        sizes[player.username] = len(player.hand)
+
+
+def hand_size_at_turn_start(game: "Game", username: str) -> int:
+    """`username`'s hand size as this turn began. A game that never ran a turn's
+    first step (a board assembled mid-turn) has no record, and the hand now is
+    the best answer there is."""
+    recorded = game.turn_counts.get(HAND_SIZE_AT_TURN_START, {})
+    if username in recorded:
+        return recorded[username]
+    return len(game.player(username).hand)

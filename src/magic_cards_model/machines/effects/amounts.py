@@ -208,6 +208,12 @@ _COUNT_CARDS_NAMED_IN_GRAVEYARDS_RE = re.compile(
     r"^(?:the )?number of cards named (?P<name>.+?) in (?P<whose>your graveyard|all graveyards)$",
     re.IGNORECASE,
 )
+#: "the number of cards with a cycling ability in your graveyard" (Zenith
+#: Flare): a graveyard count by a keyword ability the card carries.
+_COUNT_CARDS_WITH_KEYWORD_ABILITY_IN_YOUR_GRAVEYARD_RE = re.compile(
+    r"^(?:the )?number of cards with an? (?P<keyword>[a-z]+) ability in your graveyard$",
+    re.IGNORECASE,
+)
 #: Hearth Elemental's own "the number of cards in your graveyard that are
 #: instant cards, sorcery cards, and/or have an Adventure." - the "that are
 #: `<list>`" twin of `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`'s own leading-
@@ -803,6 +809,27 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
         return count_named_in_graveyards
 
+    if " ability in your graveyard" in stripped.lower() and (
+        with_ability := _COUNT_CARDS_WITH_KEYWORD_ABILITY_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped)
+    ):
+        # Zenith Flare's "the number of cards with a cycling ability in your
+        # graveyard": a card has the ability when its printing carries that
+        # keyword; CR 702.29f makes every typecycling a cycling ability.
+        wanted_keyword = with_ability.group("keyword").lower()
+
+        def count_cards_with_keyword_ability(game: "Game", controller: str) -> int:
+            return sum(
+                1
+                for state in game.player(controller).graveyard
+                if any(
+                    keyword.lower() == wanted_keyword
+                    or (wanted_keyword == "cycling" and keyword.lower().endswith("cycling"))
+                    for keyword in state.keywords
+                )
+            )
+
+        return count_cards_with_keyword_ability
+
     if match := _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped):
         qualifier = match.group("qualifier")
         if " and " in qualifier:
@@ -1258,6 +1285,20 @@ _WHICHEVER_IS_RE = re.compile(
 )
 
 
+#: "the amount of damage dealt to it this turn" (Tangled Colony).
+_DAMAGE_DEALT_TO_IT_THIS_TURN_RE = re.compile(
+    r"^(?:the )?(?:amount of )?damage dealt to (?:it|this (?:creature|permanent)) this turn$",
+    re.IGNORECASE,
+)
+
+
+#: "its mana value" / "this permanent's mana value" - the object the
+#: expression is evaluated for (Terminal Velocity's granted leaves trigger).
+_ITS_MANA_VALUE_RE = re.compile(
+    r"^(?:its|this (?:creature|permanent|artifact|token)(?:'|\u2019)s) mana value$", re.IGNORECASE
+)
+
+
 def _amount_term(term: str) -> AmountReader | None:
     """One term of `amount_expression`, or `None` when it is not readable."""
     text = term.strip()
@@ -1296,6 +1337,10 @@ def _amount_term(term: str) -> AmountReader | None:
         return read_object_counters
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
+    if "mana value" in lowered and _ITS_MANA_VALUE_RE.fullmatch(text):
+        # CR 202.3: the object's mana value, as it last existed if it has left
+        # the battlefield (CR 603.10a looks back in time for a leaves trigger).
+        return lambda _game, _controller, obj, _x: 0 if obj is None else int(obj.mana_value)
     if lowered == "the difference between its power and toughness":
         # Doran, Besieged by Time's own X: "it gets +X/+X until end of turn,
         # where X is the difference between its power and toughness." Every
@@ -1416,6 +1461,15 @@ def _amount_term(term: str) -> AmountReader | None:
         if factor is None or inner is None:
             return None
         return lambda game, controller, obj, x: factor * inner(game, controller, obj, x)
+    if "damage dealt to" in lowered and _DAMAGE_DEALT_TO_IT_THIS_TURN_RE.fullmatch(text):
+        # Tangled Colony's "X is the amount of damage dealt to it this turn":
+        # `obj` is the resolving ability's source, which a dies trigger finds
+        # in the graveyard - the ledger still answers (CR 608.2h).
+        from ..conditions.history import damage_dealt_to_object_this_turn
+
+        return lambda game, _controller, obj, _x: (
+            0 if obj is None else damage_dealt_to_object_this_turn(game, obj.id)
+        )
     if lowered == "the greatest mana value among cards in exile":
         return lambda game, _controller, _object, _x: _greatest_mana_value_among_cards_in_exile(
             game
@@ -3145,6 +3199,54 @@ _TARGET_CONTROLLER_REFERENCES = (
 #: damage equal to its power to each of ..." (bite) - is not the spell
 #: dealing damage, and is left to the readers built for it.
 _TARGETED_SUBJECT_RE = re.compile(r"\btarget\b|\bthat creature\b", re.IGNORECASE)
+
+
+#: "`<it|this permanent>` deals damage equal to `<expr>` to each `<type>`
+#: [and each `<type>`]." - non-targeted, simultaneous damage (CR 120.1,
+#: CR 608.2c) whose amount is an `amount_expression` read once as the ability
+#: resolves (CR 608.2h) off the source's last known information (CR 603.10a).
+_EQUAL_TO_DAMAGE_TO_EACH_GROUP_RE = re.compile(
+    r"^(?:it|this (?:creature|permanent|artifact)) deals damage equal to (?P<expr>[^.]+?) to "
+    r"each (?P<groups>[a-z]+(?: and each [a-z]+)*)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s35", for_spell=FORWARD)
+def _parse_expression_damage_to_each_group_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EQUAL_TO_DAMAGE_TO_EACH_GROUP_RE`'s shape. Ability-only: the subject is
+    the ability's own source, which a spell's "it" never is."""
+    if for_spell or "deals damage equal to" not in clause.lower():
+        return None
+    match = _EQUAL_TO_DAMAGE_TO_EACH_GROUP_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+    types: set[Type] = set()
+    for word in re.split(r"\s+and each\s+", match.group("groups")):
+        card_type = _singular_card_type(word)
+        if card_type is None:
+            return None
+        types.add(card_type)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        source = stack_object.source_or_last_known(game)
+        amount = reader(game, stack_object.controller, source, stack_object.x_value or 0)
+        board = game.computed_board()
+        recipients = [
+            permanent
+            for permanent in list(game.battlefield)
+            if types & set(board.of(permanent).types)
+        ]
+        for permanent in recipients:
+            game.deal_damage(permanent, amount, source=source)
+
+    return effect
 
 
 def _announced_x(game: "Game", stack_object: "StackObject") -> int:
