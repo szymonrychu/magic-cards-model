@@ -335,6 +335,10 @@ class TriggersDecisionsMixin:
                     card, caster, mana_value_below=mana_value_below
                 )
             )
+            if not is_land:
+                prompt = with_board_priced_cost(
+                    self, prompt, card, caster, alternative_cost, pays_mana_cost
+                )
         answer = self.ask(
             Decision(
                 kind=DecisionKind.MAY,
@@ -2540,6 +2544,7 @@ class TriggersDecisionsMixin:
         return f"nothing gives {decider} control of {player} (CR 723.5)"
 
 
+from ...machines.free_cast_price import with_board_priced_cost  # noqa: E402
 from ._common import ENERGY_PAID_OR_LOST, Targetable  # noqa: E402
 from ._costs_mana import _cost_refers_to_self, _named_mana_abilities  # noqa: E402
 from ._stack_priority import _illegal_option_refusal, _that_player_of  # noqa: E402
