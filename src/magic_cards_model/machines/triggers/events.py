@@ -1083,21 +1083,12 @@ def object_stat_or_last_known(game: "Game", obj: CardState, stat: str) -> int:
     last known information, which `CardState.power`/`.toughness` fall back to
     once it has left (CR 113.7a). A negative value reads as 0 (CR 107.1b).
 
-    `CardState.remember_last_known_power_toughness` keeps no snapshot when
-    the computed value equalled the printing *plus its counters*, and the
-    counters are gone after the zone change - so a creature whose only
-    boost was +1/+1 counters (Heartfire Hero dying with three) would read
-    back its bare printing. The counters it left with
-    (`last_known_counters`) are added back in exactly that case."""
+    `CardState.remember_last_known_power_toughness` always snapshots, counters
+    included, so the property read is already CR 608.2h's answer."""
     if obj.zone is Zone.BATTLEFIELD:
         value = game.power_of(obj) if stat == "power" else game.toughness_of(obj)
     else:
         value = obj.power if stat == "power" else obj.toughness
-        snapshot = obj.last_known_power if stat == "power" else obj.last_known_toughness
-        if value is not None and snapshot is None and obj.last_left_the_battlefield:
-            value += obj.last_known_counters.power_toughness_modifier - (
-                obj.counters.power_toughness_modifier
-            )
     return max(value or 0, 0)
 
 
