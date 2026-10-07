@@ -27,7 +27,7 @@ control") rather than by the ability's own source.
 Second printings: Form of the Dinosaur (the "and that creature deals damage
 equal to its power to ..." return half, read by the same reader as Stalking
 Yeti's), Legolas, Master Archer (a self-bite to "up to one target creature"),
-Heart-Piercer Manticore (the reflexive sacrifice bite, "that creature's
+Ziatora, the Incinerator (the reflexive sacrifice bite, "that creature's
 power"). No other legal printing carries an Aura's own damage to "enchanted
 creature", "enchanted creature deals ... to its owner", "attach it to target
 creature you control. That creature deals ...", "Each creature you control
@@ -111,7 +111,7 @@ def test_every_listed_and_proof_card_reads_handled():
         "Tiger-Tribe Hunter",
         "Form of the Dinosaur",
         "Legolas, Master Archer",
-        "Heart-Piercer Manticore",
+        "Ziatora, the Incinerator",
     ):
         assert set(_outcomes(name)) == {"handled"}, (name, _outcomes(name))
 
@@ -528,14 +528,20 @@ def test_tiger_tribe_hunter_uses_last_known_power_of_a_pumped_sacrifice():
     assert dreadmaw.damage == 5
 
 
-def test_heart_piercer_manticore_proof_bites_any_target_for_that_creatures_power():
-    scenario = _main(alice=["Hill Giant"], hand=["Heart-Piercer Manticore"])
+def test_ziatora_proof_bites_any_target_for_that_creatures_power_and_makes_treasure():
+    """CR 603.12: the reflexive "When you do" bite reads the sacrificed
+    creature's power as it last existed (CR 608.2h)."""
+    scenario = _main(alice=["Ziatora, the Incinerator", "Hill Giant"])
     giant = scenario.creature("Hill Giant", "alice")
     scenario.will_take_the_may(True)
     scenario.will_choose_cards(giant)
     scenario.will_choose_targets("bob")
-    scenario.cast_onto_stack("Heart-Piercer Manticore", auto=True)
-    scenario.resolve_top()
-    _drain(scenario)
+    _walk_to(scenario, Step.END_STEP)
     assert giant.zone is Zone.GRAVEYARD
     assert scenario.player("bob").life == 17
+    treasures = [
+        state
+        for state in scenario.game.battlefield
+        if state.name == "Treasure Token" and state.controller == "alice"
+    ]
+    assert len(treasures) == 3

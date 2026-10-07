@@ -1,10 +1,10 @@
 {
-  "ability": "When this creature enters, you may sacrifice another creature. When you do, this creature deals damage equal to that creature's power to any target.",
+  "ability": "At the beginning of your end step, you may sacrifice another creature. When you do, Ziatora deals damage equal to that creature's power to any target and you create three Treasure tokens.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
-    "source": "Heart-Piercer Manticore@alice#1",
+    "source": "Ziatora, the Incinerator@alice#1",
     "targets": [],
     "x": 0
   },
@@ -14,9 +14,9 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Ziatora, the Incinerator"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Heart-Piercer Manticore"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -26,13 +26,13 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
-    "step": "precombat_main",
+    "step": null,
     "tapped": [],
     "tokens": [],
     "variant": "quiet",
     "war_turn": false
   },
-  "card": "Heart-Piercer Manticore",
+  "card": "Ziatora, the Incinerator",
   "delta": {
     "created": {},
     "decisions": [
@@ -43,7 +43,7 @@
         "player": "alice",
         "players": [],
         "prompt": "sacrifice another creature",
-        "source": "Heart-Piercer Manticore"
+        "source": "Ziatora, the Incinerator"
       },
       {
         "amount": 1,
@@ -52,7 +52,7 @@
         "player": "alice",
         "players": [],
         "prompt": "choose a permanent to sacrifice",
-        "source": "Heart-Piercer Manticore"
+        "source": "Ziatora, the Incinerator"
       },
       {
         "amount": 0,
@@ -60,8 +60,8 @@
         "kind": "choose_targets",
         "player": "alice",
         "players": [],
-        "prompt": "choose targets for Heart-Piercer Manticore",
-        "source": "Heart-Piercer Manticore"
+        "prompt": "choose targets for Ziatora, the Incinerator",
+        "source": "Ziatora, the Incinerator"
       }
     ],
     "fields_changed": ["creatures_died_this_turn", "delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts", "turn_history"],
@@ -72,18 +72,16 @@
       }
     },
     "players": {},
-    "stack": ["ability of Heart-Piercer Manticore@alice#1: this creature deals 2 damage to any target"]
+    "stack": ["ability of Ziatora, the Incinerator@alice#1: Ziatora deals 2 damage to any target and you create three Treasure tokens"]
   },
   "family": "triggered",
   "format": 1,
-  "kind": "enters_the_battlefield",
+  "kind": "beginning_of_step",
   "number": 0,
   "recipe": {
-    "attempt": "put",
+    "attempt": "staged",
     "index": 0,
-    "params": {
-      "tapped": false
-    },
+    "params": {},
     "variant": "quiet"
   }
 }
