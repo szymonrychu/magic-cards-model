@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "a00440fc-e3e1-4a1c-b32b-f7946a76cd62",
+  "oracle_id": "879ba7c4-4557-4166-adb0-b52454816e5a",
+  "multiverse_ids": [
+    509478
+  ],
+  "mtgo_id": 86589,
+  "tcgplayer_id": 233845,
+  "cardmarket_id": 543596,
+  "name": "Enslave",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/a00440fc-e3e1-4a1c-b32b-f7946a76cd62",
+  "scryfall_uri": "https://scryfall.com/card/tsr/113/enslave?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:30:24Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.jpg?1783927824",
+    "normal": "https://cards.scryfall.io/normal/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.jpg?1783927824",
+    "large": "https://cards.scryfall.io/large/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.jpg?1783927824",
+    "png": "https://cards.scryfall.io/png/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.png?1783927824",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.jpg?1783927824",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.jpg?1783927824",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.webp?1783927824",
+    "grid": "https://cards.scryfall.io/grid/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.webp?1783927824",
+    "display": "https://cards.scryfall.io/display/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.webp?1783927824",
+    "art": "https://cards.scryfall.io/art/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.webp?1783927824",
+    "crop": "https://cards.scryfall.io/crop/front/a/0/a00440fc-e3e1-4a1c-b32b-f7946a76cd62.webp?1783927824"
+  },
+  "mana_cost": "{4}{B}{B}",
+  "cmc": 6.0,
+  "type_line": "Enchantment \u2014 Aura",
+  "oracle_text": "Enchant creature\nYou control enchanted creature.\nAt the beginning of your upkeep, enchanted creature deals 1 damage to its owner.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a00440fc-e3e1-4a1c-b32b-f7946a76cd62/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A879ba7c4-4557-4166-adb0-b52454816e5a&unique=prints",
+  "collector_number": "113",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zoltan Boros & Gabor Szikszai",
+  "artist_ids": [
+    "1885e6cb-c827-4896-994e-3d0a027d602f",
+    "44c3877f-8771-43dc-9e40-f4c765f59d2e"
+  ],
+  "illustration_id": "f7c234eb-0cad-4a27-becc-f71d98229b7f",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17457,
+  "penny_rank": 15624,
+  "preview": {
+    "source": "Cube Cobra",
+    "source_uri": "https://cubecobra.com/content/article/603bbb5a5a1ef3103ba27263",
+    "previewed_at": "2021-03-01"
+  },
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": "0.25",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.13",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509478&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEnslave",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEnslave",
+    "edhrec": "https://edhrec.com/route/?cc=Enslave"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F233845%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=543596&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86589?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

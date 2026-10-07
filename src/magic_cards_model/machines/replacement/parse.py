@@ -4152,8 +4152,12 @@ _REDIRECT_NEXT_RE = re.compile(
 #: (Harm's Way, Shining Shoal): the controller and every permanent of theirs
 #: (with that card type) as the damage would be dealt.
 _REDIRECT_YOU_AND_YOURS_RE = re.compile(
-    r"^you and/or (?P<what>permanents|creatures) you control$", re.IGNORECASE
+    r"^you and(?:/or)? (?P<what>permanents|creatures) you control$", re.IGNORECASE
 )
+#: "is dealt to enchanted creature instead" (Saving Grace): the redirect
+#: target is the creature the creating Aura is attached to as the effect is
+#: created (CR 303.4b), not a target.
+_REDIRECT_TO_ENCHANTED_RE = re.compile(r"^enchanted creature$", re.IGNORECASE)
 #: A targeted damage recipient: a creature, planeswalker or battle (CR 614.9's
 #: own list), "another" one included.
 _REDIRECT_TARGET_PHRASE_RE = re.compile(
@@ -4206,8 +4210,13 @@ def _read_turn_damage_sentence(sentence: str, offset: int, *, grouped: bool) -> 
     elif not (redirect.group("early") or redirect.group("late")):
         return None  # no stated duration (CR 611.2a): not this shape.
     new = redirect.group("new")
+    to_enchanted = _REDIRECT_TO_ENCHANTED_RE.fullmatch(new) is not None
     # CR 115.4: "any target" - a creature, player, planeswalker or battle.
-    if new.lower() != "any target" and _REDIRECT_TARGET_PHRASE_RE.fullmatch(new) is None:
+    if (
+        not to_enchanted
+        and new.lower() != "any target"
+        and _REDIRECT_TARGET_PHRASE_RE.fullmatch(new) is None
+    ):
         return None
     group = "protected" if redirect.groupdict().get("protected") else "protected_by"
     protected = redirect.group(group)
@@ -4222,7 +4231,10 @@ def _read_turn_damage_sentence(sentence: str, offset: int, *, grouped: bool) -> 
     return DamageRedirectReplacement(
         combat_only=bool(redirect.groupdict().get("combat")),
         protected_target=protected_target,
-        redirect_target=_target_index(sentence, redirect.start("new"), offset),
+        redirect_target=(
+            0 if to_enchanted else _target_index(sentence, redirect.start("new"), offset)
+        ),
+        redirect_to_enchanted=to_enchanted,
         choose_source=bool(redirect.groupdict().get("source")),
         amount=amount,
         amount_is_x=amount_is_x,

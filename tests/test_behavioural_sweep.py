@@ -4706,6 +4706,23 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="a creature type chosen for the source as it entered (CR 614.12a)",
         precondition=r"of the chosen type enters",
     ),
+    # NW05-T2: states the stock boards cannot stage; each is driven by its
+    # own scenario file (tests/scenarios/test_nw05_*).
+    DriverGap(
+        kind="cast_spell",
+        event="a spell cast that targets a creature its caster doesn't control",
+        precondition=r"you cast a spell that targets a creature you don't control",
+    ),
+    DriverGap(
+        kind="attacks",
+        event="two or more attackers with one of the keywords the condition lists",
+        precondition=r"you attack with at least \w+ creatures that have",
+    ),
+    DriverGap(
+        kind="beginning_of_step",
+        event="cards already exiled with the source (CR 607.1)",
+        precondition=r"if there are cards exiled with this",
+    ),
 )
 
 

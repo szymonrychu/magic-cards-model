@@ -339,6 +339,10 @@ class DamageRedirectReplacement(EngineModel):
     amount_is_x: bool = False
     protects_yours: bool = False
     protected_types: tuple[str, ...] = ()
+    redirect_to_enchanted: bool = False
+    """"is dealt to enchanted creature instead" (Saving Grace): the redirect
+    target is what the creating object's source is attached to as the effect
+    is created (CR 303.4b), fixed then - not a target."""
 
     bound: bool = False
     protected_id: UUID | None = None
@@ -363,11 +367,14 @@ class DamageRedirectReplacement(EngineModel):
 
         from ..models.player import Player
 
-        redirect_found = (
-            game.legal_target(stack_object, targets[self.redirect_target])
-            if self.redirect_target < len(targets)
-            else None
-        )
+        if self.redirect_to_enchanted:
+            redirect_found = _enchanted_by_source_of(game, stack_object)
+        else:
+            redirect_found = (
+                game.legal_target(stack_object, targets[self.redirect_target])
+                if self.redirect_target < len(targets)
+                else None
+            )
         controller = game.controller_of(stack_object).username
         update: dict[str, Any] = {"bound": True}
         if isinstance(redirect_found, CardState):
@@ -432,6 +439,8 @@ class DamageRedirectReplacement(EngineModel):
             return False
         if self.combat_only and not event.combat:
             return False
+        if event.card is not None and event.card.id == self.redirect_id:
+            return False  # already going to the new recipient: nothing to redirect
         if self.protects_yours:
             if not self._protects(game, event):
                 return False
@@ -487,6 +496,19 @@ class DamageRedirectReplacement(EngineModel):
             game._noncombat_deathtouch_and_lifelink(source, target, dealt)
             if event.combat:
                 game.combat_damage_dealt_this_turn_by.add(source.id)
+
+
+def _enchanted_by_source_of(game: "Game", stack_object: Any) -> CardState | None:
+    """The creature the creating ability's source is attached to (CR 303.4b),
+    still on the battlefield, or None."""
+    source_of = getattr(stack_object, "source_or_last_known", None)
+    source = source_of(game) if callable(source_of) else None
+    if source is None or source.attached_to is None:
+        return None
+    host = game.find_by_id(source.attached_to)
+    if not isinstance(host, CardState) or host.zone is not Zone.BATTLEFIELD:
+        return None
+    return host
 
 
 def _choose_a_source(

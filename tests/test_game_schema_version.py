@@ -2223,3 +2223,27 @@ def test_a_snapshot_written_before_the_nw05_t5_any_source_modifier_is_refused() 
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW05_T5_ANY_SOURCE}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before NW05-T2: `DamageRedirectReplacement` gained
+#: `redirect_to_enchanted` (Saving Grace's "is dealt to enchanted creature
+#: instead"). NW05-T2 bumped 129 -> 130, so the last shape without it is 129.
+_SCHEMA_VERSION_BEFORE_NW05_T2_REDIRECT_TO_ENCHANTED = 129
+
+
+def test_a_snapshot_written_before_the_redirect_to_enchanted_is_refused() -> None:
+    """A version-129 dump's created redirects carry no `redirect_to_enchanted`:
+    decoded as current, Saving Grace's would read a target index it never
+    had. Refused instead."""
+    from magic_cards_model.machines.damage_modification import DamageRedirectReplacement
+
+    assert "redirect_to_enchanted" in DamageRedirectReplacement.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW05_T2_REDIRECT_TO_ENCHANTED
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW05_T2_REDIRECT_TO_ENCHANTED
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW05_T2_REDIRECT_TO_ENCHANTED}",
+    ):
+        Game.model_validate(dumped)

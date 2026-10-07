@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "f77977e8-25d8-4531-a6fc-8c46e6904670",
+  "oracle_id": "44db1ff5-7082-4da4-8f4f-4a2d2e3d7666",
+  "multiverse_ids": [
+    407527
+  ],
+  "mtgo_id": 59479,
+  "mtgo_foil_id": 59480,
+  "tcgplayer_id": 111028,
+  "cardmarket_id": 287326,
+  "name": "Dazzling Reflection",
+  "lang": "en",
+  "released_at": "2016-01-22",
+  "uri": "https://api.scryfall.com/cards/f77977e8-25d8-4531-a6fc-8c46e6904670",
+  "scryfall_uri": "https://scryfall.com/card/ogw/17/dazzling-reflection?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:18:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.jpg?1783937927",
+    "normal": "https://cards.scryfall.io/normal/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.jpg?1783937927",
+    "large": "https://cards.scryfall.io/large/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.jpg?1783937927",
+    "png": "https://cards.scryfall.io/png/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.png?1783937927",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.jpg?1783937927",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.jpg?1783937927",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.webp?1783937927",
+    "grid": "https://cards.scryfall.io/grid/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.webp?1783937927",
+    "display": "https://cards.scryfall.io/display/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.webp?1783937927",
+    "art": "https://cards.scryfall.io/art/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.webp?1783937927",
+    "crop": "https://cards.scryfall.io/crop/front/f/7/f77977e8-25d8-4531-a6fc-8c46e6904670.webp?1783937927"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "You gain life equal to target creature's power. The next time that creature would deal damage this turn, prevent that damage.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "cd51d245-8f95-45b0-ab5f-e2b3a3eb5dfe",
+  "set": "ogw",
+  "set_name": "Oath of the Gatewatch",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/cd51d245-8f95-45b0-ab5f-e2b3a3eb5dfe",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aogw&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ogw?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f77977e8-25d8-4531-a6fc-8c46e6904670/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A44db1ff5-7082-4da4-8f4f-4a2d2e3d7666&unique=prints",
+  "collector_number": "17",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"The light of a felidar's horns can give even an Eldrazi pause.\"\n\u2014Zarra, lullmage",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "David Palumbo",
+  "artist_ids": [
+    "04ce1c75-e30c-4b7a-8cb0-b53e4ecc2f39"
+  ],
+  "illustration_id": "aa636361-02ae-46e4-9192-e759aafe4cff",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13640,
+  "penny_rank": 16762,
+  "prices": {
+    "usd": "0.10",
+    "usd_foil": "0.43",
+    "usd_etched": null,
+    "eur": "0.10",
+    "eur_foil": "0.25",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=407527&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDazzling%2BReflection",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDazzling%2BReflection",
+    "edhrec": "https://edhrec.com/route/?cc=Dazzling+Reflection"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F111028%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=287326&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/59479?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1292,6 +1292,43 @@ _DAMAGE_DEALT_TO_IT_THIS_TURN_RE = re.compile(
 )
 
 
+#: "the amount of damage those creatures dealt to that player" (Quartzwood
+#: Crasher): the combat damage the creatures a batched "one or more
+#: `<description>` deal combat damage to a player" trigger counted
+#: (`machines/triggers.batched_combat_damage_sources`, CR 603.2c) dealt to
+#: the player of that event in that step - each one's latest combat damage to
+#: that player on the damage ledger (CR 120.3: each is its own damage).
+_DAMAGE_THOSE_CREATURES_DEALT_RE = re.compile(
+    r"^(?:the )?amount of damage those creatures dealt to that player$", re.IGNORECASE
+)
+
+
+def _damage_those_creatures_dealt(game: "Game", controller: str) -> int:
+    """`_DAMAGE_THOSE_CREATURES_DEALT_RE`'s value for the resolving trigger."""
+    from ..triggers import batched_combat_damage_sources
+
+    resolving = game.resolving
+    if not isinstance(resolving, AbilityOnStack) or resolving.event is None:
+        return 0
+    event = resolving.event
+    condition = getattr(resolving.ability, "condition", None)
+    if event.player is None or not condition:
+        return 0
+    sources = set(batched_combat_damage_sources(game, condition, controller, event) or ())
+    total = 0
+    for record in reversed(game.damage_dealt_this_turn):
+        if not sources:
+            break
+        if (
+            record.combat
+            and record.recipient_player == event.player
+            and record.source_id in sources
+        ):
+            total += record.amount
+            sources.discard(record.source_id)
+    return total
+
+
 #: "its mana value" / "this permanent's mana value" - the object the
 #: expression is evaluated for (Terminal Velocity's granted leaves trigger).
 _ITS_MANA_VALUE_RE = re.compile(
@@ -1461,6 +1498,8 @@ def _amount_term(term: str) -> AmountReader | None:
         if factor is None or inner is None:
             return None
         return lambda game, controller, obj, x: factor * inner(game, controller, obj, x)
+    if "those creatures dealt" in lowered and _DAMAGE_THOSE_CREATURES_DEALT_RE.fullmatch(text):
+        return lambda game, controller, _object, _x: _damage_those_creatures_dealt(game, controller)
     if "damage dealt to" in lowered and _DAMAGE_DEALT_TO_IT_THIS_TURN_RE.fullmatch(text):
         # Tangled Colony's "X is the amount of damage dealt to it this turn":
         # `obj` is the resolving ability's source, which a dies trigger finds
@@ -4434,6 +4473,26 @@ def _carry_count(text: str, count: int, *, x: bool) -> str:
         return str(count)
 
     return _CARRIED_COUNT_RE.sub(swap, text)
+
+
+#: "damage equal to the sacrificed creature's power" / "damage equal to that
+#: creature's power" - a reflexive consequence's amount (Tiger-Tribe Hunter,
+#: Heart-Piercer Manticore): the power the sacrificed creature last had on
+#: the battlefield (CR 608.2h), written into the reflexive ability's text as
+#: a digit the way `_carry_count` writes a count (CR 603.12).
+_SACRIFICED_POWER_DAMAGE_RE = re.compile(
+    r"damage equal to (?:the sacrificed creature's|that creature's) power", re.IGNORECASE
+)
+
+
+def carries_sacrificed_power(text: str) -> bool:
+    """Whether `text` sizes its damage by the sacrificed creature's power."""
+    return _SACRIFICED_POWER_DAMAGE_RE.search(text) is not None
+
+
+def _carry_sacrificed_power(text: str, power: int) -> str:
+    """`text` with the sacrificed creature's last known power written in."""
+    return _SACRIFICED_POWER_DAMAGE_RE.sub(f"{max(power, 0)} damage", text)
 
 
 #: Kinscaer Sentry's attack trigger: "you may put a creature card with mana

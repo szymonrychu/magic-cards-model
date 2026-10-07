@@ -326,6 +326,20 @@ def parse_put_linked_into_graveyard_then_tokens_clause(clause: str) -> AbilityEf
     return effect
 
 
+def put_linked_cards_into_graveyards(game: Game, ability: AbilityOnStack) -> int:
+    """Put every card exiled with `ability`'s source (CR 607.1's linked pile,
+    that incarnation of it - CR 400.7) into its owner's graveyard, and say how
+    many got there: a replacement that sent one elsewhere does not count
+    (Valakut Exploration's "put them into their owner's graveyard, then ...
+    that much damage")."""
+    put = 0
+    for card in _linked_cards(game, ability):
+        landed = game.put_into_graveyard(card)
+        if landed.zone is Zone.GRAVEYARD:
+            put += 1
+    return put
+
+
 #: "The exiled card's owner manifests dread." (Unidentified Hovership's
 #: leaves-the-battlefield trigger, CR 603.6c). "The exiled card" is the pile
 #: the same object's enters trigger exiled - linked by

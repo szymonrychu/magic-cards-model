@@ -4570,6 +4570,17 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
             # same sentence chose first (CR 115.3), so the biter cannot be its
             # own victim. The source exclusion stays for an ability's source.
             requirement = requirement.model_copy(update={"distinct_from_prior_requirement": True})
+        elif (
+            requirement.excludes_source
+            and _ANY_OTHER_TARGET.search(text[max(0, match.start() - 10) : match.end()])
+            and _ENCHANTED_CREATURE_DEALS_RE.search(re.split(r"[.;]", text[: match.start()])[-1])
+        ):
+            # Pain for All: "enchanted creature deals damage ... to any other
+            # target" - "other" names the biter, not the Aura, so
+            # the enchanted creature is what cannot be chosen (CR 601.2c).
+            requirement = requirement.model_copy(
+                update={"excludes_source": False, "excludes_enchanted": True}
+            )
         if (
             requirement.controller is ControllerRestriction.EVENT_PLAYER
             and position > 0
@@ -5051,6 +5062,9 @@ _ON_THE_BATTLEFIELD_OR_CARD_RE = re.compile(
 
 #: " other than enchanted creature" - see `TargetRequirement.excludes_enchanted`.
 _OTHER_THAN_ENCHANTED_RE = re.compile(r" other than enchanted creature\b", re.IGNORECASE)
+#: "enchanted creature deals ..." ahead of a solitary "any other target" in
+#: the same sentence (Pain for All) - the "other" is the enchanted creature.
+_ENCHANTED_CREATURE_DEALS_RE = re.compile(r"\benchanted creature deals\b", re.IGNORECASE)
 
 
 def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetRequirement | None:

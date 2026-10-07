@@ -3543,6 +3543,12 @@ def _permanent_subtype_noun(text: str) -> str | None:
     return canonical_subtype(word)
 
 
+#: "<group> that doesn't have <keyword list>" (Path of Mettle).
+_GROUP_LACKS_KEYWORDS_RE = re.compile(
+    r"^(?P<group>.+?) that (?:doesn't|does not|don't|do not) have (?P<list>.+)$", re.IGNORECASE
+)
+
+
 def _parse_damage_group_phrase(phrase: str) -> GroupPredicate | None:
     """A mass-damage group (CR 115.10a, no target) with any of its printed
     qualifiers, read off the computed board (CR 613.5) at the moment the
@@ -3560,6 +3566,22 @@ def _parse_damage_group_phrase(phrase: str) -> GroupPredicate | None:
     than widening the damage to creatures the card never named.
     """
     text = phrase.strip()
+    lacking = _GROUP_LACKS_KEYWORDS_RE.fullmatch(text)
+    if lacking is not None:
+        # Path of Mettle: "each creature that doesn't have first strike,
+        # double strike, vigilance, or haste" - none of the listed keywords,
+        # read off the computed board (CR 613.5) as the damage is dealt.
+        base = _parse_damage_group_phrase(lacking.group("group"))
+        keywords = parse_keyword_list(lacking.group("list"))
+        if base is None or keywords is None:
+            return None
+
+        def lacking_predicate(game: "Game", permanent: CardState, controller: str) -> bool:
+            return base(game, permanent, controller) and not any(
+                has_keyword(permanent, keyword, game) for keyword in keywords
+            )
+
+        return lacking_predicate
     union_parts = re.split(r"\s+and\s+each\s+", text, flags=re.IGNORECASE)
     if len(union_parts) > 1:
         # "each creature and each non-Bolas planeswalker" (Hour of
@@ -7590,8 +7612,500 @@ def _parse_group_bite_target_clauses(text: str, *, for_spell: bool) -> list[Targ
     return [clause]
 
 
+# --------------------------------------------------------------------------
+# NW05-T2: damage dealt by an attachment, by what it is attached to, and by a
+# creature the ability names - plus "that much" to a player group.
+# --------------------------------------------------------------------------
+
+#: "it deals N damage to enchanted creature." (Fatal Attraction's and
+#: Tilonalli's Crown's enters triggers) and "this Aura deals N damage to
+#: enchanted creature." (Fatal Attraction's upkeep trigger): the Aura (or
+#: Equipment) is the source (CR 120.3), the permanent it is attached to the
+#: recipient (CR 303.4b, CR 301.5).
+_ATTACHMENT_DEALS_TO_HOST_RE = re.compile(
+    rf"^(?:it|this (?:aura|equipment)) deals (?P<n>{COUNT}) damage to "
+    r"(?:enchanted|equipped) creature$",
+    re.IGNORECASE,
+)
+
+
+def _attached_host(game: "Game", attachment: CardState | None) -> CardState | None:
+    """What `attachment` is attached to right now, if that is on the
+    battlefield (CR 303.4b's "enchanted", CR 301.5's "equipped")."""
+    if attachment is None or attachment.attached_to is None:
+        return None
+    host = game.find_by_id(attachment.attached_to)
+    if not isinstance(host, CardState) or host.zone is not Zone.BATTLEFIELD:
+        return None
+    return host
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_attachment_damage_to_host_text(text: str) -> AbilityEffect | None:
+    """`_ATTACHMENT_DEALS_TO_HOST_RE`'s shape. Nothing attached (the Aura
+    fell off, or the creature already left) is nothing to damage."""
+    lowered = text.lower()
+    if "damage to enchanted creature" not in lowered and "damage to equipped" not in lowered:
+        return None
+    match = _ATTACHMENT_DEALS_TO_HOST_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip().rstrip(".")
+    )
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        host = _attached_host(game, source)
+        if host is not None and amount > 0:
+            game.deal_damage(host, amount, source=source)
+
+    return effect
+
+
+#: "enchanted creature deals N damage to its owner." (Enslave) and
+#: "enchanted creature deals damage equal to its power to any other target."
+#: (Pain for All's enters trigger): the enchanted (or equipped) creature is
+#: the source (CR 120.3: lifelink and deathtouch follow it), "its owner" is
+#: CR 108.3's owner, not its controller, and "any other target" excludes the
+#: biter itself (CR 115.4).
+_HOST_DEALS_RE = re.compile(
+    rf"^(?:enchanted|equipped) creature deals (?:(?P<n>{COUNT}) damage|damage equal to its "
+    r"power) to (?P<to>its owner|its controller|you|each opponent|each player|"
+    r"any (?:other )?target|(?:up to one |another )?target [^.]+)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_host_deals_damage_text(text: str) -> AbilityEffect | None:
+    """`_HOST_DEALS_RE`'s shape. The creature's power is read as the ability
+    resolves (CR 608.2h); a creature no longer attached deals nothing."""
+    lowered = text.lower()
+    if not (lowered.startswith("enchanted creature deals") or "equipped creature deals" in lowered):
+        return None
+    match = _HOST_DEALS_RE.fullmatch(_strip_non_effect_preamble(text).strip().rstrip("."))
+    if match is None:
+        return None
+    fixed = parse_count(match.group("n")) if match.group("n") is not None else None
+    if match.group("n") is not None and fixed is None:
+        return None
+    to = match.group("to").lower()
+    targeted = "target" in to
+    if targeted and not _targets_understood(to, count_agnostic=True, allow_player_targets=True):
+        return None
+    other = to.startswith(("any other", "another"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        host = _attached_host(game, ability.source_or_last_known(game))
+        if host is None:
+            return
+        amount = fixed if fixed is not None else max(game.power_of(host) or 0, 0)
+        controller = game.controller_of(ability).username
+        recipients: list[Any]
+        if targeted:
+            recipients = [
+                target
+                for target in game.resolve_targets(ability)
+                if not (other and isinstance(target, CardState) and target.id == host.id)
+            ]
+        elif to == "its owner":
+            owner = host.owner
+            recipients = [game.player(owner)] if owner and game.is_in_game(owner) else []
+        elif to == "its controller":
+            recipients = [game.controller_of(host)]
+        elif to == "you":
+            recipients = [game.player(controller)]
+        elif to == "each opponent":
+            recipients = list(_opponents(game, controller))
+        else:
+            recipients = list(game.players_in_game)
+        _deal_all(game, [(host, recipient, amount) for recipient in recipients])
+
+    return effect
+
+
+#: "attach it to target creature you control. That creature deals damage
+#: equal to its power to up to one target creature you don't control."
+#: (Hunter's Bow): CR 701.3a's attach, then a one-sided bite by the first
+#: target (CR 701.14a's fight is not involved). "Up to one" may choose none
+#: (CR 601.2c).
+_ATTACH_THEN_BITE_RE = re.compile(
+    r"^attach (?:it|this (?:equipment|aura)) to (?P<subject>target creature(?: you control)?)\.\s*"
+    r"that creature deals damage equal to its power to (?P<victims>[^.]+)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_attach_then_bite_text(text: str) -> AbilityEffect | None:
+    """`_ATTACH_THEN_BITE_RE`'s shape. The first target is the biter
+    (`_bite_slots`); illegal on resolution, it is neither attached to nor
+    deals damage (CR 608.2b), while an illegal victim is simply skipped."""
+    if "that creature deals damage equal to its power" not in text.lower():
+        return None
+    whole = _strip_non_effect_preamble(text).strip().rstrip(".")
+    match = _ATTACH_THEN_BITE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    victims = match.group("victims").strip()
+    if "target" not in victims.lower() or not _targets_understood(
+        victims, count_agnostic=True, allow_player_targets=True
+    ):
+        return None
+    slots = _bite_slots(whole, match.group("subject"), for_spell=False)
+    if slots is None or len(slots.profile.requirements) != 2:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        biter, hit = _bite_participants(game, ability, slots)
+        if biter is None:
+            return
+        attachment = ability.source(game)
+        if attachment is not None and attachment.zone is Zone.BATTLEFIELD:
+            attach_permanent(game, attachment, biter)
+        amount = _bite_amount(game, biter, "power")
+        _deal_all(game, [(biter, victim, amount) for victim in hit])
+
+    return effect
+
+
+#: "it deals damage equal to its power to target creature an opponent
+#: controls and that creature deals damage equal to its power to this
+#: creature." (Stalking Yeti) and "this enchantment deals 15 damage to target
+#: creature an opponent controls and that creature deals damage equal to its
+#: power to you." (Form of the Dinosaur): two one-sided damage events, both
+#: amounts read before either is dealt (CR 608.2h) - not CR 701.14a's fight.
+_MUTUAL_BITE_RE = re.compile(
+    rf"^(?:it|this (?:creature|enchantment|permanent|artifact)) deals (?:(?P<n>{COUNT}) damage|"
+    r"damage equal to its power) to (?P<victim>target [^.]+?) and that creature deals damage "
+    r"equal to its power to (?P<back>you|it|this (?:creature|permanent))$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_mutual_bite_text(text: str) -> AbilityEffect | None:
+    """`_MUTUAL_BITE_RE`'s shape. An illegal target means neither half
+    happens (CR 608.2b: the ability's only target is gone); a source that has
+    left still deals its last known power (CR 608.2h) but is no longer there
+    to be dealt damage back (CR 400.7)."""
+    if "and that creature deals damage equal to its power" not in text.lower():
+        return None
+    match = _MUTUAL_BITE_RE.fullmatch(_strip_non_effect_preamble(text).strip().rstrip("."))
+    if match is None:
+        return None
+    victim_phrase = match.group("victim")
+    if not _targets_understood(victim_phrase, count_agnostic=False):
+        return None
+    fixed = parse_count(match.group("n")) if match.group("n") is not None else None
+    if match.group("n") is not None and fixed is None:
+        return None
+    back = match.group("back").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        victims = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not victims:
+            return
+        victim = victims[0]
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        first = fixed if fixed is not None else max(game.power_of(source) or 0, 0)
+        second = max(game.power_of(victim) or 0, 0)
+        recipient: Any
+        if back == "you":
+            recipient = game.controller_of(ability)
+        else:
+            recipient = source if source.zone is Zone.BATTLEFIELD else None
+        deals: list[tuple[CardState | None, Any, int]] = [(source, victim, first)]
+        if recipient is not None:
+            deals.append((victim, recipient, second))
+        _deal_all(game, deals)
+
+    return effect
+
+
+#: "choose target creature you don't control. Each creature you control deals
+#: 1 damage to that creature." (Case of the Gateway Express): CR 115.1's
+#: targeted choice, then every member of the group deals the damage as its
+#: own source (CR 120.3), all read and dealt together.
+_CHOOSE_TARGET_GROUP_DEALS_RE = re.compile(
+    rf"^choose (?P<phrase>target [^.]+?)\.\s*each (?P<group>[^.]+?) deals (?:(?P<n>{COUNT}) "
+    r"damage|damage equal to its power) to that (?:creature|permanent)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+@SPELL_TEXT.rung("s10")
+def _parse_choose_target_group_deals_text(text: str) -> TargetedClause | None:
+    """`_CHOOSE_TARGET_GROUP_DEALS_RE`'s shape. An illegal target takes
+    nothing (CR 608.2b); an empty group deals nothing."""
+    lowered = text.lower()
+    if not lowered.startswith("choose target") or "damage to that" not in lowered:
+        return None
+    match = _CHOOSE_TARGET_GROUP_DEALS_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip().rstrip(".")
+    )
+    if match is None or not _targets_understood(match.group("phrase"), count_agnostic=False):
+        return None
+    predicate = _parse_damage_group_phrase(match.group("group"))
+    fixed = parse_count(match.group("n")) if match.group("n") is not None else None
+    if predicate is None or (match.group("n") is not None and fixed is None):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        victims = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not victims:
+            return
+        victim = victims[0]
+        controller = game.controller_of(stack_object).username
+        sources = [
+            permanent
+            for permanent in list(game.battlefield)
+            if predicate(game, permanent, controller) and permanent.id != victim.id
+        ]
+        _deal_all(
+            game,
+            [
+                (source, victim, fixed if fixed is not None else max(game.power_of(source) or 0, 0))
+                for source in sources
+            ],
+        )
+
+    return effect
+
+
+#: "<this> deals damage equal to its power to up to one target creature."
+#: (Legolas, Master Archer, its name read as "this creature"): a self-bite
+#: whose victim may be none (CR 601.2c).
+_SELF_BITE_UP_TO_ONE_RE = re.compile(
+    r"^(?:it|this (?:creature|permanent)) deals damage equal to its power to "
+    r"(?P<phrase>up to one target [^.]+)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_self_bite_up_to_one_text(text: str) -> AbilityEffect | None:
+    """`_SELF_BITE_UP_TO_ONE_RE`'s shape: the source's power as the ability
+    resolves (CR 608.2h), to each target still legal (CR 608.2b)."""
+    if "power to up to one target" not in text.lower():
+        return None
+    match = _SELF_BITE_UP_TO_ONE_RE.fullmatch(_strip_non_effect_preamble(text).strip().rstrip("."))
+    if match is None or not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        amount = max(game.power_of(source) or 0, 0)
+        _deal_all(game, [(source, target, amount) for target in game.resolve_targets(ability)])
+
+    return effect
+
+
+#: "<subject> deals that much damage to each opponent|each player|its
+#: controller|you." - Pain for All and Spiteful Shadows ("Whenever enchanted
+#: creature is dealt damage, it deals that much damage to ..."), Coalhauler
+#: Swine, Magmakin Artillerist, Imodane ("Imodane deals ..."), Valakut
+#: Exploration's second half. "That much" is the triggering event's amount
+#: or the count the ability's own earlier instruction recorded (`that_many`).
+_THAT_MUCH_TO_PLAYERS_RE = re.compile(
+    r"^(?P<subject>it|this (?:creature|enchantment|permanent|artifact|aura)) deals that much "
+    r"damage to (?P<to>each opponent|each player|its controller|you)$",
+    re.IGNORECASE,
+)
+#: The trigger conditions whose "it" is the creature dealt damage, not the
+#: ability's source: "enchanted|equipped creature is dealt damage" (CR 303.4b).
+_HOST_IS_DEALT_DAMAGE_CONDITION_RE = re.compile(
+    r"^(?:enchanted|equipped) creature is dealt (?:combat |noncombat )?damage\b", re.IGNORECASE
+)
+
+
+def _that_much_subject(game: "Game", ability: AbilityOnStack, subject: str) -> CardState | None:
+    """Who "it" is: the damaged host for an "enchanted creature is dealt
+    damage" trigger (Pain for All: "it" is the enchanted creature, so it is the
+    source, CR 120.3), else the ability's own source as it last existed (CR
+    608.2h)."""
+    trigger = ability.ability
+    condition = getattr(trigger, "condition", "") or ""
+    if (
+        subject == "it"
+        and ability.event is not None
+        and ability.event.target_id is not None
+        and _HOST_IS_DEALT_DAMAGE_CONDITION_RE.match(condition)
+    ):
+        found = game.find_by_id(ability.event.target_id)
+        return found if isinstance(found, CardState) else None
+    return ability.source_or_last_known(game)
+
+
+def _that_much_recipients(game: "Game", ability: AbilityOnStack, subject: CardState, to: str):
+    controller = game.controller_of(ability).username
+    if to == "each opponent":
+        return list(_opponents(game, controller))
+    if to == "each player":
+        return list(game.players_in_game)
+    if to == "you":
+        return [game.player(controller)]
+    owner = subject.controller or subject.owner
+    if subject.zone is Zone.BATTLEFIELD:
+        owner = game.controller_of(subject).username
+    return [game.player(owner)] if owner and game.is_in_game(owner) else []
+
+
+def _that_much_to_players(text: str) -> Callable[["Game", AbilityOnStack, int | None], None] | None:
+    """The `_THAT_MUCH_TO_PLAYERS_RE` dealer, given the amount (or `None` to
+    read `that_many`), or None when `text` is not that shape."""
+    match = _THAT_MUCH_TO_PLAYERS_RE.fullmatch(text.strip().rstrip("."))
+    if match is None:
+        return None
+    subject_word = match.group("subject").lower()
+    to = match.group("to").lower()
+
+    def deal(game: "Game", ability: AbilityOnStack, amount: int | None) -> None:
+        if amount is None:
+            amount = _that_many_or_notice(
+                game,
+                text,
+                source_id=ability.source_id,
+                source_name=ability.name,
+                stack_object=ability,
+            )
+        if amount is None or amount <= 0:
+            return
+        subject = _that_much_subject(game, ability, subject_word)
+        if subject is None:
+            return
+        recipients = _that_much_recipients(game, ability, subject, to)
+        _deal_all(game, [(subject, recipient, amount) for recipient in recipients])
+
+    return deal
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_that_much_damage_to_players_text(text: str) -> AbilityEffect | None:
+    """`_THAT_MUCH_TO_PLAYERS_RE`'s shape (ability-only: "that much" points
+    back at a triggering event). No amount to read fails closed with a notice
+    (`_that_many_or_notice`), never a guessed number."""
+    if "deals that much damage to" not in text.lower():
+        return None
+    deal = _that_much_to_players(_strip_non_effect_preamble(text))
+    if deal is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        deal(game, ability, None)
+
+    return effect
+
+
+#: "put them into their owner's graveyard, then this enchantment deals that
+#: much damage to each opponent." (Valakut Exploration, after its intervening
+#: "if there are cards exiled with this enchantment"): "them" is CR 607.1's
+#: linked pile, and "that much" is how many of them reached a graveyard.
+_PUT_LINKED_THEN_THAT_MUCH_RE = re.compile(
+    r"^put them into their owners?'?s? graveyards?, then (?P<rest>.+)$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_put_linked_into_graveyard_then_that_much_text(text: str) -> AbilityEffect | None:
+    """`_PUT_LINKED_THEN_THAT_MUCH_RE`'s shape: `linked_exile.
+    put_linked_cards_into_graveyards`, its count recorded (CR 608.2c), then
+    the "that much" damage."""
+    if not text.lower().startswith("put them into their owner"):
+        return None
+    match = _PUT_LINKED_THEN_THAT_MUCH_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip().rstrip(".")
+    )
+    if match is None:
+        return None
+    deal = _that_much_to_players(match.group("rest"))
+    if deal is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        put = put_linked_cards_into_graveyards(game, ability)
+        game.record_count(put)
+        deal(game, ability, put)
+
+    return effect
+
+
+#: "If N or more mana was spent to cast that spell, sacrifice <this> and it
+#: deals that much damage to each opponent." (Tellah, Great Sage): "that
+#: much" is the mana spent to cast the triggering spell, read off that
+#: spell's cast record (CR 601.2h), never live; the damage is dealt by the
+#: sacrificed permanent as it last existed (CR 608.2h).
+_MANA_SPENT_SACRIFICE_THEN_THAT_MUCH_RE = re.compile(
+    rf"^if (?P<n>{COUNT}) or more mana was spent to cast that spell, sacrifice "
+    r"(?:it|this (?:creature|permanent)) and (?P<rest>it deals that much damage to [^.]+)$",
+    re.IGNORECASE,
+)
+
+
+def _triggering_spell_mana_spent(game: "Game", ability: AbilityOnStack) -> int | None:
+    """The mana spent to cast the spell whose cast triggered `ability` (CR
+    601.2h), off its cast record; None when there is no such record."""
+    event = ability.event
+    if event is None or event.subject_id is None:
+        return None
+    spell = game.find_by_id(event.subject_id)
+    if not isinstance(spell, CardState):
+        return None
+    record = game.cast_record_of(spell)
+    if record is None or record.is_copy:
+        return None
+    return sum(record.mana_spent.values())
+
+
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
+def _parse_mana_spent_sacrifice_then_that_much_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_MANA_SPENT_SACRIFICE_THEN_THAT_MUCH_RE`'s shape (ability-only)."""
+    if for_spell or "mana was spent to cast that spell" not in clause.lower():
+        return None
+    match = _MANA_SPENT_SACRIFICE_THEN_THAT_MUCH_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    needed = parse_count(match.group("n"))
+    deal = _that_much_to_players(match.group("rest"))
+    if needed is None or deal is None:
+        return None
+
+    def effect(game: "Game", ability: "StackObject") -> None:
+        if not isinstance(ability, AbilityOnStack):
+            return
+        spent = _triggering_spell_mana_spent(game, ability)
+        if spent is None or spent < needed:
+            return
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.sacrifice(source)
+        deal(game, ability, spent)
+
+    return effect
+
+
 from ..conditions.history import object_dealt_damage_clause_test  # noqa: E402
+from ..linked_exile import put_linked_cards_into_graveyards  # noqa: E402
 from ..replacement.model import CANT_BE_REGENERATED_LINE  # noqa: E402
+from ..triggers.collect import parse_keyword_list  # noqa: E402
 from ._common import (  # noqa: E402
     _DAMAGE_EACH_FILTERED_RE,
     _DAMAGE_EACH_GROUP_RE,
@@ -7618,6 +8132,7 @@ from .continuous import (  # noqa: E402
     _is_layer_effect_text,
     _layer_antecedent_clause,
     _named_player_of,
+    attach_permanent,
     continuous_effects,
     layer_context_for,
 )

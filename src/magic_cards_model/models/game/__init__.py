@@ -1924,7 +1924,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 129
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 130
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2196,6 +2196,10 @@ class Game(
     #: player or battle this turn" applies to every source, not only yours);
     #: decoded as current, an older turn-long modifier would keep reading
     #: "you control" and a new one would lose its reach.
+    #: 130 (NW05-T2): `DamageRedirectReplacement` gained
+    #: `redirect_to_enchanted` (CR 614.9, CR 303.4b: Saving Grace's "is dealt
+    #: to enchanted creature instead"); an older created redirect decoded
+    #: without it would read its target index instead.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
