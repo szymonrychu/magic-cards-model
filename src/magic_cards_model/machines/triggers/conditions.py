@@ -1473,7 +1473,8 @@ _TOKEN_WORD = re.compile(r"\btokens?\b")
 #: Satoru, the Infiltrator's "Satoru and/or one or more other nontoken
 #: creatures you control enter" is the batched spelling of the same pair.
 _SELF_OR_OTHER_ENTERS_TAIL = (
-    r" (?:and/)?or (?P<other>(?:an?|another|one or more other) .+ enters?)$"
+    r" (?:and/)?or (?P<other>(?:an?|another|one or more other) .+? enters?"
+    r"(?: from (?:your |an? |their )?(?:hand|graveyard|library|exile))?)$"
 )
 _SELF_OR_OTHER_ENTERS_GENERIC_RE = re.compile(
     rf"^this [a-z]+{_SELF_OR_OTHER_ENTERS_TAIL}", re.IGNORECASE
