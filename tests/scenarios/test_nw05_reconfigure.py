@@ -28,11 +28,13 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.machines.keywords import executes
+from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.machines.reconfigure import (
     reconfigure_attach_activation,
     reconfigure_unattach_activation,
 )
 from magic_cards_model.models import Zone
+from magic_cards_model.models.action import ActionKind, Affordability
 from magic_cards_model.models.card import Type
 from magic_cards_model.support import card_support
 from tests.cards import card
@@ -366,3 +368,78 @@ def test_simian_slings_trigger_ignores_an_unequipped_creatures_block():
     scenario.block(bears, scenario.creature("Llanowar Elves", "bob"))
 
     assert _sling_triggers(scenario) == []
+
+
+# --------------------------------------------------------------------------
+# legal_actions offers both reconfigure abilities (CR 702.151a), so a seat
+# can take them: the attach row carries its target slot, the unattach row
+# none (the shape `_reconfigure_effect` resolves by).
+# --------------------------------------------------------------------------
+
+
+def reconfigure_rows(scenario, username: str, permanent):
+    return [
+        action
+        for action in legal_actions(scenario.game, username)
+        if action.kind is ActionKind.ACTIVATE
+        and action.card_id == permanent.id
+        and action.keyword == "Reconfigure"
+    ]
+
+
+def test_legal_actions_offers_the_attach_with_another_creature_you_control_slot():
+    scenario, blades, bears = setup("Lizard Blades")
+
+    (row,) = reconfigure_rows(scenario, "alice", blades)
+
+    assert row.rule == "CR 702.151a"
+    assert row.ability_index is None
+    assert row.mana_cost == "{2}"
+    assert row.affordable is Affordability.YES
+    (slot,) = row.target_slots
+    assert (slot.minimum, slot.maximum) == (1, 1)
+    assert bears.id in slot.candidates
+    assert blades.id not in slot.candidates, "another target creature (CR 702.151a)"
+    elves = scenario.creature("Llanowar Elves", "bob")
+    assert elves.id not in slot.candidates, "a creature you control (CR 702.151a)"
+
+
+def test_legal_actions_offers_the_unattach_only_while_attached():
+    scenario, blades, bears = setup("Lizard Blades", 4)
+    attach(scenario, blades, bears)
+
+    rows = reconfigure_rows(scenario, "alice", blades)
+
+    unattach_rows = [row for row in rows if not row.target_slots]
+    attach_rows = [row for row in rows if row.target_slots]
+    assert len(unattach_rows) == 1
+    assert unattach_rows[0].rule == "CR 702.151a"
+    assert unattach_rows[0].mana_cost == "{2}"
+    assert unattach_rows[0].affordable is Affordability.YES
+    assert len(attach_rows) == 1
+
+
+def test_legal_actions_omits_reconfigure_outside_the_sorcery_window():
+    scenario, blades, bears = setup("Lizard Blades", 4)
+    attach(scenario, blades, bears)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    assert reconfigure_rows(scenario, "alice", blades) == []
+
+
+def test_legal_actions_never_offers_an_opponent_your_reconfigure():
+    scenario, blades, _bears = setup("Lizard Blades")
+
+    assert reconfigure_rows(scenario, "bob", blades) == []
+
+
+def test_the_offered_attach_row_resolves_through_the_attach_activation():
+    """The row's own candidate, handed back to `reconfigure_attach_
+    activation`, attaches it: what the seat sees is what the engine takes."""
+    scenario, blades, bears = setup("Lizard Blades")
+    (row,) = reconfigure_rows(scenario, "alice", blades)
+    (target_id,) = row.target_slots[0].candidates
+
+    attach(scenario, blades, scenario.game.find_by_id(target_id))
+
+    assert blades.attached_to == bears.id

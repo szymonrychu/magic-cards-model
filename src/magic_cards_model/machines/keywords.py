@@ -1870,7 +1870,8 @@ class KeywordActivation(EngineModel):
                     return f"{self.card.name} is not in {self.player}'s {self.zone.value}"
         if (
             self.keyword.lower() == "reconfigure"
-            and not self.targets
+            and self.ability is not None
+            and self.ability.effect == RECONFIGURE_UNATTACH_EFFECT
             and self.game is not None
             and (unattach_refusal := reconfigure_unattach_refusal(self.game, self.card))
         ):
@@ -6568,4 +6569,7 @@ AbilityOnStack.model_rebuild(
 # `KEYWORD_EFFECTS` rows as they load; imported last so each can build on
 # everything above.
 from . import blitz, level_up  # noqa: E402, F401
-from .reconfigure import reconfigure_unattach_refusal  # noqa: E402
+from .reconfigure import (  # noqa: E402
+    RECONFIGURE_UNATTACH_EFFECT,
+    reconfigure_unattach_refusal,
+)

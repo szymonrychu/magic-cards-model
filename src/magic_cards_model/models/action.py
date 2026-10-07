@@ -289,9 +289,13 @@ class Action(EngineModel):
     from_zone: Zone | None = None
     ability_index: int | None = None
     """Which of `Game.activated_abilities(source)`'s entries this activates -
-    `ACTIVATE`/`ACTIVATE_MANA` only. `None` on an equip row (`keyword="Equip"`),
-    which is a keyword ability with no entry there; it is taken with
-    `keywords.equip_activation`."""
+    `ACTIVATE`/`ACTIVATE_MANA` only. `None` on a keyword-ability row, which has
+    no entry there: equip (`keyword="Equip"`, taken with
+    `keywords.equip_activation`), level up (`keyword="Level Up"`, taken with
+    `level_up.level_up_activation`) and reconfigure (`keyword="Reconfigure"`:
+    the row with a target slot is the attach, taken with
+    `reconfigure.reconfigure_attach_activation`; the row without is the
+    unattach, taken with `reconfigure.reconfigure_unattach_activation`)."""
     keyword: str | None = None
     """The keyword this cast option or activation reads from - `Evoke`,
     `Flashback`, `Cycling` - or `None` for a plain mana-cost cast or a

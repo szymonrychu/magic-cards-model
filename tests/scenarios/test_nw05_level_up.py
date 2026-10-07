@@ -33,12 +33,14 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.machines.keywords import executes
+from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.machines.level_up import (
     LEVEL_COUNTER,
     level_bands,
     level_up_activation,
 )
 from magic_cards_model.models import Zone
+from magic_cards_model.models.action import ActionKind, Affordability
 from magic_cards_model.support import card_support
 from tests.cards import card
 from tests.scenarios.harness import Scenario, mana_from
@@ -460,3 +462,75 @@ def test_the_proof_levelers_read_handled_on_every_clause(name):
     assert support.status == "handled", [
         (c.text, c.outcome) for c in support.clauses if c.outcome != "handled"
     ]
+
+
+# --------------------------------------------------------------------------
+# legal_actions offers level up (CR 702.87a), so a seat can take it
+# --------------------------------------------------------------------------
+
+
+def level_up_rows(scenario, username: str, permanent):
+    return [
+        action
+        for action in legal_actions(scenario.game, username)
+        if action.kind is ActionKind.ACTIVATE
+        and action.card_id == permanent.id
+        and action.keyword == "Level Up"
+    ]
+
+
+def test_legal_actions_offers_level_up_in_a_main_phase():
+    scenario = board("Student of Warfare", "Plains").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    student = with_levels(scenario, "Student of Warfare", 0)
+
+    (row,) = level_up_rows(scenario, "alice", student)
+
+    assert row.rule == "CR 702.87a"
+    assert row.ability_index is None
+    assert row.mana_cost == "{W}"
+    assert row.affordable is Affordability.YES
+    assert row.target_slots == ()
+
+
+def test_legal_actions_offers_level_up_at_any_level():
+    """CR 711.4: past the top band's N3 too."""
+    scenario = board("Student of Warfare", "Plains").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    student = with_levels(scenario, "Student of Warfare", 9)
+
+    assert len(level_up_rows(scenario, "alice", student)) == 1
+
+
+def test_legal_actions_reports_an_unpaid_level_up_as_unaffordable():
+    scenario = board("Lord of Shatterskull Pass").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lord = with_levels(scenario, "Lord of Shatterskull Pass", 0)
+
+    (row,) = level_up_rows(scenario, "alice", lord)
+
+    assert row.mana_cost == "{1}{R}"
+    assert row.affordable is Affordability.NO
+
+
+def test_legal_actions_omits_level_up_outside_the_sorcery_window():
+    scenario = board("Student of Warfare", "Plains").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    student = with_levels(scenario, "Student of Warfare", 0)
+
+    assert level_up_rows(scenario, "alice", student) == []
+
+
+def test_legal_actions_never_offers_an_opponent_your_level_up():
+    scenario = board("Student of Warfare", "Plains").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    student = with_levels(scenario, "Student of Warfare", 0)
+
+    assert level_up_rows(scenario, "bob", student) == []
+
+
+def test_a_card_without_level_up_has_no_level_up_row():
+    scenario = board("Grizzly Bears", "Plains").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    assert level_up_rows(scenario, "alice", scenario.creature("Grizzly Bears", "alice")) == []

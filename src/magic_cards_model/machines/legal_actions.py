@@ -159,7 +159,15 @@ from .keywords import (
     why_cannot_dredge,
     why_cannot_turn_face_up,
 )
+from .level_up import LEVEL_UP_RULE, has_level_up, level_up_activation
 from .modes import modal_profile
+from .reconfigure import (
+    RECONFIGURE_ATTACH_EFFECT,
+    RECONFIGURE_RULE,
+    has_reconfigure,
+    reconfigure_unattach_activation,
+    unannounced_reconfigure_attach_activation,
+)
 from .special_actions import locked_doors, unlock_cost, why_cannot_unlock_door
 from .targeting import profile_for_text
 from .turn import Step
@@ -1577,6 +1585,25 @@ def _equip_action(
             unaffordable_reason=str(error),
             target_slots=target_slots,
         )
+    return _keyword_activation_row(
+        game, player, permanent, activation, target_slots, candidate_scan, board
+    )
+
+
+def _keyword_activation_row(
+    game: Any,
+    player: str,
+    permanent: CardState,
+    activation: Any,
+    target_slots: tuple[TargetSlot, ...],
+    candidate_scan: list[_ScannedCandidate],
+    board: Any,
+) -> Action | None:
+    """One `ACTIVATE` row, with no `ability_index`, for a synthetic keyword
+    activation of a permanent (`keywords.KeywordActivation`: equip, level up,
+    reconfigure). None when the activation itself refuses - its CR 307.5
+    sorcery window, control, or its own CR 602.5b restriction - the way
+    `_battlefield_ability_actions` omits a refused activation."""
     if activation.why_not() is not None:
         return None
     affordable, reason, pays_with = _cost_affordability(
@@ -1601,6 +1628,80 @@ def _equip_action(
         pays_with=pays_with,
         target_slots=target_slots,
     )
+
+
+def _level_up_action(
+    game: Any,
+    player: str,
+    permanent: CardState,
+    candidate_scan: list[_ScannedCandidate],
+    board: Any,
+) -> Action | None:
+    """CR 702.87a's level up, as an untargeted `ACTIVATE` row with
+    `keyword="Level Up"`: "[Cost]: Put a level counter on this permanent.
+    Activate only as a sorcery." A caller takes it with
+    `level_up.level_up_activation(game, permanent, player)`. CR 711.4: offered
+    at any number of level counters."""
+    if permanent.controller != player or not has_level_up(permanent.card):
+        return None
+    try:
+        activation = level_up_activation(game, permanent, player)
+    except ValueError as error:
+        return Action(
+            kind=ActionKind.ACTIVATE,
+            player=player,
+            rule=LEVEL_UP_RULE,
+            card_id=permanent.id,
+            from_zone=Zone.BATTLEFIELD,
+            keyword="Level Up",
+            affordable=Affordability.UNKNOWN,
+            unaffordable_reason=str(error),
+        )
+    return _keyword_activation_row(game, player, permanent, activation, (), candidate_scan, board)
+
+
+def _reconfigure_actions(
+    game: Any,
+    player: str,
+    permanent: CardState,
+    candidate_scan: list[_ScannedCandidate],
+    board: Any,
+) -> list[Action]:
+    """CR 702.151a's two reconfigure abilities, as `ACTIVATE` rows with
+    `keyword="Reconfigure"`: the attach carries its "another target creature
+    you control" slot and is taken with `reconfigure.reconfigure_attach_
+    activation(game, equipment, target, player)`; the unattach carries no
+    slot, is offered only while attached to a creature (its own CR 602.5b
+    restriction), and is taken with `reconfigure.reconfigure_unattach_
+    activation(game, equipment, player)`."""
+    if permanent.controller != player or not has_reconfigure(permanent.card):
+        return []
+    try:
+        attach = unannounced_reconfigure_attach_activation(game, permanent, player)
+        unattach = reconfigure_unattach_activation(game, permanent, player)
+    except ValueError as error:
+        return [
+            Action(
+                kind=ActionKind.ACTIVATE,
+                player=player,
+                rule=RECONFIGURE_RULE,
+                card_id=permanent.id,
+                from_zone=Zone.BATTLEFIELD,
+                keyword="Reconfigure",
+                affordable=Affordability.UNKNOWN,
+                unaffordable_reason=str(error),
+            )
+        ]
+    target_slots = _target_slots(
+        game, player, permanent, profile_for_text(RECONFIGURE_ATTACH_EFFECT), source_is_spell=False
+    )
+    rows = [
+        _keyword_activation_row(
+            game, player, permanent, attach, target_slots, candidate_scan, board
+        ),
+        _keyword_activation_row(game, player, permanent, unattach, (), candidate_scan, board),
+    ]
+    return [row for row in rows if row is not None]
 
 
 # ---------------------------------------------------------------------------
@@ -2128,6 +2229,10 @@ def _legal_actions(
         equip = _equip_action(game, player, permanent, candidate_scan, board)
         if equip is not None:
             actions.append(equip)
+        level_up = _level_up_action(game, player, permanent, candidate_scan, board)
+        if level_up is not None:
+            actions.append(level_up)
+        actions.extend(_reconfigure_actions(game, player, permanent, candidate_scan, board))
         if not permanent.face_up:
             turn_up = _turn_face_up_action(game, player, permanent, candidate_scan)
             if turn_up is not None:

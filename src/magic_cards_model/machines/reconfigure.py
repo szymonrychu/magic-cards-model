@@ -5,8 +5,8 @@ CR 702.151a: "Reconfigure represents two activated abilities. Reconfigure
 control. Activate only as a sorcery' and '[Cost]: Unattach this permanent.
 Activate only if this permanent is attached to a creature and only as a
 sorcery.'" Both are written out here as synthetic `KeywordActivation`s, the
-shape equip uses (`machines/keywords.equip_activation`); an activation with a
-target is the attach, one without is the unattach (`_reconfigure_effect`).
+shape equip uses (`machines/keywords.equip_activation`); an activation's own
+effect text says which of the two it is (`_reconfigure_effect`).
 
 CR 702.151b: "Attaching an Equipment with reconfigure to another creature
 causes the Equipment to stop being a creature until it becomes unattached
@@ -43,6 +43,7 @@ __all__ = [
     "reconfigure_not_a_creature",
     "reconfigure_unattach_activation",
     "reconfigure_unattach_refusal",
+    "unannounced_reconfigure_attach_activation",
 ]
 
 RECONFIGURE_RULE = "CR 702.151a"
@@ -128,6 +129,16 @@ def reconfigure_attach_activation(
     return activation
 
 
+def unannounced_reconfigure_attach_activation(
+    game: Any, equipment: CardState, player: str
+) -> KeywordActivation:
+    """The attach (CR 702.151a's first ability) with no target announced yet:
+    its cost, timing and rule, for a caller that asks about the activation
+    before choosing (`legal_actions`). Never put this on the stack;
+    `reconfigure_attach_activation` is the one that announces a target."""
+    return _activation(game, equipment, player, RECONFIGURE_ATTACH_EFFECT)
+
+
 def reconfigure_unattach_refusal(game: Any, equipment: CardState) -> str | None:
     """CR 702.151a's second ability's own restriction (CR 602.5b): "Activate
     only if this permanent is attached to a creature"."""
@@ -163,7 +174,7 @@ def _reconfigure_effect(activation: KeywordActivation) -> CardState | None:
         equipment = activation.card
     if equipment.zone is not Zone.BATTLEFIELD:
         return None
-    if not activation.targets:
+    if activation.ability is not None and activation.ability.effect == RECONFIGURE_UNATTACH_EFFECT:
         equipment.unattach()
         return equipment
     for target in activation.targets:
