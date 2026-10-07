@@ -6766,6 +6766,11 @@ def _sacrifice_then_if_you_effect(
     if choice is None:
         return None
     description, excludes_source = choice
+    if optional and excludes_source:
+        # "you may sacrifice another <thing>. If you do, ..." keeps the
+        # consequence readers that know the sacrificed permanent (its mana
+        # value, its type) - this reader has no memory of what went.
+        return None
     requirement = permanent_description(description)
     assert requirement is not None
     per_player = _sacrifice_of_choice_clause_effect(
