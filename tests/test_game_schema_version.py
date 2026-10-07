@@ -2149,3 +2149,27 @@ def test_a_snapshot_written_before_the_optional_waterbend_record_is_refused() ->
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_OPTIONAL_WATERBEND}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before nw-05-t6-keywords: `BaseAbility` gained
+#: `level_band` (a leveler striation, CR 711.2a/b). nw-05-t6-keywords bumped
+#: to 132 (its reserved number), so the last shape without it is 126.
+_SCHEMA_VERSION_BEFORE_LEVEL_BANDS = 126
+
+
+def test_a_snapshot_written_before_level_bands_is_refused() -> None:
+    """A version-126 dump's abilities carry no `level_band`: decoded as
+    current, a leveler's striated triggered ability pending on the stack
+    would read as unstriated. Refused instead."""
+    from magic_cards_model.machines.abilities import BaseAbility
+
+    assert "level_band" in BaseAbility.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_LEVEL_BANDS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_LEVEL_BANDS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_LEVEL_BANDS}",
+    ):
+        Game.model_validate(dumped)

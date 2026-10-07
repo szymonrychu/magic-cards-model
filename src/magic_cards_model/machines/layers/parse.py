@@ -22,6 +22,7 @@ from ..abilities import (
     ActivatedAbility,
     _split_top_level_sentences,
     layer_readable_sentences,
+    leveler_lines,
     parse_granted_ability_lines,
     self_normalized_effect_text,
 )
@@ -148,7 +149,11 @@ def printed_characteristics(
         # layer 4 contribution (`_changeling_effects`), not a printed value.
         subtypes=tuple(state.printed_subtypes),
         colors=tuple(state.colors),
-        abilities=tuple(_ability_lines(state.oracle_text))
+        # CR 711.2: a leveler's striated abilities are its level symbols'
+        # static abilities' to grant (`_level_symbol_effects`), not printed
+        # abilities it has at every level - so only CR 711.4's unstriated
+        # lines start here.
+        abilities=tuple(leveler_lines(state.oracle_text, None))
         + _keyword_counter_lines(on_the_permanent),
         power=power,
         toughness=toughness,

@@ -452,6 +452,14 @@ def executes(keyword: str) -> bool:
         # `_decayed_ability` below (`_TRIGGER_EXPANSIONS`), whose effect text
         # `machines/effects._parse_delayed_single_clause` reads.
         "decayed",
+        # CR 702.87a: `machines/level_up.level_up_activation`/`_level_up_
+        # effect`; the level symbols it counts toward (CR 711.2) are
+        # `level_up.level_symbol_effects`, read off each striation.
+        "level up",
+        # CR 702.151a/b: `machines/reconfigure.reconfigure_attach_activation`/
+        # `reconfigure_unattach_activation`/`_reconfigure_effect`, and the
+        # attached not-a-creature `reconfigure_not_a_creature` (layer 4).
+        "reconfigure",
     }
 
 
@@ -1860,6 +1868,15 @@ class KeywordActivation(EngineModel):
                 owner = self.game.player(self.player)
                 if self.card not in owner.cards_in(self.zone):
                     return f"{self.card.name} is not in {self.player}'s {self.zone.value}"
+        if (
+            self.keyword.lower() == "reconfigure"
+            and not self.targets
+            and self.game is not None
+            and (unattach_refusal := reconfigure_unattach_refusal(self.game, self.card))
+        ):
+            # CR 702.151a's unattach: "Activate only if this permanent is
+            # attached to a creature" (CR 602.5b).
+            return unattach_refusal
         if self.rule == "CR 702.62b" and not self.card.is_suspended:
             # Greater Gargadon's own "Activate only if this card is
             # suspended" (CR 602.5b): being in exile is necessary but not
@@ -6545,3 +6562,10 @@ def apply_as_enters_day_night(game: Any, permanent: CardState) -> None:
 AbilityOnStack.model_rebuild(
     _types_namespace={"KeywordActivation": KeywordActivation, "CostPayment": CostPayment}
 )
+
+
+# The keyword machines that live in their own modules register their
+# `KEYWORD_EFFECTS` rows as they load; imported last so each can build on
+# everything above.
+from . import blitz, level_up  # noqa: E402, F401
+from .reconfigure import reconfigure_unattach_refusal  # noqa: E402

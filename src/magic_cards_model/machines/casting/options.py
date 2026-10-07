@@ -604,6 +604,21 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "blitz":
+        # CR 702.152a: "Blitz [cost]" means "You may cast this card by paying
+        # [cost] rather than its mana cost" - dash's shape (CR 702.109a). The
+        # delayed sacrifice and the haste-and-draw static are `machines/
+        # blitz.py`'s, read off the cast record as the permanent enters.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.152a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical in ("morph", "megamorph", "disguise"):
         # CR 702.37a: "'Morph [cost]' means "You may cast this card as a 2/2
         # face-down creature with no text, no name, no subtypes, and no mana

@@ -12,6 +12,7 @@ from ...machines.abilities import (
     parse_triggered_mana,
     self_normalized_effect_text,
 )
+from ...machines.blitz import create_blitz_delayed_trigger
 from ...machines.casting import (
     _OPTIONAL_ADDITIONAL_COST,
     grant_suspend_haste,
@@ -836,6 +837,8 @@ class StackPriorityMixin:
             # haste until you lose control of the spell or the permanent it
             # becomes." `cast_during_resolution` labels the cast "Suspend".
             grant_suspend_haste(self, spell)
+        # CR 702.152a: blitz's delayed sacrifice (`machines/blitz.py`).
+        create_blitz_delayed_trigger(self, spell)
         if self.was_cast_with(spell, "Dash"):
             self._grant_dash_haste(spell)
             self.delayed_triggers.create(

@@ -280,6 +280,12 @@ def graveyard_with_counter_fact(kind: CounterKind) -> str:
     return f"put_into_graveyard_with_counter:{_counter_key(kind).lower()}"
 
 
+#: CR 702.87a's counter: "Put a level counter on this permanent." The kind
+#: a leveler's level symbols count (CR 711.2a/b). CR 702.87c: a Class's level
+#: is not one.
+LEVEL_COUNTER = "level"
+
+
 class Counters(AnnouncesMutation, RootModel[dict[str, int]]):
     """The counters on one object or player, by kind (CR 122.1).
 
@@ -2148,6 +2154,18 @@ class CardState(EngineModel):
             # just read off `meld_result` instead of `self.card`.
             return self._with_bestowed_enchant(tuple(self.meld_result.keywords))
         if not self.card.card_faces:
+            if self.is_leveler:
+                # CR 711.2a/b: a keyword printed in a level striation is one
+                # the leveler has only within that band of level counters.
+                from ..machines.abilities import keywords_in_lines, leveler_lines
+
+                live = keywords_in_lines(
+                    leveler_lines(self.oracle_text, self.counter_count(LEVEL_COUNTER)),
+                    list(self.card.keywords),
+                )
+                return self._with_bestowed_enchant(
+                    tuple(keyword for keyword in self.card.keywords if keyword.lower() in live)
+                )
             return self._with_bestowed_enchant(tuple(self.card.keywords))
         # Imported here: `machines/` imports `models/`, so the reverse import
         # only resolves at call time.
@@ -3292,6 +3310,13 @@ class CardState(EngineModel):
         of its own level counter would misread; no printed card does that.
         """
         text = self.oracle_text
+        if self.is_leveler:
+            # CR 711.2a/b: the striation its level counters are in, and CR
+            # 711.4's unstriated lines - the same narrowing a Class's level
+            # and a station's charge counters get.
+            from ..machines.abilities import leveler_lines
+
+            return "\n".join(leveler_lines(text, self.counter_count(LEVEL_COUNTER)))
         if not self.is_class:
             return self.station_live_text(text)
         from ..machines.abilities import ActivatedAbility, parse_abilities
@@ -3307,6 +3332,13 @@ class CardState(EngineModel):
             and (ability.class_level is None or ability.class_level <= self.class_level)
         ]
         return "\n".join(lines)
+
+    @property
+    def is_leveler(self) -> bool:
+        """Whether this object's text box carries a level symbol (CR 711.1)."""
+        from ..machines.abilities import is_leveler_text
+
+        return is_leveler_text(self.oracle_text)
 
     def station_threshold_met(self, threshold: int | None) -> bool:
         """CR 721.2a: "As long as this permanent has N or more charge counters
