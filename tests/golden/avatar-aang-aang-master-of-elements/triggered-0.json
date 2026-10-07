@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Avatar Aang // Aang, Master of Elements", "Aang, Swift Savior // Aang and La, Ocean's Fury"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Avatar Aang // Aang, Master of Elements", "Aang's Iceberg"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -44,7 +44,7 @@
       }
     },
     "players": {},
-    "stack": ["ability of Aang, Swift Savior@alice#1: Waterbend {8}: Transform Aang."]
+    "stack": ["ability of Aang's Iceberg@alice#1: Waterbend {3}: Sacrifice this enchantment. If you do, scry 2."]
   },
   "family": "triggered",
   "format": 1,

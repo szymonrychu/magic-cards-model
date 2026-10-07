@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Invasion of Theros // Ephara, Ever-Sheltering"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Abiding Grace"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Aang's Iceberg"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -55,7 +55,7 @@
     "index": 3,
     "params": {
       "owner": "alice",
-      "probe": "Abiding Grace",
+      "probe": "Aang's Iceberg",
       "tapped": false
     },
     "variant": "quiet"

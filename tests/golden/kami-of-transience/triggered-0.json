@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Kami of Transience"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Abiding Grace", "Abiding Grace"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Aang's Iceberg", "Aang's Iceberg"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -51,7 +51,7 @@
       }
     },
     "players": {},
-    "stack": ["Abiding Grace@alice#1"]
+    "stack": ["Aang's Iceberg@alice#1"]
   },
   "family": "triggered",
   "format": 1,
@@ -62,7 +62,7 @@
     "index": 13,
     "params": {
       "caster": "alice",
-      "probe": "Abiding Grace"
+      "probe": "Aang's Iceberg"
     },
     "variant": "quiet"
   }

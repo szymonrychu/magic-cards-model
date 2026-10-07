@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Heliod, the Radiant Dawn@alice#1",
-    "targets": ["Abiding Grace@alice#1"],
+    "targets": ["Aang's Iceberg@alice#1"],
     "x": 0
   },
   "board": {
@@ -15,7 +15,7 @@
     "players": {
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
-        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Abiding Grace"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Aang's Iceberg"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Heliod, the Radiant Dawn // Heliod, the Warped Eclipse"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
@@ -39,7 +39,7 @@
     "fields_changed": ["known_carries"],
     "notices": {},
     "objects": {
-      "Abiding Grace@alice#1": {
+      "Aang's Iceberg@alice#1": {
         "zone": ["graveyard", "hand"]
       }
     },
