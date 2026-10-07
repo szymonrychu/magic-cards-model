@@ -1532,10 +1532,11 @@ def modal_trigger_profile(effect_text: str | None) -> ModalProfile | None:
     back before each bullet here rather than teaching two modules two bullet
     grammars.
 
-    Read: any instruction whose minimum is at least one ("choose one", "choose
-    one or both", "choose one or more"). CR 603.3c removes an ability for which
-    no mode is chosen, which a minimum of zero would allow; that shape, and
-    pawprint or per-mode costs (`understood` False), return `None`.
+    Read: every counted instruction - "choose one", "choose one or both",
+    "choose one or more", and the minimum-zero "choose up to N" and "choose
+    any number" (CR 700.2b: "If no mode is chosen, the ability is removed
+    from the stack", which `Game._announce_trigger_modes` does). Pawprint or
+    per-mode costs (`understood` False) return `None`.
     """
     text = re.sub(r"\s*\u2022\s*", "\n\u2022 ", effect_text or "").strip()
     if not is_modal_text(text):
@@ -1628,9 +1629,13 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                         mode.text,
                     )
         original_targets = ability.targets
+        # CR 608.2c: the chosen modes run in the order printed on the card,
+        # however they were announced (the same order `ModalProfile.resolve`
+        # gives a spell); each keeps its own target slice (CR 700.2c).
+        printed_order = sorted(range(len(chosen)), key=lambda position: chosen[position])
         try:
-            for position, number in enumerate(chosen):
-                mode = profile.mode(number)
+            for position in printed_order:
+                mode = profile.mode(chosen[position])
                 ability.targets = list(slices[position]) if position < len(slices) else []
                 mode_text = mode_effect_body(mode)
                 clause = _parse_counter_resolution_text(mode_text)
@@ -1671,6 +1676,43 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                 clause(game, ability)
         finally:
             ability.targets = original_targets
+
+    return effect
+
+
+#: "If a source would deal damage to a player or battle this turn, it deals
+#: that much damage plus 2 instead." (Rankle and Torbran's third mode) - one
+#: CR 614.1a turn-long damage modifier (`damage_modification.
+#: DamageModifierReplacement`, CR 611.2a's "this turn"), read as one clause
+#: so a modal mode or a sentence among others reaches it: the whole-text
+#: readers (`_parse_created_replacement_ability_text`) only ever see an
+#: ability's entire text. "you" is the controller as it resolves (CR 109.5).
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
+def _parse_turn_damage_modifier_instead_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    text = _as_sentence(" ".join(clause.split()))
+    lowered = text.lower()
+    if not lowered.startswith("if ") or " this turn, it deals " not in lowered:
+        return None
+    spec = read_turn_damage_spec(text)
+    if not isinstance(spec, DamageModifierReplacement):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if isinstance(stack_object, CardState):
+            source_id, source_name = stack_object.id, stack_object.card.name
+        else:
+            source_id, source_name = stack_object.source_id, stack_object.source_name
+        game.created_replacements.append(
+            CreatedReplacement(
+                spec=spec,
+                label=text,
+                controller=game.controller_of(stack_object).username,
+                source_id=source_id,
+                source_name=source_name,
+            )
+        )
 
     return effect
 
@@ -6491,6 +6533,9 @@ from .text import (  # noqa: E402
     _plain_resolution_sentences,
     _strip_non_effect_preamble,
 )
+from ..damage_modification import DamageModifierReplacement  # noqa: E402
+from ..replacement.model import CreatedReplacement  # noqa: E402
+from ..replacement.parse import read_turn_damage_spec  # noqa: E402
 from .tokens import (  # noqa: E402
     _create_continuous_effect_for_mode_text,
     _parse_create_token_copies_except_clause,

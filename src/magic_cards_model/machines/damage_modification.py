@@ -69,12 +69,12 @@ def compile_damage_plus_source_characteristic(
 ) -> "CardReplacement | None":
     """Hawkeye, Young Avenger's shape - see the module docstring."""
     from .replacement import (
-        _DAMAGE_RECIPIENTS,
         _SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE,
         CardReplacement,
         EventKind,
         ReplacementKind,
     )
+    from .replacement.parse import damage_recipient
 
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
@@ -83,7 +83,9 @@ def compile_damage_plus_source_characteristic(
         return None
     if event_match.group("subject").lower() != "source" or event_match.group("recipient") is None:
         return None
-    recipient = _DAMAGE_RECIPIENTS.get(event_match.group("recipient").strip().lower())
+    if event_match.group("yours") is None:
+        return None  # "a source you control" is what `applies` checks below.
+    recipient = damage_recipient(event_match.group("recipient"))
     if recipient is None:
         return None
     match = _PLUS_SOURCE_CHARACTERISTIC_RE.fullmatch((effect.replacement or "").strip().rstrip("."))
@@ -205,21 +207,25 @@ class DamageModifierReplacement(EngineModel):
     subject: Literal["source", "creature"] = "source"
     quality: str | None = None
     noncombat: bool = False
-    #: A `replacement._DAMAGE_RECIPIENTS` phrase; None is any recipient.
+    #: A `replacement.parse.damage_recipient` phrase; None is any recipient.
     recipient: str | None = None
     factor: int = 1
     addend: int = 0
+    #: True for a printed "a source would deal" with no "you control" (Rankle
+    #: and Torbran's third mode): CR 614.1a's replacement then applies to a
+    #: source whoever controls it.
+    any_controller: bool = False
 
     prevention: ClassVar[bool] = False
 
     def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
-        from .replacement import _DAMAGE_RECIPIENTS
+        from .replacement.parse import damage_recipient
 
         if controller is None or not _is_damage(event) or event.source is None:
             return False
         if self.noncombat and event.combat:
             return False  # "noncombat damage" (CR 510.2 marks combat damage).
-        if game.controller_of(event.source).username != controller:
+        if not self.any_controller and game.controller_of(event.source).username != controller:
             return False  # "a source *you* control", checked now (CR 609.7b).
         if self.subject == "creature" and not _source_is_creature(game, event.source):
             return False
@@ -227,7 +233,7 @@ class DamageModifierReplacement(EngineModel):
             return False
         if self.recipient is None:
             return True
-        recipient = _DAMAGE_RECIPIENTS.get(self.recipient)
+        recipient = damage_recipient(self.recipient)
         return recipient is not None and recipient(game, controller, event)
 
     def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:

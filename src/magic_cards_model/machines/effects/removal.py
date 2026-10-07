@@ -2057,6 +2057,45 @@ def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Regenerate each creature you control." (Wail of the Nim's first mode,
+#: Wrap in Vigor, Golgari Charm, Loxodon Hierarch) - CR 701.19a's shield on
+#: every permanent of the group as the spell or ability resolves (CR 608.2h:
+#: the group is fixed then; one entering later gets none). The group is a
+#: CR 205.2a type list read off the computed board (`_parse_mass_type_
+#: qualifier`) among the permanents the resolving controller controls.
+_REGENERATE_EACH_YOU_CONTROL_RE = re.compile(
+    r"^regenerate each (?P<group>[a-z ,]+?) you control\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_regenerate_each_you_control_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_REGENERATE_EACH_YOU_CONTROL_RE`'s shape; see the banner above."""
+    stripped = " ".join(clause.split())
+    if not stripped.lower().startswith("regenerate each "):
+        return None
+    match = _REGENERATE_EACH_YOU_CONTROL_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    qualifies = _parse_mass_type_qualifier(match.group("group"))
+    if qualifies is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        group = [
+            permanent
+            for permanent in game.permanents_controlled_by(controller)
+            if qualifies(game.characteristics_of(permanent))
+        ]
+        for permanent in group:
+            game.regenerate(permanent)
+
+    return effect
+
+
 #: Skyclave Apparition's leaves-the-battlefield half: "the exiled card's owner
 #: creates an X/X blue Illusion creature token, where X is the mana value of
 #: the exiled card." CR 607.2a links "the exiled card" to the cards the same
@@ -6518,6 +6557,46 @@ def _sacrifice_of_choice_clause_effect(
         for permanent in chosen:
             if permanent.zone is Zone.BATTLEFIELD:
                 game.sacrifice(permanent)
+
+    return effect
+
+
+#: "Sacrifice a permanent." (Lorehold Command's fourth mode), "sacrifice a
+#: creature or land" (Thalia and The Gitrog Monster's attack trigger) - CR
+#: 701.21a's sacrifice with no subject: the resolving spell's or ability's
+#: controller sacrifices one permanent of their choice among those they
+#: control that match the description (`permanent_description`, the target
+#: grammar). Nothing is targeted (CR 115.10a); with none to sacrifice nothing
+#: happens (CR 608.2d), and anything after it in the same text still does.
+_SACRIFICE_ONE_OF_CHOICE_RE = re.compile(
+    r"^sacrifice (?:an?|one) (?P<description>(?!other\b|another\b)[a-z][a-z ,'-]*?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_sacrifice_one_of_choice_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SACRIFICE_ONE_OF_CHOICE_RE`'s shape; see the banner above."""
+    stripped = " ".join(clause.split())
+    if not stripped.lower().startswith("sacrifice "):
+        return None
+    match = _SACRIFICE_ONE_OF_CHOICE_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    description = match.group("description").strip()
+    if permanent_description(description) is None:
+        return None
+    per_player = _sacrifice_of_choice_clause_effect(
+        description, 1, with_indefinite_article(description)
+    )
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        )
+        per_player(
+            game, game.controller_of(stack_object), source, source_id_of(stack_object)
+        )
 
     return effect
 

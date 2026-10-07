@@ -1874,6 +1874,48 @@ def _parse_remove_up_to_n_counters_from_target_clause(text: str) -> AbilityEffec
     return effect
 
 
+#: "Remove a lore counter from target Saga you control." (Clash of the
+#: Eikons), "Remove a -1/-1 counter from target creature." (Chainbreaker) -
+#: CR 122.1's counters of one named kind, N of them, off one target (rechecked
+#: as it resolves, CR 608.2b). A target with fewer has what it has removed
+#: (CR 608.2d). Removing a lore counter triggers no chapter (CR 714.2b: a
+#: chapter ability triggers on lore counters being *put* on a Saga).
+_REMOVE_N_KIND_COUNTERS_FROM_TARGET_RE = re.compile(
+    rf"^remove (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from "
+    r"(?P<phrase>(?:another )?target [^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s16", for_spell=FORWARD)
+def _parse_remove_n_kind_counters_from_target_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_REMOVE_N_KIND_COUNTERS_FROM_TARGET_RE`'s shape; see the banner above."""
+    stripped = " ".join(clause.split())
+    if not stripped.lower().startswith("remove "):
+        return None
+    match = _REMOVE_N_KIND_COUNTERS_FROM_TARGET_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None or amount < 1:
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            present = target.counter_count(kind)
+            if present:
+                target.remove_counters(kind, min(amount, present))
+
+    return effect
+
+
 #: Graft Surgeon: "When this creature dies, put its counters on up to one
 #: target creature you control." - CR 109.2's "its" is the dying source, read
 #: through CR 603.10a/CR 704.8's last-known-information the same way

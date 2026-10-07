@@ -1812,10 +1812,13 @@ def _compile_damage_multiplier(effect: ReplacementEffect) -> CardReplacement | N
 #: The subject is "source" or, narrower, "creature" (Gratuitous Violence's
 #: "If a creature you control would deal damage to a permanent or player");
 #: the recipient is optional (Insult's "If a source you control would deal
-#: damage this turn" - any recipient).
+#: damage this turn" - any recipient). "you control" is optional too (Rankle
+#: and Torbran's "If a source would deal damage to a player or battle this
+#: turn"): without it the source's controller is not asked at all (CR 614.1a
+#: applies the replacement to any source), which `yours` records.
 _SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE = re.compile(
-    r"^an? (?:(?P<quality>[a-z]+) )?(?P<subject>source|creature) you control would deal "
-    r"(?P<noncombat>noncombat )?damage(?: to (?P<recipient>.+))?$",
+    r"^an? (?:(?P<quality>[a-z]+) )?(?P<subject>source|creature)(?P<yours> you control)? "
+    r"would deal (?P<noncombat>noncombat )?damage(?: to (?P<recipient>.+))?$",
     re.IGNORECASE,
 )
 _SOURCE_DAMAGE_MODIFIER_RE = re.compile(
@@ -1877,6 +1880,53 @@ _DAMAGE_RECIPIENTS: dict[str, _DamageRecipient] = {
     "a creature, battle, or opponent": _recipient_is_creature_battle_or_opponent,
 }
 
+#: One noun of a printed recipient list ("a player or battle", "a permanent
+#: or player"), as a test on the damage event: a player recipient (CR 120.3a)
+#: or a permanent of a card type read off the computed board (CR 613.5;
+#: CR 310.6 for a battle).
+_RECIPIENT_NOUNS: dict[str, _DamageRecipient] = {
+    "player": lambda game, you, event: event.player is not None,
+    "opponent": _recipient_is_opponent,
+    "permanent": lambda game, you, event: event.card is not None,
+    **{
+        noun: (
+            lambda card_type: lambda game, you, event: (
+                event.card is not None and card_type in game.characteristics_of(event.card).types
+            )
+        )(card_type)
+        for noun, card_type in (
+            ("creature", Type.CREATURE),
+            ("planeswalker", Type.PLANESWALKER),
+            ("battle", Type.BATTLE),
+        )
+    },
+}
+_RECIPIENT_LIST_SPLIT_RE = re.compile(r"\s*,\s*(?:or\s+)?|\s+or\s+", re.IGNORECASE)
+
+
+def damage_recipient(phrase: str) -> _DamageRecipient | None:
+    """The test a printed recipient phrase puts on a damage event: one of the
+    `_DAMAGE_RECIPIENTS` phrases, or a list of `_RECIPIENT_NOUNS` after one
+    article ("a player or battle", "a permanent or player", "a creature,
+    planeswalker, or battle"), any one of which matches. None for any other
+    wording, so an unlisted recipient compiles to nothing."""
+    lowered = " ".join(phrase.strip().lower().split())
+    listed = _DAMAGE_RECIPIENTS.get(lowered)
+    if listed is not None:
+        return listed
+    article = re.match(r"^an? ", lowered)
+    if article is None:
+        return None
+    nouns = _RECIPIENT_LIST_SPLIT_RE.split(lowered[article.end() :])
+    tests = [test for noun in nouns if (test := _RECIPIENT_NOUNS.get(noun)) is not None]
+    if len(tests) < 2 or len(tests) != len(nouns):
+        return None
+
+    def any_listed(game: "Game", you: str, event: ReplaceableEvent) -> bool:
+        return any(test(game, you, event) for test in tests)
+
+    return any_listed
+
 #: "put that many <kind> counters on that creature" - the damage replaced by
 #: counters (CR 614.1a, CR 122.1). Soul-Scar Mage's -1/-1 is the printed kind;
 #: any counter name reads the same way.
@@ -1901,7 +1951,9 @@ def _compile_damage_as_counters(effect: ReplacementEffect) -> CardReplacement | 
     event_match = _SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE.fullmatch((effect.event or "").strip())
     if event_match is None or event_match.group("quality") is not None:
         return None
-    recipient = _DAMAGE_RECIPIENTS.get(event_match.group("recipient").strip().lower())
+    if event_match.group("yours") is None or event_match.group("recipient") is None:
+        return None
+    recipient = damage_recipient(event_match.group("recipient"))
     if recipient is None:
         return None
     replacement_match = _DAMAGE_AS_COUNTERS_RE.fullmatch(
@@ -1940,8 +1992,8 @@ def read_damage_modifier(event_text: str, replacement: str) -> DamageModifierRep
         return None
     recipient = event_match.group("recipient")
     if recipient is not None:
-        recipient = recipient.strip().lower()
-        if recipient not in _DAMAGE_RECIPIENTS:
+        recipient = " ".join(recipient.strip().lower().split())
+        if damage_recipient(recipient) is None:
             return None
     match = _SOURCE_DAMAGE_MODIFIER_RE.fullmatch(replacement.strip().rstrip("."))
     if match is None:
@@ -1962,6 +2014,7 @@ def read_damage_modifier(event_text: str, replacement: str) -> DamageModifierRep
         recipient=recipient,
         factor=factor,
         addend=addend,
+        any_controller=event_match.group("yours") is None,
     )
 
 
