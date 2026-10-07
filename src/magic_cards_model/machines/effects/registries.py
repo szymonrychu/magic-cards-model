@@ -29,7 +29,6 @@ from ..turn import Step
 if TYPE_CHECKING:
     from ...models.game import Game
 from ._common import AbilityEffect, Effect
-from .damage import damage_the_attacked_player, damage_the_other_combatant
 from .removal import hangarback_dies
 
 #: The narrower half of the pattern above, on its own: CR 602.5d's "Activate
@@ -452,8 +451,6 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     # entered here any more: `_DAMAGE_EACH_OPPONENT_RE` reads it off the
     # ability's own printed text, so `trigger_effect_for`'s fallback reaches
     # it. See `tests/scenarios/test_registry_is_minimal.py`.
-    ("Hellrider", TriggerEvent.ATTACKS, ""): damage_the_attacked_player(1),
-    ("Ashmouth Hound", TriggerEvent.BLOCKS, ""): damage_the_other_combatant(1),
     ("Delver of Secrets", TriggerEvent.BEGINNING_OF_STEP, ""): delver_upkeep,
     # Thopter Assembly's own "return this creature to its owner's hand and
     # create five 1/1 colorless Thopter artifact creature tokens with
