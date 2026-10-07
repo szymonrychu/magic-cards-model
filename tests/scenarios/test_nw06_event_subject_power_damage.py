@@ -18,6 +18,10 @@ its power".
   its power."
 - Cross-task sentences (Flametongue Yearling, Chainweb Aracnir, Flayer of the
   Hatebound) read by the same template.
+- "that creature" on a trigger with no target is the event's subject:
+  Flame-Kin War Scout ("When another creature enters, sacrifice this
+  creature. If you do, this creature deals 4 damage to that creature.") and
+  Rampaging Ferocidon ("... deals 1 damage to that creature's controller").
 
 Second printings: Warstorm Surge ("Whenever a creature you control enters, it
 deals damage equal to its power to any target" - the entering creature is the
@@ -40,6 +44,11 @@ Rules verified with `mise run rules:find`:
 - **CR 120.3** - each recipient of one damage instruction is dealt its damage
   at the same time.
 - **CR 700.5** - devotion counts mana symbols among permanents' mana costs.
+- **CR 701.21a** - only a permanent its controller controls can be
+  sacrificed, so "sacrifice this creature. If you do, ..." does nothing once
+  it has left (Flame-Kin War Scout, Promise of Bunrei, Aang's Iceberg).
+- **CR 608.2b** - a chosen target that became illegal is not replaced: only an
+  ability with no target reads "that creature" off its event.
 """
 
 import pytest
@@ -535,3 +544,203 @@ def test_blazing_bomb_sacrificed_as_a_cost_deals_its_last_known_power():
 
     assert giant.damage == 3, "1 printed + 2 counters, as it last existed"
     assert set(_outcomes("Blazing Bomb")) == {"handled"}
+
+
+# -- "that creature" off a non-combat event with no target ------------------
+#
+# Flame-Kin War Scout: "When another creature enters, sacrifice this
+# creature. If you do, this creature deals 4 damage to that creature." -
+# "that creature" is the event's subject (CR 603.2), not a target; the
+# dealer is the sacrificed War Scout as it last existed (CR 113.7a).
+# Rampaging Ferocidon: "Whenever another creature enters, this creature
+# deals 1 damage to that creature's controller." - the same referent's
+# controller.
+
+
+def _scout_board(alice_hand=(), bob_hand=("Hill Giant",)):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Flame-Kin War Scout"], hand=list(alice_hand))
+        .player("bob", hand=list(bob_hand))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_flame_kin_war_scout_reads_handled():
+    assert set(_outcomes("Flame-Kin War Scout")) == {"handled"}
+
+
+def test_that_creature_of_an_enters_trigger_is_the_entering_creature():
+    effect = trigger_effect_for(
+        "Flame-Kin War Scout",
+        TriggerEvent.ENTERS_THE_BATTLEFIELD,
+        "this creature deals 4 damage to that creature.",
+    )
+    assert effect is not None
+    assert not getattr(effect, "__name__", "").endswith("_notice_only")
+
+
+def test_flame_kin_war_scout_sacrifices_itself_and_deals_4_to_the_entering_creature():
+    scenario = _scout_board()
+    giant = scenario.put_onto_battlefield("Hill Giant", "bob")
+    _drain(scenario)
+
+    scout = scenario.find("Flame-Kin War Scout", Zone.GRAVEYARD, "alice")
+    assert scout is not None, "sacrificed"
+    assert giant.zone is Zone.GRAVEYARD, "Hill Giant is 3/3: 4 damage kills it"
+    assert _notices(scenario) == []
+
+
+def test_flame_kin_war_scout_already_gone_deals_no_damage():
+    """CR 701.21a: a permanent no longer on the battlefield cannot be
+    sacrificed, so "if you do" is false and nothing is dealt."""
+    scenario = _scout_board(bob_hand=("Giant Spider",))
+    scout = scenario.creature("Flame-Kin War Scout", "alice")
+    spider = scenario.put_onto_battlefield("Giant Spider", "bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.game.destroy(scout)
+    _drain(scenario)
+
+    assert spider.damage == 0
+    assert _notices(scenario) == []
+
+
+def test_flame_kin_war_scout_entering_creature_gone_still_sacrifices():
+    scenario = _scout_board(bob_hand=("Giant Spider",))
+    spider = scenario.put_onto_battlefield("Giant Spider", "bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.game.destroy(spider)
+    _drain(scenario)
+
+    assert scenario.find("Flame-Kin War Scout", Zone.GRAVEYARD, "alice") is not None
+    assert _notices(scenario) == []
+
+
+def test_flame_kin_war_scout_its_own_controllers_creature_entering_takes_the_damage():
+    """ "another creature" is any other creature, alice's own included."""
+    scenario = _scout_board(alice_hand=("Giant Spider",), bob_hand=())
+    spider = scenario.put_onto_battlefield("Giant Spider", "alice")
+    _drain(scenario)
+
+    assert spider.zone is Zone.GRAVEYARD, "Giant Spider is 2/4: 4 damage is lethal"
+    assert scenario.find("Flame-Kin War Scout", Zone.GRAVEYARD, "alice") is not None
+
+
+def test_rampaging_ferocidon_hits_the_entering_creatures_controller():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Rampaging Ferocidon"])
+        .player("bob", hand=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Hill Giant", "bob")
+    _drain(scenario)
+
+    assert _life(scenario, "bob") == 19
+    assert _life(scenario, "alice") == 20
+    assert set(_outcomes("Rampaging Ferocidon")) == {"handled"}
+
+
+def test_rampaging_ferocidon_its_own_controllers_creature_hits_its_controller():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Rampaging Ferocidon"], hand=["Hill Giant"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Hill Giant", "alice")
+    _drain(scenario)
+
+    assert _life(scenario, "alice") == 19
+    assert _life(scenario, "bob") == 20
+
+
+# The "sacrifice this <permanent>. If you do, ..." lead on other printings:
+# Promise of Bunrei ("When a creature you control dies, sacrifice this
+# enchantment. If you do, create four 1/1 colorless Spirit creature tokens.")
+# and Aang's Iceberg ("Waterbend {3}: Sacrifice this enchantment. If you do,
+# scry 2.").
+
+
+def _spirits(scenario, username: str) -> list:
+    return [
+        c
+        for c in scenario.game.battlefield
+        if c.name.startswith("Spirit") and c.controller == username
+    ]
+
+
+def test_promise_of_bunrei_sacrifices_itself_and_makes_four_spirits():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Promise of Bunrei", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.destroy(scenario.creature("Grizzly Bears", "alice"))
+    _drain(scenario)
+
+    assert scenario.find("Promise of Bunrei", Zone.GRAVEYARD, "alice") is not None
+    assert len(_spirits(scenario, "alice")) == 4
+    assert set(_outcomes("Promise of Bunrei")) == {"handled"}
+
+
+def test_promise_of_bunrei_already_gone_makes_no_spirits():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Promise of Bunrei", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    promise = scenario.find("Promise of Bunrei", Zone.BATTLEFIELD, "alice")
+    scenario.game.destroy(scenario.creature("Grizzly Bears", "alice"))
+    scenario.game.put_triggers_on_stack()
+    scenario.game.destroy(promise)
+    _drain(scenario)
+
+    assert _spirits(scenario, "alice") == []
+
+
+def test_promise_of_bunrei_two_deaths_make_only_one_set_of_spirits():
+    """Both trigger; the second finds it already sacrificed, so "if you do"
+    is false (CR 701.21a)."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Promise of Bunrei", "Grizzly Bears", "Hill Giant"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.destroy(scenario.creature("Grizzly Bears", "alice"))
+    scenario.game.destroy(scenario.creature("Hill Giant", "alice"))
+    _drain(scenario)
+
+    assert len(_spirits(scenario, "alice")) == 4
+
+
+def test_aangs_iceberg_waterbend_sacrifices_it_and_scries_and_its_exile_ends():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Aang's Iceberg", "Island", "Island", "Island"],
+            library=["Forest", "Mountain", "Swamp"],
+        )
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    iceberg = scenario.find("Aang's Iceberg", Zone.BATTLEFIELD, "alice")
+    scenario.scry_keeping_everything_on_top()
+    scenario.activate(iceberg, *scenario.untapped_sources("Island", "Island", "Island"))
+    scenario.resolve_top()
+
+    assert scenario.find("Aang's Iceberg", Zone.GRAVEYARD, "alice") is not None
+    assert _notices(scenario) == []
+    assert set(_outcomes("Aang's Iceberg")) == {"handled"}

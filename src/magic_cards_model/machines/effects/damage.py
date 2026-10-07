@@ -4344,16 +4344,24 @@ def _that_creature_of_trigger(game: "Game", stack_object: "StackObject") -> Card
     """ "That creature": after a blocks / becomes-blocked trigger the other half
     of the blocking pair from "it" (CR 509.3d: one trigger per blocker);
     anywhere else the creature the object's own earlier text named as its
-    target (CR 608.2c's anaphora)."""
-    if isinstance(stack_object, AbilityOnStack):
-        event = stack_object.event
-        if event is not None and event.event is TriggerEvent.BLOCKS:
-            other_id = _blocking_pair_other_id(game, stack_object)
-            found = game.find_by_id(other_id) if other_id is not None else None
-            return found if isinstance(found, CardState) else None
+    target (CR 608.2c's anaphora), and failing a target the creature the
+    trigger event was about (CR 603.2) - Flame-Kin War Scout's "When another
+    creature enters, ... this creature deals 4 damage to that creature"."""
+    ability = stack_object if isinstance(stack_object, AbilityOnStack) else None
+    event = ability.event if ability is not None else None
+    if ability is not None and event is not None and event.event is TriggerEvent.BLOCKS:
+        other_id = _blocking_pair_other_id(game, ability)
+        found = game.find_by_id(other_id) if other_id is not None else None
+        return found if isinstance(found, CardState) else None
     for target in game.resolve_targets(stack_object):
         if isinstance(target, CardState) and Type.CREATURE in game.characteristics_of(target).types:
             return target
+    if event is not None and not stack_object.targets and event.subject_id is not None:
+        # A chosen target that became illegal is not replaced by the event's
+        # subject (CR 608.2b): only an ability that targets nothing reads it.
+        subject = game.find_by_id(event.subject_id)
+        if isinstance(subject, CardState) and subject.zone is not Zone.STACK:
+            return subject
     return None
 
 

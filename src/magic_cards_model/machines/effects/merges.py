@@ -1,7 +1,7 @@
 import re
 from collections.abc import Callable
 from random import Random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
@@ -3988,24 +3988,52 @@ _RETURN_SELF_TO_HAND_LEAD_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Sacrifice this creature. If you do, `<consequence>`." - Flame-Kin War
+#: Scout's enters trigger. CR 701.21a: only a permanent its controller still
+#: controls on the battlefield can be sacrificed, so "if you do" is false
+#: once it has left or changed hands; "this creature" in the consequence is
+#: then the sacrificed object as it last existed (CR 113.7a).
+_SACRIFICE_SELF_LEAD_RE = re.compile(
+    r"^sacrifice this (?:creature|permanent|artifact|enchantment|land|planeswalker)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _sacrifice_own_source(game: "Game", ability: AbilityOnStack) -> None:
+    """Sacrifice the ability's source if its controller still controls it on
+    the battlefield (CR 701.21a); otherwise nothing happens."""
+    source = ability.source(game)
+    if (
+        source is not None
+        and source.zone is Zone.BATTLEFIELD
+        and source.controller == ability.controller
+    ):
+        game.sacrifice(source)
+
 
 def _merge_return_self_then_if_you_do_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """`_RETURN_SELF_TO_HAND_LEAD_RE`, then "If you do, `<consequence>`" -
-    the consequence runs only when the source really went to its owner's
-    hand (CR 118.12), and "its" in it is the returned object as it last
-    existed on the battlefield (CR 608.2h)."""
+    """`_RETURN_SELF_TO_HAND_LEAD_RE` or `_SACRIFICE_SELF_LEAD_RE`, then "If
+    you do, `<consequence>`" - the consequence runs only when the source
+    really went to its owner's hand or graveyard (CR 118.12), and "its" in it
+    is the moved object as it last existed on the battlefield (CR 608.2h)."""
     if for_spell or index + 1 >= len(clauses):
         return None
     first = clauses[index].strip()
-    if _RETURN_SELF_TO_HAND_LEAD_RE.fullmatch(first) is None:
-        return None
-    returning = _parse_return_self_to_owners_hand_clause(
-        first, for_spell=False
-    ) or _parse_return_dead_self_to_hand_clause(first.rstrip("."), for_spell=False)
-    if returning is None:
-        return None
+    sacrificing = _SACRIFICE_SELF_LEAD_RE.fullmatch(first) is not None
+    if sacrificing:
+        returning: Any = _sacrifice_own_source
+        destination = Zone.GRAVEYARD
+    else:
+        if _RETURN_SELF_TO_HAND_LEAD_RE.fullmatch(first) is None:
+            return None
+        returning = _parse_return_self_to_owners_hand_clause(
+            first, for_spell=False
+        ) or _parse_return_dead_self_to_hand_clause(first.rstrip("."), for_spell=False)
+        if returning is None:
+            return None
+        destination = Zone.HAND
     if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
     if if_match is None:
         return None
@@ -4032,7 +4060,7 @@ def _merge_return_self_then_if_you_do_clauses(
         characteristics = game.characteristics_of(source)
         returning(game, stack_object)
         moved = game.find_by_id(source.id)
-        if not isinstance(moved, CardState) or moved.zone is not Zone.HAND:
+        if not isinstance(moved, CardState) or moved.zone is not destination:
             return
         if template is not None:
             assert stat_match is not None
