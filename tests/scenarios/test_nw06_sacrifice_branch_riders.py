@@ -203,8 +203,8 @@ def test_archdemon_alone_taps_and_deals_nine():
 
 
 def test_archdemon_is_not_its_own_human_sacrifice():
-    """Ravenous Demon is itself a Human Demon (CR 205.3m): the back face is
-    not, so it never offers itself up."""
+    """Archdemon of Greed is a Demon, not a Human (CR 205.3m: creature types),
+    so with no Human of its own to give it taps and takes the damage."""
     scenario = _archdemon_upkeep()
     assert scenario.creature("Archdemon of Greed", "alice").zone is Zone.BATTLEFIELD
 

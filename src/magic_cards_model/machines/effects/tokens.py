@@ -765,7 +765,7 @@ def _parse_create_that_many_color_pip_tokens_clause(
 #: event is about (CR 603.2: the one who took the combat damage, cast the
 #: spell), not the ability's controller. The creation itself is read exactly
 #: as "create ..." is; it just runs as the event player, so a quoted "you" in
-#: the token's own ability is that player's too (CR 113.6).
+#: the token's own ability is that player's too (CR 109.5).
 _THAT_PLAYER_CREATES_RE = re.compile(
     r"^that player creates (?P<rest>.+)$", re.IGNORECASE | re.DOTALL
 )
