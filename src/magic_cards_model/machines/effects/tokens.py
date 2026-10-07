@@ -427,7 +427,6 @@ _LEVELED_TOKEN_KEYWORDS = {"firebending"}
 #: `_parse_token_tail` keeps the bare name in `keywords` and prints "Toxic N"
 #: as the token's own first rules line.
 _COUNTED_TOKEN_KEYWORDS = {"toxic"}
-_COUNTED_TOKEN_KEYWORDS = {"toxic"}
 
 
 #: The opening/closing quote characters a token's own quoted ability can be
