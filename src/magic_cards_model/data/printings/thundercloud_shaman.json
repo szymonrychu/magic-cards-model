@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "17676da2-1d9a-4181-bc6c-1f75750f7578",
+  "oracle_id": "eb812ea7-3301-4774-86a2-64c4ed6766fc",
+  "multiverse_ids": [
+    446859
+  ],
+  "tcgplayer_id": 166910,
+  "cardmarket_id": 358775,
+  "name": "Thundercloud Shaman",
+  "lang": "en",
+  "released_at": "2018-06-08",
+  "uri": "https://api.scryfall.com/cards/17676da2-1d9a-4181-bc6c-1f75750f7578",
+  "scryfall_uri": "https://scryfall.com/card/cm2/123/thundercloud-shaman?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:25:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.jpg?1783934735",
+    "normal": "https://cards.scryfall.io/normal/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.jpg?1783934735",
+    "large": "https://cards.scryfall.io/large/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.jpg?1783934735",
+    "png": "https://cards.scryfall.io/png/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.png?1783934735",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.jpg?1783934735",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.jpg?1783934735",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.webp?1783934735",
+    "grid": "https://cards.scryfall.io/grid/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.webp?1783934735",
+    "display": "https://cards.scryfall.io/display/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.webp?1783934735",
+    "art": "https://cards.scryfall.io/art/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.webp?1783934735",
+    "crop": "https://cards.scryfall.io/crop/front/1/7/17676da2-1d9a-4181-bc6c-1f75750f7578.webp?1783934735"
+  },
+  "mana_cost": "{3}{R}{R}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Giant Shaman",
+  "oracle_text": "When this creature enters, it deals damage equal to the number of Giants you control to each non-Giant creature.",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "2ba5b1a3-40ed-422e-981d-56753004dfc6",
+  "set": "cm2",
+  "set_name": "Commander Anthology Volume II",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/2ba5b1a3-40ed-422e-981d-56753004dfc6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acm2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cm2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/17676da2-1d9a-4181-bc6c-1f75750f7578/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aeb812ea7-3301-4774-86a2-64c4ed6766fc&unique=prints",
+  "collector_number": "123",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "He cares not for the disasters his storm brings as long as his path ahead is clear.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Greg Staples",
+  "artist_ids": [
+    "93d65564-bf00-447b-8406-e2031f03b6b1"
+  ],
+  "illustration_id": "3777d799-24ae-4de8-9225-49604565b8ca",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 14891,
+  "penny_rank": 8761,
+  "prices": {
+    "usd": "0.37",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=446859&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThundercloud%2BShaman",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThundercloud%2BShaman",
+    "edhrec": "https://edhrec.com/route/?cc=Thundercloud+Shaman"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F166910%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=358775&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Thundercloud+Shaman&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

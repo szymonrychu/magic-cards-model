@@ -45,6 +45,7 @@ from ..decisions import Decision, DecisionKind, source_id_of
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
+    ComputedBoard,
     ContinuousEffect,
     Duration,
     Layer,
@@ -565,6 +566,290 @@ def _count_permanents_matching_any(
         return found
 
     return count_matching_any
+
+
+# --------------------------------------------------------------------------
+# NW-06 counted terms: filtered permanent counts, shared creature types,
+# per-turn deaths, coloured symbols, graveyard negations, colour pairs
+# --------------------------------------------------------------------------
+
+#: "the number of creatures you control with power 2 or less" (Arabella,
+#: Abandoned Doll), "the number of equipped creatures you control" (Barret
+#: Wallace, Jor Kadeen), "the number of modified creatures you control other
+#: than this creature" (Thundering Raiju), "the number of permanents you
+#: control with oil counters on them" (Urabrask's Anointer), "the total mana
+#: value of other permanents you control" (Summon: Bahamut): one counted (or
+#: summed) group of the controller's permanents, narrowed by a quality, a
+#: characteristic bound or a counter kind, optionally leaving the source out.
+#: A phrase carrying none of those narrowings is `_COUNT_YOU_CONTROL_RE`'s.
+_FILTERED_PERMANENT_COUNT_RE = re.compile(
+    r"^(?:the )?(?P<measure>number of|total mana value of) (?P<other>other )?"
+    r"(?:(?P<status>tapped|untapped) )?(?:(?P<quality>modified|equipped) )?"
+    r"(?P<qualifier>[a-z]+) you control"
+    r"(?P<other_than> other than (?:this (?:creature|permanent|artifact|enchantment)|it))?"
+    r"(?: with (?:(?P<stat>power|toughness|mana value) (?P<bound>\d+) or "
+    r"(?P<direction>less|greater|more)|(?P<counter>[a-z+/-]+) counters? on (?:them|it)))?$",
+    re.IGNORECASE,
+)
+#: The cheap literal gate in front of `_FILTERED_PERMANENT_COUNT_RE`: the full
+#: pool classifies through `count_expression` on its hot path.
+_FILTERED_PERMANENT_COUNT_MARKERS = (
+    "equipped ",
+    "modified ",
+    " with ",
+    "total mana value",
+    "other ",
+)
+#: "the greatest number of creatures you control that have a creature type in
+#: common" (Basalt Ravager, Skemfar Shadowsage, White Lotus Tile).
+_GREATEST_SHARED_CREATURE_TYPE_RE = re.compile(
+    r"^(?:the )?greatest number of (?P<qualifier>[a-z]+) you control that "
+    r"(?:have|share) a creature type in common$",
+    re.IGNORECASE,
+)
+#: "the number of creatures that died this turn" (Spymaster's Vault), "the
+#: number of nontoken creatures that died this turn", "the number of Zubera
+#: that died this turn" (Ember-Fist Zubera): whoever controlled them.
+_COUNT_DIED_THIS_TURN_RE = re.compile(
+    r"^(?:the )?number of (?:(?P<nontoken>nontoken) )?(?P<qualifier>[a-z]+) that died this turn$",
+    re.IGNORECASE,
+)
+#: "the number of red mana symbols in the mana costs of permanents you control"
+#: (Outrage Shaman, Heartlash Cinder): CR 700.5's devotion count, named by the
+#: chroma ability word's own template.
+_COUNT_COLORED_MANA_SYMBOLS_RE = re.compile(
+    rf"^(?:the )?number of (?P<color>{_COUNT_COLOR_WORD}) mana symbols? in the mana costs? of "
+    r"permanents you control$",
+    re.IGNORECASE,
+)
+#: "the number of noncreature, nonland cards in your graveyard" (Dragonfly
+#: Swarm, Summon: Esper Ramuh, The Lord Master of Hell).
+_COUNT_NONTYPE_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
+    r"^(?:the )?number of (?P<list>non-?[a-z]+(?:(?:, and |, | and )non-?[a-z]+)*) cards? "
+    r"in your graveyard$",
+    re.IGNORECASE,
+)
+#: "the number of different color pairs among permanents you control that are
+#: exactly two colors" (Niv-Mizzet, Guildpact).
+_COUNT_COLOR_PAIRS_RE = re.compile(
+    r"^(?:the )?number of different (?:color|colour) pairs among permanents you control "
+    r"that are exactly two colors$",
+    re.IGNORECASE,
+)
+#: "the number of times it was kicked" (Deathforge Shaman's "twice ..."): CR
+#: 702.33d's count, read off the cast record of the spell the permanent was.
+_TIMES_KICKED_RE = re.compile(
+    r"^(?:the )?number of times (?:it|this (?:creature|permanent|artifact|enchantment|spell)) "
+    r"was kicked$",
+    re.IGNORECASE,
+)
+
+#: A count that may need the resolving source ("other than this creature").
+SourcedCount = Callable[["Game", str, "CardState | None"], int]
+
+
+def _is_equipped(game: "Game", board: "ComputedBoard", permanent: CardState) -> bool:
+    """Whether any Equipment is attached to `permanent` right now (CR 301.5),
+    read off the computed board's subtypes (CR 613.5)."""
+    return any(
+        other.attached_to == permanent.id and "Equipment" in board.of(other).subtypes
+        for other in game.battlefield
+    )
+
+
+def _filtered_permanent_count(phrase: str) -> tuple[SourcedCount, bool] | None:
+    """`_FILTERED_PERMANENT_COUNT_RE`'s count and whether it needs the source
+    object (an "other"/"other than this creature" narrowing)."""
+    match = _FILTERED_PERMANENT_COUNT_RE.fullmatch(phrase)
+    if match is None:
+        return None
+    total_mana_value = match.group("measure").lower().startswith("total")
+    quality = (match.group("quality") or "").lower()
+    other = match.group("other") is not None or match.group("other_than") is not None
+    stat = (match.group("stat") or "").lower()
+    counter_word = match.group("counter")
+    if not (total_mana_value or quality or other or stat or counter_word):
+        return None  # a plain "the number of <type> you control" is not this reader's
+    qualifier = match.group("qualifier")
+    counts_any_permanent = qualifier.lower() in ("permanent", "permanents")
+    card_type = None if counts_any_permanent else _singular_card_type(qualifier)
+    subtype = None
+    if not counts_any_permanent and card_type is None:
+        subtype = _singular_subtype_for_count_expression(qualifier)
+        if subtype is None:
+            return None
+    status = (match.group("status") or "").lower()
+    bound = int(match.group("bound")) if match.group("bound") else 0
+    at_most = (match.group("direction") or "").lower() == "less"
+    counter_kind = _counter_kind(counter_word) if counter_word else None
+
+    def count(game: "Game", controller: str, source: CardState | None) -> int:
+        from ..conditions.board import permanent_is_modified
+
+        board = game.computed_board()
+        total = 0
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            if chars.controller != controller:
+                continue
+            if other and source is not None and permanent.id == source.id:
+                continue
+            if card_type is not None and card_type not in chars.types:
+                continue
+            if subtype is not None and not any(word.lower() == subtype for word in chars.subtypes):
+                continue
+            if status and permanent.tapped != (status == "tapped"):
+                continue
+            if quality == "equipped" and not _is_equipped(game, board, permanent):
+                continue
+            if quality == "modified" and not permanent_is_modified(game, permanent, chars):
+                continue
+            if stat:
+                value = (
+                    chars.numeric_power
+                    if stat == "power"
+                    else chars.numeric_toughness
+                    if stat == "toughness"
+                    else int(chars.mana_value)
+                )
+                if (value > bound) if at_most else (value < bound):
+                    continue
+            if counter_kind is not None and not chars.counters.get(counter_kind, 0) > 0:
+                continue
+            total += int(chars.mana_value) if total_mana_value else 1  # CR 202.3
+        return total
+
+    return count, other
+
+
+def _greatest_shared_creature_type_count(phrase: str) -> Callable[["Game", str], int] | None:
+    """The largest group of `<qualifier>` the controller has that share one
+    creature type (CR 205.3m). A changeling is every creature type (CR 702.73a),
+    which the computed board already says in its subtypes."""
+    match = _GREATEST_SHARED_CREATURE_TYPE_RE.fullmatch(phrase)
+    if match is None:
+        return None
+    card_type = _singular_card_type(match.group("qualifier"))
+    if card_type is None:
+        return None
+    from ...data.creature_types import creature_types
+
+    def greatest_shared(game: "Game", controller: str) -> int:
+        known = frozenset(creature_types())
+        board = game.computed_board()
+        sharing: dict[str, int] = {}
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            if chars.controller != controller or card_type not in chars.types:
+                continue
+            for kind in known.intersection(chars.subtypes):
+                sharing[kind] = sharing.get(kind, 0) + 1
+        return max(sharing.values(), default=0)  # CR 107.2: nothing to count is 0
+
+    return greatest_shared
+
+
+def _died_this_turn_count(phrase: str) -> Callable[["Game", str], int] | None:
+    """The turn's graveyard arrivals from the battlefield (CR 700.4) that were
+    `<qualifier>` as they last existed (CR 603.10a), `Game.turn_history`'s
+    "to_graveyard" entries - whoever controlled them, tokens included unless
+    "nontoken"."""
+    match = _COUNT_DIED_THIS_TURN_RE.fullmatch(phrase)
+    if match is None:
+        return None
+    card_type = _singular_card_type(match.group("qualifier"))
+    subtype = (
+        None
+        if card_type is not None
+        else _singular_subtype_for_count_expression(match.group("qualifier"))
+    )
+    if card_type is None and subtype is None:
+        return None
+    nontoken = match.group("nontoken") is not None
+
+    def died_this_turn(game: "Game", _controller: str) -> int:
+        found = 0
+        for entry in game.turn_history:
+            chars = entry.characteristics
+            if entry.kind != "to_graveyard" or chars is None:
+                continue
+            if card_type is not None and card_type not in chars.types:
+                continue
+            if subtype is not None and not any(word.lower() == subtype for word in chars.subtypes):
+                continue
+            if nontoken and chars.is_token:
+                continue
+            found += 1
+        return found
+
+    return died_this_turn
+
+
+def _colored_mana_symbols_count(phrase: str) -> Callable[["Game", str], int] | None:
+    match = _COUNT_COLORED_MANA_SYMBOLS_RE.fullmatch(phrase)
+    if match is None:
+        return None
+    color = _COLOR_WORD_TO_COLOR[match.group("color").lower()]
+    return lambda game, controller: devotion_to(game, controller, color)
+
+
+def _nontype_cards_in_graveyard_count(phrase: str) -> Callable[["Game", str], int] | None:
+    match = _COUNT_NONTYPE_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(phrase)
+    if match is None:
+        return None
+    excluded: set[Type] = set()
+    for word in re.findall(r"non-?([a-z]+)", match.group("list").lower()):
+        card_type = _singular_card_type(word)
+        if card_type is None:
+            return None
+        excluded.add(card_type)
+
+    def count_in_graveyard(game: "Game", controller: str) -> int:
+        return sum(
+            1 for card in game.player(controller).graveyard if not excluded.intersection(card.types)
+        )
+
+    return count_in_graveyard
+
+
+def _color_pairs_count(phrase: str) -> Callable[["Game", str], int] | None:
+    if _COUNT_COLOR_PAIRS_RE.fullmatch(phrase) is None:
+        return None
+
+    def count_pairs(game: "Game", controller: str) -> int:
+        board = game.computed_board()
+        pairs = {
+            frozenset(chars.colors)
+            for permanent in game.battlefield
+            if (chars := board.of(permanent)).controller == controller
+            and len(set(chars.colors)) == 2
+        }
+        return len(pairs)
+
+    return count_pairs
+
+
+def _nw06_counted_term(stripped: str) -> Callable[["Game", str], int] | None:
+    """The source-free counted terms of NW-06, behind literal gates."""
+    lowered = stripped.lower()
+    if any(marker in lowered for marker in _FILTERED_PERMANENT_COUNT_MARKERS):
+        filtered = _filtered_permanent_count(stripped)
+        if filtered is not None:
+            counted, needs_source = filtered
+            if needs_source:
+                return None
+            return lambda game, controller: counted(game, controller, None)
+    if "in common" in lowered:
+        return _greatest_shared_creature_type_count(stripped)
+    if "died this turn" in lowered:
+        return _died_this_turn_count(stripped)
+    if "mana symbol" in lowered:
+        return _colored_mana_symbols_count(stripped)
+    if "cards in your graveyard" in lowered and "non" in lowered:
+        return _nontype_cards_in_graveyard_count(stripped)
+    if "color pairs" in lowered or "colour pairs" in lowered:
+        return _color_pairs_count(stripped)
+    return None
 
 
 def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
@@ -1129,6 +1414,9 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
         return different_among
 
+    if (nw06_term := _nw06_counted_term(stripped)) is not None:
+        return nw06_term
+
     # "the number of colors among `<qualifier>` you control" - Vivid's own
     # amount (CR 207.2c: an ability word has no rules meaning; the count is
     # CR 105.1's colors among a group of permanents, CR 105.2c excluding
@@ -1374,6 +1662,23 @@ def _amount_term(term: str) -> AmountReader | None:
         return read_object_counters
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
+    if "times" in lowered and _TIMES_KICKED_RE.fullmatch(text):
+
+        def read_times_kicked(
+            game: "Game", _controller: str, obj: CardState | None, _x: int
+        ) -> int:
+            # CR 702.33d, read as the object last existed (CR 608.2h): the cast
+            # record of the spell this permanent was (CR 400.7d), none when it
+            # was never cast.
+            record = None if obj is None else game.cast_record_of(obj)
+            return 0 if record is None else record.kicked
+
+        return read_times_kicked
+    if any(marker in lowered for marker in _FILTERED_PERMANENT_COUNT_MARKERS) and (
+        filtered := _filtered_permanent_count(text)
+    ):
+        sourced = filtered[0]
+        return lambda game, controller, obj, _x: sourced(game, controller, obj)
     if "mana value" in lowered and _ITS_MANA_VALUE_RE.fullmatch(text):
         # CR 202.3: the object's mana value, as it last existed if it has left
         # the battlefield (CR 603.10a looks back in time for a leaves trigger).
@@ -3210,7 +3515,10 @@ _DAMAGE_TO_PERMANENT_EQUAL_TO_ITS_CONTROLLERS_RE = re.compile(
 #: 's `expr`, rewritten to the second person `count_expression` reads, then
 #: evaluated for that player (CR 608.2h).
 _TARGET_PLAYER_REFERENCES = (
-    (re.compile(r"\b(?:they|that player) controls?\b", re.IGNORECASE), "you control"),
+    (
+        re.compile(r"\b(?:they|that (?:player|opponent)) controls?\b", re.IGNORECASE),
+        "you control",
+    ),
     # "the number of cards they've drawn this turn" (Cerebral Vortex), "the
     # number of cards that player has drawn this turn" (Molten Psyche).
     (re.compile(r"\b(?:they've|they have|that player has)\b", re.IGNORECASE), "you've"),
@@ -3219,7 +3527,7 @@ _TARGET_PLAYER_REFERENCES = (
         re.compile(r"\bdealt to (?:that player|them|target (?:player|opponent))\b", re.IGNORECASE),
         "dealt to you",
     ),
-    (re.compile(r"\b(?:their|that player's)\b", re.IGNORECASE), "your"),
+    (re.compile(r"\b(?:their|that (?:player|opponent)'s)\b", re.IGNORECASE), "your"),
 )
 #: "the number of nonbasic lands that creature's controller controls" (Weight of
 #: Spires): the controller of the creature the spell targets, so the same
@@ -3246,7 +3554,7 @@ _TARGETED_SUBJECT_RE = re.compile(r"\btarget\b|\bthat creature\b", re.IGNORECASE
 #: resolves (CR 608.2h) off the source's last known information (CR 603.10a).
 _EQUAL_TO_DAMAGE_TO_EACH_GROUP_RE = re.compile(
     r"^(?:it|this (?:creature|permanent|artifact)) deals damage equal to (?P<expr>[^.]+?) to "
-    r"each (?P<groups>[a-z]+(?: and each [a-z]+)*)\.?$",
+    r"each (?:non-?(?P<non>[a-z]+) )?(?P<groups>[a-z]+(?: and each [a-z]+)*)\.?$",
     re.IGNORECASE,
 )
 
@@ -3271,6 +3579,25 @@ def _parse_expression_damage_to_each_group_clause(
         if card_type is None:
             return None
         types.add(card_type)
+    # "each non-Giant creature" (Thundercloud Shaman): the group minus anything
+    # of that card type or creature type, read off the computed board.
+    excluded_word = match.group("non")
+    excluded_type = None if excluded_word is None else _singular_card_type(excluded_word)
+    excluded_subtype = (
+        None
+        if excluded_word is None or excluded_type is not None
+        else _singular_subtype_for_count_expression(excluded_word + "s")
+        or _singular_subtype_for_count_expression(excluded_word)
+    )
+    if excluded_word is not None and excluded_type is None and excluded_subtype is None:
+        return None
+
+    def spared(chars: Characteristics) -> bool:
+        if excluded_type is not None:
+            return excluded_type in chars.types
+        return excluded_subtype is not None and any(
+            word.lower() == excluded_subtype for word in chars.subtypes
+        )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         assert isinstance(stack_object, AbilityOnStack)
@@ -3280,7 +3607,7 @@ def _parse_expression_damage_to_each_group_clause(
         recipients = [
             permanent
             for permanent in list(game.battlefield)
-            if types & set(board.of(permanent).types)
+            if types & set(board.of(permanent).types) and not spared(board.of(permanent))
         ]
         for permanent in recipients:
             game.deal_damage(permanent, amount, source=source)
@@ -3420,20 +3747,174 @@ def _parse_damage_each_player_equal_to_their_count_clause(
     rewritten = expr
     for pattern, replacement in _TARGET_PLAYER_REFERENCES:
         rewritten = pattern.sub(replacement, rewritten)
-    reader = amount_expression(rewritten) if rewritten != expr else None
+    # Each recipient's own count when the amount names them ("that player
+    # controls"); otherwise one count of the caster's (Sorcerer Class's "the
+    # number of instant and sorcery spells you've cast this turn"), fixed once
+    # as the effect applies (CR 608.2h) and dealt to every recipient alike.
+    per_player = rewritten != expr
+    reader = amount_expression(rewritten)
     if reader is None:
         return None
     opponents_only = match.group("who").lower() == "opponent"
+    names_that_spell = subject.strip().lower() == "that spell"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = _resolving_source(game, stack_object)
+        if names_that_spell and isinstance(stack_object, AbilityOnStack):
+            # "that spell" is the spell the trigger watched (CR 603.2), as it
+            # last existed once it has left the stack (CR 608.2h).
+            watched = (
+                None
+                if stack_object.event is None or stack_object.event.subject_id is None
+                else game.find_by_id(stack_object.event.subject_id)
+            )
+            if isinstance(watched, CardState):
+                source = watched
         controller = game.controller_of(stack_object).username
+        shared = None if per_player else max(reader(game, controller, source, 0), 0)
         deals = [
-            (source, player, max(reader(game, player.username, source, 0), 0))
+            (
+                source,
+                player,
+                max(reader(game, player.username, source, 0), 0) if shared is None else shared,
+            )
             for player in game.players_in_game
             if not opponents_only or player.username != controller
         ]
         _deal_all(game, deals)
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_damage_each_player_equal_to_listed_count_ability_text(
+    text: str,
+) -> AbilityEffect | None:
+    """`_parse_damage_each_player_equal_to_their_count_clause`, read from the
+    whole one-sentence ability when its count names two card types with "and"
+    ("the number of instant and sorcery spells you've cast this turn", Sorcerer
+    Class) - the clause splitter would cut the sentence at that "and", so the
+    reader is handed the ability's text before any splitting."""
+    lowered = text.lower()
+    if "damage to each" not in lowered or " and " not in lowered:
+        return None
+    body = _strip_non_effect_preamble(text).strip()
+    if body.count(".") > 1 or "," in body:
+        return None
+    return _parse_damage_each_player_equal_to_their_count_clause(body, for_spell=False)
+
+
+#: "`<src>` deals X damage to `<recipient>`, where X is `<count>`" whose count
+#: names the source itself ("other than this creature": Thundering Raiju's
+#: "the number of modified creatures you control other than this creature"),
+#: which the `(game, controller)` readers of the plain "where X" damage shapes
+#: have no source to evaluate.
+_WHERE_X_DAMAGE_SOURCE_COUNT_RE = re.compile(
+    rf"^{_UNQUOTED_PREFIX}\bdeals? X damage to (?P<phrase>each opponent|each player|"
+    r"[^,]*?\btargets?\b[^,]*?), where X is (?P<expr>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s36", for_spell=FORWARD)
+def _parse_where_x_damage_source_count_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_WHERE_X_DAMAGE_SOURCE_COUNT_RE`'s shape: X is read once as the effect
+    applies (CR 608.2h), off the dealing object as it is or last was (CR
+    113.7a) - amounts `count_expression` cannot read for lack of that source."""
+    lowered = clause.lower()
+    if "where x is" not in lowered or " other" not in lowered:
+        return None
+    match = _WHERE_X_DAMAGE_SOURCE_COUNT_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    subject = re.split(r"\bdeals?\b", clause, maxsplit=1, flags=re.IGNORECASE)[0]
+    expr = match.group("expr")
+    if _TARGETED_SUBJECT_RE.search(subject) or count_expression(expr) is not None:
+        return None
+    reader = amount_expression(expr)
+    if reader is None:
+        return None
+    phrase = match.group("phrase").lower()
+    if phrase.startswith("each "):
+        opponents_only = phrase == "each opponent"
+
+        def spread(game: "Game", stack_object: "StackObject") -> None:
+            source = _resolving_source(game, stack_object)
+            controller = game.controller_of(stack_object).username
+            amount = max(reader(game, controller, source, _announced_x(game, stack_object)), 0)
+            _deal_all(
+                game,
+                [
+                    (source, player, amount)
+                    for player in game.players_in_game
+                    if not opponents_only or player.username != controller
+                ],
+            )
+
+        return spread
+    if not _targets_understood(phrase, count_agnostic=True, allow_player_targets=True):
+        return None
+    return _deal_expression_damage(reader)
+
+
+#: "Each opponent loses X life, where X is `<count>`." / "Each player gains X
+#: life, where X is ..." (Skemfar Shadowsage's modes): the whole group, one
+#: amount fixed as the effect applies (CR 608.2h) - or each recipient's own
+#: when the count names them ("they control").
+_EACH_PLAYER_LIFE_WHERE_X_RE = re.compile(
+    r"^(?:then )?each (?P<who>opponent|player) (?P<verb>loses|gains) X life, "
+    r"where X is (?P<expr>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s36", for_spell=FORWARD)
+def _parse_each_player_life_where_x_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_PLAYER_LIFE_WHERE_X_RE`'s shape, spell or ability."""
+    if "where x is" not in clause.lower():
+        return None
+    match = _EACH_PLAYER_LIFE_WHERE_X_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    expr = match.group("expr")
+    rewritten = expr
+    for pattern, replacement in _TARGET_PLAYER_REFERENCES:
+        rewritten = pattern.sub(replacement, rewritten)
+    reader = amount_expression(rewritten)
+    if reader is None:
+        return None
+    per_player = rewritten != expr
+    opponents_only = match.group("who").lower() == "opponent"
+    gains = match.group("verb").lower() == "gains"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = _resolving_source(game, stack_object)
+        controller = game.controller_of(stack_object).username
+        x_value = _announced_x(game, stack_object)
+        shared = None if per_player else max(reader(game, controller, source, x_value), 0)
+        recipients = [
+            player
+            for player in game.players_in_game
+            if not opponents_only or player.username != controller
+        ]
+        amounts = [
+            (
+                player,
+                max(reader(game, player.username, source, x_value), 0)
+                if shared is None
+                else shared,
+            )
+            for player in recipients
+        ]
+        for player, amount in amounts:
+            if gains:
+                game.gain_life(player, amount)
+            else:
+                game.lose_life(player, amount)
 
     return effect
 
@@ -3873,6 +4354,30 @@ def _parse_it_dynamic_x_pump_clause(text: str) -> AbilityEffect | None:
                 modification=modify_power_toughness(power, toughness),
             )
         )
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_it_dynamic_x_pump_then_if_clause(text: str) -> AbilityEffect | None:
+    """ "`<it> gets +X/+X until end of turn, where X is <count>.` `Then if <its
+    power is N or greater>, <instruction>.`" (Jor Kadeen, First Goldwarden): the
+    pump (`_parse_it_dynamic_x_pump_clause`) is applied first, then the "Then
+    if" sentence is read as its own ability text (CR 608.2c: in order) - its
+    condition looks at the creature as the pump left it."""
+    if "where X is" not in text or ". Then if " not in text:
+        return None
+    pump, _, rest = " ".join(text.strip().split()).partition(". Then if ")
+    pumped = _parse_it_dynamic_x_pump_clause(pump + ".")
+    if pumped is None:
+        return None
+    follow_up = _ability_effect_or_notice("Then if " + rest)
+    if follow_up is None or not _readable_effect(follow_up):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        pumped(game, ability)
+        follow_up(game, ability)
 
     return effect
 
@@ -4900,6 +5405,62 @@ def _parse_where_x_shared_by_two_and_clauses_spell_text(text: str) -> Effect | N
     tail = tail[:1].upper() + tail[1:]
     rewritten = f"{match.group('head')}, where X is {expr}. {tail}, where X is {expr}."
     return parse_mixed_effect_for_spell(rewritten)
+
+
+#: "`<clause using X>` and `<clause using X>`, where X is `<expr>`." and its
+#: three-part serial list "`<clause>`, `<clause>`, and `<clause>`, where X is
+#: `<expr>`." - one ability sentence whose single "where X is" closes the last
+#: instruction (Arabella, Abandoned Doll's "it deals X damage to each opponent
+#: and you gain X life, where X is ..."; Niv-Mizzet, Guildpact's "it deals X
+#: damage to any target, target player draws X cards, and you gain X life,
+#: where X is ..."). CR 107.3c gives X that value everywhere on the ability,
+#: but the clause splitter leaves the earlier parts with no definition at all
+#: (an undefined X reads as nothing), so every instruction shares the one.
+_INSTRUCTION_SUBJECT = r"(?:you|that player|it|they|target|each|this [a-z]+)\b"
+_WHERE_X_CLOSING_LIST_RE = re.compile(
+    r"^(?P<first>[^.,]*?\bX\b[^.,]*?)"
+    rf"(?:,\s+(?P<second>{_INSTRUCTION_SUBJECT}[^.,]*?\bX\b[^.,]*?),)?"
+    rf"\s+and\s+(?P<last>{_INSTRUCTION_SUBJECT}[^.,]*?\bX\b[^.,]*?)"
+    r",\s*where X is (?P<expr>[^.]+)\.$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s23")
+def _parse_where_x_shared_by_list_ability_text(text: str) -> AbilityEffect | None:
+    """The sentence above: X is evaluated once as the ability resolves (CR
+    608.2h) and written into each instruction, which is then read as its own
+    sentence - an instruction reader may have no "where X" form of its own
+    (draw), and a number already in the text is what every one takes."""
+    if "where X is" not in text:
+        return None
+    body = _strip_non_effect_preamble(text)
+    match = _WHERE_X_CLOSING_LIST_RE.fullmatch(body.strip())
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+    parts = [
+        match.group(key) for key in ("first", "second", "last") if match.group(key) is not None
+    ]
+
+    def written_with(value: int) -> str:
+        return " ".join(
+            re.sub(r"\bX\b", str(value), part[:1].upper() + part[1:]) + "." for part in parts
+        )
+
+    if not _readable_effect(_ability_effect_or_notice(written_with(2))):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        value = max(reader(game, ability.controller, source, ability.x_value or 0), 0)
+        resolved = _ability_effect_or_notice(written_with(value))
+        if resolved is not None:
+            resolved(game, ability)
+
+    return effect
 
 
 @ABILITY_TEXT.rung("s23")
