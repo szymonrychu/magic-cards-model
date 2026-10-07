@@ -1681,6 +1681,7 @@ class ContinuousMixin:
         line = cls._static_line_without_ability_word(text)
         return (
             cls._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(line) is not None
+            or cls._REVEALS_EACH_CARD_DRAWN_RE.fullmatch(line) is not None
             or cls._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(line) is not None
             or cls._SPELLS_YOU_CAST_HAVE_IMPROVISE_RE.fullmatch(line) is not None
             or cls._TYPE_MV_THRESHOLD_COST_LESS_SELF_POWER_RE.fullmatch(

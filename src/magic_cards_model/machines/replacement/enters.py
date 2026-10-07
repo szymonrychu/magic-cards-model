@@ -1659,6 +1659,101 @@ def _choose_a_quality(
     return apply
 
 
+#: "choose a player" (Stuffy Doll), "choose an opponent" (Nyxathid), and the
+#: compound "choose an opponent and a card name other than a basic land card
+#: name" (Booby Trap): CR 614.12a's choice of a player, recorded on
+#: `CardState.chosen_player`, with an optional card name (CR 201.4a) after it
+#: recorded on `CardState.choice` as `_choose_a_quality` would.
+_CHOOSE_A_PLAYER_RE = re.compile(
+    r"^choose (?P<who>a player|an opponent)"
+    r"(?: and a card name(?P<other_than> other than a basic land card name)?)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _basic_land_name_refusal(value: str) -> str | None:
+    """Why `value` is not "a card name other than a basic land card name"
+    (CR 201.4a: the name must be one whose card does not have the named
+    characteristics), or None. A name the engine's pool does not hold cannot
+    be judged and is accepted, as `_card_name_quality_refusal` does."""
+    from ...data.printing_pool import resolve_printing
+
+    printing = resolve_printing(value)
+    if printing is None:
+        return None
+    if Type.LAND in printing.types and Supertype.BASIC in printing.supertypes:
+        return f"{value!r} is a basic land card name (CR 201.4a)"
+    return None
+
+
+def _choose_a_player(replacement_text: str, card_name: str) -> Apply | None:
+    """`_CHOOSE_A_PLAYER_RE`'s choice, asked before the permanent enters (CR
+    614.12a) of its own controller: any player in the game for "a player",
+    any of the controller's opponents for "an opponent" - asked only when
+    there is more than one to pick between, Tribute's own convention. A
+    compound "and a card name" asks the name next and records both."""
+    match = _CHOOSE_A_PLAYER_RE.match(replacement_text.strip())
+    if match is None:
+        return None
+    any_player = match.group("who").lower() == "a player"
+    wants_name = "card name" in match.group(0).lower()
+    other_than_basic = match.group("other_than") is not None
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if source is None or who is None:
+            return
+        candidates = tuple(
+            player.username
+            for player in game.players_in_game
+            if any_player or player.username != who
+        )
+        if not candidates:
+            return
+        chosen = candidates[0]
+        if len(candidates) > 1:
+            quality = "player" if any_player else "opponent"
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_QUALITY,
+                    player=who,
+                    prompt=f"choose {with_indefinite_article(quality)} as {card_name} enters",
+                    source=card_name,
+                    source_id=source_id_of(source),
+                    options=candidates,
+                    quality=quality,
+                )
+            )
+            assert isinstance(answer, str)
+            if answer not in candidates:
+                raise ValueError(f"{card_name}: {answer!r} is not one of {', '.join(candidates)}")
+            chosen = answer
+        source.chosen_player = chosen
+        if not wants_name:
+            return
+        value = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=who,
+                prompt=(
+                    "choose a card name other than a basic land card name"
+                    if other_than_basic
+                    else "choose a card name"
+                ),
+                source=card_name,
+                source_id=source_id_of(source),
+                options=(),
+                quality=ChoiceKind.CARD_NAME.value,
+            )
+        )
+        assert isinstance(value, str)
+        if other_than_basic and (refusal := _basic_land_name_refusal(value)) is not None:
+            raise ValueError(f"{card_name}: {refusal}")
+        source.choice = Choice(kind=ChoiceKind.CARD_NAME, value=value)
+
+    return apply
+
+
 def _choose_colors(count: int, card_name: str) -> Apply:
     """ "As [this] enters, choose two colors" - CR 614.12a's choice asked
     `count` times, each answer one of CR 105.1's colors not already chosen,
@@ -2355,6 +2450,11 @@ def _self_enters_modifiers(
                         False,
                     )
                 )
+                continue
+
+            player_choice = _choose_a_player(effect.replacement or "", card_state.card.name)
+            if player_choice is not None:
+                performable.append((f"{key}:{index}", player_choice, effect.text, False))
                 continue
 
             choice_kind = _classify_choice(effect.replacement or "")

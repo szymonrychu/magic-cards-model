@@ -2530,6 +2530,21 @@ def _condition_matches(
             game, event.player
         ):
             return False
+        if lowered.startswith("the chosen player "):
+            # Booby Trap's "When the chosen player draws a card with the
+            # chosen name": the player its CR 614.12a choice named
+            # (`CardState.chosen_player`), and "with the chosen name" the
+            # drawn card's name against the recorded card-name choice.
+            if event.player is None or event.player != source.chosen_player:
+                return False
+            if "with the chosen name" in lowered:
+                choice = source.choice
+                return (
+                    choice is not None
+                    and choice.kind is ChoiceKind.CARD_NAME
+                    and event.subject_name == choice.value
+                )
+            return True
         if "an opponent" in lowered:
             return event.player is not None and event.player != controller
         return _controller_clause_holds(condition, controller, event.player)

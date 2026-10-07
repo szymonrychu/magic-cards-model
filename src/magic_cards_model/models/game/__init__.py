@@ -3465,6 +3465,12 @@ class Game(
     #: subsystem (`machines/layers.py`, not touched by this task), so it is
     #: read locally here rather than added to that file's own static-grant
     #: readers.
+    #: Booby Trap's "The chosen player reveals each card they draw." - CR
+    #: 701.20a's reveal, made as each card is drawn by the player the
+    #: permanent's CR 614.12a choice named (`Game._reveal_drawn_card`).
+    _REVEALS_EACH_CARD_DRAWN_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^the chosen player reveals each card they draw\.?$", re.IGNORECASE
+    )
     _LOOK_AT_TOP_CARD_ANY_TIME_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^you may look at the top card of your library any time\.?$", re.IGNORECASE
     )
