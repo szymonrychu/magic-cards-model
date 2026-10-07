@@ -334,17 +334,21 @@ def test_nashi_mills_nothing_from_an_empty_library_and_takes_the_counter():
     assert scenario.game.unmodeled_trigger_effect_notices == []
 
 
-def test_questing_beast_triggers_but_its_resolution_is_left_unmodelled():
+def test_questing_beast_deals_that_much_damage_to_the_damaged_players_planeswalker():
     """Questing Beast: "it deals that much damage to target planeswalker that
     player controls."
 
     The trigger fires on "to an opponent" (proven in `test_trigger_events.py`),
-    and its target is now restricted by the trigger's own event: "that player"
-    is the player dealt the damage (`ControllerRestriction.EVENT_PLAYER`, bound
-    by `TargetingProfile.for_event_player` when the targets are chosen, CR
+    and its target is restricted by the trigger's own event: "that player" is
+    the player dealt the damage (`ControllerRestriction.EVENT_PLAYER`, bound by
+    `TargetingProfile.for_event_player` when the targets are chosen, CR
     603.3d). So only bob's Karn, the Great Creator is a legal target - alice's
-    own Karn is not - and the ability reaches resolution. What is still left
-    unread is "it deals that much damage", which leaves the notice below.
+    own Karn is not.
+
+    This test used to assert "it deals that much damage" was left unread with
+    a notice. NW06-T1 reads "that much" as the damage the trigger's event dealt
+    (CR 608.2h), so the 4 combat damage to bob is dealt again to bob's Karn
+    (5 loyalty -> 1, CR 120.3c) and nothing is left unmodelled.
     """
     scenario = (
         Scenario()
@@ -353,6 +357,8 @@ def test_questing_beast_triggers_but_its_resolution_is_left_unmodelled():
         .build()
     )
     beast = scenario.creature("Questing Beast", "alice")
+    bobs_karn = scenario.find("Karn, the Great Creator", Zone.BATTLEFIELD, "bob")
+    alices_karn = scenario.find("Karn, the Great Creator", Zone.BATTLEFIELD, "alice")
 
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(beast, defending="bob")
@@ -360,7 +366,7 @@ def test_questing_beast_triggers_but_its_resolution_is_left_unmodelled():
     scenario.combat_damage()
     resolve_all(scenario)
 
-    notices = scenario.game.unmodeled_trigger_effect_notices
-    assert len(notices) == 1
-    assert notices[0].source_name == "Questing Beast"
-    assert "that player controls" in notices[0].text
+    assert scenario.game.unmodeled_trigger_effect_notices == []
+    assert scenario.player("bob").life == 16
+    assert bobs_karn.counter_count("loyalty") == 1
+    assert alices_karn.counter_count("loyalty") == 5
