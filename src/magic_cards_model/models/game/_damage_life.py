@@ -647,7 +647,11 @@ class DamageLifeMixin:
             )
         ):
             return False  # "you and/or permanents you control", read now
-        if shield.recipient_types or shield.recipient_controller is not None:
+        if (
+            shield.recipient_types
+            or shield.recipient_controller is not None
+            or shield.recipient_subtypes
+        ):
             # "to creatures", "to creatures you control", "to you and
             # creatures you control": the damaged permanent's types and
             # controller as the damage would be dealt; a player only through
@@ -658,8 +662,12 @@ class DamageLifeMixin:
             else:
                 if event.card.zone is not Zone.BATTLEFIELD:
                     return False
-                types = self.characteristics_of(event.card).types
-                if any(wanted not in types for wanted in shield.recipient_types):
+                chars = self.characteristics_of(event.card)
+                if any(wanted not in chars.types for wanted in shield.recipient_types):
+                    return False
+                if shield.recipient_subtypes and not {
+                    subtype.lower() for subtype in chars.subtypes
+                } & set(shield.recipient_subtypes):
                     return False
                 if (
                     shield.recipient_controller is not None

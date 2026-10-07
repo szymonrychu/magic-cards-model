@@ -39,6 +39,7 @@ from ..casting import (
 )
 from ..casting_restrictions import create_targeted_cant_cast_restriction
 from ..combat import has_keyword
+from ..damage_backrefs import newly_discarded, public_card_ids
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     DelayedTrigger,
@@ -72,6 +73,7 @@ from ..triggers import (
     ExtraTriggerEvent,
     is_ability,
 )
+from ..triggers.events import event_subject_or_source, object_stat_or_last_known
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
@@ -468,6 +470,176 @@ def _parse_prevent_all_damage_to_self_this_turn_clause(
     return effect
 
 
+def _shield_object(
+    game: "Game",
+    stack_object: "StackObject",
+    obj: CardState,
+    *,
+    combat_only: bool,
+    to: bool,
+    by: bool,
+) -> None:
+    """CR 615.1a's "prevent all [combat] damage that would be dealt to [and
+    dealt by] `<obj>` this turn": one shield around the object and, for "dealt
+    by", a second one on damage it is the source of - two prevention effects
+    on one object. Both name it *as this object* (CR 400.7): the "to" shield
+    lasts only while this incarnation stays on the battlefield, and the "by"
+    shield holds its `zone_change_stamp` (a source that left and returned is a
+    new object the shield never named)."""
+    from ...models.game import PreventionShield, ShieldKind
+
+    if obj.zone is not Zone.BATTLEFIELD or obj.zone_change_stamp is None:
+        return
+    controller = game.controller_of(stack_object).username
+    word = "combat damage" if combat_only else "damage"
+    if to:
+        game.create_prevention_shield(
+            PreventionShield(
+                kind=ShieldKind.ALL,
+                label=f"prevent all {word} that would be dealt to {obj.name} this turn",
+                controller=controller,
+                card_id=obj.id,
+                combat_only=combat_only,
+                lasts_while=RemainsOnBattlefield(card_id=obj.id, stamp=obj.zone_change_stamp),
+            )
+        )
+    if by:
+        game.create_prevention_shield(
+            PreventionShield(
+                kind=ShieldKind.ALL,
+                label=f"prevent all {word} that would be dealt by {obj.name} this turn",
+                controller=controller,
+                source_id=obj.id,
+                source_stamp=obj.zone_change_stamp,
+                combat_only=combat_only,
+            )
+        )
+
+
+#: "Prevent all [combat] damage that would be dealt to and dealt by
+#: `<object>` this turn." - Moonlight Geist ("this creature"), Soratami Cloud
+#: Chariot ("target creature you control"), Ith, High Arcanist ("Untap target
+#: attacking creature. ... that creature"), Goblin Snowman ("it", read whole
+#: by `_parse_prevent_damage_to_it_whole_text`).
+_PREVENT_TO_AND_BY_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that would be dealt to and dealt by "
+    r"(?P<who>him|her|this creature|this permanent|that creature|target [^.]+?) this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _prevent_to_and_by_clause(sentence: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_PREVENT_TO_AND_BY_RE`'s sentence. A self-reference ("this creature",
+    "him") is an ability's own source; a target phrase - or "that creature",
+    CR 608.2c's anaphor back to the object's own earlier target - names each
+    target still legal as it resolves (CR 608.2b)."""
+    match = _PREVENT_TO_AND_BY_RE.fullmatch(" ".join(sentence.strip().split()))
+    if match is None:
+        return None
+    who = match.group("who").lower()
+    combat_only = match.group("combat") is not None
+    targeted = who.startswith("target ") or who == "that creature"
+    if who.startswith("target "):
+        if not _targets_understood(match.group("who"), count_agnostic=True):
+            return None
+    elif not targeted and for_spell:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if targeted:
+            objects = [t for t in game.resolve_targets(stack_object) if isinstance(t, CardState)]
+        else:
+            if not isinstance(stack_object, AbilityOnStack):
+                return
+            source = stack_object.source(game)
+            if source is None or stack_object.source_stamp not in (None, source.zone_change_stamp):
+                return
+            objects = [source]
+        for obj in objects:
+            _shield_object(game, stack_object, obj, combat_only=combat_only, to=True, by=True)
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s7", for_spell=FORWARD)
+def _parse_prevent_damage_to_and_by_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """One `_PREVENT_TO_AND_BY_RE` clause naming its own object ("that
+    creature" needs the sentence before it, `_parse_prevent_to_and_by_
+    sentence_clauses`)."""
+    if "dealt to and dealt by" not in clause.lower() or "that creature" in clause.lower():
+        return None
+    return _prevent_to_and_by_clause(clause, for_spell=for_spell)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_prevent_to_and_by_sentence_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """A text ending in `_PREVENT_TO_AND_BY_RE`'s sentence, read whole before
+    the clause splitter cuts its "to and dealt by" at the "and". Any sentences
+    before it are read by `_parse_mixed_clauses` and run first (CR 608.2c);
+    "that creature" is only read after such a sentence named a target."""
+    if "dealt to and dealt by" not in text.lower():
+        return None
+    sentences = _SENTENCE_BREAK_RE.split(" ".join(text.strip().split()))
+    last = sentences[-1]
+    head = " ".join(sentences[:-1])
+    if "that creature" in last.lower() and "target" not in head.lower():
+        return None
+    clause = _prevent_to_and_by_clause(last, for_spell=for_spell)
+    if clause is None:
+        return None
+    if not head:
+        return [clause]
+    head_clauses = _parse_mixed_clauses(head, for_spell=for_spell)
+    if head_clauses is None:
+        return None
+    return [*head_clauses, clause]
+
+
+#: An ability's whole text "Prevent all [combat] damage that would be dealt
+#: to [and dealt by] it this turn." (Goblin Snowman's block trigger): with
+#: no other instruction for "it" to point back to, it is the object the
+#: trigger event names (CR 603.2, `event_subject_or_source`) - the ability's
+#: own source when the condition is self-referential ("Whenever this
+#: creature blocks").
+_PREVENT_TO_IT_WHOLE_TEXT_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that would be dealt to (?P<by>and dealt by )?it "
+    r"this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_prevent_damage_to_it_whole_text(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_PREVENT_TO_IT_WHOLE_TEXT_RE`'s shape, on an ability's whole text only:
+    inside a longer text "it" may name an earlier target (Djeru's Resolve), so
+    a single clause is never read this way."""
+    if for_spell or "would be dealt to" not in text.lower():
+        return None
+    match = _PREVENT_TO_IT_WHOLE_TEXT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    combat_only = match.group("combat") is not None
+    by = match.group("by") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        referent = event_subject_or_source(game, ability)
+        if referent is None:
+            return
+        if (
+            ability.source_id is not None
+            and referent.id == ability.source_id
+            and ability.source_stamp not in (None, referent.zone_change_stamp)
+        ):
+            return  # CR 400.7: the source left and came back as a new object
+        _shield_object(game, ability, referent, combat_only=combat_only, to=True, by=by)
+
+    return effect
+
+
 def prevent_all_combat_damage_except(excluded: frozenset[str]) -> Effect:
     """Moonmist's second sentence: the Fog shield, minus the types it names.
 
@@ -530,6 +702,68 @@ def prevent_next_damage_to_target(amount: int) -> Effect:
                     f"to {getattr(target, 'name', None) or target.username} this turn",
                     controller=controller,
                     amount=amount,
+                    card_id=None if shielded is None else shielded.id,
+                    player=None if shielded is not None else target.username,
+                )
+            )
+
+    return effect
+
+
+#: "Prevent the next N damage that would be dealt this turn to any number of
+#: targets, divided as you choose." (Angel of Salvation): one CR 615.7
+#: shield per target, sized by the division announced with the targets (CR
+#: 601.2d, via CR 603.3d for a trigger - `targeting.announce_trigger_
+#: division`).
+_PREVENT_NEXT_DAMAGE_DIVIDED_RE = re.compile(
+    rf"^prevent the next (?P<n>{COUNT}) damage that would be dealt (?:this turn )?to any number "
+    r"of targets(?: this turn)?,? divided as you choose\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s6", for_spell=FORWARD)
+def _parse_prevent_next_damage_divided_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_PREVENT_NEXT_DAMAGE_DIVIDED_RE`'s shape.
+
+    Each target gets the share announced for it; a target illegal on
+    resolution loses its share, which is not handed to anyone else (CR
+    608.2b, and the card's ruling: "the effects that would have been created
+    for illegal targets aren't created at all"). Each shield lasts until it
+    is used up or the turn ends (CR 615.3, CR 615.7)."""
+    if "divided as you choose" not in clause.lower():
+        return None
+    match = _PREVENT_NEXT_DAMAGE_DIVIDED_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    total = parse_count(match.group("n"))
+    if total is None or total < 1:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from ...models.game import PreventionShield, ShieldKind
+
+        references = list(getattr(stack_object, "targets", ()) or ())
+        if not references:
+            return
+        shares = _divided_damage_shares(
+            total, len(references), getattr(stack_object, "division", None)
+        )
+        controller = game.controller_of(stack_object).username
+        for reference, share in zip(references, shares, strict=True):
+            target = game.legal_target(stack_object, reference)
+            if target is None or share <= 0:
+                continue
+            shielded = target if isinstance(target, CardState) else None
+            game.create_prevention_shield(
+                PreventionShield(
+                    kind=ShieldKind.AMOUNT,
+                    label=f"prevent the next {share} damage that would be dealt "
+                    f"to {getattr(target, 'name', None) or target.username} this turn",
+                    controller=controller,
+                    amount=share,
                     card_id=None if shielded is None else shielded.id,
                     player=None if shielded is not None else target.username,
                 )
@@ -641,6 +875,7 @@ class _FogSpec:
     choose_source: bool = False
     recipient_types: tuple[Type, ...] = ()
     recipient_yours: bool = False
+    recipient_subtypes: tuple[str, ...] = ()
     you_and_permanents: bool = False
     recipient_count: int = 1
     excluded_subtypes: tuple[str, ...] = ()
@@ -731,6 +966,7 @@ _FOG_TARGETS_RE = re.compile(
 #: earlier target ("Target creature gains flying until end of turn. Prevent
 #: all damage that would be dealt to that creature this turn.").
 _FOG_ANAPHOR_RE = re.compile(r"^(?:it|that creature)$")
+_FOG_SUBTYPE_YOU_CONTROL_RE = re.compile(r"^(?P<plural>[a-z][a-z'-]*s) you control$")
 
 
 def _fog_recipient_spec(phrase: str, *, for_spell: bool) -> dict[str, Any] | None:
@@ -744,6 +980,13 @@ def _fog_recipient_spec(phrase: str, *, for_spell: bool) -> dict[str, Any] | Non
         return {"you_and_permanents": True, "recipient_types": (Type.CREATURE,)}
     if lowered == "creatures you control":
         return {"recipient_types": (Type.CREATURE,), "recipient_yours": True}
+    if match := _FOG_SUBTYPE_YOU_CONTROL_RE.fullmatch(lowered):
+        # "Dogs you control" (Pack Leader): permanents of that creature type
+        # its controller controls as the damage would be dealt (CR 611.2c).
+        subtype = canonical_subtype(match.group("plural"))
+        if subtype is None or subtype.lower() not in {kind.lower() for kind in creature_types()}:
+            return None
+        return {"recipient_subtypes": (subtype.lower(),), "recipient_yours": True}
     *qualifiers, noun = lowered.split()
     if noun == "creatures" and all(word in _FOG_RECIPIENT_TYPE_WORDS for word in qualifiers):
         types = tuple(_FOG_RECIPIENT_TYPE_WORDS[word] for word in qualifiers)
@@ -928,6 +1171,8 @@ def _create_fog_shield(
         fields["recipient_types"] = spec.recipient_types
     if spec.recipient_yours:
         fields["recipient_controller"] = controller
+    if spec.recipient_subtypes:
+        fields["recipient_subtypes"] = spec.recipient_subtypes
     if spec.excluded_subtypes:
         fields["excluded_source_subtypes"] = frozenset(spec.excluded_subtypes)
     if spec.sources_not_yours:
@@ -2050,6 +2295,15 @@ _EVENT_RELATIVE_TARGET_RE = re.compile(
     r"\bthat (?:player|opponent)\b|\bthey\b|\btheir\b", re.IGNORECASE
 )
 
+#: The event-relative target phrases the target reader binds to the trigger
+#: event's player: "target `<type>` that player controls" and Rampaging
+#: Raptor's "target planeswalker that player controls or battle that player
+#: protects".
+_EVENT_PLAYER_TARGET_PHRASE_RE = re.compile(
+    r"^target [a-z ]+? that player controls(?: or battle that player protects)?$",
+    re.IGNORECASE,
+)
+
 #: "they can't gain life for the rest of the game" - the player half of
 #: `_DAMAGE_THAT_MUCH_RE`'s rider: CR 119.7's prohibition with CR 611.2a's
 #: stated duration, recorded as `Player.cannot_gain_life` on each player the
@@ -2080,10 +2334,17 @@ def _parse_damage_that_much_clause(text: str, *, for_spell: bool) -> AbilityEffe
     if match is None:
         return None
     phrase = match.group("phrase")
-    if _EVENT_RELATIVE_TARGET_RE.search(phrase) is not None:
-        # Questing Beast's "target planeswalker that player controls" is
-        # restricted by the triggering event, which the target reader cannot
-        # express - it would offer every planeswalker, so it stays unread.
+    if (
+        _EVENT_RELATIVE_TARGET_RE.search(phrase) is not None
+        and _EVENT_PLAYER_TARGET_PHRASE_RE.fullmatch(phrase.strip()) is None
+    ):
+        # "they control"/"their": a restriction the target reader cannot bind
+        # to the event's player - it would offer every object, so it stays
+        # unread. "that player controls" (Questing Beast, Satyr Firedancer)
+        # and Rampaging Raptor's "or battle that player protects" are bound
+        # to the event's player as the trigger goes on the stack (CR 603.3d,
+        # `TargetingProfile.for_event_player`) and rechecked on resolution
+        # (CR 608.2b).
         return None
     if not _targets_understood(phrase, allow_player_targets=True):
         return None
@@ -2107,6 +2368,120 @@ def _parse_damage_that_much_clause(text: str, *, for_spell: bool) -> AbilityEffe
             dealt = game.deal_damage(target, amount, source=source)
             if locks_life_gain and isinstance(target, Player) and dealt > 0:
                 target.cannot_gain_life = True
+
+    return effect
+
+
+#: "that Archer deals that much damage to that creature's controller."
+#: (Greatbow Doyen, after "Whenever an Archer you control deals damage to a
+#: creature"): the event's dealer deals the event's own amount to the
+#: controller of the creature it was dealt to.
+_THAT_DEALER_DEALS_THAT_MUCH_TO_RECIPIENTS_CONTROLLER_RE = re.compile(
+    r"^(?P<subject>it|that [a-z]+|this [a-z]+) deals that much damage to "
+    r"that (?:creature|permanent|planeswalker)'?s controller\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_dealer_deals_that_much_to_recipients_controller_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_THAT_DEALER_DEALS_THAT_MUCH_TO_RECIPIENTS_CONTROLLER_RE`'s shape.
+
+    "That Archer" is the trigger event's subject - the creature that dealt
+    the damage (CR 603.2, `event_subject_or_source`), which deals this damage
+    itself as it exists or last existed (CR 608.2h, CR 113.7a). "That much"
+    is the event's amount (the damage actually dealt, CR 615.6). "That
+    creature's controller" is read as this resolves: the controller of the
+    damaged permanent now, or as it last existed on the battlefield (CR
+    608.2h). Ability-only: a spell has no triggering event."""
+    if for_spell or "that much damage to that " not in text.lower():
+        return None
+    match = _THAT_DEALER_DEALS_THAT_MUCH_TO_RECIPIENTS_CONTROLLER_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    subject_word = match.group("subject").lower()
+    is_referent = not subject_word.startswith("this ")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.target_id is None:
+            return
+        amount = _that_many_or_notice(
+            game,
+            text,
+            source_id=ability.source_id,
+            source_name=ability.name,
+            stack_object=ability,
+        )
+        if amount is None or amount <= 0:
+            return
+        recipient = game.find_by_id(event.target_id)
+        if isinstance(recipient, CardState) and recipient.zone is Zone.BATTLEFIELD:
+            username: str | None = game.controller_of(recipient).username
+        else:
+            username = event.target_controller
+        if username is None or not game.is_in_game(username):
+            return
+        dealer = (
+            event_subject_or_source(game, ability)
+            if is_referent
+            else ability.source_or_last_known(game)
+        )
+        game.deal_damage(game.player(username), amount, source=dealer)
+
+    return effect
+
+
+#: "target player discards a card. This creature deals damage to that player
+#: equal to that card's mana value." (Hellhole Rats): CR 608.2c's "that card"
+#: is the card the first instruction discarded, "that player" the target who
+#: discarded it.
+_DISCARD_THEN_DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE = re.compile(
+    r"^(?P<head>target (?:player|opponent) discards a card)\.\s*"
+    r"(?P<subject>it|this [a-z]+) deals damage to that player equal to "
+    r"(?:that|the discarded) card'?s mana value\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_discard_then_damage_equal_to_that_cards_mana_value_text(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_DISCARD_THEN_DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE`'s pair.
+
+    The discard runs through its own reader; the card it moved (CR 701.9a,
+    or exile for madness, CR 702.35a) is found by `newly_discarded`, and its
+    mana value (CR 202.3) is the amount the source deals - as it exists or
+    last existed (CR 608.2h) - to the player who discarded it. A player with
+    no card to discard discards nothing and takes no damage; a land deals 0
+    (CR 202.3a). With the one target illegal the ability does not resolve at
+    all (CR 608.2b)."""
+    if for_spell or "card's mana value" not in text.lower():
+        return None
+    match = _DISCARD_THEN_DAMAGE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE.fullmatch(
+        " ".join(text.strip().split())
+    )
+    if match is None:
+        return None
+    head = _parse_mixed_clause(match.group("head"), for_spell=False)
+    if head is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        players = [target for target in game.resolve_targets(ability) if isinstance(target, Player)]
+        if not players:
+            return
+        player = players[0]
+        before = public_card_ids(game)
+        head(game, ability)
+        discarded = newly_discarded(game, before, player.username)
+        amount = int(sum(card.mana_value for card in discarded))
+        if amount <= 0:
+            return
+        game.deal_damage(player, amount, source=ability.source_or_last_known(game))
 
     return effect
 
@@ -3162,10 +3537,18 @@ def _record_bending(game: "Game", fact: str, event: ExtraTriggerEvent, player: s
 #: same expression grammar, just reached from a "deals damage equal to ..."
 #: opening instead of a "for each" one.
 _SELF_DAMAGE_EQUAL_TO_COUNT_RE = re.compile(
-    r"^(?P<subject>it|he|she|this [a-z]+) deals damage equal to (?P<expr>.+?) to "
-    r"(?P<recipient>any (?:other )?target|each opponent)\.?$",
+    r"^(?P<subject>it|he|she|this [a-z]+|that creature) deals damage "
+    r"(?:equal to (?P<expr>.+?) to (?P<recipient>any (?:other )?target|each opponent|"
+    r"[^.]*?\btarget\b[^.]*?)|to each opponent equal to (?P<expr_after>.+?))\.?$",
     re.IGNORECASE,
 )
+#: "its power"/"its toughness" (and a legend's "his"/"her"): the dealer's own
+#: characteristic, read off the pronoun's referent (CR 208.1, CR 608.2h).
+_DEALER_STAT_RE = re.compile(r"^(?:its|his|her) (?P<stat>power|toughness)$", re.IGNORECASE)
+#: A per-player count ("the number of cards in that player's hand", Stormbreath
+#: Dragon) belongs to `_parse_damage_each_player_equal_to_their_count_clause`,
+#: which evaluates it once for each opponent.
+_PER_PLAYER_EXPR_RE = re.compile(r"\b(?:that player|they|their|them)\b", re.IGNORECASE)
 
 
 @MIXED_CLAUSE.rung("s19", for_spell=FORWARD)
@@ -3176,61 +3559,68 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
     permanent's own ability, the same restriction `_parse_damage_that_much_
     clause` already holds itself to for the identical reason.
 
-    A bare pronoun ("it"/"he"/"she") is CR 400.7's ordinary anaphora back to
-    whichever object the trigger's own *condition* clause named as having
-    done something (CR 603.2's "subject" of the event) - Smaug the
-    Magnificent's and Eivor's own "Whenever `<self>` attacks, `<pronoun>`
-    deals damage ..." happens to name the source itself only because the
-    condition is *also* self-referential ("Smaug attacks"); Champion of the
-    Path's "Whenever another Elemental you control enters, it deals damage
-    equal to its power to each opponent" names a genuinely different
-    object - CR 208.1's own "its power" is the entering Elemental's, not
-    Champion's. `event_subject_power`/`ability.event.subject_id` already
-    name exactly that antecedent for *any* of these event kinds (including
-    the purely self-referential ones, where the event's own subject and the
-    ability's source are simply the same object), so a bare-pronoun subject
-    reads through it uniformly rather than defaulting to the source - a
-    printed "this `<noun>`" subject is left alone (the source is genuinely
-    what that phrasing names, CR 201.5).
+    A bare pronoun ("it"/"he"/"she") or "that creature" is CR 400.7's
+    ordinary anaphora back to whichever object the trigger's own *condition*
+    clause named as having done something (CR 603.2's subject of the event):
+    Smaug's and Eivor's "Whenever `<self>` attacks, `<pronoun>` deals ..."
+    name the source only because the condition is self-referential; Stalking
+    Vengeance's "Whenever another creature you control dies, it deals damage
+    equal to its power" and Pyrotechnic Performer's "that creature deals
+    damage equal to its power to each opponent" name a different object, and
+    CR 208.1's "its power" is that object's. `event_subject_or_source` names
+    the antecedent for every event kind; a printed "this `<noun>`" subject is
+    the source itself (CR 201.5). Its power is read as the effect applies, or
+    by last known information once it has left the battlefield (CR 608.2h,
+    CR 113.7a: a dies trigger's creature still deals the damage).
+
+    "to each opponent equal to `<expr>`" (Meria's Outrider, Fanatic of Mogis)
+    is the same instruction with the amount printed after the recipient: one
+    amount, read once (CR 608.2h), dealt to each opponent at the same time
+    (CR 120.3). A count naming "that player" is a per-opponent amount and is
+    left to its own reader. A new target phrase is read only for a pronoun
+    subject: "this `<noun>` deals damage equal to its power to target ..." is
+    `_SELF_DEALS_DAMAGE_EQUAL_TO_ITS_STAT_RE`'s.
     """
     if for_spell:
         return None
     match = _SELF_DAMAGE_EQUAL_TO_COUNT_RE.fullmatch(text.strip())
     if match is None:
         return None
-    is_bare_pronoun = match.group("subject").lower() in ("it", "he", "she")
-    expr = match.group("expr")
-    counted = count_expression(expr)
-    # "its power"/"his power"/"her power" (Iron Fist, Living Weapon's own
-    # granted "{T}: this permanent deals damage equal to his power to any
-    # other target") is `amount_expression`'s own vocabulary (CR 208.1's
-    # power/toughness), not `count_expression`'s ("the number of `<quality>`
-    # you control") - tried second, since `count_expression`'s own
-    # "the number of ... power ..." phrasings (none in the pool) would
-    # otherwise never get a chance to match first.
+    subject_word = match.group("subject").lower()
+    is_referent = not subject_word.startswith("this ")
+    expr = match.group("expr") or match.group("expr_after")
+    if match.group("expr_after") is not None and _PER_PLAYER_EXPR_RE.search(expr):
+        return None
+    recipient = (match.group("recipient") or "each opponent").lower()
+    each_opponent = recipient == "each opponent"
+    plain_any_target = recipient in ("any target", "any other target")
+    if not each_opponent and not plain_any_target and not is_referent:
+        return None
+    if not each_opponent and not _targets_understood(recipient, allow_player_targets=True):
+        return None
+    stat_match = _DEALER_STAT_RE.fullmatch(expr.strip())
+    stat = stat_match.group("stat").lower() if stat_match is not None else None
+    counted = count_expression(expr) if stat is None else None
     # Red Hulk's reflexive "... equal to the number of +1/+1 counters on him"
     # - an amount read off the dealer itself (CR 608.2h), not a count of
     # something its controller controls.
     magnitude = (
         amount_expression(re.sub(r"\bon (?:him|her)\b", "on it", expr, flags=re.IGNORECASE))
-        if counted is None
+        if stat is None and counted is None
         else None
     )
-    if counted is None and magnitude is None:
-        return None
-    recipient = match.group("recipient").lower()
-    each_opponent = recipient == "each opponent"
-    if not each_opponent and not _targets_understood(recipient, allow_player_targets=True):
+    if stat is None and counted is None and magnitude is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source_or_last_known(game)
-        if is_bare_pronoun:
-            event = ability.event
-            subject = game.find_by_id(event.subject_id) if event is not None else None
-            if isinstance(subject, CardState):
-                source = subject
-        if counted is not None:
+        source = (
+            event_subject_or_source(game, ability)
+            if is_referent
+            else ability.source_or_last_known(game)
+        )
+        if stat is not None:
+            amount = 0 if source is None else object_stat_or_last_known(game, source, stat)
+        elif counted is not None:
             amount = counted(game, ability.controller)
         else:
             assert magnitude is not None
@@ -3238,11 +3628,12 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
         if amount <= 0:
             return
         if each_opponent:
-            for opponent in _opponents(game, ability.controller):
-                game.deal_damage(opponent, amount, source=source)
+            _deal_all(
+                game,
+                [(source, opponent, amount) for opponent in _opponents(game, ability.controller)],
+            )
             return
-        for target in game.resolve_targets(ability):
-            game.deal_damage(target, amount, source=source)
+        _deal_all(game, [(source, target, amount) for target in game.resolve_targets(ability)])
 
     return effect
 
@@ -3953,16 +4344,24 @@ def _that_creature_of_trigger(game: "Game", stack_object: "StackObject") -> Card
     """ "That creature": after a blocks / becomes-blocked trigger the other half
     of the blocking pair from "it" (CR 509.3d: one trigger per blocker);
     anywhere else the creature the object's own earlier text named as its
-    target (CR 608.2c's anaphora)."""
-    if isinstance(stack_object, AbilityOnStack):
-        event = stack_object.event
-        if event is not None and event.event is TriggerEvent.BLOCKS:
-            other_id = _blocking_pair_other_id(game, stack_object)
-            found = game.find_by_id(other_id) if other_id is not None else None
-            return found if isinstance(found, CardState) else None
+    target (CR 608.2c's anaphora), and failing a target the creature the
+    trigger event was about (CR 603.2) - Flame-Kin War Scout's "When another
+    creature enters, ... this creature deals 4 damage to that creature"."""
+    ability = stack_object if isinstance(stack_object, AbilityOnStack) else None
+    event = ability.event if ability is not None else None
+    if ability is not None and event is not None and event.event is TriggerEvent.BLOCKS:
+        other_id = _blocking_pair_other_id(game, ability)
+        found = game.find_by_id(other_id) if other_id is not None else None
+        return found if isinstance(found, CardState) else None
     for target in game.resolve_targets(stack_object):
         if isinstance(target, CardState) and Type.CREATURE in game.characteristics_of(target).types:
             return target
+    if event is not None and not stack_object.targets and event.subject_id is not None:
+        # A chosen target that became illegal is not replaced by the event's
+        # subject (CR 608.2b): only an ability that targets nothing reads it.
+        subject = game.find_by_id(event.subject_id)
+        if isinstance(subject, CardState) and subject.zone is not Zone.STACK:
+            return subject
     return None
 
 

@@ -1,7 +1,7 @@
 import re
 from collections.abc import Callable
 from random import Random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
@@ -62,7 +62,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
-from ._chains import FORWARD, MIXED_CLAUSES, SPELL_TEXT
+from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _MANA_COST_LIST,
     _OWNER_PUTS_IT_INTO_LIBRARY_TAIL,
@@ -3988,24 +3988,52 @@ _RETURN_SELF_TO_HAND_LEAD_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Sacrifice this creature. If you do, `<consequence>`." - Flame-Kin War
+#: Scout's enters trigger. CR 701.21a: only a permanent its controller still
+#: controls on the battlefield can be sacrificed, so "if you do" is false
+#: once it has left or changed hands; "this creature" in the consequence is
+#: then the sacrificed object as it last existed (CR 113.7a).
+_SACRIFICE_SELF_LEAD_RE = re.compile(
+    r"^sacrifice this (?:creature|permanent|artifact|enchantment|land|planeswalker)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _sacrifice_own_source(game: "Game", ability: AbilityOnStack) -> None:
+    """Sacrifice the ability's source if its controller still controls it on
+    the battlefield (CR 701.21a); otherwise nothing happens."""
+    source = ability.source(game)
+    if (
+        source is not None
+        and source.zone is Zone.BATTLEFIELD
+        and source.controller == ability.controller
+    ):
+        game.sacrifice(source)
+
 
 def _merge_return_self_then_if_you_do_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
-    """`_RETURN_SELF_TO_HAND_LEAD_RE`, then "If you do, `<consequence>`" -
-    the consequence runs only when the source really went to its owner's
-    hand (CR 118.12), and "its" in it is the returned object as it last
-    existed on the battlefield (CR 608.2h)."""
+    """`_RETURN_SELF_TO_HAND_LEAD_RE` or `_SACRIFICE_SELF_LEAD_RE`, then "If
+    you do, `<consequence>`" - the consequence runs only when the source
+    really went to its owner's hand or graveyard (CR 118.12), and "its" in it
+    is the moved object as it last existed on the battlefield (CR 608.2h)."""
     if for_spell or index + 1 >= len(clauses):
         return None
     first = clauses[index].strip()
-    if _RETURN_SELF_TO_HAND_LEAD_RE.fullmatch(first) is None:
-        return None
-    returning = _parse_return_self_to_owners_hand_clause(
-        first, for_spell=False
-    ) or _parse_return_dead_self_to_hand_clause(first.rstrip("."), for_spell=False)
-    if returning is None:
-        return None
+    sacrificing = _SACRIFICE_SELF_LEAD_RE.fullmatch(first) is not None
+    if sacrificing:
+        returning: Any = _sacrifice_own_source
+        destination = Zone.GRAVEYARD
+    else:
+        if _RETURN_SELF_TO_HAND_LEAD_RE.fullmatch(first) is None:
+            return None
+        returning = _parse_return_self_to_owners_hand_clause(
+            first, for_spell=False
+        ) or _parse_return_dead_self_to_hand_clause(first.rstrip("."), for_spell=False)
+        if returning is None:
+            return None
+        destination = Zone.HAND
     if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
     if if_match is None:
         return None
@@ -4032,7 +4060,7 @@ def _merge_return_self_then_if_you_do_clauses(
         characteristics = game.characteristics_of(source)
         returning(game, stack_object)
         moved = game.find_by_id(source.id)
-        if not isinstance(moved, CardState) or moved.zone is not Zone.HAND:
+        if not isinstance(moved, CardState) or moved.zone is not destination:
             return
         if template is not None:
             assert stat_match is not None
@@ -6117,10 +6145,81 @@ from .continuous import (  # noqa: E402
     suspect,
 )
 from .counters import _counter_kind, put_counters_on_ability_targets  # noqa: E402
+
+#: "`<source>` deals N damage to that player and you gain N life." (Oath of
+#: Kaya's attack trigger): CR 608.2c's two instructions in printed order - the
+#: damage to the player the trigger event named (`_parse_damage_that_player_
+#: clause`'s own referent: the attacking opponent), then the controller's
+#: life gain. The gain does not depend on the damage being dealt: a
+#: prevented damage event still leaves "you gain N life" to happen.
+_DAMAGE_THAT_PLAYER_AND_YOU_GAIN_RE = re.compile(
+    rf"^(?P<damage>[^.]*\bdeals? {COUNT} damage to (?:that player|them|that creature'?s "
+    rf"controller)) and you gain (?P<n>{COUNT}) life\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _merge_damage_that_player_and_gain_life_text(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_DAMAGE_THAT_PLAYER_AND_YOU_GAIN_RE`'s pair. Ability-only: "that
+    player" is the triggering event's (CR 603.2)."""
+    if for_spell or "and you gain" not in text.lower():
+        return None
+    match = _DAMAGE_THAT_PLAYER_AND_YOU_GAIN_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    damage = _parse_damage_that_player_clause(match.group("damage"), for_spell=False)
+    gained = parse_count(match.group("n"))
+    if damage is None or gained is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        damage(game, ability)
+        game.gain_life(game.controller_of(ability), gained)
+
+    return effect
+
+
+#: "put a +1/+1 counter on this creature and prevent all damage that would be
+#: dealt to it this turn." (Favored Hoplite's heroic trigger): "it" is the
+#: object the first clause named about itself - the ability's own source
+#: (CR 608.2c) - so the second clause is the self-shield of `_parse_prevent_
+#: all_damage_to_self_this_turn_clause` (CR 615.1a).
+_SELF_CLAUSE_AND_PREVENT_TO_IT_RE = re.compile(
+    r"^(?P<first>[^.]*?\bthis (?P<noun>creature|permanent)\b[^.]*?) and "
+    r"(?P<second>prevent all (?:combat )?damage that would be dealt to) it this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _merge_self_clause_and_prevent_to_it_clauses(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """`_SELF_CLAUSE_AND_PREVENT_TO_IT_RE`'s pair, on an ability. A first
+    clause that also names a target is refused: "it" could be that target."""
+    if for_spell or "would be dealt to it this turn" not in text.lower():
+        return None
+    match = _SELF_CLAUSE_AND_PREVENT_TO_IT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or "target" in match.group("first").lower():
+        return None
+    first = _parse_mixed_clause(match.group("first"), for_spell=False)
+    second = _parse_prevent_all_damage_to_self_this_turn_clause(
+        f"{match.group('second')} this {match.group('noun').lower()} this turn.", for_spell=False
+    )
+    if first is None or second is None:
+        return None
+    return [first, second]
+
+
 from .damage import (  # noqa: E402
     _lethal_amount_before_damage,
     _parse_damage_each_filtered_clause,
     _parse_damage_each_group_clause,
+    _parse_damage_that_player_clause,
+    _parse_prevent_all_damage_to_self_this_turn_clause,
     _prevent_next_damage_from_target,
     card_types_among_spells_cast_reader,
 )

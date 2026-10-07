@@ -4725,6 +4725,23 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="cards already exiled with the source (CR 607.1)",
         precondition=r"if there are cards exiled with this",
     ),
+    # NW06-T1: states the stock boards cannot stage; each is driven by its
+    # own scenario file (tests/scenarios/test_nw06_*).
+    DriverGap(
+        kind="deals_damage",
+        event="a creature of the subtype the condition names dealing damage to a creature",
+        precondition=r"an? [A-Z][a-z]+ you control deals damage to a creature",
+    ),
+    DriverGap(
+        kind="deals_damage",
+        event="an instant or sorcery spell dealing damage to an opponent",
+        precondition=r"an instant or sorcery spell you control deals damage to an opponent",
+    ),
+    DriverGap(
+        kind="attacks",
+        event="an opponent attacking a planeswalker the source's controller controls",
+        precondition=r"an opponent attacks a planeswalker you control",
+    ),
 )
 
 

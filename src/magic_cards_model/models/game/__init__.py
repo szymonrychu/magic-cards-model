@@ -2204,6 +2204,11 @@ class Game(
     #: `triggers_only_if` (Quakebringer's "This ability triggers only if ..."),
     #: reachable from `Game` through every `AbilityOnStack.ability`; an older
     #: dump's ability would decode without its restriction.
+    #: 131 (NW06-T1): `PreventionShield` gained `recipient_subtypes` (Pack
+    #: Leader's "to Dogs you control", CR 611.2c) and `TargetRequirement`
+    #: gained `battles_protected_by_event_player` (Rampaging Raptor's "battle
+    #: that player protects", CR 310.9e); decoded as current, an older shield
+    #: or announced target would cover every permanent of its controller.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

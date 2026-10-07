@@ -841,6 +841,13 @@ class PreventionShield(EngineModel):
     """"to creatures you control": a damaged permanent must be controlled by
     this player as the damage would be dealt; no player is covered."""
 
+    recipient_subtypes: tuple[str, ...] = ()
+    """"to Dogs you control" (Pack Leader): a damaged permanent must have one
+    of these subtypes (lower-cased, CR 205.3) as the damage would be dealt.
+    CR 611.2c: a prevention effect changes no object's characteristics, so
+    the set it covers is not locked in when it begins - a Dog that arrives
+    or becomes one later is covered too. No player is covered."""
+
     reflects: ReflectedDamage | None = None
     """CR 615.5's "deals that much damage to any target" rider."""
 

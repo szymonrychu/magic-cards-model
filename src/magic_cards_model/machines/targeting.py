@@ -536,6 +536,11 @@ class TargetRequirement(EngineModel):
     """`ControllerRestriction.EVENT_PLAYER` only: the player "that player"
     names, bound from the trigger's own event by
     `TargetingProfile.for_event_player`. `None` until then."""
+    battles_protected_by_event_player: bool = False
+    """"target planeswalker that player controls or battle that player
+    protects" (Rampaging Raptor): a battle target answers to its protector
+    (CR 310.9e), not its controller - the planeswalker half still answers to
+    `event_player` as its controller."""
     must_be_tapped: bool | None = None
     excludes_source: bool = False
     """True for "target *other* ..." / "*another* target ...": the permanent
@@ -1943,7 +1948,20 @@ class TargetRequirement(EngineModel):
         """`ControllerRestriction.EVENT_PLAYER`: the target must be controlled
         by the player the trigger event named, once `event_player` is bound;
         unbound, nothing is restricted (see the enum member's docstring)."""
-        if self.event_player is None or controller == self.event_player:
+        if self.event_player is None:
+            return None
+        if (
+            self.battles_protected_by_event_player
+            and isinstance(target, CardState)
+            and Type.BATTLE in target.types
+        ):
+            if target.protector == self.event_player:
+                return None
+            return (
+                f"{self.phrase} needs a battle {self.event_player} protects, "
+                f"and {target.name} is not"
+            )
+        if controller == self.event_player:
             return None
         return (
             f"{self.phrase} needs a permanent {self.event_player} controls, "
@@ -4187,7 +4205,120 @@ def profile_for_text(text: str) -> TargetingProfile:
     return_from_zone = _return_from_zone_to_destination_profile(text)
     if return_from_zone is not None:
         return return_from_zone
+    protected_battle = _EVENT_PLAYER_OR_PROTECTED_BATTLE_RE.search(text)
+    if protected_battle is not None:
+        return _event_player_or_protected_battle_profile(text, protected_battle)
+    divided_prevention = _DIVIDED_PREVENTION_RE.search(text)
+    if divided_prevention is not None:
+        return _divided_prevention_profile(divided_prevention)
     return _parse(_REMINDER.sub("", text), spell_only=False)
+
+
+#: "prevent the next N damage that would be dealt this turn to any number of
+#: targets, divided as you choose" (Angel of Salvation): CR 615.7's shield,
+#: divided as the ability is put on the stack (CR 601.2d via CR 603.3d) among
+#: any targets (CR 115.4) - each target receives at least 1, so no more
+#: targets than N can be chosen.
+_DIVIDED_PREVENTION_RE = re.compile(
+    r"\bprevent the next (?P<n>\w+) damage that would be dealt (?:this turn )?to any number of "
+    r"targets(?: this turn)?,? divided as you choose\b",
+    re.IGNORECASE,
+)
+
+
+def _divided_prevention_profile(match: "re.Match[str]") -> TargetingProfile:
+    amount = parse_count(match.group("n"))
+    any_target = _parse("any target", spell_only=False)
+    if amount is None or amount < 1 or len(any_target.requirements) != 1:
+        return TargetingProfile(understood=False)
+    requirement = any_target.requirements[0].model_copy(
+        update={"phrase": "any number of targets", "minimum": 0, "count": amount}
+    )
+    return TargetingProfile(
+        requirements=(requirement,), division=Division(amount=amount, what="prevention")
+    )
+
+
+def announce_trigger_division(game: Any, ability: Any) -> None:
+    """CR 603.3d: a triggered ability that divides an effect among its
+    targets has the division announced as it is put on the stack, exactly as
+    CR 601.2d does for a spell - "each of these targets must receive at least
+    one of whatever is being divided". Every chosen target is given its one,
+    and the rest is distributed by asking the controller, target by target,
+    how much more that target receives (a `CHOOSE_AN_AMOUNT` from 0 up to
+    what is left); the last target takes whatever remains. The answer is
+    recorded on `AbilityOnStack.division`, so CR 608.2b's recheck later loses
+    an illegal target's share rather than redistributing it (CR 115.7f).
+
+    Only a fixed amount is announced; an X division (Polukranos's "X damage
+    divided") has no amount to split here and keeps the even split at
+    resolution."""
+    from .decisions import Decision, DecisionKind
+
+    profile, _text = game._trigger_target_profile(ability)
+    division = profile.division
+    chosen = len(getattr(ability, "targets", ()) or ())
+    if division is None or division.amount is None or chosen == 0:
+        return
+    extra = division.amount - chosen
+    if extra < 0:
+        return
+    shares = [1] * chosen
+    for index in range(chosen - 1):
+        if extra == 0:
+            break
+        more = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_AN_AMOUNT,
+                player=ability.controller,
+                prompt=(
+                    f"how much more of the {division.amount} {division.what} target "
+                    f"{index + 1} of {chosen} receives (0 to {extra})"
+                ),
+                source=ability.source_name,
+                amount=extra,
+                source_id=str(ability.source_id) if ability.source_id is not None else None,
+            )
+        )
+        more = max(0, min(int(more), extra))
+        shares[index] += more
+        extra -= more
+    shares[-1] += extra
+    ability.division = shares
+
+
+#: "target `<type>` that player controls or battle that player protects"
+#: (Rampaging Raptor): one target (CR 115.1), either a permanent of the named
+#: type the event's player controls or a battle that player protects (CR
+#: 310.9e). Read as "target `<type>` or battle that player controls" - which
+#: `_parse` already reads with both types - with the battle half then
+#: answered by protector instead of controller.
+_EVENT_PLAYER_OR_PROTECTED_BATTLE_RE = re.compile(
+    r"\btarget (?P<first>[a-z]+(?: or [a-z]+)*) that player controls or battle that player "
+    r"protects\b",
+    re.IGNORECASE,
+)
+
+
+def _event_player_or_protected_battle_profile(
+    text: str, match: "re.Match[str]"
+) -> TargetingProfile:
+    rewritten = (
+        text[: match.start()]
+        + f"target {match.group('first')} or battle that player controls"
+        + text[match.end() :]
+    )
+    profile = _parse(_REMINDER.sub("", rewritten), spell_only=False)
+    return profile.model_copy(
+        update={
+            "requirements": tuple(
+                requirement.model_copy(update={"battles_protected_by_event_player": True})
+                if requirement.controller is ControllerRestriction.EVENT_PLAYER
+                else requirement
+                for requirement in profile.requirements
+            )
+        }
+    )
 
 
 #: "Return from your graveyard to the battlefield `<target phrase>`."

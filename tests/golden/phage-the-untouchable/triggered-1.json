@@ -74,7 +74,7 @@
       }
     },
     "players": {},
-    "stack": ["ability of Phage the Untouchable@alice#1: Whenever Phage deals combat damage to a creature, destroy that creature. It can't be regenerated."]
+    "stack": []
   },
   "family": "triggered",
   "format": 1,
