@@ -208,6 +208,12 @@ _COUNT_CARDS_NAMED_IN_GRAVEYARDS_RE = re.compile(
     r"^(?:the )?number of cards named (?P<name>.+?) in (?P<whose>your graveyard|all graveyards)$",
     re.IGNORECASE,
 )
+#: "the number of cards with a cycling ability in your graveyard" (Zenith
+#: Flare): a graveyard count by a keyword ability the card carries.
+_COUNT_CARDS_WITH_KEYWORD_ABILITY_IN_YOUR_GRAVEYARD_RE = re.compile(
+    r"^(?:the )?number of cards with an? (?P<keyword>[a-z]+) ability in your graveyard$",
+    re.IGNORECASE,
+)
 #: Hearth Elemental's own "the number of cards in your graveyard that are
 #: instant cards, sorcery cards, and/or have an Adventure." - the "that are
 #: `<list>`" twin of `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`'s own leading-
@@ -803,6 +809,27 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
         return count_named_in_graveyards
 
+    if " ability in your graveyard" in stripped.lower() and (
+        with_ability := _COUNT_CARDS_WITH_KEYWORD_ABILITY_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped)
+    ):
+        # Zenith Flare's "the number of cards with a cycling ability in your
+        # graveyard": a card has the ability when its printing carries that
+        # keyword; CR 702.29f makes every typecycling a cycling ability.
+        wanted_keyword = with_ability.group("keyword").lower()
+
+        def count_cards_with_keyword_ability(game: "Game", controller: str) -> int:
+            return sum(
+                1
+                for state in game.player(controller).graveyard
+                if any(
+                    keyword.lower() == wanted_keyword
+                    or (wanted_keyword == "cycling" and keyword.lower().endswith("cycling"))
+                    for keyword in state.keywords
+                )
+            )
+
+        return count_cards_with_keyword_ability
+
     if match := _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped):
         qualifier = match.group("qualifier")
         if " and " in qualifier:
@@ -1258,6 +1285,13 @@ _WHICHEVER_IS_RE = re.compile(
 )
 
 
+#: "the amount of damage dealt to it this turn" (Tangled Colony).
+_DAMAGE_DEALT_TO_IT_THIS_TURN_RE = re.compile(
+    r"^(?:the )?(?:amount of )?damage dealt to (?:it|this (?:creature|permanent)) this turn$",
+    re.IGNORECASE,
+)
+
+
 def _amount_term(term: str) -> AmountReader | None:
     """One term of `amount_expression`, or `None` when it is not readable."""
     text = term.strip()
@@ -1416,6 +1450,15 @@ def _amount_term(term: str) -> AmountReader | None:
         if factor is None or inner is None:
             return None
         return lambda game, controller, obj, x: factor * inner(game, controller, obj, x)
+    if _DAMAGE_DEALT_TO_IT_THIS_TURN_RE.fullmatch(text):
+        # Tangled Colony's "X is the amount of damage dealt to it this turn":
+        # `obj` is the resolving ability's source, which a dies trigger finds
+        # in the graveyard - the ledger still answers (CR 608.2h).
+        from ..conditions.history import damage_dealt_to_object_this_turn
+
+        return lambda game, _controller, obj, _x: (
+            0 if obj is None else damage_dealt_to_object_this_turn(game, obj.id)
+        )
     if lowered == "the greatest mana value among cards in exile":
         return lambda game, _controller, _object, _x: _greatest_mana_value_among_cards_in_exile(
             game

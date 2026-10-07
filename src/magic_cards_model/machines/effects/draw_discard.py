@@ -105,6 +105,17 @@ _DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE = re.compile(
 
 
 @ABILITY_TEXT.rung("s16")
+def _parse_discard_after_damage_dealt_this_way_ability(text: str) -> AbilityEffect | None:
+    """Sonic Shrieker's whole enters-the-battlefield trigger: a damage head,
+    then "If a player is dealt damage this way, they discard a card." - read by
+    `damage_backrefs.damage_then_player_rider_ability_effect`, which owns the
+    head and what damage actually reached."""
+    from ..damage_backrefs import damage_then_player_rider_ability_effect
+
+    return damage_then_player_rider_ability_effect(text)
+
+
+@ABILITY_TEXT.rung("s16")
 def _parse_discard_then_draw_token_per_nonland_clause(text: str) -> AbilityEffect | None:
     """`_DISCARD_THEN_DRAW_TOKEN_PER_NONLAND_RE`'s shape - Seasoned
     Pyromancer's whole enters-the-battlefield trigger.

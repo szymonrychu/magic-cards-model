@@ -233,6 +233,9 @@ class TurnSbaMixin:
     def _untap_step_impl(self: "Game") -> None:
         """The rest of `untap_step` - see its own docstring for why it is split out."""
         active = self.active_player
+        from ...machines.conditions.history import note_hand_sizes_at_turn_start
+
+        note_hand_sizes_at_turn_start(self)
         # CR 502.1 comes first in the step: phased-out permanents the active
         # player controlled when they phased out phase in, before CR 502.3
         # untaps anything - and before `begin_turn_for`, so a permanent
@@ -2259,6 +2262,7 @@ class TurnSbaMixin:
             self.turn_facts = {}
             self.turn_counts_last_turn = self.turn_counts
             self.turn_counts = {}
+            condition_history.note_hand_sizes_at_turn_start(self)  # CR 500.1: the turn just began
             self.turn_history_last_turn = self.turn_history
             self.turn_history = []
             self.combat_damage_dealt_this_turn_by = set()

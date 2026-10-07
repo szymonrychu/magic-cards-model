@@ -214,6 +214,23 @@ def _player_has_cards(context: "ConditionContext", match: re.Match[str]) -> bool
     )
 
 
+def _had_cards_in_hand_at_turn_start(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "<subject> had <count> cards in hand [at the beginning of this turn]" -
+    Mindstorm Crown's two complementary sentences, read off the hand size the
+    turn began with (`history.hand_size_at_turn_start`), never the hand as the
+    ability resolves."""
+    from .history import hand_size_at_turn_start
+
+    test = _quantity_test(match.group("quantity"))
+    if test is None:
+        return False
+    return _for(
+        context,
+        match.group("subject"),
+        lambda username: test(hand_size_at_turn_start(context.game, username)),
+    )
+
+
 def _cards_in_your_zone(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "there is/are <count> [<quality>] cards in your graveyard" and "<count>
     [<quality>] cards are in your graveyard" - Walltop Sentries' "there's a
@@ -708,6 +725,13 @@ READERS: tuple[ConditionReader, ...] = (
             r"(?P<zone>hand|library|graveyard)"
         ),
         _player_has_cards,
+    ),
+    ConditionReader(
+        re.compile(
+            rf"(?P<subject>{_SUBJECT}) had (?P<quantity>{_QUANTITY}) cards? in "
+            rf"(?:{_POSSESSIVE})?hand(?: at the beginning of (?:this|the) turn)?"
+        ),
+        _had_cards_in_hand_at_turn_start,
     ),
     ConditionReader(
         re.compile(

@@ -1400,7 +1400,7 @@ _DAMAGE_TARGET_EQUAL_TO_EXPR_RE = re.compile(
 #: dumped on the first target(s) the way an un-announced "as you choose"
 #: falls back.
 _DIVIDED_DAMAGE_RE = re.compile(
-    rf".*\bdeals? (?P<n>{AMOUNT}) damage divided "
+    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage divided "
     rf"(?:as you choose|(?P<evenly>evenly, rounded down)),? among "
     rf"(?P<phrase>[^.]+?){where_x_pattern()}\.?$",
     re.IGNORECASE,
@@ -1420,32 +1420,36 @@ _DIVIDED_DAMAGE_RE = re.compile(
 #: is the number of Dragons you control", would otherwise be silent purely
 #: for lacking a fixed digit.
 _DAMAGE_EACH_OPPONENT_RE = re.compile(
-    rf".*\bdeals? (?P<n>{AMOUNT}) damage to each opponent{where_x_pattern()}\.?$", re.IGNORECASE
+    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to each opponent{where_x_pattern()}\.?$", re.IGNORECASE
 )
 #: "<Source> deals N damage to itself." (CR 119.3, 120.2b) - Goblin
 #: Kaboomist's own coin-flip loser. Same `.*\bdeals?` source-agnostic prefix
 #: as `_DAMAGE_EACH_OPPONENT_RE` just above, so "this creature", "this
 #: token", or a self-named reference (CR 201.5) all read identically.
 _DAMAGE_TO_ITSELF_RE = re.compile(
-    rf".*\bdeals? (?P<n>{AMOUNT}) damage to itself{where_x_pattern()}\.?$", re.IGNORECASE
+    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to itself{where_x_pattern()}\.?$", re.IGNORECASE
 )
 #: "<Source> deals N damage to you." (CR 119.3, 120.2b) - Mana Crypt's own
 #: coin-flip loser. Same source-agnostic prefix as the two patterns above.
+#: The `(?!if\b)` on each of these source-agnostic prefixes keeps a leading
+#: "If <condition>, " from being swallowed as part of the source (Mindstorm
+#: Crown's "If you had a card in hand, this artifact deals 1 damage to you."
+#: is a gated clause, `_parse_condition_clause`'s, never an unconditional one).
 _DAMAGE_TO_CONTROLLER_RE = re.compile(
-    rf".*\bdeals? (?P<n>{AMOUNT}) damage to you{where_x_pattern()}\.?$", re.IGNORECASE
+    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to you{where_x_pattern()}\.?$", re.IGNORECASE
 )
 #: "<Source> deals N damage to each player." (Cast Away Doubt) - CR 102.1's
 #: whole player set, the caster included - `_DAMAGE_EACH_OPPONENT_RE`'s own
 #: CR 102.2 subset with "player" standing in for "opponent".
 _DAMAGE_EACH_PLAYER_RE = re.compile(
-    rf".*\bdeals? (?P<n>{COUNT}) damage to each player\.?$", re.IGNORECASE
+    rf"(?!if\b).*\bdeals? (?P<n>{COUNT}) damage to each player\.?$", re.IGNORECASE
 )
 #: "<Source> deals N damage to each creature." (Extinguisher Battleship) -
 #: CR 119.3, also with no target: "each creature" is every creature on the
 #: battlefield, not something chosen or a player group. Same X/where-X
 #: widening as `_DAMAGE_EACH_OPPONENT_RE` just above.
 _DAMAGE_EACH_CREATURE_RE = re.compile(
-    rf".*\bdeals? (?P<n>{AMOUNT}) damage to each creature{where_x_pattern()}\.?$", re.IGNORECASE
+    rf"(?!if\b).*\bdeals? (?P<n>{AMOUNT}) damage to each creature{where_x_pattern()}\.?$", re.IGNORECASE
 )
 #: "Prevent all combat damage that would be dealt this turn." (Fog, Angelsong)
 #: - CR 615.1a's prevention effect naming neither a permanent nor a player, so
