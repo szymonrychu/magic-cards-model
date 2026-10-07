@@ -2823,6 +2823,53 @@ def _parse_each_player_wheel_ability_text(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "that player draws a card. If the player is your opponent and has four or
+#: more cards in hand, this enchantment deals 2 damage to that player."
+#: (Fevered Visions) - the event player draws (CR 121.1), then CR 608.2c's
+#: rider reads the hand as it is now, after the draw: the sentence order is
+#: the evaluation order, so a hand of three that draws to four qualifies.
+#: "That player" is the one the trigger's own event is about (the player
+#: whose end step it is); "your opponent" is relative to the ability's
+#: controller. The consequence is any ability sentence naming that player.
+_THAT_PLAYER_DRAWS_THEN_HAND_SIZE_RE = re.compile(
+    r"^that player draws (?P<draw>[^.]+?)\.\s*"
+    rf"if the player (?:(?P<opponent>is your opponent) and )?has (?P<n>{COUNT}) or "
+    r"(?P<comparison>more|fewer) cards in (?:their )?hand,\s*(?P<rest>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@ABILITY_TEXT.rung("s16")
+def _parse_that_player_draws_then_hand_size_clause(text: str) -> AbilityEffect | None:
+    """`_THAT_PLAYER_DRAWS_THEN_HAND_SIZE_RE`'s shape; see the banner above."""
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    if not whole.lower().startswith("that player draws "):
+        return None
+    match = _THAT_PLAYER_DRAWS_THEN_HAND_SIZE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    threshold = parse_count(match.group("n"))
+    draw = parse_mixed_effect(f"that player draws {match.group('draw')}.")
+    consequence = _ability_effect_or_notice(match.group("rest").strip() + ".")
+    if threshold is None or draw is None or consequence is None or _is_notice_only(consequence):
+        return None
+    wants_more = match.group("comparison").lower() == "more"
+    opponent_only = match.group("opponent") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.player is None:
+            return
+        draw(game, ability)
+        if opponent_only and event.player == ability.controller:
+            return
+        hand = len(game.player(event.player).hand)
+        if (hand >= threshold) if wants_more else (hand <= threshold):
+            consequence(game, ability)
+
+    return effect
+
+
 from ._common import (  # noqa: E402
     _DISCARD_A_CARD_RE,
     _DRAW_CARDS_EQUAL_TO_RE,

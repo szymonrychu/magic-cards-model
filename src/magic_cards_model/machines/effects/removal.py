@@ -6517,7 +6517,7 @@ _BARE_SACRIFICE_OF_CHOICE_RE = re.compile(
 
 
 def _sacrifice_of_choice_clause_effect(
-    description: str, count: int, wanted_words: str
+    description: str, count: int, wanted_words: str, *, excludes_source: bool = False
 ) -> ClauseEffect:
     """One player's own CR 701.21a/608.2d choice among their own permanents
     matching `description` - the body both `_parse_target_player_sacrifices_
@@ -6526,6 +6526,12 @@ def _sacrifice_of_choice_clause_effect(
     subject-carry pass hands it) run, factored out once so the two share the
     identical "no impossible choice"/CR 608.2d floor rather than keeping two
     copies of it.
+
+    `excludes_source` is "another <thing>" / "<thing> other than this
+    <noun>" (Liege of the Pit, Rust Elemental): the ability's own source is
+    never a candidate, so with nothing else to sacrifice nothing is (CR 701.21a:
+    a player sacrifices only a permanent they control, and "other" rules the
+    source out).
     """
     requirement = permanent_description(description)
     assert requirement is not None
@@ -6535,6 +6541,7 @@ def _sacrifice_of_choice_clause_effect(
             permanent
             for permanent in game.permanents_controlled_by(player.username)
             if requirement.rejects(permanent, player.username, game) is None
+            and not (excludes_source and str(permanent.id) == source_id)
         ]
         if not candidates:
             return
@@ -6569,9 +6576,33 @@ def _sacrifice_of_choice_clause_effect(
 #: grammar). Nothing is targeted (CR 115.10a); with none to sacrifice nothing
 #: happens (CR 608.2d), and anything after it in the same text still does.
 _SACRIFICE_ONE_OF_CHOICE_RE = re.compile(
-    r"^sacrifice (?:an?|one) (?P<description>(?!other\b|another\b)[a-z][a-z ,'-]*?)\.?$",
+    r"^sacrifice (?P<article>another|an?|one) "
+    r"(?P<description>(?!other\b|another\b)[a-z][a-z ,'-]*?)\.?$",
     re.IGNORECASE,
 )
+
+#: "a creature other than this creature" (Liege of the Pit, Demonic
+#: Taskmaster) - `_SACRIFICE_ONE_OF_CHOICE_RE`'s description with the source
+#: named out of the choice, the same exclusion "another creature" makes.
+_OTHER_THAN_THIS_RE = re.compile(r"^(?P<description>.+?) other than this [a-z]+$", re.IGNORECASE)
+
+
+def _read_sacrifice_choice(text: str) -> tuple[str, bool] | None:
+    """`_SACRIFICE_ONE_OF_CHOICE_RE`'s `(description, excludes_source)`, or None
+    when `text` is not that shape or names something `permanent_description`
+    cannot read."""
+    match = _SACRIFICE_ONE_OF_CHOICE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    description = match.group("description").strip()
+    excludes_source = match.group("article").lower() == "another"
+    other_than_this = _OTHER_THAN_THIS_RE.fullmatch(description)
+    if other_than_this is not None:
+        description = other_than_this.group("description").strip()
+        excludes_source = True
+    if permanent_description(description) is None:
+        return None
+    return description, excludes_source
 
 
 @MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
@@ -6580,14 +6611,12 @@ def _parse_sacrifice_one_of_choice_clause(clause: str, *, for_spell: bool) -> Ta
     stripped = " ".join(clause.split())
     if not stripped.lower().startswith("sacrifice "):
         return None
-    match = _SACRIFICE_ONE_OF_CHOICE_RE.fullmatch(stripped)
-    if match is None:
+    choice = _read_sacrifice_choice(stripped)
+    if choice is None:
         return None
-    description = match.group("description").strip()
-    if permanent_description(description) is None:
-        return None
+    description, excludes_source = choice
     per_player = _sacrifice_of_choice_clause_effect(
-        description, 1, with_indefinite_article(description)
+        description, 1, with_indefinite_article(description), excludes_source=excludes_source
     )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -6612,10 +6641,114 @@ def _parse_sacrifice_one_of_choice_clause(clause: str, *, for_spell: bool) -> Ta
 #: ..." (Bristlebud Farmer), asks the "you may" only when there is something
 #: to sacrifice (CR 608.2d), and "If you do" is whether a permanent was.
 _SACRIFICE_THEN_IF_YOU_RE = re.compile(
-    r"^(?P<may>you may )?(?P<sacrifice>sacrifice (?:an?|one) [^.]+?)\.\s*"
+    r"^(?P<may>you may )?(?P<sacrifice>sacrifice (?:another|an?|one) [^.]+?)\.\s*"
     r"if you (?P<branch>do|don'?t|can'?t|cannot),\s*(?P<rest>.+?)\.?$",
     re.IGNORECASE,
 )
+
+
+def _readable_ability_effect(text: str) -> AbilityEffect | None:
+    """The whole-ability reader's effect for `text`, or None when it reads
+    nothing or only a fail-closed notice stand-in - a rider that is only a
+    notice must not make the sentence around it look handled."""
+    effect = _ability_effect_or_notice(text)
+    if effect is None or getattr(effect, "__name__", "").endswith("notice_only"):
+        return None
+    return effect
+
+
+#: "tap this creature" / "tap this creature and it deals 9 damage to you" /
+#: "tap this creature and you lose 4 life" - the "If you can't" rider of a
+#: Demon's upkeep sacrifice (CR 701.26a: tapping turns the permanent sideways).
+#: The tail after "and" is read as its own instruction, with "it"/"this
+#: <noun>" as the subject naming the same source.
+_TAP_SELF_RIDER_RE = re.compile(
+    r"^tap this (?P<noun>[a-z]+)(?: and (?P<tail>.+?))?\.?$", re.IGNORECASE
+)
+_SELF_SUBJECT_TAIL_RE = re.compile(r"^(?:it|this [a-z]+) (?P<verb>.+)$", re.IGNORECASE)
+
+
+def _tap_self_rider_effect(text: str) -> AbilityEffect | None:
+    """`_TAP_SELF_RIDER_RE`'s shape: tap the ability's own source if it is
+    still the permanent that triggered, then run the tail."""
+    match = _TAP_SELF_RIDER_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    noun = match.group("noun").lower()
+    if noun not in _SACRIFICE_SELF_NOUNS:
+        return None
+    tail_effect: AbilityEffect | None = None
+    tail = match.group("tail")
+    if tail is not None:
+        subject = _SELF_SUBJECT_TAIL_RE.fullmatch(tail.strip())
+        tail_text = f"this {noun} {subject.group('verb')}." if subject else tail.strip() + "."
+        tail_effect = parse_mixed_effect(tail_text)
+        if tail_effect is None:
+            return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if (
+            source is not None
+            and source.zone is Zone.BATTLEFIELD
+            and (ability.source_stamp is None or source.zone_change_stamp == ability.source_stamp)
+        ):
+            source.tap()
+        if tail_effect is not None:
+            tail_effect(game, ability)
+
+    return effect
+
+
+#: "this creature deals 4 damage to that creature" as the rider of a
+#: sacrifice pair (Flame-Kin War Scout): "that creature" is the creature the
+#: trigger's event is about (CR 608.2c's anaphora back to "When another
+#: creature enters"), which the source - already sacrificed, so read from its
+#: last known information (CR 113.7a) - deals the damage to.
+_SELF_DEALS_DAMAGE_TO_THAT_CREATURE_RE = re.compile(
+    rf"^this [a-z]+ deals (?P<n>{COUNT}) damage to that creature\.?$", re.IGNORECASE
+)
+
+
+def _event_creature_damage_effect(text: str) -> AbilityEffect | None:
+    """`_SELF_DEALS_DAMAGE_TO_THAT_CREATURE_RE`'s shape. A blocks event names
+    its other half instead of its subject, so that event is left to the
+    general reader."""
+    match = _SELF_DEALS_DAMAGE_TO_THAT_CREATURE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    general = _readable_ability_effect(text)
+    if amount is None or general is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        if event.event is TriggerEvent.BLOCKS:
+            general(game, ability)
+            return
+        referent = game.find_by_id(event.subject_id)
+        if (
+            isinstance(referent, CardState)
+            and referent.zone is Zone.BATTLEFIELD
+            and Type.CREATURE in game.characteristics_of(referent).types
+        ):
+            game.deal_damage(referent, amount, source=ability.source_or_last_known(game))
+
+    return effect
+
+
+def _sacrifice_rider_effect(text: str) -> AbilityEffect | None:
+    """The consequence of a sacrifice branch on an ability: the event
+    creature's damage, any whole-ability reading, else the tap-this-permanent
+    compound."""
+    return (
+        _event_creature_damage_effect(text)
+        or _readable_ability_effect(text)
+        or _tap_self_rider_effect(text)
+    )
 
 
 def _sacrifice_then_if_you_effect(
@@ -6629,19 +6762,23 @@ def _sacrifice_then_if_you_effect(
     match = _SACRIFICE_THEN_IF_YOU_RE.fullmatch(whole)
     if match is None:
         return None
-    sacrifice = _SACRIFICE_ONE_OF_CHOICE_RE.fullmatch(match.group("sacrifice"))
-    if sacrifice is None:
+    choice = _read_sacrifice_choice(match.group("sacrifice"))
+    if choice is None:
         return None
-    description = sacrifice.group("description").strip()
+    description, excludes_source = choice
+    if optional and excludes_source:
+        # "you may sacrifice another <thing>. If you do, ..." keeps the
+        # consequence readers that know the sacrificed permanent (its mana
+        # value, its type) - this reader has no memory of what went.
+        return None
     requirement = permanent_description(description)
-    if requirement is None:
-        return None
+    assert requirement is not None
     per_player = _sacrifice_of_choice_clause_effect(
-        description, 1, with_indefinite_article(description)
+        description, 1, with_indefinite_article(description), excludes_source=excludes_source
     )
     rest = match.group("rest").strip() + "."
     consequence: Callable[[Game, Any], None] | None = (
-        parse_mixed_effect_for_spell(rest) if for_spell else parse_mixed_effect(rest)
+        parse_mixed_effect_for_spell(rest) if for_spell else _sacrifice_rider_effect(rest)
     )
     wants_sacrifice = match.group("branch").lower() == "do"
 
@@ -6664,12 +6801,13 @@ def _sacrifice_then_if_you_effect(
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
+        source_id, source_name = names(stack_object)
         candidates = [
             permanent
             for permanent in game.permanents_controlled_by(player.username)
             if requirement.rejects(permanent, player.username, game) is None
+            and not (excludes_source and permanent.id == source_id)
         ]
-        _source_id, source_name = names(stack_object)
         if optional and (
             not candidates
             or not game.may(
@@ -6700,6 +6838,47 @@ def _parse_may_sacrifice_then_if_you_ability_text(text: str) -> TargetedClause |
     sacrifice ... If you do" readers in earlier segments and ahead of the
     clause splitter (see `_SACRIFICE_THEN_IF_YOU_RE`'s banner)."""
     return _sacrifice_then_if_you_effect(text, for_spell=False, optional=True)
+
+
+#: "Sacrifice this creature. If you do, this creature deals 4 damage to that
+#: creature." (Flame-Kin War Scout), "sacrifice this artifact. If you do, this
+#: artifact deals 10 damage to that player." (Booby Trap) - CR 701.21a's
+#: sacrifice of the ability's own source with a CR 608.2c rider that runs only
+#: when the sacrifice happened. The rider is read as its own whole ability
+#: text, so the trigger event's referent ("that creature", "that player")
+#: keeps reading across the pair, and it runs after the sacrifice with the
+#: source's last known information (CR 113.7a).
+_SACRIFICE_SELF_THEN_IF_YOU_DO_RE = re.compile(
+    r"^sacrifice (?:it|this [a-z]+)\.\s*if you do,\s*(?P<rest>.+?)\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s40", before=["dispatch.parse_mixed_effect"])
+def _parse_sacrifice_self_then_if_you_do_ability_text(text: str) -> AbilityEffect | None:
+    """`_SACRIFICE_SELF_THEN_IF_YOU_DO_RE`'s shape; see the banner above."""
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    if not whole.lower().startswith("sacrifice "):
+        return None
+    match = _SACRIFICE_SELF_THEN_IF_YOU_DO_RE.fullmatch(whole)
+    if match is None:
+        return None
+    sacrifice = _parse_sacrifice_self_clause(whole.split(".")[0], for_spell=False)
+    consequence = _sacrifice_rider_effect(match.group("rest").strip() + ".")
+    if sacrifice is None or consequence is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        was_there = (
+            source is not None
+            and source.zone is Zone.BATTLEFIELD
+            and (ability.source_stamp is None or source.zone_change_stamp == ability.source_stamp)
+        )
+        sacrifice(game, ability)
+        if was_there and source is not None and source.zone is not Zone.BATTLEFIELD:
+            consequence(game, ability)
+
+    return effect
 
 
 @SPELL_TEXT.rung("s11", for_spell=True)
