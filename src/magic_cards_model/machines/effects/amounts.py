@@ -3269,6 +3269,12 @@ def _parse_damage_each_player_equal_to_their_count_clause(
     match = _DAMAGE_EACH_PLAYER_EQUAL_TO_THEIRS_RE.fullmatch(clause.strip())
     if match is None:
         return None
+    # A leading condition ("Metalcraft - If you control three or more
+    # artifacts, Molten Psyche deals ...") belongs to the conditional reader,
+    # which hands this rung only the sentence after the comma (CR 608.2c).
+    subject = re.split(r"\bdeals?\b", clause, maxsplit=1, flags=re.IGNORECASE)[0]
+    if re.search(r"\bif\b|,", subject, re.IGNORECASE):
+        return None
     expr = match.group("expr")
     rewritten = expr
     for pattern, replacement in _TARGET_PLAYER_REFERENCES:
