@@ -3766,6 +3766,23 @@ _ACTIVATES_TYPE_LIST_CONDITION_BOUNDARY = re.compile(
 #: ends). Without this, `_split_top_level`'s bare comma split below would cut
 #: the condition off after "you waterbend" and read "earthbend" as the whole
 #: of the trigger's effect.
+#: The CR 702 keywords a condition's keyword list may name.
+_COMBAT_KEYWORD = (
+    r"(?:first strike|double strike|vigilance|haste|flying|reach|trample|menace|deathtouch|"
+    r"lifelink|defender|indestructible|hexproof)"
+)
+
+#: Path of Mettle's "Whenever you attack with at least two creatures that
+#: have first strike, double strike, vigilance, and/or haste, transform ..."
+#: - a condition ending in a comma-separated CR 702 keyword list, which the
+#: bare top-level comma split below would cut after "first strike".
+_KEYWORD_LIST_CONDITION_BOUNDARY = re.compile(
+    r"^(?P<condition>[^,]*?\b(?:that have|that has|with) "
+    rf"{_COMBAT_KEYWORD}(?:,\s*{_COMBAT_KEYWORD})+,?\s+(?:and/or|or|and)\s+{_COMBAT_KEYWORD})"
+    r"\s*,\s*",
+    re.IGNORECASE,
+)
+
 _BENDING_LIST_CONDITION_BOUNDARY = re.compile(
     r"^(?P<condition>you (?:waterbend|earthbend|firebend|airbend)"
     r"(?:,\s*(?:waterbend|earthbend|firebend|airbend))*(?:,)?"
@@ -4062,6 +4079,11 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
     elif type_list_boundary is not None:
         condition = type_list_boundary.group("condition")
         rest = body[type_list_boundary.end() :].strip()
+        if not rest:
+            return None
+    elif (keyword_list_boundary := _KEYWORD_LIST_CONDITION_BOUNDARY.match(body)) is not None:
+        condition = keyword_list_boundary.group("condition")
+        rest = body[keyword_list_boundary.end() :].strip()
         if not rest:
             return None
     elif bending_list_boundary is not None:

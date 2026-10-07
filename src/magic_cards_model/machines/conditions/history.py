@@ -757,6 +757,17 @@ def _subject_and_others_attacked(context: "ConditionContext", match: re.Match[st
     return len(others) >= needed
 
 
+def _creatures_attacked_count(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "three or more creatures attacked this turn" (Case of the Gateway
+    Express's To solve, CR 719.3a) - every creature declared as an attacker
+    this turn (CR 508.1a), by any player, each counted once."""
+    needed = parse_count(match.group("count"))
+    if needed is None:
+        return False
+    attacked = {entry.object_id for entry in _entries(context, "attacked")}
+    return len(attacked) >= needed
+
+
 def _crewed(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "an Assassin crewed it this turn" (CR 702.122b)."""
     quality = _quality(match.group("quality"))
@@ -1785,6 +1796,10 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(r"you didn't attack(?: with (?:a|any) creatures?)? this turn"),
         _you_did_not_attack,
+    ),
+    ConditionReader(
+        re.compile(rf"(?P<count>{COUNT}) or more creatures attacked this turn"),
+        _creatures_attacked_count,
     ),
     ConditionReader(
         re.compile(

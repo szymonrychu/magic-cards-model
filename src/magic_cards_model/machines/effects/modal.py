@@ -3002,9 +3002,13 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
         return None
     x_count = restriction.quantity.source is QuantitySource.X
     consequence_text = match.group("consequence").strip()
+    # "damage equal to the sacrificed creature's power" (CR 608.2h): the
+    # power is written in as the sacrifice happens, like the count below.
+    by_power = carries_sacrificed_power(consequence_text)
+    stand_in = _carry_sacrificed_power(consequence_text, 2) if by_power else consequence_text
     # Read once with a stand-in count, so an unreadable consequence fails
     # the whole ability closed now rather than after the sacrifice.
-    if reflexive_consequence_effect(_carry_count(consequence_text, 2, x=x_count)) is None:
+    if reflexive_consequence_effect(_carry_count(stand_in, 2, x=x_count)) is None:
         return None
     prompt = f"sacrifice {match.group('restriction').strip()}"
 
@@ -3032,6 +3036,13 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
         )
         if not chosen:
             return
+        # CR 608.2h: the sacrificed creature's power as it last existed on
+        # the battlefield, read before it leaves.
+        carried = consequence_text
+        if by_power:
+            if len(chosen) != 1:
+                return
+            carried = _carry_sacrificed_power(consequence_text, game.power_of(chosen[0]) or 0)
         # CR 603.12a: paying a cost several times in one go triggers the
         # reflexive ability once.
         for permanent in chosen:
@@ -3043,7 +3054,7 @@ def _parse_reflexive_sacrifice_clause(text: str) -> AbilityEffect | None:
         # `Game.put_triggers_on_stack`. Its "that many"/X is the count just
         # sacrificed.
         game.create_reflexive_trigger(
-            text=_carry_count(consequence_text, len(chosen), x=x_count),
+            text=_carry_count(carried, len(chosen), x=x_count),
             controller=player.username,
             source_id=ability.source_id,
             source_name=source_name,
@@ -6598,8 +6609,10 @@ from ._common import (  # noqa: E402
 from .amounts import (  # noqa: E402
     _amount_substituted_base,
     _carry_count,
+    _carry_sacrificed_power,
     _parse_where_x_is_continuous_effect,
     _parse_where_x_is_continuous_effect_for_spell,
+    carries_sacrificed_power,
 )
 from .continuous import (  # noqa: E402
     _compose_layer_effect_with_remainder_for_ability_mode,

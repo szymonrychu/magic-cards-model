@@ -2459,6 +2459,9 @@ def _condition_matches(
         return _controller_clause_holds(condition, controller, event.player)
 
     if ability.event is TriggerEvent.DEALS_DAMAGE:
+        single = _SINGLE_CREATURE_SPELL_DAMAGE_RE.fullmatch(lowered.strip())
+        if single is not None:
+            return _single_creature_spell_damage_matches(game, single, controller, event)
         if re.search(r"\b(?:is|are) dealt\b", lowered):
             # Passive voice reads the *recipient*, not the dealer - Hexhaven
             # Invigorator's self-referential "this creature is dealt damage"
@@ -2471,6 +2474,12 @@ def _condition_matches(
             # recipient) are read instead.
             if mine:
                 if event.target_id != source.id:
+                    return False
+            elif _HOST_IS_DEALT_DAMAGE_RE.match(lowered.strip()):
+                # CR 303.4b: Pain for All's and Spiteful Shadows' "Whenever
+                # enchanted creature is dealt damage" - the permanent the
+                # source is attached to, as the damage is dealt.
+                if source.attached_to is None or event.target_id != source.attached_to:
                     return False
             elif "opponent" in lowered:
                 if event.player is None or event.player == controller:
@@ -5339,6 +5348,51 @@ def controller_of_source(game: "Game", source: CardState) -> str:
     if source.zone in (Zone.BATTLEFIELD, Zone.STACK):
         return source.controller or game.active_player.username
     return source.owner or source.controller or game.active_player.username
+
+
+#: "enchanted|equipped creature is dealt [combat|noncombat] damage" - the
+#: passive voice about the source's own host (CR 303.4b).
+_HOST_IS_DEALT_DAMAGE_RE = re.compile(r"^(?:enchanted|equipped) creature is dealt\b")
+
+#: Imodane, the Pyrohammer: "an instant or sorcery spell you control that
+#: targets only a single creature deals damage to that creature" - the
+#: dealer is a spell of the named types under the ability's controller, its
+#: targets are exactly one object and that object is a creature (CR 115.1a),
+#: and the damage went to that very creature.
+_SINGLE_CREATURE_SPELL_DAMAGE_RE = re.compile(
+    r"^an? (?P<types>instant or sorcery|instant|sorcery) spell you control that targets only "
+    r"a single creature deals damage to that creature$"
+)
+
+
+def _single_creature_spell_damage_matches(
+    game: "Game", match: "re.Match[str]", controller: str, event: GameEvent
+) -> bool:
+    """`_SINGLE_CREATURE_SPELL_DAMAGE_RE`'s test against one damage event."""
+    if event.subject_id is None or event.target_id is None:
+        return False
+    if event.subject_controller != controller:
+        return False
+    resolving = getattr(game, "resolving", None)
+    spell = (
+        resolving
+        if getattr(resolving, "id", None) == event.subject_id
+        else game.find_by_id(event.subject_id)
+    )
+    if not isinstance(spell, CardState):
+        return False
+    kinds = {"instant": Type.INSTANT, "sorcery": Type.SORCERY}
+    wanted = {kinds[word] for word in match.group("types").split(" or ")}
+    types = set(event.subject_types or game.characteristics_of(spell).types)
+    if not wanted & types:
+        return False
+    targets = list(spell.targets)
+    if len(targets) != 1 or targets[0].card_id != event.target_id:
+        return False
+    target = game.find_by_id(event.target_id)
+    if not isinstance(target, CardState):
+        return False
+    return Type.CREATURE in game.characteristics_of(target).types
 
 
 #: Desert Were-Worm: "you attack with creatures with total power 12 or

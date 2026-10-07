@@ -1311,19 +1311,49 @@ _DEFENDER_OPPONENT_RE = re.compile(
 
 #: Screaming Swarm's "you attack with one or more creatures" - the same
 #: batched declaration as "one or more creatures you control attack", said
-#: from the attacking player's side (CR 508.3d).
+#: from the attacking player's side (CR 508.3d). Path of Mettle's "you
+#: attack with at least two creatures that have ..." is the same declaration
+#: with a minimum.
 _YOU_ATTACK_WITH_ONE_OR_MORE_RE = re.compile(
-    r"^you attack with one or more (?P<description>.+?)$", re.IGNORECASE
+    r"^you attack with (?:one or more|at least (?P<least>two|three|four|five)) "
+    r"(?P<description>.+?)$",
+    re.IGNORECASE,
+)
+
+#: A CR 702 keyword list: "first strike, double strike, vigilance, and/or
+#: haste" / "flying or reach" - the keywords `machines/combat.Keyword` names.
+_KEYWORD_LIST_SEPARATOR_RE = re.compile(r"\s*,\s*(?:and/or\s+|or\s+|and\s+)?|\s+(?:and/or|or)\s+")
+
+
+def parse_keyword_list(text: str) -> tuple[str, ...] | None:
+    """The keywords of a printed "A, B, C, and/or D" list, lowercased, or
+    None when any item is not a keyword `machines/combat.Keyword` names."""
+    from ..combat import Keyword
+
+    known = {member.value.lower() for member in Keyword}
+    items = [item.strip().lower() for item in _KEYWORD_LIST_SEPARATOR_RE.split(text.strip())]
+    items = [item for item in items if item]
+    if not items or any(item not in known for item in items):
+        return None
+    return tuple(items)
+
+
+#: "creatures that have `<keyword list>`" / "creatures with `<keyword list>`"
+#: - an attacker qualifies with any one of them.
+_CREATURES_WITH_KEYWORD_LIST_RE = re.compile(
+    r"^creatures (?:that have|with) (?P<list>.+)$", re.IGNORECASE
 )
 
 
 def _batched_attack_match(condition: str) -> "re.Match[str] | None":
     """`_ONE_OR_MORE_ATTACK_RE` over `condition`, with "you attack with one
-    or more X" read as its equivalent "one or more X you control attack"."""
+    or more X" (or "at least N X") read as its equivalent "one (N) or more X
+    you control attack"."""
     text = condition.strip()
     you_attack = _YOU_ATTACK_WITH_ONE_OR_MORE_RE.fullmatch(text)
     if you_attack is not None:
-        text = f"one or more {you_attack.group('description')} you control attack"
+        minimum = (you_attack.group("least") or "one").lower()
+        text = f"{minimum} or more {you_attack.group('description')} you control attack"
     return _ONE_OR_MORE_ATTACK_RE.fullmatch(text)
 
 
@@ -1380,14 +1410,18 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
     match = _batched_attack_match(condition)
     if match is None:
         return None
+    from ..combat import has_keyword
     from ..targeting import permanent_description
 
     description = match.group("description")
     yours = _ONE_OR_MORE_ATTACK_YOURS.search(description) is not None
     theirs = _ONE_OR_MORE_ATTACK_THEIRS.search(description) is not None
     description = _ONE_OR_MORE_ATTACK_THEIRS.sub("", description)
-    requirement = permanent_description(_ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip())
-    if requirement is None:
+    bare = _ONE_OR_MORE_ATTACK_YOURS.sub("", description).strip()
+    keyword_list = _CREATURES_WITH_KEYWORD_LIST_RE.fullmatch(bare)
+    keywords = parse_keyword_list(keyword_list.group("list")) if keyword_list else None
+    requirement = None if keywords is not None else permanent_description(bare)
+    if requirement is None and keywords is None:
         return None
     defender = match.group("defender")
     opponent_only = False
@@ -1400,7 +1434,11 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
         for attacker in game.attacking_creatures()
         if (not yours or game.controller_of(attacker).username == controller)
         and (not theirs or game.controller_of(attacker).username != controller)
-        and requirement.rejects(attacker, controller, game) is None
+        and (
+            requirement.rejects(attacker, controller, game) is None
+            if requirement is not None
+            else any(has_keyword(attacker, keyword, game) for keyword in keywords or ())
+        )
         and (
             not opponent_only
             or (

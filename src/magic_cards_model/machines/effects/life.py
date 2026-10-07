@@ -1150,6 +1150,57 @@ def gain_life_equal_to_damage_dealt(sentence: str) -> "Callable[[Game, str, int]
     return gain
 
 
+#: "You gain life equal to target creature's power.[ The next time that
+#: creature would deal damage this turn, prevent that damage.]" (Soul's
+#: Grace; Dazzling Reflection): the power as the spell resolves (CR 608.2h),
+#: then CR 615.1's next-instance shield on that creature as a source - the
+#: same `ShieldKind.NEXT_INSTANCE` record Awe Strike's "the next time target
+#: creature would deal damage this turn" builds, ended by cleanup.
+_GAIN_LIFE_EQUAL_TO_TARGET_POWER_RE = re.compile(
+    r"^you gain life equal to target creature's power\."
+    r"(?P<shield>\s*the next time that creature would deal damage this turn, prevent that "
+    r"damage\.)?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_gain_life_equal_to_target_power_text(text: str) -> Effect | None:
+    """`_GAIN_LIFE_EQUAL_TO_TARGET_POWER_RE`'s shape. An illegal target means
+    the spell does nothing (CR 608.2b: its only target is gone)."""
+    if not text.lower().startswith("you gain life equal to target creature's power"):
+        return None
+    match = _GAIN_LIFE_EQUAL_TO_TARGET_POWER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    shields = match.group("shield") is not None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from ...models.game import PreventionShield, ShieldKind
+
+        creatures = [
+            target for target in game.resolve_card_targets(spell) if target.zone is Zone.BATTLEFIELD
+        ]
+        if not creatures:
+            return
+        creature = creatures[0]
+        controller = game.controller_of(spell).username
+        power = max(game.power_of(creature) or 0, 0)
+        if power > 0:
+            game.gain_life(controller, power)
+        if shields:
+            game.create_prevention_shield(
+                PreventionShield(
+                    kind=ShieldKind.NEXT_INSTANCE,
+                    label=f"prevent the next damage {creature.name} would deal this turn",
+                    controller=controller,
+                    source_id=creature.id,
+                )
+            )
+
+    return effect
+
+
 from ..turn_scoped_riders import game_outcome_prohibition_rider  # noqa: E402
 from ._common import (  # noqa: E402
     AmountReader,

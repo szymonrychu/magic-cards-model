@@ -1,0 +1,159 @@
+{
+  "object": "card",
+  "id": "a67793ef-ef80-4434-9c54-e3fd8a270bbe",
+  "oracle_id": "1a080b26-c766-4f7c-9198-4974d2133f75",
+  "multiverse_ids": [],
+  "resource_id": "2A5DC830F16233662CD411772861EBA29D37D89DAD8E66BCC3C8666ED277A503",
+  "mtgo_id": 141451,
+  "arena_id": 96120,
+  "tcgplayer_id": 633414,
+  "cardmarket_id": 826999,
+  "name": "Tellah, Great Sage",
+  "lang": "en",
+  "released_at": "2025-06-13",
+  "uri": "https://api.scryfall.com/cards/a67793ef-ef80-4434-9c54-e3fd8a270bbe",
+  "scryfall_uri": "https://scryfall.com/card/fin/244/tellah-great-sage?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:36:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.jpg?1783906561",
+    "normal": "https://cards.scryfall.io/normal/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.jpg?1783906561",
+    "large": "https://cards.scryfall.io/large/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.jpg?1783906561",
+    "png": "https://cards.scryfall.io/png/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.png?1783906561",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.jpg?1783906561",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.jpg?1783906561",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.webp?1783906561",
+    "grid": "https://cards.scryfall.io/grid/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.webp?1783906561",
+    "display": "https://cards.scryfall.io/display/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.webp?1783906561",
+    "art": "https://cards.scryfall.io/art/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.webp?1783906561",
+    "crop": "https://cards.scryfall.io/crop/front/a/6/a67793ef-ef80-4434-9c54-e3fd8a270bbe.webp?1783906561"
+  },
+  "mana_cost": "{3}{U}{R}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Human Wizard",
+  "oracle_text": "Whenever you cast a noncreature spell, create a 1/1 colorless Hero creature token. If four or more mana was spent to cast that spell, draw two cards. If eight or more mana was spent to cast that spell, sacrifice Tellah and it deals that much damage to each opponent.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "e0c5f3d5-ca17-4d4c-8de4-3559d6c6fe94",
+      "component": "combo_piece",
+      "name": "Tellah, Great Sage",
+      "type_line": "Legendary Creature \u2014 Human Wizard",
+      "uri": "https://api.scryfall.com/cards/e0c5f3d5-ca17-4d4c-8de4-3559d6c6fe94"
+    },
+    {
+      "object": "related_card",
+      "id": "17fa0c1f-6737-487c-9101-0bec2e586795",
+      "component": "token",
+      "name": "Hero",
+      "type_line": "Token Creature \u2014 Hero",
+      "uri": "https://api.scryfall.com/cards/17fa0c1f-6737-487c-9101-0bec2e586795"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set": "fin",
+  "set_name": "Final Fantasy",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afin&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fin?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a67793ef-ef80-4434-9c54-e3fd8a270bbe/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1a080b26-c766-4f7c-9198-4974d2133f75&unique=prints",
+  "collector_number": "244",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Yumi Yaoshida",
+  "artist_ids": [
+    "4aa6d30b-cfee-4b70-8454-0c7a616ea191"
+  ],
+  "illustration_id": "2dbdc398-63e8-4dfa-858a-af76ba58bbc4",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "ffiv",
+    "universesbeyond"
+  ],
+  "edhrec_rank": 8839,
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.37",
+    "usd_etched": null,
+    "eur": "0.19",
+    "eur_foil": "0.45",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTellah%252C%2BGreat%2BSage",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTellah%252C%2BGreat%2BSage",
+    "edhrec": "https://edhrec.com/route/?cc=Tellah%2C+Great+Sage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F633414%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826999&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/141451?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

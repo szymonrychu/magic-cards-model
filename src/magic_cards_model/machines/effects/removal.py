@@ -9085,6 +9085,44 @@ def _parse_multi_part_sacrifice_gain_draw_discard_damage_counters_clause(
     return effect
 
 
+#: "Choose a creature at random that attacked this turn. Destroy that
+#: creature." (Metzali, Tower of Triumph): one creature, picked uniformly at
+#: random among the creatures declared as attackers this turn (CR 508.1a)
+#: still on the battlefield, then destroyed (CR 701.8a). The pick is seeded
+#: off the game's `shuffle_seed` and the resolving ability's own id - both
+#: fixed per game - so a replay picks the same creature.
+_DESTROY_RANDOM_ATTACKED_RE = re.compile(
+    r"^choose an? (?P<kind>creature|permanent) at random that attacked this turn\.\s*"
+    r"destroy (?:that creature|it)$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+@SPELL_TEXT.rung("s10")
+def _parse_destroy_random_attacked_creature_text(text: str) -> TargetedClause | None:
+    """`_DESTROY_RANDOM_ATTACKED_RE`'s shape. No creature attacked this turn
+    is nothing to choose (CR 609.3: do as much as possible)."""
+    if "at random that attacked this turn" not in text.lower():
+        return None
+    if _DESTROY_RANDOM_ATTACKED_RE.fullmatch(" ".join(text.strip().rstrip(".").split())) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        attacked = {entry.object_id for entry in game.turn_history if entry.kind == "attacked"}
+        candidates = [
+            permanent
+            for permanent in game.battlefield
+            if permanent.id in attacked and game.characteristics_of(permanent).is_creature
+        ]
+        if not candidates:
+            return
+        rng = Random(f"{game.shuffle_seed}:at-random:{stack_object.id}")  # noqa: S311
+        game.destroy(rng.choice(candidates))
+
+    return effect
+
+
 from ._common import (  # noqa: E402
     _ANAPHORIC_SUBJECT_RE,
     _ANY_TYPE_MANA_STANDALONE_RE,
