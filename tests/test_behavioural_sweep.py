@@ -3011,9 +3011,11 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         (card.card_faces or [])[1].type_line or ""
     )
     # "Whenever two or more creatures your opponents control attack"
-    # (Flummoxed Cyclops, CR 603.2c): the attacking side declares that many
-    # attackers - distinct vanilla partners alongside the probe.
-    group = re.match(r"^(two|three|four|five) or more\b", lowered)
+    # (Flummoxed Cyclops, CR 603.2c), or "Whenever you attack with three or
+    # more creatures" (Karlov Watchdog, CR 508.3d): the attacking side
+    # declares that many attackers - distinct vanilla partners alongside the
+    # probe.
+    group = re.match(r"^(?:you attack with )?(two|three|four|five) or more\b", lowered)
     group_partners: tuple[str, ...] = ()
     if group is not None:
         needed = (parse_count(group.group(1), article=False) or 1) - 1
