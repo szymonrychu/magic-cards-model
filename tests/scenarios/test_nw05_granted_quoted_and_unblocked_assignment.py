@@ -199,3 +199,81 @@ def test_the_granted_trigger_sacrifices_it_after_combat_damage_to_a_player():
     scenario.pass_until_resolved()
     assert scenario.player("bob").life == 18
     assert bears.zone is Zone.GRAVEYARD, "sacrificed by its own granted trigger"
+
+
+# -- Vessel of the All-Consuming: "...if it has dealt 10 or more damage to that
+# player this turn, they lose the game." (CR 104.3e's effect-stated loss; the
+# "if" is an intervening if, CR 603.4, checked as the trigger fires and again as
+# it resolves). "They" is the damaged player. No other legal printing says
+# "they lose the game" (Scryfall o: search, 2026-10-07), so the plural subject is
+# proven on this card alone and the "that player loses the game" siblings'
+# existing tests keep proving the singular.
+
+HIDETSUGU = "Hidetsugu Consumes All // Vessel of the All-Consuming"
+
+
+def _vessel_board(*, bob_battlefield=()):
+    scenario = (
+        Scenario()
+        .player("alice", hand=[HIDETSUGU], library=["Plains"] * 5)
+        .player("bob", battlefield=list(bob_battlefield), library=["Plains"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    card = scenario.find(HIDETSUGU, Zone.HAND, "alice")
+    vessel = scenario.game.put_onto_battlefield(card, "alice", transformed=True)
+    return scenario, vessel
+
+
+def _hit(scenario, vessel, target, amount):
+    scenario.game.deal_damage(target, amount, source=vessel)
+    scenario.game.announce_batched_events()
+    scenario.pass_until_resolved()  # puts the damage triggers on the stack
+    while not scenario.game.stack_is_empty and not scenario.game.is_over:
+        scenario.pass_until_resolved()
+
+
+def test_hidetsugu_reads_every_clause():
+    bad = [c for c in card_support(card(HIDETSUGU)).clauses if c.outcome != "handled"]
+    assert not bad, bad
+
+
+def test_ten_damage_to_a_player_in_one_hit_makes_them_lose():
+    scenario, vessel = _vessel_board()
+    _hit(scenario, vessel, scenario.player("bob"), 10)
+    assert scenario.game.is_over
+    assert scenario.game.winner == "alice"
+
+
+def test_nine_damage_is_not_enough_at_trigger_time_or_resolution():
+    scenario, vessel = _vessel_board()
+    _hit(scenario, vessel, scenario.player("bob"), 9)
+    assert not scenario.game.is_over
+    assert scenario.player("bob").life == 11
+
+
+def test_the_ten_damage_adds_up_across_hits_in_the_same_turn():
+    scenario, vessel = _vessel_board()
+    _hit(scenario, vessel, scenario.player("bob"), 6)
+    assert not scenario.game.is_over
+    _hit(scenario, vessel, scenario.player("bob"), 4)
+    assert scenario.game.is_over
+
+
+def test_damage_to_a_creature_does_not_count_toward_the_player_total():
+    scenario, vessel = _vessel_board(bob_battlefield=("Hill Giant",))
+    giant = scenario.creature("Hill Giant", "bob")
+    _hit(scenario, vessel, giant, 3)
+    _hit(scenario, vessel, scenario.player("bob"), 9)
+    assert not scenario.game.is_over
+    assert scenario.player("bob").life == 11
+
+
+def test_the_count_starts_over_each_turn():
+    scenario, vessel = _vessel_board()
+    _hit(scenario, vessel, scenario.player("bob"), 9)
+    for player in ("bob", "alice"):
+        while scenario.turn.active_player != player or scenario.step is not Step.PRECOMBAT_MAIN:
+            scenario.advance()
+    _hit(scenario, vessel, scenario.player("bob"), 1)
+    assert not scenario.game.is_over

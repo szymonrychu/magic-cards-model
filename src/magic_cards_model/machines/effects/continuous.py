@@ -2463,7 +2463,9 @@ def _parse_each_player_this_creature_attacked_loses_clause(
 #: game." CR 104.3e's effect-stated loss, applied to the player the
 #: triggering event names (the damaged opponent), the same `event.player`
 #: referent every other triggered "that player ..." clause reads.
-_THAT_PLAYER_LOSES_THE_GAME_RE = re.compile(r"^that player loses the game\.?$", re.IGNORECASE)
+_THAT_PLAYER_LOSES_THE_GAME_RE = re.compile(
+    r"^(?:that player loses|they lose) the game\.?$", re.IGNORECASE
+)
 
 
 @MIXED_CLAUSE.rung("s4", for_spell=FORWARD)
