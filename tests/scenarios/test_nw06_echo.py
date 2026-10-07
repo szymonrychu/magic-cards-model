@@ -7,7 +7,7 @@ Rules read in full with `mise run rules:find` this session:
   the beginning of your last upkeep, sacrifice it unless you pay [cost].'"
 - **CR 603.4** - the intervening "if" is checked as the upkeep begins and
   again as the ability resolves.
-- **CR 107.3c** - an X the text defines is not chosen; Volcano Hellion's
+- **CR 107.3** - an X the text defines is not chosen; Volcano Hellion's
   "where X is your life total" is read as the cost is paid.
 - **CR 615.12** - "Some effects state that damage 'can't be prevented.'"
 - **CR 701.21a** - sacrificing moves the permanent to its owner's graveyard.
@@ -306,9 +306,7 @@ def test_the_chosen_amount_is_dealt_to_you_and_to_the_target_creature():
     scenario.will_choose_an_amount(3, username="alice", source="Volcano Hellion")
     scenario.resolve_top()
 
-    (asked,) = [
-        q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_AN_AMOUNT
-    ]
+    (asked,) = [q for q in scenario.questions_asked() if q.kind is DecisionKind.CHOOSE_AN_AMOUNT]
     assert asked.player == "alice"
     assert scenario.player("alice").life == 17
     assert wurm.damage == 3 and wurm.zone is Zone.BATTLEFIELD

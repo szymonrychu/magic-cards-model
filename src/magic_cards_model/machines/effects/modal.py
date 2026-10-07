@@ -3105,9 +3105,7 @@ def _parse_resolves_for_nth_time_reflexive_clause(text: str) -> AbilityEffect | 
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         first(game, ability)
-        key = (
-            f"{ABILITY_RESOLUTIONS_FACT}:{ability.source_id}:{ability.source_stamp}:{fingerprint}"
-        )
+        key = f"{ABILITY_RESOLUTIONS_FACT}:{ability.source_id}:{ability.source_stamp}:{fingerprint}"
         game.note_turn_count(key, ability.controller)
         if game.turn_count(key, ability.controller) != nth:
             return

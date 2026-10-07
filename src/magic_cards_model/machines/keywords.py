@@ -6482,7 +6482,7 @@ _ECHO_EFFECT_RE = re.compile(
 def _echo_cost(
     printed: str, game: Any, controller: str | None, source: CardState | None
 ) -> TotalCost | None:
-    """Echo's [cost] as one `TotalCost`, its X (CR 107.3c: defined by the
+    """Echo's [cost] as one `TotalCost`, its X (CR 107.3: defined by the
     text, so not chosen) evaluated now - "as the cost is paid" - against
     `game`; `None` for a cost this engine cannot read or pay mid-resolution.
     With no game (the support probe) X is read as 0, only to check the

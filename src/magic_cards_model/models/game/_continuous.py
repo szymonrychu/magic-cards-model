@@ -1669,7 +1669,6 @@ class ContinuousMixin:
                     return True
         return False
 
-
     def _creatures_died_under_control_this_turn(self: "Game") -> dict[str, int]:
         """Per player, the creatures put into a graveyard from the battlefield
         under their control this turn (CR 700.4), each judged by its type as
@@ -1684,6 +1683,7 @@ class ContinuousMixin:
             ):
                 died[entry.player] = died.get(entry.player, 0) + 1
         return died
+
     @classmethod
     def reads_enforced_static_line(cls, text: str, card_name: str) -> bool:
         """`support.py`'s credit: whether one printed static line is a shape

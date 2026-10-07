@@ -4610,6 +4610,14 @@ class DriverGap:
 
 
 SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
+    # NW06-T5: CR 614.12a's as-enters choice of a player and a card name
+    # (Booby Trap), which the stock board's source never made - proven by
+    # tests/scenarios/test_nw06_chosen_player_and_name.py.
+    DriverGap(
+        kind="draws_a_card",
+        event="the player an as-enters choice named drawing a card with the chosen name",
+        precondition=r"^when the chosen player draws a card with the chosen name",
+    ),
     # EC6's object-state conditions about an object other than the source,
     # which the stock board cannot give the state the condition asks for.
     DriverGap(

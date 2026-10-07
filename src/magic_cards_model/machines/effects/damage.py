@@ -2392,9 +2392,7 @@ _AMOUNT_OF_YOUR_CHOICE_CEILING = 1000
 
 
 @ABILITY_TEXT.rung("s19", for_spell=False)
-def _parse_damage_to_you_and_target_clause(
-    text: str, *, for_spell: bool
-) -> AbilityEffect | None:
+def _parse_damage_to_you_and_target_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_DAMAGE_TO_YOU_AND_TARGET_RE`'s shape.
 
     "You" is not a target: with the target gone the ability does not resolve
