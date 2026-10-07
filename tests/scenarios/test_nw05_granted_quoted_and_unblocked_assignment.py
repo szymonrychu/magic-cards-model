@@ -63,10 +63,12 @@ def test_a_creature_that_enters_later_is_untouched():
     scenario = _board(hand=("Hill Giant", "Grizzly Bears"))
     giant = scenario.find("Hill Giant", Zone.HAND, "alice")
     _cast_velocity(scenario, put=giant)
-    scenario.game.put_onto_battlefield(
-        scenario.find("Grizzly Bears", Zone.HAND, "alice"), "alice"
-    )
-    bears = [s for s in scenario.game.battlefield if s.name == "Grizzly Bears" and s.controller == "alice"]
+    scenario.game.put_onto_battlefield(scenario.find("Grizzly Bears", Zone.HAND, "alice"), "alice")
+    bears = [
+        s
+        for s in scenario.game.battlefield
+        if s.name == "Grizzly Bears" and s.controller == "alice"
+    ]
     assert bears and not bears[0].granted_ability_texts
 
 
@@ -126,8 +128,6 @@ def test_it_dying_early_still_pays_out_its_last_known_mana_value():
     scenario.pass_until_resolved()  # its leaves-the-battlefield trigger
     assert giant.zone is Zone.GRAVEYARD
     assert bears.zone is Zone.GRAVEYARD
-
-
 
 
 # -- Carnage, Crimson Chaos: the same "It gains "<quoted>" and "<quoted>"" ----
@@ -383,7 +383,9 @@ def test_a_creature_that_arrives_after_the_spell_resolved_has_no_permission():
     scenario = _focus_board()
     late = scenario.put_onto_battlefield("Hill Giant", "alice")
     assert not may_assign_as_though_unblocked(scenario.game, late)
-    assert may_assign_as_though_unblocked(scenario.game, scenario.creature("Grizzly Bears", "alice"))
+    assert may_assign_as_though_unblocked(
+        scenario.game, scenario.creature("Grizzly Bears", "alice")
+    )
 
 
 def test_an_opponents_creature_has_no_permission():

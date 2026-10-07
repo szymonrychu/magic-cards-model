@@ -255,3 +255,40 @@ def test_the_record_is_per_turn_and_rolled_with_the_other_per_turn_ledgers():
     scenario = _crown_board(hand=["Grizzly Bears"])
     assert scenario.game.turn_count("hand_size_at_turn_start", "alice") == 1
     assert scenario.game.turn_count("hand_size_at_turn_start", "bob") == 0
+
+
+# -- Generality proofs on other real printings -------------------------------
+# No other legal printing words the damage-to-it or start-of-turn-hand template
+# (Scryfall o: searches, 2026-10-07), so the readers are exercised directly
+# through the phrase APIs against cards that do not print them.
+
+
+def test_the_damage_dealt_to_it_term_reads_any_damaged_creature():
+    from magic_cards_model.machines.effects.amounts import amount_expression
+
+    reader = amount_expression("the amount of damage dealt to it this turn")
+    assert reader is not None
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.creature("Hill Giant", "bob")
+    assert reader(scenario.game, "alice", giant, 0) == 0
+    scenario.game.deal_damage(giant, 2, source=giant)
+    assert reader(scenario.game, "alice", giant, 0) == 2
+
+
+def test_the_hand_at_the_start_of_the_turn_condition_reads_for_any_source():
+    scenario = _crown_board(hand=["Grizzly Bears"])
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    scenario.game.discard_cards("alice", [bears], source="test")
+    assert scenario.game.condition_holds("alice", "you had a card in hand", bears) is True
+    assert (
+        scenario.game.condition_holds(
+            "alice", "you had no cards in hand at the beginning of this turn", bears
+        )
+        is False
+    ), "emptying the hand since the turn began changes nothing"

@@ -2149,3 +2149,28 @@ def test_a_snapshot_written_before_the_optional_waterbend_record_is_refused() ->
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_OPTIONAL_WATERBEND}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before nw-05-t4: `TurnHistoryEntry` gained
+#: `damage_baseline` (Tangled Colony's "the amount of damage dealt to it this
+#: turn", CR 120.1, CR 400.7). nw-05-t4 bumped 126 -> 130 (the number this task
+#: reserved), so the last shape without it is 126.
+_SCHEMA_VERSION_BEFORE_DAMAGE_BASELINE = 126
+
+
+def test_a_snapshot_written_before_the_turn_history_damage_baseline_is_refused() -> None:
+    """A version-126 dump's turn history carries no `damage_baseline`: decoded
+    as current, a creature that returned to the battlefield this turn would
+    count the damage its previous incarnation took. Refused instead."""
+    from magic_cards_model.models.game.records import TurnHistoryEntry
+
+    assert "damage_baseline" in TurnHistoryEntry.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_DAMAGE_BASELINE
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_DAMAGE_BASELINE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_DAMAGE_BASELINE}",
+    ):
+        Game.model_validate(dumped)

@@ -535,13 +535,6 @@ def _required_becomes_tapped_subtype(condition: str) -> tuple[str, ...] | None:
     return _parse_subtype_list(match.group("subtype"))
 
 
-#: "a player attacks with five or more creatures" (Aurelia, the Law Above):
-#: the attacking player's declared count, read once per declaration.
-_PLAYER_ATTACKS_WITH_N_OR_MORE_RE = re.compile(
-    rf"^(?P<who>a player|you|an opponent) attacks? with (?P<n>{COUNT}) or more creatures$"
-)
-
-
 #: "a `<Subtype>` you control attacks" (Defiant Thundermaw's own back face's
 #: "Whenever a Dragon you control attacks, it deals 2 damage to any
 #: target.") - `_BECOMES_TAPPED_SUBTYPE`'s own bare-subtype-subject shape
@@ -1957,7 +1950,7 @@ def _condition_matches(
                 if game.controller_of(attacker).username == controller
             )
             return total_power >= threshold
-        attacks_with = _PLAYER_ATTACKS_WITH_N_OR_MORE_RE.fullmatch(lowered.strip())
+        attacks_with = PLAYER_ATTACKS_WITH_N_OR_MORE_RE.fullmatch(lowered.strip())
         if attacks_with is not None:
             # CR 508.3d: "Whenever a player attacks with five or more creatures"
             # (Aurelia, the Law Above) is one trigger for the whole declaration,
@@ -5579,6 +5572,7 @@ from ._common import (  # noqa: E402
     _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION,
 )
 from .collect import (  # noqa: E402
+    PLAYER_ATTACKS_WITH_N_OR_MORE_RE,
     _unread_trigger_events,
     batched_attack_minimum,
     batched_attackers,

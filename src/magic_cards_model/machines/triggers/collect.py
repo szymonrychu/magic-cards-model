@@ -7,7 +7,7 @@ from ...ids import new_id
 from ...models.card import Card, Layout, Supertype
 from ...models.card_state import CardState
 from ...models.zone import Zone
-from ...numbers import parse_count
+from ...numbers import COUNT, parse_count
 from ...snapshot import scan_pin
 from ..abilities import (
     Ability,
@@ -1331,11 +1331,22 @@ def batched_attack_minimum(condition: str) -> int:
     return parse_count(match.group("minimum")) or 1
 
 
+#: "a player attacks with five or more creatures" (Aurelia, the Law Above):
+#: the attacking player's declared count, read once per declaration (CR 508.3d).
+PLAYER_ATTACKS_WITH_N_OR_MORE_RE = re.compile(
+    rf"^(?P<who>a player|you|an opponent) attacks? with (?P<n>{COUNT}) or more creatures$"
+)
+
+
 def is_batched_attack_condition(condition: str) -> bool:
     """Whether `condition` is "one or more `<description>` attack[
-    `<defender>`]" (or "you attack with one or more `<description>`") - one
-    trigger for a whole declaration (`batched_attackers`)."""
-    return _batched_attack_match(condition) is not None
+    `<defender>`]" (or "you attack with one or more `<description>`", or "a
+    player attacks with `<N>` or more creatures") - one trigger for a whole
+    declaration (`batched_attackers`)."""
+    return (
+        _batched_attack_match(condition) is not None
+        or PLAYER_ATTACKS_WITH_N_OR_MORE_RE.fullmatch(condition.strip().lower()) is not None
+    )
 
 
 def _defender_controller_of(game: "Game", attacker: CardState) -> str | None:

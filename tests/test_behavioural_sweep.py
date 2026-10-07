@@ -4678,6 +4678,18 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="a graveyard holding cards of five or more different mana values",
         precondition=r"if there are \w+ or more mana values among cards in your graveyard",
     ),
+    # nw-05-t4: a running damage total no single stock combat hit reaches
+    # (Vessel of the All-Consuming's ten; its scenarios drive the real totals).
+    DriverGap(
+        kind="deals_damage",
+        event="a creature that has dealt ten or more damage to one player this turn",
+        precondition=r"if it has dealt \d+ or more damage to that player this turn",
+    ),
+    DriverGap(
+        kind="attacks",
+        event="one player declaring three or five attackers at once",
+        precondition=r"a player attacks with \w+ or more creatures",
+    ),
     # ecl integration: shapes the stock boards cannot set up.
     DriverGap(
         kind="attacks",
