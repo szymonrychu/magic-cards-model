@@ -144,6 +144,14 @@ _LIFE_GAIN_PROHIBITION_RE = re.compile(
     r"^(?:players|each player) can't gain life\.?$", re.IGNORECASE
 )
 
+#: The one-sided twin: Quakebringer's, Erebos, God of the Dead's and Knight of
+#: Dusk's Shadow's "Your opponents can't gain life." (CR 119.7). Read the same
+#: way off the battlefield, but only for a player who is an opponent of the
+#: source's controller *now* (CR 611.3a), so its controller still gains.
+_OPPONENTS_LIFE_GAIN_PROHIBITION_RE = re.compile(
+    r"^your opponents can't gain life\.?$", re.IGNORECASE
+)
+
 
 #: ecl-T8: a static ability that stops players drawing cards at all -
 #: Maralen of the Mornsong's "Players can't draw cards." CR 121.3: "if an

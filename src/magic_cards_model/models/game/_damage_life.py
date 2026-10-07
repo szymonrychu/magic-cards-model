@@ -276,14 +276,18 @@ class DamageLifeMixin:
                     _LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE.search(text) or "gain life" in text.lower()
                 ):
                     continue
+                one_sided = _OPPONENTS_LIFE_GAIN_PROHIBITION_RE.match(text) is not None
                 if not (
-                    _LIFE_GAIN_PROHIBITION_RE.match(text)
+                    one_sided
+                    or _LIFE_GAIN_PROHIBITION_RE.match(text)
                     or _DRAW_OR_LIFE_GAIN_PROHIBITION_RE.match(text)
                 ):
                     self._record_unread_static_line(source, text)
                     continue
                 if not self._still_has_static_line(source, text):
                     continue
+                if one_sided and self.controller_of(source).username == username:
+                    continue  # "Your opponents": its controller is not one (CR 611.3a).
                 return f"{username} can't gain life: {source.name} says so (CR 119.7, CR 611.1)"
         # A resolved spell's or ability's "Players can't gain life this turn." /
         # "Your opponents can't gain life this turn." (CR 611.2c: recorded,
@@ -954,5 +958,6 @@ from ._common import (  # noqa: E402
     _DAMAGE_CANT_BE_PREVENTED_RE,
     _DRAW_OR_LIFE_GAIN_PROHIBITION_RE,
     _LIFE_GAIN_PROHIBITION_RE,
+    _OPPONENTS_LIFE_GAIN_PROHIBITION_RE,
 )
 from .records import ShieldKind  # noqa: E402

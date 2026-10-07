@@ -659,6 +659,7 @@ def _parse_sentence(sentence: str, names: tuple[str, ...]) -> list[ReplacementEf
         _try_enters_prepared,
         _try_enters_untapped,
         _try_enters_with,
+        _try_escapes_with,
         _try_skip,
         _try_player_skips,
         _try_instead_of,
@@ -2020,15 +2021,28 @@ def read_damage_modifier(event_text: str, replacement: str) -> DamageModifierRep
 
 def _compile_damage_plus_amount(effect: ReplacementEffect) -> CardReplacement | None:
     """A permanent's static `read_damage_modifier` shape: "you" is the
-    permanent's controller as the damage would be dealt (CR 609.7b)."""
+    permanent's controller as the damage would be dealt (CR 609.7b).
+
+    A leading "As long as `<condition>`," (Anthem of Rakdos's hellbent "you
+    have no cards in hand", Aether Revolt's revolt) is CR 604.2's bound on
+    the effect's existence: asked of `Game.condition_holds` each time damage
+    would be dealt (CR 611.3a), never once as the permanent entered. A
+    condition no reader claims is not compiled at all - fail closed rather
+    than double unconditionally."""
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    condition = effect.condition
+    if condition is not None and not condition_claims(condition):
         return None
     spec = read_damage_modifier(effect.event or "", effect.replacement or "")
     if spec is None:
         return None
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
-        return spec.applies(game, game.controller_of(source).username, event)
+        controller = game.controller_of(source).username
+        if condition is not None and not game.condition_holds(controller, condition, source):
+            return False
+        return spec.applies(game, controller, event)
 
     def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
         spec.apply(game, game.controller_of(source).username, event)
@@ -3783,7 +3797,9 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
 #: as ..." qualifier is never offered to one: compiling it there would perform
 #: the replacement unconditionally and silently drop the clause, which is the
 #: exact failure the fail-closed rule at the top of this section forbids.
-_CONDITION_AWARE_COMPILERS = frozenset({_compile_draw_plus, _compile_first_time_token_copies})
+_CONDITION_AWARE_COMPILERS = frozenset(
+    {_compile_draw_plus, _compile_first_time_token_copies, _compile_damage_plus_amount}
+)
 
 
 def _compile(effect: ReplacementEffect) -> CardReplacement | None:
@@ -4310,6 +4326,7 @@ def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
     return None
 
 
+from ..conditions import claims as condition_claims  # noqa: E402
 from ._common import _CARD_TYPE_WORDS, _REFLEXIVE_OPENER  # noqa: E402
 from .enters import (  # noqa: E402
     _cant_enter_replacements,
@@ -4321,6 +4338,7 @@ from .enters import (  # noqa: E402
     _try_enters_tapped,
     _try_enters_untapped,
     _try_enters_with,
+    _try_escapes_with,
     read_enter_uncast_exile,
 )
 from .model import (  # noqa: E402

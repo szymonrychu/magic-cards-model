@@ -1684,6 +1684,16 @@ def _left_the_battlefield(context: "ConditionContext", match: re.Match[str]) -> 
     return sum(1 for entry in _entries(context, "left_battlefield") if quality(entry)) >= needed
 
 
+def _revolt(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """Revolt (an ability word, CR 207.2c): "a permanent left the battlefield
+    under your control this turn" / "a permanent you controlled left the
+    battlefield this turn" - `Game.revolt_active_for`'s running count, by the
+    controller the permanent had as it left, the same fact a revolt
+    intervening "if" and a Disappear "enters with" already read (Aether
+    Revolt's "As long as ..." static)."""
+    return context.game.revolt_active_for(context.controller)
+
+
 def _spell_warped(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "a spell was warped this turn" - CR 702.185c: "This means that a spell
     was cast for its warp cost this turn", by anyone (`SPELL_WARPED`)."""
@@ -2048,6 +2058,13 @@ READERS: tuple[ConditionReader, ...] = (
             r"(?P<quality>[a-z-]+(?: [a-z-]+)?) left the battlefield this turn"
         ),
         _left_the_battlefield,
+    ),
+    ConditionReader(
+        re.compile(
+            r"a permanent (?:left the battlefield under your control|you controlled left the "
+            r"battlefield) this turn"
+        ),
+        _revolt,
     ),
     ConditionReader(re.compile(r"a spell was warped this turn"), _spell_warped),
     ConditionReader(

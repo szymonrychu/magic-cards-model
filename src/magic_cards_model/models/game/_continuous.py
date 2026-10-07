@@ -187,12 +187,14 @@ _PLAYER_COUNTERS_PROHIBITION_RE = re.compile(
 def is_player_rules_static_line(text: str) -> bool:
     """Whether a permanent's static line is one of the rules-of-the-game
     effects `Game` reads straight off the battlefield: "Players can't gain
-    life." (`life_gain_prohibited`, CR 119.7), "Players can't draw cards[ or
+    life." and "Your opponents can't gain life." (`life_gain_prohibited`, CR
+    119.7), "Players can't draw cards[ or
     gain life]." (`draw_prohibited`, CR 121.3), or "[Combat] damage can't be
     prevented." (`damage_cant_be_prevented`, CR 615.12)."""
     line = text.strip()
     return bool(
         _LIFE_GAIN_PROHIBITION_RE.match(line)
+        or _OPPONENTS_LIFE_GAIN_PROHIBITION_RE.match(line)
         or _DRAW_PROHIBITION_RE.match(line)
         or _DRAW_OR_LIFE_GAIN_PROHIBITION_RE.match(line)
         or _DAMAGE_CANT_BE_PREVENTED_RE.fullmatch(line)
@@ -1790,5 +1792,6 @@ from ._common import (  # noqa: E402
     _DRAW_PROHIBITION_RE,
     _LEGENDARY_TYPE_COUNT_POWER_RE,
     _LIFE_GAIN_PROHIBITION_RE,
+    _OPPONENTS_LIFE_GAIN_PROHIBITION_RE,
 )
 from ._conditions import _card_type_named, _permanent_quality  # noqa: E402
