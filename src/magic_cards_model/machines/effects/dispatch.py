@@ -399,14 +399,14 @@ _HALF_OF_OWN_LIBRARY_RE = re.compile(
 #: duration: it outlives the spell and every permanent, so it is recorded on
 #: the player (`Player.no_maximum_hand_size_for_rest_of_game`), which
 #: `Player.has_no_maximum_hand_size` reads.
+_NO_MAXIMUM_HAND_SIZE_REST_OF_GAME_RE = re.compile(
+    r"^you have no maximum hand size for the rest of the game$", re.IGNORECASE
+)
 #: "Shuffle your graveyard into your library." - the first-person, untargeted
 #: twin of `_TARGET_PLAYER_SHUFFLES_GRAVEYARD_RE` (`effects/library.py`):
 #: Spirit Water Revival's waterbent branch.
 _SHUFFLE_YOUR_GRAVEYARD_INTO_LIBRARY_RE = re.compile(
     r"^shuffle your graveyard into your library$", re.IGNORECASE
-)
-_NO_MAXIMUM_HAND_SIZE_REST_OF_GAME_RE = re.compile(
-    r"^you have no maximum hand size for the rest of the game$", re.IGNORECASE
 )
 #: CR 725.1 - "you become the monarch." Nothing to read but the plain
 #: sentence: CR 725 puts no cost or condition inside it, so it is only ever
