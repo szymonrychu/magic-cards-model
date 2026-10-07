@@ -611,6 +611,12 @@ class ZonesMixin:
             card_state.transformed = transformed and card_state.card.back_face is not None
             stamp_on_the_stack = card_state.zone_change_stamp
             card_state.move_to(Zone.BATTLEFIELD, place_intrinsic_counters=False)
+            # CR 702.30a: a new object comes under its controller's control now.
+            entered_under = card_state.stored_controller or controller
+            card_state.controlled_since_upkeep = (
+                entered_under,
+                self.upkeeps_begun.get(entered_under, 0),
+            )
             # CR 306.5b / CR 310.4b / CR 714.3a: read off the face now up,
             # before anything else changes what the object is. A permanent
             # entering as a copy has the copied object's instead (CR 707.2),

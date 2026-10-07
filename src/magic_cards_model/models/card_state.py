@@ -554,6 +554,16 @@ class Choice(EngineModel):
     value: str
 
 
+class DevouredObject(EngineModel):
+    """One permanent a devour ability sacrificed (CR 702.82b), as it last
+    existed on the battlefield: its card types and subtypes, which is all
+    "the number of Goblins it devoured" / "for each creature it devoured"
+    ever asks of it."""
+
+    types: tuple[Type, ...] = ()
+    subtypes: tuple[str, ...] = ()
+
+
 class FaceDownCharacteristics(EngineModel):
     """What a face-down object *is*, in place of what its card says (CR 708.2).
 
@@ -1420,6 +1430,36 @@ class CardState(EngineModel):
     lifetime on the battlefield, so there is no rule that says it should be
     dropped on some other zone change either.
     """
+
+    chosen_player: str | None = None
+    """The player an "as [this] enters, choose a player/an opponent" answer
+    named (CR 614.12a), read back by "the chosen player" (Stuffy Doll's
+    "deals that much damage to the chosen player", Booby Trap's "The chosen
+    player reveals each card they draw", Nyxathid's "card in the chosen
+    player's hand"). Kept apart from `choice` because one sentence can ask
+    for a player *and* a card name at once (Booby Trap: "choose an opponent
+    and a card name"), and `choice` holds one answer. Set afresh every time
+    the permanent enters, the same as `choice`."""
+
+    devoured: tuple["DevouredObject", ...] = ()
+    """What this permanent's devour ability sacrificed as it entered (CR
+    702.82b: "'It devoured' means 'sacrificed as a result of its devour
+    ability as it entered the battlefield.'"), each as it last existed on the
+    battlefield - Voracious Dragon's "the number of Goblins it devoured" asks
+    a subtype the sacrificed creature had, not one its card has now. Written
+    by `machines/replacement._sacrifice_any_number_then_enter_with_counters`
+    on every devour entry (empty when nothing was sacrificed), so a permanent
+    that re-enters never carries an old object's record (CR 400.7)."""
+
+    controlled_since_upkeep: tuple[str, int] | None = None
+    """`(controller, upkeeps)`: who controlled this permanent when it was last
+    seen to come under someone's control, and how many upkeeps that player had
+    begun by then (`Game.upkeeps_begun`). Echo's "if this permanent came under
+    your control since the beginning of your last upkeep" (CR 702.30a) is true
+    when the controller is still that player and `upkeeps` is at least their
+    current count minus one. `None` for a permanent that was on the
+    battlefield before anything recorded it (a game set up in place), read as
+    having come under its controller's control before any upkeep began."""
 
     chosen_modal_options: tuple[str, ...] = ()
     """Every mode text this object's own "choose one that hasn't been

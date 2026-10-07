@@ -2372,6 +2372,125 @@ def _parse_damage_that_much_clause(text: str, *, for_spell: bool) -> AbilityEffe
     return effect
 
 
+#: "it deals an amount of damage of your choice to you and target creature.
+#: The damage can't be prevented." (Volcano Hellion) and the fixed-amount form
+#: "it deals N damage to you and target creature": one damage amount dealt by
+#: the ability's source both to its controller and to the target (CR 120.1),
+#: the "of your choice" amount chosen by the controller as it resolves (CR
+#: 608.2d), and the optional second sentence making both unpreventable (CR
+#: 615.12).
+_DAMAGE_TO_YOU_AND_TARGET_RE = re.compile(
+    rf"^(?:it|this [a-z]+) deals (?:(?P<choice>an amount of damage of your choice)|"
+    rf"{count_pattern('n', article=False)} damage) to you and (?P<phrase>target [^.]+?)\."
+    r"(?P<unpreventable> the damage can'?t be prevented\.)?$",
+    re.IGNORECASE,
+)
+
+#: The upper end of "an amount of your choice": the rules set none, a
+#: `CHOOSE_AN_AMOUNT` question needs one, and no game state reaches it.
+_AMOUNT_OF_YOUR_CHOICE_CEILING = 1000
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_damage_to_you_and_target_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_DAMAGE_TO_YOU_AND_TARGET_RE`'s shape.
+
+    "You" is not a target: with the target gone the ability does not resolve
+    at all (CR 608.2b), so the controller is dealt nothing either. Otherwise
+    the same amount goes to both, chosen once (CR 608.2d), from 0 up.
+    Ability-only: no spell prints it."""
+    body = " ".join(text.strip().split())
+    if for_spell or " to you and target " not in body.lower():
+        return None
+    match = _DAMAGE_TO_YOU_AND_TARGET_RE.fullmatch(body)
+    if match is None or not _targets_understood(match.group("phrase")):
+        return None
+    fixed = None if match.group("choice") else parse_count(match.group("n"), article=False)
+    if fixed is None and not match.group("choice"):
+        return None
+    unpreventable = match.group("unpreventable") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        targets = [
+            target
+            for target in game.resolve_targets(ability)
+            if not (isinstance(target, CardState) and target.zone is not Zone.BATTLEFIELD)
+        ]
+        if not targets:
+            return
+        amount = fixed
+        if amount is None:
+            amount = int(
+                game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_AN_AMOUNT,
+                        player=ability.controller,
+                        prompt=(
+                            f"choose how much damage {ability.source_name} deals to you "
+                            "and its target"
+                        ),
+                        source=ability.source_name,
+                        source_id=source_id_of(ability),
+                        amount=_AMOUNT_OF_YOUR_CHOICE_CEILING,
+                    )
+                )
+            )
+        if amount <= 0:
+            return
+        source = ability.source_or_last_known(game)
+        game.deal_damage(
+            game.player(ability.controller), amount, source=source, unpreventable=unpreventable
+        )
+        for target in targets:
+            game.deal_damage(target, amount, source=source, unpreventable=unpreventable)
+
+    return effect
+
+
+#: "it deals that much damage to the chosen player." (Stuffy Doll, after
+#: "Whenever this creature is dealt damage") - the event's own amount (CR
+#: 615.6: what was actually dealt) to the player its source's CR 614.12a "as
+#: [this] enters, choose a player/an opponent" named
+#: (`CardState.chosen_player`).
+_THAT_MUCH_TO_THE_CHOSEN_PLAYER_RE = re.compile(
+    r"^(?:it|this [a-z]+) deals that much damage to the chosen player\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_damage_that_much_to_the_chosen_player_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_THAT_MUCH_TO_THE_CHOSEN_PLAYER_RE`'s shape. The source deals it as it
+    exists or last existed (CR 608.2h); a source that never had a player
+    chosen (it entered with no one to choose) deals nothing - there is no
+    chosen player to name. Ability-only: "that much" is a trigger event's."""
+    if for_spell or "the chosen player" not in text.lower():
+        return None
+    if _THAT_MUCH_TO_THE_CHOSEN_PLAYER_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        chosen = None if source is None else source.chosen_player
+        if chosen is None or chosen not in {p.username for p in game.players_in_game}:
+            return
+        amount = _that_many_or_notice(
+            game,
+            text,
+            source_id=ability.source_id,
+            source_name=ability.name,
+            stack_object=ability,
+        )
+        if amount is None or amount <= 0:
+            return
+        game.deal_damage(game.player(chosen), amount, source=source)
+
+    return effect
+
+
 #: "that Archer deals that much damage to that creature's controller."
 #: (Greatbow Doyen, after "Whenever an Archer you control deals damage to a
 #: creature"): the event's dealer deals the event's own amount to the

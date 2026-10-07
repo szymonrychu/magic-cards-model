@@ -4395,6 +4395,12 @@ def intervening_if_answer(
         # (CR 400.1), fully readable, so False is a real answer.
         return source.zone is Zone.BATTLEFIELD
 
+    if clause == "this permanent came under your control since the beginning of your last upkeep":
+        # CR 702.30a's own intervening *if* for echo, written out by
+        # `machines/keywords._echo_ability`, read off the control stamp
+        # `Game.note_control_changes` keeps against `Game.upkeeps_begun`.
+        return source.zone is Zone.BATTLEFIELD and game.came_under_control_since_last_upkeep(source)
+
     if clause == "this permanent has a time counter on it":
         # CR 702.63a's second ability, written out by `machines/keywords.
         # _vanishing_abilities`. Fully readable off the object itself, so a

@@ -2020,6 +2020,11 @@ def _static_ability_category(
         # CR 103.6a/103.6b: `Game.take_opening_hand_actions` offers what reads
         # as an action and refuses, with an `OpeningHandNotice`, what does not.
         return HANDLED if isinstance(opening_hand, OpeningHandAction) else NOTICE
+    if keyword_machine.is_self_echo_line(text):
+        # CR 702.30a: "<this> has echo {X}, where X is ..." -
+        # `keywords.self_echo_lines` writes it out as the echo upkeep trigger
+        # and `keywords._echo_effect` evaluates X as the cost is paid.
+        return HANDLED
     if looks_like_unparsed_layer_effect(
         text, static_only=True, card_name=effective_name, legendary=legendary
     ):

@@ -1253,6 +1253,14 @@ class Game(
     same choice `permanents_sacrificed_this_turn` makes. Cleared when a new
     turn begins."""
 
+    upkeeps_begun: dict[str, int] = Field(default_factory=dict)
+    """How many upkeep steps each player has begun this game (CR 503.1), the
+    clock echo's "came under your control since the beginning of your last
+    upkeep" (CR 702.30a) is read against: `CardState.controlled_since_upkeep`
+    stamps a permanent with its controller's count as it comes under their
+    control. Counted in `Game._advance_past_checks` as the upkeep begins, before its
+    "at the beginning of your upkeep" abilities trigger."""
+
     nontoken_creatures_died_under_control_this_turn: dict[str, int] = Field(default_factory=dict)
     """How many nontoken creatures have died under each player's control this
     turn, keyed by that controller.
@@ -1924,7 +1932,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 132
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 133
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2209,6 +2217,11 @@ class Game(
     #: gained `battles_protected_by_event_player` (Rampaging Raptor's "battle
     #: that player protects", CR 310.9e); decoded as current, an older shield
     #: or announced target would cover every permanent of its controller.
+    #: 133 (NW06-T5): `CardState` gained `chosen_player` (CR 614.12a's "choose
+    #: a player/an opponent"), `devoured` (CR 702.82b) and
+    #: `controlled_since_upkeep`, and `Game` gained `upkeeps_begun` (echo, CR
+    #: 702.30a); an older dump would decode with no chosen player, nothing
+    #: devoured and every permanent's echo due again.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
