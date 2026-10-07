@@ -1784,9 +1784,11 @@ def test_no_abandoned_proof_candidate_printings_pollute_the_pool():
     one of ecl-T3's losing candidates too, but ecl-T5 proves its own chosen-
     color/hexproof-from-its-colors readers on Tam, so it is a live, tested
     printing and not listed here. Suncleanser likewise: both its modes are
-    read and played in `tests/scenarios/test_remove_all_counters_family.py`.)"""
+    read and played in `tests/scenarios/test_remove_all_counters_family.py`.
+    Decimator Beetle likewise since NW05-T5: it is the second printing for
+    the remove-then-put counter pair, every clause read handled and its
+    attack trigger played in `tests/scenarios/test_nw05_modal_mode_leftovers.py`.)"""
     abandoned = {
-        "Decimator Beetle",
         "Cauldron Haze",
     }
     present = abandoned & set(pool())

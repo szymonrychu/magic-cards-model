@@ -1701,7 +1701,7 @@ def _parse_destroy_target_then_rider_if_type_destroyed_clause(
             if target.zone is not Zone.BATTLEFIELD  # actually moved - CR 701.8a
         )
         if destroyed_a_wanted_type:
-            consequence(game, stack_object)  # type: ignore[arg-type]
+            consequence(game, stack_object)
 
     return effect
 
@@ -2053,6 +2053,45 @@ def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
         source = ability.source(game)
         if source is not None and source.zone is Zone.BATTLEFIELD:
             game.regenerate(source)
+
+    return effect
+
+
+#: "Regenerate each creature you control." (Wail of the Nim's first mode,
+#: Wrap in Vigor, Golgari Charm, Loxodon Hierarch) - CR 701.19a's shield on
+#: every permanent of the group as the spell or ability resolves (CR 608.2h:
+#: the group is fixed then; one entering later gets none). The group is a
+#: CR 205.2a type list read off the computed board (`_parse_mass_type_
+#: qualifier`) among the permanents the resolving controller controls.
+_REGENERATE_EACH_YOU_CONTROL_RE = re.compile(
+    r"^regenerate each (?P<group>[a-z ,]+?) you control\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_regenerate_each_you_control_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_REGENERATE_EACH_YOU_CONTROL_RE`'s shape; see the banner above."""
+    stripped = " ".join(clause.split())
+    if not stripped.lower().startswith("regenerate each "):
+        return None
+    match = _REGENERATE_EACH_YOU_CONTROL_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    qualifies = _parse_mass_type_qualifier(match.group("group"))
+    if qualifies is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        group = [
+            permanent
+            for permanent in game.permanents_controlled_by(controller)
+            if qualifies(game.characteristics_of(permanent))
+        ]
+        for permanent in group:
+            game.regenerate(permanent)
 
     return effect
 
@@ -6520,6 +6559,152 @@ def _sacrifice_of_choice_clause_effect(
                 game.sacrifice(permanent)
 
     return effect
+
+
+#: "Sacrifice a permanent." (Lorehold Command's fourth mode), "sacrifice a
+#: creature or land" (Thalia and The Gitrog Monster's attack trigger) - CR
+#: 701.21a's sacrifice with no subject: the resolving spell's or ability's
+#: controller sacrifices one permanent of their choice among those they
+#: control that match the description (`permanent_description`, the target
+#: grammar). Nothing is targeted (CR 115.10a); with none to sacrifice nothing
+#: happens (CR 608.2d), and anything after it in the same text still does.
+_SACRIFICE_ONE_OF_CHOICE_RE = re.compile(
+    r"^sacrifice (?:an?|one) (?P<description>(?!other\b|another\b)[a-z][a-z ,'-]*?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_sacrifice_one_of_choice_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SACRIFICE_ONE_OF_CHOICE_RE`'s shape; see the banner above."""
+    stripped = " ".join(clause.split())
+    if not stripped.lower().startswith("sacrifice "):
+        return None
+    match = _SACRIFICE_ONE_OF_CHOICE_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    description = match.group("description").strip()
+    if permanent_description(description) is None:
+        return None
+    per_player = _sacrifice_of_choice_clause_effect(
+        description, 1, with_indefinite_article(description)
+    )
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        per_player(game, game.controller_of(stack_object), source, source_id_of(stack_object))
+
+    return effect
+
+
+#: "Sacrifice a Mountain. If you do, this Saga deals 3 damage to each
+#: creature." (The First Eruption's chapter III), "sacrifice a Human. If you
+#: can't, ..." (Archdemon of Greed) - `_SACRIFICE_ONE_OF_CHOICE_RE`'s
+#: sacrifice with a CR 608.2c rider on whether it happened: "If you do" runs
+#: the rest only when a permanent was sacrificed, "If you don't"/"If you
+#: can't" only when none was (CR 608.2d: nothing to sacrifice). Read whole,
+#: ahead of the clause splitter, which would otherwise hand the rider's
+#: consequence to a clause reader with its condition cut off. A consequence
+#: that does not read fails closed with a notice rather than running
+#: unconditionally. The optional form, "you may sacrifice a Food. If you do,
+#: ..." (Bristlebud Farmer), asks the "you may" only when there is something
+#: to sacrifice (CR 608.2d), and "If you do" is whether a permanent was.
+_SACRIFICE_THEN_IF_YOU_RE = re.compile(
+    r"^(?P<may>you may )?(?P<sacrifice>sacrifice (?:an?|one) [^.]+?)\.\s*"
+    r"if you (?P<branch>do|don'?t|can'?t|cannot),\s*(?P<rest>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _sacrifice_then_if_you_effect(
+    text: str, *, for_spell: bool, optional: bool = False
+) -> TargetedClause | None:
+    """`_SACRIFICE_THEN_IF_YOU_RE`'s shape; see the banner above. `optional`
+    reads only the "you may sacrifice" form, otherwise only the bare one."""
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    if not whole.lower().startswith("you may sacrifice " if optional else "sacrifice "):
+        return None
+    match = _SACRIFICE_THEN_IF_YOU_RE.fullmatch(whole)
+    if match is None:
+        return None
+    sacrifice = _SACRIFICE_ONE_OF_CHOICE_RE.fullmatch(match.group("sacrifice"))
+    if sacrifice is None:
+        return None
+    description = sacrifice.group("description").strip()
+    requirement = permanent_description(description)
+    if requirement is None:
+        return None
+    per_player = _sacrifice_of_choice_clause_effect(
+        description, 1, with_indefinite_article(description)
+    )
+    rest = match.group("rest").strip() + "."
+    consequence: Callable[[Game, Any], None] | None = (
+        parse_mixed_effect_for_spell(rest) if for_spell else parse_mixed_effect(rest)
+    )
+    wants_sacrifice = match.group("branch").lower() == "do"
+
+    def names(stack_object: "StackObject") -> tuple[UUID | None, str]:
+        if isinstance(stack_object, CardState):
+            return stack_object.id, stack_object.card.name
+        return stack_object.source_id, stack_object.source_name
+
+    if consequence is None:
+
+        def sacrifice_rider_notice_only(game: "Game", stack_object: "StackObject") -> None:
+            source_id, source_name = names(stack_object)
+            notice = ConditionalClauseNotice(
+                source_id=source_id, source_name=source_name, text=whole
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+
+        return sacrifice_rider_notice_only
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(player.username)
+            if requirement.rejects(permanent, player.username, game) is None
+        ]
+        _source_id, source_name = names(stack_object)
+        if optional and (
+            not candidates
+            or not game.may(
+                player,
+                match.group("sacrifice"),
+                source=source_name,
+                source_id=source_id_of(stack_object),
+            )
+        ):
+            candidates = []
+        else:
+            per_player(game, player, source_name, source_id_of(stack_object))
+        sacrificed = any(permanent.zone is not Zone.BATTLEFIELD for permanent in candidates)
+        if sacrificed == wants_sacrifice:
+            consequence(game, stack_object)  # type: ignore[arg-type]
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=["dispatch.parse_mixed_effect"])
+def _parse_sacrifice_then_if_you_ability_text(text: str) -> TargetedClause | None:
+    return _sacrifice_then_if_you_effect(text, for_spell=False)
+
+
+@ABILITY_TEXT.rung("s40", before=["dispatch.parse_mixed_effect"])
+def _parse_may_sacrifice_then_if_you_ability_text(text: str) -> TargetedClause | None:
+    """The optional form, tried after the narrower whole-text "you may
+    sacrifice ... If you do" readers in earlier segments and ahead of the
+    clause splitter (see `_SACRIFICE_THEN_IF_YOU_RE`'s banner)."""
+    return _sacrifice_then_if_you_effect(text, for_spell=False, optional=True)
+
+
+@SPELL_TEXT.rung("s11", for_spell=True)
+def _parse_sacrifice_then_if_you_spell_text(text: str, *, for_spell: bool) -> TargetedClause | None:
+    return _sacrifice_then_if_you_effect(text, for_spell=True)
 
 
 @MIXED_CLAUSE.rung("s30", for_spell=FORWARD)

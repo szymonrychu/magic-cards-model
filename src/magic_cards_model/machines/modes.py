@@ -80,6 +80,10 @@ _BULLET_RE = re.compile(rf"^(?:{re.escape(BULLET)}|\+\s+)")
 _INSTRUCTION = re.compile(r"^choose\b(?P<rest>.*)$", re.IGNORECASE)
 _REPEATABLE = re.compile(r"you may choose the same mode more than once", re.IGNORECASE)
 _UP_TO = re.compile(r"^\s*up to (?P<count>[\w]+)\b")
+#: "Choose any number -" (Rankle, Master of Pranks): zero to every mode, CR
+#: 700.2b's "If no mode is chosen, the ability is removed from the stack"
+#: being what happens when none is.
+_ANY_NUMBER = re.compile(r"^\s*any number\b", re.IGNORECASE)
 _OR_MORE = re.compile(r"^\s*(?P<count>[\w]+)\s+or\s+(?:more|both)\b", re.IGNORECASE)
 _PLAIN = re.compile(r"^\s*(?P<count>[\w]+)\b")
 #: The instruction's second sentence: "Choose one. If you control a Wizard as
@@ -525,12 +529,16 @@ def _read_counts(instruction: str, mode_count: int) -> tuple[int, int] | None:
         Choose one or both -    at least one, up to every mode
         Choose one or more -    at least one, up to every mode
         Choose up to two -      as few as none
+        Choose any number -     as few as none, up to every mode
         Choose three. You may choose the same mode more than once.
     """
     match = _INSTRUCTION.match(instruction)
     if match is None:
         return None
     rest = match.group("rest")
+
+    if _ANY_NUMBER.match(rest) is not None:
+        return 0, mode_count
 
     up_to = _UP_TO.match(rest)
     if up_to is not None:

@@ -5,7 +5,7 @@ from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
 
-from ...data.subtypes import creature_type_vocabulary, subtype_vocabulary
+from ...data.subtypes import canonical_subtype, creature_type_vocabulary, subtype_vocabulary
 from ...models.card import Color, Supertype, Type
 from ...models.card_state import (
     CardState,
@@ -991,6 +991,78 @@ def _parse_reflexive_subject_fights_clause(
     return effect
 
 
+#: "you may have it fight target creature you don't control" (Affectionate
+#: Indrik, Temur War Shaman), "you may have this creature fight another target
+#: creature" (Nessian Wilds Ravager, Atzocan Archer) - CR 701.14a's fight,
+#: optional, the "you may" answered as the ability resolves (CR 608.2d). The
+#: target is announced as the ability goes on the stack (CR 603.3d) and
+#: rechecked as it resolves (CR 608.2b): with none left, nothing is asked.
+#: "this creature" is the source (CR 700.7). "it" is the object the trigger
+#: event named when that is a permanent other than the source - Temur War
+#: Shaman's "Whenever a permanent you control is turned face up, ..., you may
+#: have it fight" names the turned-up permanent - and otherwise the source.
+_MAY_HAVE_FIGHT_RE = re.compile(
+    r"^you may have (?P<subject>it|this creature|this permanent) fight "
+    r"(?P<phrase>(?:up to one )?(?:other )?target [^.]+|another target [^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _may_have_fight_fighter(
+    game: "Game", ability: AbilityOnStack, subject: str
+) -> CardState | None:
+    """The creature `subject` names for `_MAY_HAVE_FIGHT_RE` (see its banner)."""
+    if subject == "it":
+        event = ability.event
+        if (
+            event is not None
+            and event.subject_id is not None
+            and event.subject_id != ability.source_id
+        ):
+            found = game.find_by_id(event.subject_id)
+            return found if isinstance(found, CardState) else None
+    return ability.source(game)
+
+
+@ABILITY_TEXT.rung("s16")
+def _parse_may_have_fight_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_HAVE_FIGHT_RE`'s shape; see the banner above."""
+    stripped = " ".join(text.split())
+    if not stripped.lower().startswith("you may have "):
+        return None
+    match = _MAY_HAVE_FIGHT_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    subject = match.group("subject").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        fighter = _may_have_fight_fighter(game, ability, subject)
+        if fighter is None or fighter.zone is not Zone.BATTLEFIELD:
+            return
+        opponents = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not opponents:
+            return  # CR 608.2b, or "up to one" chose none.
+        opponent = opponents[0]
+        if not game.may(
+            ability.controller,
+            f"have {fighter.name} fight {opponent.name}?",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        board = game.characteristics_of
+        if board(fighter).is_creature and board(opponent).is_creature:
+            _fight(game, fighter, opponent)  # CR 701.14b: both must be creatures
+
+    return effect
+
+
 @SPELL_TEXT.rung("s12")
 def _parse_first_then_reflexive_subject_fights_clause(effect_text: str) -> Effect | None:
     """`_FIRST_THEN_REFLEXIVE_FIGHT_RE`'s shape - see the banner above. The
@@ -1532,10 +1604,11 @@ def modal_trigger_profile(effect_text: str | None) -> ModalProfile | None:
     back before each bullet here rather than teaching two modules two bullet
     grammars.
 
-    Read: any instruction whose minimum is at least one ("choose one", "choose
-    one or both", "choose one or more"). CR 603.3c removes an ability for which
-    no mode is chosen, which a minimum of zero would allow; that shape, and
-    pawprint or per-mode costs (`understood` False), return `None`.
+    Read: every counted instruction - "choose one", "choose one or both",
+    "choose one or more", and the minimum-zero "choose up to N" and "choose
+    any number" (CR 700.2b: "If no mode is chosen, the ability is removed
+    from the stack", which `Game._announce_trigger_modes` does). Pawprint or
+    per-mode costs (`understood` False) return `None`.
     """
     text = re.sub(r"\s*\u2022\s*", "\n\u2022 ", effect_text or "").strip()
     if not is_modal_text(text):
@@ -1628,9 +1701,13 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                         mode.text,
                     )
         original_targets = ability.targets
+        # CR 608.2c: the chosen modes run in the order printed on the card,
+        # however they were announced (the same order `ModalProfile.resolve`
+        # gives a spell); each keeps its own target slice (CR 700.2c).
+        printed_order = sorted(range(len(chosen)), key=lambda position: chosen[position])
         try:
-            for position, number in enumerate(chosen):
-                mode = profile.mode(number)
+            for position in printed_order:
+                mode = profile.mode(chosen[position])
                 ability.targets = list(slices[position]) if position < len(slices) else []
                 mode_text = mode_effect_body(mode)
                 clause = _parse_counter_resolution_text(mode_text)
@@ -1671,6 +1748,43 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                 clause(game, ability)
         finally:
             ability.targets = original_targets
+
+    return effect
+
+
+#: "If a source would deal damage to a player or battle this turn, it deals
+#: that much damage plus 2 instead." (Rankle and Torbran's third mode) - one
+#: CR 614.1a turn-long damage modifier (`damage_modification.
+#: DamageModifierReplacement`, CR 611.2a's "this turn"), read as one clause
+#: so a modal mode or a sentence among others reaches it: the whole-text
+#: readers (`_parse_created_replacement_ability_text`) only ever see an
+#: ability's entire text. "you" is the controller as it resolves (CR 109.5).
+@MIXED_CLAUSE.rung("s13", for_spell=FORWARD)
+def _parse_turn_damage_modifier_instead_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    text = _as_sentence(" ".join(clause.split()))
+    lowered = text.lower()
+    if not lowered.startswith("if ") or " this turn, it deals " not in lowered:
+        return None
+    spec = read_turn_damage_spec(text)
+    if not isinstance(spec, DamageModifierReplacement):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if isinstance(stack_object, CardState):
+            source_id, source_name = stack_object.id, stack_object.card.name
+        else:
+            source_id, source_name = stack_object.source_id, stack_object.source_name
+        game.created_replacements.append(
+            CreatedReplacement(
+                spec=spec,
+                label=text,
+                controller=game.controller_of(stack_object).username,
+                source_id=source_id,
+                source_name=source_name,
+            )
+        )
 
     return effect
 
@@ -4718,6 +4832,65 @@ def _ability_instead_branch_effect(text: str) -> AbilityEffect | None:
     return parse_mixed_effect(text) or parse_gain_control_untimed_clause(text)
 
 
+#: "it deals 1 damage to target creature defending player controls. If that
+#: creature is a Zombie, this creature deals 2 damage to it instead."
+#: (Purifying Dragon) - the base damage, replaced whole (CR 614.1a, CR 608.2c)
+#: by a larger amount when the one target has a subtype or card type, read off
+#: the computed board (CR 613.5) as the ability resolves. One damage event,
+#: never both. The source of the alternative must be the base's own (CR 700.7:
+#: "it" and "this creature" both name it).
+_DAMAGE_INSTEAD_IF_TARGET_QUALITY_RE = re.compile(
+    rf"^(?P<subject>it|this creature|this permanent) deals (?P<n>{COUNT}) damage to "
+    r"(?P<phrase>target [^.]+?)\.\s*"
+    r"if (?:that creature|that permanent|it) is an? (?P<quality>[a-z]+), "
+    rf"(?:it|this creature|this permanent) deals (?P<m>{COUNT}) damage to "
+    r"(?:it|that creature|that permanent) instead\.?$",
+    re.IGNORECASE,
+)
+
+
+def _target_quality_test(word: str) -> Callable[["Game", CardState], bool] | None:
+    """A one-word subtype (CR 205.3) or card type (CR 205.2a) as a test on a
+    permanent's computed characteristics, or None for any other word."""
+    card_type = next((t for t in Type if t.value.lower() == word.lower()), None)
+    if card_type is not None:
+        return lambda game, permanent: card_type in game.characteristics_of(permanent).types
+    subtype = canonical_subtype(word)
+    if subtype is None:
+        return None
+    return lambda game, permanent: (
+        subtype in {each.lower() for each in game.characteristics_of(permanent).subtypes}
+    )
+
+
+@ABILITY_TEXT.rung("s16")
+def _parse_damage_instead_if_target_quality_clause(text: str) -> AbilityEffect | None:
+    """`_DAMAGE_INSTEAD_IF_TARGET_QUALITY_RE`'s shape; see the banner above."""
+    stripped = " ".join(text.split())
+    if " instead" not in stripped.lower():
+        return None
+    match = _DAMAGE_INSTEAD_IF_TARGET_QUALITY_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    has_quality = _target_quality_test(match.group("quality"))
+    if has_quality is None:
+        return None
+    subject, phrase = match.group("subject"), match.group("phrase")
+    base = parse_mixed_effect(f"{subject} deals {match.group('n')} damage to {phrase}.")
+    larger = parse_mixed_effect(f"{subject} deals {match.group('m')} damage to {phrase}.")
+    if base is None or larger is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        target = next((t for t in game.resolve_targets(ability) if isinstance(t, CardState)), None)
+        if target is not None and target.zone is Zone.BATTLEFIELD and has_quality(game, target):
+            larger(game, ability)
+        else:
+            base(game, ability)
+
+    return effect
+
+
 @ABILITY_TEXT.rung("s42")
 def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffect | None:
     """`_parse_condition_instead_clause`'s shape on an activated or triggered
@@ -6392,6 +6565,9 @@ def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | N
     return effect
 
 
+from ..damage_modification import DamageModifierReplacement  # noqa: E402
+from ..replacement.model import CreatedReplacement  # noqa: E402
+from ..replacement.parse import read_turn_damage_spec  # noqa: E402
 from ._common import (  # noqa: E402
     _ADDITIONAL_LAND_PLAY_RE,
     _CLAUSE_SEPARATOR,

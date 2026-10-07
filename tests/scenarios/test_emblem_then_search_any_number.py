@@ -233,6 +233,13 @@ def test_kioras_minus_eight_gives_the_emblem_and_then_three_octopuses():
     kiora.add_counters(Counter.LOYALTY, 8 - kiora.counters[Counter.LOYALTY])
 
     scenario.activate(kiora, index=2)
+    scenario.resolve_top()
+    # The emblem exists before the tokens are created, so each Octopus
+    # entering triggers it (CR 603.2). Alice declines every fight (CR 608.2d)
+    # so the three tokens stay to be counted.
+    triggers = [o for o in scenario.game.stack if o.source_name.endswith("emblem")]
+    assert len(triggers) == 3
+    scenario.will_take_the_may(False, times=None)
     _resolve(scenario)
 
     (emblem,) = scenario.game.emblems_of("alice")
