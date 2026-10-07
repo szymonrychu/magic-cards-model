@@ -2124,3 +2124,28 @@ def test_a_snapshot_written_before_the_nw04_t5_payoffs_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW04_T5_PAYOFFS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before nw-04-waterbend: `CastRecord` gained
+#: `waterbend_paid` (a spell's optional "you may waterbend {N}", CR 701.67a).
+#: nw-04-waterbend bumped 125 -> 126, so the last shape without it is 125.
+_SCHEMA_VERSION_BEFORE_OPTIONAL_WATERBEND = 125
+
+
+def test_a_snapshot_written_before_the_optional_waterbend_record_is_refused() -> None:
+    """A version-125 dump's cast records carry no `waterbend_paid`: decoded as
+    current, a waterbent Ruinous Waterbending on the stack would resolve its
+    "if this spell's additional cost was paid" branch as unpaid. Refused
+    instead."""
+    from magic_cards_model.models.game.records import CastRecord
+
+    assert "waterbend_paid" in CastRecord.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_OPTIONAL_WATERBEND
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_OPTIONAL_WATERBEND
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_OPTIONAL_WATERBEND}",
+    ):
+        Game.model_validate(dumped)

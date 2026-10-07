@@ -14,7 +14,8 @@ over as the remainder beside the layer sentence.
   this turn, its controller gets a poison counter." - the `machines/effects`
   created-trigger template (`CreatedTriggeredAbility`).
 - Gated on kicker (CR 702.33d): "If this spell was kicked, `<rider>`"
-  (Warhost's Frenzy).
+  (Warhost's Frenzy), or on any optional additional cost (CR 118.8b): "If
+  this spell's additional cost was paid, `<rider>`" (Ruinous Waterbending).
 - Cry of the Carnarium's "Exile all creature cards in all graveyards that
   were put there from the battlefield this turn."
 - Turn-long combat requirements (CR 508.1d, CR 509.1c): "Each creature your
@@ -143,20 +144,40 @@ def run_layer_then_rider(game: Game, stack_object: Any, layer: Rider, rider: Rid
 
 _KICKED_RE = re.compile(r"^if this spell was kicked, (?P<rest>\S.*)$", re.IGNORECASE | re.DOTALL)
 
+#: "If this spell's additional cost was paid, <rider>" - Ruinous
+#: Waterbending's "whenever a creature dies this turn, you gain 1 life" behind
+#: its optional waterbend. The condition names no keyword, so it reads
+#: `CastRecord.optional_additional_cost_paid` (CR 118.8b, CR 607.2i), the
+#: same flag `machines/effects._parse_if_additional_cost_paid_clause` asks.
+_ADDITIONAL_COST_PAID_RE = re.compile(
+    r"^if this spell'?s additional cost was paid, (?P<rest>\S.*)$", re.IGNORECASE | re.DOTALL
+)
+
 
 def _kicked_rider(sentence: str, *, for_spell: bool) -> Rider | None:
     """CR 702.33d: the rider happens only when the spell was kicked, read off
-    `Game.cast_record(spell).kicked` the way every other kicker clause is."""
-    match = _KICKED_RE.fullmatch(sentence)
-    if match is None or not for_spell:
+    `Game.cast_record(spell).kicked` the way every other kicker clause is; or,
+    for "If this spell's additional cost was paid", only when any of its
+    optional additional costs was (CR 118.8b)."""
+    if not for_spell:
+        return None
+    kicked_match = _KICKED_RE.fullmatch(sentence)
+    match = kicked_match or _ADDITIONAL_COST_PAID_RE.fullmatch(sentence)
+    if match is None:
         return None
     rest = match.group("rest")
     inner = _rider_sentence(rest[0].upper() + rest[1:], for_spell=for_spell)
     if inner is None:
         return None
 
+    def paid(game: Game, spell: Any) -> bool:
+        if not isinstance(spell, CardState):
+            return False
+        record = game.cast_record(spell)
+        return record.kicked > 0 if kicked_match else record.optional_additional_cost_paid
+
     def kicked(game: Game, spell: Any) -> None:
-        if isinstance(spell, CardState) and game.cast_record(spell).kicked > 0:
+        if paid(game, spell):
             inner(game, spell)
 
     return kicked

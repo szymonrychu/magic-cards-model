@@ -399,6 +399,12 @@ _HALF_OF_OWN_LIBRARY_RE = re.compile(
 #: duration: it outlives the spell and every permanent, so it is recorded on
 #: the player (`Player.no_maximum_hand_size_for_rest_of_game`), which
 #: `Player.has_no_maximum_hand_size` reads.
+#: "Shuffle your graveyard into your library." - the first-person, untargeted
+#: twin of `_TARGET_PLAYER_SHUFFLES_GRAVEYARD_RE` (`effects/library.py`):
+#: Spirit Water Revival's waterbent branch.
+_SHUFFLE_YOUR_GRAVEYARD_INTO_LIBRARY_RE = re.compile(
+    r"^shuffle your graveyard into your library$", re.IGNORECASE
+)
 _NO_MAXIMUM_HAND_SIZE_REST_OF_GAME_RE = re.compile(
     r"^you have no maximum hand size for the rest of the game$", re.IGNORECASE
 )
@@ -785,6 +791,18 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
                 game.exile_cards(list(player.library[:count]))
 
         return half_of_own_library
+
+    if _SHUFFLE_YOUR_GRAVEYARD_INTO_LIBRARY_RE.fullmatch(clause):
+        # CR 701.24a: every card of the player's own graveyard is put into
+        # their library, which is then shuffled - shuffled even when the
+        # graveyard was empty.
+        def shuffle_graveyard_in(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            game.put_cards_into_library(list(player.graveyard))
+            game.shuffle_library(player)
+
+        return shuffle_graveyard_in
 
     if _NO_MAXIMUM_HAND_SIZE_REST_OF_GAME_RE.fullmatch(clause):
         return lambda game, player, source, source_id: (

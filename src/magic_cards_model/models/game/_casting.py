@@ -80,6 +80,7 @@ from ...machines.next_spell import (
 from ...machines.objects_as_costs import convoke as pay_convoke
 from ...machines.objects_as_costs import delve as pay_delve
 from ...machines.objects_as_costs import improvise as pay_improvise
+from ...machines.objects_as_costs import waterbend as pay_waterbend_taps
 from ...machines.targeting import (
     TargetingProfile,
     face_spell_profile,
@@ -108,6 +109,7 @@ from ..card_state import (
     ExileAnnotation,
     TargetRef,
 )
+from ..mana import ManaCost
 from ..zone import Zone
 from ._common import StackObject
 
@@ -222,6 +224,7 @@ class CastingMixin:
         evidence_collected: bool = False,
         revealed_for_cost: bool = False,
         beheld_for_cost: bool = False,
+        waterbend_paid: bool = False,
         creature_mana_spent: int = 0,
         snow_mana_spent: dict[Color, int] | None = None,
         controlled_subtypes_as_cast: Sequence[str] = (),
@@ -317,6 +320,7 @@ class CastingMixin:
             evidence_collected=evidence_collected,
             revealed_for_cost=revealed_for_cost,
             beheld_for_cost=beheld_for_cost,
+            waterbend_paid=waterbend_paid,
             controlled_subtypes_as_cast=() if is_copy else tuple(controlled_subtypes_as_cast),
             controlled_modified_creature_as_cast=(
                 False if is_copy else controlled_modified_creature_as_cast
@@ -749,6 +753,7 @@ class CastingMixin:
                 if targets:
                     casting.choose_targets(targets)
                 payment = casting.determine_cost(x_value=x_value)
+                self._choose_waterbend_taps(casting, payment, card, caster)
                 if payment.shortfall:
                     self._pay_resolution_cast_mana(casting, payment, card, caster)
                 payment.pay()
@@ -891,6 +896,8 @@ class CastingMixin:
                     )
                 casting.pay_gift(opponent)
         self._announce_bargain_evidence_and_reveal(casting, card, caster, printed)
+        if "waterbend" in printed:
+            self._announce_waterbend(casting, card, caster, printed["waterbend"].cost, taken)
         blights = [_BLIGHT_PHRASE.match(p) for p in additional_cost_phrases(card.card)]
         # Only the optional "you may blight N" is a `MAY` here. A mandatory
         # "blight X" and "blight 2 or pay {1}" are left to the printed cost:
@@ -1079,6 +1086,76 @@ class CastingMixin:
                 )
         if "behold" in printed:
             self._announce_behold_chosen_type(casting, card, caster, printed["behold"].cost)
+
+    def _waterbend_tappers(self: "Game", caster: str, taken: set[UUID]) -> list[CardState]:
+        """CR 701.67a's candidates: the untapped artifacts and creatures
+        `caster` controls that no other cost of this cast has claimed."""
+        board = self.computed_board()
+        return [
+            state
+            for state in self.permanents_controlled_by(caster)
+            if state.untapped
+            and state.id not in taken
+            and (Type.ARTIFACT in board.of(state).types or Type.CREATURE in board.of(state).types)
+        ]
+
+    def _announce_waterbend(
+        self: "Game", casting: Casting, card: CardState, caster: str, printed: str, taken: set[UUID]
+    ) -> None:
+        """A printed "you may waterbend {N}" on a cast made on the caster's
+        behalf (CR 608.2g, CR 601.2b): a `MAY`, legal only when the cost can be
+        paid on top of the rest - with mana, or with CR 701.67a's taps standing
+        in for up to all of its generic. The taps themselves are chosen once
+        the total cost is determined (`_choose_waterbend_taps`)."""
+        extra = total_cost_for_phrase(re.sub(r"^you may ", "", printed, flags=re.I), caster)
+        if extra is None or extra.waterbend_generic is None:
+            return
+        tappable = min(len(self._waterbend_tappers(caster, taken)), extra.waterbend_generic)
+        rest = TotalCost(
+            mana=extra.mana.minus(ManaCost(generic=tappable)), components=extra.components
+        )
+        payable = self._cost_payable_on_top_of(casting, rest, caster, taken)
+        if self.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=caster,
+                prompt=f"waterbend {extra.mana} as you cast {card.name} (CR 701.67a)",
+                source=card.name,
+                source_id=source_id_of(card),
+                affirmative_is_legal=payable,
+            )
+        ):
+            casting.pay_waterbend()
+
+    def _choose_waterbend_taps(
+        self: "Game", casting: Casting, payment: CostPayment, card: CardState, caster: str
+    ) -> None:
+        """CR 701.67a inside CR 608.2g: which untapped artifacts and creatures
+        the caster taps toward the waterbend cost just announced - any number
+        up to the waterbend's own generic (CR 701.67b), none by default."""
+        if not casting.waterbend_paid or payment.waterbend_generic is None:
+            return
+        candidates = self._waterbend_tappers(caster, set())
+        if not candidates:
+            return
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=caster,
+                prompt=(
+                    f"choose up to {payment.waterbend_generic} untapped artifacts and/or "
+                    f"creatures to tap for {card.name}'s waterbend cost (CR 701.67a)"
+                ),
+                source=card.name,
+                source_id=source_id_of(card),
+                amount=min(payment.waterbend_generic, len(candidates)),
+                cards=tuple(state.id for state in candidates),
+                exact=False,
+            )
+        )
+        chosen = [state for state in candidates if state.id in set(answer)]
+        if chosen:
+            pay_waterbend_taps(payment, *chosen)
 
     def _announce_behold_chosen_type(
         self: "Game", casting: Casting, card: CardState, caster: str, cost: str
@@ -1874,6 +1951,8 @@ class CastingMixin:
         casualty: Sequence[CardState] | None = None,
         conspire: Sequence[Sequence[CardState]] | None = None,
         exile_for_cost_reduction: Sequence[CardState] | None = None,
+        waterbend: bool = False,
+        waterbend_tapping: Sequence[CardState] | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -1949,6 +2028,11 @@ class CastingMixin:
         "you may exile any number of <quality> cards from your hand. This spell
         costs {N} less to cast for each card exiled this way." (March of
         Wretched Sorrow; CR 118.8b, CR 118.7a).
+        `waterbend` pays a printed "you may waterbend {N}" (CR 701.67a) as an
+        additional cost; `waterbend_tapping` is the untapped artifacts and
+        creatures tapped for that cost's own generic mana, applied against the
+        open payment like `convoke` (CR 701.67a, bounded by CR 701.67b) and
+        refused when no waterbend cost is being paid.
         `casualty` is the creature sacrificed for each casualty instance paid
         (CR 702.153a/b), in order - printed instances first, then granted.
         They join `offspring`, `blight` and `gift` as this method's whole
@@ -2014,6 +2098,8 @@ class CastingMixin:
                 casting.pay_bargain(bargain)
             if collect_evidence:
                 casting.collect_evidence()
+            if waterbend:
+                casting.pay_waterbend()
             if reveal_for_cost is not None:
                 casting.reveal_for_cost(reveal_for_cost)
             # CR 601.2b's gift promise precedes CR 601.2c's targets: CR 702.174m
@@ -2069,6 +2155,13 @@ class CastingMixin:
                     *improvise,
                     granted=self.has_granted_improvise(casting.caster, casting.spell),
                 )
+            if waterbend_tapping:
+                if payment.waterbend_generic is None:
+                    raise ValueError(
+                        f"{card.name} is not being cast with a waterbend cost, so nothing "
+                        "may be tapped to pay for one (CR 701.67a, CR 701.67b)"
+                    )
+                pay_waterbend_taps(payment, *waterbend_tapping)
             unpinned: list[CardState] = []
             for entry in mana_sources or ():
                 if isinstance(entry, tuple):

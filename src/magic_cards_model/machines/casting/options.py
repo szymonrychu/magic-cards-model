@@ -1074,6 +1074,12 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
             )
         elif _OPTIONAL_REVEAL.match(phrase) is not None:
             found.append(OptionalAdditionalCost(keyword="reveal", cost=phrase, rule="CR 701.20a"))
+        elif _OPTIONAL_WATERBEND.match(phrase) is not None:
+            # Charged by `Casting.pay_waterbend`: CR 701.67a's mana, with
+            # CR 701.67b's tap method bounded to the waterbend's own generic.
+            found.append(
+                OptionalAdditionalCost(keyword="waterbend", cost=phrase, rule="CR 701.67a")
+            )
         elif _OPTIONAL_BEHOLD_CHOSEN_TYPE.match(phrase) is not None:
             # Charged by `Casting.behold_chosen_type_for_cost` (the type named
             # and the creatures beheld, CR 701.4a).
@@ -1693,6 +1699,7 @@ from ._common import (  # noqa: E402
     _OPTIONAL_EXILE_ANY_NUMBER_FROM_HAND,
     _OPTIONAL_REVEAL,
     _OPTIONAL_SACRIFICE_ANY_NUMBER,
+    _OPTIONAL_WATERBEND,
     BARGAIN_COST,
     CONSPIRE_COST,
 )

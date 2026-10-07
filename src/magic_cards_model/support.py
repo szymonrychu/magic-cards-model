@@ -62,6 +62,7 @@ from magic_cards_model.machines.casting import (
     has_split_second,
     hexproof_abilities_in,
     keyword_cast_options,
+    optional_additional_costs,
     player_keyword_grant_of_line,
     reads_as_graveyard_cast_permission_line,
     reads_granted_cast_spell_keyword_line,
@@ -591,6 +592,22 @@ def executed_keywords(printing: Card) -> dict[str, str]:
                     "models/game.py (Game.activation_cost, CR 701.67a)"
                 )
                 break
+    # The same action word as a spell's own optional additional cost - "As an
+    # additional cost to cast this spell, you may waterbend {4}." (Ruinous
+    # Waterbending) - is charged by `Casting.pay_waterbend`, with CR
+    # 701.67b's bound carried onto the open payment and CR 701.67c's event
+    # raised as the spell becomes cast. Conditioned on the enumerator having
+    # actually understood the sentence, never on the keyword name alone.
+    # `tests/scenarios/test_optional_waterbend_additional_cost.py` proves it.
+    if (
+        "waterbend" not in found
+        and any(k.lower() == "waterbend" for k in printing.keywords)
+        and any(
+            option.keyword == "waterbend" and option.understood
+            for option in optional_additional_costs(printing)
+        )
+    ):
+        found["waterbend"] = "machines/casting/casting.py (Casting.pay_waterbend, CR 701.67a/b)"
 
     # Suspend (CR 702.62a) is not a `KeywordCastOption`: unlike Flashback's
     # static "from the graveyard, for this cost" grant, its free cast is a

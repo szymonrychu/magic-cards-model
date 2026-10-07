@@ -1077,6 +1077,7 @@ class StackPriorityMixin:
                 evidence_collected=original_record.evidence_collected,
                 revealed_for_cost=original_record.revealed_for_cost,
                 beheld_for_cost=original_record.beheld_for_cost,
+                waterbend_paid=original_record.waterbend_paid,
             )
             return copy
 

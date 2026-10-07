@@ -942,6 +942,12 @@ class Casting(EngineModel):
     behold a Dragon", set by `behold_for_cost`. Distinct from `behold_
     chosen_type_paid`: this cost's quality is fixed by the card's own
     printed text, never chosen as the spell is cast."""
+    waterbend_paid: bool = False
+    """Whether a printed "you may waterbend {N}" additional cost was announced
+    and charged (CR 118.8b, CR 701.67a), set by `pay_waterbend`. Read by the
+    generic "if this spell's additional cost was paid" (`CastRecord.
+    optional_additional_cost_paid`) and by CR 701.67c's "whenever you
+    waterbend" event, raised as the spell becomes cast."""
     sacrificed_for_cost_reduction: int = 0
     """How many objects were sacrificed for an optional "you may sacrifice
     any number of <quality>. This spell costs <amount> less to cast for
@@ -2971,6 +2977,32 @@ class Casting(EngineModel):
         self.evidence_collected = True
         return self.step
 
+    def pay_waterbend(self) -> CastingStep:
+        """Pay a printed "you may waterbend {N}" as the optional additional cost
+        it is (CR 118.8b, CR 601.2b): CR 701.67a's "Pay [cost]", added to the
+        total cost (CR 601.2f) as mana. The permission it carries - tap an
+        untapped artifact or creature you control for each generic mana of
+        it - is applied against the open payment
+        (`machines/objects_as_costs.waterbend`), and CR 701.67b bounds it to
+        this cost's own generic through `TotalCost.waterbend_generic`, which
+        `total_cost` carries onto the payment. An X in the printed cost takes
+        the X already announced (CR 107.3a)."""
+        if self.waterbend_paid:
+            raise ValueError(f"{self.spell.name}'s waterbend cost was already announced")
+        phrase = self._optional_sentence(_OPTIONAL_WATERBEND, "waterbend", "CR 701.67a")
+        if re.search(r"\{X\}", phrase, re.IGNORECASE):
+            if self.x_value is None:
+                raise ValueError(
+                    f"{self.spell.name}'s {phrase!r} needs X announced first (CR 107.3a)"
+                )
+            phrase = substitute_x(phrase, self.x_value)
+        cost = total_cost_for_phrase(phrase, self.caster)
+        if cost is None or cost.waterbend_generic is None:
+            raise ValueError(f"{self.spell.name}'s {phrase!r} could not be read (CR 701.67a)")
+        self.add_additional_cost(cost)
+        self.waterbend_paid = True
+        return self.step
+
     def reveal_for_cost(self, card: CardState) -> CastingStep:
         """Pay a printed "you may reveal a <quality> card from your hand" as the
         optional additional cost it is (CR 118.8b, CR 701.20a) - Orator of
@@ -3740,7 +3772,15 @@ class Casting(EngineModel):
             )
         for extra in extras:
             components.extend(extra.components)
-        return TotalCost(mana=mana, components=components)
+        # CR 701.67b: the tap method reaches only the waterbend cost's own
+        # generic, summed over every waterbend cost among the additional ones
+        # (`pay_waterbend`) - never the rest of the total cost's generic.
+        bounds = [
+            extra.waterbend_generic for extra in extras if extra.waterbend_generic is not None
+        ]
+        return TotalCost(
+            mana=mana, components=components, waterbend_generic=sum(bounds) if bounds else None
+        )
 
     def _own_cost_increase_for_targets(self) -> ManaCost:
         """ "This spell costs [N] more to cast for each target beyond the
@@ -4044,6 +4084,7 @@ class Casting(EngineModel):
             payable_total = TotalCost(
                 mana=ManaCost.parse(f"{{{payable_total.mana.converted}}}"),
                 components=payable_total.components,
+                waterbend_generic=payable_total.waterbend_generic,
             ).assign_payer(self.caster)
 
         self.payment = CostPayment.for_total(
@@ -4540,6 +4581,7 @@ class Casting(EngineModel):
                 evidence_collected=self.evidence_collected,
                 revealed_for_cost=self.revealed_for_cost,
                 beheld_for_cost=self.beheld_for_cost,
+                waterbend_paid=self.waterbend_paid,
                 # CR 106.3's source of the mana spent (a creature) and CR
                 # 107.4h's snow source, read off the settled payment at CR
                 # 601.2h like `treasure_mana_spent`.
@@ -4566,6 +4608,23 @@ class Casting(EngineModel):
                     for _card in component.cards
                 ],
             )
+            if self.waterbend_paid:
+                # CR 701.67c: "An ability that triggers whenever a player
+                # waterbends triggers whenever that player pays a waterbend
+                # cost, regardless of how they paid that cost." One event for
+                # the one waterbend cost paid at CR 601.2h - mana, taps or a
+                # mix - the same event `Game.activate_ability` raises.
+                self.game.record_turn_fact("waterbent", self.caster)
+                self.game.emit(
+                    GameEvent(
+                        event=ExtraTriggerEvent.WATERBENDS,
+                        subject_id=self.spell.id,
+                        subject_name=self.spell.name,
+                        subject_controller=self.caster,
+                        subject_card=self.spell.card,
+                        player=self.caster,
+                    )
+                )
             if self.keyword_once_per_turn_key is not None:
                 # "Once during each of your turns": this cast is the once.
                 self.game.once_per_turn_cast_permissions_used[self.keyword_once_per_turn_key] = 1
@@ -5219,6 +5278,7 @@ from ._common import (  # noqa: E402
     _OPTIONAL_EXILE_ANY_NUMBER_FROM_HAND,
     _OPTIONAL_REVEAL,
     _OPTIONAL_SACRIFICE_ANY_NUMBER,
+    _OPTIONAL_WATERBEND,
     BARGAIN_COST,
     CONSPIRE_COST,
 )

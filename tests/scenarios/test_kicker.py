@@ -483,4 +483,7 @@ def test_every_optional_additional_cost_in_the_pool_is_enumerated():
         # Redirect Lightning's "pay 5 life or pay {2}": which half is paid is
         # CR 601.2b's announcement (`life_or_mana_additional_costs`).
         ("pay life", "CR 601.2b", False),
+        # Ruinous Waterbending's and Spirit Water Revival's "you may waterbend
+        # {N}" (CR 701.67a, `Casting.pay_waterbend`).
+        ("waterbend", "CR 701.67a", False),
     }

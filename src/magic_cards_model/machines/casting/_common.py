@@ -15,6 +15,11 @@ _OPTIONAL_COLLECT_EVIDENCE = re.compile(r"^you may (?P<cost>collect evidence \d+
 _OPTIONAL_REVEAL = re.compile(
     r"^you may (?P<cost>reveal an? [\w-]+ card from your hand)$", re.IGNORECASE
 )
+#: CR 701.67a's "you may waterbend {N}" as a spell's own optional additional
+#: cost (Ruinous Waterbending's {4}, Spirit Water Revival's {6}). The cost is
+#: mana (`total_cost_for_phrase` reads "waterbend {N}" with its CR 701.67b
+#: bound); `Casting.pay_waterbend` charges it.
+_OPTIONAL_WATERBEND = re.compile(r"^you may (?P<cost>waterbend (?:\{[^{}]+\})+)$", re.IGNORECASE)
 #: Celestial Reunion's own optional additional cost: "you may choose a
 #: creature type and behold two creatures of that type." CR 118.8b's "you
 #: may" plus CR 607.2d's own "choose a [value]" - the type named is not
