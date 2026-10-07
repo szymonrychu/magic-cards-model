@@ -30,12 +30,13 @@ Rules, each read in full with `mise run rules:find`:
 Listed printings: Crash Landing, Callous Sell-Sword // Burn Together. Proof
 printings (not listed, in no api deck, legal in Modern): Adarkar Windform's
 activated "Target creature loses flying until end of turn." (no "with flying"
-on the target, a snow activation) and Gravity Well's triggered "Whenever a
+on the target, a snow activation), Gravity Well's triggered "Whenever a
 creature with flying attacks, it loses flying until end of turn." (the
-attacker, untargeted). No other target-format printing carries
-"Then sacrifice it." after a bite, "deals damage to that creature equal to"
-after a layer sentence, or the unrestricted died-under-your-control count
-without an unrelated unread clause (MEMORY.md).
+attacker, untargeted) and Liliana's Standard Bearer's ETB "draw X cards, where
+X is the number of creatures that died under your control this turn." (the
+same count read by a draw, not a counter replacement). No other target-format
+printing carries "Then sacrifice it." after a bite or "deals damage to that
+creature equal to" after a layer sentence (MEMORY.md).
 """
 
 import pytest
@@ -49,7 +50,7 @@ from tests.cards import card
 from .harness import Scenario
 
 LISTED = ["Crash Landing", "Callous Sell-Sword // Burn Together"]
-PROOF = ["Adarkar Windform", "Gravity Well"]
+PROOF = ["Adarkar Windform", "Gravity Well", "Liliana's Standard Bearer"]
 
 
 @pytest.mark.parametrize("name", LISTED + PROOF)
@@ -276,6 +277,19 @@ def test_burn_together_may_hit_a_player():
     assert giant.zone is Zone.GRAVEYARD
 
 
+def test_burn_together_biter_cannot_be_its_own_other_target():
+    """CR 115.3: "any other target" is a target other than the one chosen for
+    "target creature you control", so naming the biter twice is refused at
+    announcement rather than letting it bite itself."""
+    scenario = _board(alice_hand=["Callous Sell-Sword"], alice_battlefield=["Hill Giant"])
+    giant = scenario.creature("Hill Giant", "alice")
+    casting = scenario.cast("Callous Sell-Sword")
+    casting.cast_as_adventure()
+
+    with pytest.raises(ValueError, match="CR 115.3"):
+        casting.choose_targets([giant, giant])
+
+
 def test_burn_together_still_sacrifices_when_the_victim_is_gone():
     """CR 608.2b: the victim is illegal and dealt nothing; the biter is still
     a legal target, so "Then sacrifice it." still happens."""
@@ -383,3 +397,47 @@ def test_sell_sword_counts_this_turn_only():
     sell_sword = _cast_sell_sword(scenario)
 
     assert sell_sword.counters["+1/+1"] == 0
+
+
+# -- Liliana's Standard Bearer: the same count, read by an ETB draw --------------
+
+
+def _flash_in_standard_bearer(scenario):
+    casting = scenario.cast("Liliana's Standard Bearer")
+    scenario.pay_with(
+        casting.begin_paying(), *scenario.untapped_sources("Swamp", "Forest", "Forest")
+    )
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()  # the creature spell
+    scenario.resolve_top()  # its enters trigger
+    return scenario.player("alice")
+
+
+def test_standard_bearer_draws_one_per_creature_that_died_under_your_control():
+    """CR 700.4: a token dies too; bob's creature did not die under alice's
+    control, so it is not counted."""
+    scenario = _board(
+        alice_hand=["Liliana's Standard Bearer", "Raise the Alarm"],
+        alice_battlefield=["Grizzly Bears"],
+        bob_battlefield=["Hill Giant"],
+        forests=3,
+    )
+    scenario.cast_and_resolve("Raise the Alarm", *scenario.untapped_sources("Plains", "Forest"))
+    tokens = [p for p in scenario.game.permanents_controlled_by("alice") if p.token]
+    scenario.game.destroy(tokens[0])
+    scenario.game.destroy(scenario.creature("Grizzly Bears", "alice"))
+    scenario.game.destroy(scenario.creature("Hill Giant", "bob"))
+    hand_before = len(scenario.player("alice").hand)
+
+    alice = _flash_in_standard_bearer(scenario)
+
+    assert len(alice.hand) == hand_before - 1 + 2
+
+
+def test_standard_bearer_draws_nothing_when_nothing_died():
+    scenario = _board(alice_hand=["Liliana's Standard Bearer"], forests=3)
+
+    alice = _flash_in_standard_bearer(scenario)
+
+    assert len(alice.hand) == 0
+    assert len(alice.library) == 10
