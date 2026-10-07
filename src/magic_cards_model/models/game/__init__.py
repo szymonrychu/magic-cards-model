@@ -1924,7 +1924,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 125
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 126
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2180,6 +2180,10 @@ class Game(
     #: `protected_types` and `redirect_player` (CR 614.9, CR 115.4: Harm's
     #: Way, Shining Shoal); `DelayedEffectSpec` gained the
     #: `reflexive_prevented_damage_payoff` kind.
+    #: 126 (nw-04-waterbend): `CastRecord` gained `waterbend_paid` (CR 701.67a,
+    #: CR 118.8b: a spell's optional "you may waterbend {N}"), folded into
+    #: `optional_additional_cost_paid`; an existing stack of Ruinous
+    #: Waterbending would otherwise read its paid branch as unpaid.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

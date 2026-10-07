@@ -436,6 +436,7 @@ class CastRecord(EngineModel):
             or self.blight_paid
             or self.cast_using_teamwork
             or self.behold_chosen_type_paid
+            or self.waterbend_paid
         )
 
     gift_promised: bool = False
@@ -545,6 +546,12 @@ class CastRecord(EngineModel):
     """Whether a plain "you may behold a <quality>" additional cost (CR
     118.8b, CR 701.4a) was paid - Dispelling Exhale's "if a Dragon was
     beheld" (CR 701.4b), copied from `Casting.beheld_for_cost`."""
+    waterbend_paid: bool = False
+    """Whether a printed "you may waterbend {N}" additional cost was paid
+    (CR 118.8b, CR 701.67a), copied from `Casting.waterbend_paid`. Folded
+    into `optional_additional_cost_paid` the way `blight_paid` is: Ruinous
+    Waterbending's own linked text reads the generic "if this spell's
+    additional cost was paid"."""
     controlled_subtypes_as_cast: tuple[str, ...] = ()
     """Every subtype among the permanents the caster controlled as the spell
     became cast (CR 601.2i), lowercased - "or controlled a Dragon as you cast
