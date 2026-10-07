@@ -21,10 +21,10 @@ CR numbers checked with `mise run rules:find` (rules effective 2026-09-25).
 """
 
 import pytest
-from magic_cards_model.models.card_state import Counter
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from magic_cards_model.support import card_support
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -35,6 +35,9 @@ SECOND_PRINTINGS = [
     "Wrap in Vigor",
     "Golgari Charm",
     "Chainbreaker",
+    "Decimator Beetle",
+    "The First Eruption",
+    "Bristlebud Farmer",
 ]
 
 
@@ -179,6 +182,121 @@ def test_thalia_and_the_gitrog_monster_never_offers_a_noncreature_nonland():
     assert stone.zone is Zone.BATTLEFIELD
     assert thalia.zone is Zone.GRAVEYARD  # the only creature or land she has
     assert len(scenario.player("alice").hand) == 1
+
+
+# -- The First Eruption III: "Sacrifice a Mountain. If you do, ..." ----------
+
+
+def _eruption_chapter_three(alice_lands):
+    """Up to chapter II, then chapter III alone; the Wurm's damage before III
+    is returned so III's own share can be told apart (CR 120.3)."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["The First Eruption", *alice_lands, "Craw Wurm"])
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wurm = scenario.creature("Craw Wurm", "alice")
+
+    def resolve_chapters():
+        scenario.game.put_triggers_on_stack()
+        while not scenario.game.stack_is_empty:
+            scenario.resolve_top()
+
+    resolve_chapters()
+    scenario.game.saga_lore_step()
+    resolve_chapters()
+    giant = scenario.creature("Hill Giant", "bob")
+    before = wurm.damage
+    scenario.game.saga_lore_step()
+    resolve_chapters()
+    return scenario, giant, wurm, before
+
+
+def test_first_eruption_sacrifices_a_mountain_and_then_deals_three():
+    scenario, giant, wurm, before = _eruption_chapter_three(["Mountain", "Forest"])
+
+    assert [c.name for c in scenario.player("alice").graveyard if c.name == "Mountain"]
+    assert giant.zone is Zone.GRAVEYARD
+    assert wurm.damage == before + 3
+
+
+def test_first_eruption_without_a_mountain_deals_nothing():
+    """ "If you do": nothing was sacrificed (CR 608.2d), so chapter III deals
+    no damage."""
+    scenario, giant, wurm, before = _eruption_chapter_three(["Forest"])
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+
+    assert giant.zone is Zone.BATTLEFIELD
+    assert wurm.damage == before
+    assert forest.zone is Zone.BATTLEFIELD
+
+
+# -- Bristlebud Farmer: "you may sacrifice a Food. If you do, ..." ----------
+
+
+def _bristlebud(*, with_food: bool, take: bool = True):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Bristlebud Farmer"],
+            library=["Grizzly Bears", "Forest", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    farmer = scenario.put_onto_battlefield("Bristlebud Farmer", "alice")
+    scenario.game.put_triggers_on_stack()
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
+    foods = [p for p in scenario.game.permanents_controlled_by("alice") if p.token]
+    if not with_food:
+        for food in foods:
+            scenario.game.sacrifice(food)
+    scenario.will_take_the_may(take, username="alice", source="Bristlebud Farmer")
+    farmer.summoning_sick = False  # staged: it has been under alice's control since her turn began
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(farmer)
+    scenario.game.put_triggers_on_stack()
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
+    return scenario
+
+
+def _foods(scenario):
+    return [p for p in scenario.game.permanents_controlled_by("alice") if p.token]
+
+
+def test_bristlebud_sacrificing_a_food_mills_three():
+    scenario = _bristlebud(with_food=True)
+
+    assert len(_foods(scenario)) == 1
+    milled_or_kept = len(scenario.player("alice").graveyard) + len(scenario.player("alice").hand)
+    assert milled_or_kept >= 3
+    assert len(scenario.player("alice").library) == 1
+
+
+def test_bristlebud_declining_mills_nothing():
+    scenario = _bristlebud(with_food=True, take=False)
+
+    assert len(_foods(scenario)) == 2
+    assert len(scenario.player("alice").library) == 4
+
+
+def test_bristlebud_with_no_food_is_never_asked_and_mills_nothing():
+    """ "If you do": with no Food there is nothing to sacrifice (CR 608.2d),
+    so the consequence never runs."""
+    scenario = _bristlebud(with_food=False)
+
+    assert len(scenario.player("alice").library) == 4
+    assert not [
+        q
+        for q in scenario.questions_asked()
+        if q.source == "Bristlebud Farmer" and "sacrifice" in (q.prompt or "").lower()
+    ]
 
 
 # -- Wail of the Nim: regenerate each creature you control, and entwine -------
@@ -395,3 +513,51 @@ def test_chainbreaker_on_a_creature_without_the_counter_does_nothing():
 
     assert bears.counters == {} or not any(bears.counters.values())
     assert scenario.game.unmodeled_trigger_effect_notices == []
+
+
+# -- Decimator Beetle: remove from one target, put on another ----------------
+
+
+def test_decimator_beetle_moves_the_counter_from_its_first_target_to_its_second():
+    """Each half acts on its own target (CR 115.1d: both chosen as the
+    trigger goes on the stack, in printed order): the counter comes off
+    alice's creature and one goes on bob's, never both on both."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Decimator Beetle", "Craw Wurm"])
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    beetle = scenario.creature("Decimator Beetle", "alice")
+    wurm = scenario.creature("Craw Wurm", "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    wurm.add_counters("-1/-1", 1)
+    scenario.will_choose_targets(wurm, giant, username="alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(beetle)
+    scenario.game.put_triggers_on_stack()
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
+
+    assert wurm.counter_count("-1/-1") == 0
+    assert giant.counter_count("-1/-1") == 1
+
+
+def test_decimator_beetle_with_no_second_target_only_removes():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Decimator Beetle", "Craw Wurm"])
+        .player("bob")
+        .build()
+    )
+    beetle = scenario.creature("Decimator Beetle", "alice")
+    wurm = scenario.creature("Craw Wurm", "alice")
+    wurm.add_counters("-1/-1", 2)
+    scenario.will_choose_targets(wurm, username="alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(beetle)
+    scenario.game.put_triggers_on_stack()
+    while not scenario.game.stack_is_empty:
+        scenario.resolve_top()
+
+    assert wurm.counter_count("-1/-1") == 1

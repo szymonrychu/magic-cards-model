@@ -1880,26 +1880,25 @@ _DAMAGE_RECIPIENTS: dict[str, _DamageRecipient] = {
     "a creature, battle, or opponent": _recipient_is_creature_battle_or_opponent,
 }
 
+
 #: One noun of a printed recipient list ("a player or battle", "a permanent
 #: or player"), as a test on the damage event: a player recipient (CR 120.3a)
 #: or a permanent of a card type read off the computed board (CR 613.5;
 #: CR 310.6 for a battle).
+def _recipient_is_type(card_type: Type) -> _DamageRecipient:
+    def test(game: "Game", you: str, event: ReplaceableEvent) -> bool:
+        return event.card is not None and card_type in game.characteristics_of(event.card).types
+
+    return test
+
+
 _RECIPIENT_NOUNS: dict[str, _DamageRecipient] = {
     "player": lambda game, you, event: event.player is not None,
     "opponent": _recipient_is_opponent,
     "permanent": lambda game, you, event: event.card is not None,
-    **{
-        noun: (
-            lambda card_type: lambda game, you, event: (
-                event.card is not None and card_type in game.characteristics_of(event.card).types
-            )
-        )(card_type)
-        for noun, card_type in (
-            ("creature", Type.CREATURE),
-            ("planeswalker", Type.PLANESWALKER),
-            ("battle", Type.BATTLE),
-        )
-    },
+    "creature": _recipient_is_type(Type.CREATURE),
+    "planeswalker": _recipient_is_type(Type.PLANESWALKER),
+    "battle": _recipient_is_type(Type.BATTLE),
 }
 _RECIPIENT_LIST_SPLIT_RE = re.compile(r"\s*,\s*(?:or\s+)?|\s+or\s+", re.IGNORECASE)
 
@@ -1926,6 +1925,7 @@ def damage_recipient(phrase: str) -> _DamageRecipient | None:
         return any(test(game, you, event) for test in tests)
 
     return any_listed
+
 
 #: "put that many <kind> counters on that creature" - the damage replaced by
 #: counters (CR 614.1a, CR 122.1). Soul-Scar Mage's -1/-1 is the printed kind;

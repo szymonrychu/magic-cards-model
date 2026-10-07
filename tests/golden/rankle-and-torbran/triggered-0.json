@@ -1,0 +1,86 @@
+{
+  "ability": "Whenever Rankle and Torbran deals combat damage to a player or battle, choose any number — • Each player creates a Treasure token. • Each player sacrifices a creature of their choice. • If a source would deal damage to a player or battle this turn, it deals that much damage plus 2 instead.",
+  "action": {
+    "controller": "alice",
+    "modes": [1],
+    "on_stack": true,
+    "source": "Rankle and Torbran@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Rankle and Torbran"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "declare_attackers",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Rankle and Torbran",
+  "delta": {
+    "created": {
+      "Treasure Token@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": null,
+        "tapped": false,
+        "toughness": null,
+        "transformed": false,
+        "zone": "battlefield"
+      },
+      "Treasure Token@bob+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "bob",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": null,
+        "tapped": false,
+        "toughness": null,
+        "transformed": false,
+        "zone": "battlefield"
+      }
+    },
+    "decisions": [],
+    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
+    "notices": {},
+    "objects": {},
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "deals_damage",
+  "number": 0,
+  "recipe": {
+    "attempt": "combat",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

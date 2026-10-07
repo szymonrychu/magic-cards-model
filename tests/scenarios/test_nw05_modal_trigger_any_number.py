@@ -141,7 +141,9 @@ def _enter_siege(scenario):
 
 
 def _treasures(scenario, username):
-    return [p for p in scenario.game.permanents_controlled_by(username) if p.name == "Treasure Token"]
+    return [
+        p for p in scenario.game.permanents_controlled_by(username) if p.name == "Treasure Token"
+    ]
 
 
 def test_choosing_no_mode_removes_the_ability():
@@ -247,7 +249,7 @@ def test_the_plus_two_adds_to_damage_dealt_to_a_battle():
 
 
 def test_combat_damage_to_a_battle_triggers_it_too():
-    """"deals combat damage to a player or battle": the battle alone is
+    """ "deals combat damage to a player or battle": the battle alone is
     enough."""
     scenario = _board(alice_hand=[ERGAMON])
     rt = scenario.creature(RT, "alice")

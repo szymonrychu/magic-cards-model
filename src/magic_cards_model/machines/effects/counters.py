@@ -1906,12 +1906,64 @@ def _parse_remove_n_kind_counters_from_target_clause(
     kind = _counter_kind(match.group("kind"))
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
+        # Any zone the target was legally chosen in: a suspended card's time
+        # counters are removed in exile (CR 702.62a), the rest on the
+        # battlefield; `resolve_targets` already dropped an illegal one.
         for target in game.resolve_targets(stack_object):
-            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+            if not isinstance(target, CardState):
                 continue
             present = target.counter_count(kind)
             if present:
                 target.remove_counters(kind, min(amount, present))
+
+    return effect
+
+
+#: "remove a -1/-1 counter from target creature you control and put a -1/-1
+#: counter on up to one target creature defending player controls." (Decimator
+#: Beetle) - the two halves each act on their own target (CR 115.1d: both
+#: chosen as the ability goes on the stack, in printed order - the first
+#: announced is the first phrase's), which the clause splitter
+#: cannot keep apart: each half alone would act on every target. Read whole.
+_REMOVE_FROM_TARGET_AND_PUT_ON_TARGET_RE = re.compile(
+    rf"^remove (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from "
+    r"(?P<first>(?:another )?target [^.]+?) and put "
+    rf"(?P<m>{COUNT}) (?P<put_kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?P<second>(?:up to one )?(?:another )?target [^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s4")
+def _parse_remove_from_target_and_put_on_target_clause(text: str) -> AbilityEffect | None:
+    """`_REMOVE_FROM_TARGET_AND_PUT_ON_TARGET_RE`'s shape; see the banner above."""
+    stripped = " ".join(text.split())
+    if not stripped.lower().startswith("remove ") or " and put " not in stripped.lower():
+        return None
+    match = _REMOVE_FROM_TARGET_AND_PUT_ON_TARGET_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    removed, put = parse_count(match.group("n")), parse_count(match.group("m"))
+    if removed is None or put is None or removed < 1 or put < 1:
+        return None
+    first, second = match.group("first"), match.group("second")
+    if not (_targets_understood(first) and _targets_understood(second, count_agnostic=True)):
+        return None
+    remove_kind = _counter_kind(match.group("kind"))
+    put_kind = _counter_kind(match.group("put_kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        refs = list(ability.targets)
+        for index, ref in enumerate(refs):
+            target = game.legal_target(ability, ref)
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue  # CR 608.2b
+            if index == 0:
+                present = target.counter_count(remove_kind)
+                if present:
+                    target.remove_counters(remove_kind, min(removed, present))
+            else:
+                game.add_counters(target, put_kind, put)
 
     return effect
 

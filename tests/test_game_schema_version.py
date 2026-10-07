@@ -2149,3 +2149,28 @@ def test_a_snapshot_written_before_the_optional_waterbend_record_is_refused() ->
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_OPTIONAL_WATERBEND}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before NW05-T5: `DamageModifierReplacement` gained
+#: `any_controller` (Rankle and Torbran's "If a source would deal damage to a
+#: player or battle this turn"). NW05-T5 bumped 126 -> 131 (its reserved
+#: number), so the last shape without the field is 126.
+_SCHEMA_VERSION_BEFORE_NW05_T5_ANY_SOURCE = 126
+
+
+def test_a_snapshot_written_before_the_nw05_t5_any_source_modifier_is_refused() -> None:
+    """A version-126 dump's turn-long damage modifiers carry no
+    `any_controller`: decoded as current, every one would read "a source you
+    control" whether or not it printed "you control". Refused instead."""
+    from magic_cards_model.machines.damage_modification import DamageModifierReplacement
+
+    assert "any_controller" in DamageModifierReplacement.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NW05_T5_ANY_SOURCE
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NW05_T5_ANY_SOURCE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW05_T5_ANY_SOURCE}",
+    ):
+        Game.model_validate(dumped)
