@@ -277,3 +277,123 @@ def test_the_count_starts_over_each_turn():
             scenario.advance()
     _hit(scenario, vessel, scenario.player("bob"), 1)
     assert not scenario.game.is_over
+
+
+# -- Predatory Focus: "You may have creatures you control assign their combat
+# damage this turn as though they weren't blocked." - the printed permission
+# of Rhox and its siblings (CR 510.1b over CR 510.1c), granted to every creature
+# its controller has as the spell resolves (CR 611.2c) until end of turn
+# (CR 514.2), and still asked of its controller creature by creature (CR 608.2d).
+# No other legal printing words it "they weren't blocked" (Scryfall o: search,
+# 2026-10-07); Rhox's printed line is the existing-path regression and
+# Garruk, Savage Herald's -7 grants the identical quoted line.
+
+PREDATORY_FOCUS = "Predatory Focus"
+
+from magic_cards_model.machines.combat import may_assign_as_though_unblocked  # noqa: E402
+
+
+def _focus_board(*, alice_creatures=("Grizzly Bears",), bob_creatures=("Hill Giant",)):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[PREDATORY_FOCUS, "Hill Giant"],
+            battlefield=["Forest"] * 5 + list(alice_creatures),
+        )
+        .player("bob", battlefield=list(bob_creatures), life=20, library=["Plains"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_onto_stack(PREDATORY_FOCUS, auto=True)
+    scenario.resolve_top()
+    return scenario
+
+
+def _attack_and_block(scenario, attacker, blocker):
+    attacker.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(attacker)
+    scenario.start_at(Step.DECLARE_BLOCKERS)
+    scenario.block(attacker, blocker)
+
+
+def test_predatory_focus_reads_every_clause():
+    bad = [c for c in card_support(card(PREDATORY_FOCUS)).clauses if c.outcome != "handled"]
+    assert not bad, bad
+
+
+def test_a_blocked_creature_may_assign_all_its_damage_to_the_player():
+    scenario = _focus_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    _attack_and_block(scenario, bears, giant)
+    scenario.will_take_the_may(True, username="alice", source="Grizzly Bears")
+    scenario.combat_damage()
+    assert scenario.player("bob").life == 18
+    assert giant.damage == 0, "the blocker took none of it"
+    assert bears.zone is Zone.GRAVEYARD, "CR 510.1d: the blocker still deals its own damage"
+
+
+def test_declining_keeps_the_ordinary_blocked_assignment():
+    scenario = _focus_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    _attack_and_block(scenario, bears, giant)
+    scenario.will_take_the_may(False, username="alice", source="Grizzly Bears")
+    scenario.combat_damage()
+    assert scenario.player("bob").life == 20
+    assert giant.damage == 2
+
+
+def test_each_creature_is_asked_separately():
+    scenario = _focus_board(alice_creatures=("Grizzly Bears", "Hill Giant"))
+    alice_giant, bears = None, scenario.creature("Grizzly Bears", "alice")
+    alice_giant = next(
+        s for s in scenario.game.battlefield if s.name == "Hill Giant" and s.controller == "alice"
+    )
+    bob_giant = next(
+        s for s in scenario.game.battlefield if s.name == "Hill Giant" and s.controller == "bob"
+    )
+    bears.summoning_sick = False
+    alice_giant.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears, alice_giant, defending="bob")
+    scenario.start_at(Step.DECLARE_BLOCKERS)
+    scenario.block(bears, bob_giant)
+    scenario.will_take_the_may(True, username="alice", source="Grizzly Bears")
+    scenario.combat_damage()
+    # the unblocked Hill Giant hits for 3 as always, the blocked Bears chose the player
+    assert scenario.player("bob").life == 20 - 3 - 2
+    assert bob_giant.damage == 0
+
+
+def test_an_unblocked_creature_is_not_asked_anything():
+    scenario = _focus_board(bob_creatures=())
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    scenario.combat_damage()
+    assert scenario.player("bob").life == 18
+
+
+def test_a_creature_that_arrives_after_the_spell_resolved_has_no_permission():
+    """CR 611.2c: only the creatures it could affect as it resolved."""
+    scenario = _focus_board()
+    late = scenario.put_onto_battlefield("Hill Giant", "alice")
+    assert not may_assign_as_though_unblocked(scenario.game, late)
+    assert may_assign_as_though_unblocked(scenario.game, scenario.creature("Grizzly Bears", "alice"))
+
+
+def test_an_opponents_creature_has_no_permission():
+    scenario = _focus_board()
+    assert not may_assign_as_though_unblocked(scenario.game, scenario.creature("Hill Giant", "bob"))
+
+
+def test_the_permission_ends_with_the_turn():
+    scenario = _focus_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    while scenario.turn.active_player != "bob":
+        scenario.advance()
+    assert not may_assign_as_though_unblocked(scenario.game, bears)

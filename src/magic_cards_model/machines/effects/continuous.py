@@ -41,7 +41,12 @@ from ..casting import (
     once_per_turn_key,
 )
 from ..casting_restrictions import create_targeted_cant_cast_restriction
-from ..combat import KEYWORDS_OUTSIDE_COMBAT, Keyword, has_keyword
+from ..combat import (
+    ASSIGN_AS_THOUGH_UNBLOCKED_TEXT,
+    KEYWORDS_OUTSIDE_COMBAT,
+    Keyword,
+    has_keyword,
+)
 from ..converge import colors_of_mana_spent
 from ..cost import (
     cost_announces_x,
@@ -2459,6 +2464,53 @@ def _parse_each_player_this_creature_attacked_loses_clause(
 
 
 #: "that player loses the game" - Vraska, Scheming Gorgon's -10 grants
+#: "You may have creatures you control assign their combat damage this turn as
+#: though they weren't blocked." (Predatory Focus) - the permission Rhox's own
+#: line states (`machines/combat.ASSIGN_AS_THOUGH_UNBLOCKED_TEXT`), granted
+#: until end of turn to the creatures its controller has as this resolves (CR
+#: 611.2c) and still asked of that controller creature by creature when each
+#: blocked attacker assigns (CR 608.2d).
+_CREATURES_YOU_CONTROL_ASSIGN_AS_THOUGH_UNBLOCKED_RE = re.compile(
+    r"^you may have creatures you control assign their combat damage this turn "
+    r"as though they weren'?t blocked\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s4", for_spell=FORWARD)
+def _parse_creatures_you_control_assign_as_though_unblocked_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_CREATURES_YOU_CONTROL_ASSIGN_AS_THOUGH_UNBLOCKED_RE`'s shape: one
+    layer-6 grant (CR 613.1f) per creature, scoped to that very object (CR
+    400.7), expiring in the cleanup step (CR 514.2)."""
+    if _CREATURES_YOU_CONTROL_ASSIGN_AS_THOUGH_UNBLOCKED_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        store = continuous_effects(game)
+        for permanent in list(game.permanents_controlled_by(controller)):
+            if not game.characteristics_of(permanent).is_creature:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{permanent.name}: may assign its combat damage as though it "
+                        "weren't blocked this turn"
+                    ),
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                    modification=grant_ability(ASSIGN_AS_THOUGH_UNBLOCKED_TEXT),
+                ),
+                game,
+            )
+
+    return effect
+
+
 #: "Whenever this creature deals damage to an opponent, that player loses the
 #: game." CR 104.3e's effect-stated loss, applied to the player the
 #: triggering event names (the damaged opponent), the same `event.player`
