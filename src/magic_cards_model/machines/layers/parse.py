@@ -9986,6 +9986,7 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     return _parse_layer_sentence_ungated(sentence) or _parse_if_gated_layer_sentence(sentence)
 
 
+@functools.lru_cache(maxsize=16384)
 def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
     """One of the generalised shapes below, or `None` if this is not one of them.
 
@@ -10770,6 +10771,7 @@ def _all_activated_abilities_builder(
     return builder
 
 
+@functools.lru_cache(maxsize=16384)
 def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     """The board-wide and filtered *static* shapes (CR 611.3), split out of
     `_parse_layer_sentence` only to keep either function readable - the two are

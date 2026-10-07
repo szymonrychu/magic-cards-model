@@ -1,3 +1,4 @@
+import functools
 import re
 from collections.abc import Callable, Iterable
 from enum import StrEnum
@@ -817,10 +818,18 @@ def _prepare_effect_clauses(text: str) -> list[str] | None:
     read as an unparseable effect clause and taking the whole thing down, when
     the cost is not part of resolution at all (CR 118.8a).
     """
+    prepared = _prepared_effect_clauses(text)
+    return None if prepared is None else list(prepared)
+
+
+@functools.lru_cache(maxsize=16384)
+def _prepared_effect_clauses(text: str) -> tuple[str, ...] | None:
+    """`_prepare_effect_clauses`' answer, memoised per text as a tuple - the
+    support oracle asks it of one text once per `_unreadable_*` probe."""
     if is_modal_text(text):
         return None
     clauses = _rejoin_search_clauses(split_effect_clauses(_strip_non_effect_preamble(text)))
-    return clauses or None
+    return tuple(clauses) or None
 
 
 # --------------------------------------------------------------------------

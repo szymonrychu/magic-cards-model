@@ -92,6 +92,7 @@ own text instead.
 are deliberately separate parsers with separate jobs.
 """
 
+import functools
 import re
 from collections.abc import Sequence
 from enum import StrEnum
@@ -4431,6 +4432,7 @@ def _expand_support_keyword(text: str) -> str:
     return _SUPPORT_KEYWORD_RE.sub(expand, text)
 
 
+@functools.lru_cache(maxsize=16384)
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
     if spell_only:
