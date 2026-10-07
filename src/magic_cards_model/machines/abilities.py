@@ -111,7 +111,7 @@ import functools
 import re
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal, NamedTuple
 from uuid import UUID
 
 from pydantic import Field
@@ -1092,8 +1092,10 @@ def _mana_abilities_from(abilities: "Sequence[Ability]", face: str | None) -> li
         and any(piece.kind is CostKind.TAP for piece in ability.costs)
         and (face is None or ability.face == face)
         # CR 721.2a: a station striation's mana ability is granted at N charge
-        # counters and reaches a payer through `added_ability_lines`.
+        # counters and reaches a payer through `added_ability_lines`; CR
+        # 711.2a/b's level striation the same way, at its level counters.
         and ability.station_threshold is None
+        and ability.level_band is None
     ]
 
 
@@ -1810,6 +1812,13 @@ class BaseAbility(EngineModel):
     #: normally. The line itself (`raw`/`text`) is the ability with the
     #: "N+ | " symbol taken off, which is what the permanent has at N.
     station_threshold: int | None = None
+    #: CR 711.2's level symbol: the leveler striation this ability was
+    #: printed in, as `(N1, N2)` for "{LEVEL N1-N2}" (CR 711.2a) or
+    #: `(N3, None)` for "{LEVEL N3+}" (CR 711.2b). The permanent has the
+    #: ability only while its level counters are in that range; `None` for an
+    #: ability printed above every level symbol, which CR 711.4 treats
+    #: normally (the level up keyword line itself among them).
+    level_band: tuple[int, int | None] | None = None
 
 
 class ActivationCostReduction(EngineModel):
@@ -2279,6 +2288,93 @@ def station_creature_threshold(card: Card, oracle_text: str | None = None) -> in
     return max(thresholds)
 
 
+#: CR 711.2's level symbol as Scryfall's oracle text prints it, on a line of
+#: its own: "LEVEL 1-5" is "{LEVEL N1-N2}" (CR 711.2a), "LEVEL 6+" is
+#: "{LEVEL N3+}" (CR 711.2b). Upper case, which no ability sentence starts
+#: with, so the class-level bar "Level 2" (CR 716.2a) never reads as one.
+LEVEL_SYMBOL_RE = re.compile(r"^LEVEL (?P<low>\d+)(?:-(?P<high>\d+)|\+)$")
+
+#: The power/toughness box printed in a leveler striation (CR 711.2), which
+#: Scryfall puts on the line right after the level symbol: "6/6".
+_LEVEL_BOX_RE = re.compile(r"^(?P<power>\d+)/(?P<toughness>\d+)$")
+
+
+class LevelLine(NamedTuple):
+    """One line of a leveler card's text box, with the striation it is in.
+
+    `role` is "symbol" for the level symbol itself, "box" for the striation's
+    power/toughness box, and "ability" for anything else; `band` is the
+    striation's `(N1, N2)` or `(N3, None)`, `None` above every symbol."""
+
+    text: str
+    band: tuple[int, int | None] | None
+    role: str
+
+
+def is_leveler_text(text: str | None) -> bool:
+    """Whether this text box carries a level symbol (CR 711.1)."""
+    if not text or "LEVEL " not in text:  # the cheap literal gate first
+        return False
+    return any(LEVEL_SYMBOL_RE.match(line.strip()) for line in (text or "").splitlines())
+
+
+def level_striations(lines: Sequence[str]) -> list[LevelLine]:
+    """Each line of a leveler face, with the striation it is printed in.
+
+    CR 711.2: "Any abilities printed within the same text box striation as a
+    level symbol are part of its static ability. The same is true of the
+    power/toughness box printed within that striation." A striation runs from
+    its symbol to the next symbol or the end of the text box; CR 711.4's lines
+    above the first symbol are band `None`.
+    """
+    out: list[LevelLine] = []
+    band: tuple[int, int | None] | None = None
+    expecting_box = False
+    for raw in lines:
+        line = raw.strip()
+        symbol = LEVEL_SYMBOL_RE.match(line)
+        if symbol is not None:
+            high = symbol.group("high")
+            band = (int(symbol.group("low")), int(high) if high is not None else None)
+            out.append(LevelLine(line, band, "symbol"))
+            expecting_box = True
+            continue
+        if expecting_box and _LEVEL_BOX_RE.match(line):
+            out.append(LevelLine(line, band, "box"))
+            expecting_box = False
+            continue
+        expecting_box = False
+        out.append(LevelLine(line, band, "ability"))
+    return out
+
+
+def level_band_holds(band: tuple[int, int | None] | None, level: int) -> bool:
+    """CR 711.2a/b: "at least N1 ... but no more than N2" / "N3 or more" level
+    counters. True for `None`, an ability outside every striation."""
+    if band is None:
+        return True
+    low, high = band
+    return level >= low and (high is None or level <= high)
+
+
+def leveler_lines(text: str | None, level: int | None) -> list[str]:
+    """A leveler's ability lines as a permanent with `level` level counters
+    has them: CR 711.4's unstriated lines, plus - when `level` is given - the
+    abilities of the striation it is in (CR 711.2a/b). Level symbols and
+    power/toughness boxes are never ability lines. Text with no level symbol
+    comes back line for line."""
+    lines = [line.strip() for line in (text or "").splitlines() if line.strip()]
+    if not is_leveler_text(text):
+        return lines
+    return [
+        entry.text
+        for entry in level_striations(lines)
+        if entry.role == "ability"
+        and entry.text
+        and (entry.band is None or (level is not None and level_band_holds(entry.band, level)))
+    ]
+
+
 def parse_abilities(card: Card) -> list[Ability]:
     """Every ability printed on a card, front face and backs, in printed order.
 
@@ -2302,7 +2398,21 @@ def parse_abilities(card: Card) -> list[Ability]:
     abilities: list[Ability] = []
     for face_name, text in _faces(card):
         face_abilities: list[Ability] = []
-        for line, threshold in station_striations(_merge_modal_bullet_lines(text.split("\n"))):
+        merged = _merge_modal_bullet_lines(text.split("\n"))
+        if is_leveler_text(text):
+            # CR 711.2: a level symbol and its power/toughness box are not
+            # abilities; each ability in a striation is tagged with its band,
+            # which the permanent has only within that band (granted by
+            # `machines/layers._level_symbol_effects`, like station's).
+            for entry in level_striations(merged):
+                if entry.role != "ability":
+                    continue
+                for ability in _parse_line(entry.text, card.keywords, face_name):
+                    ability.level_band = entry.band
+                    face_abilities.append(ability)
+            abilities.extend(face_abilities)
+            continue
+        for line, threshold in station_striations(merged):
             if threshold is None:
                 face_abilities.extend(_parse_line(line, card.keywords, face_name))
                 continue

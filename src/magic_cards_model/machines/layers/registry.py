@@ -635,6 +635,9 @@ def effects_for(
             *_impending_not_a_creature(source, timestamp),
             *_suspected_abilities(source, timestamp),
             *_station_symbol_effects(source, timestamp),
+            *_level_symbol_effects(source, timestamp),
+            *_blitz_effects(source, timestamp),
+            *_reconfigure_effects(source, timestamp),
         ]
         if static_only
         else []
@@ -778,6 +781,37 @@ def _station_symbol_effects(source: CardState, timestamp: int) -> list[Continuou
             )
         )
     return effects
+
+
+def _level_symbol_effects(source: CardState, timestamp: int) -> list[ContinuousEffect]:
+    """CR 711.2a/b's level symbols, as the static abilities they are -
+    `machines/level_up.level_symbol_effects` (imported here: that module
+    builds on `machines/keywords.py`, which imports this package)."""
+    if not source.is_leveler:
+        return []
+    from ..level_up import level_symbol_effects
+
+    return level_symbol_effects(source, timestamp)
+
+
+def _blitz_effects(source: CardState, timestamp: int) -> list[ContinuousEffect]:
+    """CR 702.152a's battlefield static, `machines/blitz.blitz_static_effects`
+    (imported here for the same cycle `_level_symbol_effects` names)."""
+    if not source.cast_with_keyword:
+        return []
+    from ..blitz import blitz_static_effects
+
+    return blitz_static_effects(source, timestamp)
+
+
+def _reconfigure_effects(source: CardState, timestamp: int) -> list[ContinuousEffect]:
+    """CR 702.151b's not-a-creature, `machines/reconfigure.reconfigure_not_a_
+    creature` (imported here for the same cycle `_level_symbol_effects` names)."""
+    if source.attached_to is None:
+        return []
+    from ..reconfigure import reconfigure_not_a_creature
+
+    return reconfigure_not_a_creature(source, timestamp)
 
 
 #: CR 701.60c: "A suspected permanent has menace and 'This creature can't

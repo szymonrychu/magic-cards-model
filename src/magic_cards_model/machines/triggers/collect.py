@@ -16,6 +16,7 @@ from ..abilities import (
     TriggeredAbility,
     TriggerEvent,
     intrinsic_land_ability,
+    leveler_lines,
     parse_abilities,
     parse_granted_ability_lines,
     self_reference_names,
@@ -398,8 +399,10 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
         # CR 721.2a: a station striation's trigger is granted by the symbol's
         # static ability (`layers._station_symbol_effects`) and is found
         # through `added_ability_lines` while the counters reach N - never as
-        # a printed ability the permanent always has.
+        # a printed ability the permanent always has. CR 711.2a/b's level
+        # striation the same way (`layers._level_symbol_effects`).
         and ability.station_threshold is None
+        and ability.level_band is None
         # An ability the parser could not file under a `TriggerEvent` is kept
         # when this module can read its condition anyway (`_unread_trigger_
         # events`) - it is matched from the printed condition rather than from
@@ -934,8 +937,10 @@ def activated_abilities_of(card: Card, face: str | None = None) -> list[Activate
         if isinstance(ability, ActivatedAbility)
         and (face is None or ability.face == face)
         # CR 721.2a: granted by the station symbol's static ability at N
-        # charge counters, and found then through `added_ability_lines`.
+        # charge counters, and found then through `added_ability_lines`; a
+        # CR 711.2a/b level striation's at its level counters.
         and ability.station_threshold is None
+        and ability.level_band is None
     ]
     result = printed or ([intrinsic] if (intrinsic := intrinsic_land_ability(card, face)) else [])
     _activated_abilities_cache[key] = result
@@ -991,7 +996,9 @@ def rewritten_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ..
     lines = tuple(computed.abilities)
     if not lines:
         return None
-    printed = [line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()]
+    # CR 711.2: a leveler's striated lines are granted by its level symbols,
+    # not printed abilities it always has (`leveler_lines`).
+    printed = leveler_lines(permanent.oracle_text, None)
     if all(line in lines for line in printed):
         return None
     return lines
@@ -1036,9 +1043,7 @@ def added_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
         lines = permanent.abilities_as_it_left
         if lines is None:
             return ()
-        printed = {
-            line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()
-        }
+        printed = set(leveler_lines(permanent.oracle_text, None))
         granted = set(permanent.granted_ability_texts)
         # A grant `machines/layers._sync_stored_grant_ability_texts` had
         # already reconciled onto `granted_ability_texts` before this
@@ -1053,7 +1058,7 @@ def added_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
         computed = game.characteristics_of(permanent)
     except KeyError:
         return ()
-    printed = {line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()}
+    printed = set(leveler_lines(permanent.oracle_text, None))
     granted = set(permanent.granted_ability_texts)
     return tuple(line for line in computed.abilities if line not in printed and line not in granted)
 
