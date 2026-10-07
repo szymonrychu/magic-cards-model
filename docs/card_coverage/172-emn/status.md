@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 17.1% |
-| Works (untested) | 110 | 55.3% |
+| Tested | 35 | 17.6% |
+| Works (untested) | 112 | 56.3% |
 | Partial (unaudited) | 9 | 4.5% |
-| Not working | 46 | 23.1% |
+| Not working | 43 | 21.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Assembled Alphas | silent | Whenever this creature blocks or becomes blocked by a creature, this creature deals 3 damage to that creature and 3 damage to that creature's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Backwoods Survivalists | silent | Delirium — This creature gets +1/+1 and has trample as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Campaign of Vengeance | silent | Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coax from the Blind Eternities | silent | You may reveal an Eldrazi card you own from outside the game or choose a face-up Eldrazi card you own in exile. Put that card into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -55,14 +54,12 @@
 | Shreds of Sanity | silent | Return up to one target instant card and up to one target sorcery card from your graveyard to your hand, then discard a card. Exile Shreds of Sanity. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigarda's Aid | silent | Whenever an Equipment you control enters, you may attach it to target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slayer's Cleaver | silent | Equipped creature gets +3/+1 and must be blocked by an Eldrazi if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Somberwald Stag | silent | When this creature enters, you may have it fight target creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spell Queller | silent | When this creature leaves the battlefield, the exiled card's owner may cast that card without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spirit of the Hunt | silent | When this creature enters, each other creature you control that's a Wolf or a Werewolf gets +0/+3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stitcher's Graft | silent | Whenever equipped creature attacks, it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tamiyo, Field Researcher | silent | +1: Choose up to two target creatures. Until your next turn, whenever either of those creatures deals combat damage, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thraben Foulbloods | silent | Delirium — This creature gets +1/+1 and has menace as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tree of Perdition | silent | {T}: Exchange target opponent's life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ulrich of the Krallenhorde // Ulrich, Uncontested Alpha | silent | Whenever this creature transforms into Ulrich, Uncontested Alpha, you may have it fight target non-Werewolf creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whispers of Emrakul | silent | Target opponent discards a card at random. Delirium — If there are four or more card types among cards in your graveyard, that player discards two cards at rand | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Collective Defiance | notice | Escalate {1} (Pay this cost for each mode chosen beyond the first.) Choose one or more — • Target player discards all the cards in their hand, then draws that m | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Drownyard Behemoth | notice | This creature has hexproof as long as it entered this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -166,6 +163,7 @@
 | Sigardian Priest | handled | {1}, {T}: Tap target non-Human creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skirsdag Supplicant | handled | {B}, {T}, Discard a card: Each player loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Smoldering Werewolf // Erupting Dreadwolf | handled | When this creature enters, it deals 1 damage to each of up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Somberwald Stag | handled | When this creature enters, you may have it fight target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spectral Reserves | handled | Create two 1/1 white Spirit creature tokens with flying. You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Splendid Reclamation | handled | Return all land cards from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spreading Flames | handled | Spreading Flames deals 6 damage divided as you choose among any number of target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -180,6 +178,7 @@
 | Thalia, Heretic Cathar | handled | Creatures and nonbasic lands your opponents control enter tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thermo-Alchemist | handled | {T}: This creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thraben Standard Bearer | handled | {1}{W}, {T}, Discard a card: Create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ulrich of the Krallenhorde // Ulrich, Uncontested Alpha | handled | Whenever this creature enters or transforms into Ulrich of the Krallenhorde, target creature gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ulvenwald Captive // Ulvenwald Abomination | handled | {5}{G}{G}: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ulvenwald Observer | handled | Whenever a creature you control with toughness 4 or greater dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vampire Cutthroat | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
@@ -195,8 +194,9 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>35 cards</summary>
 
+- Assembled Alphas
 - Blessed Alliance
 - Cemetery Recruitment
 - Certain Death
@@ -263,7 +263,6 @@
 | when ~ enters, each other creature you control that's a wolf or a werewolf gets +N/+N until end of turn. | 1 | Spirit of the Hunt | emn |
 | when ~ enters, other humans you control get +N/+N and gain lifelink until end of turn. | 1 | Heron's Grace Champion | emn |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Fogwalker | emn |
-| when ~ enters, you may have it fight target creature you don't control. | 1 | Somberwald Stag | emn |
 | when ~ leaves the battlefield, the exiled card's owner may cast that card without paying its mana cost. | 1 | Spell Queller | emn |
 | whenever a creature you control attacks, defending player loses N life and you gain N life. | 1 | Campaign of Vengeance | emn |
 | whenever a player casts an instant or sorcery spell that targets only ~, that player copies that spell for each other creature they control that the spell could | 1 | Mirrorwing Dragon | emn |
@@ -272,9 +271,7 @@
 | whenever equipped creature attacks, it doesn"..."s next untap step. | 1 | Stitcher's Graft | emn |
 | whenever ~ attacks, add {M} at the beginning of your next main phase ~. | 1 | Conduit of Storms // Conduit of Emrakul | emn |
 | whenever ~ attacks, you may exile another target nontoken creature. if you do, ~ becomes a copy of that creature until end of turn. return the exiled card to th | 1 | Identity Thief | emn |
-| whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature and N damage to that creature's controller. | 1 | Assembled Alphas | emn |
 | whenever ~ deals combat damage to a creature, that creature becomes a copy of ~. | 1 | Permeating Mass | emn |
-| whenever ~ transforms into ulrich, uncontested alpha, you may have it fight target non-werewolf creature you don't control. | 1 | Ulrich of the Krallenhorde // Ulrich, Uncontested Alpha | emn |
 | you may reveal an eldrazi card you own from outside the game or choose a face-up eldrazi card you own in exile. put that card into your hand. | 1 | Coax from the Blind Eternities | emn |
 | your opponents can't cast spells with mana value N or less. | 1 | Brisela, Voice of Nightmares | emn |
 | {M}, sacrifice ~ and any number of other non-eldrazi creatures: create a N/N colorless eldrazi horror creature token for each creature sacrificed ~. | 1 | Emrakul's Evangel | emn |

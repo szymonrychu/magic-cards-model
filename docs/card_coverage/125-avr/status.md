@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 9.2% |
-| Works (untested) | 108 | 49.8% |
+| Works (untested) | 109 | 50.2% |
 | Partial (unaudited) | 16 | 7.4% |
-| Not working | 73 | 33.6% |
+| Not working | 72 | 33.2% |
 
 ## Cards needing work
 
@@ -74,7 +74,6 @@
 | Primal Surge | silent | Exile the top card of your library. If it's a permanent card, you may put it onto the battlefield. If you do, repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rite of Ruin | silent | Choose an order for artifacts, creatures, and lands. Each player sacrifices one permanent of their choice of the first type, sacrifices two of their choice of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Silverblade Paladin | silent | As long as this creature is paired with another creature, both creatures have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Somberwald Vigilante | silent | Whenever this creature becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spectral Gateguards | silent | As long as this creature is paired with another creature, both creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stern Mentor | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Stonewright | silent | As long as Stonewright is paired with another creature, each of those creatures has "{R}: This creature gets +1/+0 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -200,6 +199,7 @@
 | Slayers' Stronghold | handled | {R}{W}, {T}: Target creature gets +2/+0 and gains vigilance and haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Snare the Skies | handled | Target creature gets +1/+1 and gains reach until end of turn. (It can block creatures with flying.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Somberwald Sage | handled |  |  | Y/-/- | not_tested |
+| Somberwald Vigilante | handled | Whenever this creature becomes blocked by a creature, this creature deals 1 damage to that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soul of the Harvest | handled | Whenever another nontoken creature you control enters, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soulcage Fiend | handled | When this creature dies, each player loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spectral Prison | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -328,7 +328,6 @@
 | whenever an opponent loses life, you gain that much life. | 1 | Exquisite Blood | avr |
 | whenever bruna attacks or blocks, you may attach to it any number of auras on the battlefield and you may put onto the battlefield attached to it any number of  | 1 | Bruna, Light of Alabaster | avr |
 | whenever ~ attacks, return another creature you control to its owner's hand. | 1 | Havengul Skaab | avr |
-| whenever ~ becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Somberwald Vigilante | avr |
 | you may cast ~ from exile. | 1 | Misthollow Griffin | avr |
 | {M}{M}, {M}: you may cast spells ~ as though they had flash. | 1 | Alchemist's Refuge | avr |
 | {M}{M}: prevent all combat damage that would be dealt to and dealt by ~ ~. | 1 | Moonlight Geist | avr |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 14.5% |
-| Works (untested) | 125 | 50.2% |
+| Tested | 40 | 16.1% |
+| Works (untested) | 126 | 50.6% |
 | Partial (unaudited) | 15 | 6.0% |
-| Not working | 73 | 29.3% |
+| Not working | 68 | 27.3% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Dennick, Pious Apprentice // Dennick, Pious Apparition | silent | Whenever one or more creature cards are put into graveyards from anywhere, investigate. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Devoted Grafkeeper // Departed Soulkeeper | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fading Hope | silent | Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Falkenrath Perforator | silent | Whenever this creature attacks, it deals 1 damage to defending player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Florian, Voldaren Scion | silent | At the beginning of each of your postcombat main phases, look at the top X cards of your library, where X is the total amount of life your opponents lost this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Galedrifter // Waildrifter | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ghoulcaller's Harvest | silent | Create X 2/2 black Zombie creature tokens with decayed, where X is half the number of creature cards in your graveyard, rounded up. (A creature with decayed can | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -82,8 +81,6 @@
 | Willow Geist | silent | When this creature dies, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodline Culling | notice | Choose one — • Target creature gets -5/-5 until end of turn. • Creature tokens get -2/-2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bloodthirsty Adversary | notice | When this creature enters, you may pay {2}{R} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Burn Down the House | notice | Choose one — • Burn Down the House deals 5 damage to each creature and each planeswalker. • Create three 1/1 red Devil creature tokens with "When this token die | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Can't Stay Away | notice | Return target creature card with mana value 3 or less from your graveyard to the battlefield. It gains "If this creature would die, exile it instead." Flashback | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Curse of Silence | notice | Spells with the chosen name enchanted player casts cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire-Strain Rampage | notice | Destroy target artifact, enchantment, or land. If a land was destroyed this way, its controller may search their library for up to two basic land cards, put the | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Diregraf Horde | notice | When this creature enters, create two 2/2 black Zombie creature tokens with decayed. When you do, exile up to two target cards from graveyards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -91,9 +88,7 @@
 | Flare of Faith | notice | Target creature gets +2/+2 until end of turn. If it's a Human, instead it gets +3/+3 and gains indestructible until end of turn. | unparsed remainder: If it's a Human, instead it gets +3/+3 and gains indestructible until end of turn. | Y/Y/- | not_working |
 | Hallowed Respite | notice | Exile target nonlegendary creature, then return it to the battlefield under its owner's control. If it entered under your control, put a +1/+1 counter on it. Ot | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heirloom Mirror // Inherited Fiend | notice | {1}, {T}, Pay 1 life, Discard a card: Draw a card, mill a card, then put a ritual counter on this artifact. Then if it has three or more ritual counters on it,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Hungry for More | notice | Create a 3/1 black and red Vampire creature token with trample, lifelink, and haste. Sacrifice it at the beginning of the next end step. Flashback {1}{B}{R} (Yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Light Up the Night | notice | Light Up the Night deals X damage to any target. It deals X plus 1 damage instead if that target is a creature or planeswalker. Flashback—{3}{R}, Remove X loyal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Purifying Dragon | notice | Whenever this creature attacks, it deals 1 damage to target creature defending player controls. If that creature is a Zombie, this creature deals 2 damage to it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Stolen Vitality | notice | Target creature gets +3/+1 until end of turn. If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of tu | unparsed remainder: If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of turn. | Y/Y/- | not_working |
 | Unnatural Moonrise | notice | It becomes night. Until end of turn, target creature gets +1/+0 and gains trample and "Whenever this creature deals combat damage to a player, draw a card." Fla | unparsed remainder: It becomes night. | Y/Y/- | not_working |
 | Voldaren Stinger | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -128,6 +123,7 @@
 | Brood Weaver | handled | When this creature dies, create a 1/2 green Spider creature token with reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burly Breaker // Dire-Strain Demolisher | handled | Transform | no code needed | Y/Y/- | not_tested |
 | Burn the Accursed | handled | Burn the Accursed deals 5 damage to target creature and 2 damage to that creature's controller. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Can't Stay Away | handled | Return target creature card with mana value 3 or less from your graveyard to the battlefield. It gains "If this creature would die, exile it instead." Flashback | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Candlegrove Witch | handled | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cathar Commando | handled | {1}, Sacrifice this creature: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cathar's Call | handled | Enchanted creature has vigilance and "At the beginning of your end step, create a 1/1 white Human creature token." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -243,12 +239,13 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>40 cards</summary>
 
 - Blood Pact
 - Bounding Wolf
 - Brimstone Vandal
 - Brutal Cathar // Moonrage Brute
+- Burn Down the House
 - Candlelit Cavalry
 - Corpse Cobble
 - Croaking Counterpart
@@ -257,12 +254,14 @@
 - Duel for Dominance
 - Enduring Angel // Angelic Enforcer
 - Faithful Mending
+- Falkenrath Perforator
 - Falkenrath Pit Fighter
 - Gavony Dawnguard
 - Geistflame Reservoir
 - Graveyard Trespasser // Graveyard Glutton
 - Haunted Ridge
 - Hedgewitch's Mask
+- Hungry for More
 - Jadar, Ghoulcaller of Nephalia
 - Moonrager's Slash
 - Moonsilver Key
@@ -272,6 +271,7 @@
 - Otherworldly Gaze
 - Overgrown Farmland
 - Play with Fire
+- Purifying Dragon
 - Reckless Stormseeker // Storm-Charged Slasher
 - Rite of Harmony
 - Rockfall Vale
@@ -290,7 +290,7 @@
 |---|---|---|---|
 | disturb | 10 | Baithook Angler // Hook-Haunt Drifter, Beloved Beggar // Generous Soul, Chaplain of Alms // Chapel Shieldgeist, Covert Cutpurse // Covetous Geist, Covetous Castaway // Ghostly Castigator | mid |
 | Coven | 3 | Augur of Autumn, Harvesttide Sentry, Sungold Sentinel | mid |
-| Choose one | 2 | Bloodline Culling, Burn Down the House | mid |
+| Choose one | 1 | Bloodline Culling | mid |
 | +N: choose up to one target artifact, up to one target creature, and up to one target land. untap the chosen permanents you control. tap the chosen permanents y | 1 | Teferi, Who Slows the Sunset | mid |
 | +N: until your next turn, you may cast creature spells as though they had flash, and each creature you control enters with an additional +N/+N counter on it. | 1 | Arlinn, the Pack's Hope // Arlinn, the Moon's Fury | mid |
 | as long as an opponent lost life ~, each other vampire you control enters with an additional +N/+N counter on it. | 1 | Vampire Socialite | mid |
@@ -307,7 +307,6 @@
 | choose up to three target cards in graveyards. the owners of those cards shuffle them into their libraries. you gain N life. flashback {M}{M} (you may cast ~ fr | 1 | Turn the Earth | mid |
 | choose up to two target creature cards in your graveyard. an opponent chooses one of them. return that card to your hand. return the other to the battlefield un | 1 | Wake to Slaughter | mid |
 | create N N/N black zombie creature tokens with decayed, where N is half the number of creature cards in your graveyard, rounded up. (a creature with decayed can | 1 | Ghoulcaller's Harvest | mid |
-| create a N/N black and red vampire creature token with trample, lifelink, and haste. sacrifice it at the beginning of the next end step. flashback {M}{M}{M} (yo | 1 | Hungry for More | mid |
 | creature tokens you control lose all abilities and have base power and toughness N/N. | 1 | Poppet Stitcher // Poppet Factory | mid |
 | destroy target artifact, enchantment, or land. if a land was destroyed ~, its controller may search their library for up to two basic land cards, put them onto  | 1 | Dire-Strain Rampage | mid |
 | destroy target creature or planeswalker. its controller investigates. (they create a clue token. it's an artifact with "...") | 1 | Fateful Absence | mid |
@@ -322,7 +321,6 @@
 | other untapped creatures you control have hexproof. | 1 | Saryth, the Viper's Fang | mid |
 | prevent all combat damage that would be dealt by enchanted creature. | 1 | Candletrap | mid |
 | put a +N/+N counter on up to one target creature you control. tap up to one target creature you don"..."t untap during its controller's next untap step. flashba | 1 | Winterthorn Blessing | mid |
-| return target creature card with mana value N or less from your graveyard to the battlefield. it gains "..." flashback {M}{M}{M} (you may cast ~ from your grave | 1 | Can't Stay Away | mid |
 | return target creature to its owner's hand. if its mana value was N or less, scry N. (look at the top card of your library. you may put that card on the bottom. | 1 | Fading Hope | mid |
 | search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. then if there are three or more basic land types among lands | 1 | Path to the Festival | mid |
 | spells can't be countered. | 1 | Lier, Disciple of the Drowned | mid |
@@ -349,8 +347,6 @@
 | whenever you attack, for each opponent, create a N/N white human creature token that's tapped and attacking that player or a planeswalker they control. | 1 | Adeline, Resplendent Cathar | mid |
 | whenever you cast a spell, you may discard your hand. if you do, draw a card for each of that spell's colors. | 1 | Moonveil Regent | mid |
 | whenever ~ attacks, add {M} or {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Kessig Naturalist // Lord of the Ulvenwald | mid |
-| whenever ~ attacks, it deals N damage to defending player. | 1 | Falkenrath Perforator | mid |
-| whenever ~ attacks, it deals N damage to target creature defending player controls. if that creature is a zombie, ~ deals N damage to it instead. | 1 | Purifying Dragon | mid |
 | whenever ~ attacks, return target creature card with mana value N or less from your graveyard to the battlefield tapped and attacking. | 1 | Bereaved Survivor // Dauntless Avenger | mid |
 | whenever ~ attacks, you may exile a creature card from your graveyard. if you do, each opponent loses N life and you gain N life, where N is the number of creat | 1 | Hostile Hostel // Creeping Inn | mid |
 | whenever ~ becomes blocked, each creature blocking it gets -N/-N until end of turn. | 1 | Baneblade Scoundrel // Baneclaw Marauder | mid |

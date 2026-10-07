@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 14.2% |
-| Works (untested) | 137 | 57.3% |
+| Tested | 36 | 15.1% |
+| Works (untested) | 138 | 57.7% |
 | Partial (unaudited) | 9 | 3.8% |
-| Not working | 59 | 24.7% |
+| Not working | 56 | 23.4% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Clan Guildmage | silent | {2}{G}, {T}: Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Combine Guildmage | silent | {1}{G}, {T}: This turn, each creature you control enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consecrate // Consume | silent | Target player sacrifices a creature with the greatest power among creatures they control. You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dagger Caster | silent | When this creature enters, it deals 1 damage to each opponent and 1 damage to each creature your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Debtors' Transport | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Domri's Nodorog | silent | When this creature enters, you may search your library and/or graveyard for a card named Domri, City Smasher, reveal it, and put it into your hand. If you searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin's Automaton | silent | As long as you control a Dovin planeswalker, this creature gets +2/+2 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,7 +61,6 @@
 | Plaza of Harmony | silent | {T}: Add one mana of any type that a Gate you control could produce. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Priest of Forgotten Gods | silent | {T}, Sacrifice two other creatures: Any number of target players each lose 2 life and sacrifice a creature of their choice. You add {B}{B} and draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pteramander | silent | {7}{U}: Adapt 4. This ability costs {1} less to activate for each instant and sorcery card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rakdos Roustabout | silent | Whenever this creature becomes blocked, it deals 1 damage to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakdos, the Showstopper | silent | When Rakdos enters, flip a coin for each creature that isn't a Demon, Devil, or Imp. Destroy each creature whose coin comes up tails. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rampage of the Clans | silent | Destroy all artifacts and enchantments. For each permanent destroyed this way, its controller creates a 3/3 green Centaur creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rumbling Ruin | silent | When this creature enters, count the number of +1/+1 counters on creatures you control. Creatures your opponents control with power less than or equal to that n | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -76,7 +74,6 @@
 | Thought Collapse | silent | Counter target spell. Its controller mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tin Street Dodger | silent | {R}: This creature can't be blocked this turn except by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tithe Taker | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Warrant // Warden | silent | Create a 4/4 white and blue Sphinx creature token with flying and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Windstorm Drake | silent | Other creatures you control with flying get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodmist Infiltrator | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Code of Constraint | notice | Target creature gets -4/-0 until end of turn. Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap duri | unparsed remainder: Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap during its controller's next untap step. | Y/Y/- | not_working |
@@ -228,6 +225,7 @@
 | Vindictive Vampire | handled | Whenever another creature you control dies, this creature deals 1 damage to each opponent and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vizkopa Vampire | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Wall of Lost Thoughts | handled | When this creature enters, target player mills four cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Warrant // Warden | handled | Put target attacking or blocking creature on top of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Watchful Giant | handled | When this creature enters, create a 1/1 white Human creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wilderness Reclamation | handled | At the beginning of your end step, untap all lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wrecking Beast | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
@@ -235,7 +233,7 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>36 cards</summary>
 
 - Angel of Grace
 - Awaken the Erstwhile
@@ -244,6 +242,7 @@
 - Clear the Mind
 - Consign to the Pit
 - Cry of the Carnarium
+- Dagger Caster
 - Dovin, Grand Arbiter
 - Flames of the Raze-Boar
 - Footlight Fiend
@@ -257,6 +256,7 @@
 - Light Up the Stage
 - Prime Speaker Vannifar
 - Rafter Demon
+- Rakdos Roustabout
 - Rally to Battle
 - Repudiate // Replicate
 - Rix Maadi Reveler
@@ -287,7 +287,6 @@
 | as long as ~ has a +N/+N counter on it, it can attack as though it didn't have defender. | 1 | Scuttlegator | rna |
 | at the beginning of your upkeep, reveal cards from the top of your library until you reveal a creature card. until your next turn, ~ base power becomes twice th | 1 | Amplifire | rna |
 | counter target spell. its controller mills three cards. | 1 | Thought Collapse | rna |
-| create a N/N white and blue sphinx creature token with flying and vigilance. | 1 | Warrant // Warden | rna |
 | destroy all artifacts and enchantments. for each permanent destroyed ~, its controller creates a N/N green centaur creature token. | 1 | Rampage of the Clans | rna |
 | destroy all creatures. you gain life equal to the number of creatures you controlled that were destroyed ~. | 1 | Kaya's Wrath | rna |
 | distribute three +N/+N counters among one, two, or three target creatures, then double the number of +N/+N counters on each of those creatures. | 1 | Biogenic Upgrade | rna |
@@ -311,7 +310,6 @@
 | when ~ enters, count the number of +N/+N counters on creatures you control. creatures your opponents control with power less than or equal to that number can't  | 1 | Rumbling Ruin | rna |
 | when ~ enters, exile any number of other nontoken creatures you control until it leaves the battlefield. | 1 | Lumbering Battlement | rna |
 | when ~ enters, exile target nonland permanent an opponent controls and all other nonland permanents that player controls with the same name as that permanent un | 1 | Deputy of Detention | rna |
-| when ~ enters, it deals N damage to each opponent and N damage to each creature your opponents control. | 1 | Dagger Caster | rna |
 | when ~ enters, look at the top four cards of your library. you may reveal a creature or land card from among them and put it on top of your library. put the res | 1 | Silhana Wayfinder | rna |
 | when ~ enters, until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Forbidding Spirit | rna |
 | when ~ enters, you may remove any number of +N/+N counters from among creatures you control. if you do, put twice that many +N/+N counters on ~. | 1 | Galloping Lizrog | rna |
@@ -323,7 +321,6 @@
 | whenever you pay life, put that many blood counters on ~. | 1 | Font of Agonies | rna |
 | whenever ~ attacks, you may sacrifice another creature. if you do, ~ can't be blocked ~. | 1 | Bloodmist Infiltrator | rna |
 | whenever ~ becomes blocked, each creature blocking it gets -N/-N until end of turn. | 1 | Plague Wight | rna |
-| whenever ~ becomes blocked, it deals N damage to the player or planeswalker it's attacking. | 1 | Rakdos Roustabout | rna |
 | you can't cast noncreature spells. | 1 | Nikya of the Old Ways | rna |
 | you may reveal ~ from your opening hand. if you do, scry N at the beginning of your first upkeep. | 1 | Sphinx of Foresight | rna |
 | {M}, sacrifice two other creatures: any number of target players each lose N life and sacrifice a creature of their choice. you add {M}{M} and draw a card. | 1 | Priest of Forgotten Gods | rna |

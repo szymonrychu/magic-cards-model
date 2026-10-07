@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 11.8% |
-| Works (untested) | 77 | 47.8% |
+| Tested | 21 | 13.0% |
+| Works (untested) | 78 | 48.4% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 54 | 33.5% |
+| Not working | 51 | 31.7% |
 
 ## Cards needing work
 
@@ -58,16 +58,13 @@
 | Sage's Reverie | silent | When this Aura enters, draw a card for each Aura you control that's attached to a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sandsteppe Mastodon | silent | When this creature enters, bolster 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scroll of the Masters | silent | {3}, {T}: Target creature you control gets +1/+1 until end of turn for each lore counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shockmaw Dragon | silent | Whenever this creature deals combat damage to a player, it deals 1 damage to each creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silumgar, the Drifting Death | silent | Whenever a Dragon you control attacks, creatures defending player controls get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulfire Grand Master | silent | Instant and sorcery spells you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulflayer | silent | If a creature card with flying was exiled with this creature's delve ability, this creature has flying. The same is true for first strike, double strike, deatht | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sudden Reclamation | silent | Mill four cards, then return a creature card and a land card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tasigur, the Golden Fang | silent | {2}{G/U}{G/U}: Mill two cards, then return a nonland card of an opponent's choice from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temur Sabertooth | silent | {1}{G}: You may return another creature you control to its owner's hand. If you do, this creature gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Temur War Shaman | silent | Whenever a permanent you control is turned face up, if it's a creature, you may have it fight target creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torrent Elemental | silent | Whenever this creature attacks, tap all creatures defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ugin's Construct | silent | When this creature enters, sacrifice a permanent that's one or more colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ugin, the Spirit Dragon | silent | −X: Exile each permanent with mana value X or less that's one or more colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whisperwood Elemental | silent | Sacrifice this creature: Until end of turn, face-up nontoken creatures you control gain "When this creature dies, manifest the top card of your library." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wildcall | silent | Manifest the top card of your library, then put X +1/+1 counters on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it fa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -162,6 +159,7 @@
 | Sultai Skullkeeper | handled | When this creature enters, mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tasigur's Cruelty | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Each opponent discards two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Temporal Trespass | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Take an extra turn after this one. Exile Temporal Trespass. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ugin's Construct | handled | When this creature enters, sacrifice a permanent that's one or more colors. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valorous Stance | handled | Choose one — • Target creature gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) • Destroy target creature with  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vaultbreaker | handled | Whenever this creature attacks, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whisk Away | handled | Put target attacking or blocking creature on top of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -172,7 +170,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>21 cards</summary>
 
 - Ainok Guide
 - Arcbond
@@ -187,8 +185,10 @@
 - Mastery of the Unseen
 - Mob Rule
 - Shifting Loyalties
+- Shockmaw Dragon
 - Temur Battle Rage
 - Temur Runemark
+- Temur War Shaman
 - Wandering Champion
 - War Flare
 - Warden of the First Tree
@@ -239,14 +239,11 @@
 | when ~ dies, bolster N. | 1 | Abzan Skycaptain | frf |
 | when ~ enters, draw a card for each aura you control that's attached to a creature. | 1 | Sage's Reverie | frf |
 | when ~ enters, return another creature you control to its owner's hand. | 1 | Ambush Krotiq | frf |
-| when ~ enters, sacrifice a permanent that's one or more colors. | 1 | Ugin's Construct | frf |
 | whenever a creature you control attacks, defending player loses N life and you gain N life. | 1 | Brutal Hordechief | frf |
 | whenever a dragon you control attacks, bolster N. | 1 | Dromoka, the Eternal | frf |
 | whenever a dragon you control attacks, creatures defending player controls get -N/-N until end of turn. | 1 | Silumgar, the Drifting Death | frf |
-| whenever a permanent you control is turned face up, if it"..."t control. | 1 | Temur War Shaman | frf |
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |
-| whenever ~ deals combat damage to a player, it deals N damage to each creature that player controls. | 1 | Shockmaw Dragon | frf |
 | you gain N life. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Honor's Reward | frf |
 | you may cast ~ from your graveyard as long as you control a black or green permanent. | 1 | Marang River Prowler | frf |
 | {M}, {M}: search your library for a card named heart-piercer bow or vial of dragonfire, reveal it, put it into your hand, then shuffle. | 1 | Renowned Weaponsmith | frf |

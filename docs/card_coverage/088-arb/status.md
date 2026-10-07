@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 9.8% |
+| Tested | 15 | 10.5% |
 | Works (untested) | 74 | 51.7% |
 | Partial (unaudited) | 9 | 6.3% |
-| Not working | 46 | 32.2% |
+| Not working | 45 | 31.5% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Knight of New Alara | silent | Each other multicolored creature you control gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich Lord of Unx | silent | {U}{U}{B}{B}: Target player loses X life and mills X cards, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lord of Extinction | silent | Lord of Extinction's power and toughness are each equal to the number of cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mage Slayer | silent | Whenever equipped creature attacks, it deals damage equal to its power to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Marrow Chomper | silent | When this creature enters, you gain 2 life for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Funeral | silent | Target opponent reveals cards from the top of their library until four land cards are revealed. That player puts all cards revealed this way into their graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Morbid Bloom | silent | Exile target creature card from a graveyard, then create X 1/1 green Saproling creature tokens, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -159,7 +158,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Anathemancer
 - Architects of Will
@@ -170,6 +169,7 @@
 - Intimidation Bolt
 - Maelstrom Nexus
 - Maelstrom Pulse
+- Mage Slayer
 - Predatory Advantage
 - Putrid Leech
 - Sigil Captain
@@ -221,7 +221,6 @@
 | whenever a creature you control attacks alone, if it's the first combat phase of the turn, untap that creature. after ~, there is an additional combat phase. | 1 | Finest Hour | arb |
 | whenever a creature you control attacks alone, you may search your library for an aura card that could enchant that creature, put it onto the battlefield attach | 1 | Sovereigns of Lost Alara | arb |
 | whenever another artifact you control enters, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Glassdust Hulk | arb |
-| whenever equipped creature attacks, it deals damage equal to its power to the player or planeswalker it's attacking. | 1 | Mage Slayer | arb |
 | whenever ~ attacks, defending player mills ten cards. | 1 | Nemesis of Reason | arb |
 | whenever ~ attacks, defending player sacrifices a creature of their choice. | 1 | Thraximundar | arb |
 | whenever ~ attacks, flip a coin. if you win the flip, ~ gets +N/+N and gains flying until end of turn. | 1 | Skyclaw Thrash | arb |

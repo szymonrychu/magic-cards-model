@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 26 | 11.6% |
-| Works (untested) | 161 | 71.6% |
+| Works (untested) | 162 | 72.0% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 29 | 12.9% |
+| Not working | 28 | 12.4% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Smoke Teller | silent | {1}{U}: Look at target face-down creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Solemn Visitor | silent | +1: Until your next turn, creatures you control get +1/+0 and gain lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | High Sentinels of Arashin | notice | This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mardu Charm | notice | Choose one — • Mardu Charm deals 4 damage to target creature. • Create two 1/1 white Warrior creature tokens. They gain first strike until end of turn. • Target | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ride Down | notice | Destroy target blocking creature. Creatures that were blocked by that creature this combat gain trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rite of the Serpent | notice | Destroy target creature. If that creature had a +1/+1 counter on it, create a 1/1 green Snake creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Temur Charm | notice | Choose one — • Target creature you control gets +1/+1 until end of turn. It fights target creature you don't control. • Counter target spell unless its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -137,6 +136,7 @@
 | Mardu Ascendancy | handled | Whenever a nontoken creature you control attacks, create a 1/1 red Goblin creature token that's tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Banner | handled | {R}{W}{B}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Blazebringer | handled | When this creature attacks or blocks, sacrifice it at end of combat. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mardu Charm | handled | Choose one — • Mardu Charm deals 4 damage to target creature. • Create two 1/1 white Warrior creature tokens. They gain first strike until end of turn. • Target | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Hateblade | handled | {B}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Hordechief | handled | Raid — When this creature enters, if you attacked this turn, create a 1/1 white Warrior creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Roughrider | handled | Whenever this creature attacks, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -264,8 +264,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose one | 2 | Mardu Charm, Temur Charm | ktk |
 | Raid | 2 | Bellowing Saddlebrute, War-Name Aspirant | ktk |
+| Choose one | 1 | Temur Charm | ktk |
 | Ferocious | 1 | Dragon Grip | ktk |
 | +N: until end of turn, sarkhan becomes a legendary N/N red dragon creature with flying, indestructible, and haste. | 1 | Sarkhan, the Dragonspeaker | ktk |
 | +N: until your next turn, creatures you control get +N/+N and gain lifelink. | 1 | Sorin, Solemn Visitor | ktk |

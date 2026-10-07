@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 11.3% |
+| Tested | 30 | 11.7% |
 | Works (untested) | 127 | 49.6% |
 | Partial (unaudited) | 19 | 7.4% |
-| Not working | 81 | 31.6% |
+| Not working | 80 | 31.2% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Lifecraft Engine | silent | Vehicle creatures you control are the chosen creature type in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lightwheel Enhancements | silent | Enchanted permanent gets +1/+1 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lotusguard Disciple | silent | When this creature enters, target creature or Vehicle gains lifelink and indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Magmakin Artillerist | silent | Whenever you discard one or more cards, this creature deals that much damage to each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mendicant Core, Guidelight | silent | Max speed — Whenever you cast an artifact spell, you may pay {1}. If you do, copy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Midnight Mangler | silent | During turns other than yours, this Vehicle is an artifact creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mindspring Merfolk | silent | Exhaust — {X}{U}{U}, {T}: Draw X cards. Put a +1/+1 counter on each Merfolk creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -257,7 +256,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Bleachbone Verge
 - Boommobile
@@ -272,6 +271,7 @@
 - Guardian Sunmare
 - Ketramose, the New Dawn
 - Lumbering Worldwagon
+- Magmakin Artillerist
 - Marauding Mako
 - March of the World Ooze
 - Monument to Endurance
@@ -358,7 +358,6 @@
 | whenever you activate an exhaust ability, put a +N/+N counter on ~. | 1 | Adrenaline Jockey | dft |
 | whenever you activate an exhaust ability, return ~ from your graveyard to the battlefield. | 1 | Afterburner Expert | dft |
 | whenever you attack, target attacking creature gets +N/+N until end of turn. when that creature dies ~, surveil N. | 1 | Grim Javelineer | dft |
-| whenever you discard one or more cards, ~ deals that much damage to each opponent. | 1 | Magmakin Artillerist | dft |
 | whenever ~ attacks while saddled, untap it and put a +N/+N counter on it. | 1 | Brightfield Mustang | dft |
 | whenever ~ saddles a mount or crews a vehicle during your main phase, that mount or vehicle gains flying until end of turn. | 1 | Canyon Vaulter | dft |
 | whenever ~ saddles a mount or crews a vehicle during your main phase, that mount or vehicle gets +N/+N and gains trample until end of turn. | 1 | Reckless Velocitaur | dft |

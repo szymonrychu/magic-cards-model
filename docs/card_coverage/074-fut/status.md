@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 14.0% |
-| Works (untested) | 69 | 38.8% |
+| Tested | 28 | 15.7% |
+| Works (untested) | 70 | 39.3% |
 | Partial (unaudited) | 18 | 10.1% |
-| Not working | 66 | 37.1% |
+| Not working | 62 | 34.8% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Darksteel Garrison | silent | Fortify | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Deepcavern Imp | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Epochrasite | silent | When this creature dies, exile it with three time counters on it and it gains suspend. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fatal Attraction | silent | When this Aura enters, it deals 2 damage to enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fleshwrither | silent | Transfigure | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Flowstone Embrace | silent | {T}: Enchanted creature gets +2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gathan Raiders | silent | Hellbent — This creature gets +2/+2 as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -70,7 +69,6 @@
 | Riddle of Lightning | silent | Choose any target. Scry 3, then reveal the top card of your library. Riddle of Lightning deals damage equal to that card's mana value to that permanent or playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Riftsweeper | silent | When this creature enters, choose target face-up exiled card. Its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Samite Censer-Bearer | silent | {W}, Sacrifice this creature: Prevent the next 1 damage that would be dealt to each creature you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Scourge of Kher Ridges | silent | {5}{R}: This creature deals 6 damage to each other creature with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scout's Warning | silent | The next creature card you play this turn can be played as though it had flash. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Second Wind | silent | {T}: Untap enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shah of Naar Isle | silent | When this creature's echo cost is paid, each opponent may draw up to three cards. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -86,11 +84,9 @@
 | Steamflogger Boss | silent | Assemble | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Thunderblade Charge | silent | Thunderblade Charge deals 3 damage to any target. Whenever one or more creatures you control deal combat damage to a player, if this card is in your graveyard,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Veilstone Amulet | silent | Whenever you cast a spell, creatures you control can't be the targets of spells or abilities your opponents control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wrap in Vigor | silent | Regenerate each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dust of Moments | notice | Choose one — • Remove two time counters from each permanent and each suspended card. • Put two time counters on each permanent with a time counter on it and eac | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Grave Peril | notice | When a nonblack creature enters, sacrifice this enchantment. If you do, destroy that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Saltskitter | notice | Whenever another creature enters, exile this creature. Return this creature to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Shivan Sand-Mage | notice | When this creature enters, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permanent with a t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sword of the Meek | notice | Whenever a 1/1 creature you control enters, you may return this card from your graveyard to the battlefield, then attach it to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aven Mindcensor | unaudited | If an opponent would search a library, that player searches the top four cards of that library instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Cloud Key | unaudited | As this artifact enters, choose artifact, creature, enchantment, instant, or sorcery. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -161,6 +157,7 @@
 | Rift Elemental | handled | {1}{R}, Remove a time counter from a permanent you control or suspended card you own: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | River of Tears | handled |  |  | Y/-/- | not_tested |
 | Sarcomite Myr | handled | {2}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shivan Sand-Mage | handled | When this creature enters, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permanent with a t | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slaughter Pact | handled | Destroy target nonblack creature. At the beginning of your next upkeep, pay {2}{B}. If you don't, you lose the game. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sliversmith | handled | {1}, {T}, Discard a card: Create a 1/1 colorless Sliver artifact creature token named Metallic Sliver. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soultether Golem | handled | Whenever another creature you control enters, put a time counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -183,7 +180,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>28 cards</summary>
 
 - Akroma's Memorial
 - Arc Blade
@@ -192,6 +189,7 @@
 - Dakmor Salvage
 - Delay
 - Dryad Arbor
+- Fatal Attraction
 - Festering March
 - Ghostfire
 - Glittering Wish
@@ -205,11 +203,13 @@
 - Mistmeadow Skulk
 - Molten Disaster
 - Pact of Negation
+- Scourge of Kher Ridges
 - Street Wraith
 - Summoner's Pact
 - Tarmogoyf
 - Tolaria West
 - Vedalken Aethermage
+- Wrap in Vigor
 
 </details>
 
@@ -251,7 +251,6 @@
 | if ~ was kicked, it enters with three additional time counters on it. | 1 | Ravaging Riftwurm | fut |
 | play with the top card of your library revealed. | 1 | Magus of the Future | fut |
 | put target creature on top of its owner"..."s library, then put any number of them on the bottom of that player's library and the rest on top in any order.) | 1 | Spin into Myth | fut |
-| regenerate each creature you control. | 1 | Wrap in Vigor | fut |
 | search target player's library for a card and exile it. then that player shuffles. gravestorm (when you cast ~, copy it for each permanent put into a graveyard  | 1 | Bitter Ordeal | fut |
 | spells that target ~ cost {M} less to cast. | 1 | Spellwild Ouphe | fut |
 | spend only mana produced by basic lands to cast ~. | 1 | Imperiosaur | fut |
@@ -263,10 +262,8 @@
 | when a spell or ability an opponent controls causes you to discard ~, return it to your hand. | 1 | Quagnoth | fut |
 | when ~ dies, exile it with three time counters on it and it gains suspend. | 1 | Epochrasite | fut |
 | when ~ echo cost is paid, each opponent may draw up to three cards. | 1 | Shah of Naar Isle | fut |
-| when ~ enters, choose one — • remove two time counters from target permanent or suspended card. • put two time counters on target permanent with a time counter  | 1 | Shivan Sand-Mage | fut |
 | when ~ enters, choose target face-up exiled card. its owner shuffles it into their library. | 1 | Riftsweeper | fut |
 | when ~ enters, if it"..."s a copy of ~. | 1 | Imperial Mask | fut |
-| when ~ enters, it deals N damage to enchanted creature. | 1 | Fatal Attraction | fut |
 | when ~ enters, prevent the next N damage that would be dealt ~ to any number of targets, divided as you choose. | 1 | Angel of Salvation | fut |
 | when ~ enters, scry N, then reveal the top card of your library. ~ gets -N/-N until end of turn, where N is that card's mana value. | 1 | Putrid Cyclops | fut |
 | when ~ is put into your graveyard from your library, you may put it onto the battlefield. | 1 | Narcomoeba | fut |
@@ -291,7 +288,6 @@
 | {M}: enchanted creature gets +N/-N until end of turn. | 1 | Flowstone Embrace | fut |
 | {M}: target creature becomes a coward until end of turn. | 1 | Boldwyr Intimidator | fut |
 | {M}: untap enchanted creature. | 1 | Second Wind | fut |
-| {M}{M}: ~ deals N damage to each other creature with flying. | 1 | Scourge of Kher Ridges | fut |
 | ~ deals N damage to any target. whenever one or more creatures you control deal combat damage to a player, if ~ is in your graveyard, you may pay {M}{M}{M}{M}.  | 1 | Thunderblade Charge | fut |
 | ~ enters with a +N/+N counter on it for each other spell cast ~. | 1 | Storm Entity | fut |
 

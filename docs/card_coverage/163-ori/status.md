@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 11.6% |
+| Tested | 22 | 12.2% |
 | Works (untested) | 103 | 56.9% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 50 | 27.6% |
+| Not working | 49 | 27.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Acolyte of the Inferno | silent | Whenever this creature becomes blocked by a creature, it deals 2 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Animist's Awakening | silent | Reveal the top X cards of your library. Put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood-Cursed Knight | silent | As long as you control an enchantment, this creature gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | silent | −7: Chandra deals 6 damage to each opponent. Each player dealt damage this way gets an emblem with "At the beginning of your upkeep, this emblem deals 3 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -190,8 +189,9 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
+- Acolyte of the Inferno
 - Alhammarret's Archive
 - Boggart Brute
 - Chandra's Ignition
@@ -270,7 +270,6 @@
 | whenever you draw a card, target opponent mills two cards. if two nonland cards that share a color were milled ~, repeat ~. | 1 | Sphinx's Tutelage | ori |
 | whenever ~ attacks, each opponent who doesn't control an elf loses N life. | 1 | Thornbow Archer | ori |
 | whenever ~ attacks, if it's renowned, other attacking creatures you control get +N/+N until end of turn. | 1 | Consul's Lieutenant | ori |
-| whenever ~ becomes blocked by a creature, it deals N damage to that creature. | 1 | Acolyte of the Inferno | ori |
 | whenever ~ deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | 1 | Graveblade Marauder | ori |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Harbinger of the Tides | ori |
 | ~ can't attack alone. | 1 | Bonded Construct | ori |

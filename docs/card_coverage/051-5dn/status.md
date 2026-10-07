@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 9.3% |
-| Works (untested) | 96 | 59.3% |
+| Works (untested) | 97 | 59.9% |
 | Partial (unaudited) | 12 | 7.4% |
-| Not working | 39 | 24.1% |
+| Not working | 38 | 23.5% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Beacon of Tomorrows | silent | Target player takes an extra turn after this one. Shuffle Beacon of Tomorrows into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blinkmoth Infusion | silent | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Untap all artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cosmic Larva | silent | At the beginning of your upkeep, sacrifice this creature unless you sacrifice two lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Desecration Elemental | silent | Whenever a player casts a spell, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Door to Nothingness | silent | {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}, {T}, Sacrifice this artifact: Target player loses the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Doubling Cube | silent | {3}, {T}: Double the amount of each type of unspent mana you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fangren Pathcutter | silent | Whenever this creature attacks, attacking creatures gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -104,6 +103,7 @@
 | Condescend | handled | Counter target spell unless its controller pays {X}. Scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conjurer's Bauble | handled | {T}, Sacrifice this artifact: Put up to one target card from your graveyard on the bottom of your library. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dawn's Reflection | handled | Whenever enchanted land is tapped for mana, its controller adds an additional two mana in any combination of colors. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Desecration Elemental | handled | Whenever a player casts a spell, sacrifice a creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dross Crocodile | handled |  |  | Y/-/- | not_tested |
 | Early Frost | handled | Tap up to three target lands. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ebon Drake | handled | Whenever a player casts a spell, you lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -233,7 +233,6 @@
 | target opponent reveals their hand. you may copy an instant or sorcery card in it. if you do, you may cast the copy without paying its mana cost. | 1 | Reversal of Fortune | 5dn |
 | target player takes an extra turn after ~. shuffle ~ into its owner's library. | 1 | Beacon of Tomorrows | 5dn |
 | when you control no other artifacts, sacrifice ~. | 1 | Synod Centurion | 5dn |
-| whenever a player casts a spell, sacrifice a creature. | 1 | Desecration Elemental | 5dn |
 | whenever ~ attacks, attacking creatures gain trample until end of turn. | 1 | Fangren Pathcutter | 5dn |
 | whenever ~ becomes unattached from a permanent, sacrifice that permanent. | 1 | Grafted Wargear | 5dn |
 | whenever ~ blocks or becomes blocked by a creature, destroy that creature at end of combat. | 1 | Tangle Asp | 5dn |

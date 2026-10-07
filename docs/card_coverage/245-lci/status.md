@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 65 | 23.6% |
-| Works (untested) | 136 | 49.5% |
+| Works (untested) | 137 | 49.8% |
 | Partial (unaudited) | 13 | 4.7% |
-| Not working | 61 | 22.2% |
+| Not working | 60 | 21.8% |
 
 ## Cards needing work
 
@@ -55,7 +55,6 @@
 | Merfolk Cave-Diver | silent | Whenever a creature you control explores, this creature gets +1/+0 until end of turn and can't be blocked this turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Nicanzil, Current Conductor | silent | Whenever a creature you control explores a land card, you may put a land card from your hand onto the battlefield tapped. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Ojer Kaslem, Deepest Growth // Temple of Cultivation | silent | Whenever Ojer Kaslem deals combat damage to a player, reveal that many cards from the top of your library. You may put a creature card and/or a land card from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Palani's Hatcher | silent | At the beginning of combat on your turn, if you control one or more Eggs, sacrifice an Egg, then create a 3/3 green Dinosaur creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Pit of Offerings | silent | {T}: Add one mana of any of the exiled cards' colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Relic's Roar | silent | Until end of turn, target artifact or creature becomes a Dinosaur artifact creature with base power and toughness 4/3 in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roaming Throne | silent | This creature is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -189,6 +188,7 @@
 | Oltec Cloud Guard | handled | When this creature enters, create a 1/1 colorless Gnome artifact creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Orazca Puzzle-Door | handled | {1}, {T}, Sacrifice this artifact: Look at the top two cards of your library. Put one of those cards into your hand and the other into your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Oteclan Landmark // Oteclan Levitator | handled | When this artifact enters, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Palani's Hatcher | handled | Other Dinosaurs you control have haste. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Panicked Altisaur | handled | {T}: This creature deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pathfinding Axejaw | handled | When this creature enters, it explores. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pirate Hat | handled | Equipped creature gets +1/+1 and has "Whenever this creature attacks, draw a card, then discard a card." | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -321,7 +321,6 @@
 | as long as an artifact entered the battlefield under your control ~, ~ can attack as though it didn't have defender. | 1 | Shipwreck Sentry | lci |
 | as long as you control an artifact, ~ gets +N/+N and has haste. | 1 | Goblin Tomb Raider | lci |
 | as long as ~ has three or more counters on it, it has flying and vigilance. | 1 | Warden of the Inner Sky | lci |
-| at the beginning of combat on your turn, if you control one or more eggs, sacrifice an egg, then create a N/N green dinosaur creature token. | 1 | Palani's Hatcher | lci |
 | at the beginning of your end step, if you descended ~, each opponent may discard a card or sacrifice a permanent of their choice. zoyowa deals N damage to each  | 1 | Zoyowa Lava-Tongue | lci |
 | at the beginning of your upkeep, exile the top two cards of your library. you may play them ~. if you exiled a land card ~, create a N/N red dinosaur creature t | 1 | Bonehoard Dracosaur | lci |
 | counter target artifact or creature spell. discover N, where N is that spell's mana value. (exile cards from the top of your library until you exile a nonland c | 1 | Hurl into History | lci |

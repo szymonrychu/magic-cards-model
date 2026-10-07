@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 12.4% |
+| Tested | 35 | 12.8% |
 | Works (untested) | 124 | 45.3% |
 | Partial (unaudited) | 12 | 4.4% |
-| Not working | 104 | 38.0% |
+| Not working | 103 | 37.6% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Boartusk Liege | silent | Other red creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cauldron of Souls | silent | {T}: Choose any number of target creatures. Each of those creatures gains persist until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cemetery Puca | silent | Whenever a creature dies, you may pay {1}. If you do, this creature becomes a copy of that creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Chainbreaker | silent | {3}, {T}: Remove a -1/-1 counter from target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Corrosive Mentor | silent | Black creatures you control have wither. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Counterbore | silent | Counter target spell. Search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. Then that player shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cragganwick Cremator | silent | When this creature enters, discard a card at random. If you discard a creature card this way, this creature deals damage equal to that card's power to target pl | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -270,13 +269,14 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>35 cards</summary>
 
 - Beseech the Queen
 - Blowfly Infestation
 - Boggart Ram-Gang
 - Boon Reflection
 - Burn Trail
+- Chainbreaker
 - Dawnglow Infusion
 - Deepchannel Mentor
 - Demigod of Revenge
@@ -400,7 +400,6 @@
 | {M}, sacrifice a forest: choose a player. that player adds {M}{M}{M}. | 1 | Valleymaker | shm |
 | {M}, {M}: look at the top card of your library. you may exile that card. | 1 | Puresight Merrow | shm |
 | {M}, {M}: move a counter from target creature onto a second target creature. | 1 | Leech Bonder | shm |
-| {M}, {M}: remove a -N/-N counter from target creature. | 1 | Chainbreaker | shm |
 | {M}, {M}: remove a -N/-N counter from target creature. if you do, you gain N life. | 1 | Woeleecher | shm |
 | {M}: choose any number of target creatures. each of those creatures gains persist until end of turn. | 1 | Cauldron of Souls | shm |
 | {M}: target creature becomes the color or colors of your choice until end of turn. | 1 | Scuttlemutt | shm |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 7.3% |
+| Tested | 20 | 8.6% |
 | Works (untested) | 135 | 57.9% |
 | Partial (unaudited) | 6 | 2.6% |
-| Not working | 75 | 32.2% |
+| Not working | 72 | 30.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Affectionate Indrik | silent | When this creature enters, you may have it fight target creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aurelia, Exemplar of Justice | silent | At the beginning of combat on your turn, choose up to one target creature you control. Until end of turn, that creature gets +2/+0, gains trample if it's red, a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barging Sergeant | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Beacon Bolt | silent | Beacon Bolt deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. Jump-start (You may c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -68,7 +67,6 @@
 | Never Happened | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nullhide Ferox | silent | {2}: This creature loses all abilities until end of turn. Any player may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Omnispell Adept | silent | {2}{U}, {T}: You may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ornery Goblin | silent | Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Parhelion Patrol | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pelt Collector | silent | As long as this creature has three or more +1/+1 counters on it, it has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Piston-Fist Cyclops | silent | As long as you've cast an instant or sorcery spell this turn, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -82,7 +80,6 @@
 | Sonic Assault | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Street Riot | silent | During your turn, creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunhome Stalwart | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Swathcutter Giant | silent | Whenever this creature attacks, it deals 1 damage to each creature defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tajic, Legion's Edge | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Thief of Sanity | silent | Whenever this creature deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest int | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thoughtbound Phantasm | silent | As long as this creature has three or more +1/+1 counters on it, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -246,8 +243,9 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>20 cards</summary>
 
+- Affectionate Indrik
 - Arclight Phoenix
 - Assassin's Trophy
 - Chamber Sentry
@@ -262,8 +260,10 @@
 - Kraul Harpooner
 - Lazav, the Multifarious
 - Lotleth Giant
+- Ornery Goblin
 - Rhizome Lurcher
 - Skyline Scout
+- Swathcutter Giant
 - Wand of Vertebrae
 
 </details>
@@ -309,7 +309,6 @@
 | when ~ enters, put a +N/+N counter on each creature that convoked it. | 1 | Venerated Loxodon | grn |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Gateway Plaza | grn |
 | when ~ enters, surveil N. when you do, you may return target nonland permanent an opponent controls to its owner's hand. | 1 | Dream Eater | grn |
-| when ~ enters, you may have it fight target creature you don't control. | 1 | Affectionate Indrik | grn |
 | when ~ enters, you may search your library for a basic land card or gate card, reveal it, put it into your hand, then shuffle. | 1 | District Guide | grn |
 | when ~ enters, you may tap any number of untapped gates you control. draw a card for each gate tapped ~. | 1 | Guild Summit | grn |
 | whenever etrata deals combat damage to a player, exile target creature that player controls and put a hit counter on that card. that player loses the game if th | 1 | Etrata, the Silencer | grn |
@@ -319,9 +318,7 @@
 | whenever you surveil, if ~ is in your graveyard, you may pay N life. if you do, return ~ to your hand. | 1 | Blood Operative | grn |
 | whenever ~ attacks, creatures with defender can't block ~. | 1 | Goblin Locksmith | grn |
 | whenever ~ attacks, if you control a ral planeswalker, ~ gets +N/+N for each card in your hand until end of turn. | 1 | Ral's Staticaster | grn |
-| whenever ~ attacks, it deals N damage to each creature defending player controls. | 1 | Swathcutter Giant | grn |
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Ledev Champion | grn |
-| whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Ornery Goblin | grn |
 | whenever ~ deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest into their grav | 1 | Thief of Sanity | grn |
 | you may look at an additional two cards each time you surveil. | 1 | Enhanced Surveillance | grn |
 | you may put two +N/+N counters on a creature you control. then all creatures get -N/-N until end of turn. | 1 | Find // Finality | grn |

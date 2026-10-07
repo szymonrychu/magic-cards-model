@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 14.2% |
-| Works (untested) | 122 | 49.4% |
+| Tested | 36 | 14.6% |
+| Works (untested) | 124 | 50.2% |
 | Partial (unaudited) | 17 | 6.9% |
-| Not working | 73 | 29.6% |
+| Not working | 70 | 28.3% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Bottled Cloister | silent | At the beginning of each opponent's upkeep, exile all cards from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Breath of Fury | silent | When enchanted creature deals combat damage to a player, sacrifice it and attach this Aura to a creature you control. If you do, untap all creatures you control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudstone Curio | silent | Whenever a nonartifact permanent you control enters, you may return another permanent you control that shares a permanent type with it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
-| Coalhauler Swine | silent | Whenever this creature is dealt damage, it deals that much damage to each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Compulsive Research | silent | Target player draws three cards. Then that player discards two cards unless they discard a land card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Congregation at Dawn | silent | Search your library for up to three creature cards, reveal them, then shuffle and put those cards on top in any order. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crown of Convergence | silent | As long as the top card of your library is a creature card, creatures you control that share a color with that card get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -48,7 +47,6 @@
 | Halcyon Glaze | silent | Whenever you cast a creature spell, this enchantment becomes a 4/4 Illusion creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incite Hysteria | silent | Radiance — Until end of turn, target creature and each other creature that shares a color with it gain "This creature can't block." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Induce Paranoia | silent | Counter target spell. If {B} was spent to cast this spell, that spell's controller mills X cards, where X is the spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Loxodon Hierarch | silent | {G}{W}, Sacrifice this creature: Regenerate each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mark of Eviction | silent | At the beginning of your upkeep, return enchanted creature and all Auras attached to that creature to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Master Warcraft | silent | Cast this spell only before attackers are declared. You choose which creatures attack this turn. You choose which creatures block this turn and how those creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindleech Mass | silent | Whenever this creature deals combat damage to a player, you may look at that player's hand. If you do, you may cast a spell from among those cards without payin | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -80,7 +78,6 @@
 | Terraformer | silent | {1}: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughtpicker Witch | silent | {1}, Sacrifice a creature: Look at the top two cards of target opponent's library, then exile one of them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tunnel Vision | silent | Choose a card name. Target player reveals cards from the top of their library until a card with that name is revealed. If it is, that player puts the rest of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vindictive Mob | silent | When this creature enters, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vulturous Zombie | silent | Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Warp World | silent | Each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. Each player puts all artifact, crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woebringer Demon | silent | At the beginning of each player's upkeep, that player sacrifices a creature of their choice. If the player can't, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -190,6 +187,7 @@
 | Last Gasp | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leashling | handled | Put a card from your hand on top of your library: Return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lore Broker | handled | {T}: Each player draws a card, then discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Loxodon Hierarch | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moldervine Cloak | handled | Enchanted creature gets +3/+3. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moroii | handled | At the beginning of your upkeep, you lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightmare Void | handled | Target player reveals their hand. You choose a card from it. That player discards that card. Dredge 2 (If you would draw a card, you may mill two cards instead. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -232,6 +230,7 @@
 | Veteran Armorer | handled | Other creatures you control get +0/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viashino Fangtail | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viashino Slasher | handled | {R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Vindictive Mob | handled | When this creature enters, sacrifice a creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vinelasher Kudzu | handled | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vitu-Ghazi, the City-Tree | handled | {2}{G}{W}, {T}: Create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Votary of the Conclave | handled | {2}{G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -242,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>36 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
@@ -251,6 +250,7 @@
 - Chant of Vitu-Ghazi
 - Char
 - Cleansing Beam
+- Coalhauler Swine
 - Concerted Effort
 - Dark Confidant
 - Doubling Season
@@ -332,7 +332,6 @@
 | until end of turn, you may cast target instant or sorcery card from your graveyard without paying its mana cost. if that spell would be put into your graveyard, | 1 | Sins of the Past | rav |
 | when enchanted creature deals combat damage to a player, sacrifice it and attach ~ to a creature you control. if you do, untap all creatures you control and aft | 1 | Breath of Fury | rav |
 | when ~ dies, each player puts a card from their hand on top of their library. | 1 | Sadistic Augermage | rav |
-| when ~ enters, sacrifice a creature. | 1 | Vindictive Mob | rav |
 | when ~ enters, sacrifice it unless you return an enchantment to its owner's hand. | 1 | Drake Familiar | rav |
 | when ~ enters, you may exchange control of target creature you control and target creature with power less than or equal to that creature's power an opponent co | 1 | Spawnbroker | rav |
 | when ~ enters, you may search your library for any number of cards that have mana value N, reveal them, put them into your hand, then shuffle. | 1 | Grozoth | rav |
@@ -349,7 +348,6 @@
 | whenever ~ deals combat damage to a creature, destroy that creature. | 1 | Stinkweed Imp | rav |
 | whenever ~ deals combat damage to a player, you may look at that player's hand. if you do, you may cast a spell from among those cards without paying its mana c | 1 | Mindleech Mass | rav |
 | whenever ~ deals combat damage, you gain that much life. | 1 | Sunhome Enforcer | rav |
-| whenever ~ is dealt damage, it deals that much damage to each player. | 1 | Coalhauler Swine | rav |
 | you can't choose an untapped permanent as ~ target as you cast it. | 1 | Dream Leash | rav |
 | your opponents can't cast spells with the same name as a card exiled with circu. | 1 | Circu, Dimir Lobotomist | rav |
 | {M}, sacrifice a creature: look at the top two cards of target opponent's library, then exile one of them. | 1 | Thoughtpicker Witch | rav |
@@ -361,7 +359,6 @@
 | {M}: prevent the next N damage that would be dealt to ~ ~. | 1 | Ordruun Commando | rav |
 | {M}: regenerate enchanted creature. | 1 | Strands of Undeath | rav |
 | {M}: target creature can't block ~ ~. | 1 | Screeching Griffin | rav |
-| {M}{M}, sacrifice ~: regenerate each creature you control. | 1 | Loxodon Hierarch | rav |
 | {M}{M}, unattach ~: search your library for a red or white instant card with mana value N or less and cast that card without paying its mana cost. then shuffle. | 1 | Sunforger | rav |
 | {M}{M}: all creatures able to block ~ ~ do so. | 1 | Mortipede | rav |
 | {M}{M}: creatures without defender can't block ~ ~. | 1 | Sabertooth Alley Cat | rav |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 9.8% |
+| Tested | 23 | 10.3% |
 | Works (untested) | 101 | 45.1% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 91 | 40.6% |
+| Not working | 90 | 40.2% |
 
 ## Cards needing work
 
@@ -114,7 +114,6 @@
 | Zanikev Locust | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Assassin's Strike | notice | Destroy target creature. Its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Destroy the Evidence | notice | Destroy target land. Its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Golgari Charm | notice | Choose one — • All creatures get -1/-1 until end of turn. • Destroy target enchantment. • Regenerate each creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grave Betrayal | notice | Whenever a creature you don't control dies, return it to the battlefield under your control with an additional +1/+1 counter on it at the beginning of the next  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rakdos Charm | notice | Choose one — • Exile target player's graveyard. • Destroy target artifact. • Each creature deals 1 damage to its controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dryad Militant | unaudited | If an instant or sorcery card would be put into a graveyard from anywhere, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -232,7 +231,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Abrupt Decay
 - Axebane Guardian
@@ -242,6 +241,7 @@
 - Dark Revenant
 - Fencing Ace
 - Gatecreeper Vine
+- Golgari Charm
 - Golgari Guildgate
 - Grisly Salvage
 - Guttersnipe
@@ -268,7 +268,7 @@
 | scavenge | 9 | Deadbridge Goliath, Drudge Beetle, Golgari Decoy, Korozda Monitor, Sewer Shambler | rtr |
 | enchanted land has "..." | 4 | Racecourse Fury, Security Blockade, Underworld Connections, Urban Burgeoning | rtr |
 | when ~ enters, detain target creature an opponent controls. | 3 | Azorius Arrester, Isperia's Skywatch, Soulsworn Spirit | rtr |
-| Choose one | 2 | Golgari Charm, Rakdos Charm | rtr |
+| Choose one | 1 | Rakdos Charm | rtr |
 | +N: until your next turn, whenever a creature an opponent controls attacks, it gets -N/-N until end of turn. | 1 | Jace, Architect of Thought | rtr |
 | +N: until your next turn, whenever a creature deals combat damage to vraska, destroy that creature. | 1 | Vraska the Unseen | rtr |
 | all damage that would be dealt to you and other permanents you control is dealt to ~ instead. | 1 | Palisade Giant | rtr |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 15.2% |
+| Tested | 29 | 16.3% |
 | Works (untested) | 93 | 52.2% |
 | Partial (unaudited) | 10 | 5.6% |
-| Not working | 48 | 27.0% |
+| Not working | 46 | 25.8% |
 
 ## Cards needing work
 
@@ -51,14 +51,12 @@
 | Induced Amnesia | silent | When this enchantment enters, target player exiles all cards from their hand face down, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Journey to Eternity // Atzal, Cave of Eternity | silent | When enchanted creature dies, return it to the battlefield under your control, then return this card to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kumena's Awakening | silent | At the beginning of your upkeep, each player draws a card. If you have the city's blessing, instead only you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Path of Mettle // Metzali, Tower of Triumph | silent | When Path of Mettle enters, it deals 1 damage to each creature that doesn't have first strike, double strike, vigilance, or haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Legs | silent | Enchanted creature gets +0/+2 as long as it's a Pirate. Otherwise, it gets -2/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silent Gravestone | silent | {4}, {T}: Exile this artifact and all cards from all graveyards. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slaughter the Strong | silent | Each player chooses any number of creatures they control with total power 4 or less, then sacrifices all other creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphinx's Decree | silent | Each opponent can't cast instant or sorcery spells during that player's next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tendershoot Dryad | silent | Saprolings you control get +2/+2 as long as you have the city's blessing. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tetzimoc, Primal Death | silent | When Tetzimoc enters, destroy each creature your opponents control with a prey counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tilonalli's Crown | silent | When this Aura enters, it deals 1 damage to enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Twilight Prophet | silent | At the beginning of your upkeep, if you have the city's blessing, reveal the top card of your library and put it into your hand. Each opponent loses X life and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vona's Hunger | silent | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Each opponent sacrifices a creature of their choice. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warkite Marauder | silent | Whenever this creature attacks, target creature defending player controls loses all abilities and has base power and toughness 0/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -181,7 +179,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>29 cards</summary>
 
 - Arch of Orazca
 - Crafty Cutpurse
@@ -199,6 +197,7 @@
 - Needletooth Raptor
 - Orazca Relic
 - Paladin of Atonement
+- Path of Mettle // Metzali, Tower of Triumph
 - Pride of Conquerors
 - Ravenous Chupacabra
 - Reckless Rage
@@ -209,6 +208,7 @@
 - Stampeding Horncrest
 - Sun-Collared Raptor
 - Swab Goblin
+- Tilonalli's Crown
 - Vraska, Scheming Gorgon
 
 </details>
@@ -245,8 +245,6 @@
 | when enchanted creature dies, return it to the battlefield under your control, then return ~ to the battlefield transformed under your control. | 1 | Journey to Eternity // Atzal, Cave of Eternity | rix |
 | when tetzimoc enters, destroy each creature your opponents control with a prey counter on it. | 1 | Tetzimoc, Primal Death | rix |
 | when ~ dies, you may cast dinosaur spells ~ as though they had flash, and whenever you cast a dinosaur spell ~, it gains "..." | 1 | Cherished Hatchling | rix |
-| when ~ enters, it deals N damage to each creature that doesn't have first strike, double strike, vigilance, or haste. | 1 | Path of Mettle // Metzali, Tower of Triumph | rix |
-| when ~ enters, it deals N damage to enchanted creature. | 1 | Tilonalli's Crown | rix |
 | when ~ enters, target player exiles all cards from their hand face down, then draws that many cards. | 1 | Induced Amnesia | rix |
 | when ~ enters, you draw N cards and you lose N life, where N is the number of vampires you control. | 1 | Champion of Dusk | rix |
 | when ~ enters, you lose N life unless you control another pirate. | 1 | Fathom Fleet Boarder | rix |

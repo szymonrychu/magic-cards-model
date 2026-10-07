@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 13.6% |
+| Tested | 23 | 14.9% |
 | Works (untested) | 74 | 48.1% |
 | Partial (unaudited) | 5 | 3.2% |
-| Not working | 54 | 35.1% |
+| Not working | 52 | 33.8% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Elbrus, the Binding Blade // Withengar Unbound | silent | When equipped creature deals combat damage to a player, unattach Elbrus, then transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiend of the Shadows | silent | Whenever this creature deals combat damage to a player, that player exiles a card from their hand. You may play that card for as long as it remains exiled. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flayer of the Hatebound | silent | Whenever this creature or another creature enters from your graveyard, that creature deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Forge Devil | silent | When this creature enters, it deals 1 damage to target creature and 1 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gather the Townsfolk | silent | Create two 1/1 white Human creature tokens. Fateful hour — If you have 5 or less life, create five of those tokens instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gavony Ironwright | silent | Fateful hour — As long as you have 5 or less life, other creatures you control get +1/+4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Geralf's Messenger | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -55,12 +54,10 @@
 | Mikaeus, the Unhallowed | silent | Whenever a Human deals damage to you, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nearheath Stalker | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Pyreheart Wolf | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Ravenous Demon // Archdemon of Greed | silent | At the beginning of your upkeep, sacrifice a Human. If you can't, tap this creature and it deals 9 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Relentless Skaabs | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Scorch the Fields | silent | Destroy target land. Scorch the Fields deals 1 damage to each Human creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sightless Ghoul | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sorin, Lord of Innistrad | silent | −6: Destroy up to three target creatures and/or other planeswalkers. Return each card put into a graveyard this way to the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spiteful Shadows | silent | Whenever enchanted creature is dealt damage, it deals that much damage to its controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stormbound Geist | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Strangleroot Geist | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Stromkirk Captain | silent | Other Vampire creatures you control get +1/+1 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -78,6 +75,7 @@
 | Faith's Shield | notice | Target permanent you control gains protection from the color of your choice until end of turn. Fateful hour — If you have 5 or less life, instead you and each p | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Feed the Pack | notice | At the beginning of your end step, you may sacrifice a nontoken creature. If you do, create X 2/2 green Wolf creature tokens, where X is the sacrificed creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Loyal Cathar // Unhallowed Cathar | notice | When this creature dies, return it to the battlefield transformed under your control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Ravenous Demon // Archdemon of Greed | notice | At the beginning of your upkeep, sacrifice a Human. If you can't, tap this creature and it deals 9 damage to you. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sudden Disappearance | notice | Exile all nonland permanents target player controls. Return the exiled cards to the battlefield under their owner's control at the beginning of the next end ste | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Séance | notice | At the beginning of each upkeep, you may exile target creature card from your graveyard. If you do, create a token that's a copy of that card, except it's a Spi | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Curse of Bloodletting | unaudited | If a source would deal damage to enchanted player, it deals double that damage to that player instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -163,7 +161,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>23 cards</summary>
 
 - Alpha Brawl
 - Avacyn's Collar
@@ -173,6 +171,7 @@
 - Curse of Exhaustion
 - Dungeon Geists
 - Faithless Looting
+- Forge Devil
 - Grafdigger's Cage
 - Gruesome Discovery
 - Heckling Fiends
@@ -184,6 +183,7 @@
 - Secrets of the Dead
 - Shattered Perception
 - Soul Seizer // Ghastly Haunting
+- Spiteful Shadows
 - Thalia, Guardian of Thraben
 - Thought Scour
 
@@ -222,12 +222,10 @@
 | when equipped creature deals combat damage to a player, unattach elbrus, then transform it. | 1 | Elbrus, the Binding Blade // Withengar Unbound | dka |
 | when ~ dies, return it to the battlefield transformed under your control at the beginning of the next end step. | 1 | Loyal Cathar // Unhallowed Cathar | dka |
 | when ~ dies, target opponent discards a card at random. | 1 | Black Cat | dka |
-| when ~ enters, it deals N damage to target creature and N damage to you. | 1 | Forge Devil | dka |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Markov Warlord | dka |
 | when ~ is put into a graveyard from the battlefield, return all cards exiled with it to the battlefield under their owners' control. | 1 | Helvault | dka |
 | whenever a creature attacks you or a planeswalker you control, reveal the top card of your library. if it's a forest card, remove that creature from combat. the | 1 | Lost in the Woods | dka |
 | whenever a human deals damage to you, destroy it. | 1 | Mikaeus, the Unhallowed | dka |
-| whenever enchanted creature is dealt damage, it deals that much damage to its controller. | 1 | Spiteful Shadows | dka |
 | whenever enchanted player casts an instant or sorcery spell, each other player may copy that spell and may choose new targets for the copy they control. | 1 | Curse of Echoes | dka |
 | whenever ~ deals combat damage to a player, that player exiles a card from their hand. you may play that card for as long as it remains exiled. | 1 | Fiend of the Shadows | dka |
 | whenever ~ or another creature enters from your graveyard, that creature deals damage equal to its power to any target. | 1 | Flayer of the Hatebound | dka |

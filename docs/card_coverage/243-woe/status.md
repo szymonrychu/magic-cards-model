@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 14.7% |
-| Works (untested) | 141 | 53.0% |
+| Tested | 41 | 15.4% |
+| Works (untested) | 142 | 53.4% |
 | Partial (unaudited) | 8 | 3.0% |
-| Not working | 78 | 29.3% |
+| Not working | 75 | 28.2% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Hylda of the Icy Crown | silent | Whenever you tap an untapped creature an opponent controls, you may pay {1}. When you do, choose one — • Create a 4/4 white and blue Elemental creature token. • | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Hylda's Crown of Winter | silent | {1}, {T}: Tap target creature. This ability costs {1} less to activate during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Icewrought Sentry | silent | Whenever you tap an untapped creature an opponent controls, this creature gets +2/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Imodane, the Pyrohammer | silent | Whenever an instant or sorcery spell you control that targets only a single creature deals damage to that creature, Imodane deals that much damage to each oppon | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lich-Knights' Conquest | silent | Sacrifice any number of artifacts, enchantments, and/or tokens. Return that many creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Malevolent Witchkite | silent | When this creature enters, sacrifice any number of artifacts, enchantments, and/or tokens, then draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mosswood Dreadknight // Dread Whispers | silent | When this creature dies, you may cast it from your graveyard as an Adventure until the end of your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -67,14 +66,12 @@
 | Rowan's Grim Search | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) If this spell was bargained, look at the top four cards of your library,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowan, Scion of War | silent | {T}: Spells you cast this turn that are black and/or red cost {X} less to cast, where X is the amount of life you lost this turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sharae of Numbing Depths | silent | Whenever you tap one or more untapped creatures your opponents control, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Skewer Slinger | silent | Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Slumbering Keepguard | silent | {2}{W}: This creature gets +1/+1 until end of turn for each enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Solitary Sanctuary | silent | Whenever you tap an untapped creature an opponent controls, put a +1/+1 counter on target creature you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Spell Stutter | silent | Counter target spell unless its controller pays {2} plus an additional {1} for each Faerie you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Syr Armont, the Redeemer | silent | When Syr Armont enters, create a Monster Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Syr Ginger, the Meal Ender | silent | {2}, {T}, Sacrifice Syr Ginger: You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Talion, the Kindly Lord | silent | Whenever an opponent casts a spell with mana value, power, or toughness equal to the chosen number, that player loses 2 life and you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Tangled Colony | silent | When this creature dies, create X 1/1 black Rat creature tokens with "This token can't block," where X is the amount of damage dealt to it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tattered Ratter | silent | Whenever a Rat you control becomes blocked, it gets +2/+0 until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
 | Territorial Witchstalker | silent | At the beginning of combat on your turn, if you control a creature with power 4 or greater, this creature gets +1/+0 until end of turn and can attack this turn  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Apprentice's Folly | silent | I, II — Choose target nontoken creature you control that doesn't have the same name as a token you control. Create a token that's a copy of it, except it isn't  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -208,6 +205,7 @@
 | Scarecrow Guide | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
 | Scream Puff | handled | Whenever this creature deals combat damage to a player, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shrouded Shepherd // Cleave Shadows | handled | Creatures your opponents control get -1/-1 until end of turn. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Skewer Slinger | handled | Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Skybeast Tracker | handled | Whenever you cast a spell with mana value 5 or greater, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Snaremaster Sprite | handled | When this creature enters, you may pay {2}. When you do, tap target creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spellbook Vendor | handled | At the beginning of combat on your turn, you may pay {1}. When you do, create a Sorcerer Role token attached to target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -257,7 +255,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>41 cards</summary>
 
 - Agatha's Champion
 - Agatha's Soul Cauldron
@@ -280,6 +278,7 @@
 - Gruff Triplets
 - Hearth Elemental // Stoke Genius
 - Horned Loch-Whale // Lagoon Breach
+- Imodane, the Pyrohammer
 - Into the Fae Court
 - Korvold and the Noble Thief
 - Lady of Laughter
@@ -295,6 +294,7 @@
 - Song of Totentanz
 - Spiteful Hexmage
 - Stonesplitter Bolt
+- Tangled Colony
 - Torch the Tower
 - Troublemaker Ouphe
 - Troyan, Gutsy Explorer
@@ -344,7 +344,6 @@
 | until end of turn, target creature you control has base power and toughness N/N and gains flying and hexproof. (it can't be the target of spells or abilities yo | 1 | Water Wings | woe |
 | up to two target creatures can't block ~. (then exile ~. you may cast the creature later from exile.) | 1 | Bellowing Bruiser // Beat a Path | woe |
 | when syr armont enters, create a monster role token attached to another target creature you control. | 1 | Syr Armont, the Redeemer | woe |
-| when ~ dies, create N N/N black rat creature tokens with "..." where N is the amount of damage dealt to it ~. | 1 | Tangled Colony | woe |
 | when ~ dies, you may cast it from your graveyard as an adventure until the end of your next turn. | 1 | Mosswood Dreadknight // Dread Whispers | woe |
 | when ~ enters, choose one or more — • return target card you own in exile that has an adventure to your hand. • put target card you don"..."s library. • exile t | 1 | Sentinel of Lost Lore | woe |
 | when ~ enters, choose one — • create a N/N black rat creature token with "..." • you may sacrifice another creature. if you do, scry N, then draw a card. • crea | 1 | Lord Skitter's Butcher | woe |
@@ -355,7 +354,6 @@
 | whenever a legendary creature you control enters, you may have ~ become a legendary equipment artifact named everflame, heroes' legacy. if you do, it gains equi | 1 | The Irencrag | woe |
 | whenever a rat you control becomes blocked, it gets +N/+N until end of turn. | 1 | Tattered Ratter | woe |
 | whenever a source you control deals noncombat damage to an opponent, you may exile that many cards from the top of your library. you may play those cards ~. | 1 | Virtue of Courage // Embereth Blaze | woe |
-| whenever an instant or sorcery spell you control that targets only a single creature deals damage to that creature, imodane deals that much damage to each oppon | 1 | Imodane, the Pyrohammer | woe |
 | whenever an opponent casts a spell with mana value, power, or toughness equal to the chosen number, that player loses N life and you draw a card. | 1 | Talion, the Kindly Lord | woe |
 | whenever you cast a spell that's white, blue, black, or red, put a +N/+N counter on ~. | 1 | Questing Druid // Seek the Beast | woe |
 | whenever you tap an untapped creature an opponent controls, put a +N/+N counter on target creature you control. | 1 | Solitary Sanctuary | woe |
@@ -365,7 +363,6 @@
 | whenever ~ attacks, defending player loses N life and you gain N life. | 1 | Restless Fortress | woe |
 | whenever ~ attacks, it gets +N/+N until end of turn for each attacking creature. if a rat is attacking, ~ gains trample until end of turn. | 1 | Charging Hooligan | woe |
 | whenever ~ attacks, you may sacrifice a food. if you do, attacking creatures get +N/+N and gain trample until end of turn. | 1 | Provisions Merchant | woe |
-| whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Skewer Slinger | woe |
 | whenever ~ deals combat damage to a player, put a skewer counter on ~. then you may sacrifice it. if you do, exile the top N cards of your library, where N is t | 1 | Rotisserie Elemental | woe |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. for each creature your opponents control, create a cursed role token attached to that crea | 1 | Asinine Antics | woe |
 | you may sacrifice a creature. if you do, search your library for a creature or basic land card, reveal it, put it into your hand, then shuffle. | 1 | The Huntsman's Redemption | woe |

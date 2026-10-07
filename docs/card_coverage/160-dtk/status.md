@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 9.4% |
+| Tested | 24 | 10.3% |
 | Works (untested) | 128 | 54.9% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 72 | 30.9% |
+| Not working | 70 | 30.0% |
 
 ## Cards needing work
 
@@ -45,18 +45,16 @@
 | Echoes of the Kin Tree | silent | {2}{W}: Bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elusive Spellfist | silent | Whenever you cast a noncreature spell, this creature gets +1/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Enduring Victory | silent | Destroy target attacking or blocking creature. Bolster 1. (Choose a creature with the least toughness among creatures you control and put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Foe-Razer Regent | silent | When this creature enters, you may have it fight target creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Foe-Razer Regent | silent | Whenever a creature you control fights, put two +1/+1 counters on it at the beginning of the next end step. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Foul-Tongue Shriek | silent | Target opponent loses 1 life for each attacking creature you control. You gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glade Watcher | silent | Formidable — {G}: This creature can attack this turn as though it didn't have defender. Activate only if creatures you control have total power 8 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gleam of Authority | silent | Enchanted creature gets +1/+1 for each +1/+1 counter on other creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gurmag Drowner | silent | When this creature exploits a creature, look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Harbinger of the Hunt | silent | {2}{G}: This creature deals 1 damage to each other creature with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hardened Berserker | silent | Whenever this creature attacks, the next spell you cast this turn costs {1} less to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hedonist's Trove | silent | When this enchantment enters, exile target opponent's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herald of Dromoka | silent | Other Warrior creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herdchaser Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusory Gains | silent | Whenever a creature an opponent controls enters, attach this Aura to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kolaghan Aspirant | silent | Whenever this creature becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Living Lore | silent | Living Lore's power and toughness are each equal to the exiled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Magmatic Chasm | silent | Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Minister of Pain | silent | When this creature exploits a creature, creatures your opponents control get -1/-1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -241,7 +239,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Ambuscade Shaman
 - Anticipate
@@ -255,7 +253,9 @@
 - Dragon-Scarred Bear
 - Dromoka's Command
 - Epic Confrontation
+- Harbinger of the Hunt
 - Impact Tremors
+- Kolaghan Aspirant
 - Kolaghan's Command
 - Learn from the Past
 - Marang River Skeleton
@@ -309,7 +309,6 @@
 | when ~ enters, exile target opponent's graveyard. | 1 | Hedonist's Trove | dtk |
 | when ~ enters, if you cast it from your hand and there are five or more other creatures on the battlefield, destroy all other creatures. | 1 | Deathbringer Regent | dtk |
 | when ~ enters, return a nonland permanent you control to its owner's hand. | 1 | Ancestral Statue | dtk |
-| when ~ enters, you may have it fight target creature you don't control. | 1 | Foe-Razer Regent | dtk |
 | when ~ enters, you may put a creature card with mana value N or less from your hand or graveyard onto the battlefield. that creature gains haste. return it to y | 1 | Swift Warkite | dtk |
 | when ~ exploits a creature, counter target creature spell. | 1 | Silumgar Sorcerer | dtk |
 | when ~ exploits a creature, create two N/N black zombie creature tokens. | 1 | Rakshasa Gravecaller | dtk |
@@ -322,6 +321,7 @@
 | when ~ exploits a creature, you draw two cards and you lose N life. | 1 | Vulturous Aven | dtk |
 | when ~ is turned face up, counter target spell unless its controller pays {M}. | 1 | Silumgar Spell-Eater | dtk |
 | whenever a creature an opponent controls enters, attach ~ to that creature. | 1 | Illusory Gains | dtk |
+| whenever a creature you control fights, put two +N/+N counters on it at the beginning of the next end step. | 1 | Foe-Razer Regent | dtk |
 | whenever a permanent you control is turned face up, you may return ~ from your graveyard to the battlefield face up or face down. | 1 | Deathmist Raptor | dtk |
 | whenever another nontoken creature you control enters, bolster N. | 1 | Anafenza, Kin-Tree Spirit | dtk |
 | whenever enchanted creature attacks, you may create a token that's a copy of that creature. exile that token at end of combat. | 1 | Mirror Mockery | dtk |
@@ -330,7 +330,6 @@
 | whenever ~ attacks, add {M}{M}{M}{M}{M}{M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Savage Ventmaw | dtk |
 | whenever ~ attacks, bolster N. | 1 | Dromoka Captain | dtk |
 | whenever ~ attacks, the next spell you cast ~ costs {M} less to cast. | 1 | Hardened Berserker | dtk |
-| whenever ~ becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Kolaghan Aspirant | dtk |
 | whenever ~ deals combat damage to a player, you may pay {M}. if you do, create a N/N black zombie creature token and each opponent mills two cards. | 1 | Necromaster Dragon | dtk |
 | you may cast ~ from your graveyard if you pay {M} more to cast it for each other creature card in your graveyard. | 1 | Risen Executioner | dtk |
 | you may look at face-down creatures you don't control any time. | 1 | Keeper of the Lens | dtk |
@@ -339,7 +338,6 @@
 | {M}{M}, sacrifice another warrior creature: target player loses N life and you gain N life, where N is the sacrificed creature's power. | 1 | Blood-Chin Fanatic | dtk |
 | {M}{M}: bolster N. | 1 | Echoes of the Kin Tree | dtk |
 | {M}{M}: turn ~ face down. | 1 | Obscuring Aether | dtk |
-| {M}{M}: ~ deals N damage to each other creature with flying. | 1 | Harbinger of the Hunt | dtk |
 | ~ can be attached only to a creature with toughness N or greater. | 1 | Gate Smasher | dtk |
 | ~ can block dragons as though it had reach. | 1 | Dragon Hunter | dtk |
 | ~ can't attack or block unless you pay {M}. | 1 | Qal Sisma Behemoth | dtk |

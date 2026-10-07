@@ -18,16 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 1 | 5.3% |
-| Works (untested) | 10 | 52.6% |
+| Works (untested) | 11 | 57.9% |
 | Partial (unaudited) | 4 | 21.1% |
-| Not working | 4 | 21.1% |
+| Not working | 3 | 15.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Jolrael, Empress of Beasts | silent | {2}{G}, {T}, Discard two cards: All lands target player controls become 3/3 creatures until end of turn. They're still lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lesser Gargadon | silent | Whenever this creature attacks or blocks, sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Panic Attack | silent | Up to three target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spiketail Hatchling | silent | Sacrifice this creature: Counter target spell unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Avatar of Hope | unaudited | If you have 3 or less life, this spell costs {6} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -36,6 +35,7 @@
 | Living Terrain | unaudited | Enchanted land is a 5/6 green Treefolk creature that's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Coastal Hornclaw | handled | Sacrifice a land: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Diving Griffin | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Lesser Gargadon | handled | Whenever this creature attacks or blocks, sacrifice a land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Plague Wind | handled | Destroy all creatures you don't control. They can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ridgeline Rager | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Searing Wind | handled | Searing Wind deals 10 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -64,7 +64,6 @@
 | if you have N or less life, ~ costs {M} less to cast. | 1 | Avatar of Hope | pcy |
 | sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Spiketail Hatchling | pcy |
 | up to three target creatures can't block ~. | 1 | Panic Attack | pcy |
-| whenever ~ attacks or blocks, sacrifice a land. | 1 | Lesser Gargadon | pcy |
 | {M}{M}, {M}, discard two cards: all lands target player controls become N/N creatures until end of turn. they're still lands. | 1 | Jolrael, Empress of Beasts | pcy |
 
 ## Notes

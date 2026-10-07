@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 12.6% |
-| Works (untested) | 62 | 43.4% |
+| Tested | 19 | 13.3% |
+| Works (untested) | 63 | 44.1% |
 | Partial (unaudited) | 12 | 8.4% |
-| Not working | 51 | 35.7% |
+| Not working | 49 | 34.3% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Krovikan Rot | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Lightning Storm | silent | Lightning Storm deals X damage to any target, where X is 3 plus the number of charge counters on Lightning Storm. Discard a land card: Put two charge counters o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magmatic Core | silent | At the beginning of your end step, this enchantment deals X damage divided as you choose among any number of target creatures, where X is the number of age coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Perilous Research | silent | Draw two cards, then sacrifice a permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Resize | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rimefeather Owl | silent | Rimefeather Owl's power and toughness are each equal to the number of snow permanents on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rimehorn Aurochs | silent | {2}{S}: Target creature blocks target creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -62,7 +61,6 @@
 | Rune Snag | silent | Counter target spell unless its controller pays {2} plus an additional {2} for each card named Rune Snag in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrying Sheets | silent | {1}{S}, {T}: Look at the top card of your library. If that card is snow, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shape of the Wiitigo | silent | When this Aura enters, put six +1/+1 counters on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stalking Yeti | silent | When this creature enters, if it's on the battlefield, it deals damage equal to its power to target creature an opponent controls and that creature deals damage | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sun's Bounty | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Surging Aether | silent | Ripple | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Surging Dementia | silent | Ripple | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -127,6 +125,7 @@
 | Mouth of Ronom | handled | {4}{S}, {T}, Sacrifice this land: It deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ohran Yeti | handled | {2}{S}: Target snow creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Orcish Bloodpainter | handled | {T}, Sacrifice a creature: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Perilous Research | handled | Draw two cards, then sacrifice a permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phobian Phantasm | handled | Cumulative upkeep | machines/keywords.py | Y/-/- | not_tested |
 | Phyrexian Etchings | handled | At the beginning of your end step, draw a card for each age counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phyrexian Ironfoot | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -155,7 +154,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Adarkar Windform
 - Allosaurus Rider
@@ -173,6 +172,7 @@
 - Ronom Hulk
 - Skred
 - Soul Spike
+- Stalking Yeti
 - Swift Maneuver
 - Vexing Sphinx
 
@@ -191,7 +191,6 @@
 | at the beginning of your end step, ~ deals N damage divided as you choose among any number of target creatures, where N is the number of age counters on it. | 1 | Magmatic Core | csp |
 | counter target spell unless its controller pays {M} plus an additional {M} for each card named ~ in each graveyard. | 1 | Rune Snag | csp |
 | creatures with ice counters on them don"..." untap steps. | 1 | Rimescale Dragon | csp |
-| draw two cards, then sacrifice a permanent. | 1 | Perilous Research | csp |
 | enchanted creature can"..."t be activated. | 1 | Gelid Shackles | csp |
 | enchanted creature gets +N/+N for each age counter on ~. | 1 | Glacial Plating | csp |
 | exile target creature. you draw cards equal to that creature"..."s control. if you do, discard cards equal to that creature's toughness. | 1 | Vanish into Memory | csp |
@@ -205,7 +204,6 @@
 | spells you cast have ripple N. | 1 | Thrumming Stone | csp |
 | when you control no snow lands, sacrifice ~. | 1 | Ronom Serpent | csp |
 | when ~ enters, exile the top five cards of target player's library face down. you may look at those cards for as long as they remain exiled. | 1 | Jester's Scepter | csp |
-| when ~ enters, if it's on the battlefield, it deals damage equal to its power to target creature an opponent controls and that creature deals damage equal to it | 1 | Stalking Yeti | csp |
 | when ~ enters, put six +N/+N counters on enchanted creature. | 1 | Shape of the Wiitigo | csp |
 | when ~ enters, sacrifice it unless you sacrifice five lands. | 1 | Jokulmorder | csp |
 | when ~ has no ice counters on it, sacrifice it. if you do, create marit lage, a legendary N/N black avatar creature token with flying and indestructible. | 1 | Dark Depths | csp |

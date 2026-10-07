@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 8.5% |
-| Works (untested) | 141 | 63.2% |
+| Tested | 20 | 9.0% |
+| Works (untested) | 143 | 64.1% |
 | Partial (unaudited) | 7 | 3.1% |
-| Not working | 56 | 25.1% |
+| Not working | 53 | 23.8% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Akrasan Squire | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Angel's Herald | silent | {2}{W}, {T}, Sacrifice a green creature, a white creature, and a blue creature: Search your library for a card named Empyrial Archangel, put it onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angelic Benediction | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Archdemon of Unx | silent | At the beginning of your upkeep, sacrifice a non-Zombie creature, then create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Banewasp Affliction | silent | When enchanted creature dies, that creature's controller loses life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Battlegrace Angel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Behemoth's Herald | silent | {2}{G}, {T}, Sacrifice a red creature, a green creature, and a white creature: Search your library for a card named Godsire, put it onto the battlefield, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,7 +58,6 @@
 | Mycoloth | silent | At the beginning of your upkeep, create a 1/1 green Saproling creature token for each +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Outrider of Jhess | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Prince of Thralls | silent | Whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays 3 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Puppet Conjurer | silent | At the beginning of your upkeep, sacrifice a Homunculus. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rafiq of the Many | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Realm Razer | silent | When this creature leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Resounding Scream | silent | Target player discards a card at random. Cycling {5}{U}{B}{R} ({5}{U}{B}{R}, Discard this card: Draw a card.) When you cycle this card, target player discards t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -71,7 +69,6 @@
 | Sigiled Paladin | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Skill Borrower | silent | As long as the top card of your library is an artifact or creature card, this creature has all activated abilities of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skullmulcher | silent | When this creature enters, draw a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soul's Grace | silent | You gain life equal to target creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Might | silent | Put X +1/+1 counters on target creature, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx's Herald | silent | {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tar Fiend | silent | When this creature enters, target player discards a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -92,6 +89,7 @@
 | Agony Warp | handled | Target creature gets -3/-0 until end of turn. Target creature gets -0/-3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Algae Gharial | handled | Whenever another creature dies, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arcane Sanctum | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Archdemon of Unx | handled | At the beginning of your upkeep, sacrifice a non-Zombie creature, then create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bant Battlemage | handled | {G}, {T}: Target creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bant Panorama | handled | {1}, {T}, Sacrifice this land: Search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blister Beetle | handled | When this creature enters, target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -177,6 +175,7 @@
 | Onyx Goblet | handled | {T}: Target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Predator Dragon | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Protomatter Powder | handled | {4}{W}, {T}, Sacrifice this artifact: Return target artifact card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Puppet Conjurer | handled | {U}, {T}: Create a 0/1 blue Homunculus artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quietus Spike | handled | Equipped creature has deathtouch. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakeclaw Gargantuan | handled | {1}: Target creature with power 5 or greater gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ranger of Eos | handled | When this creature enters, you may search your library for up to two creature cards with mana value 1 or less, reveal them, put them into your hand, then shuffl | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -234,7 +233,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Angelsong
 - Blightning
@@ -253,6 +252,7 @@
 - Salvage Titan
 - Skeletonize
 - Soul's Fire
+- Soul's Grace
 - Thunder-Thrash Elder
 - Vein Drinker
 
@@ -268,8 +268,6 @@
 | all damage that would be dealt to you is dealt to ~ instead. | 1 | Empyrial Archangel | ala |
 | as long as the top card of your library is an artifact or creature card, ~ has all activated abilities of that card. | 1 | Skill Borrower | ala |
 | at the beginning of your upkeep, create a N/N green saproling creature token for each +N/+N counter on ~. | 1 | Mycoloth | ala |
-| at the beginning of your upkeep, sacrifice a homunculus. | 1 | Puppet Conjurer | ala |
-| at the beginning of your upkeep, sacrifice a non-zombie creature, then create a N/N black zombie creature token. | 1 | Archdemon of Unx | ala |
 | choose five permanents you control. for each of those permanents, you may search your library for a card with the same name as that permanent. put those cards o | 1 | Clarion Ultimatum | ala |
 | counter target spell that targets you or a permanent you control. draw a card. | 1 | Hindering Light | ala |
 | each creature card in your graveyard has unearth {M}{M}. | 1 | Sedris, the Traitor King | ala |
@@ -300,7 +298,6 @@
 | whenever a player taps a mountain, forest, or plains for mana, that player adds one mana of any type that land produced. | 1 | Keeper of Progenitus | ala |
 | whenever you cast a spell, ~ gets +N/+N until end of turn, where N is that spell's mana value. | 1 | Manaplasm | ala |
 | whenever you gain life, you may pay {M}{M}. if you do, put a +N/+N counter on target creature for each N life you gained. | 1 | Cradle of Vitality | ala |
-| you gain life equal to target creature's power. | 1 | Soul's Grace | ala |
 | {M}, sacrifice ~: destroy all permanents except for artifacts and lands. activate only during your upkeep. | 1 | Scourglass | ala |
 | {M}: create an N/N beast creature token that's red, green, and white. | 1 | Godsire | ala |
 | {M}: reveal any number of creature cards with power N or greater from your hand. add {M} for each card revealed ~. | 1 | Sacellum Godspeaker | ala |

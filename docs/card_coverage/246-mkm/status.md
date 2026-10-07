@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 49 | 18.3% |
+| Tested | 51 | 19.0% |
 | Works (untested) | 111 | 41.4% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 98 | 36.6% |
+| Not working | 96 | 35.8% |
 
 ## Cards needing work
 
@@ -34,11 +34,9 @@
 | Anzrag, the Quake-Mole | silent | Whenever Anzrag becomes blocked, untap each creature you control. After this phase, there is an additional combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Audience with Trostani | silent | Create a 0/1 green Plant creature token, then draw cards equal to the number of differently named creature tokens you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aurelia's Vindicator | silent | When this creature leaves the battlefield, return the exiled cards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Aurelia, the Law Above | silent | Whenever a player attacks with five or more creatures, Aurelia deals 3 damage to each of your opponents and you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Burden of Proof | silent | Enchanted creature gets +2/+2 as long as it's a Detective you control. Otherwise, it has base power and toughness 1/1 and can't block Detectives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call a Surprise Witness | silent | Return target creature card with mana value 3 or less from your graveyard to the battlefield. Put a flying counter on it. It's a Spirit in addition to its other | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Case File Auditor | silent | When this creature enters and whenever you solve a Case, look at the top six cards of your library. You may reveal an enchantment card from among them and put i | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Case of the Gateway Express | silent | When this Case enters, choose target creature you don't control. Each creature you control deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Case of the Gorgon's Kiss | silent | Solved — This Case is a 4/4 Gorgon creature with deathtouch and lifelink in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Case of the Trampled Garden | silent | Solved — Whenever you attack, put a +1/+1 counter on target attacking creature. It gains trample until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
 | Chalk Outline | silent | Whenever one or more creature cards leave your graveyard, create a 2/2 white and blue Detective creature token, then investigate. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -249,15 +247,17 @@
 ## Fully supported
 
 <details>
-<summary>49 cards</summary>
+<summary>51 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
 - Alley Assailant
+- Aurelia, the Law Above
 - Barbed Servitor
 - Bolrac-Clan Basher
 - Break Out
 - Case of the Crimson Pulse
+- Case of the Gateway Express
 - Case of the Stashed Skeleton
 - Case of the Uneaten Feast
 - Clandestine Meddler
@@ -351,7 +351,6 @@
 | when ~ dies, you may exile it and collect evidence N. if you do, return ~ to the battlefield tapped. | 1 | Lamplight Phoenix | mkm |
 | when ~ enters and whenever you solve a case, look at the top six cards of your library. you may reveal an enchantment card from among them and put it into your  | 1 | Case File Auditor | mkm |
 | when ~ enters, choose one — • destroy up to one target artifact. • sacrifice an artifact. if you do, put two +N/+N counters on ~. | 1 | Gearbane Orangutan | mkm |
-| when ~ enters, choose target creature you don't control. each creature you control deals N damage to that creature. | 1 | Case of the Gateway Express | mkm |
 | when ~ enters, cloak the top card of your library, then attach ~ to it. | 1 | Cryptic Coat | mkm |
 | when ~ enters, create a N/N white human creature token, a N/N blue merfolk creature token, and a N/N red goblin creature token. then secretly choose human, merf | 1 | A Killer Among Us | mkm |
 | when ~ enters, draw two cards. then discard two cards unless you discard an instant or sorcery card or a creature card with flying. | 1 | Steamcore Scholar | mkm |
@@ -370,7 +369,6 @@
 | whenever a creature is dealt damage, its controller may exile that many cards from the top of their library. they may play those cards until the end of their ne | 1 | Expedited Inheritance | mkm |
 | whenever a creature you control attacks, exile the top card of your library face down. | 1 | Connecting the Dots | mkm |
 | whenever a face-down creature you control dies, return it to the battlefield face down under its owner"..."s a permanent card, then turn it face up. | 1 | Yarus, Roar of the Old Gods | mkm |
-| whenever a player attacks with five or more creatures, aurelia deals N damage to each of your opponents and you gain N life. | 1 | Aurelia, the Law Above | mkm |
 | whenever a wolf you control attacks, if tolsimir attacked ~, target creature an opponent controls blocks that wolf ~ if able. | 1 | Tolsimir, Midnight's Light | mkm |
 | whenever agrus kos enters or attacks, choose up to one target creature. if it's suspected, exile it. otherwise, suspect it. | 1 | Agrus Kos, Spirit of Justice | mkm |
 | whenever an assassin you control deals combat damage to an opponent, cloak the top card of that player's library. | 1 | Etrata, Deadly Fugitive | mkm |

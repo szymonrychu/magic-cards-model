@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 11.3% |
+| Tested | 13 | 12.3% |
 | Works (untested) | 35 | 33.0% |
 | Partial (unaudited) | 6 | 5.7% |
-| Not working | 53 | 50.0% |
+| Not working | 52 | 49.1% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Haytham Kenway | silent | Other Knights you control get +2/+2 and have protection from Assassins. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hemlock Vial | silent | {B}, {T}, Sacrifice this artifact: Each equipped creature and Equipment you control gains deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hookblade | silent | During your turn, equipped creature has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hunter's Bow | silent | When this Equipment enters, attach it to target creature you control. That creature deals damage equal to its power to up to one target creature you don't contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kassandra, Eagle Bearer | silent | When Kassandra enters, search your graveyard, hand, and library for a card named The Spear of Leonidas, put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leonardo da Vinci | silent | {3}{U}{U}: Until end of turn, Thopters you control have base power and toughness X/X, where X is the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loyal Inventor | silent | When this creature enters, you may search your library for an artifact card, reveal it, then shuffle. Put that card into your hand if you control an Assassin. O | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -124,7 +123,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Abstergo Entertainment
 - Adrestia
@@ -134,6 +133,7 @@
 - Evie Frye
 - Haystack
 - Hidden Blade
+- Hunter's Bow
 - Jacob Frye
 - Labyrinth Adversary
 - Misthios's Fury
@@ -181,7 +181,6 @@
 | when shaun & rebecca enters, search your graveyard, hand, and library for a card named the animus and put it onto the battlefield, then shuffle. | 1 | Shaun & Rebecca, Agents | acr |
 | when staff of eden enters, put target legendary permanent card not named ~ from a graveyard onto the battlefield under your control. | 1 | Staff of Eden, Vault's Key | acr |
 | when yggdrasil enters, exile all creature cards from your graveyard. | 1 | Yggdrasil, Rebirth Engine | acr |
-| when ~ enters, attach it to target creature you control. that creature deals damage equal to its power to up to one target creature you don't control. | 1 | Hunter's Bow | acr |
 | when ~ enters, attach it to up to one target creature you control. destroy up to one other target creature. | 1 | Phantom Blade | acr |
 | when ~ enters, attach it to up to one target creature you control. tap all creatures target opponent controls. | 1 | Assassin Gauntlet | acr |
 | when ~ enters, you may search your library and/or graveyard for a card named eivor, battle-ready, reveal it, and put it into your hand. if you search your libra | 1 | Raven Clan War-Axe | acr |

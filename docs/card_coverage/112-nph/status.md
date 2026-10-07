@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 16.0% |
+| Tested | 27 | 16.7% |
 | Works (untested) | 77 | 47.5% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 48 | 29.6% |
+| Not working | 47 | 29.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Batterskull | silent | {3}: Return this Equipment to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cathedral Membrane | silent | When this creature dies during combat, it deals 6 damage to each creature it blocked this combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chancellor of the Annex | silent | Whenever an opponent casts a spell, counter it unless that player pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chancellor of the Spires | silent | When this creature enters, you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Corrupted Resolve | silent | Counter target spell if its controller is poisoned. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -166,11 +165,12 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Argent Mutation
 - Arm with Aether
 - Caged Sun
+- Cathedral Membrane
 - Chancellor of the Forge
 - Darksteel Relic
 - Dismember
@@ -228,7 +228,6 @@
 | tap target creature. metalcraft — if you control three or more artifacts, exile that creature. | 1 | Dispatch | nph |
 | untap all artifacts you control during each other player's untap step. | 1 | Unwinding Clock | nph |
 | when enchanted artifact is put into a graveyard, you gain N life. | 1 | Viridian Harvest | nph |
-| when ~ dies during combat, it deals N damage to each creature it blocked ~. | 1 | Cathedral Membrane | nph |
 | when ~ dies, target player loses life equal to its power. | 1 | Mortis Dogs | nph |
 | when ~ enters, choose one — • search your library for a creature card, reveal it, then shuffle and put that card on top. • put target noncreature permanent on t | 1 | Brutalizer Exarch | nph |
 | when ~ enters, you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | 1 | Chancellor of the Spires | nph |

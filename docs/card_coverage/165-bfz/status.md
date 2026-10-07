@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 28 | 12.4% |
-| Works (untested) | 159 | 70.4% |
+| Works (untested) | 161 | 71.2% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 33 | 14.6% |
+| Not working | 31 | 13.7% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Fertile Thicket | silent | When this land enters, you may look at the top five cards of your library. If you do, reveal up to one basic land card from among them, then put that card on to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon, Ally of Zendikar | silent | +1: Until end of turn, Gideon becomes a 5/5 Human Soldier Ally creature with indestructible that's still a planeswalker. Prevent all damage that would be dealt  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grip of Desolation | silent | Devoid (This card has no color.) Exile target creature and target land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hedron Blade | silent | Whenever equipped creature becomes blocked by one or more colorless creatures, it gains deathtouch until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Infuse with the Elements | silent | Converge — Put X +1/+1 counters on target creature, where X is the number of colors of mana spent to cast this spell. That creature gains trample until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mist Intruder | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Munda, Ambush Leader | silent | Rally — Whenever Munda or another Ally you control enters, you may look at the top four cards of your library. If you do, reveal any number of Ally cards from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +48,6 @@
 | Skyline Cascade | silent | When this land enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slab Hammer | silent | Whenever equipped creature attacks, you may return a land you control to its owner's hand. If you do, the creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sludge Crawler | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Smothering Abomination | silent | At the beginning of your upkeep, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tightening Coils | silent | Enchanted creature gets -6/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Titan's Presence | silent | As an additional cost to cast this spell, reveal a colorless creature card from your hand. Exile target creature if its power is less than or equal to the revea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Transgress the Mind | silent | Devoid (This card has no color.) Target player reveals their hand. You choose a card from it with mana value 3 or greater and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -126,6 +124,7 @@
 | Hagra Sharpshooter | handled | {4}{B}: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Halimar Tidecaller | handled | When this creature enters, you may return target card with awaken from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hedron Archive | handled | {2}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Hedron Blade | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hero of Goma Fada | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control gain indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Horribly Awry | handled | Devoid (This card has no color.) Counter target creature spell with mana value 4 or less. If that spell is countered this way, exile it instead of putting it in | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Incubator Drone | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,6 +195,7 @@
 | Shatterskull Recruit | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
 | Skitterskin | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Smoldering Marsh | handled | This land enters tapped unless you control two or more basic lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Smothering Abomination | handled | At the beginning of your upkeep, sacrifice a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Snapping Gnarlid | handled | Landfall — Whenever a land you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spawning Bed | handled | {6}, {T}, Sacrifice this land: Create three 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spell Shrivel | handled | Devoid (This card has no color.) Counter target spell unless its controller pays {4}. If that spell is countered this way, exile it instead of putting it into i | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -273,7 +273,6 @@
 | all creatures able to block ~ do so. | 1 | Breaker of Armies | bfz |
 | as an additional cost to cast ~, reveal a colorless creature card from your hand. exile target creature if its power is less than or equal to the revealed card' | 1 | Titan's Presence | bfz |
 | as ~ enters, you may put two cards your opponents own from exile into their owners' graveyards. if you do, ~ enters with four +N/+N counters on it. | 1 | Ulamog's Despoiler | bfz |
-| at the beginning of your upkeep, sacrifice a creature. | 1 | Smothering Abomination | bfz |
 | colorless spells you cast cost {M} less to cast. | 1 | Herald of Kozilek | bfz |
 | devoid (~ has no color.) exile target creature and target land. | 1 | Grip of Desolation | bfz |
 | devoid (~ has no color.) exile target nonbasic land. search its controller's graveyard, hand, and library for any number of cards with the same name as that lan | 1 | Crumble to Dust | bfz |
@@ -287,7 +286,6 @@
 | whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | 1 | Sire of Stagnation | bfz |
 | whenever drana deals combat damage to a player, put a +N/+N counter on each attacking creature you control. | 1 | Drana, Liberator of Malakir | bfz |
 | whenever equipped creature attacks, you may return a land you control to its owner's hand. if you do, the creature gets +N/+N until end of turn. | 1 | Slab Hammer | bfz |
-| whenever equipped creature becomes blocked by one or more colorless creatures, it gains deathtouch until end of turn. | 1 | Hedron Blade | bfz |
 | whenever you cast an instant or sorcery spell that targets only zada, copy that spell for each other creature you control that the spell could target. each copy | 1 | Zada, Hedron Grinder | bfz |
 | whenever ~ attacks, defending player exiles two permanents they control. | 1 | Bane of Bala Ged | bfz |
 | whenever ~ attacks, defending player loses N life. | 1 | Silent Skimmer | bfz |

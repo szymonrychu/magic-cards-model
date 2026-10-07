@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 10.2% |
+| Tested | 27 | 11.0% |
 | Works (untested) | 159 | 64.9% |
 | Partial (unaudited) | 14 | 5.7% |
-| Not working | 47 | 19.2% |
+| Not working | 45 | 18.4% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Adanto Vanguard | silent | As long as this creature is attacking, it gets +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anointed Deacon | silent | At the beginning of combat on your turn, you may have target Vampire get +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arcane Adaptation | silent | Creatures you control are the chosen type in addition to their other types. The same is true for creature spells you control and creature cards you own that are | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Atzocan Archer | silent | When this creature enters, you may have it fight another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Axis of Mortality | silent | At the beginning of your upkeep, you may have two target players exchange life totals. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boneyard Parley | silent | Exile up to five target creature cards from graveyards. An opponent separates those cards into two piles. Put all cards from the pile of your choice onto the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadeye Tracker | silent | Explore | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -48,7 +47,6 @@
 | Old-Growth Dryads | silent | When this creature enters, each opponent may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perilous Voyage | silent | Return target nonland permanent you don't control to its owner's hand. If its mana value was 2 or less, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Priest of the Wakening Sun | silent | At the beginning of your upkeep, you may reveal a Dinosaur card from your hand. If you do, you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Raging Swordtooth | silent | When this creature enters, it deals 1 damage to each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | River Heralds' Boon | silent | Put a +1/+1 counter on target creature and a +1/+1 counter on up to one target Merfolk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | River's Rebuke | silent | Return all nonland permanents target player controls to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowdy Crew | silent | When this creature enters, draw three cards, then discard two cards at random. If two cards that share a card type are discarded this way, put two +1/+1 counter | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -250,10 +248,11 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>27 cards</summary>
 
 - Admiral Beckett Brass
 - Arguel's Blood Fast // Temple of Aclazotz
+- Atzocan Archer
 - Bellowing Aegisaur
 - Blinding Fog
 - Captivating Crew
@@ -266,6 +265,7 @@
 - Kinjalli's Sunwing
 - Kitesail Freebooter
 - Merfolk Branchwalker
+- Raging Swordtooth
 - Rallying Roar
 - Ranging Raptors
 - Search for Azcanta // Azcanta, the Sunken Ruin
@@ -322,9 +322,7 @@
 | when ~ enters, each opponent may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. | 1 | Old-Growth Dryads | xln |
 | when ~ enters, each player loses a third of their life, rounded up. | 1 | Dire Fleet Ravager | xln |
 | when ~ enters, if you cast it from your hand, destroy all non-dinosaur creatures. | 1 | Wakening Sun's Avatar | xln |
-| when ~ enters, it deals N damage to each other creature. | 1 | Raging Swordtooth | xln |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Storm Sculptor | xln |
-| when ~ enters, you may have it fight another target creature. | 1 | Atzocan Archer | xln |
 | when ~ enters, you may search your library and/or graveyard for a card named huatli, dinosaur knight, reveal it, then put it into your hand. if you search your  | 1 | Sun-Blessed Mount | xln |
 | when ~ enters, you may search your library for any number of cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Legion Conquistador | xln |
 | whenever a creature you control explores, put a +N/+N counter on ~ and you gain N life. | 1 | Wildgrowth Walker | xln |

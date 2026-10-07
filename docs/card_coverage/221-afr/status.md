@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 9.7% |
+| Tested | 26 | 10.1% |
 | Works (untested) | 119 | 46.3% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 96 | 37.4% |
+| Not working | 95 | 37.0% |
 
 ## Cards needing work
 
@@ -117,7 +117,6 @@
 | Ray of Enfeeblement | notice | Target creature gets -4/-1 until end of turn. If that creature is white, it gets -4/-4 until end of turn instead. | unparsed remainder: If that creature is white, it gets -4/-4 until end of turn instead. | Y/Y/- | not_working |
 | The Book of Exalted Deeds | notice | {W}{W}{W}, {T}, Exile The Book of Exalted Deeds: Put an enlightened counter on target Angel. It gains "You can't lose the game and your opponents can't win the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Tarrasque | notice | The Tarrasque has haste and ward {10} as long as it was cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Tiger-Tribe Hunter | notice | Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, you may sacrifice another creature. Whe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wild Shape | notice | Choose one. Until end of turn, target creature you control has that base power and toughness, becomes that creature type, and gains that ability. • 1/3 Turtle w | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | You Come to a River | notice | Choose one — • Fight the Current — Return target nonland permanent to its owner's hand. • Find a Crossing — Target creature gets +1/+0 until end of turn and can | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | You Come to the Gnoll Camp | notice | Choose one — • Intimidate Them — Up to two target creatures can't block this turn. • Fend Them Off — Target creature gets +3/+1 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -262,7 +261,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Bar the Gate
 - Boots of Speed
@@ -285,6 +284,7 @@
 - Spoils of the Hunt
 - Tasha's Hideous Laughter
 - Thieves' Tools
+- Tiger-Tribe Hunter
 - Veteran Dungeoneer
 - Wish
 - Wizard Class
@@ -297,8 +297,8 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Choose one | 3 | You Come to a River, You Come to the Gnoll Camp, You Find Some Prisoners | afr |
-| Pack tactics | 3 | Minion of the Mighty, Targ Nar, Demon-Fang Gnoll, Tiger-Tribe Hunter | afr |
 | when ~ enters, roll a dN. | 3 | Djinni Windseer, Goblin Morningstar, Swarming Goblins | afr |
+| Pack tactics | 2 | Minion of the Mighty, Targ Nar, Demon-Fang Gnoll | afr |
 | whenever ~ attacks, roll a dN. | 2 | Hoarding Ogre, Sylvan Shepherd | afr |
 | Animate Walking Statue | 1 | The Blackstaff of Waterdeep | afr |
 | Bear Form | 1 | Circle of the Moon Druid | afr |

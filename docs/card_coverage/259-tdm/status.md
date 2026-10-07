@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 53 | 21.0% |
-| Works (untested) | 129 | 51.2% |
+| Tested | 55 | 21.8% |
+| Works (untested) | 128 | 50.8% |
 | Partial (unaudited) | 12 | 4.8% |
-| Not working | 58 | 23.0% |
+| Not working | 57 | 22.6% |
 
 ## Cards needing work
 
@@ -64,7 +64,6 @@
 | Sinkhole Surveyor | silent | Whenever this creature attacks, you lose 1 life and this creature endures 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Smile at Death | silent | At the beginning of your upkeep, return up to two target creature cards with power 2 or less from your graveyard to the battlefield. Put a +1/+1 counter on each | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Songcrafter Mage | silent | When this creature enters, target instant or sorcery card in your graveyard gains harmonize until end of turn. Its harmonize cost is equal to its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sonic Shrieker | silent | When this creature enters, it deals 2 damage to any target and you gain 2 life. If a player is dealt damage this way, they discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stillness in Motion | silent | At the beginning of your upkeep, mill three cards. Then if your library has no cards in it, exile this enchantment and put five cards from your graveyard on top | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Taigam, Master Opportunist | silent | Flurry — Whenever you cast your second spell each turn, copy it, then exile the spell you cast with four time counters on it. If it doesn't have suspend, it gai | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tempest Hawk | silent | Whenever this creature deals combat damage to a player, you may search your library for a card named Tempest Hawk, reveal it, put it into your hand, then shuffl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -191,7 +190,6 @@
 | Sandskitter Outrider | handled | When this creature enters, it endures 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sarkhan's Resolve | handled | Choose one — • Target creature gets +3/+3 until end of turn. • Destroy target creature with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Seize Opportunity | handled | Choose one — • Exile the top two cards of your library. Until the end of your next turn, you may play those cards. • Up to two target creatures each get +2/+1 u | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Shock Brigade | handled | Menace | machines/combat.py | Y/Y/Y | not_tested |
 | Shocking Sharpshooter | handled | Whenever another creature you control enters, this creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sibsig Appraiser | handled | When this creature enters, look at the top two cards of your library. Put one of them into your hand and the other into your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sidisi, Regent of the Mire | handled | {T}, Sacrifice a creature you control with mana value X other than Sidisi: Return target creature card with mana value X plus 1 from your graveyard to the battl | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -229,7 +227,7 @@
 ## Fully supported
 
 <details>
-<summary>53 cards</summary>
+<summary>55 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
@@ -268,6 +266,8 @@
 - Rot-Curse Rakshasa
 - Sage of the Skies
 - Sarkhan, Dragon Ascendant
+- Shock Brigade
+- Sonic Shrieker
 - Stadium Headliner
 - Stalwart Successor
 - Starry-Eyed Skyrider
@@ -324,7 +324,6 @@
 | when shiko enters, exile target nonland card with mana value N or less from your graveyard. copy it, then you may cast the copy without paying its mana cost. | 1 | Shiko, Paragon of the Way | tdm |
 | when ~ enters, draw a card if you control a creature with a counter on it. if you don't draw a card ~, put a +N/+N counter on ~. | 1 | Trade Route Envoy | tdm |
 | when ~ enters, if it's your main phase, there is an additional combat phase after ~ followed by an additional main phase. when you next attack ~, untap each cre | 1 | All-Out Assault | tdm |
-| when ~ enters, it deals N damage to any target and you gain N life. if a player is dealt damage ~, they discard a card. | 1 | Sonic Shrieker | tdm |
 | when ~ enters, search your library for a black card, a green card, and a blue card. put those cards into your graveyard, then shuffle. | 1 | Lotuslight Dancers | tdm |
 | when ~ enters, target creature an opponent controls gets -N/-N until end of turn and target creature you control gets +N/+N until end of turn. | 1 | Gurmag Rakshasa | tdm |
 | when ~ enters, target instant or sorcery card in your graveyard gains harmonize until end of turn. its harmonize cost is equal to its mana cost. | 1 | Songcrafter Mage | tdm |

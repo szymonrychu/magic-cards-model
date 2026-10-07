@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 17.5% |
+| Tested | 48 | 17.8% |
 | Works (untested) | 138 | 51.3% |
 | Partial (unaudited) | 24 | 8.9% |
-| Not working | 60 | 22.3% |
+| Not working | 59 | 21.9% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | Outlaws' Merriment | silent | At the beginning of your upkeep, choose one at random. Create a red and white creature token with those characteristics. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overwhelmed Apprentice | silent | When this creature enters, each opponent mills two cards. Then you scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Queen of Ice // Rage of Winter | silent | Whenever this creature deals combat damage to a creature, tap that creature. It doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rankle, Master of Pranks | silent | Whenever Rankle deals combat damage to a player, choose any number — • Each player discards a card. • Each player loses 1 life and draws a card. • Each player s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Realm-Cloaked Giant // Cast Off | silent | Destroy all non-Giant creatures. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Revenge of Ravens | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life and you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Robber of the Rich | silent | Whenever this creature attacks, if defending player has more cards in hand than you, exile the top card of their library. During any turn you attacked with a Ro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -252,7 +251,7 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>48 cards</summary>
 
 - Banish into Fable
 - Bartered Cow
@@ -287,6 +286,7 @@
 - Oko, the Trickster
 - Outmuscle
 - Rally for the Throne
+- Rankle, Master of Pranks
 - Reaper of Night // Harvest Fear
 - Redcap Melee
 - Rimrock Knight // Boulder Rush
@@ -359,7 +359,6 @@
 | whenever another green creature you control enters, put a +N/+N counter on yorvo. then if that creature"..."s power, put another +N/+N counter on yorvo. | 1 | Yorvo, Lord of Garenbrig | eld |
 | whenever another non-human creature you control enters, you may pay {M}. when you do, put N +N/+N counters on ~. | 1 | Wildborn Preserver | eld |
 | whenever korvold enters or attacks, sacrifice another permanent. | 1 | Korvold, Fae-Cursed King | eld |
-| whenever rankle deals combat damage to a player, choose any number — • each player discards a card. • each player loses N life and draws a card. • each player s | 1 | Rankle, Master of Pranks | eld |
 | whenever ~ attacks, create a number of N/N white knight creature tokens with vigilance equal to the number of opponents you have. | 1 | Silverwing Squadron | eld |
 | whenever ~ attacks, if defending player has more cards in hand than you, exile the top card of their library. during any turn you attacked with a rogue, you may | 1 | Robber of the Rich | eld |
 | whenever ~ attacks, other knights you control get +N/+N until end of turn. | 1 | Belle of the Brawl | eld |

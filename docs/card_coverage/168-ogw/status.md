@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 14.2% |
+| Tested | 26 | 14.8% |
 | Works (untested) | 115 | 65.3% |
 | Partial (unaudited) | 4 | 2.3% |
-| Not working | 32 | 18.2% |
+| Not working | 31 | 17.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Dazzling Reflection | silent | You gain life equal to target creature's power. The next time that creature would deal damage this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deceiver of Form | silent | At the beginning of combat on your turn, reveal the top card of your library. If a creature card is revealed this way, you may have creatures you control other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dread Defiler | silent | {3}{C}, Exile a creature card from your graveyard: Target opponent loses life equal to the exiled card's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elemental Uprising | silent | Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. It must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -181,10 +180,11 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Ayli, Eternal Pilgrim
 - Crumbling Vestige
+- Dazzling Reflection
 - Eldrazi Mimic
 - Eldrazi Obligator
 - Expedition Raptor
@@ -238,7 +238,6 @@
 | when ~ enters, return target creature an opponent controls to its owner"..."s owner can't cast spells with the same name as that creature until your next turn. | 1 | Reflector Mage | ogw |
 | when ~ enters, you may cast target instant or sorcery card with mana value N or less from your graveyard without paying its mana cost. if that spell would be pu | 1 | Goblin Dark-Dwellers | ogw |
 | whenever enchanted creature deals damage, its controller loses that much life. | 1 | Visions of Brutality | ogw |
-| you gain life equal to target creature's power. the next time that creature would deal damage ~, prevent that damage. | 1 | Dazzling Reflection | ogw |
 | you may spend mana as though it were mana of any color to cast planeswalker spells. | 1 | Oath of Nissa | ogw |
 | {M}: target creature can't block ~ ~. | 1 | Kozilek's Pathfinder | ogw |
 | {M}{M}, exile a creature card from your graveyard: target opponent loses life equal to the exiled card's power. | 1 | Dread Defiler | ogw |

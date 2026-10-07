@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 65 | 23.5% |
-| Works (untested) | 125 | 45.1% |
+| Works (untested) | 127 | 45.8% |
 | Partial (unaudited) | 12 | 4.3% |
-| Not working | 75 | 27.1% |
+| Not working | 73 | 26.4% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Buzzard-Wasp Colony | silent | Whenever another creature you control dies, if it had counters on it, put its counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Crashing Wave | silent | As an additional cost to cast this spell, waterbend {X}. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays for {1} | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Crescent Island Temple | silent | When Crescent Island Temple enters, for each Shrine you control, create a 1/1 red Monk creature token with prowess. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Cycle of Renewal | silent | Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dai Li Agents | silent | Whenever this creature attacks, each opponent loses X life and you gain X life, where X is the number of creatures you control with +1/+1 counters on them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Destined Confrontation | silent | Each player chooses any number of creatures they control with total power 4 or less, then sacrifices all other creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Diligent Zookeeper | silent | Each non-Human creature you control gets +1/+1 for each of its creature types, to a maximum of 10. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -54,7 +53,6 @@
 | Foggy Swamp Hunters | silent | As long as you've drawn two or more cards this turn, this creature has lifelink and menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Foggy Swamp Visions | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Hama, the Bloodbender | silent | When Hama enters, target opponent mills three cards. Exile up to one noncreature, nonland card from that player's graveyard. For as long as you control Hama, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Joo Dee, One of Many | silent | {B}, {T}: Surveil 1. Create a token that's a copy of this creature, then sacrifice an artifact or creature. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Koh, the Face Stealer | silent | Pay 1 life: Choose a creature card exiled with Koh. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kyoshi Island Plaza | silent | When Kyoshi Island Plaza enters, search your library for up to X basic land cards, where X is the number of Shrines you control. Put those cards onto the battle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Leaves from the Vine | silent | III — Draw a card if there's a creature or Lesson card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -134,6 +132,7 @@
 | Combustion Man | handled | Whenever Combustion Man attacks, destroy target permanent unless its controller has Combustion Man deal damage to them equal to his power. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Compassionate Healer | handled | Whenever this creature becomes tapped, you gain 1 life and scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cunning Maneuver | handled | Target creature gets +3/+1 until end of turn. Create a Clue token. (It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Cycle of Renewal | handled | Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dai Li Indoctrination | handled | Choose one — • Target opponent reveals their hand. You choose a nonland permanent card from it. That player discards that card. • Earthbend 2. (Target land you  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Deserter's Disciple | handled | {T}: Another target creature you control with power 2 or less can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Earth Kingdom Jailer | handled | When this creature enters, exile up to one target artifact, creature, or enchantment an opponent controls with mana value 3 or greater until this creature leave | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -168,6 +167,7 @@
 | Jasmine Dragon Tea Shop | handled | {5}, {T}: Create a 1/1 white Ally creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Jeong Jeong's Deserters | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Jet, Freedom Fighter | handled | When Jet enters, he deals damage equal to the number of creatures you control to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Joo Dee, One of Many | handled | {B}, {T}: Surveil 1. Create a token that's a copy of this creature, then sacrifice an artifact or creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | June, Bounty Hunter | handled | June can't be blocked as long as you've drawn two or more cards this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Katara, Bending Prodigy | handled | At the beginning of your end step, if Katara is tapped, put a +1/+1 counter on her. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Katara, the Fearless | handled | If a triggered ability of an Ally you control triggers, that ability triggers an additional time. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -351,7 +351,6 @@
 | noble creatures you control and lesson spells you control have lifelink. | 1 | Lo and Li, Twin Tutors | tla |
 | other permanents you control have indestructible. | 1 | The Walls of Ba Sing Se | tla |
 | pay N life: choose a creature card exiled with koh. | 1 | Koh, the Face Stealer | tla |
-| sacrifice a land. search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | 1 | Cycle of Renewal | tla |
 | search your library for up to four land cards with different names and reveal them. an opponent chooses two of those cards. put the chosen cards into your grave | 1 | Elemental Teachings | tla |
 | starting with you, each player chooses up to one permanent with mana value N or greater from among permanents your opponents control. exile those permanents. | 1 | The Legend of Yangchen // Avatar Yangchen | tla |
 | target creature you control gets +N/+N until end of turn. if that creature is an ally, it also gains flying until end of turn. | 1 | Yip Yip! | tla |
@@ -386,7 +385,6 @@
 | whenever ~ attacks, each opponent loses N life and you gain N life, where N is the number of creatures you control with +N/+N counters on them. | 1 | Dai Li Agents | tla |
 | whenever ~ becomes tapped, target player mills N cards, where N is the number of lesson cards in your graveyard. | 1 | Master Pakku | tla |
 | whenever ~ enters or attacks, exile up to one target card from a graveyard. if a creature card is exiled ~, create a clue token. | 1 | Raven Eagle | tla |
-| {M}, {M}: surveil N. create a token that's a copy of ~, then sacrifice an artifact or creature. activate only as a sorcery. | 1 | Joo Dee, One of Many | tla |
 | {M}, {M}: two target creatures you control that share a creature type can't be blocked ~. | 1 | Secret Tunnel | tla |
 | {M}: add N mana of any one color, where N is the greatest number of creatures you control that have a creature type in common. | 1 | White Lotus Tile | tla |
 | {M}: mill a card. you may put a land card milled ~ into your hand. you gain N life if a lesson card is milled ~. | 1 | Sparring Dummy | tla |

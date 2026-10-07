@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 12.1% |
-| Works (untested) | 136 | 53.1% |
+| Tested | 32 | 12.5% |
+| Works (untested) | 137 | 53.5% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 78 | 30.5% |
+| Not working | 76 | 29.7% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Hajar, Loyal Bodyguard | silent | Sacrifice Hajar: Legendary creatures you control get +1/+0 and gain indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heavyweight Demolisher | silent | At the beginning of your upkeep, tap this creature unless you pay {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hero of the Dunes | silent | Creatures you control with mana value 3 or less get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Horned Stoneseeker | silent | When this creature leaves the battlefield, sacrifice a Powerstone. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hostile Negotiations | silent | Exile the top three cards of your library in a face-down pile, then exile the top three cards of your library in another face-down pile. Look at the cards in ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hulking Metamorph | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hurkyl's Final Meditation | silent | During turns other than yours, this spell costs {3} more to cast. Return all nonland permanents to their owners' hands. End the turn. (Exile all spells and abil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -98,7 +97,6 @@
 | Lay Down Arms | notice | Exile target creature with mana value less than or equal to the number of Plains you control. Its controller gains 3 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Legions to Ashes | notice | Exile target nonland permanent an opponent controls and all tokens that player controls with the same name as that permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Meticulous Excavation | notice | {2}{W}: Return target permanent you control to its owner's hand. If it has unearth, instead exile it, then return that card to its owner's hand. Activate only d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mishra's Command | notice | Choose two — • Choose target player. They may discard up to X cards. Then they draw a card for each card discarded this way. • This spell deals X damage to targ | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mishra's Research Desk | notice | {1}, {T}, Sacrifice this artifact: Exile the top two cards of your library. Choose one of them. Until the end of your next turn, you may play that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mishra, Lost to Phyrexia | notice | Whenever Mishra enters or attacks, choose three — • Target opponent discards two cards. • Mishra deals 3 damage to any target. • Destroy target artifact or plan | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Portal to Phyrexia | notice | At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. It's a Phyrexian in addition to its other ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -166,6 +164,7 @@
 | Hall of Tagsin | handled | {4}, {T}: Create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Harbin, Vanguard Aviator | handled | Whenever you attack with five or more Soldiers, creatures you control get +1/+1 and gain flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hoarding Recluse | handled | When this creature dies, put up to one other target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Horned Stoneseeker | handled | When this creature enters, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Involuntary Cooldown | handled | Tap up to two target artifacts and/or creatures. Put two stun counters on each of them. (If a permanent with a stun counter would become untapped, remove one fr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Junkyard Genius | handled | When this creature enters, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keeper of the Cadence | handled | {3}: Put target artifact, instant, or sorcery card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -255,7 +254,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>32 cards</summary>
 
 - Aeronaut Cavalry
 - Alloy Animist
@@ -273,6 +272,7 @@
 - Hurkyl, Master Wizard
 - In the Trenches
 - Mine Worker
+- Mishra's Command
 - One with the Multiverse
 - Penregon Strongbull
 - Phyrexian Dragon Engine
@@ -296,7 +296,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | prototype | 14 | Autonomous Assembler, Blitz Automaton, Combat Thresher, Cradle Clearcutter, Depth Charge Colossus | bro |
-| Choose two | 4 | Gix's Command, Kayla's Command, Mishra's Command, Urza's Command | bro |
+| Choose two | 3 | Gix's Command, Kayla's Command, Urza's Command | bro |
 | +N: artifact, instant, and sorcery spells you cast ~ cost {M} less to cast. you gain N life. | 1 | Urza, Planeswalker | bro |
 | +N: scry N. you may tap an untapped artifact you control. if you do, draw a card. | 1 | Saheeli, Filigree Master | bro |
 | as an additional cost to cast ~, tap two untapped artifacts, creatures, and/or lands you control. | 1 | Warlord's Elite | bro |
@@ -341,7 +341,6 @@
 | when ~ enters, scry N, where N is its power. | 1 | Spotter Thopter | bro |
 | when ~ enters, you and target opponent each create a tapped powerstone token. | 1 | Thran Spider | bro |
 | when ~ enters, you gain life equal to its power. | 1 | Boulderbranch Golem | bro |
-| when ~ leaves the battlefield, sacrifice a powerstone. | 1 | Horned Stoneseeker | bro |
 | whenever an artifact you control enters, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard. | 1 | Sarinth Steelseeker | bro |
 | whenever feldon is dealt damage, exile that many cards from the top of your library. choose one of them. until the end of your next turn, you may play that card | 1 | Feldon, Ronom Excavator | bro |
 | whenever mishra enters or attacks, choose three — • target opponent discards two cards. • mishra deals N damage to any target. • destroy target artifact or plan | 1 | Mishra, Lost to Phyrexia | bro |

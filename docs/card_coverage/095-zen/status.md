@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 32 | 14.5% |
-| Works (untested) | 119 | 54.1% |
+| Works (untested) | 121 | 55.0% |
 | Partial (unaudited) | 7 | 3.2% |
-| Not working | 62 | 28.2% |
+| Not working | 60 | 27.3% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Chandra Ablaze | silent | −7: Cast any number of red instant and/or sorcery cards from your graveyard without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Conqueror's Pledge | silent | Kicker {6} (You may pay an additional {6} as you cast this spell.) Create six 1/1 white Kor Soldier creature tokens. If this spell was kicked, create twelve of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cosi's Trickster | silent | Whenever an opponent shuffles their library, you may put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Eldrazi Monument | silent | At the beginning of your upkeep, sacrifice a creature. If you can't, sacrifice this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Electropotence | silent | Whenever a creature you control enters, you may pay {2}{R}. If you do, that creature deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eternity Vessel | silent | Landfall — Whenever a land you control enters, you may have your life total become the number of charge counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gigantiform | silent | Enchanted creature has base power and toughness 8/8 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -71,7 +70,6 @@
 | Relic Crush | silent | Destroy target artifact or enchantment and up to one other target artifact or enchantment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rite of Replication | silent | Kicker {5} (You may pay an additional {5} as you cast this spell.) Create a token that's a copy of target creature. If this spell was kicked, create five of tho | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roil Elemental | silent | Landfall — Whenever a land you control enters, you may gain control of target creature for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ruinous Minotaur | silent | Whenever this creature deals damage to an opponent, sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sadistic Sacrament | silent | Kicker {7} (You may pay an additional {7} as you cast this spell.) Search target player's library for up to three cards, exile them, then that player shuffles.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scythe Tiger | silent | When this creature enters, sacrifice it unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seascape Aerialist | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -108,6 +106,7 @@
 | Crypt Ripper | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Devout Lightcaster | handled | When this creature enters, exile target black permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disfigure | handled | Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Eldrazi Monument | handled | Creatures you control get +1/+1 and have flying and indestructible. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emeria Angel | handled | Landfall — Whenever a land you control enters, you may create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Explorer's Scope | handled | Whenever equipped creature attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feast of Blood | handled | Cast this spell only if you control two or more Vampires. Destroy target creature. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -172,6 +171,7 @@
 | Rampaging Baloths | handled | Landfall — Whenever a land you control enters, create a 4/4 green Beast creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ravenous Trap | handled | If an opponent had three or more cards put into their graveyard from anywhere this turn, you may pay {0} rather than pay this spell's mana cost. Exile target pl | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reckless Scholar | handled | {T}: Target player draws a card, then discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ruinous Minotaur | handled | Whenever this creature deals damage to an opponent, sacrifice a land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Runeflare Trap | handled | If an opponent drew three or more cards this turn, you may pay {R} rather than pay this spell's mana cost. Runeflare Trap deals damage to target player equal to | the engine reads this text and performs it | Y/-/- | not_tested |
 | Savage Silhouette | handled | Enchanted creature gets +2/+2 and has "{1}{G}: Regenerate this creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scute Mob | handled | At the beginning of your upkeep, if you control five or more lands, put four +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -264,7 +264,6 @@
 | as long as ~ has seven or more quest counters on it, creatures you control get +N/+N. | 1 | Beastmaster Ascension | zen |
 | as long as ~ has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into your hand, then  | 1 | Archmage Ascension | zen |
 | as long as ~ is equipped, it has double strike. | 1 | Kor Duelist | zen |
-| at the beginning of your upkeep, sacrifice a creature. if you can't, sacrifice ~. | 1 | Eldrazi Monument | zen |
 | at the beginning of your upkeep, sacrifice ~ unless you return a land you control to its owner's hand. | 1 | Living Tsunami | zen |
 | at the beginning of your upkeep, you lose N life unless an opponent has N or less life. | 1 | Vampire Lacerator | zen |
 | at the beginning of your upkeep, you may choose a card type. if you do, each player sacrifices a permanent of their choice of that type. | 1 | World Queller | zen |
@@ -304,7 +303,6 @@
 | whenever enchanted creature deals combat damage to a player, double its controller's life total. | 1 | Celestial Mantle | zen |
 | whenever equipped creature attacks, you may have target creature block it ~ if able. | 1 | Grappling Hook | zen |
 | whenever lorthos attacks, you may pay {M}. if you do, tap up to eight target permanents. those permanents don"..." next untap steps. | 1 | Lorthos, the Tidemaker | zen |
-| whenever ~ deals damage to an opponent, sacrifice a land. | 1 | Ruinous Minotaur | zen |
 | whenever ~ or another ally you control enters, target player reveals a number of cards from their hand equal to the number of allies you control. you choose one | 1 | Bala Ged Thief | zen |
 | whenever ~ or another ally you control enters, you may choose a color. if you do, allies you control gain protection from the chosen color until end of turn. | 1 | Kabira Evangel | zen |
 | whenever ~ or another ally you control enters, you may gain life equal to the number of allies you control. | 1 | Ondu Cleric | zen |

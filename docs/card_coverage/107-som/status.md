@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 14.0% |
-| Works (untested) | 126 | 58.6% |
+| Works (untested) | 127 | 59.1% |
 | Partial (unaudited) | 8 | 3.7% |
-| Not working | 51 | 23.7% |
+| Not working | 50 | 23.3% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Grindclock | silent | {T}: Target player mills X cards, where X is the number of charge counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hand of the Praetors | silent | Other creatures you control with infect get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hoard-Smelter Dragon | silent | {3}{R}: Destroy target artifact. This creature gets +X/+0 until end of turn, where X is that artifact's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Infiltration Lens | silent | Whenever equipped creature becomes blocked by a creature, you may draw two cards. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Kemba, Kha Regent | silent | At the beginning of your upkeep, create a 2/2 white Cat creature token for each Equipment attached to Kemba. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Tangle | silent | Whenever this creature deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. Each | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memoricide | silent | Choose a nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuffles | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -136,6 +135,7 @@
 | Ichor Rats | handled | When this creature enters, each player gets a poison counter. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ichorclaw Myr | handled | Whenever this creature becomes blocked, it gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inexorable Tide | handled | Whenever you cast a spell, proliferate. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Infiltration Lens | handled | Whenever equipped creature becomes blocked by a creature, you may draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Instill Infection | handled | Put a -1/-1 counter on target creature. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kuldotha Forgemaster | handled | {T}, Sacrifice three artifacts: Search your library for an artifact card, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kuldotha Rebirth | handled | As an additional cost to cast this spell, sacrifice an artifact. Create three 1/1 red Goblin creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -283,7 +283,6 @@
 | whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | 1 | Viridian Revel | som |
 | whenever an opponent casts a spell, that player loses N life unless they discard a card. | 1 | Painful Quandary | som |
 | whenever another artifact you control enters, you may have ~ become a N/N bird artifact creature with flying until end of turn. | 1 | Glint Hawk Idol | som |
-| whenever equipped creature becomes blocked by a creature, you may draw two cards. | 1 | Infiltration Lens | som |
 | whenever you cast an artifact spell, you may have target creature get +N/+N and gain deathtouch until end of turn. | 1 | Painsmith | som |
 | whenever ~ attacks, gain control of target equipment an opponent controls until end of turn. attach it to ~. when you lose control of that equipment, unattach i | 1 | Ogre Geargrabber | som |
 | whenever ~ attacks, untap each other creature you control. | 1 | Copperhorn Scout | som |

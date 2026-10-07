@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 10.2% |
-| Works (untested) | 143 | 58.6% |
+| Works (untested) | 144 | 59.0% |
 | Partial (unaudited) | 16 | 6.6% |
-| Not working | 60 | 24.6% |
+| Not working | 59 | 24.2% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Eternal Skylord | silent | Zombie tokens you control have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fblthp, the Lost | silent | When Fblthp enters, draw a card. If it entered from your library or was cast from your library, draw two cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Devastation | silent | Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Finale of Glory | silent | Create X 2/2 white Soldier creature tokens with vigilance. If X is 10 or more, also create X 4/4 white Angel creature tokens with flying and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Promise | silent | You may cast up to one target instant card and/or up to one target sorcery card from your graveyard each with mana value X or less without paying their mana cos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Revelation | silent | Draw X cards. If X is 10 or more, instead shuffle your graveyard into your library, draw X cards, untap up to five lands, and you have no maximum hand size for  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Firemind Vessel | silent | {T}: Add two mana of different colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -151,6 +150,7 @@
 | Erratic Visionary | handled | {1}{U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eternal Taskmaster | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Evolution Sage | handled | Landfall — Whenever a land you control enters, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Finale of Glory | handled | Create X 2/2 white Soldier creature tokens with vigilance. If X is 10 or more, also create X 4/4 white Angel creature tokens with flying and vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flux Channeler | handled | Whenever you cast a noncreature spell, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gideon's Battle Cry | handled | Put a +1/+1 counter on each creature you control. You may search your library and/or graveyard for a card named Gideon, the Oathsworn, reveal it, and put it int | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gideon's Company | handled | Whenever you gain life, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -293,7 +293,6 @@
 | choose four. you may choose the same mode more than once. • create a N/N citizen creature token that's all colors. • return target permanent card from your grav | 1 | Planewide Celebration | war |
 | choose up to four target cards in your graveyard. if you control a bolas planeswalker, return those cards to your hand. otherwise, an opponent chooses two of th | 1 | Deliver Unto Evil | war |
 | copy target instant or sorcery spell, then return it to its owner's hand. you may choose new targets for the copy. | 1 | Narset's Reversal | war |
-| create N N/N white soldier creature tokens with vigilance. if N is N or more, also create N N/N white angel creature tokens with flying and vigilance. | 1 | Finale of Glory | war |
 | destroy any number of target planeswalkers. choose a planeswalker you control. put two loyalty counters on it for each planeswalker destroyed ~. | 1 | The Elderspell | war |
 | draw N cards. if N is N or more, instead shuffle your graveyard into your library, draw N cards, untap up to five lands, and you have no maximum hand size for t | 1 | Finale of Revelation | war |
 | during your turn, creatures you control have first strike and equip abilities you activate cost {M} less to activate. | 1 | Nahiri, Storm of Stone | war |

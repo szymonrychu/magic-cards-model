@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 12.8% |
+| Tested | 41 | 13.5% |
 | Works (untested) | 129 | 42.4% |
 | Partial (unaudited) | 15 | 4.9% |
-| Not working | 121 | 39.8% |
+| Not working | 119 | 39.1% |
 
 ## Cards needing work
 
@@ -103,7 +103,6 @@
 | Summon: Leviathan | silent | I — Return each creature that isn't a Kraken, Leviathan, Merfolk, Octopus, or Serpent to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summoner's Grimoire | silent | Equipped creature is a Shaman in addition to its other types and has "Whenever this creature attacks, you may put a creature card from your hand onto the battle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Swallowed by Leviathan | silent | Choose target spell. Surveil 2, then counter the chosen spell unless its controller pays {1} for each card in your graveyard. (To surveil 2, look at the top two | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Tellah, Great Sage | silent | Whenever you cast a noncreature spell, create a 1/1 colorless Hero creature token. If four or more mana was spent to cast that spell, draw two cards. If eight o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terra, Magical Adept // Esper Terra | silent | IV — Add {W}{W}, {U}{U}, {B}{B}, {R}{R}, and {G}{G}. Exile Esper Terra, then return it to the battlefield . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Emperor of Palamecia // The Lord Master of Hell | silent | Starfall — Whenever The Lord Master of Hell attacks, it deals X damage to each opponent, where X is the number of noncreature, nonland cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Final Days | silent | Create two tapped 2/2 black Horror creature tokens. If this spell was cast from a graveyard, instead create X of those tokens, where X is the number of creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -132,7 +131,6 @@
 | Zodiark, Umbral God | silent | When Zodiark enters, each player sacrifices half the non-God creatures they control of their choice, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aerith Rescue Mission | notice | Choose one — • Take the Elevator — Create three 1/1 colorless Hero creature tokens. • Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Ardyn, the Usurper | notice | Starscourge — At the beginning of combat on your turn, exile up to one target creature card from a graveyard. If you exiled a card this way, create a token that | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Clash of the Eikons | notice | Choose one or more — • Target creature you control fights target creature an opponent controls. • Remove a lore counter from target Saga you control. (Removing  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Eden, Seat of the Sanctum | notice | {5}, {T}: Mill two cards. Then you may sacrifice this land. When you do, return another target permanent card from your graveyard to your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Golbez, Crystal Collector | notice | At the beginning of your end step, if you control four or more artifacts, return target creature card from your graveyard to your hand. Then if you control eigh | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Ice Magic | notice | Tiered (Choose one additional cost.) • Blizzard — {0} — Return target creature to its owner's hand. • Blizzara — {2} — Target creature's owner puts it on their  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -295,13 +293,14 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>41 cards</summary>
 
 - Bartz and Boko
 - Blitzball
 - Cactuar
 - Cargo Ship
 - Cecil, Dark Knight // Cecil, Redeemed Paladin
+- Clash of the Eikons
 - Clive, Ifrit's Dominant // Ifrit, Warden of Inferno
 - Coliseum Behemoth
 - Esper Origins // Summon: Esper Maduin
@@ -331,6 +330,7 @@
 - Summon: Fat Chocobo
 - Summon: Knights of Round
 - Summon: Primal Garuda
+- Tellah, Great Sage
 - The Fire Crystal
 - Thunder Magic
 - Traveling Chocobo
@@ -352,7 +352,6 @@
 | Blow Up | 1 | Blazing Bomb | fin |
 | Blue Magic | 1 | Quistis Trepe | fin |
 | Choose one | 1 | Aerith Rescue Mission | fin |
-| Choose one or more | 1 | Clash of the Eikons | fin |
 | Dragonfire Dive | 1 | Dion, Bahamut's Dominant // Bahamut, Warden of Light | fin |
 | Echo of the Lost | 1 | Emet-Selch, Unsundered // Hades, Sorcerer of Eld | fin |
 | Fire Cross | 1 | Seifer Almasy | fin |
@@ -448,7 +447,6 @@
 | whenever one or more birds you control attack, look at that many cards from the top of your library. you may put one of them into your hand. then put any number | 1 | Choco, Seeker of Paradise | fin |
 | whenever one or more scouts, pirates, and/or rogues you control deal combat damage to a player, exile the top card of that player"..."t, create a treasure token | 1 | Vaan, Street Thief | fin |
 | whenever sin enters or attacks, exile a permanent card from your graveyard at random, then create a tapped token that's a copy of that card. if the exiled card  | 1 | Sin, Spira's Punishment | fin |
-| whenever you cast a noncreature spell, create a N/N colorless hero creature token. if four or more mana was spent to cast that spell, draw two cards. if eight o | 1 | Tellah, Great Sage | fin |
 | whenever you cast your first human creature spell each turn, that creature enters with an additional +N/+N counter on it for each dog and/or wolf you control. | 1 | Torgal, A Fine Hound | fin |
 | whenever you tap a land for {M}, add an additional {M}. | 1 | Ultima, Origin of Oblivion | fin |
 | whenever ~ attacks, it deals damage equal to the number of equipped creatures you control to defending player. | 1 | Barret Wallace | fin |

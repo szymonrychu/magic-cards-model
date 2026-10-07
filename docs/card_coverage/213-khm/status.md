@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 34 | 11.8% |
-| Works (untested) | 136 | 47.4% |
+| Works (untested) | 137 | 47.7% |
 | Partial (unaudited) | 15 | 5.2% |
-| Not working | 102 | 35.5% |
+| Not working | 101 | 35.2% |
 
 ## Cards needing work
 
@@ -105,7 +105,6 @@
 | The Three Seasons | silent | III — Choose three cards in each graveyard. Their owners shuffle those cards into their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tibalt's Trickery | silent | Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Toralf, God of Fury // Toralf's Hammer | silent | Whenever a creature or planeswalker an opponent controls is dealt excess noncombat damage, Toralf deals damage equal to the excess to any target other than that | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Tormentor's Helm | silent | Whenever equipped creature becomes blocked, it deals 1 damage to defending player. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Tundra Fumarole | silent | Tundra Fumarole deals 4 damage to target creature or planeswalker. Add {C} for each {S} spent to cast this spell. Until end of turn, you don't lose this mana as | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Valki, God of Lies // Tibalt, Cosmic Impostor | silent | When Valki enters, each opponent reveals their hand. For each opponent, exile a creature card they revealed this way until Valki leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Valkyrie's Sword | silent | When this Equipment enters, you may pay {4}{W}. If you do, create a 4/4 white Angel Warrior creature token with flying and vigilance, then attach this Equipment | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -264,6 +263,7 @@
 | Struggle for Skemfar | handled | Put a +1/+1 counter on target creature you control. Then that creature fights up to one target creature you don't control. (Each deals damage equal to its power | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sulfurous Mire | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Surtland Frostpyre | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tormentor's Helm | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Toski, Bearer of Secrets | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tuskeri Firewalker | handled | Boast — {1}: Exile the top card of your library. You may play that card this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tyrite Sanctum | handled | {2}, {T}: Target legendary creature becomes a God in addition to its other types. Put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -416,7 +416,6 @@
 | whenever a creature or planeswalker an opponent controls is dealt excess noncombat damage, toralf deals damage equal to the excess to any target other than that | 1 | Toralf, God of Fury // Toralf's Hammer | khm |
 | whenever an angel you control dies, each other player sacrifices a creature of their choice. | 1 | Rampage of the Valkyries | khm |
 | whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your contro | 1 | Tergrid, God of Fright // Tergrid's Lantern | khm |
-| whenever equipped creature becomes blocked, it deals N damage to defending player. | 1 | Tormentor's Helm | khm |
 | whenever jorn attacks, untap each snow permanent you control. | 1 | Jorn, God of Winter // Kaldring, the Rimestaff | khm |
 | whenever one or more creatures you control with flying deal combat damage to a player ~, look at that player's hand and draw a card. | 1 | The Raven's Warning | khm |
 | whenever you activate a boast ability, put a +N/+N counter on ~. | 1 | Frenzied Raider | khm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 8.7% |
-| Works (untested) | 81 | 54.4% |
+| Tested | 14 | 9.4% |
+| Works (untested) | 82 | 55.0% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 48 | 32.2% |
+| Not working | 46 | 30.9% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Orzhov Euthanist | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Orzhov Pontiff | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Poisonbelly Ogre | silent | Whenever another creature enters, its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Predatory Focus | silent | You may have creatures you control assign their combat damage this turn as though they weren't blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primeval Light | silent | Destroy all enchantments target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quicken | silent | The next sorcery spell you cast this turn can be cast as though it had flash. (It can be cast any time you could cast an instant.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rabble-Rouser | silent | {R}, {T}: Attacking creatures get +X/+0 until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -73,7 +72,6 @@
 | Vertigo Spawn | silent | Whenever this creature blocks a creature, tap that creature. That creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aetherplasm | notice | Whenever this creature blocks a creature, you may return this creature to its owner's hand. If you do, you may put a creature card from your hand onto the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ghostway | notice | Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Thunderheads | notice | Replicate {2}{U} (When you cast this spell, copy it for each time you paid its replicate cost.) Create a 3/3 blue Weird creature token with defender and flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Battering Wurm | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Djinn Illuminatus | unaudited | Each instant and sorcery spell you cast has replicate. The replicate cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leyline of Lifeforce | unaudited | Creature spells can't be countered. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -149,6 +147,7 @@
 | Steamcore Weird | handled | When this creature enters, if {R} was spent to cast it, it deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Streetbreaker Wurm | handled |  |  | Y/-/- | not_tested |
 | Teysa, Orzhov Scion | handled | Sacrifice three white creatures: Exile target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Thunderheads | handled | Replicate {2}{U} (When you cast this spell, copy it for each time you paid its replicate cost.) Create a 3/3 blue Weird creature token with defender and flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tibor and Lumia | handled | Whenever you cast a blue spell, target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tin Street Hooligan | handled | When this creature enters, if {G} was spent to cast it, destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | To Arms! | handled | Untap all creatures you control. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -166,7 +165,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Burning-Tree Shaman
 - Cerebral Vortex
@@ -178,6 +177,7 @@
 - Leyline of the Void
 - Order of the Stars
 - Parallectric Feedback
+- Predatory Focus
 - Skarrgan Firebird
 - Steam Vents
 - Stomping Ground
@@ -207,7 +207,6 @@
 | nonbasic landwalk | 1 | Dryad Sophisticate | gpt |
 | replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost. you may choose new targets for the copies.) choose target permanent an opp | 1 | Mimeofacture | gpt |
 | replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost. you may choose new targets for the copies.) target mountain becomes a N/N  | 1 | Siege of Towers | gpt |
-| replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost.) create a N/N blue weird creature token with defender and flying. exile it | 1 | Thunderheads | gpt |
 | target player discards a card. haunt (when ~ card is put into a graveyard after resolving, exile it haunting target creature.) when the creature ~ haunts dies,  | 1 | Cry of Contrition | gpt |
 | the next sorcery spell you cast ~ can be cast as though it had flash. (it can be cast any time you could cast an instant.) draw a card. | 1 | Quicken | gpt |
 | ulasht enters with a +N/+N counter on it for each other red creature you control and a +N/+N counter on it for each other green creature you control. | 1 | Ulasht, the Hate Seed | gpt |
@@ -226,7 +225,6 @@
 | whenever ~ deals damage, you gain that much life. | 1 | Mourning Thrull | gpt |
 | whenever ~ is dealt combat damage, you gain that much life and attacking player loses that much life. | 1 | Souls of the Faultless | gpt |
 | you gain N life for each player. haunt (when ~ card is put into a graveyard after resolving, exile it haunting target creature.) when the creature ~ haunts dies | 1 | Benediction of Moons | gpt |
-| you may have creatures you control assign their combat damage ~ as though they weren't blocked. | 1 | Predatory Focus | gpt |
 | {M}, {M}: attacking creatures get +N/+N until end of turn, where N is ~ power. | 1 | Rabble-Rouser | gpt |
 | {M}, {M}: each creature with mana value N can't attack or block ~. | 1 | Droning Bureaucrats | gpt |
 | {M}: ~ deals damage equal to its power divided as you choose among any number of target creatures. each of those creatures deals damage equal to its power to ~. | 1 | Living Inferno | gpt |

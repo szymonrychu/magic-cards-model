@@ -18,16 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 34 | 16.2% |
-| Works (untested) | 97 | 46.2% |
+| Works (untested) | 99 | 47.1% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 64 | 30.5% |
+| Not working | 62 | 29.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Abominable Treefolk | silent | Abominable Treefolk's power and toughness are each equal to the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Alpine Guide | silent | When this creature leaves the battlefield, sacrifice a Mountain. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Amorphous Axe | silent | Equipped creature gets +3/+0 and is every creature type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Answered Prayers | silent | Whenever a creature you control enters, you gain 1 life. If this enchantment isn't a creature, it becomes a 3/3 Angel creature with flying in addition to its ot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aria of Flame | silent | When this enchantment enters, each opponent gains 10 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -43,7 +42,6 @@
 | Goblin Champion | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Oriflamme | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Headless Specter | silent | Hellbent — Whenever this creature deals combat damage to a player, if you have no cards in hand, that player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hexdrinker | silent | Level up {1} ({1}: Put a level counter on this. Level up only as a sorcery.) LEVEL 3-7 4/4 Protection from instants LEVEL 8+ 6/6 Protection from everything | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Iceberg Cancrix | silent | Whenever another snow permanent you control enters, you may have target player mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Igneous Elemental | silent | This spell costs {2} less to cast if there is a land card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lancer Sliver | silent | Sliver creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -79,8 +77,8 @@
 | Cabal Therapist | notice | At the beginning of your first main phase, you may sacrifice a creature. When you do, choose a nonland card name, then target player reveals their hand and disc | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eyekite | notice | This creature gets +2/+0 as long as you've drawn two or more cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fallen Shinobi | notice | Whenever this creature deals combat damage to a player, that player exiles the top two cards of their library. Until end of turn, you may play those cards witho | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Force of Rage | notice | If it's not your turn, you may exile a red card from your hand rather than pay this spell's mana cost. Create two 3/1 red Elemental creature tokens with trample | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Goatnap | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until e | unparsed remainder: Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until end of turn. | Y/Y/Y | not_working |
+| Hexdrinker | notice | Protection | protection from a quality the engine does not read: everything | Y/-/- | not_working |
 | Ice-Fang Coatl | notice | This creature has deathtouch as long as you control at least three other snow permanents. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kaya's Guile | notice | Choose two — • Each opponent sacrifices a creature of their choice. • Exile all opponents' graveyards. • Create a 1/1 white and black Spirit creature token with | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Murasa Behemoth | notice | This creature gets +3/+3 as long as there is a land card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -105,6 +103,7 @@
 | Tempered Sliver | unaudited | Sliver creatures you control have "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Valiant Changeling | unaudited | This spell costs {1} less to cast for each creature type among creatures you control. This effect can't reduce the amount of mana this spell costs by more than  | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Winter's Rest | unaudited | As long as you control another snow permanent, enchanted creature doesn't untap during its controller's untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Alpine Guide | handled | When this creature enters, you may search your library for a Mountain card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arcum's Astrolabe | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ayula's Influence | handled | Discard a land card: Create a 2/2 green Bear creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ayula, Queen Among Bears | handled | Whenever another Bear you control enters, choose one — • Put two +1/+1 counters on target Bear. • Target Bear you control fights target creature you don't contr | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -128,6 +127,7 @@
 | Farmstead Gleaner | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feaster of Fools | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | First-Sphere Gargantua | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Force of Rage | handled | If it's not your turn, you may exile a red card from your hand rather than pay this spell's mana cost. Create two 3/1 red Elemental creature tokens with trample | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fountain of Ichor | handled | {3}: This artifact becomes a 3/3 Dinosaur artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frostwalla | handled | {S}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Generous Gift | handled | Destroy target permanent. Its controller creates a 3/3 green Elephant creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -277,12 +277,11 @@
 | exile the top six cards of your library. you may cast up to two sorcery spells with mana value N or less from among them without paying their mana costs. put th | 1 | Collected Conjuring | mh1 |
 | exploit | 1 | Silumgar Scavenger | mh1 |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if that creature is a goat, it also gets +N/+N until e | 1 | Goatnap | mh1 |
-| if it's not your turn, you may exile a red card from your hand rather than pay ~ mana cost. create two N/N red elemental creature tokens with trample and haste. | 1 | Force of Rage | mh1 |
 | if it's not your turn, you may exile a white card from your hand rather than pay ~ mana cost. | 1 | Force of Virtue | mh1 |
-| level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N protection from instants level N+ N/N protection from everything | 1 | Hexdrinker | mh1 |
 | modular | 1 | Scrapyard Recombiner | mh1 |
 | other creatures you control of the chosen type get +N/+N. | 1 | Morophon, the Boundless | mh1 |
 | other sliver creatures you control have outlast {M}. | 1 | Enduring Sliver | mh1 |
+| protection | 1 | Hexdrinker | mh1 |
 | retrace | 1 | Throes of Chaos | mh1 |
 | return N cards at random from your graveyard to your hand. exile ~. | 1 | Reap the Past | mh1 |
 | return target creature to its owner"..."s controller may pay {M}{M}. if the player does, they may copy ~ and may choose a new target for that copy. | 1 | String of Disappearances | mh1 |
@@ -297,7 +296,6 @@
 | when ~ enters, each opponent gains N life. | 1 | Aria of Flame | mh1 |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Quakefoot Cyclops | mh1 |
 | when ~ enters, you may search your library for an artifact card with mana value N, reveal that card, put it into your hand, then shuffle. | 1 | Tribute Mage | mh1 |
-| when ~ leaves the battlefield, sacrifice a mountain. | 1 | Alpine Guide | mh1 |
 | whenever a creature you control becomes blocked, you may return it to its owner's hand. | 1 | Cunning Evasion | mh1 |
 | whenever a creature you control enters, you gain N life. if ~ isn't a creature, it becomes a N/N angel creature with flying in addition to its other types until | 1 | Answered Prayers | mh1 |
 | whenever another snow permanent you control enters, you may have target player mill two cards. | 1 | Iceberg Cancrix | mh1 |

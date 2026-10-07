@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 12.2% |
-| Works (untested) | 130 | 56.5% |
+| Tested | 30 | 13.0% |
+| Works (untested) | 129 | 56.1% |
 | Partial (unaudited) | 20 | 8.7% |
-| Not working | 52 | 22.6% |
+| Not working | 51 | 22.2% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Sylvan Awakening | silent | Until your next turn, all lands you control become 2/2 Elemental creatures with reach, indestructible, and haste. They're still lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi's Sentinel | silent | As long as you control a Teferi planeswalker, this creature gets +4/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi, Hero of Dominaria | silent | −3: Put target nonland permanent into its owner's library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The First Eruption | silent | III — Sacrifice a Mountain. If you do, this Saga deals 3 damage to each creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thran Temporal Gateway | silent | {4}, {T}: You may put a historic permanent card from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Time of Ice | silent | III — Return all tapped creatures to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Triumph of Gerrard | silent | III — Target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -207,7 +206,6 @@
 | Thallid Soothsayer | handled | {2}, Sacrifice a creature: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Antiquities War | handled | I, II — Look at the top five cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of you | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Eldest Reborn | handled | I — Each opponent sacrifices a creature or planeswalker of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| The Flame of Keld | handled | I — Discard your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Mending of Dominaria | handled | I, II — Mill two cards, then you may return a creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Mirari Conjecture | handled | I — Return target instant card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tiana, Ship's Caretaker | handled | Whenever an Aura or Equipment you control is put into a graveyard from the battlefield, you may return that card to its owner's hand at the beginning of the nex | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -232,7 +230,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>30 cards</summary>
 
 - Adamant Will
 - Adventurous Impulse
@@ -261,6 +259,8 @@
 - Sentinel of the Pearl Trident
 - Teferi, Timebender
 - Tetsuko Umezawa, Fugitive
+- The First Eruption
+- The Flame of Keld
 - Torgaar, Famine Incarnate
 
 </details>
@@ -302,7 +302,6 @@
 | kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) untap target creature. it gets +N/+N until end of turn. if ~ was kicked, that creature gets +N/+N unti | 1 | Gift of Growth | dom |
 | return all tapped creatures to their owners' hands. | 1 | Time of Ice | dom |
-| sacrifice a mountain. if you do, ~ deals N damage to each creature. | 1 | The First Eruption | dom |
 | sacrifice ~: the chosen creature gains indestructible until end of turn. | 1 | Dauntless Bodyguard | dom |
 | search your library for two cards. put one into your hand and the other into your graveyard. then shuffle. | 1 | Final Parting | dom |
 | shanna can't be the target of abilities your opponents control. | 1 | Shanna, Sisay's Legacy | dom |

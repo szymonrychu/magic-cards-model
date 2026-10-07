@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 11.9% |
+| Tested | 20 | 12.5% |
 | Works (untested) | 89 | 55.6% |
 | Partial (unaudited) | 8 | 5.0% |
-| Not working | 44 | 27.5% |
+| Not working | 43 | 26.9% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Hero of Leina Tower | silent | Heroic — Whenever you cast a spell that targets this creature, you may pay {X}. If you do, put X +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kiora, the Crashing Wave | silent | +1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis, God of Slaughter | silent | At the beginning of each opponent's upkeep, Mogis deals 2 damage to that player unless they sacrifice a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nessian Wilds Ravager | silent | When this creature enters, if tribute wasn't paid, you may have this creature fight another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oracle of Bones | silent | When this creature enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peregrination | silent | Search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. Shuffle, then scry | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perplexing Chimera | silent | Whenever an opponent casts a spell, you may exchange control of this creature and that spell. If you do, you may choose new targets for the spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -171,7 +170,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Acolyte's Reward
 - Deepwater Hypnotist
@@ -183,6 +182,7 @@
 - Heroes' Podium
 - Kiora's Follower
 - Lightning Volley
+- Nessian Wilds Ravager
 - Ornitharch
 - Pain Seer
 - Satyr Wayfinder
@@ -230,7 +230,6 @@
 | until end of turn, target creature gains "..." | 1 | Retraction Helix | bng |
 | when ~ enters, if tribute wasn"..."s hand." | 1 | Flame-Wreathed Phoenix | bng |
 | when ~ enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Oracle of Bones | bng |
-| when ~ enters, if tribute wasn't paid, you may have ~ fight another target creature. | 1 | Nessian Wilds Ravager | bng |
 | when ~ enters, put a +N/+N counter on enchanted creature. | 1 | Ephara's Enlightenment | bng |
 | whenever an instant or sorcery spell you control deals damage to an opponent, ~ deals that much damage to target creature that player controls. | 1 | Satyr Firedancer | bng |
 | whenever an opponent casts a spell, you may exchange control of ~ and that spell. if you do, you may choose new targets for the spell. | 1 | Perplexing Chimera | bng |

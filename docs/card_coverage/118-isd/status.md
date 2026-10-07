@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 12.6% |
-| Works (untested) | 143 | 59.8% |
+| Tested | 31 | 13.0% |
+| Works (untested) | 144 | 60.3% |
 | Partial (unaudited) | 14 | 5.9% |
-| Not working | 52 | 21.8% |
+| Not working | 50 | 20.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Balefire Dragon | silent | Whenever this creature deals combat damage to a player, it deals that much damage to each creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bitterheart Witch | silent | When this creature dies, you may search your library for a Curse card, put it onto the battlefield attached to target player, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bonds of Faith | silent | Enchanted creature gets +2/+2 as long as it's a Human. Otherwise, it can't attack or block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Butcher's Cleaver | silent | As long as equipped creature is a Human, it has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -64,7 +63,6 @@
 | Runechanter's Pike | silent | Equipped creature has first strike and gets +X/+0, where X is the number of instant and sorcery cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Runic Repetition | silent | Return target exiled card with flashback you own to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sharpened Pitchfork | silent | As long as equipped creature is a Human, it gets +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stitcher's Apprentice | silent | {1}{U}, {T}: Create a 2/2 blue Homunculus creature token, then sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sturmgeist | silent | Sturmgeist's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tree of Redemption | silent | {T}: Exchange your life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trepanation Blade | silent | Whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. The creature gets +1/+0 until en | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -215,6 +213,7 @@
 | Splinterfright | handled | Splinterfright's power and toughness are each equal to the number of creature cards in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stensia Bloodhall | handled | {3}{B}{R}, {T}: This land deals 2 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stitched Drake | handled | As an additional cost to cast this spell, exile a creature card from your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stitcher's Apprentice | handled | {1}{U}, {T}: Create a 2/2 blue Homunculus creature token, then sacrifice a creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stromkirk Noble | handled | This creature can't be blocked by Humans. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stromkirk Patrol | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sulfur Falls | handled | This land enters tapped unless you control an Island or a Mountain. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -239,12 +238,13 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
 - Ashmouth Hound
 - Back from the Brink
+- Balefire Dragon
 - Boneyard Wurm
 - Brimstone Volley
 - Cackling Counterpart
@@ -328,7 +328,6 @@
 | whenever ~ attacks or blocks, other humans you control get +N/+N until end of turn. | 1 | Hamlet Captain | isd |
 | whenever ~ attacks, create a N/N green wolf creature token that's tapped and attacking for each creature card in your graveyard. | 1 | Kessig Cagebreakers | isd |
 | whenever ~ deals combat damage to a creature, flip a coin. if you win the flip, destroy that creature. | 1 | Creepy Doll | isd |
-| whenever ~ deals combat damage to a player, it deals that much damage to each creature that player controls. | 1 | Balefire Dragon | isd |
 | you may cast ~ from your graveyard. | 1 | Skaab Ruinator | isd |
 | you may pay {M} rather than pay the mana cost for zombie creature spells you cast. | 1 | Rooftop Storm | isd |
 | {M}, remove three study counters from ~ and sacrifice it: put all creature cards from all graveyards onto the battlefield under your control. they're black zomb | 1 | Grimoire of the Dead | isd |
@@ -336,7 +335,6 @@
 | {M}: exchange your life total with ~ toughness. | 1 | Tree of Redemption | isd |
 | {M}: target player mills a card. ~ gets +N/+N until end of turn, where N is the milled card's mana value. | 1 | Mindshrieker | isd |
 | {M}: until end of turn, ~ loses defender and gains flying. | 1 | Manor Gargoyle | isd |
-| {M}{M}, {M}: create a N/N blue homunculus creature token, then sacrifice a creature. | 1 | Stitcher's Apprentice | isd |
 | {M}{M}: choose any target, then mill three cards. ~ deals damage to that permanent or player equal to the greatest mana value among the milled cards. | 1 | Heretic's Punishment | isd |
 | {M}{M}: ~ owner shuffles it into their library. if that player does, they reveal cards from the top of that library until a card named ~ is revealed. the player | 1 | Mirror-Mad Phantasm | isd |
 | ~ can't be blocked except by creatures with flying or reach. | 1 | Orchard Spirit | isd |

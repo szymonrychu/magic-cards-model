@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 7.4% |
-| Works (untested) | 80 | 49.4% |
+| Works (untested) | 81 | 50.0% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 60 | 37.0% |
+| Not working | 59 | 36.4% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Fangren Firstborn | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genesis Chamber | silent | Whenever a nontoken creature enters, if this artifact is untapped, that creature's controller creates a 1/1 colorless Myr artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Archaeologist | silent | {R}, {T}: Flip a coin. If you win the flip, destroy target artifact and untap this creature. If you lose the flip, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Greater Harvester | silent | At the beginning of your upkeep, sacrifice a permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich's Tomb | silent | Whenever you lose life, sacrifice a permanent for each 1 life you lost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memnarch | silent | {1}{U}{U}: Target permanent becomes an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mephitic Ooze | silent | Whenever this creature deals combat damage to a creature, destroy that creature. The creature can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,6 +116,7 @@
 | Emissary of Despair | handled | Whenever this creature deals combat damage to a player, that player loses 1 life for each artifact they control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Essence Drain | handled | Essence Drain deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Geth's Grimoire | handled | Whenever an opponent discards a card, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Greater Harvester | handled | At the beginning of your upkeep, sacrifice a permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grimclaw Bats | handled | {B}, Pay 1 life: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heartseeker | handled | Equipped creature gets +2/+1 and has "{T}, Unattach Heartseeker: Destroy target creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hunger of the Nim | handled | Target creature gets +1/+0 until end of turn for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -212,7 +212,6 @@
 | as long as ~ is equipped, it gets +N/+N and has first strike. | 1 | Auriok Glaivemaster | dst |
 | as long as ~ is untapped, it has protection from artifacts and from each color. | 1 | Pristine Angel | dst |
 | at the beginning of your upkeep, put a +N/+N counter on each creature you control with modular. | 1 | Arcbound Overseer | dst |
-| at the beginning of your upkeep, sacrifice a permanent. | 1 | Greater Harvester | dst |
 | at the beginning of your upkeep, you may move a +N/+N counter from target creature onto ~. | 1 | Arcbound Fiend | dst |
 | cast ~ only during the declare attackers step. attacking creatures you control get +N/+N until end of turn, where N is the number of attacking creatures. sacrif | 1 | Tears of Rage | dst |
 | counter target spell. that spell's controller may draw a card. | 1 | Vex | dst |

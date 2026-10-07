@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 16.6% |
-| Works (untested) | 108 | 40.8% |
+| Tested | 45 | 17.0% |
+| Works (untested) | 107 | 40.4% |
 | Partial (unaudited) | 14 | 5.3% |
 | Not working | 99 | 37.4% |
 
@@ -180,7 +180,6 @@
 | Friendly Ghost | handled | When this creature enters, target creature gets +2/+4 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Friendly Teddy | handled | When this creature dies, each player draws a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Funeral Room // Awakening Hall | handled | Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Grab the Prize | handled | As an additional cost to cast this spell, discard a card. Draw two cards. If the discarded card wasn't a land card, Grab the Prize deals 2 damage to each oppone | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Grasping Longneck | handled | When this creature dies, you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Greenhouse // Rickety Gazebo | handled | Lands you control have "{T}: Add one mana of any color." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hand That Feeds | handled | Delirium — Whenever this creature attacks while there are four or more card types among cards in your graveyard, it gets +2/+0 and gains menace until end of tur | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -251,7 +250,7 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>45 cards</summary>
 
 - Abhorrent Oculus
 - Balustrade Wurm
@@ -276,6 +275,7 @@
 - Give In to Violence
 - Glassworks // Shattered Yard
 - Gloomlake Verge
+- Grab the Prize
 - Kaito, Bane of Nightmares
 - Kona, Rescue Beastie
 - Lakeside Shack

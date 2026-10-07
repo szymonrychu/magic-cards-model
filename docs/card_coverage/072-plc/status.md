@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 11.1% |
-| Works (untested) | 64 | 39.5% |
+| Tested | 19 | 11.7% |
+| Works (untested) | 66 | 40.7% |
 | Partial (unaudited) | 12 | 7.4% |
-| Not working | 68 | 42.0% |
+| Not working | 65 | 40.1% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Dismal Failure | silent | Counter target spell. Its controller discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dormant Sliver | silent | All Sliver creatures have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dust Elemental | silent | When this creature enters, return three creatures you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Enslave | silent | At the beginning of your upkeep, enchanted creature deals 1 damage to its owner. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Erratic Mutation | silent | Choose target creature. Reveal cards from the top of your library until you reveal a nonland card. That creature gets +X/-X until end of turn, where X is that c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Extirpate | silent | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Choose target card in a gravey | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fa'adiyah Seer | silent | {T}: Draw a card and reveal it. If it isn't a land card, discard it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -87,11 +86,9 @@
 | Volcano Hellion | silent | When this creature enters, it deals an amount of damage of your choice to you and target creature. The damage can't be prevented. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Pair | silent | Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fatal Frenzy | notice | Until end of turn, target creature you control gains trample and gets +X/+0, where X is its power. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Fury Charm | notice | Choose one — • Destroy target artifact. • Target creature gets +1/+1 and gains trample until end of turn. • Remove two time counters from target permanent or su | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hedge Troll | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Magus of the Arena | notice | {3}, {T}: Tap target creature you control and target creature of an opponent's choice they control. Those creatures fight each other. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pongify | notice | Destroy target creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Timebender | notice | When this creature is turned face up, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permane | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Timecrafting | notice | Choose one — • Remove X time counters from target permanent or suspended card. • Put X time counters on target permanent with a time counter on it or suspended  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Treacherous Urge | notice | Target opponent reveals their hand. You may put a creature card from it onto the battlefield under your control. That creature gains haste. Sacrifice it at the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aquamorph Entity | unaudited | As this creature enters or is turned face up, it becomes your choice of 5/1 or 1/5. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -125,6 +122,7 @@
 | Dust Corona | handled | Enchanted creature gets +2/+0 and can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Essence Warden | handled | Whenever another creature enters, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Evolution Charm | handled | Choose one — • Search your library for a basic land card, reveal it, put it into your hand, then shuffle. • Return target creature card from your graveyard to y | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fury Charm | handled | Choose one — • Destroy target artifact. • Target creature gets +1/+1 and gains trample until end of turn. • Remove two time counters from target permanent or su | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gaea's Anthem | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghost Tactician | handled | {W}, {T}, Discard a card: Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Giant Dustwasp | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -164,6 +162,7 @@
 | Shivan Meteor | handled | Shivan Meteor deals 13 damage to target creature. Suspend 2—{1}{R}{R} (Rather than cast this card from your hand, you may pay {1}{R}{R} and exile it with two ti | the engine reads this text and performs it | Y/-/- | not_tested |
 | Simian Spirit Guide | handled |  |  | Y/-/- | not_tested |
 | Teneb, the Harvester | handled | Whenever Teneb deals combat damage to a player, you may pay {2}{B}. If you do, put target creature card from a graveyard onto the battlefield under your control | the engine reads this text and performs it | Y/-/- | not_tested |
+| Timebender | handled | When this creature is turned face up, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permane | the engine reads this text and performs it | Y/-/- | not_tested |
 | Torchling | handled | {R}: Untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Utopia Vow | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vitaspore Thallid | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -174,7 +173,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Aether Membrane
 - Ana Battlemage
@@ -184,6 +183,7 @@
 - Dash Hopes
 - Deadly Grub
 - Dunerider Outlaw
+- Enslave
 - Harmonize
 - Kor Dirge
 - Magus of the Library
@@ -203,7 +203,7 @@
 |---|---|---|---|
 | all slivers have "..." | 5 | Cautery Sliver, Darkheart Sliver, Frenetic Sliver, Necrotic Sliver, Poultice Sliver | plc |
 | echo | 3 | Hammerheim Deadeye, Stingscourger, Uktabi Drake | plc |
-| Choose one | 2 | Fury Charm, Timecrafting | plc |
+| Choose one | 1 | Timecrafting | plc |
 | all creatures have "..." | 1 | Magus of the Tabernacle | plc |
 | all forests and all saprolings are N/N green saproling creatures and forest lands in addition to their other types. | 1 | Life and Limb | plc |
 | all sliver creatures get +N/+N. | 1 | Sinew Sliver | plc |
@@ -217,7 +217,6 @@
 | as ~ enters, it becomes your choice of a N/N creature, a N/N creature with flying, or a N/N creature with defender. | 1 | Primal Plasma | plc |
 | at the beginning of each player's upkeep, that player may put an artifact, creature, or land card from their hand onto the battlefield. | 1 | Braids, Conjurer Adept | plc |
 | at the beginning of your upkeep, destroy the creature with the least power. it can't be regenerated. if two or more creatures are tied for least power, you choo | 1 | Porphyry Nodes | plc |
-| at the beginning of your upkeep, enchanted creature deals N damage to its owner. | 1 | Enslave | plc |
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M}. | 1 | Melancholy | plc |
 | change the target of target spell with a single target. you lose life equal to that spell's mana value. | 1 | Imp's Mischief | plc |
 | choose target creature. reveal cards from the top of your library until you reveal a nonland card. that creature gets +N/-N until end of turn, where N is that c | 1 | Erratic Mutation | plc |
@@ -249,7 +248,6 @@
 | when ~ enters, return three creatures you control to their owner's hand. | 1 | Dust Elemental | plc |
 | when ~ enters, return two creatures you control to their owner's hand. | 1 | Stormfront Riders | plc |
 | when ~ enters, tap all other creatures. | 1 | Timbermare | plc |
-| when ~ is turned face up, choose one — • remove two time counters from target permanent or suspended card. • put two time counters on target permanent with a ti | 1 | Timebender | plc |
 | when ~ is turned face up, target creature gets +N/-N or -N/+N until end of turn. | 1 | Shaper Parasite | plc |
 | when ~ leaves the battlefield, enchanted permanent's controller sacrifices it. | 1 | Reality Acid | plc |
 | whenever a creature enters, enchanted creature gets +N/+N until end of turn. | 1 | Mantle of Leadership | plc |

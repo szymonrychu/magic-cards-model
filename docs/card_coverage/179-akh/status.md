@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 9.5% |
+| Tested | 24 | 10.0% |
 | Works (untested) | 137 | 56.8% |
 | Partial (unaudited) | 19 | 7.9% |
-| Not working | 62 | 25.7% |
+| Not working | 61 | 25.3% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Cartouche of Strength | silent | When this Aura enters, you may have enchanted creature fight target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Commit // Memory | silent | Put target spell or nonland permanent into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cruel Reality | silent | At the beginning of enchanted player's upkeep, that player sacrifices a creature or planeswalker of their choice. If the player can't, they lose 5 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Decimator Beetle | silent | Whenever this creature attacks, remove a -1/-1 counter from target creature you control and put a -1/-1 counter on up to one target creature defending player co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Defiant Greatmaw | silent | Whenever you put one or more -1/-1 counters on this creature, remove a -1/-1 counter from another target creature you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Destined // Lead | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) All creatures able to block target creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dispossess | silent | Choose an artifact card name. Search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. Then that playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -248,13 +247,14 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Angler Drake
 - Archfiend of Ifnir
 - Cascading Cataracts
 - Censor
 - Curator of Mysteries
+- Decimator Beetle
 - Djeru's Resolve
 - Edifice of Authority
 - Gideon of the Trials
@@ -325,7 +325,6 @@
 | whenever you exert a creature, you may discard a card. if you do, draw a card. | 1 | Battlefield Scavenger | akh |
 | whenever you put one or more -N/-N counters on ~, remove a -N/-N counter from another target creature you control. | 1 | Defiant Greatmaw | akh |
 | whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Honored Crop-Captain | akh |
-| whenever ~ attacks, remove a -N/-N counter from target creature you control and put a -N/-N counter on up to one target creature defending player controls. | 1 | Decimator Beetle | akh |
 | whenever ~ becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | 1 | Glyph Keeper | akh |
 | you can spend mana of any type to cast creature spells. | 1 | Vizier of the Menagerie | akh |
 | you may exert ~ as it attacks. when you do, creatures you control get +N/+N until end of turn. | 1 | Tah-Crop Elite | akh |

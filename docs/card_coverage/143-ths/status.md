@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 11.8% |
-| Works (untested) | 132 | 62.6% |
+| Works (untested) | 133 | 63.0% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 46 | 21.8% |
+| Not working | 45 | 21.3% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Evangel of Heliod | silent | When this creature enters, create a number of 1/1 white Soldier creature tokens equal to your devotion to white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fanatic of Mogis | silent | When this creature enters, it deals damage to each opponent equal to your devotion to red. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fate Foretold | silent | When enchanted creature dies, its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Firedrinker Satyr | silent | Whenever this creature is dealt damage, it deals that much damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fleshmad Steed | silent | Whenever another creature dies, tap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hammer of Purphoros | silent | {2}{R}, {T}, Sacrifice a land: Create a 3/3 colorless Golem enchantment artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heliod, God of the Sun | silent | {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -121,6 +120,7 @@
 | Fade into Antiquity | handled | Exile target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Felhide Minotaur | handled |  |  | Y/Y/- | not_tested |
 | Feral Invocation | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Firedrinker Satyr | handled | Whenever this creature is dealt damage, it deals that much damage to you. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flamecast Wheel | handled | {5}, {T}, Sacrifice this artifact: It deals 3 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flamespeaker Adept | handled | Whenever you scry, this creature gets +2/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fleetfeather Sandals | handled | Equipped creature has flying and haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -282,7 +282,6 @@
 | when ~ enters, up to N target creatures each gain intimidate and haste until end of turn, where N is your devotion to black. | 1 | Mogis's Marauder | ths |
 | whenever another creature dies, tap ~. | 1 | Fleshmad Steed | ths |
 | whenever daxos deals combat damage to a player, exile the top card of that player"..."s mana value. until end of turn, you may cast that card and you may spend  | 1 | Daxos of Meletis | ths |
-| whenever ~ is dealt damage, it deals that much damage to you. | 1 | Firedrinker Satyr | ths |
 | your opponents can't gain life. | 1 | Erebos, God of the Dead | ths |
 | {M}{M}, {M}, sacrifice a land: create a N/N colorless golem enchantment artifact creature token. | 1 | Hammer of Purphoros | ths |
 | {M}{M}, {M}: attacking creatures get -N/-N until end of turn. | 1 | Shipwreck Singer | ths |

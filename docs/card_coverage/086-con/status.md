@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 11.3% |
-| Works (untested) | 76 | 53.9% |
+| Works (untested) | 77 | 54.6% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 44 | 31.2% |
+| Not working | 43 | 30.5% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Malfegor | silent | When Malfegor enters, discard your hand. Each opponent sacrifices a creature of their choice for each card discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manaforce Mace | silent | Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Martial Coup | silent | Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Meglonoth | silent | Whenever this creature blocks a creature, this creature deals damage to that creature's controller equal to this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nicol Bolas, Planeswalker | silent | −9: Nicol Bolas deals 7 damage to target player or planeswalker. That player or that planeswalker's controller discards seven cards, then sacrifices seven perma | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noble Hierarch | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Paragon of the Amesha | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes an Angel, gets +3/+3, and gains flying and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -115,6 +114,7 @@
 | Lapse of Certainty | handled | Counter target spell. If that spell is countered this way, put it on top of its owner's library instead of into that player's graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Master Transmuter | handled | {U}, {T}, Return an artifact you control to its owner's hand: You may put an artifact card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Matca Rioters | handled | Domain — Matca Rioters's power and toughness are each equal to the number of basic land types among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Meglonoth | handled | Whenever this creature blocks a creature, this creature deals damage to that creature's controller equal to this creature's power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Might of Alara | handled | Domain — Target creature gets +1/+1 until end of turn for each basic land type among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mirror-Sigil Sergeant | handled | At the beginning of your upkeep, if you control a blue permanent, you may create a token that's a copy of this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molten Frame | handled | Destroy target artifact creature. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -206,7 +206,6 @@
 | when ~ enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | 1 | Sphinx Summoner | con |
 | whenever another creature leaves the battlefield, you may have target player mill two cards. | 1 | Extractor Demon | con |
 | whenever enchanted land becomes tapped, its controller loses N life. | 1 | Corrupted Roots | con |
-| whenever ~ blocks a creature, ~ deals damage to that creature's controller equal to ~ power. | 1 | Meglonoth | con |
 | whenever ~ deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | 1 | Maelstrom Archangel | con |
 | you may cast ~ from your graveyard by paying {M}{M}{M}{M}{M} rather than paying its mana cost. if you do, it enters with two +N/+N counters on it. | 1 | Worldheart Phoenix | con |
 | {M}{M}, {M}: put a bribery counter on target creature you don't control. its controller draws a card. | 1 | Gwafa Hazid, Profiteer | con |

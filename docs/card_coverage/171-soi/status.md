@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 8.4% |
-| Works (untested) | 172 | 65.9% |
+| Works (untested) | 173 | 66.3% |
 | Partial (unaudited) | 10 | 3.8% |
-| Not working | 57 | 21.8% |
+| Not working | 56 | 21.5% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Inquisitor's Ox | silent | Delirium — This creature gets +1/+0 and has vigilance as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasive Surgery | silent | Counter target sorcery spell. Delirium — If there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kessig Dire Swine | silent | Delirium — This creature has trample as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kessig Forgemaster // Flameheart Werewolf | silent | Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Indignation | silent | Mill X cards. Target player loses 2 life for each creature card put into your graveyard this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Manic Scribe | silent | When this creature enters, each opponent mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moldgraf Scavenger | silent | Delirium — This creature gets +3/+0 as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -175,6 +174,7 @@
 | Jace's Scrutiny | handled | Target creature gets -4/-0 until end of turn. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jace, Unraveler of Secrets | handled | +1: Scry 1, then draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Just the Wind | handled | Return target creature to its owner's hand. Madness {U} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it in | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kessig Forgemaster // Flameheart Werewolf | handled | Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kindly Stranger // Demon-Possessed Witch | handled | Delirium — {2}{B}: Transform this creature. Activate only if there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lamplighter of Selhoff | handled | When this creature enters, if you control another Zombie, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loam Dryad | handled |  |  | Y/Y/- | not_tested |
@@ -347,7 +347,6 @@
 | whenever ~ attacks and isn't blocked, you may pay {M}{M}. if you do, transform it. | 1 | Elusive Tormentor // Insidious Mist | soi |
 | whenever ~ attacks or blocks, sacrifice another creature or land. | 1 | Morkrut Necropod | soi |
 | whenever ~ attacks, you may pay {M}{M} and discard a card. if you do, ~ deals damage to target creature or planeswalker equal to the discarded card's mana value | 1 | Wolf of Devil's Breach | soi |
-| whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Kessig Forgemaster // Flameheart Werewolf | soi |
 | you and humans you control have hexproof. | 1 | Sigarda, Heron's Grace | soi |
 | you may cast spirit spells as though they had flash. | 1 | Rattlechains | soi |
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with N additional +N/+N counters on it. | 1 | Altered Ego | soi |

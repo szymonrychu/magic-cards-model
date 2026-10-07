@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 17.0% |
+| Tested | 31 | 17.6% |
 | Works (untested) | 93 | 52.8% |
 | Partial (unaudited) | 5 | 2.8% |
-| Not working | 48 | 27.3% |
+| Not working | 47 | 26.7% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Repeated Reverberation | silent | When you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability this turn, copy that spell or ability twice. You may choose new targets | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rienne, Angel of Rebirth | silent | Other multicolored creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scheming Symmetry | silent | Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Scorch Spitter | silent | Whenever this creature attacks, it deals 1 damage to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin's Guide | silent | When this creature enters, you may search your library and/or graveyard for a card named Sorin, Vampire Lord, reveal it, and put it into your hand. If you searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tale's End | silent | Counter target activated ability, triggered ability, or legendary spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thought Distortion | silent | This spell can't be countered. Target opponent reveals their hand. Exile all noncreature, nonland cards from that player's hand and graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -176,7 +175,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Aether Gust
 - Agent of Treachery
@@ -200,6 +199,7 @@
 - Nightpack Ambusher
 - Omnath, Locus of the Roil
 - Risen Reef
+- Scorch Spitter
 - Shifting Ceratops
 - Spectral Sailor
 - Tomebound Lich
@@ -251,7 +251,6 @@
 | whenever you activate a loyalty ability of a chandra planeswalker, you may pay {M}. if you do, copy that ability. you may choose new targets for the copy. | 1 | Chandra's Regulator | m20 |
 | whenever you discard a card, exile that card from your graveyard. | 1 | Bag of Holding | m20 |
 | whenever ~ attacks, choose target elemental creature card in your graveyard with toughness less than ~ toughness. return that card to the battlefield tapped and | 1 | Thunderkin Awakener | m20 |
-| whenever ~ attacks, it deals N damage to the player or planeswalker it's attacking. | 1 | Scorch Spitter | m20 |
 | you may cast artifact spells and colorless spells from the top of your library. | 1 | Mystic Forge | m20 |
 | you may pay {M} and tap four untapped creatures you control with flying rather than pay ~ mana cost. | 1 | Sephara, Sky's Blade | m20 |
 | {M}, {M}: choose a card name, then reveal the top card of your library. if that card has the chosen name, sacrifice ~ and draw three cards. activate only as a s | 1 | Diviner's Lockbox | m20 |

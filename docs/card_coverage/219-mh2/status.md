@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 16.7% |
+| Tested | 44 | 17.1% |
 | Works (untested) | 122 | 47.3% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 81 | 31.4% |
+| Not working | 80 | 31.0% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Geyadrone Dihada | silent | −7: Gain control of each permanent with a corruption counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glimpse of Tomorrow | silent | Suspend 3—{R}{R} Shuffle all permanents you own into your library, then reveal that many cards from the top of your library. Put all non-Aura permanent cards re | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Traprunner | silent | Whenever this creature attacks, flip three coins. For each flip you win, create a 1/1 red Goblin creature token that's tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gouged Zealot | silent | Delirium — Whenever this creature attacks, if there are four or more card types among cards in your graveyard, this creature deals 1 damage to each creature def | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ignoble Hierarch | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Inevitable Betrayal | silent | Suspend 3—{1}{U}{U} (Rather than cast this card from your hand, pay {1}{U}{U} and exile it with three time counters on it. At the beginning of your upkeep, remo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jade Avenger | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -245,7 +244,7 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>44 cards</summary>
 
 - Abiding Grace
 - Archon of Cruelty
@@ -262,6 +261,7 @@
 - Fae Offering
 - Gilt-Blade Prowler
 - Glorious Enforcer
+- Gouged Zealot
 - Grief
 - Grist, the Hunger Tide
 - Harmonic Prodigy
@@ -298,7 +298,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | modular | 8 | Arcbound Javelineer, Arcbound Mouser, Arcbound Prototype, Arcbound Slasher, Arcbound Tracker | mh2 |
-| Delirium | 4 | Bloodbraid Marauder, Foul Watcher, Gouged Zealot, Scuttletide | mh2 |
+| Delirium | 3 | Bloodbraid Marauder, Foul Watcher, Scuttletide | mh2 |
 | eternalize | 2 | Timeless Dragon, Timeless Witness | mh2 |
 | reinforce | 2 | Break Ties, Wren's Run Hydra | mh2 |
 | Converge | 1 | Glinting Creeper | mh2 |

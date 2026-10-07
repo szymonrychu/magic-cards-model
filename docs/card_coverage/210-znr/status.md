@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 14.1% |
-| Works (untested) | 124 | 48.6% |
+| Tested | 37 | 14.5% |
+| Works (untested) | 125 | 49.0% |
 | Partial (unaudited) | 21 | 8.2% |
-| Not working | 74 | 29.0% |
+| Not working | 72 | 28.2% |
 
 ## Cards needing work
 
@@ -64,7 +64,6 @@
 | Ravager's Mace | silent | Equipped creature gets +1/+0 for each creature in your party and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reclaim the Wastes | silent | Kicker {3} (You may pay an additional {3} as you cast this spell.) Search your library for a basic land card, reveal it, put it into your hand, then shuffle. If | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Relic Robber | silent | Whenever this creature deals combat damage to a player, that player creates a 0/1 colorless Goblin Construct artifact creature token with "This token can't bloc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Roiling Regrowth | silent | Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ruin Crab | silent | Landfall — Whenever a land you control enters, each opponent mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scourge of the Skyclaves | silent | Scourge of the Skyclaves's power and toughness are each equal to 20 minus the highest life total among players. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Gate Stormcaller | silent | When this creature enters, copy the next instant or sorcery spell with mana value 2 or less you cast this turn when you cast it. If this creature was kicked, co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -85,7 +84,6 @@
 | Tazeem Raptor | silent | When this creature enters, you may return a land you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thieving Skydiver | silent | When this creature enters, if it was kicked, gain control of target artifact with mana value X or less. If that artifact is an Equipment, attach it to this crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thwart the Grave | silent | This spell costs {1} less to cast for each creature in your party. (Your party consists of up to one each of Cleric, Rogue, Warrior, and Wizard.) Return target  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Valakut Exploration | silent | At the beginning of your end step, if there are cards exiled with this enchantment, put them into their owner's graveyard, then this enchantment deals that much | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Verazol, the Split Current | silent | Whenever you cast a kicked spell, you may remove two +1/+1 counters from Verazol. If you do, copy that spell. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yasharn, Implacable Earth | silent | When Yasharn enters, search your library for a basic Forest card and a basic Plains card, reveal those cards, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zagras, Thief of Heartbeats | silent | Whenever a creature you control deals combat damage to a planeswalker, destroy that planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -203,6 +201,7 @@
 | Risen Riptide | handled | Whenever you cast a kicked spell, this creature has base power and toughness 5/5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rockslide Sorcerer | handled | Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roil Eruption | handled | Kicker {5} (You may pay an additional {5} as you cast this spell.) Roil Eruption deals 3 damage to any target. If this spell was kicked, it deals 5 damage inste | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Roiling Regrowth | handled | Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roost of Drakes | handled | When this enchantment enters, if it was kicked, create a 2/2 blue Drake creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scavenged Blade | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scion of the Swarm | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -249,7 +248,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
@@ -287,6 +286,7 @@
 - Synchronized Spellcraft
 - Turntimber Symbiosis // Turntimber, Serpentine Wood
 - Valakut Awakening // Valakut Stoneforge
+- Valakut Exploration
 
 </details>
 
@@ -306,7 +306,6 @@
 | as long as ~ has a +N/+N counter on it, it can attack as though it didn't have defender. | 1 | Skyclave Sentinel | znr |
 | as long as ~ is equipped, it has haste. | 1 | Fireblade Charger | znr |
 | at the beginning of combat on your turn, if you have a full party, choose target nonland permanent an opponent controls. until your next turn, it can"..."t be a | 1 | Linvala, Shield of Sea Gate | znr |
-| at the beginning of your end step, if there are cards exiled with ~, put them into their owner's graveyard, then ~ deals that much damage to each opponent. | 1 | Valakut Exploration | znr |
 | choose target creature you control. put a +N/+N counter on it for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, | 1 | Strength of Solidarity | znr |
 | choose target creature. you lose N life. until end of turn, that creature gains "..." | 1 | Malakir Rebirth // Malakir Mire | znr |
 | counter target creature or planeswalker spell unless its controller pays {M}. if an opponent has eight or more cards in their graveyard, instead counter that sp | 1 | Anticognition | znr |
@@ -331,7 +330,6 @@
 | look at the top five cards of your library. you may reveal a creature card from among them and put it into your hand. put the rest on the bottom of your library | 1 | Adventure Awaits | znr |
 | nontoken creatures you control are forest lands in addition to their other types. | 1 | Ashaya, Soul of the Wild | znr |
 | sacrifice N lands. for each land sacrificed ~, draw a card. you may play N additional lands ~. lands you control enter tapped ~. | 1 | Nahiri's Lithoforming | znr |
-| sacrifice a land. search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | 1 | Roiling Regrowth | znr |
 | spells your opponents cast that target charix cost {M} more to cast. | 1 | Charix, the Raging Isle | znr |
 | taborax has lifelink as long as it has five or more +N/+N counters on it. | 1 | Taborax, Hope's Demise | znr |
 | tap target creature. its controller mills two cards. that creature doesn"..."s next untap step. (they put the top two cards of their library into their graveyar | 1 | Glacial Grasp | znr |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 6.3% |
-| Works (untested) | 74 | 46.5% |
+| Works (untested) | 75 | 47.2% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 65 | 40.9% |
+| Not working | 64 | 40.3% |
 
 ## Cards needing work
 
@@ -70,11 +70,10 @@
 | Patron of the Orochi | silent | {T}: Untap all Forests and all green creatures. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pus Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Reduce to Dreams | silent | Return all artifacts and enchantments to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ronin Cliffrider | silent | Whenever this creature attacks, you may have it deal 1 damage to each creature defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Ronin Cliffrider | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ronin Warclub | silent | Whenever a creature you control enters, attach this Equipment to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sakura-Tribe Springcaller | silent | At the beginning of your upkeep, add {G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimmering Glasskite | silent | Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shinka Gatekeeper | silent | Whenever this creature is dealt damage, it deals that much damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shirei, Shizo's Caretaker | silent | Whenever a creature with power 1 or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the ne | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Shizuko, Caller of Autumn | silent | At the beginning of each player's upkeep, that player adds {G}{G}{G}. Until end of turn, they don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Silverstorm Samurai | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -150,6 +149,7 @@
 | Roar of Jukai | handled | If you control a Forest, each blocked creature gets +2/+2 until end of turn. Splice onto Arcane—An opponent gains 5 life. (As you cast an Arcane spell, you may  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scaled Hulk | handled | Whenever you cast a Spirit or Arcane spell, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scourge of Numai | handled | At the beginning of your upkeep, you lose 2 life if you don't control an Ogre. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shinka Gatekeeper | handled | Whenever this creature is dealt damage, it deals that much damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shuko | handled | Equipped creature gets +1/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shuriken | handled | Equipped creature has "{T}, Unattach Shuriken: Shuriken deals 2 damage to target creature. That creature's controller gains control of Shuriken unless it was un | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sickening Shoal | handled | You may exile a black card with mana value X from your hand rather than pay this spell's mana cost. Target creature gets -X/-X until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -198,7 +198,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| bushido | 6 | Indebted Samurai, Isao, Enlightened Bushi, Kentaro, the Smiling Cat, Silverstorm Samurai, Takeno's Cavalry | bok |
+| bushido | 7 | Indebted Samurai, Isao, Enlightened Bushi, Kentaro, the Smiling Cat, Ronin Cliffrider, Silverstorm Samurai | bok |
 | soulshift | 6 | Body of Jukai, Crawling Filth, Forked-Branch Garami, Harbinger of Spring, Moonlit Strider | bok |
 | at the beginning of the end step, if there are two or more ki counters on ~, you may flip it. | 5 | Budoka Pupil // Ichiga, Who Topples Oaks, Callow Jushi // Jaraku the Interloper, Cunning Bandit // Azamuki, Treachery Incarnate, Faithful Squire // Kaiso, Memory of Loyalty, Hired Muscle // Scarmaker | bok |
 | offering | 3 | Patron of the Akki, Patron of the Kitsune, Patron of the Moon | bok |
@@ -232,10 +232,8 @@
 | whenever ink-eyes deals combat damage to a player, you may put target creature card from that player's graveyard onto the battlefield under your control. | 1 | Ink-Eyes, Servant of Oni | bok |
 | whenever you cast a spirit or arcane spell, you may search your library for an aura card with enchant creature, reveal it, put it into your hand, then shuffle. | 1 | Tallowisp | bok |
 | whenever ~ attacks, it gains "..." until end of turn unless defending player sacrifices a creature of their choice. | 1 | Ogre Marauder | bok |
-| whenever ~ attacks, you may have it deal N damage to each creature defending player controls. | 1 | Ronin Cliffrider | bok |
 | whenever ~ deals combat damage to a player, look at that player's hand. | 1 | Walker of Secret Ways | bok |
 | whenever ~ deals damage to a creature, tap that creature and it doesn"..."s next untap step. | 1 | Matsu-Tribe Sniper | bok |
-| whenever ~ is dealt damage, it deals that much damage to you. | 1 | Shinka Gatekeeper | bok |
 | whenever ~ is dealt damage, you gain that much life. | 1 | Kami of the Honored Dead | bok |
 | you and target opponent each gain control of all creatures the other controls until end of turn. untap those creatures. those creatures gain haste until end of  | 1 | Twist Allegiance | bok |
 | {M}, discard a spirit or arcane card: ~ becomes an N/N cat artifact creature until end of turn, where N is the discarded card's mana value. | 1 | Slumbering Tora | bok |

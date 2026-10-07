@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.5% |
+| Tested | 22 | 8.9% |
 | Works (untested) | 135 | 54.9% |
 | Partial (unaudited) | 27 | 11.0% |
-| Not working | 63 | 25.6% |
+| Not working | 62 | 25.2% |
 
 ## Cards needing work
 
@@ -81,7 +81,6 @@
 | Klothys's Design | notice | Creatures you control get +X/+X until end of turn, where X is your devotion to green. (Each {G} in the mana costs of permanents you control counts toward your d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Naiad of Hidden Coves | notice | During turns other than yours, spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nylea's Intervention | notice | Choose one — • Search your library for up to X land cards, reveal them, put them into your hand, then shuffle. • Nylea's Intervention deals twice X damage to ea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Purphoros's Intervention | notice | Choose one — • Create an X/1 red Elemental creature token with trample and haste. Sacrifice it at the beginning of the next end step. • Purphoros's Intervention | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Purphoros, Bronze-Blooded | notice | {2}{R}: You may put a red creature card or an artifact creature card from your hand onto the battlefield. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sunlit Hoplite | notice | This creature gets +1/+0 as long as you control an Elspeth planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swimmer in Nightmares | notice | This creature gets +3/+0 as long as there are ten or more cards in a single graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -255,7 +254,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Cling to Dust
 - Dawn Evangel
@@ -270,6 +269,7 @@
 - Nessian Hornbeetle
 - Nylea, Keen-Eyed
 - Nyxbloom Ancient
+- Purphoros's Intervention
 - Shadowspear
 - Soul-Guide Lantern
 - Storm's Wrath
@@ -285,8 +285,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose one | 4 | Heliod's Intervention, Nylea's Intervention, Purphoros's Intervention, Thassa's Intervention | thb |
 | ~ escapes with a +N/+N counter on it. | 4 | Loathsome Chimera, Ox of Agonas, Phoenix of Ash, Underworld Rage-Hound | thb |
+| Choose one | 3 | Heliod's Intervention, Nylea's Intervention, Thassa's Intervention | thb |
 | Constellation | 2 | Nessian Wanderer, Protean Thaumaturge | thb |
 | ~ escapes with two +N/+N counters on it. | 2 | Underworld Charger, Woe Strider | thb |
 | +N: look at the top four cards of your library. you may reveal an enchantment card from among them and put that card into your hand. put the rest on the bottom  | 1 | Calix, Destiny's Hand | thb |

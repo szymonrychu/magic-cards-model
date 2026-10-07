@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 13.2% |
+| Tested | 39 | 13.9% |
 | Works (untested) | 133 | 47.3% |
 | Partial (unaudited) | 20 | 7.1% |
-| Not working | 91 | 32.4% |
+| Not working | 89 | 31.7% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Aragorn, Company Leader | silent | Whenever the Ring tempts you, if you chose a creature other than Aragorn as your Ring-bearer, put your choice of a counter from among first strike, vigilance, d | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Assault on Osgiliath | silent | Amass Orcs X, then Goblins and Orcs you control gain double strike and haste until end of turn. (To amass Orcs X, put X +1/+1 counters on an Army you control. I | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bag End Porter | silent | Whenever this creature attacks, it gets +X/+X until end of turn, where X is the number of legendary creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Battle-Scarred Goblin | silent | Whenever this creature becomes blocked, it deals 1 damage to each creature blocking it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Borne Upon a Wind | silent | You may cast spells this turn as though they had flash. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Call of the Ring | silent | Whenever you choose a creature as your Ring-bearer, you may pay 2 life. If you do, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Celeborn the Wise | silent | Whenever you scry, Celeborn gets +1/+1 until end of turn for each card looked at while scrying this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -61,7 +60,6 @@
 | Isolation at Orthanc | silent | Put target creature into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | King of the Oathbreakers | silent | Whenever King of the Oathbreakers or another Spirit you control becomes the target of a spell, it phases out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Legolas, Counter of Kills | silent | Whenever you scry, if Legolas is tapped, you may untap it. Do this only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Legolas, Master Archer | silent | Whenever you cast a spell that targets a creature you don't control, Legolas deals damage equal to its power to up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lembas | silent | When this artifact is put into a graveyard from the battlefield, its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lobelia Sackville-Baggins | silent | When Lobelia enters, exile target creature card from an opponent's graveyard that was put there from the battlefield this turn, then create X Treasure tokens, w | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Long List of the Ents | silent | I, II, III, IV, V, VI — Note a creature type that hasn't been noted for this Saga. When you next cast a creature spell of that type this turn, that creature ent | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -274,9 +272,10 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>39 cards</summary>
 
 - Arwen, Mortal Queen
+- Battle-Scarred Goblin
 - Bill the Pony
 - Breaking of the Fellowship
 - Butterbur, Bree Innkeeper
@@ -299,6 +298,7 @@
 - Gollum, Patient Plotter
 - Grond, the Gatebreaker
 - Last March of the Ents
+- Legolas, Master Archer
 - Lórien Revealed
 - Oliphaunt
 - Orcish Bowmasters
@@ -397,7 +397,6 @@
 | whenever the ring tempts you, target opponent reveals cards from the top of their library until they reveal a land card. put that card onto the battlefield tapp | 1 | Sméagol, Helpful Guide | ltr |
 | whenever witch-king attacks, defending player sacrifices a creature with the least power among creatures they control. | 1 | Witch-king, Bringer of Ruin | ltr |
 | whenever you attack, scry N, then you may reveal the top card of your library. if a creature card is revealed ~, put it onto the battlefield tapped and attackin | 1 | Doors of Durin | ltr |
-| whenever you cast a spell that targets a creature you don't control, legolas deals damage equal to its power to up to one target creature. | 1 | Legolas, Master Archer | ltr |
 | whenever you cast your second spell each turn, copy it, except the copy isn't legendary. you may choose new targets for the copy. | 1 | Storm of Saruman | ltr |
 | whenever you cast your second spell each turn, each opponent mills two cards. when one or more cards are milled ~, exile target enchantment, instant, or sorcery | 1 | Saruman of Many Colors | ltr |
 | whenever you choose a creature as your ring-bearer, you may pay N life. if you do, draw a card. | 1 | Call of the Ring | ltr |
@@ -410,7 +409,6 @@
 | whenever ~ attacks, it gets +N/+N until end of turn, where N is the number of legendary creatures you control. | 1 | Bag End Porter | ltr |
 | whenever ~ attacks, you may sacrifice a food or pay {M}{M}. when you do, tap target creature an opponent controls. | 1 | Nimble Hobbit | ltr |
 | whenever ~ attacks, you may tap any number of untapped humans you control. draw a card for each human tapped ~. | 1 | Minas Tirith Garrison | ltr |
-| whenever ~ becomes blocked, it deals N damage to each creature blocking it. | 1 | Battle-Scarred Goblin | ltr |
 | whenever ~ deals damage to a goblin or orc, destroy that creature. | 1 | East-Mark Cavalier | ltr |
 | whenever ~ or another spirit you control becomes the target of a spell, it phases out. | 1 | King of the Oathbreakers | ltr |
 | you and target opponent each create a food token. | 1 | Oath of the Grey Host | ltr |

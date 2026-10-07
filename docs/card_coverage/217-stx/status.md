@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 15.0% |
-| Works (untested) | 150 | 54.7% |
+| Tested | 42 | 15.3% |
+| Works (untested) | 152 | 55.5% |
 | Partial (unaudited) | 5 | 1.8% |
-| Not working | 78 | 28.5% |
+| Not working | 75 | 27.4% |
 
 ## Cards needing work
 
@@ -36,8 +36,6 @@
 | Conspiracy Theorist | silent | Whenever this creature attacks, you may pay {1} and discard a card. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Containment Breach | silent | Destroy target artifact or enchantment. If its mana value is 2 or less, create a 1/1 black and green Pest creature token with "When this token dies, you gain 1  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Culmination of Studies | silent | Exile the top X cards of your library. For each land card exiled this way, create a Treasure token. For each blue card exiled this way, draw a card. For each re | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Daemogoth Titan | silent | Whenever this creature attacks or blocks, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Daemogoth Woe-Eater | silent | At the beginning of your upkeep, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadly Brew | silent | Each player sacrifices a creature or planeswalker of their choice. If you sacrificed a permanent this way, you may return another permanent card from your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Detention Vortex | silent | {3}: Destroy this Aura. Only your opponents may activate this ability and only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Devastating Mastery | silent | You may pay {2}{W}{W} rather than pay this spell's mana cost. If the {2}{W}{W} cost was paid, an opponent chooses up to two nonland permanents they control and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,7 +95,6 @@
 | Confront the Past | notice | Choose one — • Return target planeswalker card with mana value X or less from your graveyard to the battlefield. • Remove twice X loyalty counters from target p | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emergent Sequence | notice | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature that's stil | unparsed remainder: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Put a +1/+1 counter on it for each land you had enter the battlefield under your control this turn. | Y/Y/- | not_working |
 | Flunk | notice | Target creature gets -X/-X until end of turn, where X is 7 minus the number of cards in that creature's controller's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Lorehold Command | notice | Choose two — • Create a 3/2 red and white Spirit creature token. • Creatures you control get +1/+0 and gain indestructible and haste until end of turn. • Loreho | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Prismari Apprentice | notice | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature can't be blocked this turn. If that spell has mana value 5 or greater, put a +1 | unparsed remainder: If that spell has mana value 5 or greater, put a +1/+1 counter on this creature. | Y/Y/- | not_working |
 | Quandrix Command | notice | Choose two — • Return target creature or planeswalker to its owner's hand. • Counter target artifact or enchantment spell. • Put two +1/+1 counters on target cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Scurrid Colony | notice | This creature gets +2/+2 as long as you control eight or more lands. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -134,6 +131,8 @@
 | Creative Outburst | handled | Creative Outburst deals 5 damage to any target. Look at the top five cards of your library. Put one of them into your hand and the rest on the bottom of your li | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crushing Disappointment | handled | Each player loses 2 life. You draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Curate | handled | Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.) Draw a | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Daemogoth Titan | handled | Whenever this creature attacks or blocks, sacrifice a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Daemogoth Woe-Eater | handled | At the beginning of your upkeep, sacrifice a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Decisive Denial | handled | Choose one — • Target creature you control fights target creature you don't control. (Each deals damage equal to its power to the other.) • Counter target noncr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Defend the Campus | handled | Choose one — • Creatures you control get +1/+1 until end of turn. • Destroy target creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonsguard Elite | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -263,7 +262,7 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>42 cards</summary>
 
 - Academic Dispute
 - Bayou Groff
@@ -291,6 +290,7 @@
 - Infuse with Vitality
 - Introduction to Annihilation
 - Kelpie Guide
+- Lorehold Command
 - Lorehold Excavation
 - Make Your Mark
 - Mascot Exhibition
@@ -315,7 +315,7 @@
 |---|---|---|---|
 | Magecraft | 5 | Elemental Expressionist, Prismari Apprentice, Prismari Pledgemage, Quandrix Apprentice, Symmetry Sage | stx |
 | Choose one | 2 | Academic Probation, Confront the Past | stx |
-| Choose two | 2 | Lorehold Command, Quandrix Command | stx |
+| Choose two | 1 | Quandrix Command | stx |
 | +N: you may discard a card. if you do, draw a card. if a creature card was discarded ~, draw two cards instead. | 1 | Mila, Crafty Companion // Lukka, Wayward Bonder | stx |
 | as an additional cost to cast ~, exile an instant or sorcery card from your graveyard. ~ deals N damage to each non-dragon creature, where N is the exiled card' | 1 | Draconic Intervention | stx |
 | as an additional cost to cast ~, sacrifice a creature. create N N/N black and green pest creature tokens with "..." where N is the sacrificed creature's power. | 1 | Tend the Pests | stx |
@@ -324,7 +324,6 @@
 | as long as ~ is in your graveyard, if you would learn, you may instead return ~ to the battlefield. | 1 | Retriever Phoenix | stx |
 | at the beginning of combat on your turn, you may choose two. each mode must target a different player. | 1 | Shadrix Silverquill | stx |
 | at the beginning of your upkeep, exile the top card of each opponent's library. until end of turn, you may cast spells from among those exiled cards, and you ma | 1 | Uvilda, Dean of Perfection // Nassari, Dean of Expression | stx |
-| at the beginning of your upkeep, sacrifice a creature. | 1 | Daemogoth Woe-Eater | stx |
 | choose a creature or planeswalker, then destroy all other creatures and planeswalkers. | 1 | Selfless Glyphweaver // Deadly Vanity | stx |
 | choose target creature you control. each other creature you control becomes a copy of it until end of turn, except those creatures aren't legendary. | 1 | Augmenter Pugilist // Echoing Equation | stx |
 | choose target creature. when that creature dies ~, search your library for a creature card with lesser mana value, put it onto the battlefield tapped, then shuf | 1 | Rushed Rebirth | stx |
@@ -363,7 +362,6 @@
 | whenever another nontoken creature you control dies, exile it. if you do, create a token that"..."s a spirit in addition to its other types and it has "..." | 1 | Hofri Ghostforge | stx |
 | whenever one or more cards are put into exile during your turn, put a +N/+N counter on ~. ~ triggers only once each turn. | 1 | Stonebinder's Familiar | stx |
 | whenever you gain life, you may pay {M}. if you do, put a +N/+N counter on each creature you control and those creatures gain trample until end of turn. | 1 | Valentin, Dean of the Vein // Lisette, Dean of the Root | stx |
-| whenever ~ attacks or blocks, sacrifice a creature. | 1 | Daemogoth Titan | stx |
 | whenever ~ attacks, it gains flying until end of turn if you control a creature with flying. the same is true for first strike, double strike, deathtouch, indes | 1 | Thunderous Orator | stx |
 | whenever ~ attacks, look at the top seven cards of your library. you may cast an instant or sorcery spell with mana value less than or equal to ~'s power from a | 1 | Velomachus Lorehold | stx |
 | whenever ~ attacks, the next instant or sorcery spell you cast ~ costs {M} less to cast, where N is ~ power as ~ resolves. | 1 | Maelstrom Muse | stx |

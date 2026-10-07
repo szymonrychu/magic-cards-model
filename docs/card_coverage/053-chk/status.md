@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 26 | 9.2% |
-| Works (untested) | 132 | 46.6% |
-| Partial (unaudited) | 14 | 4.9% |
-| Not working | 111 | 39.2% |
+| Works (untested) | 133 | 47.0% |
+| Partial (unaudited) | 15 | 5.3% |
+| Not working | 109 | 38.5% |
 
 ## Cards needing work
 
@@ -91,11 +91,9 @@
 | Night of Souls' Betrayal | silent | All creatures get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Numai Outcast | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Oathkeeper, Takeno's Daisho | silent | Whenever equipped creature dies, return that card to the battlefield under your control if it's a Samurai card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Oni Possession | silent | At the beginning of your upkeep, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orochi Eggwatcher // Shidako, Broodmistress | silent | {2}{G}, {T}: Create a 1/1 green Snake creature token. If you control ten or more creatures, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orochi Hatchery | silent | {5}, {T}: Create a 1/1 green Snake creature token for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orochi Ranger | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Painwracker Oni | silent | At the beginning of your upkeep, sacrifice a creature if you don't control an Ogre. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Part the Veil | silent | Return all creatures you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Petals of Insight | silent | Look at the top three cards of your library. You may put those cards on the bottom of your library in any order. If you do, return Petals of Insight to its owne | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pious Kitsune | silent | At the beginning of your upkeep, put a devotion counter on this creature. Then if a creature named Eight-and-a-Half-Tails is on the battlefield, you gain 1 life | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -109,7 +107,7 @@
 | Scuttling Death | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sensei Golden-Tail | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Serpent Skin | silent | {G}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shisato, Whispering Hunter | silent | At the beginning of your upkeep, sacrifice a Snake. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Shisato, Whispering Hunter | silent | Whenever Shisato deals combat damage to a player, that player skips their next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sift Through Sands | silent | Draw two cards, then discard a card. If you've cast a spell named Peer Through Depths and a spell named Reach Through Mists this turn, you may search your libra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Silent-Chant Zubera | silent | When this creature dies, you gain 2 life for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soratami Savant | silent | {3}, Return a land you control to its owner's hand: Counter target spell unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -147,6 +145,7 @@
 | Myojin of Infinite Rage | unaudited | Myojin of Infinite Rage enters with a divinity counter on it if you cast it from your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Myojin of Life's Web | unaudited | Myojin of Life's Web enters with a divinity counter on it if you cast it from your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Myojin of Seeing Winds | unaudited | Myojin of Seeing Winds enters with a divinity counter on it if you cast it from your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Oni Possession | unaudited | Enchanted creature is a Demon Spirit. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sachi, Daughter of Seshiro | unaudited | Shamans you control have "{T}: Add {G}{G}." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Swirl the Mists | unaudited | As this enchantment enters, choose a color word. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Uba Mask | unaudited | If a player would draw a card, that player exiles that card face up instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -234,6 +233,7 @@
 | Orochi Leafcaller | handled |  |  | Y/-/- | not_tested |
 | Orochi Sustainer | handled |  |  | Y/-/- | not_tested |
 | Pain Kami | handled | {X}{R}, Sacrifice this creature: It deals X damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Painwracker Oni | handled | At the beginning of your upkeep, sacrifice a creature if you don't control an Ogre. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Peer Through Depths | handled | Look at the top five cards of your library. You may reveal an instant or sorcery card from among them and put it into your hand. Put the rest on the bottom of y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pinecrest Ridge | handled |  |  | Y/-/- | not_tested |
 | Psychic Puppetry | handled | You may tap or untap target permanent. Splice onto Arcane {U} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice cost. If  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -337,9 +337,6 @@
 | as ~ enters, choose a color word. | 1 | Swirl the Mists | chk |
 | at the beginning of the end step, if ~ is enchanted by two or more auras, flip it. | 1 | Kitsune Mystic // Autumn-Tail, Kitsune Sage | chk |
 | at the beginning of your upkeep, put a devotion counter on ~. then if a creature named eight-and-a-half-tails is on the battlefield, you gain N life for each de | 1 | Pious Kitsune | chk |
-| at the beginning of your upkeep, sacrifice a creature if you don't control an ogre. | 1 | Painwracker Oni | chk |
-| at the beginning of your upkeep, sacrifice a creature. | 1 | Oni Possession | chk |
-| at the beginning of your upkeep, sacrifice a snake. | 1 | Shisato, Whispering Hunter | chk |
 | at the beginning of your upkeep, sacrifice kuro unless you pay {M}{M}{M}{M}. | 1 | Kuro, Pitlord | chk |
 | at the beginning of your upkeep, target opponent discards a card for each shrine you control. | 1 | Honden of Night's Reach | chk |
 | at the beginning of your upkeep, you may have target creature you control get +N/+N until end of turn, where N is the number of creatures you control. if you do | 1 | Junkyo Bell | chk |
@@ -353,6 +350,7 @@
 | each other creature named ~ gets +N/+N and has haste. | 1 | Brothers Yamazaki | chk |
 | each other samurai creature you control gets +N/+N for each point of bushido it has. | 1 | Takeno, Samurai General | chk |
 | enchanted creature gets +N/+N and attacks each combat if able. | 1 | Uncontrollable Anger | chk |
+| enchanted creature is a demon spirit. | 1 | Oni Possession | chk |
 | exile target creature. at the beginning of the next end step, return that card to the battlefield under its owner's control with a +N/+N counter on it. | 1 | Otherworldly Journey | chk |
 | for each spirit, return it to its owner's hand unless that player pays {M}. | 1 | Cut the Tethers | chk |
 | if a creature dealt damage by kumano ~ would die, exile it instead. | 1 | Kumano, Master Yamabushi | chk |
@@ -391,6 +389,7 @@
 | whenever godo attacks for the first time each turn, untap it and all samurai you control. after ~, there is an additional combat phase. | 1 | Godo, Bandit Warlord | chk |
 | whenever one or more creatures block, flip a coin. if you win the flip, each blocking creature is sacrificed by its controller. if you lose the flip, each block | 1 | Tide of War | chk |
 | whenever one or more creatures you control deal combat damage to a player, tap all lands that player controls and untap all lands you control. | 1 | Nature's Will | chk |
+| whenever shisato deals combat damage to a player, that player skips their next untap step. | 1 | Shisato, Whispering Hunter | chk |
 | whenever you cast a spirit or arcane spell, you may exile hikari. if you do, return it to the battlefield under its owner's control at the beginning of the next | 1 | Hikari, Twilight Guardian | chk |
 | whenever you cast a spirit or arcane spell, ~ gains protection from the color of your choice until end of turn. | 1 | Kami of the Painted Road | chk |
 | whenever you draw a card, exile the top card of your library face down. | 1 | Moonring Mirror | chk |

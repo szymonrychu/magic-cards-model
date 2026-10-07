@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 17.6% |
-| Works (untested) | 99 | 52.9% |
+| Tested | 34 | 18.2% |
+| Works (untested) | 100 | 53.5% |
 | Partial (unaudited) | 12 | 6.4% |
-| Not working | 43 | 23.0% |
+| Not working | 41 | 21.9% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Living Brain, Mechanical Marvel | silent | At the beginning of combat on your turn, target non-Equipment artifact you control becomes an artifact creature with base power and toughness 3/3 until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Maximum Carnage | silent | I — Until your next turn, each creature attacks each combat if able and attacks a player other than you if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Miles Morales // Ultimate Spider-Man | silent | Whenever you attack, double the number of each kind of counter on each Spider and legendary creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Molten Man, Inferno Incarnate | silent | When Molten Man leaves the battlefield, sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mysterio, Master of Illusion | silent | When Mysterio enters, create a 3/3 blue Illusion Villain creature token for each nontoken Villain you control. Exile those tokens when Mysterio leaves the battl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Parker Luck | silent | At the beginning of your end step, two target players each reveal the top card of their library. They each lose life equal to the mana value of the card reveale | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rent Is Due | silent | At the beginning of your end step, you may tap two untapped creatures and/or Treasures you control. If you do, draw a card. Otherwise, sacrifice this enchantmen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -61,7 +60,6 @@
 | Vulture, Scheming Scavenger | silent | Whenever Vulture attacks, other Villains you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wall Crawl | silent | Spiders you control get +1/+1 and can't be blocked by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | With Great Power . . . | silent | Enchanted creature gets +2/+2 for each Aura and Equipment attached to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Carnage, Crimson Chaos | notice | When Carnage enters, return target creature card with mana value 3 or less from your graveyard to the battlefield. It gains "This creature attacks each combat i | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Eddie Brock // Venom, Lethal Protector | notice | Whenever Venom attacks, you may sacrifice another creature. If you do, draw X cards, then you may put a permanent card with mana value X or less from your hand  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Heroes' Hangout | notice | Choose one — • Date Night — Exile the top two cards of your library. Choose one of them. Until the end of your next turn, you may play that card. • Patrol Night | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Hide on the Ceiling | notice | Exile X target artifacts and/or creatures. Return the exiled cards to the battlefield under their owners' control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -115,6 +113,7 @@
 | Masked Meower | handled | Discard a card, Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mechanical Mobster | handled | When this creature enters, exile up to one target card from a graveyard. Target creature you control connives. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Merciless Enforcers | handled | {3}{B}: This creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Molten Man, Inferno Incarnate | handled | When Molten Man enters, search your library for a basic Mountain card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Morbius the Living Vampire | handled | {U}{B}, Exile this card from your graveyard: Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your libr | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mysterio's Phantasm | handled | Whenever this creature attacks, mill a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | News Helicopter | handled | When this creature enters, create a 1/1 green and white Human Citizen creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -184,10 +183,11 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Aunt May
 - Behold the Sinister Six!
+- Carnage, Crimson Chaos
 - Doc Ock's Henchmen
 - Doc Ock's Tentacles
 - Doctor Octopus, Master Planner
@@ -256,8 +256,6 @@
 | top of the food chain — kraven's power is equal to the greatest mana value among permanents you control. | 1 | Kraven, Proud Predator | spm |
 | until your next turn, each creature attacks each combat if able and attacks a player other than you if able. | 1 | Maximum Carnage | spm |
 | when black cat enters, look at the top nine cards of target opponent's library, exile two of them face down, then put the rest on the bottom of their library in | 1 | Black Cat, Cunning Thief | spm |
-| when carnage enters, return target creature card with mana value N or less from your graveyard to the battlefield. it gains "..." and "..." | 1 | Carnage, Crimson Chaos | spm |
-| when molten man leaves the battlefield, sacrifice a land. | 1 | Molten Man, Inferno Incarnate | spm |
 | when mysterio enters, create a N/N blue illusion villain creature token for each nontoken villain you control. exile those tokens when mysterio leaves the battl | 1 | Mysterio, Master of Illusion | spm |
 | when the spot enters, exile up to one target nonland permanent and up to one target nonland permanent card from a graveyard. | 1 | The Spot, Living Portal | spm |
 | when you next cast a creature spell ~, copy it, except the copy isn't legendary. | 1 | The Clone Saga | spm |

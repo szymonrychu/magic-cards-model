@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 10.5% |
+| Tested | 26 | 11.4% |
 | Works (untested) | 99 | 43.4% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 83 | 36.4% |
+| Not working | 81 | 35.5% |
 
 ## Cards needing work
 
@@ -79,7 +79,6 @@
 | Porcuparrot | silent | {T}: This creature deals X damage to any target, where X is the number of times this creature has mutated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pouncing Shoreshark | silent | Whenever this creature mutates, you may return target creature an opponent controls to its owner's hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Primal Empathy | silent | At the beginning of your upkeep, draw a card if you control a creature with the greatest power among creatures on the battlefield. Otherwise, put a +1/+1 counte | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Quartzwood Crasher | silent | Whenever one or more creatures you control with trample deal combat damage to a player, create an X/X green Dinosaur Beast creature token with trample, where X  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Regal Leosaur | silent | Whenever this creature mutates, other creatures you control get +2/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Reptilian Reflection | silent | Whenever you cycle a card, you may have this enchantment become a 5/4 Dinosaur creature with trample and haste in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanctuary Smasher | silent | When you cycle this card, put a first strike counter on target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -98,7 +97,6 @@
 | Winota, Joiner of Forces | silent | Whenever a non-Human creature you control attacks, look at the top six cards of your library. You may put a Human creature card from among them onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yidaro, Wandering Monster | silent | When you cycle this card, shuffle it into your library from your graveyard. If you've cycled a card named Yidaro, Wandering Monster four or more times this game | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zagoth Mamba | silent | Whenever this creature mutates, target creature an opponent controls gets -2/-2 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Zenith Flare | silent | Zenith Flare deals X damage to any target and you gain X life, where X is the number of cards with a cycling ability in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bushmeat Poacher | notice | {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Call of the Death-Dweller | notice | Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire Tactics | notice | Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -234,7 +232,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>26 cards</summary>
 
 - Back for More
 - Blade Banish
@@ -253,6 +251,7 @@
 - Mythos of Vadrok
 - Narset of the Ancient Way
 - Offspring's Revenge
+- Quartzwood Crasher
 - Ram Through
 - Raugrin Triome
 - Startling Development
@@ -260,6 +259,7 @@
 - Thwart the Enemy
 - Unbreakable Bond
 - Yorion, Sky Nomad
+- Zenith Flare
 
 </details>
 
@@ -314,7 +314,6 @@
 | whenever a creature you control with menace becomes blocked, defending player sacrifices a creature of their choice that's blocking it. | 1 | Labyrinth Raptor | iko |
 | whenever a non-human creature you control attacks, look at the top six cards of your library. you may put a human creature card from among them onto the battlef | 1 | Winota, Joiner of Forces | iko |
 | whenever a nontoken creature you control dies, mill two cards. then return a creature card with lesser mana value than the creature that died from your graveyar | 1 | Death's Oasis | iko |
-| whenever one or more creatures you control with trample deal combat damage to a player, create an N/N green dinosaur beast creature token with trample, where N  | 1 | Quartzwood Crasher | iko |
 | whenever you cast a noncreature spell, create an N/N blue shark creature token with flying, where N is that spell's mana value. | 1 | Shark Typhoon | iko |
 | whenever you cycle a card, you may have ~ become a N/N dinosaur creature with trample and haste in addition to its other types until end of turn. | 1 | Reptilian Reflection | iko |
 | whenever ~ attacks, if it doesn't have first strike, put a first strike counter on it. | 1 | Momentum Rumbler | iko |
@@ -356,7 +355,6 @@
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with trample. | 1 | Hornbash Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with vigilance. | 1 | Keensight Mentor | iko |
 | {M}{M}: search your library for a card named ~, put it onto the battlefield tapped, then shuffle. | 1 | Whisper Squad | iko |
-| ~ deals N damage to any target and you gain N life, where N is the number of cards with a cycling ability in your graveyard. | 1 | Zenith Flare | iko |
 | ~ enters with your choice of a deathtouch counter or a lifelink counter on it. | 1 | Boot Nipper | iko |
 | ~ enters with your choice of a flying counter or a first strike counter on it. | 1 | Helica Glider | iko |
 | ~ enters with your choice of a flying counter or a hexproof counter on it. | 1 | Wingfold Pteron | iko |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 16.2% |
+| Tested | 19 | 17.1% |
 | Works (untested) | 65 | 58.6% |
 | Partial (unaudited) | 8 | 7.2% |
-| Not working | 20 | 18.0% |
+| Not working | 19 | 17.1% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Hive Mind | silent | Whenever a player casts an instant or sorcery spell, each other player copies that spell. Each of those players may choose new targets for their copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Honor of the Pure | silent | White creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ice Cage | silent | When enchanted creature becomes the target of a spell or ability, destroy this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Inferno Elemental | silent | Whenever this creature blocks or becomes blocked by a creature, this creature deals 3 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magebane Armor | silent | Equipped creature gets +2/+4 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Master of the Wild Hunt | silent | {T}: Tap all untapped Wolf creatures you control. Each Wolf tapped this way deals damage equal to its power to target creature. That creature deals damage equal | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirror of Fate | silent | {T}, Sacrifice this artifact: Choose up to seven face-up exiled cards you own. Exile all the cards from your library, then put the chosen cards on top of your l | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -123,7 +122,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Acidic Slime
 - Act of Treason
@@ -136,6 +135,7 @@
 - Goblin Artillery
 - Great Sable Stag
 - Harm's Way
+- Inferno Elemental
 - Lifelink
 - Runeclaw Bear
 - Safe Passage
@@ -167,7 +167,6 @@
 | when ~ enters, target forest becomes a N/N green treefolk creature for as long as ~ remains on the battlefield. it's still a land. | 1 | Awakener Druid | m10 |
 | whenever a +N/+N counter is removed from ~, put two +N/+N counters on it at the beginning of the next end step. | 1 | Protean Hydra | m10 |
 | whenever a player casts an instant or sorcery spell, each other player copies that spell. each of those players may choose new targets for their copy. | 1 | Hive Mind | m10 |
-| whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Inferno Elemental | m10 |
 | whenever ~ deals combat damage to a player, search that player"..."t have that name, you may put it onto the battlefield under your control. then that player sh | 1 | Sphinx Ambassador | m10 |
 | white creatures you control get +N/+N. | 1 | Honor of the Pure | m10 |
 | {M}, sacrifice ~: choose up to seven face-up exiled cards you own. exile all the cards from your library, then put the chosen cards on top of your library. | 1 | Mirror of Fate | m10 |

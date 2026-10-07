@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 5.3% |
+| Tested | 7 | 6.2% |
 | Works (untested) | 64 | 56.6% |
 | Partial (unaudited) | 8 | 7.1% |
-| Not working | 35 | 31.0% |
+| Not working | 34 | 30.1% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Savage Summoning | silent | This spell can't be countered. The next creature spell you cast this turn can be cast as though it had flash. That spell can't be countered. That creature enter | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seismic Stomp | silent | Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sentinel Sliver | silent | Sliver creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shadowborn Demon | silent | At the beginning of your upkeep, if there are fewer than six creature cards in your graveyard, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Staff of the Death Magus | silent | Whenever you cast a black spell or a Swamp you control enters, you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Staff of the Flame Magus | silent | Whenever you cast a red spell or a Mountain you control enters, you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Staff of the Mind Magus | silent | Whenever you cast a blue spell or an Island you control enters, you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
@@ -137,13 +136,14 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Angelic Accord
 - Elvish Mystic
 - Grim Return
 - Kalonian Hydra
 - Path of Bravery
+- Shadowborn Demon
 - Sliver Construct
 
 </details>
@@ -156,7 +156,6 @@
 | a deck can have any number of cards named ~. | 1 | Shadowborn Apostle | m14 |
 | as long as you control eight or more lands, ~ gets +N/+N and has trample. | 1 | Woodborn Behemoth | m14 |
 | at the beginning of your upkeep, if enchanted equipment is attached to a creature, destroy that creature. | 1 | Artificer's Hex | m14 |
-| at the beginning of your upkeep, if there are fewer than six creature cards in your graveyard, sacrifice a creature. | 1 | Shadowborn Demon | m14 |
 | create two N/N red elemental creature tokens, then flip a coin. if you win the flip, return ~ to its owner's hand. | 1 | Molten Birth | m14 |
 | creature spells with flying you cast cost {M} less to cast. | 1 | Warden of Evos Isle | m14 |
 | creatures without flying can't block ~. | 1 | Seismic Stomp | m14 |

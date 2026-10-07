@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 9.8% |
+| Tested | 20 | 10.9% |
 | Works (untested) | 97 | 53.0% |
 | Partial (unaudited) | 5 | 2.7% |
-| Not working | 63 | 34.4% |
+| Not working | 61 | 33.3% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Ammit Eternal | silent | Whenever this creature deals combat damage to a player, remove all -1/-1 counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Apocalypse Demon | silent | Apocalypse Demon's power and toughness are each equal to the number of cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Champion of Wits | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Chaos Maw | silent | When this creature enters, it deals 3 damage to each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Countervailing Winds | silent | Counter target spell unless its controller pays {1} for each card in your graveyard. Cycling {2} ({2}, Discard this card: Draw a card.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cunning Survivor | silent | Whenever you cycle or discard a card, this creature gets +1/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dagger of the Worthy | silent | Equipped creature gets +2/+0 and has afflict 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,7 +61,6 @@
 | Resolute Survivors | silent | Whenever you exert a creature, this creature deals 1 damage to each opponent and you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Rhonas's Stalwart | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 until end of turn and can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Riddleform | silent | Whenever you cast a noncreature spell, you may have this enchantment become a 3/3 Sphinx creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Saving Grace | silent | When this Aura enters, all damage that would be dealt this turn to you and permanents you control is dealt to enchanted creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sidewinder Naga | silent | As long as you control a Desert or there is a Desert card in your graveyard, this creature gets +1/+0 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sifter Wurm | silent | When this creature enters, scry 3, then reveal the top card of your library. You gain life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spellweaver Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -195,11 +193,12 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>20 cards</summary>
 
 - Abrade
 - Blur of Blades
 - Chandra's Defeat
+- Chaos Maw
 - Claim // Fame
 - Desert of the True
 - Driven // Despair
@@ -212,6 +211,7 @@
 - Pride Sovereign
 - Refuse // Cooperate
 - Sand Strangler
+- Saving Grace
 - Solemnity
 - Striped Riverwinder
 - Wall of Forgotten Pharaohs
@@ -253,8 +253,6 @@
 | shuffle your library, then exile the top four cards. you may cast any number of spells with mana value N or less from among them without paying their mana costs | 1 | Hazoret's Undying Fury | hou |
 | untap target creature. it gets +N/+N until end of turn and can block an additional creature ~. | 1 | Act of Heroism | hou |
 | when you cycle ~, counter target activated or triggered ability you don't control. | 1 | Nimble Obstructionist | hou |
-| when ~ enters, all damage that would be dealt ~ to you and permanents you control is dealt to enchanted creature instead. | 1 | Saving Grace | hou |
-| when ~ enters, it deals N damage to each other creature. | 1 | Chaos Maw | hou |
 | when ~ enters, scry N, then reveal the top card of your library. you gain life equal to that card's mana value. | 1 | Sifter Wurm | hou |
 | when ~ enters, target creature with power less than or equal to ~ power can't block ~. | 1 | Earthshaker Khenra | hou |
 | when ~ enters, you gain life equal to its power. | 1 | Sunscourge Champion | hou |

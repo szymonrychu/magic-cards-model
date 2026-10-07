@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 10.3% |
+| Tested | 12 | 11.2% |
 | Works (untested) | 58 | 54.2% |
 | Partial (unaudited) | 2 | 1.9% |
-| Not working | 36 | 33.6% |
+| Not working | 35 | 32.7% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Slumbering Dragon | silent | Whenever a creature attacks you or a planeswalker you control, put a +1/+1 counter on this creature. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Spelltwine | silent | Exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. Copy those cards. Cast the copies if a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sublime Archangel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Thundermaw Hellkite | silent | When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tricks of the Trade | silent | Enchanted creature gets +2/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Void Stalker | silent | {2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arctic Aven | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -126,7 +125,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Augur of Bolas
 - Chandra's Fury
@@ -137,6 +136,7 @@
 - Omniscience
 - Predatory Rampage
 - Switcheroo
+- Thundermaw Hellkite
 - Touch of the Eternal
 - Worldfire
 
@@ -158,7 +158,6 @@
 | enchanted permanent doesn"..."s untap step and its activated abilities can't be activated. | 1 | Encrust | m13 |
 | exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. copy those cards. cast the copies if a | 1 | Spelltwine | m13 |
 | other merfolk creatures you control get +N/+N and have islandwalk. | 1 | Master of the Pearl Trident | m13 |
-| when ~ enters, it deals N damage to each creature with flying your opponents control. tap those creatures. | 1 | Thundermaw Hellkite | m13 |
 | when ~ enters, sacrifice another creature. you gain N life and draw N cards, where N is that creature's power. | 1 | Disciple of Bolas | m13 |
 | when ~ enters, search your library for a creature card with deathtouch, hexproof, reach, or trample and reveal it. shuffle and put that card on top. | 1 | Mwonvuli Beast Tracker | m13 |
 | when ~ enters, target opponent reveals their hand. you may cast an instant or sorcery spell from among those cards without paying its mana cost. | 1 | Mindclaw Shaman | m13 |

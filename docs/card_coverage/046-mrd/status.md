@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.0% |
-| Works (untested) | 155 | 57.6% |
+| Tested | 29 | 10.8% |
+| Works (untested) | 156 | 58.0% |
 | Partial (unaudited) | 8 | 3.0% |
-| Not working | 79 | 29.4% |
+| Not working | 76 | 28.3% |
 
 ## Cards needing work
 
@@ -57,10 +57,8 @@
 | Lumengrid Augur | silent | {1}, {T}: Target player draws a card, then discards a card. If that player discards an artifact card this way, untap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | March of the Machines | silent | Each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mesmeric Orb | silent | Whenever a permanent becomes untapped, that permanent's controller mills a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mindstorm Crown | silent | At the beginning of your upkeep, draw a card if you had no cards in hand at the beginning of this turn. If you had a card in hand, this artifact deals 1 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mourner's Shield | silent | {2}, {T}: Prevent all damage that would be dealt this turn by a source of your choice that shares a color with the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Incubator | silent | {6}, {T}, Sacrifice this artifact: Search your library for any number of artifact cards, exile them, then create that many 1/1 colorless Myr artifact creature t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nim Devourer | silent | {B}{B}: Return this card from your graveyard to the battlefield, then sacrifice a creature. Activate only during your upkeep. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ogre Leadfoot | silent | Whenever this creature becomes blocked by an artifact creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Override | silent | Counter target spell unless its controller pays {1} for each artifact you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Proteus Staff | silent | {2}{U}, {T}: Put target creature on the bottom of its owner's library. That creature's controller reveals cards from the top of their library until they reveal  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -104,7 +102,6 @@
 | Molten Rain | notice | Destroy target land. If that land was nonbasic, Molten Rain deals 2 damage to the land's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Razor Barrier | notice | Target permanent you control gains protection from artifacts or from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Soul Nova | notice | Exile target attacking creature and all Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Wail of the Nim | notice | Choose one — • Regenerate each creature you control. • Wail of the Nim deals 1 damage to each creature and each player. Entwine {B} (Choose both if you pay the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Domineer | unaudited | You control enchanted artifact creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Grid Monitor | unaudited | You can't cast creature spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Krark's Thumb | unaudited | If you would flip a coin, instead flip two coins and ignore one. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -190,6 +187,7 @@
 | Neurok Hoversail | handled | Equipped creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Neurok Spy | handled | This creature can't be blocked as long as defending player controls an artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightmare Lash | handled | Equipped creature gets +1/+1 for each Swamp you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nim Devourer | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Lasher | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Replica | handled | {2}{B}, Sacrifice this creature: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Shambler | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -272,7 +270,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>29 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
@@ -291,6 +289,7 @@
 - Lightning Greaves
 - Loxodon Punisher
 - Mindslaver
+- Mindstorm Crown
 - Oblivion Stone
 - Platinum Angel
 - Raise the Alarm
@@ -300,6 +299,7 @@
 - Sylvan Scrying
 - Tooth and Nail
 - Viridian Joiner
+- Wail of the Nim
 - Welding Jar
 
 </details>
@@ -308,7 +308,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose one | 5 | Blinding Beam, Grab the Reins, Incite War, Journey of Discovery, Wail of the Nim | mrd |
+| Choose one | 4 | Blinding Beam, Grab the Reins, Incite War, Journey of Discovery | mrd |
 | whenever ~ attacks or blocks, remove a +N/+N counter from it at end of combat. | 4 | Clockwork Beetle, Clockwork Condor, Clockwork Dragon, Clockwork Vorrac | mrd |
 | Imprint | 1 | Thought Prison | mrd |
 | all creatures able to block target creature ~ do so. | 1 | Bloodscent | mrd |
@@ -324,7 +324,6 @@
 | at the beginning of each player's upkeep, that player puts a flood counter on target non-island land they control of their choice. that land is an island for as | 1 | Quicksilver Fountain | mrd |
 | at the beginning of each upkeep, each player exiles the top card of their library. the player who exiled the card with the greatest mana value takes an extra tu | 1 | Timesifter | mrd |
 | at the beginning of your end step, target opponent gains control of ~ and puts a charge counter on it. | 1 | Jinxed Choker | mrd |
-| at the beginning of your upkeep, draw a card if you had no cards in hand at the beginning of ~. if you had a card in hand, ~ deals N damage to you. | 1 | Mindstorm Crown | mrd |
 | at the beginning of your upkeep, sacrifice another artifact. if you can't, tap ~ and you lose N life. | 1 | Rust Elemental | mrd |
 | at the beginning of your upkeep, the player with the lowest life total gains control of ~. if two or more players are tied for lowest life total, you choose one | 1 | Loxodon Peacekeeper | mrd |
 | choose a card name. reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. exile all other cards r | 1 | Spoils of the Vault | mrd |
@@ -384,7 +383,6 @@
 | {M}: ~ gains all activated abilities of target creature until end of turn. | 1 | Quicksilver Elemental | mrd |
 | {M}{M}, sacrifice an artifact: bosh deals damage equal to the sacrificed artifact's mana value to any target. | 1 | Bosh, Iron Golem | mrd |
 | {M}{M}, {M}: put target creature on the bottom of its owner"..."s controller reveals cards from the top of their library until they reveal a creature card. the  | 1 | Proteus Staff | mrd |
-| {M}{M}: return ~ from your graveyard to the battlefield, then sacrifice a creature. activate only during your upkeep. | 1 | Nim Devourer | mrd |
 | ~ can't attack or block unless you pay {M} for each +N/+N counter on it. | 1 | Myr Prototype | mrd |
 | ~ gets +N/+N for each untapped permanent your opponents control. | 1 | Copperhoof Vorrac | mrd |
 | ~ has protection from each of the exiled card's card types. | 1 | Mirror Golem | mrd |

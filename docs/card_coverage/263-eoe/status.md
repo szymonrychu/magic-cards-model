@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 20.6% |
+| Tested | 54 | 21.4% |
 | Works (untested) | 135 | 53.6% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 58 | 23.0% |
+| Not working | 56 | 22.2% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Mouth of the Storm | silent | When this creature enters, creatures your opponents control get -3/-0 until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mutinous Massacre | silent | Choose odd or even. Destroy each creature with mana value of the chosen quality. Then gain control of all creatures until end of turn. Untap them. They gain has | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Orbital Plunge | silent | Orbital Plunge deals 6 damage to target creature. If excess damage was dealt this way, create a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Pain for All | silent | When this Aura enters, enchanted creature deals damage equal to its power to any other target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Possibility Technician | silent | Whenever this creature or another Kavu you control enters, exile the top card of your library. For as long as that card remains exiled, you may play it if you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Pulsar Squadron Ace | silent | When this creature enters, look at the top five cards of your library. You may reveal a Spacecraft card from among them and put it into your hand. Put the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ragost, Deft Gastronaut | silent | Artifacts you control are Foods in addition to their other types and have "{2}, {T}, Sacrifice this artifact: You gain 3 life." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -63,7 +62,6 @@
 | Specimen Freighter | silent | Whenever this Spacecraft attacks, defending player mills four cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Survey Mechan | silent | {10}, Sacrifice this creature: It deals 3 damage to any target. Target player draws three cards and gains 3 life. This ability costs {X} less to activate, where | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Synthesizer Labship | silent | At the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness 2/2 and gains fl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Terminal Velocity | silent | You may put an artifact or creature card from your hand onto the battlefield. That permanent gains haste, "When this permanent leaves the battlefield, it deals  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terrapact Intimidator | silent | When this creature enters, target opponent may have you create two Lander tokens. If they don't, put two +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thaumaton Torpedo | silent | {6}, {T}, Sacrifice this artifact: Destroy target nonland permanent. This ability costs {3} less to activate if you attacked with a Spacecraft this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Eternity Elevator | silent | {T}: Add X mana of any one color, where X is the number of charge counters on The Eternity Elevator. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -230,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>54 cards</summary>
 
 - Archenemy's Charm
 - Biotech Specialist
@@ -262,6 +260,7 @@
 - Moonlit Meditation
 - Nova Hellkite
 - Ouroboroid
+- Pain for All
 - Pinnacle Emissary
 - Pinnacle Starcage
 - Quantum Riddler
@@ -274,6 +273,7 @@
 - Sunset Saboteur
 - Sunstar Chaplain
 - Syr Vondam, Sunstar Exemplar
+- Terminal Velocity
 - Terrasymbiosis
 - Territorial Bruntar
 - The Endstone
@@ -326,7 +326,6 @@
 | when ~ enters, creatures your opponents control get -N/-N until your next turn. | 1 | Mouth of the Storm | eoe |
 | when ~ enters, destroy up to one other target creature. if that creature wasn't dealt damage ~, its controller draws two cards. | 1 | Faller's Faithful | eoe |
 | when ~ enters, each opponent exiles a card from their hand and may play that card for as long as it remains exiled. each spell cast ~ costs {M} more to cast. ea | 1 | Lightstall Inquisitor | eoe |
-| when ~ enters, enchanted creature deals damage equal to its power to any other target. | 1 | Pain for All | eoe |
 | when ~ enters, if you cast it, shuffle your hand and graveyard into your library, then draw seven cards. | 1 | Weftwalking | eoe |
 | when ~ enters, look at the top five cards of your library. you may reveal a spacecraft card from among them and put it into your hand. put the rest on the botto | 1 | Pulsar Squadron Ace | eoe |
 | when ~ enters, sacrifice it unless you tap an untapped permanent you control. | 1 | Command Bridge | eoe |
@@ -340,7 +339,6 @@
 | whenever you attack, you may remove a +N/+N counter from each of two creatures you control. if you do, draw a card and create a N/N colorless robot artifact cre | 1 | Dyadrine, Synthesis Amalgam | eoe |
 | whenever ~ attacks, defending player mills four cards. | 1 | Specimen Freighter | eoe |
 | whenever ~ or another kavu you control enters, exile the top card of your library. for as long as that card remains exiled, you may play it if you control a kav | 1 | Possibility Technician | eoe |
-| you may put an artifact or creature card from your hand onto the battlefield. that permanent gains haste, "..." and "..." | 1 | Terminal Velocity | eoe |
 | {M}, sacrifice another artifact: exile the top N cards of your library, where N is one plus the mana value of the sacrificed artifact. you may play those cards  | 1 | Memorial Vault | eoe |
 | {M}, sacrifice ~: it deals N damage to any target. target player draws three cards and gains N life. ~ costs {M} less to activate, where N is the number of diff | 1 | Survey Mechan | eoe |
 | {M}, {M}, sacrifice ~: destroy target nonland permanent. ~ costs {M} less to activate if you attacked with a spacecraft ~. | 1 | Thaumaton Torpedo | eoe |

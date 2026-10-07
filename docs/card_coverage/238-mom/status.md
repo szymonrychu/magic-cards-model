@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 65 | 23.9% |
+| Tested | 67 | 24.6% |
 | Works (untested) | 98 | 36.0% |
 | Partial (unaudited) | 6 | 2.2% |
-| Not working | 103 | 37.9% |
+| Not working | 101 | 37.1% |
 
 ## Cards needing work
 
@@ -83,7 +83,6 @@
 | Portent Tracker | silent | {T}: Choose target battle. If an opponent protects it, remove a defense counter from it. Otherwise, put a defense counter on it. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Progenitor Exarch | silent | When this creature enters, incubate 3 X times. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quintorius, Loremaster | silent | {1}{R}{W}, {T}, Sacrifice a Spirit: Choose target card exiled with Quintorius. You may cast that card this turn without paying its mana cost. If that spell woul | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rankle and Torbran | silent | Whenever Rankle and Torbran deals combat damage to a player or battle, choose any number — • Each player creates a Treasure token. • Each player sacrifices a cr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Realmbreaker, the Invasion Tree | silent | {2}, {T}: Target opponent mills three cards. Put a land card from their graveyard onto the battlefield tapped under your control. It gains "If this land would l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Redcap Heelslasher | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rona, Herald of Invasion // Rona, Tolarian Obliterator | silent | Whenever a source deals damage to Rona, that source's controller exiles a card from their hand at random. If it's a land card, you may put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -100,7 +99,6 @@
 | Sunfall | silent | Exile all creatures. Incubate X, where X is the number of creatures exiled this way. (Create an Incubator token with X +1/+1 counters on it and "{2}: Transform  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sword of Once and Future | silent | Whenever equipped creature deals combat damage to a player, surveil 2. Then you may cast an instant or sorcery spell with mana value 2 or less from your graveya | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tangled Skyline | silent | When this enchantment enters, you gain 5 life and incubate 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Thalia and The Gitrog Monster | silent | Whenever Thalia and The Gitrog Monster attacks, sacrifice a creature or land, then draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tiller of Flesh | silent | Whenever you cast a spell that targets one or more permanents, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Traumatic Revelation | silent | Target opponent reveals their hand. You may choose a creature or battle card from it. If you do, that player discards that card. If you don't, incubate 3. (Crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unseal the Necropolis | silent | Each player mills three cards. Then you return up to two creature cards from your graveyard to your hand. (To mill three cards, a player puts the top three card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -237,7 +235,7 @@
 ## Fully supported
 
 <details>
-<summary>65 cards</summary>
+<summary>67 cards</summary>
 
 - Angelic Intervention
 - Archangel Elspeth
@@ -293,12 +291,14 @@
 - Omnath, Locus of All
 - Orthion, Hero of Lavabrink
 - Rampaging Geoderm
+- Rankle and Torbran
 - Sandstalker Moloch
 - See Double
 - Seed of Hope
 - Surge of Salvation
 - Tandem Takedown
 - Temporal Cleansing
+- Thalia and The Gitrog Monster
 - Tribute to the World Tree
 - Urabrask // The Great Work
 - Vorinclex // The Grand Evolution
@@ -368,9 +368,7 @@
 | whenever you cast your first instant or sorcery spell each turn, you may cast a spell with lesser mana value that shares a card type with it from your hand with | 1 | Baral and Kari Zev | mom |
 | whenever ~ attacks a battle, double its power until end of turn. | 1 | War-Trained Slasher | mom |
 | whenever ~ attacks, create a tapped and attacking token that's a copy of it. put a +N/+N counter on that token for each +N/+N counter on ~. sacrifice that token | 1 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | mom |
-| whenever ~ attacks, sacrifice a creature or land, then draw a card. | 1 | Thalia and The Gitrog Monster | mom |
 | whenever ~ attacks, you may pay {M}{M}. when you do, return target creature card from your graveyard to the battlefield. it's a phyrexian in addition to its oth | 1 | Terror of Towashi | mom |
-| whenever ~ deals combat damage to a player or battle, choose any number — • each player creates a treasure token. • each player sacrifices a creature of their c | 1 | Rankle and Torbran | mom |
 | whenever ~ deals combat damage to a player or battle, look at that many cards from the top of your library. you may reveal a creature or land card from among th | 1 | Doomskar Warrior | mom |
 | whenever ~ deals combat damage to a player or battle, transform up to one target incubator token you control. | 1 | Attentive Skywarden | mom |
 | whenever ~ deals combat damage to an opponent, it deals that much damage to target planeswalker that player controls or battle that player protects. | 1 | Rampaging Raptor | mom |
