@@ -110,3 +110,14 @@ def test_event_subject_readers_see_the_counters():
     event = GameEvent(event=TriggerEvent.DIES, subject_id=leaper.id)
     assert event_subject_power(scenario.game, event) == 3
     assert event_subject_toughness(scenario.game, event) == 3
+
+
+def test_source_characteristic_reader_keeps_counters_after_leaving():
+    from magic_cards_model.machines.effects.draw_discard import _source_characteristic
+
+    scenario = _board()
+    leaper = scenario.creature("Goblin Fireleaper", "alice")
+    scenario.game.add_counters(leaper, "+1/+1", 2)
+    scenario.game.destroy(leaper)
+    assert _source_characteristic(scenario.game, leaper, "power") == 3
+    assert _source_characteristic(scenario.game, leaper, "toughness") == 3
