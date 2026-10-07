@@ -28,6 +28,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.triggers import AbilityOnStack
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from magic_cards_model.support import card_support
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -315,3 +316,37 @@ def test_atzocan_archer_may_fight_its_controllers_own_creature():
 
     assert elves.zone is Zone.GRAVEYARD
     assert archer.damage == 1
+
+
+def test_kioras_emblem_has_the_entering_creature_fight():
+    """Kiora, Master of the Depths' emblem: "Whenever a creature you control
+    enters, you may have it fight target creature." The source is an emblem
+    in the command zone (CR 114.4), so "it" can only be the creature that
+    entered - the trigger event's object - and that creature fights."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Kiora, Master of the Depths"],
+            hand=["Llanowar Elves"],
+            library=["Island"] * 3,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Island"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    kiora = scenario.find("Kiora, Master of the Depths", Zone.BATTLEFIELD, "alice")
+    kiora.add_counters(Counter.LOYALTY, 8 - kiora.counters[Counter.LOYALTY])
+    scenario.activate(kiora, index=2)
+    scenario.will_take_the_may(False, username="alice", times=3)
+    _resolve_all(scenario)
+    assert len([p for p in scenario.game.battlefield if p.name.startswith("Octopus")]) == 3
+
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_targets(bears, username="alice")
+    scenario.will_take_the_may(True, username="alice")
+    elves = scenario.put_onto_battlefield("Llanowar Elves", "alice")
+    _resolve_all(scenario)
+
+    assert elves.zone is Zone.GRAVEYARD
+    assert bears.damage == 1
