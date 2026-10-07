@@ -4786,7 +4786,12 @@ def cascade(game: Any, spell: CardState, seed: int | None = None) -> CascadeResu
             decision = Decision(
                 kind=DecisionKind.MAY,
                 player=owner.username,
-                prompt=f"cast {result.hit.name} without paying its mana cost (cascade)",
+                prompt=with_board_priced_cost(
+                    game,
+                    f"cast {result.hit.name} without paying its mana cost (cascade)",
+                    result.hit,
+                    owner.username,
+                ),
                 source=spell.name,
                 source_id=source_id_of(spell),
                 affirmative_is_legal=castable,
@@ -4926,7 +4931,12 @@ def discover(
             decision = Decision(
                 kind=DecisionKind.MAY,
                 player=controller,
-                prompt=f"cast {result.hit.name} without paying its mana cost (discover {n})",
+                prompt=with_board_priced_cost(
+                    game,
+                    f"cast {result.hit.name} without paying its mana cost (discover {n})",
+                    result.hit,
+                    controller,
+                ),
                 source=source_name,
                 source_id=source_id,
                 affirmative_is_legal=castable,
@@ -6569,6 +6579,7 @@ AbilityOnStack.model_rebuild(
 # `KEYWORD_EFFECTS` rows as they load; imported last so each can build on
 # everything above.
 from . import blitz, level_up  # noqa: E402, F401
+from .free_cast_price import with_board_priced_cost  # noqa: E402
 from .reconfigure import (  # noqa: E402
     RECONFIGURE_UNATTACH_EFFECT,
     reconfigure_unattach_refusal,

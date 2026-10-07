@@ -1481,7 +1481,9 @@ def _possibility_storm_effect(game: "Game", ability: AbilityOnStack) -> None:
         decision = Decision(
             kind=DecisionKind.MAY,
             player=exiler,
-            prompt=f"cast {hit.name} without paying its mana cost",
+            prompt=with_board_priced_cost(
+                game, f"cast {hit.name} without paying its mana cost", hit, exiler
+            ),
             source=ability.source_name,
             source_id=source_id_of(ability),
             affirmative_is_legal=True,
@@ -9123,6 +9125,7 @@ def _parse_destroy_random_attacked_creature_text(text: str) -> TargetedClause | 
     return effect
 
 
+from ..free_cast_price import with_board_priced_cost  # noqa: E402
 from ._common import (  # noqa: E402
     _ANAPHORIC_SUBJECT_RE,
     _ANY_TYPE_MANA_STANDALONE_RE,
