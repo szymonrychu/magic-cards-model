@@ -52,6 +52,7 @@ from ..delayed import (
     ReflexiveAttachSubjectToTargetConsequence,
     SacrificeSubject,
     anaphoric_delayed_trigger,
+    parse_anaphoric_delayed_clause,
 )
 from ..layers import (
     ContinuousEffect,
@@ -419,7 +420,13 @@ def _parse_offspring_token_copy_clause(clause: str) -> AbilityEffect | None:
 #: is left open rather than guessed at (`docs/engine-coverage.md`); what this
 #: wave fixes is that the token itself, and its other keyword (flying), are
 #: created at all, which used to fail the whole clause and create nothing.
+#:
 _LEVELED_TOKEN_KEYWORDS = {"firebending"}
+#: "Toxic N" (CR 702.164a) is the other kind: `machines/combat.
+#: total_toxic_value` counts it off a computed rules line (CR 702.164b), so
+#: `_parse_token_tail` keeps the bare name in `keywords` and prints "Toxic N"
+#: as the token's own first rules line.
+_COUNTED_TOKEN_KEYWORDS = {"toxic"}
 
 
 #: The opening/closing quote characters a token's own quoted ability can be
@@ -486,10 +493,15 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
         keyword_part = _TOKEN_TAIL_KEYWORD_JOIN_RE.sub("", quoted.group("pre")).strip()
     if not keyword_part:
         return (), quoted_text
-    parts = [part.strip() for part in re.split(r",\s*|\s+and\s+", keyword_part) if part.strip()]
+    parts = [
+        part.strip()
+        for part in re.split(r",\s*(?:and\s+)?|\s+and\s+", keyword_part)
+        if part.strip()
+    ]
     if not parts:
         return (), quoted_text
     keywords: list[str] = []
+    counted_lines: list[str] = []
     for part in parts:
         lowered = part.lower()
         if lowered in _TOKEN_KEYWORDS:
@@ -501,11 +513,20 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
             keywords.append(part[:1].upper() + part[1:].lower())
             continue
         leveled = re.fullmatch(r"(?P<word>[a-z]+) (?P<n>\d+)", lowered)
+        if leveled is not None and leveled.group("word") in _COUNTED_TOKEN_KEYWORDS:
+            # CR 702.164a: held the way a printing holds a parameterized
+            # keyword (`TokenDefinition.keywords`' own docstring) - the bare
+            # name in `keywords`, the full "Toxic 1" as a rules line, which is
+            # what `combat.total_toxic_value` counts.
+            keywords.append(leveled.group("word").title())
+            counted_lines.append(f"{leveled.group('word').title()} {leveled.group('n')}")
+            continue
         if leveled is not None and leveled.group("word") in _LEVELED_TOKEN_KEYWORDS:
             keywords.append(f"{leveled.group('word').title()} {leveled.group('n')}")
             continue
         return None
-    return tuple(keywords), quoted_text
+    rules_lines = [*counted_lines, *([quoted_text] if quoted_text is not None else [])]
+    return tuple(keywords), "\n".join(rules_lines) or None
 
 
 #: A bare non-creature type word ending a token's noun phrase with no
@@ -705,20 +726,42 @@ def _parse_create_that_many_color_pip_tokens_clause(
 
 
 def _token_creation_clause(
-    definition: TokenDefinition, count: int, *, tapped: bool
+    definition: TokenDefinition, count: int, *, tapped: bool, attacking: bool = False
 ) -> TargetedClause:
     """ "Create [count] [definition]" (CR 701.7a), as a `TargetedClause`.
 
     The creating player is CR 111.2's owner and controller - whoever controls
     the resolving spell or ability - so this reads `game.controller_of` the
     same way every other clause in this dispatcher does.
+
+    `attacking` is "tapped and attacking" (CR 508.4): the tokens enter
+    attacking whatever the creating ability's own source is attacking, or
+    else whatever the controller's attack already names, and with neither
+    they simply enter tapped. They were never declared as attackers
+    (CR 508.4: "never 'attacked'"), which `create_tokens(attacking=...)` already guarantees.
     """
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
-        create_tokens(game, definition, controller, count, tapped=tapped)
+        defender = _attack_target_of_source(game, stack_object, controller) if attacking else None
+        create_tokens(game, definition, controller, count, tapped=tapped, attacking=defender)
 
     return effect
+
+
+def _attack_target_of_source(
+    game: "Game", stack_object: "StackObject", controller: str
+) -> object | None:
+    """What the resolving ability's own source is attacking (CR 508.4: a
+    permanent put onto the battlefield attacking is attacking the player or
+    planeswalker its creator names - here the same one the source attacks),
+    falling back to whatever the controller's attack already names when the
+    source is no longer attacking."""
+    source_id = getattr(stack_object, "source_id", None)
+    attack = game.combat.attack_by(source_id) if source_id is not None else None
+    if attack is not None:
+        return attack.defender
+    return _defender_of_controllers_attack(game, controller)
 
 
 def _token_definition_from_words(desc: str, tail: str | None) -> TokenDefinition | None:
@@ -930,15 +973,22 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     tail = match.group("tail")
     name = match.group("name")
 
+    attacking = False
     tapped = bool(words) and words[0].lower() == "tapped"
     if tapped:
         words = words[1:]
+        if [word.lower() for word in words[:2]] == ["and", "attacking"]:
+            # "create a tapped and attacking 1/1 ... token" (CR 508.4).
+            attacking, words = True, words[2:]
     if not words:
         return None
+    tapped = tapped or attacking
 
     predefined_name = " ".join(words)
     if tail is None and name is None and predefined_name in PREDEFINED:
-        return _token_creation_clause(PREDEFINED[predefined_name], count, tapped=tapped)
+        return _token_creation_clause(
+            PREDEFINED[predefined_name], count, tapped=tapped, attacking=attacking
+        )
 
     definition = _parse_generic_token_descriptor(words, tail)
     if definition is None:
@@ -950,7 +1000,7 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         # Weapons Manufacturing's Munitions states one, so it overrides
         # whatever `card_name` would otherwise derive.
         definition = definition.model_copy(update={"name": name.strip()})
-    return _token_creation_clause(definition, count, tapped=tapped)
+    return _token_creation_clause(definition, count, tapped=tapped, attacking=attacking)
 
 
 #: "create `<Name>`, a[n] `<descriptor>` token[s]" (CR 111.9) - the name-first
@@ -1670,41 +1720,216 @@ _TOKEN_WITH_KEYWORDS_AND_QUOTED_ABILITY_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
+#: A token sentence that carries a quoted ability after its "with" (any
+#: shape: a bare quote, keywords and a quote), or that is "tapped and
+#: attacking": `split_effect_clauses` masks the quote but a trailing `."`
+#: never ends a sentence for `_plain_resolution_sentences`, and the bare " and
+#: " of a keyword list is still a clause boundary, so these are read whole.
+_TOKEN_SENTENCE_RE = re.compile(
+    r"^(?:you )?create\b.*?\btokens?\b(?!.*\bcopy of\b)",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: Where one sentence of a token paragraph ends and the next begins, outside
+#: any quotation: `_plain_resolution_sentences`'s own boundary applied to the
+#: text with every quoted span masked, so a quoted ability's own closing `."`
+#: never hides the sentence break behind it ("... any target." They gain
+#: haste ...).
+_QUOTE_AWARE_SENTENCE_BOUNDARY_RE = re.compile(r"(?<=[.!?\x01])\s+(?=[A-Z])|\n+")
+_QUOTE_ENDS_A_SENTENCE_RE = re.compile(r"[.!?][\"\u201d']$")
+
+
+def _quote_aware_sentences(text: str) -> list[str]:
+    """`text` split into sentences with every quoted ability kept inside the
+    sentence it belongs to (CR 111.3: a token's quoted ability is that
+    token's own text, never an instruction of the outer spell)."""
+    quoted: list[str] = []
+
+    def mask(match: re.Match[str]) -> str:
+        quoted.append(match.group(0))
+        mark = "\x01" if _QUOTE_ENDS_A_SENTENCE_RE.search(match.group(0)) else "\x00"
+        return f"{mark}{len(quoted) - 1}{mark}"
+
+    masked = _QUOTED_SPAN_RE.sub(mask, text)
+    return [
+        re.sub(r"[\x00\x01](\d+)[\x00\x01]", lambda m: quoted[int(m.group(1))], part).strip()
+        for part in _QUOTE_AWARE_SENTENCE_BOUNDARY_RE.split(masked)
+        if part.strip()
+    ]
+
+
+#: "with `<...>` and ..." in the unquoted part of a token sentence: the bare
+#: " and " of a keyword list, which `split_effect_clauses` cuts through. A
+#: colour pair ("blue and red") has no "with" in front of it.
+_TOKEN_WITH_AND_LIST_RE = re.compile(r"\bwith\b[^\"\u201c]*\band\b", re.IGNORECASE)
+
+
+def _token_sentence_needs_whole_reading(sentence: str, *, has_riders: bool) -> bool:
+    """Whether the sentence is one the clause splitter would cut wrongly (a
+    keyword list ending in a quoted ability, an "and"-joined keyword list,
+    "tapped and attacking") or one an anaphoric rider follows - the only
+    token sentences this reads, so every ordinary token clause keeps its
+    existing path."""
+    if _TOKEN_SENTENCE_RE.match(sentence) is None:
+        return False
+    return (
+        has_riders
+        or _TOKEN_WITH_KEYWORDS_AND_QUOTED_ABILITY_RE.match(sentence) is not None
+        or _TOKEN_WITH_AND_LIST_RE.search(sentence) is not None
+        or "tapped and attacking" in sentence.lower()
+    )
+
+
+def _token_rider_clause(
+    token_clause: TargetedClause,
+    grants: list[tuple[list[str], str | None]],
+    delayed: list[Any],
+    *,
+    for_spell: bool,
+) -> TargetedClause:
+    """`token_clause`, then every anaphoric rider the sentences after it
+    carried, applied to exactly the permanents it put onto the battlefield
+    (CR 608.2c: "They"/"It" is the token(s) just created; CR 400.7: a before/
+    after diff on the zone-change stamp names them, whatever the descriptor).
+
+    `grants` are CR 613.1f layer-6 keyword grants and `delayed` are CR 603.7a
+    delayed triggered abilities about those objects, in the order printed.
+    """
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_id, source_name = _permanent_id_and_name(stack_object, for_spell=for_spell)
+        before = {(state.id, state.zone_change_stamp) for state in game.battlefield}
+        token_clause(game, stack_object)
+        created = [
+            state for state in game.battlefield if (state.id, state.zone_change_stamp) not in before
+        ]
+        if not created:
+            return  # CR 101.3: nothing was produced for the pronoun to name.
+        for keywords, duration in grants:
+            for permanent in created:
+                _grant_keywords_to(
+                    game,
+                    permanent,
+                    keywords,
+                    duration,
+                    controller=controller,
+                    source_name=source_name,
+                )
+        for clause in delayed:
+            triggers = clause.triggers_for_all(
+                created,
+                controller=controller,
+                source_id=source_id,
+                source_name=source_name,
+                game=game,
+            )
+            for trigger in triggers or []:
+                game.create_delayed_trigger(trigger)
+
+    return effect
+
+
+def _read_token_rider(
+    sentence: str,
+) -> tuple[str, Any] | None:
+    """One rider sentence as ("grant", (keywords, duration)) or ("delayed",
+    the anaphoric delayed clause), or `None` when it is neither. Plural and
+    singular pronouns are checked by the delayed clause itself against the
+    number of tokens that exist when it runs."""
+    body = sentence.strip().rstrip(".")
+    grant = _ANAPHOR_GAINS_KEYWORDS_RE.fullmatch(body)
+    if grant is not None:
+        keywords = split_and_validate_keywords(grant.group("keywords"))
+        if keywords is None:
+            return None
+        return "grant", (list(keywords), (grant.group("duration") or "").lower() or None)
+    delayed = parse_anaphoric_delayed_clause(sentence)
+    if delayed is not None and not delayed.self_referential:
+        return "delayed", delayed
+    return None
+
 
 @MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
 def _parse_token_with_keywords_and_quoted_ability_sentences(
     text: str, *, for_spell: bool
 ) -> list[TargetedClause] | None:
-    """Every sentence of `text`, with each `_TOKEN_WITH_KEYWORDS_AND_QUOTED_
-    ABILITY_RE` sentence read whole and every other sentence through the
-    ordinary clause pipeline; `None` when no sentence has that shape, or any
-    sentence fails to read (CR 608.2c has no notion of running half an
-    instruction).
+    """Every sentence of `text`, with each token sentence the clause splitter
+    would cut wrongly read whole and every other sentence through the ordinary
+    clause pipeline; `None` when no sentence has that shape, or any sentence
+    fails to read (CR 608.2c has no notion of running half an instruction).
 
     `split_effect_clauses` masks the quoted span but still cuts the sentence at
     the bare " and " in front of it, so "... token with haste" and a lone
     quotation came out as two clauses and neither read - every "token with
-    `<keyword>` and "`<ability>`"" card was silent. The token reader
-    (`_parse_token_clause`) already reads the whole sentence correctly, so this
-    only hands it the sentence the splitter should not have cut.
+    `<keyword>` and "`<ability>`"" card was silent; the same cut turned
+    "token with trample and haste" (Purphoros's Intervention, Elemental
+    Appeal) into "with trample" and an unreadable "haste". The token reader
+    (`_parse_token_clause`) already reads the whole sentence correctly, so
+    this only hands it the sentence the splitter should not have cut.
+
+    The sentences right after a token sentence that name its tokens
+    anaphorically are read with it, as one CR 608.2c instruction: "They gain
+    haste until end of turn." (Burn Down the House) and "Sacrifice it at the
+    beginning of the next end step." / "Exile it ..." (Purphoros's
+    Intervention, a CR 603.7a delayed trigger about that token alone). Both
+    are read by the same machinery `_parse_put_then_grant_then_delayed_whole_
+    text` uses for any other antecedent; this only lets the antecedent carry
+    a quoted ability, which that reader's own quote stash refuses.
     """
-    if '"' not in text and "\u201c" not in text:  # the shape needs a quoted ability
+    lowered = text.lower()
+    if "token" not in lowered or not (
+        '"' in text
+        or "\u201c" in text
+        or " and " in lowered
+        or "tapped and attacking" in lowered
+        or "gain" in lowered
+        or " it at " in lowered
+    ):
         return None
-    sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
-    if not any(_TOKEN_WITH_KEYWORDS_AND_QUOTED_ABILITY_RE.match(s) for s in sentences):
+    sentences = _quote_aware_sentences(_strip_non_effect_preamble(text))
+    # First pass: which sentences are token sentences read whole, and which
+    # rider sentences each one takes. Nothing to read whole means this is not
+    # the rung's shape (and the ordinary pipeline below must not be re-entered
+    # with the same text).
+    plan: list[tuple[str, list[tuple[str, Any]] | None]] = []
+    index = 0
+    while index < len(sentences):
+        riders: list[tuple[str, Any]] = []
+        following = index + 1
+        while (
+            following < len(sentences)
+            and (rider := _read_token_rider(sentences[following])) is not None
+        ):
+            riders.append(rider)
+            following += 1
+        if _token_sentence_needs_whole_reading(sentences[index], has_riders=bool(riders)):
+            plan.append((sentences[index], riders))
+            index = following
+        else:
+            plan.append((sentences[index], None))
+            index += 1
+    if all(riders is None for _, riders in plan):
         return None
     clauses: list[TargetedClause] = []
-    for sentence in sentences:
-        if _TOKEN_WITH_KEYWORDS_AND_QUOTED_ABILITY_RE.match(sentence):
-            token_clause = _parse_token_clause(sentence.strip(), for_spell=for_spell)
-            if token_clause is None:
+    for sentence, riders in plan:
+        if riders is None:
+            parsed = _parse_mixed_clauses(sentence, for_spell=for_spell)
+            if parsed is None:
                 return None
-            clauses.append(token_clause)
+            clauses.extend(parsed)
             continue
-        parsed = _parse_mixed_clauses(sentence, for_spell=for_spell)
-        if parsed is None:
+        token_clause = _parse_token_clause(sentence.strip().rstrip("."), for_spell=for_spell)
+        if token_clause is None:
             return None
-        clauses.extend(parsed)
+        if riders:
+            token_clause = _token_rider_clause(
+                token_clause,
+                [value for kind, value in riders if kind == "grant"],
+                [value for kind, value in riders if kind == "delayed"],
+                for_spell=for_spell,
+            )
+        clauses.append(token_clause)
     return clauses
 
 
@@ -4218,6 +4443,7 @@ def _parse_target_player_creates_token(text: str) -> AbilityEffect | None:
 
 
 from ._common import (  # noqa: E402
+    _ANAPHOR_GAINS_KEYWORDS_RE,
     _COLOR_WORD_TO_COLOR,
     _OBJECT_ANAPHOR_RE,
     _ONE_PERMANENT,
@@ -4249,6 +4475,7 @@ from .amounts import (  # noqa: E402
 )
 from .continuous import (  # noqa: E402
     _defender_of_controllers_attack,
+    _grant_keywords_to,
     attach_permanent,
     continuous_effects,
     layer_context_for,

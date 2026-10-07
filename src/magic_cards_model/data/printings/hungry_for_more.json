@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "ce09c0df-d022-4ebf-8f7f-8a913249e75f",
+  "oracle_id": "3eaf1e6b-bf4c-4ea8-83ea-6827470fd802",
+  "multiverse_ids": [
+    535022
+  ],
+  "resource_id": "97A1A398BB70F5429E6F9B719C529248815E5ADD9B4A94A5459D0CAB6A1581C3",
+  "mtgo_id": 93458,
+  "arena_id": 78593,
+  "tcgplayer_id": 248008,
+  "cardmarket_id": 574863,
+  "name": "Hungry for More",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/ce09c0df-d022-4ebf-8f7f-8a913249e75f",
+  "scryfall_uri": "https://scryfall.com/card/mid/228/hungry-for-more?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:52:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.jpg?1783925560",
+    "normal": "https://cards.scryfall.io/normal/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.jpg?1783925560",
+    "large": "https://cards.scryfall.io/large/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.jpg?1783925560",
+    "png": "https://cards.scryfall.io/png/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.png?1783925560",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.jpg?1783925560",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.jpg?1783925560",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.webp?1783925560",
+    "grid": "https://cards.scryfall.io/grid/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.webp?1783925560",
+    "display": "https://cards.scryfall.io/display/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.webp?1783925560",
+    "art": "https://cards.scryfall.io/art/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.webp?1783925560",
+    "crop": "https://cards.scryfall.io/crop/front/c/e/ce09c0df-d022-4ebf-8f7f-8a913249e75f.webp?1783925560"
+  },
+  "mana_cost": "{B}{R}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Create a 3/1 black and red Vampire creature token with trample, lifelink, and haste. Sacrifice it at the beginning of the next end step.\nFlashback {1}{B}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Lifelink",
+    "Flashback"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "ce09c0df-d022-4ebf-8f7f-8a913249e75f",
+      "component": "combo_piece",
+      "name": "Hungry for More",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/ce09c0df-d022-4ebf-8f7f-8a913249e75f"
+    },
+    {
+      "object": "related_card",
+      "id": "0f8fe08d-b469-4471-8a7d-cf75850ba312",
+      "component": "token",
+      "name": "Vampire",
+      "type_line": "Token Creature \u2014 Vampire",
+      "uri": "https://api.scryfall.com/cards/0f8fe08d-b469-4471-8a7d-cf75850ba312"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ce09c0df-d022-4ebf-8f7f-8a913249e75f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3eaf1e6b-bf4c-4ea8-83ea-6827470fd802&unique=prints",
+  "collector_number": "228",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Bastien L. Deharme",
+  "artist_ids": [
+    "798f63ec-41ad-474e-9708-df08193345c6"
+  ],
+  "illustration_id": "2b374842-993e-4053-b0a2-20b8207a69a8",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19297,
+  "penny_rank": 8205,
+  "preview": {
+    "source": "Ashlizzle",
+    "source_uri": "https://twitter.com/Ashlizzlle_/status/1435041337867489284",
+    "previewed_at": "2021-09-06"
+  },
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": "0.39",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.20",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=535022&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHungry%2Bfor%2BMore",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHungry%2Bfor%2BMore",
+    "edhrec": "https://edhrec.com/route/?cc=Hungry+for+More"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248008%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574863&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/93458?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
