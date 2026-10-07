@@ -7682,7 +7682,7 @@ Schema 126 -> 129 (NW05-T5, renumbered at integration): `DamageModifierReplaceme
 | Mechanic | Reader | Cards (proof) |
 |---|---|---|
 | An Aura's/Equipment's own damage to the creature it is attached to (CR 120.3, CR 303.4b) | `effects/damage.py:_parse_attachment_damage_to_host_text` | Fatal Attraction, Tilonalli's Crown |
-| "enchanted/equipped creature deals N / damage equal to its power to its owner, its controller, you, each opponent, each player or a target" - the host is the source; "its owner" is CR 108.3's owner; "any other target" skips the host on resolution | `effects/damage.py:_parse_host_deals_damage_text` | Enslave, Pain for All |
+| "enchanted/equipped creature deals N / damage equal to its power to its owner, its controller, you, each opponent, each player or a target" - the host is the source; "its owner" is CR 108.3's owner; "any other target" excludes the enchanted creature (not the Aura) at target choice (CR 601.2c) | `effects/damage.py:_parse_host_deals_damage_text`, `targeting._parse` (`excludes_enchanted`) | Enslave, Pain for All |
 | "attach it to target creature you control. That creature deals damage equal to its power to up to one target ..." (CR 701.3a then a one-sided bite) | `effects/damage.py:_parse_attach_then_bite_text` | Hunter's Bow |
 | "X deals N / damage equal to its power to target creature ... and that creature deals damage equal to its power to you / this creature" - both amounts read before either is dealt (not CR 701.14a fight) | `effects/damage.py:_parse_mutual_bite_text` | Stalking Yeti (Form of the Dinosaur) |
 | "choose target creature ... Each creature you control deals N damage to that creature" (CR 115.1; each creature its own source) | `effects/damage.py:_parse_choose_target_group_deals_text` | Case of the Gateway Express |
@@ -7699,5 +7699,3 @@ Schema 126 -> 129 (NW05-T5, renumbered at integration): `DamageModifierReplaceme
 | Batched combat damage restricted to trample, X = "the amount of damage those creatures dealt to that player" (CR 603.2c) | `effects/amounts.py:_damage_those_creatures_dealt` | Quartzwood Crasher |
 | Keyword-list condition boundary and "you attack with at least N creatures that have <keyword list>"; "each creature that doesn't have <keyword list>" | `abilities.py:_KEYWORD_LIST_CONDITION_BOUNDARY`, `triggers/collect.py:parse_keyword_list`, `effects/damage.py:_GROUP_LACKS_KEYWORDS_RE` | Path of Mettle |
 | "Choose a creature at random that attacked this turn. Destroy that creature." - seeded off `shuffle_seed` and the ability id (replay-stable) | `effects/removal.py:_parse_destroy_random_attacked_creature_text` | Metzali, Tower of Triumph |
-
-Known gap: "any other target" after "enchanted creature deals" is enforced on resolution (the host takes nothing), not at target choice - `machines/targeting.py` (outside NW05-T2's ownership) still offers the enchanted creature as a legal choice.
