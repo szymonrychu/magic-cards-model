@@ -292,3 +292,23 @@ def test_the_hand_at_the_start_of_the_turn_condition_reads_for_any_source():
         )
         is False
     ), "emptying the hand since the turn began changes nothing"
+
+
+# -- Guard narrowness (ratchet offenders) ------------------------------------
+
+
+def test_the_if_guard_does_not_silence_gated_damage_to_each_opponent():
+    """Only the `damage to you` reader refuses a leading "If <condition>, ":
+    the printed "If ..., X deals 2 damage to each opponent." riders (Reckless
+    Handling, Grab the Prize) still read as handled."""
+    from magic_cards_model.machines.effects import effect_for
+    from magic_cards_model.support import card_support
+    from tests.cards import card
+
+    assert card_support(card("Reckless Handling")).status == "handled"
+    assert (
+        effect_for(
+            "If the discarded card wasn't a land card, Grab the Prize deals 2 damage to each opponent."
+        )
+        is not None
+    )
