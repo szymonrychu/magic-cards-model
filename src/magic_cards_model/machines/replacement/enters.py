@@ -7,7 +7,14 @@ from magic_cards_model.phrases import with_indefinite_article
 
 from ...data.creature_types import creature_types
 from ...models.card import Card, Color, Supertype, Type, types_of
-from ...models.card_state import CardState, Choice, ChoiceKind, Counter, ExileMarker
+from ...models.card_state import (
+    CardState,
+    Choice,
+    ChoiceKind,
+    Counter,
+    DevouredObject,
+    ExileMarker,
+)
 from ...models.token import is_token
 from ...models.zone import Zone
 from ...numbers import COUNT, parse_count
@@ -793,6 +800,10 @@ def _behold_or_tapped(phrase: str, card_name: str) -> Apply:
 #: sacrifice" half, the same role `_IF_YOU_DONT` plays for the shockland's
 #: "you don't".
 _IF_YOU_DO = re.compile(r"^(?:if )?you do$", re.IGNORECASE)
+#: A paragraph that is a Devour keyword line (CR 702.82a/c), which
+#: `parse._expand_devour` spells out as the sacrifice-then-counters pair
+#: below - the one source whose sacrifices are "devoured" (CR 702.82b).
+_DEVOUR_LINE_RE = re.compile(r"^devour\b", re.IGNORECASE)
 
 #: "sacrifice any number of <description>" (Shimatsu, mandatory) or "you may
 #: sacrifice any number of <description>" (Devouring Hellion, optional) - read
@@ -822,7 +833,12 @@ def _sacrifice_any_number_choice(effect: ReplacementEffect) -> tuple[str, bool] 
 
 
 def _sacrifice_any_number_then_enter_with_counters(
-    restriction: "_SacrificeRestriction", counter_kind: str, multiplier: int, card_name: str
+    restriction: "_SacrificeRestriction",
+    counter_kind: str,
+    multiplier: int,
+    card_name: str,
+    *,
+    devour: bool = False,
 ) -> Apply:
     """The combined CR 614.12a choice: sacrifice, then carry the count into
     the entering permanent's own counters.
@@ -872,6 +888,16 @@ def _sacrifice_any_number_then_enter_with_counters(
             chosen_ids = answer
         by_id = {candidate.id: candidate for candidate in candidates}
         chosen = [by_id[card_id] for card_id in chosen_ids]
+        if devour and event.card is not None:
+            # CR 702.82b: what "it devoured" counts, each as it last existed
+            # on the battlefield (CR 608.2h) - read before it is sacrificed.
+            event.card.devoured = tuple(
+                DevouredObject(
+                    types=tuple(game.characteristics_of(permanent).types),
+                    subtypes=tuple(game.characteristics_of(permanent).subtypes),
+                )
+                for permanent in chosen
+            )
         for permanent in chosen:
             game.sacrifice(permanent)
         event.counters[counter_kind] = (
@@ -2431,6 +2457,7 @@ def _self_enters_modifiers(
                                     parsed[follower].counter_kind,
                                     parsed[follower].that_many_multiplier,
                                     card_state.card.name,
+                                    devour=_DEVOUR_LINE_RE.match(effect.raw or "") is not None,
                                 ),
                                 f"{effect.text} {parsed[follower].text}",
                                 False,

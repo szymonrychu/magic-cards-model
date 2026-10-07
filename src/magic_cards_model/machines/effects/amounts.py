@@ -897,6 +897,8 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         return history_count
     if (player_counters := player_counter_count(stripped)) is not None:
         return player_counters
+    if "devoured" in stripped.lower() and (devoured := _devoured_count(stripped)) is not None:
+        return devoured
     if "mana spent to cast" in stripped and _COLORS_OF_MANA_SPENT_TO_CAST_IT_RE.fullmatch(stripped):
         # "where X is the number of colors of mana spent to cast this spell"
         # (Radiant Flames, Kaleidoscorch): the converge count, read off the
@@ -1496,6 +1498,48 @@ _COLORS_OF_MANA_SPENT_TO_CAST_IT_RE = re.compile(
 )
 
 
+#: "the number of Goblins it devoured" (Voracious Dragon), "creature it
+#: devoured" (Skullmulcher's and Marrow Chomper's "for each creature it
+#: devoured"): CR 702.82b's count, read off `CardState.devoured` of the
+#: permanent whose ability is resolving.
+_DEVOURED_COUNT_RE = re.compile(
+    r"^(?:the number of )?(?P<quality>[a-z][a-z'-]*?)s? it devoured$", re.IGNORECASE
+)
+
+
+def _devoured_count(phrase: str) -> Callable[["Game", str], int] | None:
+    """`_DEVOURED_COUNT_RE`'s count: how many of the objects the resolving
+    ability's source devoured (CR 702.82b) had the named card type or
+    subtype as they last existed. The source is read as it is now or last
+    existed (CR 608.2h), so the count survives the permanent leaving."""
+    match = _DEVOURED_COUNT_RE.fullmatch(phrase.strip())
+    if match is None:
+        return None
+    word = match.group("quality")
+    card_type = _singular_card_type(word)
+    subtype = None if card_type is not None else _singular_subtype_for_count_expression(word)
+    if card_type is None and subtype is None:
+        return None
+
+    def count(game: "Game", _controller: str) -> int:
+        resolving = game.resolving
+        if resolving is not None and is_ability(resolving):
+            resolving = resolving.source_or_last_known(game)
+        if not isinstance(resolving, CardState):
+            return 0
+        return sum(
+            1
+            for devoured in resolving.devoured
+            if (card_type is not None and card_type in devoured.types)
+            or (
+                subtype is not None
+                and subtype in {printed.lower() for printed in devoured.subtypes}
+            )
+        )
+
+    return count
+
+
 def _colors_spent_on_resolving(game: "Game", _controller: str) -> int:
     """Converge's count (CR 207.2c; `machines/converge.colors_of_mana_spent`)
     for whatever is resolving now: the spell itself, or - for a trigger written
@@ -1640,6 +1684,10 @@ def _amount_term(term: str) -> AmountReader | None:
     constant = parse_count(text)
     if constant is not None:
         return lambda _game, _controller, _object, _x: constant
+    if "devoured" in lowered and (devoured := _devoured_count(text)) is not None:
+        # Ahead of the permanent counts below, which would otherwise read
+        # "the number of Goblins" off the board and drop "it devoured".
+        return lambda game, controller, _object, _x: devoured(game, controller)
     if (half := parse_half(text)) is not None:
         # CR 107.1a: the card prints which way a fractional result rounds;
         # `numbers.parse_half` refuses a "half" that does not say.
