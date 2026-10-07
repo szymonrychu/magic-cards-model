@@ -2066,6 +2066,18 @@ def _condition_matches(
                 # even when the source is what "becomes blocked").
                 qualifier = _becomes_blocked_by_qualifier_holds(game, condition, event.subject_id)
                 blocked = qualifier is None or qualifier
+            if blocked and "becomes blocked by" not in lowered:
+                # CR 509.3c: a plain "becomes blocked" triggers once each
+                # combat for that creature however many block it - only the
+                # pair of its first blocker (`Attack.blocked_by` is in the
+                # order they began to block, CR 509.1h) counts, and one made
+                # to block an attacker already blocked never does.
+                attack = game.combat.attack_by(source.id)
+                blocked = (
+                    attack is None
+                    or not attack.blocked_by
+                    or attack.blocked_by[0] == event.subject_id
+                )
             return blocks or blocked
         # Tetsuko Umezawa, Pursuer's own non-self-referential form: "a
         # creature an opponent controls with power or toughness 1 or less

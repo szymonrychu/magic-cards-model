@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "700b38c5-3fd2-4566-8d27-9a09d5ab02b2",
+  "oracle_id": "fc16a2ce-a570-454f-8498-f9c604c0d68b",
+  "multiverse_ids": [
+    452952
+  ],
+  "mtgo_id": 69777,
+  "arena_id": 68663,
+  "tcgplayer_id": 176871,
+  "cardmarket_id": 364193,
+  "name": "Swathcutter Giant",
+  "lang": "en",
+  "released_at": "2018-10-05",
+  "uri": "https://api.scryfall.com/cards/700b38c5-3fd2-4566-8d27-9a09d5ab02b2",
+  "scryfall_uri": "https://scryfall.com/card/grn/202/swathcutter-giant?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:15:21Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.jpg?1783934121",
+    "normal": "https://cards.scryfall.io/normal/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.jpg?1783934121",
+    "large": "https://cards.scryfall.io/large/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.jpg?1783934121",
+    "png": "https://cards.scryfall.io/png/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.png?1783934121",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.jpg?1783934121",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.jpg?1783934121",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.webp?1783934121",
+    "grid": "https://cards.scryfall.io/grid/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.webp?1783934121",
+    "display": "https://cards.scryfall.io/display/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.webp?1783934121",
+    "art": "https://cards.scryfall.io/art/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.webp?1783934121",
+    "crop": "https://cards.scryfall.io/crop/front/7/0/700b38c5-3fd2-4566-8d27-9a09d5ab02b2.webp?1783934121"
+  },
+  "mana_cost": "{4}{R}{W}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Giant Soldier",
+  "oracle_text": "Vigilance\nWhenever this creature attacks, it deals 1 damage to each creature defending player controls.",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [
+    "Vigilance"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "597c6d4a-8212-4903-a6af-12c4ae9e13f0",
+  "set": "grn",
+  "set_name": "Guilds of Ravnica",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/597c6d4a-8212-4903-a6af-12c4ae9e13f0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Agrn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/grn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/700b38c5-3fd2-4566-8d27-9a09d5ab02b2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afc16a2ce-a570-454f-8498-f9c604c0d68b&unique=prints",
+  "collector_number": "202",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "boros",
+  "flavor_text": "\"Now do you understand what we meant when we said *disperse*?\"\n\u2014Eksari, Boros patrol leader",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Aaron Miller",
+  "artist_ids": [
+    "fc021f3d-773a-4706-bbe7-f602324f511f"
+  ],
+  "illustration_id": "2f5f4807-151f-4cb4-99c0-5a284425a693",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21277,
+  "penny_rank": 15207,
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.46",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.23",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=452952&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSwathcutter%2BGiant",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSwathcutter%2BGiant",
+    "edhrec": "https://edhrec.com/route/?cc=Swathcutter+Giant"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F176871%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=364193&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/69777?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
