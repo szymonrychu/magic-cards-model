@@ -6739,6 +6739,14 @@ _PLAYER_LIFE_COMPARISON_RE = re.compile(
 )
 
 
+#: "two or more creatures died under your control this turn" (Gimli,
+#: Mournful Avenger): CR 700.4's per-turn count for the source's controller,
+#: `LayerContext.creatures_died_under_control`.
+_CREATURES_DIED_UNDER_YOUR_CONTROL_RE = re.compile(
+    rf"^(?P<count>{COUNT}) or more creatures died under your control this turn$", re.IGNORECASE
+)
+
+
 def _opponents_of(controller: str | None, players: Iterable[str]) -> list[str]:
     return [player for player in players if player != controller]
 
@@ -6792,6 +6800,17 @@ def _self_static_gate(
             )
 
         return life_gate, "while the life total condition holds"
+    if match := _CREATURES_DIED_UNDER_YOUR_CONTROL_RE.fullmatch(text):
+        died_threshold = parse_count(match.group("count"), article=False)
+        if not died_threshold:
+            return None
+
+        def died_gate(source: CardState, context: LayerContext) -> bool:
+            controller = source.controller
+            died = context.creatures_died_under_control
+            return controller is not None and died.get(controller, 0) >= died_threshold
+
+        return died_gate, f"while {died_threshold}+ creatures died under your control this turn"
     if " and " in text:
         gates = [_self_static_gate(part) for part in text.split(" and ")]
         if all(gate is not None for gate in gates):

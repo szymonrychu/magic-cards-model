@@ -971,6 +971,7 @@ class ContinuousMixin:
             # is - Kinbinding's own "the number of creatures that entered the
             # battlefield under your control this turn."
             turn_counts={fact: dict(players) for fact, players in self.turn_counts.items()},
+            creatures_died_under_control=self._creatures_died_under_control_this_turn(),
             # Bristlebane Outrider's own "another creature entered ... this
             # turn" - see `LayerContext.entered_this_turn_ids`'s own docstring
             # for why this needs the object identity, not just the count.
@@ -1668,6 +1669,21 @@ class ContinuousMixin:
                     return True
         return False
 
+
+    def _creatures_died_under_control_this_turn(self: "Game") -> dict[str, int]:
+        """Per player, the creatures put into a graveyard from the battlefield
+        under their control this turn (CR 700.4), each judged by its type as
+        it last existed (`TurnHistoryEntry.characteristics`)."""
+        died: dict[str, int] = {}
+        for entry in self.turn_history:
+            if (
+                entry.kind == "to_graveyard"
+                and entry.player is not None
+                and entry.characteristics is not None
+                and Type.CREATURE in entry.characteristics.types
+            ):
+                died[entry.player] = died.get(entry.player, 0) + 1
+        return died
     @classmethod
     def reads_enforced_static_line(cls, text: str, card_name: str) -> bool:
         """`support.py`'s credit: whether one printed static line is a shape
