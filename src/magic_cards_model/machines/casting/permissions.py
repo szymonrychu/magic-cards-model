@@ -154,6 +154,27 @@ def _printed_self_zone_cast_additional_cost(text: str) -> tuple[Zone, TotalCost]
     return read.zones[0], read.cost
 
 
+_SEARCH_CAST_RE = re.compile(
+    r"While you're searching your library, you may cast this card from your library\."
+)
+
+
+def reads_search_cast_permission_line(text: str) -> bool:
+    """Panglacial Wurm's line: what `support.py` asks, and what
+    `search_cast_candidates` consults while a library search is under way."""
+    return _SEARCH_CAST_RE.fullmatch(" ".join(_REMINDER_TEXT_RE.sub("", text).split())) is not None
+
+
+def search_cast_candidates(library: list[CardState]) -> list[CardState]:
+    """The cards in `library` whose own text lets their owner cast them from
+    the library while that library is being searched (CR 701.23a, CR 601.3)."""
+    return [
+        card
+        for card in library
+        if any(reads_search_cast_permission_line(line) for line in card.oracle_text.splitlines())
+    ]
+
+
 def reads_printed_self_zone_cast_line(text: str) -> bool:
     """What `support.py` asks before crediting the line."""
     return printed_self_zone_cast(text) is not None

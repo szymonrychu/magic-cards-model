@@ -17,6 +17,7 @@ from ...machines.abilities import (
 )
 from ...machines.casting import (
     annotate_exile,
+    search_cast_candidates,
 )
 from ...machines.casting_restrictions import (
     draw_cap_restriction,
@@ -25,6 +26,7 @@ from ...machines.casting_restrictions import (
 from ...machines.combat import (
     keywords_as_it_exists,
 )
+from ...machines.cost import plan_mana_payment, total_cost_for_phrase
 from ...machines.decisions import (
     CardSplit,
     Decision,
@@ -1508,6 +1510,7 @@ class ZonesMixin:
                 self.emit(
                     GameEvent(event=ExtraTriggerEvent.SEARCHES_LIBRARY, player=player.username)
                 )
+                self._offer_casts_while_searching(player)
 
             candidates = [state for state in player.cards_in(zone) if matches(state)]
             limit = min(count, len(candidates))
@@ -1541,6 +1544,41 @@ class ZonesMixin:
             if shuffle and zone is Zone.LIBRARY:
                 self.shuffle_library(player)
             return found
+
+    def _offer_casts_while_searching(self: "Game", player: Player) -> None:
+        """Panglacial Wurm's "While you're searching your library, you may cast
+        this card from your library." (CR 701.23a, CR 601.3): the search is
+        under way, so each such card in the library is offered a cast, paying
+        its mana cost, before the find is chosen (CR 608.2g - the effect that
+        causes the search is still resolving)."""
+        for card in search_cast_candidates(player.library):
+            if card not in player.library or not self.can_cast_during_resolution(
+                card, player.username
+            ):
+                continue
+            cost = total_cost_for_phrase(card.card.mana_cost or "", player.username)
+            sources = self._mana_sources_while_resolving(player)
+            if (
+                cost is not None
+                and plan_mana_payment(cost.mana, sources, game=self, payer=player.username) is None
+            ):
+                continue  # CR 608.2d: a cast that cannot be paid is not offered.
+            if self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=player.username,
+                    prompt=f"cast {card.name} from your library while searching it",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                )
+            ):
+                self.cast_during_resolution(
+                    card,
+                    player.username,
+                    source_name=card.name,
+                    rule="CR 701.23a: cast while searching the library",
+                    pays_mana_cost=True,
+                )
 
     def search_and_put(
         self: "Game",

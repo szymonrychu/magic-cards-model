@@ -9,6 +9,7 @@ from magic_cards_model.machines.casting import (
     cast_condition_readable,
     conditional_free_cast_condition,
     reads_quality_flash_grant_line,
+    reads_search_cast_permission_line,
     reads_static_zone_cast_permission_line,
     strip_ability_word,
 )
@@ -23,7 +24,11 @@ def reads_static_line(printing, text, *, card_name=None, legendary=False) -> boo
         # the permission as the exiling ability resolves
         # (`_grant_cast_exiled_card_permission_from_sibling_static`).
         return True
-    if reads_static_zone_cast_permission_line(text) or reads_quality_flash_grant_line(text):
+    if (
+        reads_static_zone_cast_permission_line(text)
+        or reads_quality_flash_grant_line(text)
+        or reads_search_cast_permission_line(text)
+    ):
         return True
     free_condition = conditional_free_cast_condition(text)
     return free_condition is not None and cast_condition_readable(free_condition)

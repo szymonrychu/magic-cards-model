@@ -929,3 +929,56 @@ def test_emet_selch_does_nothing_on_an_opponents_turn():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     assert refusal(scenario, "Divination", Zone.GRAVEYARD).startswith("nothing allows alice")
+
+
+# -- Panglacial Wurm: cast from the library while searching it ---------------
+
+
+def _search_alice_library(scenario, name="Forest"):
+    return scenario.game.search_library(
+        "alice", lambda state: state.name == name, count=1, optional=True, source="Test Tutor"
+    )
+
+
+def test_panglacial_wurm_is_cast_from_the_library_while_searching():
+    scenario = build(
+        alice={"library": ["Panglacial Wurm", "Forest", "Forest", "Forest", "Forest"]},
+        lands=["Forest"] * 7,
+    )
+    scenario.will_take_the_may(True)
+    _search_alice_library(scenario)
+    wurm = next(c for c in scenario.game.stack if c.name == "Panglacial Wurm")
+    assert wurm.zone is Zone.STACK
+    assert all(c.name != "Panglacial Wurm" for c in scenario.player("alice").library)
+
+
+def test_panglacial_wurm_stays_in_the_library_when_the_cast_is_declined():
+    scenario = build(
+        alice={"library": ["Panglacial Wurm", "Forest", "Forest", "Forest", "Forest"]},
+        lands=["Forest"] * 7,
+    )
+    scenario.will_take_the_may(False)
+    _search_alice_library(scenario)
+    assert not scenario.game.stack
+    assert any(c.name == "Panglacial Wurm" for c in scenario.player("alice").library)
+
+
+def _may_questions(scenario):
+    return [q for q in scenario.questions_asked() if q.kind.value == "may"]
+
+
+def test_panglacial_wurm_is_not_offered_when_its_mana_cost_cannot_be_paid():
+    scenario = build(
+        alice={"library": ["Panglacial Wurm", "Forest", "Forest", "Forest", "Forest"]},
+        lands=["Forest"] * 2,
+    )
+    _search_alice_library(scenario)
+    assert not scenario.game.stack
+    assert not _may_questions(scenario)
+
+
+def test_panglacial_wurm_in_the_hand_is_not_offered_while_searching():
+    scenario = build(alice={"hand": ["Panglacial Wurm"]}, lands=["Forest"] * 7)
+    _search_alice_library(scenario)
+    assert not scenario.game.stack
+    assert not _may_questions(scenario)
