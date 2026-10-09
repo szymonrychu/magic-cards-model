@@ -753,6 +753,7 @@ _ATTACKED_AND_CONTROL_RE = re.compile(
     re.IGNORECASE,
 )
 _HAVE_MAX_SPEED_RE = re.compile(r"^you have max speed$", re.IGNORECASE)
+_THIS_CASE_IS_SOLVED_RE = re.compile(r"^this case is solved$", re.IGNORECASE)
 
 
 def cast_condition_holds(game: Any, caster: str, condition: str, source: CardState | None) -> bool:
@@ -765,6 +766,9 @@ def cast_condition_holds(game: Any, caster: str, condition: str, source: CardSta
     702.178a). An unread condition is false: nothing is permitted by text
     nobody checked."""
     text = condition.strip().rstrip(".")
+    if _THIS_CASE_IS_SOLVED_RE.fullmatch(text):
+        # CR 719.3b: the designation is on the Case itself.
+        return bool(source is not None and source.solved)
     if _HAVE_MAX_SPEED_RE.fullmatch(text):
         from ..speed import has_max_speed
 
@@ -804,6 +808,7 @@ def cast_condition_readable(condition: str) -> bool:
     text = condition.strip().rstrip(".")
     return (
         _HAVE_MAX_SPEED_RE.fullmatch(text) is not None
+        or _THIS_CASE_IS_SOLVED_RE.fullmatch(text) is not None
         or _CREATURE_NOT_NAMED_DIED_RE.fullmatch(text) is not None
         or _ATTACKED_AND_CONTROL_RE.fullmatch(text) is not None
         or condition_is_readable(text)

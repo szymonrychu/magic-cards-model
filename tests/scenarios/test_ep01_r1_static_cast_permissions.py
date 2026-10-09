@@ -246,3 +246,184 @@ def test_wickerfolk_pays_two_life_and_sacrifices_a_creature():
     assert on_battlefield(folk)
     assert bears.zone is Zone.GRAVEYARD
     assert scenario.player("alice").life == 18
+
+
+# -- a permanent's permission to cast from the top of the library ------------
+
+
+def top_board(permanent, library, *, battlefield=(), hand=()):
+    return build(
+        alice={"battlefield": [permanent, *battlefield], "library": [*library, "Forest", "Forest"], "hand": list(hand)}
+    )
+
+
+def top_refusal(scenario):
+    top = scenario.player("alice").library[0]
+    return why_cannot_cast_from(top, "alice", Zone.LIBRARY, scenario.game)
+
+
+def cast_top(scenario, *, targets=None, choosing=None):
+    top = scenario.player("alice").library[0]
+    casting = scenario.cast(top.name, username="alice", from_zone=Zone.LIBRARY)
+    casting.use_keyword(CAST_PERMISSION, choosing=choosing)
+    if targets is not None:
+        casting.choose_targets(targets)
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    scenario.put_on_stack(casting)
+    resolve_everything(scenario)
+    return top
+
+
+@pytest.mark.parametrize("permanent", ["Precognition Field", "Melek, Izzet Paragon"])
+def test_instant_and_sorcery_spells_are_castable_from_the_top(permanent):
+    scenario = top_board(permanent, ["Divination"])
+    assert top_refusal(scenario) is None
+    assert cast_top(scenario).zone is Zone.GRAVEYARD
+    scenario = top_board(permanent, ["Grizzly Bears"])
+    assert top_refusal(scenario).startswith("nothing allows alice")
+
+
+def test_artifact_and_colorless_spells_from_the_top_with_mystic_forge():
+    scenario = top_board("Mystic Forge", ["Sol Ring"])
+    assert on_battlefield(cast_top(scenario))
+    scenario = top_board("Mystic Forge", ["Grizzly Bears"])
+    assert top_refusal(scenario) is not None
+    # "colorless" is its own atom: an Eldrazi that is not an artifact
+    scenario = top_board("Mystic Forge", ["Eternal Scourge"])
+    assert top_refusal(scenario) is None
+
+
+def test_a_subtype_and_noncreature_list_from_the_top_with_madame_web():
+    scenario = top_board("Madame Web, Clairvoyant", ["Spider-Man, Web-Slinger"])
+    assert top_refusal(scenario) is None
+    scenario = top_board("Madame Web, Clairvoyant", ["Divination"])
+    assert top_refusal(scenario) is None
+    scenario = top_board("Madame Web, Clairvoyant", ["Grizzly Bears"])
+    assert top_refusal(scenario) is not None
+
+
+def test_two_subtypes_from_the_top_with_sigarda():
+    for top, readable in (
+        ("Serra Angel", True),
+        ("Thraben Inspector", True),
+        ("Grizzly Bears", False),
+    ):
+        scenario = top_board("Sigarda, Font of Blessings", [top])
+        assert (top_refusal(scenario) is None) is readable, top
+
+
+def test_the_chosen_creature_type_gates_realmwalker():
+    from magic_cards_model.models.card_state import Choice, ChoiceKind
+
+    scenario = top_board("Realmwalker", ["Llanowar Elves"])
+    realmwalker = scenario.creature("Realmwalker", "alice")
+    assert top_refusal(scenario) is not None  # nothing chosen yet
+    realmwalker.choice = Choice(kind=ChoiceKind.CREATURE_TYPE, value="Elf")
+    assert top_refusal(scenario) is None
+    scenario = top_board("Realmwalker", ["Grizzly Bears"])
+    scenario.creature("Realmwalker", "alice").choice = Choice(
+        kind=ChoiceKind.CREATURE_TYPE, value="Elf"
+    )
+    assert top_refusal(scenario) is not None
+
+
+def test_flash_or_flying_from_the_top_with_errant_and_giada():
+    scenario = top_board("Errant and Giada", ["Serra Angel"])
+    assert top_refusal(scenario) is None
+    scenario = top_board("Errant and Giada", ["Grizzly Bears"])
+    assert top_refusal(scenario) is not None
+    scenario = top_board("Errant and Giada", ["Lightning Bolt"])
+    assert top_refusal(scenario) is not None  # an instant is not a spell with flash
+
+
+def test_historic_spells_and_lands_from_the_top_with_crystal_skull():
+    scenario = top_board("Crystal Skull, Isu Spyglass", ["Sol Ring"])
+    assert top_refusal(scenario) is None
+    scenario = top_board("Crystal Skull, Isu Spyglass", ["Grizzly Bears"])
+    assert top_refusal(scenario) is not None
+    scenario = top_board("Crystal Skull, Isu Spyglass", ["Forest"])
+    forest = scenario.player("alice").library[0]
+    with pytest.raises(ValueError):
+        scenario.game.play_land(forest, "alice")
+
+
+def test_coven_gates_augur_of_autumn_on_different_powers():
+    scenario = top_board(
+        "Augur of Autumn", ["Hill Giant"], battlefield=["Llanowar Elves", "Grizzly Bears"]
+    )
+    assert top_refusal(scenario) is not None  # powers 2, 1 and 2: only two different
+    scenario = top_board(
+        "Augur of Autumn", ["Hill Giant"], battlefield=["Llanowar Elves", "Hill Giant"]
+    )
+    assert top_refusal(scenario) is None
+    assert on_battlefield(cast_top(scenario))
+
+
+def test_assemble_the_players_is_once_each_turn_and_power_bounded():
+    scenario = top_board("Assemble the Players", ["Hill Giant"])
+    assert top_refusal(scenario) is not None  # power 3 is over the bound
+    scenario = top_board("Assemble the Players", ["Grizzly Bears", "Llanowar Elves"])
+    assert on_battlefield(cast_top(scenario))
+    assert top_refusal(scenario) is not None  # the one use of this turn is gone
+
+
+def test_johann_is_once_each_turn_for_an_instant_or_sorcery():
+    scenario = top_board("Johann, Apprentice Sorcerer", ["Divination", "Divination"])
+    assert top_refusal(scenario) is None
+    cast_top(scenario)
+    assert top_refusal(scenario) is not None
+
+
+def test_falco_spara_removes_a_counter_in_addition_to_the_cost():
+    scenario = top_board("Falco Spara, Pactweaver", ["Divination"], battlefield=["Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.game.add_counters(bears, Counter.PLUS_ONE, 1)
+    cast_top(scenario, choosing=[bears])
+    assert bears.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_falco_spara_cannot_pay_without_a_counter():
+    scenario = top_board("Falco Spara, Pactweaver", ["Divination"])
+    scenario.creature("Falco Spara, Pactweaver", "alice").counters.clear()
+    with pytest.raises(ValueError):
+        cast_top(scenario)
+
+
+def test_radha_plays_lands_from_the_top_but_casts_nothing():
+    scenario = top_board("Radha, Heart of Keld", ["Forest", "Grizzly Bears"])
+    forest = scenario.player("alice").library[0]
+    scenario.game.play_land(forest, "alice")
+    assert forest.zone is Zone.BATTLEFIELD
+    assert top_refusal(scenario).startswith("nothing allows alice")
+
+
+def test_lunar_whale_plays_the_top_card_only_after_it_attacked():
+    scenario = top_board("The Lunar Whale", ["Grizzly Bears"])
+    assert top_refusal(scenario) is not None
+    whale = scenario.creature("The Lunar Whale", "alice")
+    from magic_cards_model.models.game.records import TurnHistoryEntry
+
+    scenario.game.turn_history.append(
+        TurnHistoryEntry(kind="attacked", player="alice", object_id=whale.id)
+    )
+    assert top_refusal(scenario) is None
+
+
+def test_the_reality_chip_needs_to_be_attached():
+    scenario = top_board("The Reality Chip", ["Grizzly Bears"], battlefield=["Llanowar Elves"])
+    assert top_refusal(scenario) is not None
+    chip = scenario.creature("The Reality Chip", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    chip.attach_to(elves)
+    assert top_refusal(scenario) is None
+
+
+def test_case_of_the_locked_hothouse_works_only_when_solved():
+    scenario = top_board("Case of the Locked Hothouse", ["Grizzly Bears"])
+    assert top_refusal(scenario) is not None
+    case = next(c for c in scenario.game.battlefield if c.name == "Case of the Locked Hothouse")
+    case.solved = True
+    assert top_refusal(scenario) is None
+    scenario = top_board("Case of the Locked Hothouse", ["Divination"])
+    next(c for c in scenario.game.battlefield if c.name == "Case of the Locked Hothouse").solved = True
+    assert top_refusal(scenario) is not None  # a sorcery is neither creature nor enchantment
