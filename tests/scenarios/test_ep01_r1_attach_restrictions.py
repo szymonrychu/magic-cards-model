@@ -300,3 +300,39 @@ def test_bloodshed_fever_forces_the_enchanted_creature_to_attack() -> None:
         scenario.attack_with(scenario.creature("Hill Giant"))
     scenario.attack_with(enchanted)
     assert scenario.attackers() == [enchanted]
+
+
+# -- Weight of Conscience: "Tap two untapped creatures you control that share a creature type" --
+
+
+def _conscience(mine: list[str]):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Weight of Conscience", *mine])
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.find("Weight of Conscience", Zone.BATTLEFIELD, "alice").attach_to(giant)
+    return scenario, giant
+
+
+def test_weight_of_conscience_exiles_with_two_creatures_sharing_a_type() -> None:
+    scenario, giant = _conscience(["Grizzly Bears", "Grizzly Bears"])
+    aura = scenario.find("Weight of Conscience", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creatures("Grizzly Bears", "Grizzly Bears", username="alice")
+    scenario.activate(aura, index=0, tapping_for_cost=bears)
+    scenario.pass_until_resolved()
+    assert all(bear.tapped for bear in bears)
+    assert giant.zone is Zone.EXILE
+
+
+def test_weight_of_conscience_refuses_two_creatures_that_share_no_type() -> None:
+    scenario, giant = _conscience(["Grizzly Bears", "Serra Angel"])
+    aura = scenario.find("Weight of Conscience", Zone.BATTLEFIELD, "alice")
+    pair = [scenario.creature("Grizzly Bears", "alice"), scenario.creature("Serra Angel", "alice")]
+    with pytest.raises(ValueError, match="creature type"):
+        scenario.activate(aura, index=0, tapping_for_cost=pair)
+    assert giant.zone is Zone.BATTLEFIELD
+    assert not any(creature.tapped for creature in pair)

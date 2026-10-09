@@ -2228,6 +2228,9 @@ class Game(
     #: 137 (EP01-R1-T4): `CardState` gained `paired_with` (CR 702.95a's soulbond
     #: pair); an older dump would decode every creature unpaired, so a
     #: Flowering Lumberknot that was paired could no longer attack or block.
+    #: The same version: `machines/cost.CostComponent` gained
+    #: `shared_creature_type` (Weight of Conscience's "that share a creature
+    #: type"), reachable through a pending activation's cost.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

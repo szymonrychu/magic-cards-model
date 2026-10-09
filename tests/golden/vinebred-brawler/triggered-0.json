@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Vinebred Brawler@alice#1",
-    "targets": ["Aftermath Analyst@alice#1"],
+    "targets": ["Advocate of the Beast@alice#1"],
     "x": 0
   },
   "board": {
@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Vinebred Brawler", "Aftermath Analyst"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Vinebred Brawler", "Advocate of the Beast"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -39,8 +39,8 @@
     "fields_changed": ["continuous_effects"],
     "notices": {},
     "objects": {
-      "Aftermath Analyst@alice#1": {
-        "power": [1, 3],
+      "Advocate of the Beast@alice#1": {
+        "power": [2, 4],
         "toughness": [3, 4]
       }
     },
