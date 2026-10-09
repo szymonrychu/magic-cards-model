@@ -731,6 +731,7 @@
     "cards_drawn_this_turn",
     "permanents_sacrificed_this_turn",
     "ability_resolutions_this_turn",
+    "noncombat_damage_to_players_this_turn",
     "creatures_died_this_turn",
     "upkeeps_begun",
     "nontoken_creatures_died_under_control_this_turn",
