@@ -1152,6 +1152,7 @@ class CostsManaMixin:
             crew_number,
             crew_offer,
             delve_offer,
+            has_crew_loyalty_alternative,
             has_convoke,
             has_delve,
             has_improvise,
@@ -1195,6 +1196,16 @@ class CostsManaMixin:
                 rule="CR 702.122a",
                 number=crew_number(card.card),
                 candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
+                loyalty_candidates=[
+                    c
+                    for c in battlefield
+                    if has_crew_loyalty_alternative(card.card)
+                    and Type.PLANESWALKER in self.characteristics_of(c).types
+                    and self.controller_of(c).username == player
+                    and c.counters[Counter.LOYALTY] > 0
+                ]
+                if has_crew_loyalty_alternative(card.card)
+                else [],
             )
         # CR 702.184a: a station permanent's own ability, offered while it is
         # on the battlefield - the candidates are the creatures its cost could

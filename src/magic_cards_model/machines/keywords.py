@@ -76,6 +76,7 @@ from .cost import (
     cumulative_upkeep_cost,
     discard_cost,
     exile_cost,
+    remove_counters_cost,
     return_to_hand_cost,
     tap_cost,
     total_cost_for_phrase,
@@ -101,6 +102,7 @@ from .objects_as_costs import (
     ObjectOffer,
     crew_number,
     crew_offer,
+    has_crew_loyalty_alternative,
     power_of,
     total_power,
 )
@@ -3333,7 +3335,12 @@ def _outlast_effect(activation: KeywordActivation) -> int | None:
 
 
 def crew_activation(
-    game: Any, vehicle: CardState, crewing: Sequence[CardState], player: str
+    game: Any,
+    vehicle: CardState,
+    crewing: Sequence[CardState],
+    player: str,
+    *,
+    loyalty_from: CardState | None = None,
 ) -> KeywordActivation:
     """Build the activation for a Vehicle's crew ability (CR 702.122a).
 
@@ -3367,6 +3374,8 @@ def crew_activation(
     if number is None:
         raise ValueError(f"{vehicle.name} has no crew ability ({KeywordRule.CREW})")
 
+    if loyalty_from is not None:
+        return _crew_by_loyalty_activation(game, vehicle, crewing, player, loyalty_from, number)
     chosen = list(crewing)
     offer = crew_offer(vehicle)
     seen: set[UUID] = set()
@@ -3406,6 +3415,68 @@ def crew_activation(
                     f"Tap any number of other untapped creatures you control "
                     f"with total power {number} or greater"
                 ),
+                effect="This permanent becomes an artifact creature until end of turn.",
+            ),
+            game=game,
+        )
+    )
+
+
+def _crew_by_loyalty_activation(
+    game: Any,
+    vehicle: CardState,
+    crewing: Sequence[CardState],
+    player: str,
+    planeswalker: CardState,
+    number: int,
+) -> KeywordActivation:
+    """Heart of Kiran's "You may remove a loyalty counter from a planeswalker
+    you control rather than pay [its] crew cost." (CR 118.9, CR 702.122a): the
+    crew ability's cost is one loyalty counter removed from `planeswalker`
+    instead of tapped creatures, so none may be named."""
+    if not has_crew_loyalty_alternative(vehicle.card):
+        raise ValueError(
+            f"{vehicle.name} does not let its crew cost be paid by removing a loyalty counter "
+            f"({KeywordRule.CREW}, CR 118.9)"
+        )
+    if crewing:
+        raise ValueError(
+            f"{vehicle.name}'s crew cost is paid by one loyalty counter or by tapping "
+            "creatures, not both (CR 118.9a)"
+        )
+    if (
+        planeswalker.zone is not Zone.BATTLEFIELD
+        or Type.PLANESWALKER not in game.characteristics_of(planeswalker).types
+    ):
+        raise ValueError(f"{planeswalker.name} is not a planeswalker on the battlefield")
+    if game.controller_of(planeswalker).username != player:
+        raise ValueError(f"{player} does not control {planeswalker.name}")
+    if planeswalker.counters[Counter.LOYALTY] < 1:
+        raise ValueError(f"{planeswalker.name} has no loyalty counter to remove")
+    ability = _keyword(vehicle.card, "crew")
+    assert ability is not None
+    cost = TotalCost(
+        components=[
+            remove_counters_cost(
+                planeswalker,
+                1,
+                Counter.LOYALTY,
+                payer=player,
+                description=f"remove a loyalty counter from {planeswalker.name}",
+            )
+        ]
+    )
+    return statically_priced(
+        KeywordActivation(
+            card=vehicle,
+            player=player,
+            keyword="Crew",
+            rule=str(KeywordRule.CREW),
+            zone=Zone.BATTLEFIELD,
+            cost=cost,
+            ability=_synthetic_ability(
+                ability,
+                cost_text="Remove a loyalty counter from a planeswalker you control",
                 effect="This permanent becomes an artifact creature until end of turn.",
             ),
             game=game,

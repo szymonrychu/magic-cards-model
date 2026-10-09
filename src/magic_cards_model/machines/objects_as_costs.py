@@ -47,13 +47,14 @@ Every CR number in this module was looked up with
 `knowledge_search(type="rules")` in the session that wrote it.
 """
 
+import re
 from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
 from pydantic import ConfigDict
 
-from ..models.card import Card, Color, Type
+from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState
 from ..models.mana import PaymentOption
 from ..models.zone import Zone
@@ -379,6 +380,37 @@ def crew_offer(vehicle: CardState) -> ObjectOffer:
         permitted_types=frozenset({Type.CREATURE}),
         untapped_only=True,
         excluding=vehicle.id,
+    )
+
+
+#: Heart of Kiran: "You may remove a loyalty counter from a planeswalker you
+#: control rather than pay Heart of Kiran's crew cost." (CR 118.9: another way
+#: to pay the same cost; the printed name is normalised to "this Vehicle").
+_CREW_LOYALTY_ALTERNATIVE_RE = re.compile(
+    r"^you may remove a loyalty counter from a planeswalker you control rather than pay "
+    r"(?:this \w+'s|its) crew cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def reads_crew_loyalty_alternative_line(name: str, text: str, *, legendary: bool = True) -> bool:
+    """Whether one printed line is Heart of Kiran's crew alternative."""
+    from .abilities import self_normalized_effect_text
+
+    return bool(
+        _CREW_LOYALTY_ALTERNATIVE_RE.match(
+            self_normalized_effect_text(name, text.strip(), legendary=legendary)
+        )
+    )
+
+
+def has_crew_loyalty_alternative(card: Card) -> bool:
+    """Whether `card` prints Heart of Kiran's alternative way to pay its crew
+    cost (a planeswalker's loyalty counter instead of tapped creatures)."""
+    legendary = Supertype.LEGENDARY in card.supertypes
+    return any(
+        reads_crew_loyalty_alternative_line(card.name, line, legendary=legendary)
+        for line in (card.oracle_text or "").splitlines()
     )
 
 

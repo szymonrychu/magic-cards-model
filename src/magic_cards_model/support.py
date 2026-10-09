@@ -105,6 +105,7 @@ from magic_cards_model.machines.combat_statics import (
 )
 from magic_cards_model.machines.companion import reads_companion_line
 from magic_cards_model.machines.connive import is_connive_replacement_line, mentions_connive
+from magic_cards_model.machines.objects_as_costs import reads_crew_loyalty_alternative_line
 from magic_cards_model.machines.cost import (
     additional_cost_phrases,
     cost_announces_x,
@@ -2214,6 +2215,10 @@ def _static_ability_category(
         return HANDLED
     if reads_or_pay_additional_cost_line(text):
         # `casting.mandatory_additional_costs` charges either half.
+        return HANDLED
+    if reads_crew_loyalty_alternative_line(effective_name, text, legendary=legendary):
+        # CR 118.9 / CR 702.122a: `keywords.crew_activation(loyalty_from=...)`
+        # pays the crew cost with a planeswalker's loyalty counter (Heart of Kiran).
         return HANDLED
     if reads_black_mana_as_life_line(text):
         # CR 107.4f: `payable_with_black_as_life` reads each {B} the
