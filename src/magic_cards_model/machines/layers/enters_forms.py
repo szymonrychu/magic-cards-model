@@ -25,6 +25,7 @@ imports from it at module scope).
 import functools
 import re
 from collections.abc import Sequence
+from uuid import UUID
 
 from ...models.card_state import CardState, ChoiceKind
 from ..chosen_body import parse_body
@@ -39,6 +40,7 @@ from .model import (
     define_power_toughness,
     define_toughness,
     grant_ability,
+    modify_power_toughness,
     set_power_toughness,
 )
 from .parse import _become_a_copy_builder, _only, _source_line_for, _split_and_validate_keywords
@@ -50,6 +52,11 @@ _CHOOSES_BODY_RE = re.compile(
 _COIN_BODY_RE = re.compile(
     r"^if (?:the coin|it) comes up (?P<side>heads|tails), this creature enters as "
     r"(?P<body>an? \d+/\d+ creature(?: with [a-z ,]+)?)\.?$",
+    re.IGNORECASE,
+)
+_CHOSEN_CREATURE_PUMP_RE = re.compile(
+    r"^the chosen creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and has (?P<keywords>[a-z ,]+?))?\.?$",
     re.IGNORECASE,
 )
 _FACE_DOWN_COUNT_RE = re.compile(
@@ -123,6 +130,54 @@ def _chosen_body_builder(line: str) -> EffectBuilder:
         if chosen is None or chosen.kind is not ChoiceKind.BODY:
             return []
         return _body_effects(source, timestamp, chosen.value, line)
+
+    return builder
+
+
+def _chosen_creature_pump_builder(
+    power: int, toughness: int, keyword_text: str | None, line: str
+) -> EffectBuilder:
+    """Tyrannical Pitlord: "The chosen creature gets +3/+3 and has flying." -
+    the object recorded by the as-enters choice (CR 614.12a), pumped (CR 613.4c)
+    and granted keywords (CR 613.1f) for as long as the source is on the
+    battlefield (CR 611.3a)."""
+    keywords = _split_and_validate_keywords(keyword_text) if keyword_text else []
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        chosen = source.choice
+        if chosen is None or chosen.kind is not ChoiceKind.OBJECT:
+            return []
+        selector = _only(UUID(chosen.value))
+        effects = [
+            ContinuousEffect(
+                description=f"{source.name}: the chosen creature gets {power:+}/{toughness:+}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=modify_power_toughness(power, toughness),
+            )
+        ]
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: the chosen creature has {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords or []
+        )
+        return effects
 
     return builder
 
@@ -212,6 +267,13 @@ def parse_entering_form_sentence(sentence: str) -> EffectBuilder | None:
         return _chosen_body_builder(text)
     if match := _COIN_BODY_RE.match(text):
         return _coin_body_builder(match.group("side").lower(), match.group("body"), text)
+    if match := _CHOSEN_CREATURE_PUMP_RE.match(text):
+        keyword_text = match.group("keywords")
+        if keyword_text and _split_and_validate_keywords(keyword_text) is None:
+            return None
+        return _chosen_creature_pump_builder(
+            int(match.group("power")), int(match.group("toughness")), keyword_text, text
+        )
     if _FACE_DOWN_COUNT_RE.match(text):
         return _face_down_count_builder(text)
     if _EXILED_MANA_VALUE_RE.match(text):

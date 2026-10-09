@@ -294,6 +294,156 @@ def test_tyrannical_pitlord_cannot_choose_itself_or_an_opponents_creature():
     assert scenario.questions_asked() == []
 
 
+def _pitlord_board():
+    scenario = _board(hand=["Tyrannical Pitlord"], battlefield=["Grizzly Bears"])
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose_cards(bears, source="Tyrannical Pitlord")
+    scenario.put_onto_battlefield("Tyrannical Pitlord")
+    return scenario, bears
+
+
+def test_tyrannical_pitlord_gives_its_chosen_creature_plus_three_and_flying():
+    scenario, bears = _pitlord_board()
+    chars = _chars(scenario, bears)
+    assert (chars.power, chars.toughness) == (5, 5)
+    assert "flying" in _keywords(scenario, bears)
+    other = scenario.game.computed_board().of(
+        scenario.find("Tyrannical Pitlord", Zone.BATTLEFIELD, "alice")
+    )
+    assert (other.power, other.toughness) == (6, 6)
+
+
+def test_tyrannical_pitlord_leaving_sacrifices_the_chosen_creature():
+    scenario, bears = _pitlord_board()
+    scenario.game.destroy(scenario.find("Tyrannical Pitlord", Zone.BATTLEFIELD, "alice"))
+    _resolve_all(scenario)
+    assert "Grizzly Bears" not in scenario.battlefield_names()
+
+
+def test_the_chosen_creature_leaving_first_does_not_matter_to_the_pitlord():
+    scenario, bears = _pitlord_board()
+    scenario.game.destroy(bears)
+    _resolve_all(scenario)
+    assert "Tyrannical Pitlord" in scenario.battlefield_names()
+
+
+# -- Monastery Siege and Outpost Siege ---------------------------------------------
+
+
+def _cast_bolt_cost(scenario, target):
+    from magic_cards_model.models import ManaCost  # noqa: F401
+    from tests.scenarios.test_costs import announce
+
+    bolt = announce(scenario, "Lightning Bolt", username="bob")
+    bolt.choose_targets([target])
+    return bolt.total_cost.mana
+
+
+def _monastery(mode):
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Monastery Siege"], battlefield=["Grizzly Bears"])
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"] * 4)
+        .build()
+    )
+    _enter(scenario, "Monastery Siege", mode)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_monastery_siege_dragons_taxes_opponents_spells_targeting_you_or_your_permanents():
+    from magic_cards_model.models import ManaCost
+
+    scenario = _monastery("Dragons")
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    assert _cast_bolt_cost(scenario, bears) == ManaCost.parse("{2}{R}")
+    scenario = _monastery("Dragons")
+    assert _cast_bolt_cost(scenario, "alice") == ManaCost.parse("{2}{R}")
+    scenario = _monastery("Dragons")
+    assert _cast_bolt_cost(scenario, "bob") == ManaCost.parse("{R}")
+    assert scenario.game.cost_modifier_notices == []
+
+
+def test_monastery_siege_khans_does_not_tax():
+    from magic_cards_model.models import ManaCost
+
+    scenario = _monastery("Khans")
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    assert _cast_bolt_cost(scenario, bears) == ManaCost.parse("{R}")
+
+
+def _to_alice_draw_step(scenario):
+    """Her first turn skips the draw (CR 103.8a), so walk to her second."""
+    for _ in range(40):
+        scenario.advance()
+        if scenario.step is Step.DRAW and scenario.turn.active_player == "alice":
+            return
+    raise AssertionError("never reached alice's draw step")
+
+
+def _monastery_draw(mode):
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Monastery Siege"], library=["Forest"] * 8)
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    _enter(scenario, "Monastery Siege", mode)
+    _to_alice_draw_step(scenario)
+    _resolve_all(scenario)
+    alice = scenario.player("alice")
+    return len(alice.hand), len(alice.graveyard), len(alice.library)
+
+
+def test_monastery_siege_khans_draws_an_additional_card_then_discards():
+    assert _monastery_draw("Dragons") == (1, 0, 7)
+    assert _monastery_draw("Khans") == (1, 1, 6)  # two drawn, one discarded
+
+
+def test_outpost_siege_offers_its_two_modes():
+    scenario = _board(hand=["Outpost Siege"])
+    permanent = _enter(scenario, "Outpost Siege", "Khans")
+    assert _question(scenario, "Outpost Siege").options == ("Khans", "Dragons")
+    assert permanent.choice == Choice(kind=ChoiceKind.MODE, value="Khans")
+
+
+def test_outpost_siege_khans_exiles_the_top_card_each_upkeep_and_dragons_does_not():
+    def exiled(mode):
+        scenario = (
+            Scenario()
+            .player("alice", hand=["Outpost Siege"], library=["Forest"] * 5)
+            .player("bob", library=["Forest"] * 5)
+            .build()
+        )
+        _enter(scenario, "Outpost Siege", mode)
+        scenario.advance()
+        _resolve_all(scenario)
+        return len([c for c in scenario.game.exile if c.owner == "alice"])
+
+    assert exiled("Khans") == 1
+    assert exiled("Dragons") == 0
+
+
+def test_outpost_siege_dragons_pings_when_your_creature_leaves_and_khans_does_not():
+    def bob_life(mode):
+        scenario = (
+            Scenario()
+            .player("alice", hand=["Outpost Siege"], battlefield=["Grizzly Bears"])
+            .player("bob")
+            .build()
+        )
+        _enter(scenario, "Outpost Siege", mode)
+        scenario.start_at(Step.PRECOMBAT_MAIN)
+        scenario.game.destroy(scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice"))
+        if mode == "Dragons":
+            scenario.choose_trigger_targets("Outpost Siege", ["bob"])
+        _resolve_all(scenario)
+        return scenario.player("bob").life
+
+    assert bob_life("Dragons") == 19
+    assert bob_life("Khans") == 20
+
+
 def test_metamorphic_alteration_chooses_any_creature():
     scenario = (
         Scenario()

@@ -10138,6 +10138,7 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         or "face-down creatures" in sentence
         or "exiled card" in sentence
         or ("your choice of" in sentence or "turned face down" in sentence)
+        or "chosen creature gets" in sentence
     ):
         from .enters_forms import parse_entering_form_sentence
 

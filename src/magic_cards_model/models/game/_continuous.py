@@ -100,6 +100,7 @@ _COMBAT_KEYWORDS: frozenset[str] = frozenset(keyword.value for keyword in Keywor
 
 #: "mana value 3 or greater" (Mistmeadow Skulk): CR 202.3's mana value against
 #: a number, exactly or with "or greater/more" / "or less/fewer".
+_MODE_BULLET_STATIC_RE = re.compile(r"^•\s*(?P<mode>[A-Z][\w'-]*)\s+—\s+(?P<body>.+)$", re.DOTALL)
 _MANA_VALUE_QUALITY_RE = re.compile(
     r"^mana values? (?P<number>\d+)(?: or (?P<bound>greater|more|less|fewer))?$", re.IGNORECASE
 )
@@ -1452,6 +1453,19 @@ class ContinuousMixin:
                 text = line.strip()
                 if not text or text not in static_lines:
                     continue
+                # CR 614.12a: "• Dragons — <static>" under an as-enters
+                # "choose Khans or Dragons" is in effect only while that mode
+                # is the recorded choice (the static twin of
+                # `abilities._parse_line_mode_gated`).
+                if (bullet := _MODE_BULLET_STATIC_RE.match(text)) is not None:
+                    chosen_mode = permanent.choice
+                    if (
+                        chosen_mode is None
+                        or chosen_mode.kind is not ChoiceKind.MODE
+                        or chosen_mode.value.lower() != bullet.group("mode").lower()
+                    ):
+                        continue
+                    text = bullet.group("body")
                 # Read before `cost_modifier_effect` (`machines/cost.py`, not
                 # this task's file - see the reader just below): The Scarlet
                 # Witch's own "Instant and sorcery spells you cast with mana
@@ -1531,6 +1545,26 @@ class ContinuousMixin:
                         continue
                     if any(target.card_id == permanent.id for target in targets or ()):
                         increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.TARGETING_CONTROLLER_INCREASE:
+                    # Monastery Siege (Dragons): "that target you or a
+                    # permanent you control" - CR 601.2c's announced targets,
+                    # a player target by username, an object by the controller
+                    # of the permanent it names.
+                    if permanent.controller == caster:
+                        continue
+                    for target in targets or ():
+                        if target.username is not None:
+                            hit = target.username == permanent.controller
+                        else:
+                            aimed = (
+                                self.find_by_id(target.card_id)
+                                if target.card_id is not None
+                                else None
+                            )
+                            hit = aimed is not None and aimed.controller == permanent.controller
+                        if hit:
+                            increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                            break
                 elif effect.kind is CostModifierKind.NAMED_INCREASE:
                     # Disruptor Flute: "Spells with the chosen name cost {3}
                     # more to cast." The name is CR 614.12a's choice, made as

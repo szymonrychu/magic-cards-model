@@ -82,6 +82,12 @@ _TARGETING_THIS_COST_INCREASE = re.compile(
     r"[Ss]pells your opponents cast that target this \w+ cost "
     r"\{(?P<amount>\d+)\} more to cast\."
 )
+#: Monastery Siege's Dragons tax: spells an opponent casts that target the
+#: permanent's controller or a permanent that controller controls.
+_TARGETING_CONTROLLER_COST_INCREASE = re.compile(
+    r"[Ss]pells your opponents cast that target you or a permanent you control cost "
+    r"\{(?P<amount>\d+)\} more to cast\."
+)
 _PER_SPELL_COST_INCREASE = re.compile(
     r"Each spell a player casts costs \{(?P<amount>\d+)\} more to cast for each "
     r"other spell that player has cast this turn\."
@@ -292,6 +298,11 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
     if match is not None:
         return CostModifierEffect(
             kind=CostModifierKind.TARGETING_THIS_INCREASE, amount=int(match.group("amount"))
+        )
+    match = _TARGETING_CONTROLLER_COST_INCREASE.search(text)
+    if match is not None:
+        return CostModifierEffect(
+            kind=CostModifierKind.TARGETING_CONTROLLER_INCREASE, amount=int(match.group("amount"))
         )
     match = _OPPONENT_COST_INCREASE.search(text)
     if match is not None:
