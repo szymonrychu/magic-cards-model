@@ -376,6 +376,25 @@ def _loyalty_on_planeswalkers(game, controller, entering, _x) -> int:
     )
 
 
+def _greatest_power_among_other_creatures(game, controller, entering, _x) -> int:
+    from ..models.card import Type
+
+    powers = [
+        game.characteristics_of(permanent).power
+        for permanent in game.permanents_controlled_by(controller)
+        if permanent.id != entering.id and Type.CREATURE in _characteristics(game, permanent).types
+    ]
+    return max((power for power in powers if power is not None), default=0)
+
+
+def _life_lost_by_opponents(game, controller, entering, _x) -> int:
+    return sum(
+        player.life_lost_this_turn
+        for player in game.players_in_game
+        if player.username != controller
+    )
+
+
 def _lands_entered_this_turn(game, controller, entering, _x) -> int:
     return game.lands_entered_this_turn.get(controller, 0)
 
@@ -465,6 +484,8 @@ _FIXED_COUNT_TERMS = {
     "creature you control of the chosen type": _chosen_type_count,
     "creature that player controls": _chosen_opponent_creatures,
     "land that entered the battlefield under your control this turn": _lands_entered_this_turn,
+    "greatest power among other creatures you control": _greatest_power_among_other_creatures,
+    "total life lost by your opponents this turn": _life_lost_by_opponents,
 }
 
 

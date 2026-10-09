@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "8ffd77d7-3fe6-4493-96eb-f62183c0358d",
+  "oracle_id": "f5d62baa-648d-4030-87f9-e795ed665084",
+  "multiverse_ids": [
+    265411
+  ],
+  "mtgo_id": 46773,
+  "mtgo_foil_id": 46774,
+  "tcgplayer_id": 66472,
+  "cardmarket_id": 258357,
+  "name": "Cryptborn Horror",
+  "lang": "en",
+  "released_at": "2012-10-05",
+  "uri": "https://api.scryfall.com/cards/8ffd77d7-3fe6-4493-96eb-f62183c0358d",
+  "scryfall_uri": "https://scryfall.com/card/rtr/212/cryptborn-horror?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:58:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.jpg?1783940327",
+    "normal": "https://cards.scryfall.io/normal/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.jpg?1783940327",
+    "large": "https://cards.scryfall.io/large/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.jpg?1783940327",
+    "png": "https://cards.scryfall.io/png/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.png?1783940327",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.jpg?1783940327",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.jpg?1783940327",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.webp?1783940327",
+    "grid": "https://cards.scryfall.io/grid/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.webp?1783940327",
+    "display": "https://cards.scryfall.io/display/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.webp?1783940327",
+    "art": "https://cards.scryfall.io/art/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.webp?1783940327",
+    "crop": "https://cards.scryfall.io/crop/front/8/f/8ffd77d7-3fe6-4493-96eb-f62183c0358d.webp?1783940327"
+  },
+  "mana_cost": "{1}{B/R}{B/R}",
+  "cmc": 3.0,
+  "type_line": "Creature — Horror",
+  "oracle_text": "Trample\nThis creature enters with X +1/+1 counters on it, where X is the total life lost by your opponents this turn.",
+  "power": "0",
+  "toughness": "0",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "80b2374d-c5f1-403e-9772-f6c806fd275e",
+  "set": "rtr",
+  "set_name": "Return to Ravnica",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/80b2374d-c5f1-403e-9772-f6c806fd275e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Artr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rtr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8ffd77d7-3fe6-4493-96eb-f62183c0358d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af5d62baa-648d-4030-87f9-e795ed665084&unique=prints",
+  "collector_number": "212",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "rakdos",
+  "flavor_text": "Although Cryptwitch Merree vanished after a spat with Rakdos, her playthings lingered.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Richard Wright",
+  "artist_ids": [
+    "7b1b0ce9-2c58-4321-a2a7-cdc94feae082"
+  ],
+  "illustration_id": "6f3ce6f7-9465-416b-b714-f36be2d47134",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18277,
+  "penny_rank": 10539,
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.57",
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": "0.51",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=265411&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCryptborn%2BHorror",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCryptborn%2BHorror",
+    "edhrec": "https://edhrec.com/route/?cc=Cryptborn+Horror"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F66472%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=258357&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/46773?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

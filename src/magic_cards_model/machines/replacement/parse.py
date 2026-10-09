@@ -522,7 +522,34 @@ def _parse_oracle_text(
                 ):
                     update["linked_trigger"] = linked
                 effects.append(effect.model_copy(update=update))
+        effects = _gate_replaced_enters_with(effects, paragraph)
     return effects
+
+
+def _gate_replaced_enters_with(
+    effects: list[ReplacementEffect], paragraph: str
+) -> list[ReplacementEffect]:
+    """ "[This] enters with six +1/+1 counters on it. It escapes with twelve
+    +1/+1 counters on it instead." (Polukranos, Unchained): the instead-sentence
+    replaces the plain one for a permanent that escaped (CR 702.138c), so the
+    plain sentence's `ENTERS_WITH` applies only to one that did not."""
+    from .enters import ESCAPED_CONDITION, NOT_ESCAPED_CONDITION
+
+    if not re.search(r"\binstead\.?$", paragraph.strip(), re.IGNORECASE):
+        return effects
+    if not any(
+        effect.kind is ReplacementKind.ENTERS_WITH and effect.condition == ESCAPED_CONDITION
+        for effect in effects
+    ):
+        return effects
+    return [
+        effect.model_copy(update={"condition": NOT_ESCAPED_CONDITION})
+        if effect.kind is ReplacementKind.ENTERS_WITH
+        and effect.condition is None
+        and effect.raw == paragraph
+        else effect
+        for effect in effects
+    ]
 
 
 #: CR 702.82a/c's keyword line: "Devour N" or "Devour [quality] N" (Famished

@@ -522,3 +522,98 @@ def test_tizerus_charger_cast_from_hand_has_neither_counter():
     charger = played.cast_and_resolve("Tizerus Charger", auto=True)
     assert charger.counters["flying"] == 0
     assert charger.counters[Counter.PLUS_ONE] == 0
+
+
+# -- second printings: the same readers on cards the task did not list ----------
+# (Modern/Pioneer/Standard-legal, in no shipped deck), so each reader is
+# proven general rather than fitted to one printing.
+
+
+def _cast_x_spell(played, name, x):
+    card = played.find(name, Zone.HAND, "alice")
+    lands = [p for p in played.game.permanents_controlled_by("alice") if "Land" in p.card.type_line]
+    played.game.cast(card, "alice", x_value=x, mana_sources=lands)
+    return played.resolve_top()
+
+
+def test_ochre_jelly_enters_with_x_counters_like_every_x_creature():
+    played = _board(hand=["Ochre Jelly"], battlefield=["Forest"] * 4)
+    assert _cast_x_spell(played, "Ochre Jelly", 3).counters[Counter.PLUS_ONE] == 3
+
+
+def test_slumbering_trudge_stuns_and_taps_at_a_low_x():
+    played = _board(hand=["Slumbering Trudge"], battlefield=["Forest"] * 3)
+    trudge = _cast_x_spell(played, "Slumbering Trudge", 1)
+    assert trudge.counters[Counter.STUN] == 2
+    assert trudge.tapped
+
+
+def test_slumbering_trudge_at_a_high_x_enters_untapped_with_no_stun():
+    played = _board(hand=["Slumbering Trudge"], battlefield=["Forest"] * 4)
+    trudge = _cast_x_spell(played, "Slumbering Trudge", 3)
+    assert trudge.counters[Counter.STUN] == 0
+    assert not trudge.tapped
+
+
+def test_prime_speaker_zegana_takes_the_greatest_power_among_other_creatures():
+    played = _board(battlefield=["Grizzly Bears", "Craw Wurm"], hand=["Prime Speaker Zegana"])
+    assert played.put_onto_battlefield("Prime Speaker Zegana").counters[Counter.PLUS_ONE] == 6
+
+
+def test_cryptborn_horror_counts_the_life_opponents_lost_this_turn():
+    played = _board(hand=["Cryptborn Horror"])
+    played.game.player("bob").lose_life(3)
+    assert played.put_onto_battlefield("Cryptborn Horror").counters[Counter.PLUS_ONE] == 3
+
+
+def test_voracious_wurm_counts_the_life_you_gained_this_turn():
+    played = _board(hand=["Voracious Wurm"])
+    played.game.life_gained_amount_this_turn["alice"] = 4
+    assert played.put_onto_battlefield("Voracious Wurm").counters[Counter.PLUS_ONE] == 4
+
+
+@pytest.mark.parametrize("name", ["Rhizome Lurcher", "Golgari Raiders"])
+def test_undergrowth_counts_creature_cards_in_your_graveyard(name):
+    played = _board(hand=[name], graveyard=["Grizzly Bears", "Elvish Warrior", "Lightning Bolt"])
+    assert played.put_onto_battlefield(name).counters[Counter.PLUS_ONE] == 2
+
+
+def test_gatekeeper_gargoyle_counts_the_gates_you_control():
+    played = _board(battlefield=["Azorius Guildgate"], hand=["Gatekeeper Gargoyle"])
+    assert played.put_onto_battlefield("Gatekeeper Gargoyle").counters[Counter.PLUS_ONE] == 1
+
+
+def test_springmantle_cleric_counts_the_colours_of_mana_spent():
+    played = _board(hand=["Springmantle Cleric"], battlefield=["Forest"] * 4 + ["Plains"])
+    assert played.cast_and_resolve("Springmantle Cleric", auto=True).counters[Counter.PLUS_ONE] == 2
+
+
+def test_callous_sell_sword_counts_creatures_that_died_under_your_control():
+    played = _board(
+        hand=["Callous Sell-Sword"],
+        battlefield=["Grizzly Bears", "Mountain"],
+    )
+    played.game.destroy(played.creature("Grizzly Bears"))
+    assert played.put_onto_battlefield("Callous Sell-Sword").counters[Counter.PLUS_ONE] == 1
+
+
+def test_polukranos_unchained_enters_with_six_and_escapes_with_twelve():
+    plain = _board(hand=["Polukranos, Unchained"])
+    assert plain.put_onto_battlefield("Polukranos, Unchained").counters[Counter.PLUS_ONE] == 6
+    escaped = _escape("Polukranos, Unchained", ["Swamp"] * 5 + ["Forest"], 6)
+    assert escaped.counters[Counter.PLUS_ONE] == 12
+
+
+def test_callous_sell_sword_ignores_creatures_that_died_under_an_opponents_control():
+    played = _two_sided({"hand": ["Callous Sell-Sword"]}, {"battlefield": ["Grizzly Bears"]})
+    played.game.destroy(played.game.permanents_controlled_by("bob")[0])
+    assert played.put_onto_battlefield("Callous Sell-Sword").counters[Counter.PLUS_ONE] == 0
+
+
+def test_unbreathing_horde_counts_other_zombies_and_zombie_cards_in_the_graveyard():
+    played = _board(
+        battlefield=["Rhizome Lurcher"],
+        graveyard=["Rhizome Lurcher", "Grizzly Bears"],
+        hand=["Unbreathing Horde"],
+    )
+    assert played.put_onto_battlefield("Unbreathing Horde").counters[Counter.PLUS_ONE] == 2

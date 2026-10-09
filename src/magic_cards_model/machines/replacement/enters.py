@@ -108,10 +108,15 @@ _ENTERS_WITH = re.compile(
 #: three +1/+1 counters on it.", read as the `ENTERS_WITH` it means, gated on
 #: `ESCAPED_CONDITION` (`_escaped`, CR 702.138b).
 _ESCAPES_WITH = re.compile(
-    r"^(?P<subject>[^,]+?) escapes with (?P<what>.+?)(?:\s+on it)?\.?$", re.IGNORECASE
+    r"^(?P<subject>[^,]+?) escapes with (?P<what>.+?)(?:\s+on it)?(?:\s+instead)?\.?$",
+    re.IGNORECASE,
 )
 #: The condition text CR 702.138c's own expansion states.
 ESCAPED_CONDITION = "this permanent escaped"
+#: What the plain "enters with" sentence in front of an "It escapes with ...
+#: instead." sentence (Polukranos, Unchained) is gated on: the instead-sentence
+#: replaces it, so it applies only to a permanent that did not escape.
+NOT_ESCAPED_CONDITION = "this permanent didn't escape"
 #: "for each time it was kicked" - `_read_counters` keeps the count phrase as
 #: the `amount_expression` "time it was kicked"; CR 702.33d's kick count is
 #: read off the spell's cast record as the permanent enters (`_kicked_count`).
@@ -1538,6 +1543,9 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
 
     if condition.strip().lower() == ESCAPED_CONDITION:
         return _escaped
+
+    if condition.strip().lower() == NOT_ESCAPED_CONDITION:
+        return lambda game, entering: not _escaped(game, entering)
 
     return None
 
