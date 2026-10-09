@@ -104,6 +104,7 @@ from .objects_as_costs import (
     power_of,
     total_power,
 )
+from .soulbond import soulbond_effect
 from .triggers import (
     AbilityOnStack,
     ExtraTriggerEvent,
@@ -192,6 +193,9 @@ def executes(keyword: str) -> bool:
         "fear",
         # CR 702.101a: `_extort_ability` (`_TRIGGER_EXPANSIONS`).
         "extort",
+        # CR 702.95a: `_soulbond_abilities` (`_TRIGGER_EXPANSIONS`), resolved
+        # by `machines/soulbond.soulbond_effect`.
+        "soulbond",
         # CR 702.191a: `_increment_ability` (`_TRIGGER_EXPANSIONS`); its
         # intervening "if" is `machines/triggers.intervening_if_answer`'s.
         "increment",
@@ -1025,6 +1029,29 @@ def _renown_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _soulbond_abilities(ability: KeywordAbility) -> list[TriggeredAbility]:
+    """CR 702.95a: soulbond is two triggered abilities, both "you may pair"
+    (`machines/soulbond.py` resolves them)."""
+    return [
+        _expansion(
+            ability,
+            keyword="soulbond",
+            word=TriggerWord.WHEN,
+            condition="this creature enters",
+            effect="you may pair this creature with another unpaired creature you control",
+            event=TriggerEvent.ENTERS_THE_BATTLEFIELD,
+        ),
+        _expansion(
+            ability,
+            keyword="soulbond",
+            word=TriggerWord.WHENEVER,
+            condition="another creature you control enters",
+            effect="you may pair that creature with this creature",
+            event=TriggerEvent.ENTERS_THE_BATTLEFIELD,
+        ),
+    ]
+
+
 def _flanking_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.25a: "Flanking is a triggered ability that triggers during the
     declare blockers step. (See rule 509, 'Declare Blockers Step.') 'Flanking'
@@ -1662,6 +1689,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "partner with": _single(_partner_with_ability),
     "annihilator": _single(_annihilator_ability),
     "renown": _single(_renown_ability),
+    "soulbond": _soulbond_abilities,
     "extort": _single(_extort_ability),
     "increment": _single(_increment_ability),
     "flanking": _single(_flanking_ability),
@@ -6594,6 +6622,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "cumulative upkeep": _cumulative_upkeep_effect,
     "echo": _echo_effect,
     "annihilator": _annihilator_effect,
+    "soulbond": soulbond_effect,
 }
 
 

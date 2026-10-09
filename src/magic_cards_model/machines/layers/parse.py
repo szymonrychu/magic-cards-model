@@ -113,6 +113,7 @@ def printed_characteristics(
             is_token=state.token,
             zone_change_stamp=state.zone_change_stamp,
             attached_to=state.attached_to,
+            paired_with=state.paired_with,
             transformed=state.transformed,
         )
     # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
@@ -163,6 +164,7 @@ def printed_characteristics(
         is_token=state.token,
         zone_change_stamp=state.zone_change_stamp,
         attached_to=state.attached_to,
+        paired_with=state.paired_with,
         transformed=state.transformed,
     )
 
@@ -1678,6 +1680,18 @@ _EACH_ANTHEM_PER_OTHER_CREATURE_RE = re.compile(
 #: `_self_protection_from_chosen_color_builder`.
 _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
     r"^this (?:creature|permanent|token) has protection from the chosen colou?r\.?$",
+    re.IGNORECASE,
+)
+
+#: "As long as this creature is paired with another creature, both creatures
+#: have <keyword(s)>[ and get +N/+N]." (Silverblade Paladin, Nightshade
+#: Peddler, Wolfir Silverheart) - CR 702.95a's pair, read live by
+#: `PairedPartners` so the grant ends the moment the pair does (CR 702.95e).
+_PAIRED_BOTH_RE = re.compile(
+    r"^as long as this creature is paired with another creature, both creatures "
+    r"(?:(?:have (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)"
+    r"(?: and get (?P<p1>[+-]\d+)/(?P<t1>[+-]\d+))?)"
+    r"|(?:get (?P<p2>[+-]\d+)/(?P<t2>[+-]\d+)))\.?$",
     re.IGNORECASE,
 )
 
@@ -4162,6 +4176,49 @@ def _self_protection_from_chosen_color_builder(*, line: str) -> EffectBuilder:
                 modification=grant_ability(ability),
             )
         ]
+
+    return builder
+
+
+def _paired_both_builder(
+    keywords: list[str], power: int, toughness: int, *, line: str
+) -> EffectBuilder:
+    """`_PAIRED_BOTH_RE`'s shape: a layer 6 grant (CR 613.1f) and/or a 7c pump
+    (CR 613.4c) over the source and its soulbond partner."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = PairedPartners(source_id=source.id)
+        effects = [
+            ContinuousEffect(
+                description=f"{source.name}: both paired creatures have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+        if power or toughness:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: both paired get {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=line,
+                    selector=selector,
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+        return effects
 
     return builder
 
@@ -10886,6 +10943,15 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _all_activated_abilities_builder(all_activated, line=sentence)
     if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
         return _self_protection_from_chosen_color_builder(line=sentence)
+    if match := _PAIRED_BOTH_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match["keywords"]) if match["keywords"] else []
+        if keywords is not None:
+            return _paired_both_builder(
+                keywords,
+                int(match["p1"] or match["p2"] or 0),
+                int(match["t1"] or match["t2"] or 0),
+                line=sentence,
+            )
     if match := _HEXPROOF_FROM_EACH_OF_ITS_COLORS_RE.fullmatch(sentence):
         return _hexproof_from_each_of_its_colors_builder(
             other=match.group("other") is not None,
@@ -12223,6 +12289,7 @@ from .model import (  # noqa: E402
     ModifyPowerToughnessPer,
     OnlyThisIncarnation,
     OtherCreatures,
+    PairedPartners,
     PermanentsOfTypes,
     PermanentsOfTypesControlledBy,
     PermanentsWithName,

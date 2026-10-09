@@ -399,3 +399,19 @@ def test_plain_cant_attack_or_block() -> None:
     """Vigean Hydropon: no condition at all."""
     assert _try("Vigean Hydropon") is not None
     assert _try("Vigean Hydropon", "block") is not None
+
+
+def test_lambholt_pacifist_needs_a_creature_with_power_four_or_greater() -> None:
+    assert _try("Lambholt Pacifist") is not None
+    assert _try("Lambholt Pacifist", mine=["Hill Giant"]) is not None
+    assert _try("Lambholt Pacifist", mine=["Craw Wurm"]) is None
+
+
+LESSONS = ["Airbending Lesson", "Firebending Lesson", "Boomerang Basics"]
+
+
+@pytest.mark.parametrize("action", ["attack", "block"])
+def test_the_lion_turtle_needs_three_lessons_in_your_graveyard(action: str) -> None:
+    assert _try("The Lion-Turtle", action) is not None
+    assert _try("The Lion-Turtle", action, graveyard=LESSONS[:2]) is not None
+    assert _try("The Lion-Turtle", action, graveyard=LESSONS) is None

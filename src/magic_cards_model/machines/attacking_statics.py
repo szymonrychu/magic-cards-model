@@ -254,6 +254,9 @@ def _defender_form(condition: str) -> str | None:
     return None
 
 
+_PAIRED_SOULBOND_RE = re.compile(r"it's paired with a creature with soulbond", re.IGNORECASE)
+
+
 def _condition_readable(condition: str) -> bool:
     from ..models.game._conditions import condition_is_readable
 
@@ -262,7 +265,8 @@ def _condition_readable(condition: str) -> bool:
     if rewritten is not None:
         return condition_is_readable(rewritten)
     return bool(
-        _MAX_SPEED_RE.fullmatch(text)
+        _PAIRED_SOULBOND_RE.fullmatch(text)
+        or _MAX_SPEED_RE.fullmatch(text)
         or _EVEN_COUNTERS_RE.fullmatch(text)
         or _ONE_ONE_RE.fullmatch(text)
         or condition_is_readable(text)
@@ -294,6 +298,10 @@ def _condition_holds(game, creature, defender, condition: str) -> bool | None:
             and board.of(permanent).toughness == int(one["t"])
             for permanent in game.permanents_controlled_by(controller)
         )
+    if _PAIRED_SOULBOND_RE.fullmatch(text):
+        from .soulbond import paired_with_soulbond
+
+        return paired_with_soulbond(game, creature)
     return game.condition_holds(controller, text, creature)
 
 

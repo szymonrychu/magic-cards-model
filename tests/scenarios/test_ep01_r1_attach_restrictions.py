@@ -292,3 +292,11 @@ def test_dog_umbra_on_an_opponents_creature_has_no_umbra_armor() -> None:
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.game.destroy(giant)
     assert giant.zone is Zone.GRAVEYARD
+
+
+def test_bloodshed_fever_forces_the_enchanted_creature_to_attack() -> None:
+    scenario, enchanted = _attack_scenario("Bloodshed Fever")
+    with pytest.raises(ValueError, match=r"CR 508\.1d"):
+        scenario.attack_with(scenario.creature("Hill Giant"))
+    scenario.attack_with(enchanted)
+    assert scenario.attackers() == [enchanted]

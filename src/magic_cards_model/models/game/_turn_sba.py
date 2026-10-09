@@ -1467,6 +1467,10 @@ class TurnSbaMixin:
         # condition newly true, only ever the same one CR 704.3's outer loop
         # in `_check_state_based_actions_impl` already repeats.
         annihilate_counters_on(self.battlefield)
+        if any(state.paired_with is not None for state in self.battlefield):
+            from ...machines.soulbond import release_broken_pairs
+
+            release_broken_pairs(self)  # CR 702.95e
 
         # Every check below reads the battlefield and moves nothing, so they
         # share one layered board (`snapshot.scan_pin`); the moves come after.

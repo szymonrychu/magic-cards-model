@@ -2300,3 +2300,23 @@ def test_a_snapshot_written_before_the_recipient_subtypes_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW06_T1_RECIPIENT_SUBTYPES}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP01-R1-T4: `CardState` gained `paired_with`
+#: (CR 702.95a). The last shape without it is main's 133.
+_SCHEMA_VERSION_BEFORE_EP01_T4_PAIRED_WITH = 133
+
+
+def test_a_snapshot_written_before_soulbond_pairing_is_refused() -> None:
+    """A version-133 dump has no `paired_with`: decoded as current, every
+    soulbond pair would read as broken. Refused instead."""
+    assert "paired_with" in CardState.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP01_T4_PAIRED_WITH
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP01_T4_PAIRED_WITH
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_T4_PAIRED_WITH}",
+    ):
+        Game.model_validate(dumped)

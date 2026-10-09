@@ -300,3 +300,19 @@ def test_a_vehicle_cant_be_blocked_by_low_power_creatures() -> None:
 
     assert blocked_by("Grizzly Bears") is not None
     assert blocked_by("Hill Giant") is None
+
+
+@pytest.mark.parametrize(
+    ("attacker", "blocker", "refused"),
+    [
+        ("Elusive Otter", "Mob Lookout", True),
+        ("Elusive Otter", "Memnite", False),
+        ("Shrill Howler", "Mob Lookout", True),
+        ("Shrill Howler", "Craw Wurm", False),
+    ],
+)
+def test_elusive_otter_and_shrill_howler_lesser_power_blockers(attacker, blocker, refused) -> None:
+    """Otter has power 1; Shrill Howler's is more than a power-0 blocker's and
+    less than Craw Wurm's 6 (CR 509.1b)."""
+    result = _block(attacker, [blocker])
+    assert (result is not None) is refused
