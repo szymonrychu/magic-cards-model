@@ -297,3 +297,105 @@ def test_mycoid_maze_with_no_creature_among_the_top_four_takes_nothing():
 
     assert scenario.player("alice").hand == []
     assert scenario.player("alice").library[0].name == "Grizzly Bears"
+
+
+# -- Kumano Faces Kakkazan, chapter II -----------------------------------------
+
+
+def _kumano_board():
+    scenario = _board(
+        ["Forest", "Forest", "Forest"],
+        alice_hand=["Kumano Faces Kakkazan", "Grizzly Bears", "Llanowar Elves"],
+        alice_library=["Island"] * 5,
+    )
+    scenario.game.put_onto_battlefield(
+        scenario.find("Kumano Faces Kakkazan", Zone.HAND, "alice"), "alice"
+    )
+    saga = scenario.find("Kumano Faces Kakkazan", Zone.BATTLEFIELD, "alice")
+    return scenario, saga
+
+
+def test_the_next_creature_spell_this_turn_enters_with_an_extra_counter_only_once():
+    scenario, saga = _kumano_board()
+    scenario.pass_until_resolved()  # chapter I, put on the stack as the Saga entered
+    scenario.game.add_counters(saga, "lore", 1)  # chapter II
+    scenario.pass_until_resolved()
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest")
+
+    scenario.cast_and_resolve("Grizzly Bears", forests[0], forests[1])
+    scenario.pass_until_resolved()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    assert bears.counter_count("+1/+1") == 1
+
+    scenario.cast_and_resolve("Llanowar Elves", forests[2])
+    scenario.pass_until_resolved()
+    elves = scenario.creature("Llanowar Elves", "alice")
+    assert elves.counter_count("+1/+1") == 0
+    _clause_handled("Kumano Faces Kakkazan", "When you next cast a creature spell")
+
+
+# -- Melira, the Living Cure: "Exile Melira: Choose another target creature or artifact. ..."
+
+
+def _melira_board():
+    scenario = _board(
+        ["Melira, the Living Cure", "Grizzly Bears"],
+        ["Llanowar Elves"],
+        alice_library=["Island"] * 10,
+        bob_library=["Island"] * 10,
+    )
+    melira = scenario.creature("Melira, the Living Cure", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(melira, targets=[bears])
+    scenario.pass_until_resolved()
+    assert melira.zone is Zone.EXILE
+    return scenario, bears
+
+
+def test_the_chosen_creature_returns_to_the_battlefield_when_it_dies_this_turn():
+    scenario, bears = _melira_board()
+
+    scenario.game.destroy(bears)
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert bears.controller == "alice"
+    _clause_handled("Melira, the Living Cure", "Exile")
+
+
+def test_a_creature_that_was_not_chosen_stays_dead():
+    scenario, _ = _melira_board()
+    elves = scenario.creature("Llanowar Elves", "bob")
+
+    scenario.game.destroy(elves)
+
+    assert elves.zone is Zone.GRAVEYARD
+
+
+def test_the_return_happens_once_and_only_this_turn():
+    scenario, bears = _melira_board()
+    scenario.game.destroy(bears)
+    scenario.pass_until_resolved()
+    assert bears.zone is Zone.BATTLEFIELD
+
+    scenario.game.destroy(bears)  # the one-shot is spent
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_the_return_is_gone_next_turn():
+    scenario, bears = _melira_board()
+    _next_turn(scenario)
+
+    scenario.game.destroy(bears)
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_a_chosen_creature_that_is_exiled_instead_does_not_return():
+    scenario, bears = _melira_board()
+
+    scenario.game.exile_permanent(bears)
+
+    assert bears.zone is Zone.EXILE

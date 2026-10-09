@@ -53,6 +53,7 @@ from ..delayed import (
     ReflexivePayEnergyConsequence,
     ReflexivePayManaConsequence,
     ReflexiveWhenYouDoConsequence,
+    ReturnThatCardToBattlefieldUnderOwner,
     ThatCreatureDiesConsequence,
     draw_a_card_for_controller,
     return_subject_to_hand,
@@ -830,6 +831,62 @@ def _parse_choose_target_then_dies_this_turn_clause(effect_text: str) -> Effect 
                 game.characteristics_of(opponent).is_creature
             ):
                 _fight(game, fighter, opponent)  # CR 701.14b
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Choose another target creature or artifact. When it's put into a graveyard
+# this turn, return that card to the battlefield under its owner's control."
+# --------------------------------------------------------------------------
+#
+# Melira, the Living Cure. CR 603.7a/603.7b: the second sentence creates a
+# delayed triggered ability about the one permanent the first chose, for the
+# rest of the turn. It was on the battlefield when chosen, so (CR 400.7) the
+# only way it is "put into a graveyard" is off the battlefield - the DIES
+# event, which `ReturnThatCardToBattlefieldUnderOwner` answers.
+
+_CHOOSE_THEN_PUT_INTO_GRAVEYARD_RETURN_RE = re.compile(
+    r"^choose (?P<phrase>(?:another )?target (?:creature or artifact|creature|artifact|"
+    r"permanent))\. when (?:it|that (?:creature|artifact|permanent))(?:'s| is) put into "
+    r"a graveyard this turn, return that card to the battlefield under its owner'?s "
+    r"control$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_choose_target_then_put_into_graveyard_return_clause(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """`_CHOOSE_THEN_PUT_INTO_GRAVEYARD_RETURN_RE`'s shape - see the banner."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split()).rstrip(".")
+    match = _CHOOSE_THEN_PUT_INTO_GRAVEYARD_RETURN_RE.fullmatch(whole)
+    if match is None or not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        chosen = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not chosen:
+            return  # CR 608.2b: the chosen permanent is gone, nothing to watch.
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text="When it's put into a graveyard this turn, return that card to the "
+                "battlefield under its owner's control.",
+                event=TriggerEvent.DIES,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                subject_id=chosen[0].id,
+                remaining=1,
+                expires_end_of_turn=True,
+                effect=ReturnThatCardToBattlefieldUnderOwner(),
+            )
+        )
 
     return effect
 

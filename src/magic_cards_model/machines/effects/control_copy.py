@@ -26,6 +26,7 @@ from ..delayed import (
     CopyNextSpellYouCast,
     CreateTokenCopyOfControlledToken,
     DelayedTrigger,
+    SpellEntersWithAdditionalCounter,
     anaphoric_delayed_trigger,
 )
 from ..layers import (
@@ -1252,6 +1253,51 @@ def _parse_copy_next_instant_or_sorcery_you_cast_clause(text: str) -> AbilityEff
                 expires_end_of_turn=True,
                 required_any_types=(Type.INSTANT, Type.SORCERY),
                 effect=CopyNextSpellYouCast(may_retarget=may_retarget),
+            )
+        )
+
+    return effect
+
+
+#: "When you next cast a creature spell this turn, that creature enters with
+#: an additional +1/+1 counter on it." (Kumano Faces Kakkazan's chapter II) -
+#: the same CR 603.7a delayed cast trigger as the copy shapes above, with the
+#: counter riding the cast spell's record (`SpellEntersWithAdditionalCounter`).
+_NEXT_SPELL_ENTERS_WITH_ADDITIONAL_COUNTER_RE = re.compile(
+    r"^when you next cast an? (?P<type>creature|artifact|enchantment|planeswalker) spell "
+    r"this turn, that (?:creature|permanent) enters with an additional "
+    r"(?P<kind>\+1/\+1|[a-z]+) counter on it\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_next_spell_enters_with_additional_counter_clause(text: str) -> AbilityEffect | None:
+    """`_NEXT_SPELL_ENTERS_WITH_ADDITIONAL_COUNTER_RE`'s shape."""
+    match = _NEXT_SPELL_ENTERS_WITH_ADDITIONAL_COUNTER_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    card_type = Type(match.group("type").lower())
+    counter_kind = match.group("kind").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=(
+                    f"When you next cast a {card_type.value} spell this turn, that "
+                    f"{card_type.value} enters with an additional {counter_kind} counter on it."
+                ),
+                event=TriggerEvent.CAST_SPELL,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                only_when_active=ability.controller,
+                remaining=1,
+                expires_end_of_turn=True,
+                required_any_types=(card_type,),
+                effect=SpellEntersWithAdditionalCounter(counter_kind=counter_kind),
             )
         )
 
