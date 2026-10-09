@@ -533,6 +533,19 @@ class ChoiceKind(StrEnum):
     (Zero is even.)" - a fourth "as [this] enters, choose ..." shape,
     `Choice.value` "odd" or "even". The parenthetical is the card's own
     reminder text, not a separate numbered rule."""
+    #: "As this enters, choose Khans or Dragons" (the Siege cycle) and the other
+    #: printed either/or lists: `Choice.value` is the chosen word as printed.
+    MODE = "mode"
+    #: "choose a card type [other than creature]" (Serra's Emissary, Umori,
+    #: Stenn, Arachne, Cloud Key): `Choice.value` one of CR 300.1's types.
+    CARD_TYPE = "card_type"
+    #: "choose a number [between 1 and 10]" (Sanctum Prelate, Talion):
+    #: `Choice.value` the decimal digits.
+    NUMBER = "number"
+    #: "choose a planeswalker type" (Deification), `Choice.value` the type.
+    PLANESWALKER_TYPE = "planeswalker_type"
+    #: "choose a color word" (Swirl the Mists), `Choice.value` the color's name.
+    COLOR_WORD = "color_word"
     BASIC_LAND_TYPE = "basic_land_type"
     """Multiversal Passage's own "As this land enters, choose a basic land
     type." - CR 305.6's five (`Choice.value` one of "Plains"/"Island"/

@@ -14,8 +14,9 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...models.card import Color, Supertype, Type
-from ...models.card_state import CardState, ChoiceKind
-from .model import CardReplacement, EventKind, ReplacementEffect
+from ...models.card_state import CardState, Choice, ChoiceKind
+from ..decisions import Decision, DecisionKind, source_id_of
+from .model import Apply, CardReplacement, EventKind, ReplaceableEvent, ReplacementEffect
 
 if TYPE_CHECKING:
     from ...models.game import Game
@@ -218,8 +219,170 @@ def compile_group_enter_tapped(effect: ReplacementEffect) -> CardReplacement | N
     return CardReplacement(label=effect.text, applies=applies, apply=apply)
 
 
+# --------------------------------------------------------------------------
+# "As [this] enters, choose ..." (CR 614.1c, CR 614.12a)
+# --------------------------------------------------------------------------
+
+#: CR 300.1's card types, the closed universe a "card type" answer comes from.
+CARD_TYPE_OPTIONS = (
+    "artifact",
+    "battle",
+    "creature",
+    "enchantment",
+    "instant",
+    "kindred",
+    "land",
+    "planeswalker",
+    "sorcery",
+)
+_COLOR_WORD_OPTIONS = ("white", "blue", "black", "red", "green")
+
+_CHOOSE_MODE_RE = re.compile(r"^choose (?P<opts>[A-Z][\w'-]*(?:, [A-Z][\w'-]*)*(?:,? or [A-Z][\w'-]*)+)$")
+_CHOOSE_PHRASES_RE = re.compile(
+    r"^choose (?P<opts>(?:white|blue|black|red|green) [A-Z]\w+(?:, (?:white|blue|black|red|green) [A-Z]\w+)*"
+    r",? or (?:white|blue|black|red|green) [A-Z]\w+)$"
+)
+_CHOOSE_TYPE_LIST_RE = re.compile(
+    r"^choose (?P<opts>(?:artifact|battle|creature|enchantment|instant|land|planeswalker|sorcery)"
+    r"(?:, (?:artifact|battle|creature|enchantment|instant|land|planeswalker|sorcery))*"
+    r",? or (?:artifact|battle|creature|enchantment|instant|land|planeswalker|sorcery))$"
+)
+_CHOOSE_CARD_TYPE_RE = re.compile(
+    r"^(?:look at an opponent's hand, then )?choose a card type(?: other than (?P<ex>creature(?: or land)?))?$"
+)
+_CHOOSE_NUMBER_RE = re.compile(r"^choose a number(?: between (?P<lo>\d+) and (?P<hi>\d+))?$")
+_LOOK_THEN_NAME_RE = re.compile(r"^look at an opponent's hand, then choose any card name$")
+
+
+def _split_options(text: str) -> tuple[str, ...]:
+    return tuple(part.strip() for part in re.split(r",\s*(?:or\s+)?|\s+or\s+", text) if part.strip())
+
+
+def _ask_quality(
+    kind: ChoiceKind,
+    options: tuple[str, ...],
+    prompt: str,
+    card_name: str,
+    *,
+    look_at_opponent_hand: bool = False,
+    validator: Callable[[str], str | None] | None = None,
+) -> Apply:
+    """One CR 614.12a choice, asked of the entering permanent's controller
+    through `CHOOSE_A_QUALITY` and recorded on `CardState.choice`. An answer
+    outside `options` (when the rules enumerate them) or refused by
+    `validator` raises, as the existing quality choices do."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if who is None:
+            return
+        seen: tuple = ()
+        if look_at_opponent_hand:
+            # "Look at an opponent's hand": the cards are shown to the chooser
+            # alone (they are carried on the question, not revealed to the table).
+            seen = tuple(
+                card.id
+                for opponent in game.players_in_game
+                if opponent.username != who
+                for card in game.player(opponent.username).hand
+            )
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_A_QUALITY,
+            player=who,
+            prompt=prompt,
+            source=card_name,
+            source_id=source_id_of(source),
+            options=options,
+            quality=kind.value,
+            cards=seen,
+        )
+        value = game.ask(decision)
+        assert isinstance(value, str)
+        if options:
+            matched = next((o for o in options if o.lower() == value.lower()), None)
+            if matched is None:
+                raise ValueError(f"{card_name}: {value!r} is not one of {', '.join(options)}")
+            value = matched
+        if validator is not None and (refusal := validator(value)) is not None:
+            raise ValueError(f"{card_name}: {refusal}")
+        source.choice = Choice(kind=kind, value=value)
+
+    return apply
+
+
+def _number_validator(low: int | None, high: int | None) -> Callable[[str], str | None]:
+    def check(value: str) -> str | None:
+        if not value.isdigit():
+            return f"{value!r} is not a number"
+        number = int(value)
+        if low is not None and not low <= number <= (high if high is not None else number):
+            return f"{number} is not between {low} and {high}"
+        return None
+
+    return check
+
+
+def enters_choice_apply(effect: ReplacementEffect, card_name: str) -> Apply | None:
+    """What an "As [this] enters, choose ..." sentence of the shapes T2 adds does
+    as the permanent enters, or None when no shape here reads it."""
+    text = (effect.replacement or "").strip().rstrip(".")
+    match = _CHOOSE_PHRASES_RE.match(text) or _CHOOSE_MODE_RE.match(text)
+    if match is not None:
+        options = _split_options(match.group("opts"))
+        return _ask_quality(
+            ChoiceKind.MODE, options, f"choose {', '.join(options)}", card_name
+        )
+    match = _CHOOSE_TYPE_LIST_RE.match(text)
+    if match is not None:
+        return _ask_quality(
+            ChoiceKind.CARD_TYPE,
+            _split_options(match.group("opts")),
+            "choose a card type",
+            card_name,
+        )
+    match = _CHOOSE_CARD_TYPE_RE.match(text)
+    if match is not None:
+        excluded = set(_split_options(match.group("ex") or ""))
+        options = tuple(t for t in CARD_TYPE_OPTIONS if t not in excluded)
+        return _ask_quality(
+            ChoiceKind.CARD_TYPE,
+            options,
+            "choose a card type",
+            card_name,
+            look_at_opponent_hand=text.startswith("look at"),
+        )
+    match = _CHOOSE_NUMBER_RE.match(text)
+    if match is not None:
+        low = int(match.group("lo")) if match.group("lo") else None
+        high = int(match.group("hi")) if match.group("hi") else None
+        options = tuple(str(n) for n in range(low, high + 1)) if low is not None else ()
+        return _ask_quality(
+            ChoiceKind.NUMBER,
+            options,
+            "choose a number",
+            card_name,
+            validator=_number_validator(low, high),
+        )
+    if text == "choose a planeswalker type":
+        return _ask_quality(
+            ChoiceKind.PLANESWALKER_TYPE,
+            (),
+            "choose a planeswalker type",
+            card_name,
+            validator=lambda v: None if v[:1].isupper() and v.isalpha() else f"{v!r} is not a planeswalker type",
+        )
+    if text == "choose a color word":
+        return _ask_quality(ChoiceKind.COLOR_WORD, _COLOR_WORD_OPTIONS, "choose a color word", card_name)
+    if _LOOK_THEN_NAME_RE.match(text):
+        return _ask_quality(
+            ChoiceKind.CARD_NAME, (), "choose a card name", card_name, look_at_opponent_hand=True
+        )
+    return None
+
+
 __all__ = [
     "ChoiceKind",
+    "enters_choice_apply",
     "compile_group_enter_tapped",
     "read_extra_enters_condition",
     "read_group_subject",

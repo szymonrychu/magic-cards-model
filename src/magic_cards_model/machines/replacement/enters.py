@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 from .enters_choices import (
     REVEALED_OR_CONTROL_RE,
     compile_group_enter_tapped,
+    enters_choice_apply,
     read_extra_enters_condition,
     reveal_follow_up_subtype,
 )
@@ -1462,6 +1463,9 @@ def _revolt_active(game: "Game", entering: CardState) -> bool:
 #: new type, not a card carrying its own choice) is a *targeted* clause of a
 #: different shape entirely and is never routed through here.
 _CHOOSE_A_COLOR_RE = re.compile(r"^choose a color\.?$", re.IGNORECASE)
+#: "choose a noncreature, nonland card name" (Council of the Absolute) - the
+#: comma-joined form of the two-word quality `_CHOOSE_A_CARD_NAME_RE` reads.
+_COMMA_QUALITY_RE = re.compile(r", non", re.IGNORECASE)
 #: "choose two colors" (Tablet of the Guilds) - the same CR 614.12a choice made
 #: that many times, each a color not already chosen.
 _CHOOSE_N_COLORS_RE = re.compile(rf"^choose (?P<count>{COUNT}) colors\.?$", re.IGNORECASE)
@@ -1496,7 +1500,7 @@ _COLOR_OPTIONS = tuple(
 
 def _classify_choice(replacement_text: str) -> ChoiceKind | None:
     """Which of the five "as [this] enters, choose ..." shapes this is, if any."""
-    text = replacement_text.strip()
+    text = _COMMA_QUALITY_RE.sub(" non", replacement_text.strip())
     if _CHOOSE_A_COLOR_RE.match(text):
         return ChoiceKind.COLOR
     if _CHOOSE_A_CARD_NAME_RE.match(text):
@@ -1635,7 +1639,7 @@ def card_name_quality(replacement_text: str) -> str | None:
     """The characteristics a "choose a <quality> card name" choice carries
     (CR 201.4a) - "nonland" for Phyrexian Revoker, "nonbasic land" for Alpine
     Moon - or None for a plain "choose a card name" or anything else."""
-    match = _CHOOSE_A_CARD_NAME_RE.match(replacement_text.strip())
+    match = _CHOOSE_A_CARD_NAME_RE.match(_COMMA_QUALITY_RE.sub(" non", replacement_text.strip()))
     if match is None or match.group("quality") is None:
         return None
     return match.group("quality").lower()
@@ -2563,6 +2567,11 @@ def _self_enters_modifiers(
             player_choice = _choose_a_player(effect.replacement or "", card_state.card.name)
             if player_choice is not None:
                 performable.append((f"{key}:{index}", player_choice, effect.text, False))
+                continue
+
+            extra_choice = enters_choice_apply(effect, card_state.card.name)
+            if extra_choice is not None:
+                performable.append((f"{key}:{index}", extra_choice, effect.text, False))
                 continue
 
             choice_kind = _classify_choice(effect.replacement or "")
