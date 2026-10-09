@@ -82,10 +82,11 @@ class _Outcome:
 
 _ABILITY_WORD_RE = re.compile(r"^[A-Z][A-Za-z' ]{2,30}? [-—–] (?=\S)")
 _SELF_NOUN_RE = re.compile(
-    r"\bthis (?:creature|permanent|enchantment|artifact|planeswalker|equipment|aura|vehicle|land)\b",
+    r"\bthis (?:creature|permanent|enchantment|artifact|planeswalker|equipment|aura|vehicle"
+    r"|land)\b",
     re.IGNORECASE,
 )
-_SENTENCE_SPLIT = re.compile(r"(?<=\.)\s+(?=[A-Z])")
+_NEXT_SENTENCE = re.compile(r"(?<=\.)\s+(?=[A-Z])")
 
 
 def _normalise(names: Sequence[str], text: str) -> str:
@@ -202,8 +203,8 @@ def _atom(word: str) -> _Test | None:
     characteristic = _characteristic_word(word)
     if characteristic is None:
         return None
-    return lambda game, holder, obj: _is_card(obj) and characteristic(
-        game._protection_characteristics(obj)
+    return lambda game, holder, obj: (
+        _is_card(obj) and characteristic(game._protection_characteristics(obj))
     )
 
 
@@ -213,7 +214,8 @@ def _qualifier_test(kind: str, arg: str | None) -> _Test:
     if kind == "parity":
         odd = arg == "odd"
         return lambda game, holder, obj: (
-            _is_card(obj) and (int(game._protection_characteristics(obj).mana_value) % 2 == 1) == odd
+            _is_card(obj)
+            and (int(game._protection_characteristics(obj).mana_value) % 2 == 1) == odd
         )
     if kind == "chosen_name":
 
@@ -274,9 +276,11 @@ def _noun_phrase_test(phrase: str) -> _Test | None:
         else:
             groups.append([atom])
     for group in groups:
-        tests.append(lambda game, holder, obj, group=tuple(group): any(
-            each(game, holder, obj) for each in group
-        ))
+        tests.append(
+            lambda game, holder, obj, group=tuple(group): any(
+                each(game, holder, obj) for each in group
+            )
+        )
 
     def matches(game: "Game", holder: CardState, obj: Any) -> bool:
         return all(test(game, holder, obj) for test in tests)
@@ -332,7 +336,9 @@ def _condition_gate(condition: str) -> _Gate | None:
     spelled = condition.replace("~", "this permanent")
     if not parse.condition_claims(spelled):
         return None
-    return lambda game, holder: bool(game.condition_holds(_controller(game, holder), spelled, holder))
+    return lambda game, holder: bool(
+        game.condition_holds(_controller(game, holder), spelled, holder)
+    )
 
 
 _COUNTER_KIND = r"[+-]\d+/[+-]\d+|[a-z]+"
@@ -357,11 +363,11 @@ _REMOVE_COUNTERS_RE = re.compile(
     rf"{_SELF_REFERENCE}$",
     re.IGNORECASE,
 )
-_MILL_RE = re.compile(r"^(?P<who>that player|each opponent|you) mills? that many cards$", re.IGNORECASE)
-_SACRIFICE_RE = re.compile(r"^sacrifice that many permanents$", re.IGNORECASE)
-_EXILE_TOP_RE = re.compile(
-    r"^exile that many cards from the top of your library$", re.IGNORECASE
+_MILL_RE = re.compile(
+    r"^(?P<who>that player|each opponent|you) mills? that many cards$", re.IGNORECASE
 )
+_SACRIFICE_RE = re.compile(r"^sacrifice that many permanents$", re.IGNORECASE)
+_EXILE_TOP_RE = re.compile(r"^exile that many cards from the top of your library$", re.IGNORECASE)
 _EXILE_GRAVEYARD_RE = re.compile(
     r"^exile a card from your graveyard for each 1 damage prevented this way$", re.IGNORECASE
 )
@@ -370,9 +376,7 @@ _DRAW_RE = re.compile(
     r"(?:prevented|replaced) this way$",
     re.IGNORECASE,
 )
-_GAIN_LIFE_RE = re.compile(
-    r"^you gain life equal to the damage prevented this way$", re.IGNORECASE
-)
+_GAIN_LIFE_RE = re.compile(r"^you gain life equal to the damage prevented this way$", re.IGNORECASE)
 _CREATE_TOKENS_RE = re.compile(
     rf"^create (?P<count>an?|that many|\d+) (?P<descriptor>.+?){_EACH_PREVENTED}$",
     re.IGNORECASE,
@@ -447,7 +451,9 @@ def _action(text: str) -> _Action | None:
     if found is not None:
         who = found.group("who").lower()
 
-        def mill(game: "Game", holder: CardState, event: ReplaceableEvent, outcome: _Outcome) -> None:
+        def mill(
+            game: "Game", holder: CardState, event: ReplaceableEvent, outcome: _Outcome
+        ) -> None:
             if who == "that player":
                 players = [] if event.player is None else [event.player]
             elif who == "you":
@@ -479,7 +485,9 @@ def _action(text: str) -> _Action | None:
     if found is not None:
         sources_controller = found.group("who").lower() != "you"
 
-        def draw(game: "Game", holder: CardState, event: ReplaceableEvent, outcome: _Outcome) -> None:
+        def draw(
+            game: "Game", holder: CardState, event: ReplaceableEvent, outcome: _Outcome
+        ) -> None:
             if sources_controller:
                 if event.source is None:
                     return
@@ -506,7 +514,9 @@ def _action(text: str) -> _Action | None:
         if count is None or definition is None:
             return None
 
-        def create(game: "Game", holder: CardState, event: ReplaceableEvent, outcome: _Outcome) -> None:
+        def create(
+            game: "Game", holder: CardState, event: ReplaceableEvent, outcome: _Outcome
+        ) -> None:
             number = count(outcome)
             if number > 0:
                 create_tokens(game, definition, _controller(game, holder), number)
@@ -523,7 +533,9 @@ def _reflexive_damage(targets: str, *, removed: bool) -> _Action:
     """CR 603.12: "When damage is prevented this way, ... deals that much damage
     to any other target." goes on the stack as a reflexive trigger."""
 
-    def trigger(game: "Game", holder: CardState, event: ReplaceableEvent, outcome: _Outcome) -> None:
+    def trigger(
+        game: "Game", holder: CardState, event: ReplaceableEvent, outcome: _Outcome
+    ) -> None:
         from ..delayed import ReflexiveWhenYouDoConsequence
 
         amount = outcome.removed if removed else outcome.amount
@@ -628,7 +640,8 @@ _SCALE_TARGET = (
 _SCALE_RE = re.compile(
     rf"^(?:it|that source|~) deals (?P<how>double that damage|twice that much damage|"
     rf"triple that damage|half that damage, rounded (?P<direction>down|up)|"
-    rf"that much damage plus (?P<plus>\w+|an amount of damage equal to (?P<expr>.+?))){_SCALE_TARGET}$",
+    rf"that much damage plus (?P<plus>\w+|an amount of damage equal to (?P<expr>.+?)))"
+    rf"{_SCALE_TARGET}$",
     re.IGNORECASE,
 )
 _SPLIT_ACTIONS_RE = re.compile(r",? and |, ")
@@ -1034,7 +1047,7 @@ def _read_paragraph(names: Sequence[str], text: str) -> _Read | None:
             return None
         gates.append(gate)
         line = found.group("rest")
-    sentences = [sentence.strip().rstrip(".") for sentence in _SENTENCE_SPLIT.split(line)]
+    sentences = [sentence.strip().rstrip(".") for sentence in _NEXT_SENTENCE.split(line)]
     main, rider_sentences = sentences[0], sentences[1:]
     riders: list[_Action] = []
     for sentence in rider_sentences:
@@ -1043,7 +1056,7 @@ def _read_paragraph(names: Sequence[str], text: str) -> _Read | None:
             return None
         riders.append(action)
     found = _CANT_BE_PREVENTED_RE.fullmatch(main)
-    if found is not None and not riders and not gates and not found.group("kind") == "noncombat ":
+    if found is not None and not riders and not gates and found.group("kind") != "noncombat ":
         source = _phrase_test(found.group("source"))
         if source is None:
             return None
@@ -1065,7 +1078,9 @@ def _read_paragraph(names: Sequence[str], text: str) -> _Read | None:
         return None
     applies, apply, prevention = read
     return _Read(
-        replacement=CardReplacement(label=text.strip(), applies=applies, apply=apply, prevention=prevention)
+        replacement=CardReplacement(
+            label=text.strip(), applies=applies, apply=apply, prevention=prevention
+        )
     )
 
 
@@ -1084,8 +1099,9 @@ def _read_cached(card: Card, names: tuple[str, ...], text: str) -> _Read | None:
 
 
 def _level_gate(low: int, high: int | None) -> _Gate:
-    return lambda game, holder: low <= holder.counter_count("level") and (
-        high is None or holder.counter_count("level") <= high
+    return lambda game, holder: (
+        low <= holder.counter_count("level")
+        and (high is None or holder.counter_count("level") <= high)
     )
 
 
@@ -1136,9 +1152,7 @@ def reads_damage_static_line(card: Card, line: str) -> bool:
     return read is not None and not _claimed_elsewhere(card, line)
 
 
-def unpreventable_source(
-    card: Card, line: str
-) -> tuple[_Test, bool] | None:
+def unpreventable_source(card: Card, line: str) -> tuple[_Test, bool] | None:
     """A "Damage that would be dealt by <S> can't be prevented." static as the
     source test and whether it is limited to combat damage (CR 615.12), or None."""
     if "can't be prevented" not in line.lower():

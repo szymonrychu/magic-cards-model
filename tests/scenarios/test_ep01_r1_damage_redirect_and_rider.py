@@ -86,7 +86,7 @@ def _counters(state, kind="+1/+1"):
     return state.counter_count(kind)
 
 
-# -- redirection ----------------------------------------------------------------------------
+# -- redirection ---------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("holder", ["Empyrial Archangel", "Palisade Giant"])
@@ -202,7 +202,7 @@ def test_weathered_bodyguards_leave_noncombat_damage_alone():
     assert scenario.player("alice").life == 18
 
 
-# -- prevent that damage, put counters --------------------------------------------------------
+# -- prevent that damage, put counters -----------------------------------------------------------
 
 
 def test_anti_venom_prevents_the_damage_and_grows_by_that_many_counters():
@@ -279,7 +279,7 @@ def test_vigor_protects_other_creatures_you_control_and_grows_them():
     assert _hit(scenario, scenario.player("alice"), 3, guide) == 3  # a creature, not a player
 
 
-# -- prevent that damage, then lose or remove counters ----------------------------------------------
+# -- prevent that damage, then lose or remove counters -------------------------------------------
 
 
 def test_phantom_wurm_removes_a_counter_whenever_damage_is_prevented():
@@ -369,7 +369,7 @@ def test_sekki_removes_counters_and_creates_that_many_spirit_tokens():
     assert len(spirits) == 3
 
 
-# -- prevent that damage, other riders --------------------------------------------------------------
+# -- prevent that damage, other riders -----------------------------------------------------------
 
 
 def test_gloom_surgeon_exiles_that_many_cards_from_the_library_for_combat_damage():
@@ -455,7 +455,7 @@ def test_phyrexian_vindicator_prevents_and_triggers_for_that_much_damage():
     assert len(scenario.pending_triggers) == 1
 
 
-# -- replaced combat damage to a player (Szadek, Undead Alchemist) -------------------------------------
+# -- replaced combat damage to a player (Szadek, Undead Alchemist) -------------------------------
 
 
 def test_szadek_puts_counters_on_itself_and_mills_the_player_instead_of_damaging():
@@ -489,7 +489,7 @@ def test_undead_alchemist_mills_the_player_instead_of_damaging_for_zombies_you_c
     )
 
 
-# -- damage that can't be prevented ---------------------------------------------------------------------
+# -- damage that can't be prevented --------------------------------------------------------------
 
 
 @pytest.mark.parametrize("holder", ["Excruciator", "Malignus"])

@@ -64,7 +64,7 @@ def _spell(scenario, name, owner, land="Mountain", at=None):
     return scenario.cast_onto_stack(name, source, username=owner, targets=targets)
 
 
-# -- double -----------------------------------------------------------------------
+# -- double --------------------------------------------------------------------------------------
 
 
 def test_goldnight_castigator_doubles_damage_to_its_controller_and_to_itself():
@@ -179,7 +179,7 @@ def test_kuja_doubles_damage_from_wizards_you_control():
     assert _hit(scenario, bob, 2, scenario.creature("Grizzly Bears", "alice")) == 2
 
 
-# -- half -------------------------------------------------------------------------
+# -- half ----------------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(("damage", "dealt"), [(1, 0), (2, 1), (5, 2), (8, 4)])
@@ -190,7 +190,7 @@ def test_ghosts_of_the_innocent_halves_all_damage_rounded_down(damage, dealt):
     assert _hit(scenario, scenario.player("bob"), damage, guide) == dealt
 
 
-# -- plus N ---------------------------------------------------------------------------
+# -- plus N --------------------------------------------------------------------------------------
 
 
 def test_embermaw_hellion_adds_one_to_damage_from_other_red_sources_you_control():
@@ -298,7 +298,7 @@ def test_rem_karolus_prevents_spell_damage_to_you_and_adds_one_to_spell_damage_t
     assert _hit(scenario, theirs, 2, mine_bolt) == 3
 
 
-# -- prevent N of that damage ---------------------------------------------------------------
+# -- prevent N of that damage --------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("holder", ["Urza's Armor", "Protection of the Hekma"])
@@ -325,7 +325,9 @@ def test_protection_of_the_hekma_only_works_against_sources_an_opponent_controls
 
 
 def test_orbs_of_warding_works_against_creatures_only():
-    scenario = _board(alice=["Orbs of Warding"], bob=["Goblin Guide", "Mountain"], bob_hand=["Lightning Bolt"])
+    scenario = _board(
+        alice=["Orbs of Warding"], bob=["Goblin Guide", "Mountain"], bob_hand=["Lightning Bolt"]
+    )
     alice = scenario.player("alice")
     assert _hit(scenario, alice, 3, scenario.creature("Goblin Guide", "bob")) == 2
     # Orbs of Warding gives its controller hexproof, so the Bolt is aimed at bob's own creature.

@@ -28,8 +28,12 @@ from tests.scenarios.harness import Scenario
 def _board(alice=(), bob=(), alice_life=20, *, alice_hand=(), bob_hand=(), first="alice"):
     """`first` is the active player: the first one added takes the first turn."""
     seats = {
-        "alice": {"life": alice_life, "library": ["Plains"], "hand": list(alice_hand),
-                  "battlefield": list(alice)},
+        "alice": {
+            "life": alice_life,
+            "library": ["Plains"],
+            "hand": list(alice_hand),
+            "battlefield": list(alice),
+        },
         "bob": {"library": ["Mountain"], "hand": list(bob_hand), "battlefield": list(bob)},
     }
     order = ["alice", "bob"] if first == "alice" else ["bob", "alice"]
@@ -62,9 +66,7 @@ def _spell(scenario, name, owner, land="Mountain"):
         game.pass_priority(game.priority.seat)  # CR 117.3d: the next player in turn order
     other = "bob" if owner == "alice" else "alice"
     source = next(
-        c
-        for c in game.battlefield
-        if c.name == land and c.controller == owner and not c.tapped
+        c for c in game.battlefield if c.name == land and c.controller == owner and not c.tapped
     )
     targets = None if name == "Brainstorm" else [scenario.player(other)]
     return scenario.cast_onto_stack(name, source, username=owner, targets=targets)
@@ -124,7 +126,7 @@ def test_prevention_stops_when_the_aura_leaves_the_battlefield():
     assert _hit(scenario, scenario.player("alice"), 2, bears) == 2
 
 
-# -- combat only (Candletrap) --------------------------------------------------
+# -- combat only (Candletrap) --------------------------------------------------------------------
 
 
 def test_candletrap_prevents_only_combat_damage_by_the_enchanted_creature():
@@ -154,7 +156,7 @@ def test_candletrap_prevents_the_enchanted_blockers_combat_damage():
     assert bears.damage == 2 or bears.zone is Zone.GRAVEYARD
 
 
-# -- to and by (Heart of Light, Ghostly Possession) ------------------------------
+# -- to and by (Heart of Light, Ghostly Possession) ----------------------------------------------
 
 
 @pytest.mark.parametrize("aura", ["Heart of Light", "Ghostly Possession"])
@@ -191,7 +193,7 @@ def test_heart_of_light_prevents_noncombat_damage_too_but_ghostly_possession_doe
     assert _hit(scenario, elves, 5, guide) == 5  # not combat damage: Ghostly Possession ignores it
 
 
-# -- groups of recipients ---------------------------------------------------------
+# -- groups of recipients ------------------------------------------------------------------------
 
 
 def test_emmara_prevents_damage_to_creature_tokens_you_control_only():
@@ -281,7 +283,7 @@ def test_light_of_sanction_prevents_damage_from_your_own_sources_to_your_creatur
     assert _hit(scenario, scenario.player("alice"), 2, bears) == 2  # to you, not a creature
 
 
-# -- the controller (Solitary Confinement, Personal Sanctuary) ---------------------
+# -- the controller (Solitary Confinement, Personal Sanctuary) -----------------------------------
 
 
 def test_solitary_confinement_prevents_all_damage_to_you_on_any_turn():
@@ -308,7 +310,7 @@ def test_personal_sanctuary_only_works_during_your_turn():
     assert _hit(theirs, theirs.player("alice"), 5, theirs.creature("Goblin Guide", "bob")) == 5
 
 
-# -- the permanent itself ------------------------------------------------------------
+# -- the permanent itself ------------------------------------------------------------------------
 
 
 def test_gideon_blackblade_takes_no_damage_during_its_controllers_turn_only():
@@ -369,7 +371,7 @@ def test_armored_transport_ignores_combat_damage_from_creatures_blocking_it():
     assert _hit(scenario, transport, 1, guide) == 1
 
 
-# -- "Prevent all damage that ~ would deal to <group>" ----------------------------------
+# -- "Prevent all damage that ~ would deal to <group>" -------------------------------------------
 
 
 def test_goblin_furrier_deals_no_damage_to_snow_creatures():
@@ -400,7 +402,7 @@ def test_another_creatures_damage_to_snow_creatures_is_not_prevented():
     )
 
 
-# -- named sources (Gideon's Intervention) -----------------------------------------------
+# -- named sources (Gideon's Intervention) -------------------------------------------------------
 
 
 def test_gideons_intervention_prevents_damage_from_sources_with_the_chosen_name():
