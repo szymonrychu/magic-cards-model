@@ -1436,6 +1436,11 @@ class ActivationMixin:
         is CR 605.1a's mana ability, spared by an "unless they're mana
         abilities" tail.
         """
+        from ...machines.attached_restrictions import attached_activation_prohibition
+
+        attached = attached_activation_prohibition(self, obj, is_mana=is_mana)
+        if attached is not None:
+            return attached
         for source in list(self.battlefield):
             for line in parse_abilities(source.card):
                 if line.kind is not AbilityKind.STATIC:
