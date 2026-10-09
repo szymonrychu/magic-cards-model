@@ -210,8 +210,9 @@ class CombatMixin:
                 enlist_refusal = enlist.enlist_refusal(self, creature, enlisting, set())
                 if enlist_refusal is not None:
                     raise ValueError(enlist_refusal)
-            self._pay_attack_costs([(creature, defender)], attack_cost_sources)
+            returned = self._pay_attack_costs([(creature, defender)], attack_cost_sources)
             attack = combat_rules.declare_attacker(self, creature, self.attack_target(defender))
+            self._return_attack_cost_permanents(returned)
             if enlisting is not None:
                 # CR 508.1g's optional cost, chosen alongside this one
                 # attacker's own declaration.
@@ -383,7 +384,7 @@ class CombatMixin:
                         raise ValueError(enlist_refusal)
             # CR 508.1h-j: the whole declaration's cost to attack, paid in
             # full before anyone becomes an attacking creature (CR 508.1k).
-            self._pay_attack_costs(attacks, attack_cost_sources)
+            returned = self._pay_attack_costs(attacks, attack_cost_sources)
             registered = [
                 (
                     creature,
@@ -391,6 +392,10 @@ class CombatMixin:
                 )
                 for creature, defender in attacks
             ]
+            # The permanents returned to pay (Floodtide Serpent) go once every
+            # attacker is registered, so the restriction they pay for is not
+            # re-judged against a cost that has just been paid.
+            self._return_attack_cost_permanents(returned)
             if enlist_choices:
                 for creature, _attack in registered:
                     enlisted = enlist_choices.get(creature.id)

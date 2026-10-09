@@ -2663,6 +2663,12 @@ class ZonesMixin:
         """The rest of `sacrifice` - see its own docstring for why it is split out."""
         if permanent not in self.battlefield:
             raise ValueError(f"{permanent.name} is not a permanent on the battlefield")
+        from ...machines.attacking_statics import cant_be_sacrificed
+
+        if cant_be_sacrificed(self, permanent) is not None:
+            # CR 101.2: "can't" beats the instruction to sacrifice; the
+            # permanent stays where it is.
+            return permanent
         # CR 701.21a names the permanent's controller as the player who
         # sacrifices it, so the record is kept under the controller it still
         # has here, before the move to the graveyard takes it away. Recorded

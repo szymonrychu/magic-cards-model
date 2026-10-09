@@ -5712,7 +5712,7 @@ _ATTACHED_CREATURE_STATIC_RE = re.compile(
     # Meltstrider's Resolve / Wolfrider's Saddle: "gets +0/+2 and can't be
     # blocked by more than one creature" - the blocker cap (CR 509.1b) with
     # no "has" in front of it, read by the same keyword-list validator.
-    r"| and (?P<restriction>can't be blocked .+?)"
+    r"| and (?P<restriction>can't (?:be blocked .+?|attack alone))"
     # Rope: "gets +1/+2, has reach, and can't be blocked by more than one
     # creature" - the same two grants as a comma list.
     r"|, has (?P<listed>[a-z][a-z ]*?),? and (?P<listed_restriction>can't be blocked .+?))?"
@@ -5774,6 +5774,25 @@ _ATTACHED_CREATURE_IS_SUBTYPE_RE = re.compile(
     r"(?P<power>\d+)/(?P<toughness>\d+)"
     r"(?: and (?P<loses>loses all abilities))?\.?"
     r"(?: It (?P<rider>[^.]+))?\.?$"
+)
+
+#: "Enchanted creature is a Spirit and can't attack or block." (Fog on the
+#: Barrow-Downs) - `_ATTACHED_CREATURE_IS_SUBTYPE_RE`'s subtype *set* (CR 205.1a)
+#: with no base power and toughness, and the restriction (CR 508.1c, 509.1b)
+#: in the same sentence instead of an "It ..." rider.
+_ATTACHED_CREATURE_IS_SUBTYPE_AND_CANT_RE = re.compile(
+    r"^(?P<attachment>[Ee]nchanted|[Ee]quipped) creature is an? "
+    r"(?P<subtypes>[A-Z][a-z]+(?: [A-Z][a-z]+)*) and can'?t "
+    r"(?P<what>attack or block|attack|block)\.?$"
+)
+
+#: "Enchanted creature can't attack or block and has "{7}: ... Activate only as
+#: a sorcery."" (Hold for Ransom) - CR 508.1c/509.1b's restriction and a quoted
+#: ability grant (CR 113.10a) in one sentence, each read as its own layer 6
+#: grant by `_attached_creature_static_builder`.
+_ATTACHED_CREATURE_CANT_AND_HAS_RE = re.compile(
+    r"^(?P<attachment>[Ee]nchanted|[Ee]quipped) creature can'?t "
+    r'(?P<what>attack or block|attack|block) and has "(?P<granted>.+)"\.?$'
 )
 
 #: One part of `_ATTACHED_CREATURE_IS_SUBTYPE_RE`'s rider: CR 508.1c/509.1b's
@@ -8317,8 +8336,8 @@ def _attached_creature_loses_and_becomes_builder(
 
 def _attached_creature_is_subtype_builder(
     subtypes: tuple[str, ...],
-    power: int,
-    toughness: int,
+    power: int | None,
+    toughness: int | None,
     *,
     subject: str,
     line: str,
@@ -8396,18 +8415,21 @@ def _attached_creature_is_subtype_builder(
             )
             for granted in (*keywords, *restrictions)
         )
-        effects.append(
-            ContinuousEffect(
-                description=f"{source.name}: {subject} creature has base P/T {power}/{toughness}",
-                layer=Layer.POWER_TOUGHNESS,
-                sublayer=Sublayer.SET,
-                timestamp=timestamp,
-                source_id=source.id,
-                source_ability=ability,
-                selector=selector,
-                modification=set_power_toughness(power, toughness),
+        if power is not None and toughness is not None:
+            effects.append(
+                ContinuousEffect(
+                    description=(
+                        f"{source.name}: {subject} creature has base P/T {power}/{toughness}"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=ability,
+                    selector=selector,
+                    modification=set_power_toughness(power, toughness),
+                )
             )
-        )
         return effects
 
     return builder
@@ -11117,6 +11139,26 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             loses_all=match.group("loses") is not None or rider_loses_all or loses_other,
             keywords=rider_keywords,
             restrictions=restrictions,
+        )
+    if match := _ATTACHED_CREATURE_CANT_AND_HAS_RE.fullmatch(sentence):
+        return _attached_creature_static_builder(
+            0,
+            0,
+            [f"This creature can't {match.group('what')}."],
+            subject=match.group("attachment").lower(),
+            granted=match.group("granted").strip(),
+            line=sentence,
+        )
+    if match := _ATTACHED_CREATURE_IS_SUBTYPE_AND_CANT_RE.fullmatch(sentence):
+        return _attached_creature_is_subtype_builder(
+            tuple(match.group("subtypes").split()),
+            None,
+            None,
+            subject=match.group("attachment").lower(),
+            line=sentence,
+            loses_all=False,
+            keywords=[],
+            restrictions=[f"This creature can't {match.group('what')}."],
         )
     if match := _ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE.fullmatch(sentence):
         pump_keywords: list[str] = []

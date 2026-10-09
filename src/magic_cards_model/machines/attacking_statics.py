@@ -327,7 +327,9 @@ def _condition_refusal(game, creature, defender, action: str) -> str | None:
 
 
 def self_attack_condition_refusal(game, creature, defender) -> str | None:
-    return _condition_refusal(game, creature, defender, "attack")
+    return self_owner_attack_refusal(game, creature, defender) or _condition_refusal(
+        game, creature, defender, "attack"
+    )
 
 
 def self_block_condition_refusal(game, blocker, attacker) -> str | None:
@@ -373,6 +375,63 @@ def self_block_declaration_refusal(game, declared) -> str | None:
     return _declaration_refusal(game, blockers, "block")
 
 
+# A creature's own compound sentence, "Alexios attacks each combat if able,
+# can't be sacrificed, and can't attack its owner." - each clause is its own
+# rule: CR 508.1d's requirement, CR 701.21a's sacrifice (CR 101.2: "can't"
+# wins), CR 508.1c's restriction.
+_REQUIRES_CLAUSE = "attacks each combat if able"
+_NO_SACRIFICE_CLAUSE = "can't be sacrificed"
+_NOT_OWNER_CLAUSE = "can't attack its owner"
+_COMPOUND_CLAUSES = frozenset({_REQUIRES_CLAUSE, _NO_SACRIFICE_CLAUSE, _NOT_OWNER_CLAUSE})
+_CLAUSE_SPLIT_RE = re.compile(r",\s*(?:and\s+)?|\s+and\s+", re.IGNORECASE)
+
+
+def compound_clauses(sentence: str, subjects) -> frozenset[str] | None:
+    """The clauses of a compound self sentence made only of the three above
+    (at least two of them), or None."""
+    text = sentence.strip().rstrip(".")
+    for subject in sorted(subjects, key=len, reverse=True):
+        lead = subject.lower() + " "
+        if not text.lower().startswith(lead):
+            continue
+        parts = [part.strip().lower() for part in _CLAUSE_SPLIT_RE.split(text[len(lead) :])]
+        if len(parts) >= 2 and all(part in _COMPOUND_CLAUSES for part in parts):
+            return frozenset(parts)
+    return None
+
+
+def _compound_clause_sets(game, creature):
+    from .combat import _computed_ability_sentences, _self_reference_alternatives
+
+    subjects = _self_reference_alternatives(creature)
+    for raw in _computed_ability_sentences(creature, game):
+        clauses = compound_clauses(raw, subjects)
+        if clauses is not None:
+            yield clauses
+
+
+def cant_be_sacrificed(game, permanent) -> str | None:
+    """Why `permanent`'s own "can't be sacrificed" stops it being sacrificed, or
+    None (CR 701.21a, CR 101.2) - read off the computed abilities (CR 613.5)."""
+    if permanent.zone.value != "battlefield":
+        return None
+    for clauses in _compound_clause_sets(game, permanent):
+        if _NO_SACRIFICE_CLAUSE in clauses:
+            return f"{permanent.name} can't be sacrificed (CR 701.21a, CR 101.2)"
+    return None
+
+
+def self_owner_attack_refusal(game, creature, defender) -> str | None:
+    """ "can't attack its owner" (CR 508.1c): an attack on the player who owns
+    the creature."""
+    if defender is None or not defender.is_player:
+        return None
+    for clauses in _compound_clause_sets(game, creature):
+        if _NOT_OWNER_CLAUSE in clauses and defender.username == creature.owner:
+            return f"{creature.name} can't attack its owner {creature.owner} (CR 508.1c)"
+    return None
+
+
 def self_attack_requirements(game, creature) -> list[bool]:
     """One entry per "attacks each combat if able unless <condition>" this
     creature has while the condition does not hold (CR 508.1d)."""
@@ -382,7 +441,9 @@ def self_attack_requirements(game, creature) -> list[bool]:
     )
 
     subjects = {name.lower() for name in _self_reference_alternatives(creature)}
-    found: list[bool] = []
+    found: list[bool] = [
+        False for clauses in _compound_clause_sets(game, creature) if _REQUIRES_CLAUSE in clauses
+    ]
     for raw in _computed_ability_sentences(creature, game):
         match = _REQUIREMENT_UNLESS_RE.fullmatch(raw.strip())
         if match is None or match["subject"].strip().lower() not in subjects:
@@ -410,6 +471,8 @@ def reads_self_condition_line(printing, text: str, *, card_name: str) -> bool:
     if not sentences:
         return False
     for sentence in sentences:
+        if compound_clauses(sentence, subjects) is not None:
+            continue
         if match := _SELF_UNLESS_RE.fullmatch(sentence):
             if match["subject"].strip().lower() not in subjects:
                 return False

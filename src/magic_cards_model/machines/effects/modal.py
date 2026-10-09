@@ -2872,7 +2872,12 @@ def _choose_permanents_to_sacrifice(
     printed count - or, for a range, any count from its minimum up to every
     candidate. An answer below a range's minimum is not a payment and returns
     no permanents, so the caller does not run the "if/when you do" half.
+
+    A permanent that "can't be sacrificed" (Alexios) is not offered (CR 101.2).
     """
+    from ..attacking_statics import cant_be_sacrificed
+
+    candidates = [c for c in candidates if cant_be_sacrificed(game, c) is None]
     if restriction.is_self:
         return candidates[:1]
     quantity = restriction.quantity

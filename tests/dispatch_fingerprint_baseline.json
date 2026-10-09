@@ -292,6 +292,7 @@
       "_parse_event_subject_variable_pump_clause",
       "_parse_put_exiled_target_onto_battlefield_clause",
       "_parse_exiled_card_owner_creates_x_token_clause",
+      "_parse_granting_aura_sacrificed_and_draws",
       "_parse_exile_several_up_to_one_targets_then_return_clause",
       "_parse_exile_target_then_return_tapped_and_attacking_clause",
       "_parse_exile_then_pay_or_else_return_clause",

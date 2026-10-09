@@ -1968,6 +1968,9 @@ class ActivationMixin:
             mana = mana.minus(self._power_up_group_discount(permanent, controller))
         mana = mana.minus(self._activation_target_cost_reduction(permanent, ability, targets))
         mana = self._activated_ability_group_discount(permanent, controller, mana)
+        from ...machines.attached_restrictions import activation_cost_increase
+
+        mana = increase(mana, activation_cost_increase(self, permanent))
 
         return TotalCost(
             mana=mana, components=components, waterbend_generic=waterbend_generic

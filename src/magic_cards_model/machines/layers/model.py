@@ -3496,6 +3496,13 @@ _CANT_BE_BLOCKED_ITEM_RE = re.compile(
 )
 
 
+#: "can't attack alone" (CR 508.1c, 506.5) as one item of the same list -
+#: Sightless Brawler's "Enchanted creature gets +3/+2 and can't attack alone."
+#: The granted text is the whole self-referential sentence, which is what
+#: `machines/attacking_statics.py` reads.
+_CANT_ATTACK_ALONE_ITEM_RE = re.compile(r"^can'?t attack alone(?:,\s*|\s+and\s+|$)", re.IGNORECASE)
+
+
 def _split_and_validate_keywords(raw: str) -> list[str] | None:
     """ "double strike and lifelink" / "menace, deathtouch and first strike" /
     "hexproof from monocolored" / "protection from red and from blue" -> each
@@ -3551,6 +3558,11 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
             )
             result.append(sentence)
             remaining = remaining[cant_be_blocked.end() :].strip()
+            continue
+        cant_attack_alone = _CANT_ATTACK_ALONE_ITEM_RE.match(remaining)
+        if cant_attack_alone is not None:
+            result.append("This creature can't attack alone.")
+            remaining = remaining[cant_attack_alone.end() :].strip()
             continue
         bare = _BARE_KEYWORD_ITEM_RE.match(remaining)
         if bare is None:

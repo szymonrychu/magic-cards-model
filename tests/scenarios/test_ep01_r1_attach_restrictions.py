@@ -181,3 +181,114 @@ def test_enchanted_creature_attacks_each_combat_if_able() -> None:
         scenario.attack_with(scenario.creature("Hill Giant"))
     scenario.attack_with(enchanted)
     assert scenario.attackers() == [enchanted]
+
+
+# -- Sightless Brawler, Fog on the Barrow-Downs, Hold for Ransom, Dog Umbra -----
+
+
+def test_sightless_brawler_aura_grants_the_pump_and_cant_attack_alone() -> None:
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Sightless Brawler", "Grizzly Bears", "Hill Giant"])
+        .player("bob", battlefield=["Serra Angel"])
+        .build()
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.find("Sightless Brawler", Zone.BATTLEFIELD, "alice").attach_to(bears)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    assert scenario.game.power_of(bears) == 5
+    assert scenario.game.toughness_of(bears) == 4
+    with pytest.raises(ValueError, match=r"CR 508\.1c"):
+        scenario.attack_with(bears)
+    scenario.attack_with(bears, scenario.creature("Hill Giant", "alice"))
+
+
+def test_sightless_brawler_leaves_other_creatures_alone() -> None:
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Sightless Brawler", "Grizzly Bears", "Hill Giant"])
+        .player("bob")
+        .build()
+    )
+    scenario.find("Sightless Brawler", Zone.BATTLEFIELD, "alice").attach_to(
+        scenario.creature("Grizzly Bears", "alice")
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Hill Giant", "alice"))
+
+
+def test_fog_on_the_barrow_downs_makes_a_spirit_that_cant_attack_or_block() -> None:
+    scenario, enchanted = _attack_scenario("Fog on the Barrow-Downs")
+    assert scenario.game.characteristics_of(enchanted).subtypes == ("Spirit",)
+    assert scenario.can_attack(enchanted) is False
+    assert scenario.can_attack(scenario.creature("Hill Giant")) is True
+    blocked, victim = _block_scenario("Fog on the Barrow-Downs")
+    with pytest.raises(ValueError, match="can't block"):
+        blocked.block(blocked.creature("Hill Giant", "alice"), victim)
+
+
+def test_hold_for_ransom_restricts_and_grants_the_sacrifice_ability() -> None:
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears", *["Mountain"] * 7])
+        .player("bob", battlefield=["Hold for Ransom"], library=["Island"] * 3)
+        .build()
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    ransom = scenario.find("Hold for Ransom", Zone.BATTLEFIELD, "bob")
+    ransom.attach_to(bears)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    assert scenario.can_attack(bears) is False
+    hand = len(scenario.player("bob").hand)
+    scenario.activate(bears, username="alice", auto=True)
+    scenario.resolve_top()
+    # The ransom is paid by the held creature's controller; the Aura's
+    # controller sacrifices the Aura and draws, and the creature is free.
+    assert ransom.zone is Zone.GRAVEYARD
+    assert bears.zone is Zone.BATTLEFIELD
+    assert len(scenario.player("bob").hand) == hand + 1
+    assert scenario.can_attack(bears) is True
+
+
+def test_hold_for_ransom_cannot_be_activated_at_instant_speed() -> None:
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears", *["Mountain"] * 7])
+        .player("bob", battlefield=["Hold for Ransom"])
+        .build()
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.find("Hold for Ransom", Zone.BATTLEFIELD, "bob").attach_to(bears)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    assert scenario.why_cannot_activate(bears, 0, "alice") is not None
+
+
+def test_dog_umbra_has_umbra_armor_only_on_its_controllers_creature() -> None:
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears", "Dog Umbra"])
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    umbra = scenario.find("Dog Umbra", Zone.BATTLEFIELD, "alice")
+    umbra.attach_to(bears)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.destroy(bears)
+    assert bears.zone is Zone.BATTLEFIELD, "umbra armor: destroy the Aura instead (CR 702.89a)"
+    assert umbra.zone is Zone.GRAVEYARD
+
+
+def test_dog_umbra_on_an_opponents_creature_has_no_umbra_armor() -> None:
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Dog Umbra"])
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    giant = scenario.creature("Hill Giant", "bob")
+    umbra = scenario.find("Dog Umbra", Zone.BATTLEFIELD, "alice")
+    umbra.attach_to(giant)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.destroy(giant)
+    assert giant.zone is Zone.GRAVEYARD

@@ -5180,6 +5180,45 @@ def _parse_may_sacrifice_then_damage_then_amass_if_excess_clause(
     return effect
 
 
+#: Hold for Ransom's granted "{7}: Hold for Ransom's controller sacrifices it and
+#: draws a card." - once the Aura's name is read as the grant's source, "it" is
+#: the Aura itself (the ransom is paid by the held creature's controller; the
+#: Aura's controller is the one who sacrifices it and draws). The ability is the
+#: enchanted creature's, so the Aura is whichever attached permanent states the
+#: grant (CR 113.10a, CR 701.21a).
+_AURA_CONTROLLER_SACRIFICES_IT_AND_DRAWS_RE = re.compile(
+    r"^(?:this permanent|this creature|[A-Z][^.,]*?)'s controller "
+    r"sacrifices it and draws a card\.?$"
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_granting_aura_sacrificed_and_draws(text: str) -> AbilityEffect | None:
+    """`_AURA_CONTROLLER_SACRIFICES_IT_AND_DRAWS_RE`'s shape."""
+    stripped = " ".join(text.split())
+    if _AURA_CONTROLLER_SACRIFICES_IT_AND_DRAWS_RE.fullmatch(stripped) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        held = ability.source(game)
+        if held is None:
+            return
+        for aura in list(game.battlefield):
+            if aura.attached_to != held.id:
+                continue
+            if not any(
+                "sacrifices it and draws a card" in line
+                for line in game.characteristics_of(aura).abilities
+            ):
+                continue
+            owner = game.controller_of(aura).username
+            game.sacrifice(aura)
+            if aura.zone is not Zone.BATTLEFIELD:
+                game.draw_cards(owner, 1)
+
+    return effect
+
+
 #: "the blocking creature's controller sacrifices it at end of combat" - The
 #: Ring's third ability (CR 701.54c), read as a delayed triggered ability (CR
 #: 603.7, CR 511.2) about the blocking creature its own "becomes blocked by a

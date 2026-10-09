@@ -896,10 +896,14 @@ class CostComponent(EngineModel):
             or self.requirement.why_not(permanent, game, self.payer) is None
         ]
 
-    def _why_not_sacrifice(self, _game: Any) -> str | None:
+    def _why_not_sacrifice(self, game: Any) -> str | None:
+        from .. import attacking_statics
+
         for card in self.cards:
             if card.zone is not Zone.BATTLEFIELD:
                 return f"{card.name} is not a permanent, so it cannot be sacrificed"
+            if game is not None and (why := attacking_statics.cant_be_sacrificed(game, card)):
+                return why
         return self._why_not_controlled()
 
     def _why_not_controlled(self) -> str | None:

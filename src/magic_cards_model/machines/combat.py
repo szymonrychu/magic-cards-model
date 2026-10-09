@@ -2749,6 +2749,9 @@ def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) ->
     if unobeyed_must_be_blocked is not None:
         raise ValueError(unobeyed_must_be_blocked)
 
+    # CR 509.1d-f: the cost to block, paid in full before the blocks are made.
+    game._pay_block_costs(blocks)
+
     for attack in combat.attacks:
         chosen = declared[attack.attacker_id]
         attack.blockers = [blocker.id for blocker in chosen]

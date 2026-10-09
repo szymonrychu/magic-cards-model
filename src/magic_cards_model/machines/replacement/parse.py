@@ -3448,7 +3448,36 @@ def _keyword_replacements(
                 apply=_umbra_armor,
             )
         ]
+    if computed_abilities is not None and _has_conditional_umbra_armor(computed_abilities):
+        return [
+            CardReplacement(
+                label="umbra armor while its controller controls the enchanted permanent "
+                "(CR 702.89a)",
+                applies=_conditional_umbra_armor_applies,
+                apply=_umbra_armor,
+            )
+        ]
     return []
+
+
+def _has_conditional_umbra_armor(abilities: tuple[str, ...]) -> bool:
+    """Dog Umbra's "As long as another player controls enchanted creature, it
+    can't attack or block. Otherwise, this Aura has umbra armor." - the
+    second sentence (`machines/attached_restrictions.CONDITIONAL_UMBRA_RE`)."""
+    from ..attached_restrictions import CONDITIONAL_UMBRA_RE
+
+    return any(CONDITIONAL_UMBRA_RE.search(line) for line in abilities)
+
+
+def _conditional_umbra_armor_applies(
+    game: "Game", source: CardState, event: ReplaceableEvent
+) -> bool:
+    """Umbra armor's replacement (`_umbra_armor_applies`) while the Aura's
+    controller still controls the enchanted permanent - the "Otherwise" of
+    "as long as another player controls enchanted creature" (CR 613.5)."""
+    if not _umbra_armor_applies(game, source, event) or event.card is None:
+        return False
+    return game.controller_of(source).username == game.controller_of(event.card).username
 
 
 #: The zone words a "cards in ..." clause may name, plural as printed.

@@ -739,10 +739,11 @@ class _SubjectProbe:
 
 
 def extra_attack_refusal(game: "Game", creature: CardState, defender) -> str | None:
-    from . import attached_restrictions, attacking_statics, group_attack_statics
+    from . import attached_restrictions, attack_block_costs, attacking_statics, group_attack_statics
 
     return (
         attached_restrictions.attached_attack_refusal(game, creature)
+        or attack_block_costs.return_cost_refusal(game, creature)
         or attacking_statics.self_attack_condition_refusal(game, creature, defender)
         or group_attack_statics.group_attack_refusal(game, creature, defender)
     )
@@ -760,17 +761,23 @@ def extra_block_refusal(game: "Game", blocker: CardState, attacker: CardState) -
 
 
 def extra_declaration_refusal(game: "Game", declared) -> str | None:
-    from . import attacking_statics
+    from . import attacking_statics, group_attack_statics
 
-    return block_evasion_declaration_refusal(
-        game, declared
-    ) or attacking_statics.self_block_declaration_refusal(game, declared)
+    return (
+        block_evasion_declaration_refusal(game, declared)
+        or attacking_statics.self_block_declaration_refusal(game, declared)
+        or group_attack_statics.block_cap_refusal(game, declared)
+    )
 
 
 def extra_attack_declaration_refusal(game: "Game", attacks) -> str | None:
-    from . import attacking_statics
+    from . import attack_block_costs, attacking_statics, group_attack_statics
 
-    return attacking_statics.self_attack_declaration_refusal(game, attacks)
+    return (
+        attacking_statics.self_attack_declaration_refusal(game, attacks)
+        or group_attack_statics.attack_cap_refusal(game, attacks)
+        or attack_block_costs.return_cost_declaration_refusal(game, attacks)
+    )
 
 
 def extra_attack_requirements(game: "Game", creature: CardState) -> list[bool]:
@@ -787,3 +794,9 @@ def extra_attack_costs(game: "Game", creature: CardState, defender) -> list:
     from . import attack_block_costs
 
     return attack_block_costs.attack_costs(game, creature, defender)
+
+
+def extra_block_costs(game: "Game", blocker: CardState) -> list:
+    from . import attack_block_costs
+
+    return attack_block_costs.block_costs(game, blocker)

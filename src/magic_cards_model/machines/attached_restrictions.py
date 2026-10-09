@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from ..models.card import Card
     from ..models.card_state import CardState
     from ..models.game import Game
+    from ..models.mana import ManaCost
 
 _RESTRICTION_RE = re.compile(
     r"^(?P<cond>as long as another player controls enchanted creature, )?"
@@ -35,6 +36,10 @@ _DEACTIVATE_TAIL_RE = re.compile(
     r"^,? and its activated abilities can't be activated(?P<mana> unless they're mana abilities)?$",
     re.IGNORECASE,
 )
+#: Dog Umbra's second sentence; `replacement/parse._keyword_replacements`
+#: gives the Aura umbra armor only while its controller controls the enchanted
+#: creature.
+CONDITIONAL_UMBRA_RE = re.compile(r"otherwise, this aura has umbra armor", re.IGNORECASE)
 _PAY_TAIL_RE = re.compile(r"^ unless its controller pays (?P<cost>.+)$", re.IGNORECASE)
 _REQUIREMENT_RE = re.compile(
     r"^(?:enchanted|equipped) creature attacks each combat if able\.?$", re.IGNORECASE
@@ -142,6 +147,44 @@ def attached_attack_requirements(game: "Game", creature: "CardState") -> list[bo
     ]
 
 
+def attached_charges(game: "Game", creature: "CardState", action: str):
+    """(source, cost text, sentence) for each "unless its controller pays
+    <cost>" an attachment states about `creature` doing `action` ("attack" or
+    "block") - priced by `attack_block_costs` (CR 508.1h, 509.1d)."""
+    for source, restriction in _attached_restrictions(game, creature):
+        if restriction.pay is not None and getattr(restriction, action):
+            yield source, restriction.pay, restriction.sentence
+
+
+_ACTIVATION_TAX_RE = re.compile(
+    r"^activated abilities of (?:enchanted|equipped) (?:creature|permanent|artifact|land) "
+    r"cost (?P<cost>(?:\{[^}]+\})+) more to activate\.?$",
+    re.IGNORECASE,
+)
+
+
+def activation_cost_increase(game: "Game", obj: "CardState") -> "ManaCost":
+    """The mana an attachment adds to every activated ability of `obj` -
+    Oppressive Rays' "Activated abilities of enchanted creature cost {3} more to
+    activate." (CR 602.2b, CR 601.2f)."""
+    from ..models.mana import ManaCost
+    from .layers import layer_readable_sentences
+
+    total = ManaCost.parse("")
+    board = game.computed_board()
+    for source in game.battlefield:
+        if source.attached_to != obj.id:
+            continue
+        for ability in board.of(source).abilities:
+            if "more to activate" not in ability.lower():
+                continue
+            for sentence in layer_readable_sentences(ability, static_only=True):
+                match = _ACTIVATION_TAX_RE.fullmatch(sentence.strip())
+                if match is not None:
+                    total = total.plus(ManaCost.parse(match["cost"]))
+    return total
+
+
 def attached_activation_prohibition(game: "Game", obj: "CardState", *, is_mana: bool) -> str | None:
     """Why an attachment's "its activated abilities can't be activated" stops
     activating an ability of `obj`, or None (CR 602.5)."""
@@ -163,7 +206,23 @@ def reads_attached_restriction_line(printing: "Card", text: str, *, card_name: s
     if "enchanted " not in lowered and "equipped " not in lowered and "it can't" not in lowered:
         return False
     sentences = [s.strip() for s in layer_readable_sentences(text, static_only=True)]
-    return bool(sentences) and all(
-        (found := parse_attached(sentence)) is not None and found.pay is None
-        for sentence in sentences
-    )
+    return bool(sentences) and all(_reads_sentence(sentence) for sentence in sentences)
+
+
+def _reads_sentence(sentence: str) -> bool:
+    found = parse_attached(sentence)
+    if found is not None:
+        return found.pay is None
+    if _ACTIVATION_TAX_RE.fullmatch(sentence):
+        return True
+    if CONDITIONAL_UMBRA_RE.fullmatch(sentence.rstrip(".")):
+        return True
+    # "gets +3/+2 and can't attack alone", "is a Spirit and can't attack or
+    # block", "can't attack or block and has "..."": the layer system grants
+    # the restriction and `attacking_statics`/`combat` enforce it.
+    from .layers import _parse_layer_sentence
+
+    lowered = sentence.lower()
+    if "can't attack" in lowered or "can't block" in lowered:
+        return _parse_layer_sentence(sentence) is not None
+    return False
