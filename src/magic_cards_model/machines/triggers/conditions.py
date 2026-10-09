@@ -1934,6 +1934,12 @@ def _condition_matches(
         ):
             return False
         subtype = _required_subtype(condition)
+        if "into your graveyard" in lowered:
+            # Enduring Renewal's "a creature is put into your graveyard from
+            # the battlefield": the graveyard is its owner's (CR 404.1).
+            died = game.find_by_id(event.subject_id) if event.subject_id else None
+            if not isinstance(died, CardState) or died.owner != controller:
+                return False
         if not (
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)

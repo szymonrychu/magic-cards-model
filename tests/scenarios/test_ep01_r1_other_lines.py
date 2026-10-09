@@ -399,3 +399,49 @@ def test_a_chosen_creature_that_is_exiled_instead_does_not_return():
     scenario.game.exile_permanent(bears)
 
     assert bears.zone is Zone.EXILE
+
+
+# -- Enduring Renewal: "Whenever a creature is put into your graveyard from the
+#    battlefield, return it to your hand." ------------------------------------
+
+
+def test_enduring_renewal_returns_your_creature_that_dies_to_your_hand():
+    scenario = _board(["Enduring Renewal", "Grizzly Bears"], ["Llanowar Elves"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.game.destroy(bears)
+    scenario.pass_until_resolved()
+
+    assert bears in scenario.player("alice").hand
+    _clause_handled("Enduring Renewal", "Whenever a creature is put into your graveyard")
+
+
+def test_enduring_renewal_ignores_an_opponents_creature_dying():
+    scenario = _board(["Enduring Renewal"], ["Llanowar Elves"])
+    elves = scenario.creature("Llanowar Elves", "bob")
+
+    scenario.game.destroy(elves)
+    scenario.pass_until_resolved()
+
+    assert elves.zone is Zone.GRAVEYARD
+
+
+def test_enduring_renewal_returns_a_creature_you_own_that_an_opponent_controlled():
+    scenario = _board(["Enduring Renewal"], ["Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bears.owner = "alice"
+
+    scenario.game.destroy(bears)
+    scenario.pass_until_resolved()
+
+    assert bears in scenario.player("alice").hand
+
+
+def test_enduring_renewal_does_not_return_a_creature_milled_from_the_library():
+    scenario = _board(["Enduring Renewal"], alice_library=["Grizzly Bears", "Island"])
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
+
+    scenario.game.put_into_graveyard(bears)
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.GRAVEYARD

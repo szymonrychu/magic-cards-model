@@ -4342,7 +4342,7 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # plural form printed on "one or more other Cats you control die".
     if (
         re.search(r"\bdi(?:es|e)\b", lowered)
-        or "put into a graveyard from the battlefield" in lowered
+        or re.search(r"\bput into (?:a|your) graveyard from the battlefield\b", lowered)
     ):
         return TriggerEvent.DIES
     # CR 508.3f/509.3g/702.68a: "attacks [a player] and isn't blocked" -
