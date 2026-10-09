@@ -19,6 +19,6 @@ _FAMILIES = (
 
 def reads_static_line(printing, text, *, card_name, legendary) -> bool:
     lowered = text.lower()
-    if "attack" not in lowered and "block" not in lowered:
+    if "attack" not in lowered and "block" not in lowered and "more to activate" not in lowered:
         return False
     return any(family(printing, text, card_name=card_name) for family in _FAMILIES)
