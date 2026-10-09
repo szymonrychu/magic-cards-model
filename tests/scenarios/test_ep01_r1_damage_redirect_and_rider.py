@@ -572,3 +572,30 @@ def test_security_blockade_gives_the_enchanted_land_a_tap_ability_that_prevents_
     assert forest.tapped
     assert _hit(scenario, scenario.player("alice"), 3, guide) == 2  # CR 615.7: the next 1 damage
     assert _hit(scenario, scenario.player("alice"), 3, guide) == 3  # the shield is spent
+
+
+def test_cautery_sliver_gives_every_sliver_a_prevention_ability_whoever_controls_it():
+    scenario = _board(alice=["Cautery Sliver"], bob=["Cautery Sliver", "Plains", "Goblin Guide"])
+    mine = _on(scenario, "Cautery Sliver")
+    theirs = _on(scenario, "Cautery Sliver", "bob")
+    guide = scenario.creature("Goblin Guide", "bob")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    assert len(mine.granted_ability_texts) == 2
+    assert len(theirs.granted_ability_texts) == 2
+    assert guide.granted_ability_texts == ()
+
+
+def test_cautery_sliver_sacrifice_prevents_the_next_damage_to_a_sliver_or_player():
+    scenario = _board(alice=["Cautery Sliver", "Plains"], bob=["Goblin Guide"])
+    sliver = _on(scenario, "Cautery Sliver")
+    guide = scenario.creature("Goblin Guide", "bob")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    index = next(i for i, text in enumerate(sliver.granted_ability_texts) if "Prevent" in text)
+    scenario.activate(
+        sliver, _on(scenario, "Plains"), index=index, targets=[scenario.player("alice")]
+    )
+    scenario.resolve_top()
+
+    assert _hit(scenario, scenario.player("alice"), 3, guide) == 2

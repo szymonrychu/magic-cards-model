@@ -2068,9 +2068,12 @@ _GROUP_EVASION_GRANT_RE = re.compile(
 #: excluded (`other_creatures_controlled_by`), so it keeps only its printed
 #: ward rather than gaining a second instance from its own line.
 _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
-    r"^(?P<other>other )?(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments)"
-    r"(?P<scope> you control)?(?P<named> with the chosen name)? have "
-    r'"(?P<ability>.+)"\.?$',
+    r"^(?:(?P<other>other )?(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments)"
+    r"(?P<scope> you control)?(?P<named> with the chosen name)?"
+    # CR 205.3m: "All Slivers have "..."" (Cautery Sliver) - every creature of
+    # the subtype, whoever controls it.
+    r"|all (?P<all_subtype>[a-z]+))"
+    r' have "(?P<ability>.+)"\.?$',
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -2079,6 +2082,11 @@ def group_quoted_ability_grant_selector(match: re.Match[str], source: CardState)
     """The group `_GROUP_QUOTED_ABILITY_GRANT_RE` names, for `source` - `None`
     when neither qualifier is printed, or a chosen-name group's source has no
     card name chosen (it entered without CR 201.4's choice being made)."""
+    if match.group("all_subtype") is not None:
+        subtype = _singular_subtype_word(match.group("all_subtype"))
+        if subtype is None:
+            return None
+        return creatures_controlled_by_with_subtype(None, [subtype], any_controller=True)
     card_type = _card_type_word(match.group("subject"))
     if card_type is None:
         return None
@@ -9555,9 +9563,10 @@ def _group_quoted_ability_grant_builder(
         selector = group_quoted_ability_grant_selector(match, source)
         if selector is None:
             return []
+        subject = (match.group("subject") or f"all {match.group('all_subtype')}").lower()
         return [
             ContinuousEffect(
-                description=f"{source.name}: {match.group('subject').lower()}"
+                description=f"{source.name}: {subject}"
                 f'{match.group("scope") or ""}{match.group("named") or ""} have "{granted}"',
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
@@ -11636,9 +11645,14 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return built
     if match := _GROUP_QUOTED_ABILITY_GRANT_RE.fullmatch(sentence):
         granted = match.group("ability").strip()
-        if not granted or _card_type_word(match.group("subject")) is None:
+        if not granted:
             return None
-        if match.group("scope") is None and match.group("named") is None:
+        if match.group("all_subtype") is not None:
+            if _singular_subtype_word(match.group("all_subtype")) is None:
+                return None
+        elif _card_type_word(match.group("subject")) is None or (
+            match.group("scope") is None and match.group("named") is None
+        ):
             return None
         return _group_quoted_ability_grant_builder(granted, match, line=sentence)
     for gained_life_re in (

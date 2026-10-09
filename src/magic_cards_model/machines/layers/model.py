@@ -1478,13 +1478,14 @@ class CreaturesControlledByWithSubtype(SelectorBase):
     subtypes: tuple[str, ...] = ()
     other_than: UUID | None = None
     negate: bool = False
+    any_controller: bool = False
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         wanted = {subtype.lower() for subtype in self.subtypes}
         has_one = any(subtype.lower() in wanted for subtype in chars.subtypes)
         return (
             chars.is_creature
-            and chars.controller == self.username
+            and (self.any_controller or chars.controller == self.username)
             and chars.card_id != self.other_than
             and (not has_one if self.negate else has_one)
         )
@@ -2975,6 +2976,7 @@ def creatures_controlled_by_with_subtype(
     *,
     other_than: UUID | None = None,
     negate: bool = False,
+    any_controller: bool = False,
 ) -> Selector:
     """ "[Other] <subtype>s you control" / "each other creature you control
     that's a Cat, Elemental, ... " - an anthem over a filtered subset of the
@@ -2989,9 +2991,15 @@ def creatures_controlled_by_with_subtype(
     `negate` reads the list as CR 109.2's negation instead - "each non-Human
     creature you control" (Zilortha, Apex of Ikoria) - matching every creature
     carrying *none* of `subtypes`.
+
+    `any_controller` drops the controller test - "All Slivers" (Cautery Sliver).
     """
     return CreaturesControlledByWithSubtype(
-        username=username, subtypes=tuple(subtypes), other_than=other_than, negate=negate
+        username=username,
+        subtypes=tuple(subtypes),
+        other_than=other_than,
+        negate=negate,
+        any_controller=any_controller,
     )
 
 
