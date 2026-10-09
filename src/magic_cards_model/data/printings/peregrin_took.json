@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "f5baee8d-88e7-4468-94a9-66ca8e2caf15",
+  "oracle_id": "188da0ad-8524-4fb2-915e-1876dc9df89f",
+  "multiverse_ids": [
+    617011
+  ],
+  "mtgo_id": 112272,
+  "arena_id": 84873,
+  "tcgplayer_id": 498369,
+  "cardmarket_id": 715949,
+  "name": "Peregrin Took",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/f5baee8d-88e7-4468-94a9-66ca8e2caf15",
+  "scryfall_uri": "https://scryfall.com/card/ltr/181/peregrin-took?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:17:43Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.jpg?1783916263",
+    "normal": "https://cards.scryfall.io/normal/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.jpg?1783916263",
+    "large": "https://cards.scryfall.io/large/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.jpg?1783916263",
+    "png": "https://cards.scryfall.io/png/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.png?1783916263",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.jpg?1783916263",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.jpg?1783916263",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.webp?1783916263",
+    "grid": "https://cards.scryfall.io/grid/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.webp?1783916263",
+    "display": "https://cards.scryfall.io/display/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.webp?1783916263",
+    "art": "https://cards.scryfall.io/art/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.webp?1783916263",
+    "crop": "https://cards.scryfall.io/crop/front/f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.webp?1783916263"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Halfling Citizen",
+  "oracle_text": "If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\nSacrifice three Foods: Draw a card.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Food"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "3c8b8eef-d150-4610-8428-d8ea75eeb80a",
+      "component": "combo_piece",
+      "name": "Peregrin Took",
+      "type_line": "Legendary Creature \u2014 Halfling Citizen",
+      "uri": "https://api.scryfall.com/cards/3c8b8eef-d150-4610-8428-d8ea75eeb80a"
+    },
+    {
+      "object": "related_card",
+      "id": "4a029bdc-92e3-4d85-8af5-e33429a5f017",
+      "component": "token",
+      "name": "Food",
+      "type_line": "Token Artifact \u2014 Food",
+      "uri": "https://api.scryfall.com/cards/4a029bdc-92e3-4d85-8af5-e33429a5f017"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "08078706-ac5d-439b-8f01-894d38751367",
+  "set": "ltr",
+  "set_name": "The Lord of the Rings: Tales of Middle-earth",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/08078706-ac5d-439b-8f01-894d38751367",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f5baee8d-88e7-4468-94a9-66ca8e2caf15/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A188da0ad-8524-4fb2-915e-1876dc9df89f&unique=prints",
+  "collector_number": "181",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Sam! Get breakfast ready for half-past nine!\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Campbell White",
+  "artist_ids": [
+    "d281eab4-463a-4ba8-9039-8943737960a0"
+  ],
+  "illustration_id": "1e24cb02-4ed0-4fc5-a394-6683878c0f8c",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 791,
+  "prices": {
+    "usd": "1.38",
+    "usd_foil": "1.39",
+    "usd_etched": null,
+    "eur": "0.25",
+    "eur_foil": "0.40",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=617011&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPeregrin%2BTook",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPeregrin%2BTook",
+    "edhrec": "https://edhrec.com/route/?cc=Peregrin+Took"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F498369%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=715949&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/112272?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
