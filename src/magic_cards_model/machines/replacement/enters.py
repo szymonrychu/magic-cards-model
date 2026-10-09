@@ -2344,6 +2344,9 @@ def _self_enters_modifiers(
     game: "Game",
     card_state: CardState,
     entering_as_copy: tuple[str, tuple[str, ...]] | None = None,
+    *,
+    turned_up: bool = False,
+    entering_transformed: bool = False,
 ) -> list[tuple[str, Apply, str, bool]]:
     """The card's own "enters ..." replacement effects, as things to apply.
 
@@ -2406,7 +2409,15 @@ def _self_enters_modifiers(
     # `triggers_for` and `Game.activated_abilities` for the same filter).
     # `up_face_name` is `None` for an ordinary single-faced card, which keeps
     # every one of its own lines (`effect.face` is also `None` there).
+    if card_state.face_down and not turned_up:
+        # CR 708.2: a face-down permanent has no text, so no "enters"/"as ...
+        # enters" line of the card applies to it (CR 614.12).
+        return []
     up_face_name = card_state.up_face_name
+    if entering_transformed and card_state.card.back_face is not None:
+        # CR 712.14a / CR 614.12: it enters with its back face up, so that
+        # face's lines are the ones that apply as it enters.
+        up_face_name = card_state.card.back_face.name
     key = "self"
     if entering_as_copy is None:
         parsed = [
@@ -2414,6 +2425,14 @@ def _self_enters_modifiers(
             for effect in parse_replacement_effects(card_state.card)
             if up_face_name is None or effect.face in (None, up_face_name)
         ]
+        if turned_up:
+            # CR 614.1e: only the "as this is turned face up" effects, which
+            # perform exactly as their "as this enters" twins do.
+            parsed = [
+                effect.model_copy(update={"kind": ReplacementKind.AS_ENTERS})
+                for effect in parsed
+                if effect.kind is ReplacementKind.AS_TURNED_FACE_UP
+            ]
         if card_state.granted_ability_texts:
             # CR 113.10a: a granted ability text "functions exactly as if it
             # were printed on the object" - Wildgrowth Archaic's own cast

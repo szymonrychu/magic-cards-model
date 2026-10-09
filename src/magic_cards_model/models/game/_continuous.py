@@ -881,6 +881,7 @@ class ContinuousMixin:
         """`computed_board`, always computed afresh."""
         self.continuous_effects.note(self.battlefield)
         context = LayerContext(
+            face_down_creatures=sum(1 for permanent in self.battlefield if permanent.face_down),
             graveyards=tuple(card for player in self.players_in_game for card in player.graveyard),
             graveyard_by_controller={
                 player.username: tuple(player.graveyard) for player in self.players_in_game

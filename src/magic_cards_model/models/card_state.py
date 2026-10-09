@@ -550,6 +550,18 @@ class ChoiceKind(StrEnum):
     #: choose a nonland permanent" (Metamorphic Alteration, Dauntless Bodyguard,
     #: Scheming Fence): `Choice.value` the chosen permanent's id.
     OBJECT = "object"
+    #: "it becomes your choice of a 3/3 creature with flying, a 2/5 ..." (Corrupted
+    #: Shapeshifter, Primal Plasma, Aquamorph Entity): `Choice.value` the chosen
+    #: option as printed, without its article ("3/3 creature with flying").
+    BODY = "body"
+    #: "As this enters, flip a coin" (Molten Sentry): `Choice.value` "heads" or
+    #: "tails" (CR 705.1: a win is heads by this engine's convention).
+    COIN = "coin"
+    #: "you may choose another creature on the battlefield. If you do, ... it
+    #: becomes a copy of that creature" (Vesuvan Shapeshifter): `Choice.value`
+    #: the chosen creature's copiable values (CR 707.2), frozen as a
+    #: `Characteristics` JSON snapshot taken as the choice was made (CR 707.2b).
+    COPY_OF = "copy_of"
     BASIC_LAND_TYPE = "basic_land_type"
     """Multiversal Passage's own "As this land enters, choose a basic land
     type." - CR 305.6's five (`Choice.value` one of "Plains"/"Island"/

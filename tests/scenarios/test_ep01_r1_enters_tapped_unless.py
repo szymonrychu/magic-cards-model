@@ -252,3 +252,93 @@ def test_sphere_of_the_suns_enters_tapped_with_three_charge_counters():
     sphere = _enters(scenario, "Sphere of the Suns")
     assert sphere.tapped
     assert sphere.counters == {"charge": 3}
+
+
+# --------------------------------------------------------------------------
+# Group statics keyed on a quality or a relationship (CR 614.1d)
+# --------------------------------------------------------------------------
+
+
+def test_zhao_taps_nonbasic_lands_whoever_controls_them():
+    """Zhao's printed line is "Nonbasic lands enter tapped." - basic lands and
+    non-lands are untouched (CR 205.4a: basic is a supertype)."""
+    scenario = _board(
+        battlefield=["Zhao, the Moon Slayer"],
+        hand=["Command Tower", "Forest", "Grizzly Bears"],
+        opp_hand=["Command Tower"],
+    )
+    assert _enters(scenario, "Command Tower").tapped
+    assert _enters(scenario, "Command Tower", "bob").tapped
+    assert not _enters(scenario, "Forest").tapped
+    assert not _enters(scenario, "Grizzly Bears").tapped
+
+
+def _restraints_on_bob(scenario):
+    card = scenario.find("Radiant Grace // Radiant Restraints", Zone.HAND, "alice")
+    restraints = scenario.game.put_onto_battlefield(card, "alice", transformed=True)
+    restraints.attach_to("bob")
+    return restraints
+
+
+def test_radiant_restraints_taps_creatures_only_the_enchanted_player_controls():
+    """Radiant Restraints enchants a player (CR 303.4): "Creatures enchanted
+    player controls enter tapped." - Alice's own creatures and Bob's lands are
+    untouched."""
+    scenario = _board(
+        hand=["Radiant Grace // Radiant Restraints", "Grizzly Bears"],
+        opp_hand=["Grizzly Bears", "Forest"],
+    )
+    _restraints_on_bob(scenario)
+    assert _enters(scenario, "Grizzly Bears", "bob").tapped
+    assert not _enters(scenario, "Forest", "bob").tapped
+    assert not _enters(scenario, "Grizzly Bears", "alice").tapped
+
+
+def test_radiant_restraints_does_nothing_once_it_enchants_the_other_player():
+    scenario = _board(
+        hand=["Radiant Grace // Radiant Restraints", "Grizzly Bears"], opp_hand=["Grizzly Bears"]
+    )
+    restraints = _restraints_on_bob(scenario)
+    restraints.attach_to("alice")
+    assert not _enters(scenario, "Grizzly Bears", "bob").tapped
+    assert _enters(scenario, "Grizzly Bears", "alice").tapped
+
+
+# --------------------------------------------------------------------------
+# Ashling's Prerogative: tapped unless the mana value has the chosen parity
+# --------------------------------------------------------------------------
+
+
+def _prerogative(parity):
+    scenario = _board(
+        hand=["Ashling's Prerogative", "Grizzly Bears", "Llanowar Elves", "Mountain"],
+        opp_hand=["Grizzly Bears", "Llanowar Elves"],
+    )
+    scenario.will_choose(parity, source="Ashling's Prerogative")
+    scenario.put_onto_battlefield("Ashling's Prerogative")
+    return scenario
+
+
+def test_ashlings_prerogative_taps_creatures_without_an_odd_mana_value_when_odd_is_chosen():
+    scenario = _prerogative("odd")
+    assert not _enters(scenario, "Llanowar Elves").tapped  # mana value 1
+    assert _enters(scenario, "Grizzly Bears").tapped  # mana value 2
+    assert not _enters(scenario, "Mountain").tapped  # not a creature
+    assert _enters(scenario, "Grizzly Bears", "bob").tapped  # "each creature"
+    assert not _enters(scenario, "Llanowar Elves", "bob").tapped
+
+
+def test_ashlings_prerogative_taps_creatures_without_an_even_mana_value_when_even_is_chosen():
+    scenario = _prerogative("even")
+    assert _enters(scenario, "Llanowar Elves").tapped
+    assert not _enters(scenario, "Grizzly Bears").tapped
+    assert not _enters(scenario, "Grizzly Bears", "bob").tapped
+
+
+def test_ashlings_prerogative_gives_haste_to_creatures_with_the_chosen_parity():
+    scenario = _prerogative("odd")
+    elves = _enters(scenario, "Llanowar Elves")
+    bears = _enters(scenario, "Grizzly Bears")
+    board = scenario.game.computed_board()
+    assert "haste" in {k.lower() for k in board.of(elves).abilities}
+    assert "haste" not in {k.lower() for k in board.of(bears).abilities}

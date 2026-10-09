@@ -502,6 +502,14 @@ class ReplaceableEvent:
     tapped: bool = False
     #: Whether the permanent arrives with the prepared designation (CR 722.3a).
     prepared: bool = False
+    #: The creature an as-enters choice made the entering Equipment arrive
+    #: attached to (Grifter's Blade, CR 614.12a: "it enters attached to that
+    #: creature"), attached by `Game.enter_the_battlefield` as it arrives.
+    attach_to: CardState | None = None
+    #: Whether the permanent arrives transformed, back face up (CR 712.14a,
+    #: CR 702.145b): CR 614.12 judges its enters replacements on the face it
+    #: would have on the battlefield.
+    transformed: bool = False
     #: CR 702.136a's riot, declined: "If you don't [have this permanent enter
     #: with an additional +1/+1 counter], it gains haste." No duration is
     #: printed, so `Game.enter_the_battlefield` grants it indefinitely
@@ -2005,7 +2013,10 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
     if event.kind is EventKind.ENTERS_BATTLEFIELD and event.card is not None:
         entering = event.card
         for suffix, apply, label, copy_as_it_enters in _self_enters_modifiers(
-            game, entering, entering_as_copy=event.entering_as_copy
+            game,
+            entering,
+            entering_as_copy=event.entering_as_copy,
+            entering_transformed=event.transformed,
         ):
             found.append(
                 ApplicableEffect(

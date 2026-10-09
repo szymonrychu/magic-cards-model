@@ -14,8 +14,15 @@ permanent (`CardState.choice`). Proven per shape with real printings:
 - "look at an opponent's hand, then choose any card name / a card type other
   than creature".
 
+- "As ~ enters, it becomes your choice of ..." and the coin-flip body
+  (Corrupted Shapeshifter, Primal Plasma, Aquamorph Entity, Molten Sentry), "as
+  it enters or is turned face up" (CR 614.1e), face-down and copy-choice
+  shapes (Ixidron, Crowd-Control Warden, Vesuvan Shapeshifter), exile from your
+  graveyard as it enters (Sutured Ghoul, Living Lore), enters attached
+  (Grifter's Blade) and "you get an emblem" (Tibalt).
+
 CR numbers (looked up with `mise run rules:find`): 614.1c, 614.12a, 603.2,
-201.4a, 300.1.
+201.4a, 300.1, 614.1e, 708.2, 708.8, 607.2a, 114.2, 305.6.
 """
 
 import pytest
@@ -369,3 +376,441 @@ def test_kicker_mills_as_the_creature_enters(name, kicked, milled):
     _cast_kicked(scenario, name, kicked=kicked)
     assert len(scenario.player("alice").graveyard) == milled
     assert len(scenario.player("alice").library) == 10 - milled
+
+
+# -- the entering permanent becomes your choice of a body (CR 614.1c, 613.4b) ----
+
+
+def _chars(scenario, permanent):
+    return scenario.game.computed_board().of(permanent)
+
+
+def _keywords(scenario, permanent):
+    return {k.lower() for k in _chars(scenario, permanent).abilities}
+
+
+@pytest.mark.parametrize(
+    ("name", "answer", "power_toughness", "keyword"),
+    [
+        ("Corrupted Shapeshifter", "3/3 creature with flying", (3, 3), "flying"),
+        ("Corrupted Shapeshifter", "2/5 creature with vigilance", (2, 5), "vigilance"),
+        ("Corrupted Shapeshifter", "0/12 creature with defender", (0, 12), "defender"),
+        ("Primal Plasma", "3/3 creature", (3, 3), None),
+        ("Primal Plasma", "2/2 creature with flying", (2, 2), "flying"),
+        ("Primal Plasma", "1/6 creature with defender", (1, 6), "defender"),
+        ("Aquamorph Entity", "5/1", (5, 1), None),
+        ("Aquamorph Entity", "1/5", (1, 5), None),
+    ],
+)
+def test_a_chosen_body_sets_base_power_toughness_and_abilities(
+    name, answer, power_toughness, keyword
+):
+    scenario = _board(hand=[name])
+    permanent = _enter(scenario, name, answer)
+    assert (_chars(scenario, permanent).power, _chars(scenario, permanent).toughness) == (
+        power_toughness
+    )
+    keywords = _keywords(scenario, permanent)
+    for other in ("flying", "vigilance", "defender"):
+        assert (other in keywords) == (other == keyword), other
+
+
+def test_a_chosen_body_offers_exactly_the_printed_bodies_and_refuses_another():
+    scenario = _board(hand=["Primal Plasma"])
+    scenario.will_choose("9/9 creature", source="Primal Plasma")
+    with pytest.raises(ValueError, match="9/9"):
+        scenario.put_onto_battlefield("Primal Plasma")
+    scenario = _board(hand=["Primal Plasma"])
+    _enter(scenario, "Primal Plasma", "3/3 creature")
+    assert _question(scenario, "Primal Plasma").options == (
+        "3/3 creature",
+        "2/2 creature with flying",
+        "1/6 creature with defender",
+    )
+
+
+def test_a_chosen_body_keeps_counters_on_top_of_the_set_base():
+    """Layer 7b sets the base, layer 7c adds counters on top (CR 613.4b-c)."""
+    scenario = _board(hand=["Corrupted Shapeshifter"])
+    permanent = _enter(scenario, "Corrupted Shapeshifter", "2/5 creature with vigilance")
+    scenario.game.add_counters(permanent, "+1/+1", 2, putter="alice")
+    assert (_chars(scenario, permanent).power, _chars(scenario, permanent).toughness) == (4, 7)
+
+
+def test_molten_sentry_enters_as_one_of_two_bodies_by_the_coin():
+    outcomes = {}
+    for flips in range(8):
+        scenario = _board(hand=["Molten Sentry"])
+        scenario.game.coin_flips_performed = flips
+        sentry = scenario.put_onto_battlefield("Molten Sentry")
+        chars = _chars(scenario, sentry)
+        keywords = _keywords(scenario, sentry)
+        assert sentry.choice is not None
+        assert sentry.choice.kind is ChoiceKind.COIN
+        if sentry.choice.value == "heads":
+            assert ((chars.power, chars.toughness), "haste" in keywords) == ((5, 2), True)
+            assert "defender" not in keywords
+        else:
+            assert sentry.choice.value == "tails"
+            assert ((chars.power, chars.toughness), "defender" in keywords) == ((2, 5), True)
+            assert "haste" not in keywords
+        outcomes[sentry.choice.value] = True
+    assert set(outcomes) == {"heads", "tails"}
+
+
+# -- as it enters or is turned face up (CR 614.1e, 708.8) --------------------------
+
+
+def _face_down(scenario, name, keyword, *mana):
+    casting = scenario.cast(name)
+    casting.use_keyword(keyword)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources(*mana))
+    scenario.put_on_stack(casting)
+    return scenario.resolve_top()
+
+
+def _face_down_board(hand, lands, land="Island", extra=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=[hand], battlefield=[land] * lands + list(extra))
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_aquamorph_entity_chooses_again_when_it_is_turned_face_up():
+    scenario = _face_down_board("Aquamorph Entity", 6)
+    permanent = _face_down(scenario, "Aquamorph Entity", "Morph", "Island", "Island", "Island")
+    assert permanent.face_down
+    assert [d for d in scenario.questions_asked() if d.source == "Aquamorph Entity"] == []
+    scenario.will_choose("1/5", source="Aquamorph Entity")
+    turned = scenario.turn_face_up(
+        permanent, *scenario.untapped_sources("Island", "Island", "Island")
+    )
+    assert (turned.power, turned.toughness) == (1, 5)
+    assert _question(scenario, "Aquamorph Entity").options == ("5/1", "1/5")
+
+
+def test_crowd_control_warden_enters_with_a_counter_per_other_creature():
+    scenario = _board(
+        hand=["Crowd-Control Warden"], battlefield=["Grizzly Bears", "Llanowar Elves"]
+    )
+    warden = scenario.put_onto_battlefield("Crowd-Control Warden")
+    assert warden.counters == {"+1/+1": 2}
+
+
+def test_crowd_control_warden_with_no_other_creature_enters_bare():
+    scenario = _board(hand=["Crowd-Control Warden"], battlefield=["Mountain"])
+    assert scenario.put_onto_battlefield("Crowd-Control Warden").counters == {}
+
+
+def test_crowd_control_warden_counts_the_creatures_you_control_when_turned_face_up():
+    scenario = _face_down_board(
+        "Crowd-Control Warden", 8, land="Forest", extra=["Grizzly Bears", "Llanowar Elves"]
+    )
+    permanent = _face_down(
+        scenario, "Crowd-Control Warden", "Disguise", "Forest", "Forest", "Forest"
+    )
+    assert permanent.counters == {}
+    turned = scenario.turn_face_up(permanent, *scenario.untapped_sources(*["Forest"] * 5))
+    assert turned.counters == {"+1/+1": 2}
+
+
+# -- Vesuvan Shapeshifter: a copy until it is turned face down (CR 707.2, 708.8) --
+
+
+def _vesuvan(*, take, choose=None):
+    scenario = _board(hand=["Vesuvan Shapeshifter"], battlefield=["Serra Angel"])
+    scenario.will_take_the_may(take, source="Vesuvan Shapeshifter")
+    if choose is not None:
+        scenario.will_choose_cards(
+            scenario.find(choose, Zone.BATTLEFIELD, "alice"), source="Vesuvan Shapeshifter"
+        )
+    return scenario, scenario.put_onto_battlefield("Vesuvan Shapeshifter")
+
+
+def test_vesuvan_shapeshifter_becomes_a_copy_of_the_creature_it_chooses():
+    scenario, vesuvan = _vesuvan(take=True, choose="Serra Angel")
+    chars = _chars(scenario, vesuvan)
+    assert chars.name == "Serra Angel"
+    assert (chars.power, chars.toughness) == (4, 4)
+    assert "flying" in _keywords(scenario, vesuvan)
+    assert any("turn this creature face down" in line for line in chars.abilities)
+
+
+def test_vesuvan_shapeshifter_that_declines_stays_itself():
+    scenario, vesuvan = _vesuvan(take=False)
+    assert _chars(scenario, vesuvan).name == "Vesuvan Shapeshifter"
+    assert vesuvan.choice is None
+
+
+def test_vesuvan_shapeshifter_stops_being_a_copy_when_turned_face_down():
+    scenario, vesuvan = _vesuvan(take=True, choose="Serra Angel")
+    vesuvan.turn_face_down()
+    chars = _chars(scenario, vesuvan)
+    assert chars.name != "Serra Angel"
+    assert (chars.power, chars.toughness) == (2, 2)
+    assert "flying" not in _keywords(scenario, vesuvan)
+
+
+def test_vesuvan_shapeshifter_chooses_again_when_turned_face_up():
+    scenario = _face_down_board("Vesuvan Shapeshifter", 6, extra=["Serra Angel"])
+    permanent = _face_down(scenario, "Vesuvan Shapeshifter", "Morph", "Island", "Island", "Island")
+    assert _chars(scenario, permanent).name != "Serra Angel"
+    scenario.will_take_the_may(True, source="Vesuvan Shapeshifter")
+    scenario.will_choose_cards(
+        scenario.find("Serra Angel", Zone.BATTLEFIELD, "alice"), source="Vesuvan Shapeshifter"
+    )
+    turned = scenario.turn_face_up(permanent, *scenario.untapped_sources("Island", "Island"))
+    assert _chars(scenario, turned).name == "Serra Angel"
+
+
+# -- Ixidron: turn all other nontoken creatures face down (CR 708.2) ---------------
+
+
+def test_ixidron_turns_every_other_creature_face_down_and_counts_them():
+    scenario = _board(
+        hand=["Ixidron"],
+        battlefield=["Grizzly Bears", "Mountain"],
+        opp_hand=[],
+    )
+    ixidron = scenario.put_onto_battlefield("Ixidron")
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "alice")
+    assert bears.face_down
+    assert not mountain.face_down
+    assert not ixidron.face_down
+    # One face-down creature: Ixidron is 1/1.
+    assert (_chars(scenario, ixidron).power, _chars(scenario, ixidron).toughness) == (1, 1)
+    assert (_chars(scenario, bears).power, _chars(scenario, bears).toughness) == (2, 2)
+
+
+def test_ixidron_also_turns_the_opponents_creatures_face_down():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Ixidron"])
+        .player("bob", battlefield=["Serra Angel", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ixidron = scenario.put_onto_battlefield("Ixidron")
+    assert all(
+        state.face_down
+        for state in scenario.game.battlefield
+        if state.name != "Ixidron" or state.face_down
+    )
+    assert (_chars(scenario, ixidron).power, _chars(scenario, ixidron).toughness) == (2, 2)
+
+
+# -- exile from your graveyard as it enters (CR 607.2a) ----------------------------
+
+
+def test_sutured_ghoul_exiles_creature_cards_and_sums_their_power_and_toughness():
+    scenario = _board(
+        hand=["Sutured Ghoul"],
+        battlefield=[],
+    )
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Sutured Ghoul"],
+            graveyard=["Grizzly Bears", "Serra Angel", "Lightning Bolt"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_cards(bears, angel, source="Sutured Ghoul")
+    ghoul = scenario.put_onto_battlefield("Sutured Ghoul")
+    assert bears.zone is Zone.EXILE and angel.zone is Zone.EXILE
+    assert scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    assert {c.id for c in scenario.game.cards_exiled_with(ghoul.id, None)} == {bears.id, angel.id}
+    assert (_chars(scenario, ghoul).power, _chars(scenario, ghoul).toughness) == (6, 6)
+
+
+def test_sutured_ghoul_offers_only_creature_cards_and_may_take_none():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Sutured Ghoul"], graveyard=["Grizzly Bears", "Lightning Bolt"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_cards(source="Sutured Ghoul")
+    ghoul = scenario.put_onto_battlefield("Sutured Ghoul")
+    assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    assert scenario.game.cards_exiled_with(ghoul.id, None) == []
+    (question,) = [
+        d
+        for d in scenario.questions_asked()
+        if d.kind is DecisionKind.CHOOSE_CARDS and d.source == "Sutured Ghoul"
+    ]
+    assert len(question.cards) == 1
+
+
+def test_living_lore_exiles_one_instant_or_sorcery_and_takes_its_mana_value():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Living Lore"],
+            graveyard=["Divination", "Lightning Bolt", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_cards(divination, source="Living Lore")
+    lore = scenario.put_onto_battlefield("Living Lore")
+    assert divination.zone is Zone.EXILE
+    assert [c.id for c in scenario.game.cards_exiled_with(lore.id, None)] == [divination.id]
+    assert (_chars(scenario, lore).power, _chars(scenario, lore).toughness) == (3, 3)
+    (question,) = [
+        d
+        for d in scenario.questions_asked()
+        if d.kind is DecisionKind.CHOOSE_CARDS and d.source == "Living Lore"
+    ]
+    assert len(question.cards) == 2  # the Bears is not an instant or sorcery card
+
+
+def test_living_lore_with_nothing_to_exile_enters_as_a_zero_zero():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Living Lore"], graveyard=["Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lore = scenario.put_onto_battlefield("Living Lore")
+    assert scenario.game.cards_exiled_with(lore.id, None) == []
+    assert (_chars(scenario, lore).power, _chars(scenario, lore).toughness) == (0, 0)
+
+
+# -- Grifter's Blade: enters attached to the creature chosen (CR 614.12a, 301.5) ----
+
+
+def test_grifters_blade_enters_attached_to_the_chosen_creature():
+    scenario = _board(hand=["Grifter's Blade"], battlefield=["Grizzly Bears", "Llanowar Elves"])
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose_cards(bears, source="Grifter's Blade")
+    blade = scenario.put_onto_battlefield("Grifter's Blade")
+    assert blade.attached_to == bears.id
+    assert (_chars(scenario, bears).power, _chars(scenario, bears).toughness) == (3, 3)
+
+
+def test_grifters_blade_offers_only_creatures_you_control():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Grifter's Blade"], battlefield=["Grizzly Bears", "Mountain"])
+        .player("bob", battlefield=["Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose_cards(bears, source="Grifter's Blade")
+    scenario.put_onto_battlefield("Grifter's Blade")
+    (question,) = [
+        d
+        for d in scenario.questions_asked()
+        if d.kind is DecisionKind.CHOOSE_CARDS and d.source == "Grifter's Blade"
+    ]
+    assert question.cards == (bears.id,)
+
+
+def test_grifters_blade_without_a_creature_asks_nothing_and_enters_unattached():
+    scenario = _board(hand=["Grifter's Blade"], battlefield=["Mountain"])
+    blade = scenario.put_onto_battlefield("Grifter's Blade")
+    assert blade.attached_to is None
+    assert not [d for d in scenario.questions_asked() if d.source == "Grifter's Blade"]
+
+
+# -- Tibalt: as it enters you get an emblem (CR 114.2) -----------------------------
+
+
+def test_tibalt_gives_its_controller_an_emblem_as_it_enters():
+    scenario = _board(hand=["Valki, God of Lies // Tibalt, Cosmic Impostor"])
+    card = scenario.find("Valki, God of Lies // Tibalt, Cosmic Impostor", Zone.HAND, "alice")
+    scenario.game.put_onto_battlefield(card, "alice", transformed=True)
+    (emblem,) = scenario.game.emblems_of("alice")
+    assert "You may play cards exiled with Tibalt, Cosmic Impostor" in emblem.card.oracle_text
+    assert scenario.game.emblems_of("bob") == []
+
+
+def test_valki_entering_as_the_front_face_gets_no_emblem():
+    scenario = _board(hand=["Valki, God of Lies // Tibalt, Cosmic Impostor"])
+    scenario.put_onto_battlefield("Valki, God of Lies // Tibalt, Cosmic Impostor")
+    assert scenario.game.emblems_of("alice") == []
+
+
+# -- Kolvori // The Ringhart Crest: the back face's creature-type choice -------------
+
+
+def test_the_ringhart_crest_asks_for_a_creature_type_as_it_enters():
+    scenario = _board(hand=["Kolvori, God of Kinship // The Ringhart Crest"])
+    card = scenario.find("Kolvori, God of Kinship // The Ringhart Crest", Zone.HAND, "alice")
+    scenario.will_choose("Elf")
+    crest = scenario.game.put_onto_battlefield(card, "alice", transformed=True)
+    assert crest.choice is not None
+    assert crest.choice.kind is ChoiceKind.CREATURE_TYPE
+    assert crest.choice.value.lower() == "elf"
+
+
+def test_kolvori_front_face_asks_no_creature_type():
+    scenario = _board(hand=["Kolvori, God of Kinship // The Ringhart Crest"])
+    kolvori = scenario.put_onto_battlefield("Kolvori, God of Kinship // The Ringhart Crest")
+    assert kolvori.choice is None
+
+
+# -- Sieges: bullets of the other modes (CR 614.12a) --------------------------------
+
+
+@pytest.mark.parametrize(
+    ("siege", "modes"),
+    [
+        ("Frostcliff Siege", ("Jeskai", "Temur")),
+        ("Windcrag Siege", ("Mardu", "Jeskai")),
+        ("Hollowmurk Siege", ("Sultai", "Abzan")),
+        ("Glacierwood Siege", ("Temur", "Sultai")),
+        ("Barrensteppe Siege", ("Abzan", "Mardu")),
+        ("Mirrodin Besieged", ("Mirran", "Phyrexian")),
+    ],
+)
+def test_each_clan_siege_offers_its_two_printed_modes(siege, modes):
+    scenario = _board(hand=[siege])
+    permanent = _enter(scenario, siege, modes[0])
+    assert _question(scenario, siege).options == modes
+    assert permanent.choice == Choice(kind=ChoiceKind.MODE, value=modes[0])
+
+
+def test_frostcliff_siege_jeskai_draws_when_creatures_connect_and_temur_does_not():
+    def run(mode):
+        scenario = (
+            Scenario()
+            .player(
+                "alice",
+                hand=["Frostcliff Siege"],
+                battlefield=["Grizzly Bears"],
+                library=["Forest"] * 5,
+            )
+            .player("bob", library=["Forest"] * 5)
+            .build()
+        )
+        _enter(scenario, "Frostcliff Siege", mode)
+        scenario.start_at(Step.PRECOMBAT_MAIN)
+        before = len(scenario.player("alice").hand)
+        scenario.attack_with(scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice"))
+        scenario.no_blocks()
+        scenario.combat_damage()
+        _resolve_all(scenario)
+        return len(scenario.player("alice").hand) - before
+
+    assert run("Jeskai") == 1
+    assert run("Temur") == 0

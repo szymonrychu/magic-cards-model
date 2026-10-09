@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "d8423d8d-744a-4bbe-a853-8ad756451bdb",
+  "oracle_id": "674e2683-31c0-4fee-95fb-98b1201e41e7",
+  "multiverse_ids": [
+    464006
+  ],
+  "mtgo_id": 72486,
+  "tcgplayer_id": 191559,
+  "cardmarket_id": 375411,
+  "name": "Mirrodin Besieged",
+  "lang": "en",
+  "released_at": "2019-06-14",
+  "uri": "https://api.scryfall.com/cards/d8423d8d-744a-4bbe-a853-8ad756451bdb",
+  "scryfall_uri": "https://scryfall.com/card/mh1/57/mirrodin-besieged?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:59:03Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.jpg?1783933143",
+    "normal": "https://cards.scryfall.io/normal/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.jpg?1783933143",
+    "large": "https://cards.scryfall.io/large/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.jpg?1783933143",
+    "png": "https://cards.scryfall.io/png/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.png?1783933143",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.jpg?1783933143",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.jpg?1783933143",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.webp?1783933143",
+    "grid": "https://cards.scryfall.io/grid/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.webp?1783933143",
+    "display": "https://cards.scryfall.io/display/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.webp?1783933143",
+    "art": "https://cards.scryfall.io/art/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.webp?1783933143",
+    "crop": "https://cards.scryfall.io/crop/front/d/8/d8423d8d-744a-4bbe-a853-8ad756451bdb.webp?1783933143"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Enchantment",
+  "oracle_text": "As this enchantment enters, choose Mirran or Phyrexian.\n\u2022 Mirran \u2014 Whenever you cast an artifact spell, create a 1/1 colorless Myr artifact creature token.\n\u2022 Phyrexian \u2014 At the beginning of your end step, draw a card, then discard a card. Then if there are fifteen or more artifact cards in your graveyard, target opponent loses the game.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "d8423d8d-744a-4bbe-a853-8ad756451bdb",
+      "component": "combo_piece",
+      "name": "Mirrodin Besieged",
+      "type_line": "Enchantment",
+      "uri": "https://api.scryfall.com/cards/d8423d8d-744a-4bbe-a853-8ad756451bdb"
+    },
+    {
+      "object": "related_card",
+      "id": "323e26b2-1f7d-4a30-a0ef-1aa91e91d551",
+      "component": "token",
+      "name": "Myr",
+      "type_line": "Token Artifact Creature \u2014 Myr",
+      "uri": "https://api.scryfall.com/cards/323e26b2-1f7d-4a30-a0ef-1aa91e91d551"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7efccd6-55bc-4fb8-9138-e72577510a99",
+  "set": "mh1",
+  "set_name": "Modern Horizons",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/d7efccd6-55bc-4fb8-9138-e72577510a99",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh1&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh1?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d8423d8d-744a-4bbe-a853-8ad756451bdb/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A674e2683-31c0-4fee-95fb-98b1201e41e7&unique=prints",
+  "collector_number": "57",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Bram Sels",
+  "artist_ids": [
+    "2e90d3c1-e8ac-45c7-9d5a-63385c1a384d"
+  ],
+  "illustration_id": "e12abd9d-3fcf-44ec-be4f-7b4a1a483f1f",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2467,
+  "penny_rank": 4880,
+  "preview": {
+    "source": "Paulo Vitor Damo da Rosa",
+    "source_uri": "https://twitter.com/PVDDR/status/1134082255339642881?s=19",
+    "previewed_at": "2019-05-30"
+  },
+  "prices": {
+    "usd": "4.17",
+    "usd_foil": "10.58",
+    "usd_etched": null,
+    "eur": "3.89",
+    "eur_foil": "5.98",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=464006&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMirrodin%2BBesieged",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMirrodin%2BBesieged",
+    "edhrec": "https://edhrec.com/route/?cc=Mirrodin+Besieged"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F191559%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=375411&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/72486?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -14,7 +14,10 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...models.card import Color, Supertype, Type
-from ...models.card_state import CardState, Choice, ChoiceKind
+from ...models.card_state import CardState, Choice, ChoiceKind, ExileAnnotation, ExileMarker
+from ...models.token import is_token
+from ...models.zone import Zone
+from ..chosen_body import split_body_options
 from ..decisions import Decision, DecisionKind, source_id_of
 from .model import Apply, CardReplacement, EventKind, ReplaceableEvent, ReplacementEffect
 
@@ -164,12 +167,41 @@ def _noun_test(noun: str) -> Callable[[CardState], bool] | None:
     return lambda card: all(test(card) for test in tests)
 
 
+_CHOSEN_PARITY_SUBJECT_RE = re.compile(
+    r"^each creature (?P<without>with|without) mana value of the chosen quality$"
+)
+
+
+def _read_chosen_parity_subject(text: str) -> GroupTest | None:
+    """ "Each creature without mana value of the chosen quality" (Ashling's
+    Prerogative): the creature's mana value against the odd/even answer the
+    source recorded as it entered (CR 614.12a); zero is even. No answer
+    recorded, no creature matches."""
+    match = _CHOSEN_PARITY_SUBJECT_RE.match(text)
+    if match is None:
+        return None
+    without = match.group("without") == "without"
+
+    def matches(game: "Game", source: CardState, entering: CardState) -> bool:
+        chosen = source.choice
+        if chosen is None or chosen.kind is not ChoiceKind.ODD_OR_EVEN:
+            return False
+        if Type.CREATURE not in entering.types:
+            return False
+        has_parity = (int(entering.mana_value) % 2 == 0) == (chosen.value == "even")
+        return has_parity != without
+
+    return matches
+
+
 def read_group_subject(subject: str) -> GroupTest | None:
     """ "Artifacts, creatures, and lands your opponents control", "Permanents",
     "Non-Phyrexian creatures", "Snow lands your opponents control", "Creatures
     enchanted player controls" as `(game, source, entering) -> bool`, or None
     for any noun this does not read (fail closed rather than drop it)."""
     text = subject.strip().lower()
+    if (parity := _read_chosen_parity_subject(text)) is not None:
+        return parity
     scope = "any"
     for suffix, name in _SCOPES:
         if text.endswith(suffix):
@@ -489,6 +521,234 @@ def _each_opponent_reveals_hand_then_name(effect: ReplacementEffect, card_name: 
     return apply
 
 
+_BECOMES_CHOICE_RE = re.compile(r"^it becomes your choice of (?P<opts>.+)$")
+_FLIP_A_COIN_RE = re.compile(r"^flip a coin$")
+_COUNTERS_PER_OTHER_CREATURE_RE = re.compile(
+    r"^put X \+1/\+1 counters on it, where X is the number of other creatures you control$"
+)
+_CHOOSE_CREATURE_TO_COPY_RE = re.compile(r"^you may choose another creature on the battlefield$")
+_TURN_OTHERS_FACE_DOWN_RE = re.compile(r"^turn all other nontoken creatures face down$")
+_EXILE_FROM_GRAVEYARD_RE = re.compile(
+    r"^exile (?P<count>any number of|an?) (?P<what>creature|instant or sorcery) cards? "
+    r"from your graveyard$"
+)
+_CHOOSE_ATTACH_RE = re.compile(r"^choose a creature you control it could be attached to$")
+_EMBLEM_RE = re.compile(r'^you get an emblem with "(?P<text>.+)"$', re.DOTALL)
+_ATTACH_FOLLOW_UP_RE = re.compile(r"^if you do, it enters attached to that creature\.?$", re.I)
+
+
+def _coin_flip(card_name: str) -> Apply:
+    """CR 705.1: "As this enters, flip a coin" - the result is recorded on the
+    entering permanent for the sentences that say what each side does."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        if source is None:
+            return
+        source.choice = Choice(kind=ChoiceKind.COIN, value="heads" if game.flip_coin() else "tails")
+
+    return apply
+
+
+def _counters_per_other_creature(card_name: str) -> Apply:
+    """ "put X +1/+1 counters on it, where X is the number of other creatures
+    you control" (Crowd-Control Warden): counted as it enters (CR 614.1c,
+    placed with the permanent) or as it is turned face up (CR 614.1e, put on
+    the permanent already on the battlefield)."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        if source is None or source.controller is None:
+            return
+        board = game.computed_board()
+        count = sum(
+            1
+            for permanent in game.permanents_controlled_by(source.controller)
+            if permanent.id != source.id and Type.CREATURE in board.of(permanent).types
+        )
+        if not count:
+            return
+        if source.zone is Zone.BATTLEFIELD:
+            game.add_counters(source, "+1/+1", count, putter=source.controller)
+        else:
+            event.counters["+1/+1"] = event.counters.get("+1/+1", 0) + count
+
+    return apply
+
+
+def _choose_creature_to_copy(card_name: str) -> Apply:
+    """ "you may choose another creature on the battlefield" (Vesuvan
+    Shapeshifter): the chosen creature's copiable values (CR 707.2) are frozen
+    onto the permanent as a `ChoiceKind.COPY_OF` answer (CR 707.2b); a
+    refusal, or nothing to choose, clears any earlier answer."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        from ..layers.apply import copiable_characteristics
+
+        if source is None or source.controller is None:
+            return
+        source.choice = None
+        who = source.controller
+        board = game.computed_board()
+        candidates = [
+            permanent
+            for permanent in game.battlefield
+            if permanent.id != source.id and Type.CREATURE in board.of(permanent).types
+        ]
+        if not candidates:
+            return
+        source_id = source_id_of(source)
+        if not game.may(
+            who,
+            "choose another creature on the battlefield",
+            source=card_name,
+            source_id=source_id,
+            cards=candidates,
+        ):
+            return
+        (picked,) = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=who,
+                prompt=f"choose another creature for {card_name} to copy",
+                source=card_name,
+                source_id=source_id,
+                amount=1,
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        target = next((card for card in candidates if card.id == picked), None)
+        if target is None:
+            raise ValueError(f"{card_name}: that is not a creature it can copy")
+        values = copiable_characteristics(target, game.continuous_effects.active(game))
+        source.choice = Choice(kind=ChoiceKind.COPY_OF, value=values.model_dump_json())
+
+    return apply
+
+
+def _turn_others_face_down(card_name: str) -> Apply:
+    """ "turn all other nontoken creatures face down" (Ixidron, CR 708.2a): each
+    becomes a 2/2 face-down creature with no text, name, subtypes or mana cost."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        board = game.computed_board()
+        for permanent in list(game.battlefield):
+            if (
+                (source is None or permanent.id != source.id)
+                and Type.CREATURE in board.of(permanent).types
+                and not is_token(permanent)
+            ):
+                permanent.turn_face_down()
+
+    return apply
+
+
+def _exile_from_graveyard(any_number: bool, what: str, card_name: str) -> Apply:
+    """ "exile any number of creature cards / an instant or sorcery card from
+    your graveyard" as this enters (Sutured Ghoul, Living Lore): the cards are
+    exiled "with" the entering permanent (CR 607.2a), which its other
+    sentences count."""
+    wanted = {Type.CREATURE} if what == "creature" else {Type.INSTANT, Type.SORCERY}
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if source is None or who is None:
+            return
+        candidates = [card for card in game.player(who).graveyard if wanted & set(card.types)]
+        if not candidates:
+            return
+        answer = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=who,
+                prompt=f"choose {what} cards to exile as {card_name} enters",
+                source=card_name,
+                source_id=source_id_of(source),
+                amount=len(candidates) if any_number else 1,
+                exact=not any_number,
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        assert isinstance(answer, tuple)
+        by_id = {card.id: card for card in candidates}
+        if any(card_id not in by_id for card_id in answer) or len(set(answer)) != len(answer):
+            raise ValueError(f"{card_name}: that is not a card it can exile")
+        for exiled in game.exile_cards([by_id[card_id] for card_id in answer]):
+            if exiled.zone is Zone.EXILE:
+                exiled.exile_annotation = ExileAnnotation(
+                    marker=ExileMarker.LINKED,
+                    owner=exiled.owner,
+                    turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+                    linked_permanent_id=source.id,
+                    linked_permanent_stamp=None,
+                )
+
+    return apply
+
+
+def _choose_creature_to_attach_to(card_name: str) -> Apply:
+    """ "choose a creature you control it could be attached to. If you do, it
+    enters attached to that creature" (Grifter's Blade, CR 614.12a)."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if source is None or who is None:
+            return
+        board = game.computed_board()
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(who)
+            if Type.CREATURE in board.of(permanent).types
+        ]
+        if not candidates:
+            return
+        (picked,) = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=who,
+                prompt=f"choose a creature for {card_name} to enter attached to",
+                source=card_name,
+                source_id=source_id_of(source),
+                amount=1,
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        target = next((card for card in candidates if card.id == picked), None)
+        if target is None:
+            raise ValueError(f"{card_name}: that is not a creature it can be attached to")
+        event.attach_to = target
+
+    return apply
+
+
+def _get_an_emblem(text: str, card_name: str) -> Apply:
+    """ "you get an emblem with ..." as this enters (Tibalt, Cosmic Impostor,
+    CR 114.2): the entering permanent's controller gets it."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        if source is None or source.controller is None:
+            return
+        game.create_emblem(source.controller, text, source.name or card_name)
+
+    return apply
+
+
+def reads_attach_follow_up(text: str) -> bool:
+    """Grifter's Blade's "If you do, it enters attached to that creature." - the
+    second half of the one choice `_choose_creature_to_attach_to` performs."""
+    return _ATTACH_FOLLOW_UP_RE.match(text.strip()) is not None
+
+
+def as_turned_face_up(game: "Game", permanent: CardState) -> None:
+    """CR 614.1e: run the "as this is turned face up" half of a permanent's
+    "as this enters or is turned face up" lines, now that it is face up."""
+    from .enters import _self_enters_modifiers
+
+    event = ReplaceableEvent(
+        kind=EventKind.ENTERS_BATTLEFIELD, card=permanent, destination=Zone.BATTLEFIELD
+    )
+    for _key, apply, _label, _copy in _self_enters_modifiers(game, permanent, turned_up=True):
+        apply(game, permanent, event)
+
+
 def enters_choice_apply(effect: ReplacementEffect, card_name: str) -> Apply | None:
     """What an "As [this] enters, choose ..." sentence of the shapes T2 adds does
     as the permanent enters, or None when no shape here reads it."""
@@ -566,11 +826,34 @@ def enters_choice_apply(effect: ReplacementEffect, card_name: str) -> Apply | No
         return _ask_quality(
             ChoiceKind.CARD_NAME, (), "choose a card name", card_name, look_at_opponent_hand=True
         )
+    match = _BECOMES_CHOICE_RE.match(text)
+    if match is not None and (bodies := split_body_options(match.group("opts"))) is not None:
+        return _ask_quality(ChoiceKind.BODY, bodies, "choose what it becomes", card_name)
+    if _FLIP_A_COIN_RE.match(text):
+        return _coin_flip(card_name)
+    if _COUNTERS_PER_OTHER_CREATURE_RE.match(text):
+        return _counters_per_other_creature(card_name)
+    if _CHOOSE_CREATURE_TO_COPY_RE.match(text):
+        return _choose_creature_to_copy(card_name)
+    if _TURN_OTHERS_FACE_DOWN_RE.match(text):
+        return _turn_others_face_down(card_name)
+    match = _EXILE_FROM_GRAVEYARD_RE.match(text)
+    if match is not None:
+        return _exile_from_graveyard(
+            match.group("count") == "any number of", match.group("what"), card_name
+        )
+    if _CHOOSE_ATTACH_RE.match(text):
+        return _choose_creature_to_attach_to(card_name)
+    match = _EMBLEM_RE.match(text)
+    if match is not None:
+        return _get_an_emblem(match.group("text"), card_name)
     return None
 
 
 __all__ = [
     "ChoiceKind",
+    "as_turned_face_up",
+    "reads_attach_follow_up",
     "enters_choice_apply",
     "compile_group_enter_tapped",
     "read_extra_enters_condition",

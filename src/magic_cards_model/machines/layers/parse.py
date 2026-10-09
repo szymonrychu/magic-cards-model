@@ -1523,6 +1523,46 @@ def _all_creatures_keyword_grant_builder(keywords: list[str], *, line: str) -> E
     return builder
 
 
+#: "Each creature with mana value of the chosen quality has haste." (Ashling's
+#: Prerogative): a CR 611.3 static grant over the creatures whose mana value has
+#: the parity the source recorded as it entered (CR 614.12a, `ChoiceKind.
+#: ODD_OR_EVEN`); nothing chosen, nothing granted.
+_CHOSEN_PARITY_KEYWORD_GRANT_RE = re.compile(
+    r"^each creature (?P<without>with|without) mana value of the chosen quality "
+    r"(?:has|have) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _chosen_parity_keyword_grant_builder(
+    keywords: list[str], *, without: bool, line: str
+) -> EffectBuilder:
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        chosen = source.choice
+        if chosen is None or chosen.kind is not ChoiceKind.ODD_OR_EVEN:
+            return []
+        parity: Literal["odd", "even"] = "even" if chosen.value == "even" else "odd"
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: creatures with a {parity} mana value have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=CreaturesOfManaValueParity(parity=parity, without=without),
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+
+    return builder
+
+
 #: "For each non-Human creature you control, you may have that creature
 #: assign its combat damage as though it weren't blocked." (Zilortha, Apex
 #: of Ikoria) - a distributive static grant (CR 611.3) of `combat.
@@ -10093,6 +10133,23 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
     tapped_group = parse_tapped_group_keyword_grant(sentence)
     if tapped_group is not None:
         return tapped_group
+    if (
+        "enters as" in sentence
+        or "face-down creatures" in sentence
+        or "exiled card" in sentence
+        or ("your choice of" in sentence or "turned face down" in sentence)
+    ):
+        from .enters_forms import parse_entering_form_sentence
+
+        if (entering_form := parse_entering_form_sentence(sentence)) is not None:
+            return entering_form
+    if match := _CHOSEN_PARITY_KEYWORD_GRANT_RE.fullmatch(sentence):
+        parity_keywords = _split_and_validate_keywords(match.group("keywords"))
+        if parity_keywords is None:
+            return None
+        return _chosen_parity_keyword_grant_builder(
+            parity_keywords, without=match.group("without").lower() == "without", line=sentence
+        )
     if match := _ALL_CREATURES_KEYWORD_GRANT_RE.fullmatch(sentence):
         all_creatures_keywords = _split_and_validate_keywords(match.group("keywords"))
         if all_creatures_keywords is None:
@@ -12171,6 +12228,7 @@ from .model import (  # noqa: E402
     CreaturesControlledBy,
     CreaturesControlledByQuality,
     CreaturesControlledByWithSubtype,
+    CreaturesOfManaValueParity,
     Duration,
     EquippedCreatureIfToughnessExceedsPower,
     FixedCount,

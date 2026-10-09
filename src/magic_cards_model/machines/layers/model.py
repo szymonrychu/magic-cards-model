@@ -913,6 +913,22 @@ class NonbasicLands(SelectorBase):
         return chars.is_land and not chars.is_basic
 
 
+class CreaturesOfManaValueParity(SelectorBase):
+    """Every creature whose mana value has (or, with `without`, lacks) one parity
+    (Ashling's Prerogative's "mana value of the chosen quality", CR 614.12a;
+    zero is even)."""
+
+    kind: Literal["creatures_of_mana_value_parity"] = "creatures_of_mana_value_parity"
+    parity: Literal["odd", "even"]
+    without: bool = False
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if not chars.is_creature:
+            return False
+        has_parity = (int(chars.mana_value) % 2 == 0) == (self.parity == "even")
+        return has_parity != self.without
+
+
 class SelfIfDevotionBelow(SelectorBase):
     """A Theros god's "As long as your devotion to <colors> is less than N,
     <this> isn't a creature." - `Only`'s identity test plus CR 700.5's count:
@@ -1709,6 +1725,7 @@ Selector = Annotated[
     | CreaturesControlledByOpponentsOf
     | LandsControlledBy
     | NonbasicLands
+    | CreaturesOfManaValueParity
     | EveryLand
     | SelfIfDevotionBelow
     | PermanentsWithName
@@ -2100,6 +2117,17 @@ class DefinePower(ModificationBase):
         return chars.with_(power=self.count(chars, board) + self.power)
 
 
+class DefineToughness(ModificationBase):
+    """Sublayer 7a, toughness only (CR 613.4a)."""
+
+    kind: Literal["define_toughness"] = "define_toughness"
+    count: Count
+    toughness: int = 0
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(toughness=self.count(chars, board) + self.toughness)
+
+
 class ModifyPowerToughness(ModificationBase):
     """Sublayer 7c (CR 613.4c). Adds; never sets."""
 
@@ -2307,6 +2335,7 @@ Modification = Annotated[
     | SetPowerToughnessToManaValue
     | DefinePowerToughness
     | DefinePower
+    | DefineToughness
     | ModifyPowerToughness
     | ModifyPowerToughnessPer
     | SwitchPowerToughness
@@ -3164,6 +3193,13 @@ def define_power(count: Count, power: int = 0) -> Modification:
     ability ever named. This leaves toughness exactly as layers 1-6 left it.
     """
     return DefinePower(count=count, power=power)
+
+
+def define_toughness(count: Count, toughness: int = 0) -> Modification:
+    """Sublayer 7a, toughness only (CR 613.4a): `define_power`'s twin, for the
+    CDA whose power and toughness are defined by different counts (Sutured
+    Ghoul)."""
+    return DefineToughness(count=count, toughness=toughness)
 
 
 def modify_power_toughness(power: int, toughness: int) -> Modification:
