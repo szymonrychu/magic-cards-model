@@ -2300,3 +2300,27 @@ def test_a_snapshot_written_before_the_recipient_subtypes_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NW06_T1_RECIPIENT_SUBTYPES}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP01-R1-T1: `CastRecord` gained `convoked`
+#: (CR 702.51c, "for each creature that convoked it"). EP01-R1-T1 bumped
+#: 133 -> 134, so the last shape without it is 133.
+_SCHEMA_VERSION_BEFORE_EP01_R1_T1_CONVOKED = 133
+
+
+def test_a_snapshot_written_before_the_convoked_count_is_refused() -> None:
+    """A version-133 dump's cast records carry no `convoked`: decoded as
+    current, a spell convoked by two creatures would read as convoked by none.
+    Refused instead."""
+    from magic_cards_model.models.game.records import CastRecord
+
+    assert "convoked" in CastRecord.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP01_R1_T1_CONVOKED
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP01_R1_T1_CONVOKED
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R1_T1_CONVOKED}",
+    ):
+        Game.model_validate(dumped)

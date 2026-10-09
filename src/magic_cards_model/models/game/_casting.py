@@ -226,6 +226,7 @@ class CastingMixin:
         beheld_for_cost: bool = False,
         waterbend_paid: bool = False,
         creature_mana_spent: int = 0,
+        convoked: int = 0,
         snow_mana_spent: dict[Color, int] | None = None,
         controlled_subtypes_as_cast: Sequence[str] = (),
         controlled_modified_creature_as_cast: bool = False,
@@ -326,6 +327,7 @@ class CastingMixin:
                 False if is_copy else controlled_modified_creature_as_cast
             ),
             creature_mana_spent=0 if is_copy else creature_mana_spent,
+            convoked=0 if is_copy else convoked,
             snow_mana_spent={} if is_copy else dict(snow_mana_spent or {}),
         )
         self.forget_cast_record(spell)

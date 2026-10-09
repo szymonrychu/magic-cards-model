@@ -4590,6 +4590,11 @@ class Casting(EngineModel):
                     if self.payment is not None and self.payment.mana_payment is not None
                     else 0
                 ),
+                convoked=(
+                    sum(1 for entry in self.payment.substitutions if entry.keyword == "convoke")
+                    if self.payment is not None
+                    else 0
+                ),
                 snow_mana_spent=(
                     dict(self.payment.mana_payment.snow_spent)
                     if self.payment is not None and self.payment.mana_payment is not None

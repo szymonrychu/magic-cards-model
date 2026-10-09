@@ -15,6 +15,7 @@ Every number was looked up with `mise run rules:find <n>`.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
+from magic_cards_model.machines.objects_as_costs import convoke
 from magic_cards_model.models.card_state import Counter
 
 from .harness import Scenario
@@ -232,3 +233,30 @@ def test_ascendant_packleader_needs_a_big_permanent():
 def test_ascendant_packleader_with_a_mana_value_four_permanent_gets_a_counter():
     played = _board(hand=["Ascendant Packleader"], battlefield=["Steel Exemplar"])
     assert played.put_onto_battlefield("Ascendant Packleader").counters[Counter.PLUS_ONE] == 1
+
+
+# -- "for each creature that convoked it" (CR 702.51c) ------------------------
+
+
+def _imperiosaur_convoked_by(convokers):
+    played = _board(
+        hand=["Ancient Imperiosaur"],
+        battlefield=["Grizzly Bears"] * convokers + ["Forest"] * (7 - convokers),
+    )
+    casting = played.cast("Ancient Imperiosaur")
+    payment = casting.begin_paying()
+    for bear in played.creatures("Grizzly Bears", *["Grizzly Bears"] * (convokers - 1))[
+        :convokers
+    ] if convokers else []:
+        convoke(payment, casting.spell, bear)
+    played.auto_pay(payment, username="alice")
+    played.put_on_stack(casting)
+    return played.resolve_top()
+
+
+def test_ancient_imperiosaur_gets_two_counters_per_creature_that_convoked_it():
+    assert _imperiosaur_convoked_by(2).counters[Counter.PLUS_ONE] == 4
+
+
+def test_ancient_imperiosaur_cast_without_convoke_enters_bare():
+    assert _imperiosaur_convoked_by(0).counters[Counter.PLUS_ONE] == 0

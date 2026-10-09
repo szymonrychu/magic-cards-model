@@ -3533,6 +3533,12 @@ _IN_YOUR_GRAVEYARD_RE = re.compile(
 )
 
 
+def adventure_face(card):
+    from ..casting.permissions import adventure_face as read_adventure_face
+
+    return read_adventure_face(card)
+
+
 def _is_subtype(entering: CardState, word: str) -> bool:
     return any(subtype.lower() == word for subtype in entering.card.subtypes)
 
@@ -3593,7 +3599,7 @@ def _group_subject_predicate(subject: str):
                 return False
         if wanted_subtypes and not any(_is_subtype(entering, w) for w in wanted_subtypes):
             return False
-        if adventure and "Adventure" not in entering.card.subtypes:
+        if adventure and adventure_face(entering.card) is None:
             return False
         if chosen_type:
             chosen = getattr(source.choice, "value", source.choice)
@@ -3604,7 +3610,7 @@ def _group_subject_predicate(subject: str):
 
 
 def _group_mana_value_cap(entering: CardState) -> bool:
-    return entering.card.mana_value <= 4
+    return entering.mana_value <= 4
 
 
 def group_enters_specs(lines: Iterable[str]):

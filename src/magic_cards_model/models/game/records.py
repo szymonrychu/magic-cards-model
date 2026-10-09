@@ -566,6 +566,11 @@ class CastRecord(EngineModel):
     """How much of `mana_spent` came from creatures (CR 106.3), from
     `ManaPayment.creature_spent` - "three or more mana from creatures was
     spent to cast it"."""
+    convoked: int = 0
+    """How many creatures were tapped to pay for the spell with convoke (CR
+    702.51a), each of which "convoked" it (CR 702.51c) - "for each creature
+    that convoked it". Read off the settled payment at CR 601.2h. 0 for a copy
+    (CR 707.10)."""
     snow_mana_spent: dict[Color, int] = Field(default_factory=dict)
     """How much of `mana_spent` came from snow sources, by colour (CR 107.4h's
     {S}), from `ManaPayment.snow_spent` - "{S} of any of that spell's colors

@@ -23,7 +23,13 @@ from magic_cards_model.machines.replacement.parse import (
     strip_reminder_text,
 )
 from magic_cards_model.models.card import Card, Color, Type
-from magic_cards_model.models.card_state import CardState, Counter, Counters
+from magic_cards_model.models.card_state import (
+    CardState,
+    Choice,
+    ChoiceKind,
+    Counter,
+    Counters,
+)
 from magic_cards_model.models.game import Game
 from magic_cards_model.models.game.records import CastRecord
 from magic_cards_model.models.player import Player
@@ -173,6 +179,9 @@ def _group_line_performed(printing: Card, text: str) -> bool:
                 card=candidate, zone=Zone.STACK, controller="sweep_you", owner="sweep_you"
             )
             entering.bind_to_game(game)
+            if "chosen type" in text.lower() and candidate.subtypes:
+                # "of the chosen type": the source's own as-enters choice.
+                source.choice = Choice(kind=ChoiceKind.CREATURE_TYPE, value=candidate.subtypes[0])
             if not spec["predicate"](source, entering):
                 continue
             event = ReplaceableEvent(kind=EventKind.ENTERS_BATTLEFIELD, card=entering)

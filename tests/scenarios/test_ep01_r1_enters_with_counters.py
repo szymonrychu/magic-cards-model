@@ -193,3 +193,48 @@ def test_a_choice_answer_outside_the_printed_options_is_refused():
     played.will_choose("flying", source="Boot Nipper")
     with pytest.raises(ValueError):
         played.put_onto_battlefield("Boot Nipper")
+
+
+def test_avatar_of_the_resolute_counts_other_creatures_with_a_plus_counter():
+    played = _board(
+        battlefield=["Elvish Warrior", "Goblin Piker", "Squad Captain"], hand=["Avatar of the Resolute"]
+    )
+    for name in ("Elvish Warrior", "Goblin Piker"):
+        played.game.add_counters(played.creature(name), Counter.PLUS_ONE, 1)
+    avatar = played.put_onto_battlefield("Avatar of the Resolute")
+    assert avatar.counters[Counter.PLUS_ONE] == 2
+
+
+def test_avatar_of_the_resolute_alone_enters_bare():
+    played = _board(hand=["Avatar of the Resolute"])
+    assert played.put_onto_battlefield("Avatar of the Resolute").counters[Counter.PLUS_ONE] == 0
+
+
+# -- more group replacements (CR 614.1c, CR 614.12) ----------------------------
+
+
+def test_metallic_mimic_buffs_other_creatures_of_the_chosen_type_only():
+    played = _board(hand=["Metallic Mimic", "Elvish Warrior", "Goblin Piker"])
+    played.will_choose("Elf", source="Metallic Mimic")
+    played.put_onto_battlefield("Metallic Mimic")
+    assert played.put_onto_battlefield("Elvish Warrior").counters[Counter.PLUS_ONE] == 1
+    assert played.put_onto_battlefield("Goblin Piker").counters[Counter.PLUS_ONE] == 0
+
+
+def test_thunderous_velocipede_gives_one_counter_at_mana_value_four_or_less():
+    played = _board(battlefield=["Thunderous Velocipede"], hand=["Grizzly Bears", "Smuggler's Copter"])
+    assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 1
+    assert played.put_onto_battlefield("Smuggler's Copter").counters[Counter.PLUS_ONE] == 1
+
+
+def test_thunderous_velocipede_gives_three_counters_above_mana_value_four():
+    played = _board(battlefield=["Thunderous Velocipede"], hand=["Cultivator Colossus"])
+    assert played.put_onto_battlefield("Cultivator Colossus").counters[Counter.PLUS_ONE] == 3
+
+
+def test_mysterious_pathlighter_buffs_creatures_with_an_adventure_only():
+    played = _board(
+        battlefield=["Mysterious Pathlighter"], hand=["Bonecrusher Giant", "Grizzly Bears"]
+    )
+    assert played.put_onto_battlefield("Bonecrusher Giant").counters[Counter.PLUS_ONE] == 1
+    assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 0

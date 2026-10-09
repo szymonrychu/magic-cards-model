@@ -248,7 +248,7 @@ _COLOR_LETTERS = {"white": "W", "blue": "U", "black": "B", "red": "R", "green": 
 _BOARD_COUNT_RE = re.compile(
     r"^(?P<other>other )?(?P<nontoken>nontoken )?(?P<color>white |blue |black |red |green )?"
     r"(?P<kinds>[a-z][a-z-]*(?: and/or [a-z][a-z-]*)?)"
-    r" you (?:already )?control(?P<counter> with an? \+1/\+1 counter on (?:it|them))?$"
+    r" you (?:already )?control(?P<counter> with an? \+1/\+1 counter(?: on (?:it|them))?)?$"
 )
 _GRAVEYARD_COUNT_RE = re.compile(
     r"^(?P<kinds>[a-z][a-z-]*) cards? in (?P<whose>your|all) graveyards?$"
@@ -306,7 +306,7 @@ def _board_count_term(original: str, text: str):
                 continue
             if letter is not None and Color(letter) not in chars.colors:
                 continue
-            if with_counter and not permanent.counters.get("+1/+1", 0):
+            if with_counter and not permanent.counter_count("+1/+1"):
                 continue
             total += 1
         return total
@@ -344,6 +344,11 @@ class _FakeChars:
 def _spent_total(game, entering) -> int:
     record = game.cast_record_of(entering)
     return sum(record.mana_spent.values()) if record is not None else 0
+
+
+def _convoked_total(game, entering) -> int:
+    record = game.cast_record_of(entering)
+    return record.convoked if record is not None else 0
 
 
 def _other_spells_cast(game, controller, entering, _x) -> int:
@@ -441,6 +446,8 @@ _FIXED_COUNT_TERMS = {
     "greatest number of creatures a player controls": _greatest_creature_count,
     "opponent who lost life this turn": _opponents_who_lost_life,
     "mana spent to cast it": lambda game, c, e, x: _spent_total(game, e),
+    # CR 702.51c: a creature tapped to pay for a spell with convoke "convoked" it.
+    "creature that convoked it": lambda game, c, e, x: _convoked_total(game, e),
     "mana from a treasure spent to cast them": _treasure_mana_spent,
     "creature you control of the chosen type": _chosen_type_count,
     "creature that player controls": _chosen_opponent_creatures,
