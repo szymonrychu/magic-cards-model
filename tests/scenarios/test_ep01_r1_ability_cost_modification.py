@@ -278,3 +278,56 @@ def test_boom_scholar_discounts_exhaust_of_other_permanents_only():
     paragon = scenario.creature("Pacesetter Paragon", "alice")
     assert _ability_cost(scenario, paragon) == "{R}"
     assert _ability_cost(scenario, scholar) == "{4}{R}{G}"
+
+
+def test_cosmos_charger_cheapens_foretelling_and_allows_any_turn():
+    from magic_cards_model.machines.casting import MarkedExile
+
+    scenario = _main(
+        alice={"hand": ["Lupine Harbingers"], "battlefield": ["Cosmos Charger"]},
+        bob={},
+    )
+    harbingers = scenario.find("Lupine Harbingers", Zone.HAND, "alice")
+    assert str(MarkedExile.foretell(scenario.game, harbingers, "alice").cost.mana) == "{1}"
+    # Without it foretelling costs {2} and only on your own turn (CR 116.2h).
+    plain = _main(alice={"hand": ["Lupine Harbingers"]}, bob={})
+    harbingers = plain.find("Lupine Harbingers", Zone.HAND, "alice")
+    assert str(MarkedExile.foretell(plain.game, harbingers, "alice").cost.mana) == "{2}"
+    plain.game.turn.active_index = 1
+    try:
+        MarkedExile.foretell(plain.game, harbingers, "alice")
+    except ValueError as refusal:
+        assert "own turn" in str(refusal)
+    else:
+        raise AssertionError("foretelling on the opponent's turn needs Cosmos Charger")
+    scenario.game.turn.active_index = 1
+    assert MarkedExile.foretell(scenario.game, harbingers, "alice") is not None
+
+
+def test_doc_aurlock_cheapens_plotting_by_two():
+    from magic_cards_model.machines.casting import MarkedExile
+
+    scenario = _main(
+        alice={
+            "hand": ["Slickshot Show-Off", "Loan Shark"],
+            "battlefield": ["Doc Aurlock, Grizzled Genius"],
+        },
+    )
+    show_off = scenario.find("Slickshot Show-Off", Zone.HAND, "alice")
+    loan_shark = scenario.find("Loan Shark", Zone.HAND, "alice")
+    assert str(MarkedExile.plot(scenario.game, show_off, "alice").cost.mana) == "{R}"
+    assert str(MarkedExile.plot(scenario.game, loan_shark, "alice").cost.mana) == "{1}{U}"
+
+
+def test_inquisitive_glimmer_cheapens_unlock_costs():
+    from magic_cards_model.machines.special_actions import unlock_cost
+
+    scenario = _main(
+        alice={"battlefield": ["Inquisitive Glimmer", "Unholy Annex // Ritual Chamber"]},
+    )
+    room = next(
+        s for s in scenario.game.permanents_controlled_by("alice") if "Annex" in s.card.name
+    )
+    cost = unlock_cost(room, "Unholy Annex", scenario.game, "alice")
+    assert str(cost.mana) == "{1}{B}"
+    assert str(unlock_cost(room, "Unholy Annex").mana) == "{2}{B}"

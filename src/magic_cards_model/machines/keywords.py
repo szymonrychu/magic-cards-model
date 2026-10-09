@@ -6536,6 +6536,38 @@ def _echo_cost(
     return read
 
 
+#: "You may pay {0} rather than pay the echo cost for permanents you control."
+#: (Thick-Skinned Goblin): CR 118.9's alternative cost applied to echo's [cost].
+_ECHO_ALTERNATIVE_RE = re.compile(
+    r"^you may pay (?P<cost>(?:\{[^{}]+\})+) rather than pay the echo cost for "
+    r"permanents you control\.?$",
+    re.IGNORECASE,
+)
+
+
+def echo_alternative_cost(line: str) -> TotalCost | None:
+    """The cost a static "rather than pay the echo cost" line substitutes, or
+    `None` when `line` is not one (CR 118.9, CR 702.30a)."""
+    match = _ECHO_ALTERNATIVE_RE.match(re.sub(r"\s*\([^)]*\)", "", line).strip())
+    if match is None:
+        return None
+    mana = ManaCost.try_parse(match.group("cost"))
+    return None if mana is None else TotalCost.of(mana)
+
+
+def _echo_alternative_for(game: Any, controller: str) -> TotalCost | None:
+    """The alternative echo cost a permanent `controller` controls offers."""
+    board = game.computed_board()
+    for permanent in game.permanents_controlled_by(controller):
+        for line in board.of(permanent).abilities:
+            if "echo cost" not in line.lower():
+                continue
+            alternative = echo_alternative_cost(line)
+            if alternative is not None:
+                return alternative
+    return None
+
+
 def _echo_effect(game: Any, ability: AbilityOnStack) -> bool | None:
     """CR 702.30a resolving: "sacrifice it unless you pay [cost]" - CR
     118.12a's "unless", one `Game.may_pay_unless_cost` question, CR 118.3
@@ -6572,6 +6604,12 @@ def _echo_effect(game: Any, ability: AbilityOnStack) -> bool | None:
     if cost is None:
         game._note_unread_trigger(ability)  # noqa: SLF001
         return None
+    alternative = _echo_alternative_for(game, controller)
+    if alternative is not None:
+        # CR 118.9: paying the alternative cost is always the better choice
+        # when it is cheaper, and the player may take it rather than the
+        # printed one - {0} is never beaten.
+        cost = alternative
     paid = game.may_pay_unless_cost(
         controller,
         cost,

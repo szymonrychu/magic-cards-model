@@ -29,6 +29,8 @@ from ..casting_restrictions import (
     zone_cast_prohibition_source,
 )
 from ..cost.abilities import ability_cost_adjustment, foretell_any_turn
+from ..cost.statics import object_quality
+from ..cost.text import printed_cost_total
 from ..cost import (
     CardRequirement,
     ComponentKind,
@@ -310,8 +312,32 @@ def types_being_cast(card: Card, face_name: str | None = None) -> tuple[Type, ..
     return tuple(card.types)
 
 
+def flash_grant_sources(game: Any, spell: CardState, caster: str) -> list[str]:
+    """The permanents whose static alternative cost lets `caster` cast `spell`
+    "as though it had flash" when it is paid (Primal Prayers' "If you cast a
+    spell this way, you may cast it as though it had flash"), given it can be
+    paid for this spell now (CR 118.9, CR 601.3)."""
+    if game is None:
+        return []
+    return [
+        name
+        for name, grant in static_free_cast_grants(game, caster)
+        if grant.grants_flash
+        and static_free_cast_refusal(game, caster, spell, spell.zone, name, grant) is None
+    ]
+
+
+def flash_by_alternative_cost(game: Any, spell: CardState, caster: str) -> bool:
+    return bool(flash_grant_sources(game, spell, caster))
+
+
 def why_cannot_cast_now(
-    spell: CardState, caster: str, game: Any = None, *, face: str | None = None
+    spell: CardState,
+    caster: str,
+    game: Any = None,
+    *,
+    face: str | None = None,
+    without_alternative_flash: bool = False,
 ) -> str | None:
     """Why the timing rules refuse this cast right now, or None (CR 117.1a).
 
@@ -403,6 +429,8 @@ def why_cannot_cast_now(
         return None  # Bard's Company's own conditional flash grant
     if game.has_first_spell_flash_grant(caster, spell):
         return None  # Radagast of Rhosgobel's own first-creature-spell flash grant
+    if not without_alternative_flash and flash_by_alternative_cost(game, spell, caster):
+        return None  # Primal Prayers: flash while paying its alternative cost
     if spell.zone is not Zone.HAND and (
         castable_from(spell.card, spell.zone)
         or granted_cast_options(game, spell, caster, spell.zone)
@@ -719,6 +747,10 @@ class Casting(EngineModel):
     "your opponents can't cast noncreature spells this turn", Bonecrusher
     Giant's creature half is legal while Stomp is not.
     """
+    timing_refusals_unless_flash_grant: dict[str, str] = Field(default_factory=dict)
+    """CR 117.1a refusals set aside at the proposal because an alternative cost
+    grants flash (`flash_grant_sources`), keyed like `face_cast_refusals`;
+    `cast()` raises them unless that alternative cost is the one paid."""
     timing_refusals_unless_window: dict[str, str] = Field(default_factory=dict)
     """CR 117.1a refusals `model_post_init` set aside because a keyword whose
     own timing is a window (`CastTiming.OWN_DECLARE_BLOCKERS`, CR 702.190a's
@@ -1051,6 +1083,19 @@ class Casting(EngineModel):
         for option in options:
             evaluated = back_face.name if back_face is not None and option is None else option
             timing = why_cannot_cast_now(self.spell, self.caster, self.game, face=evaluated)
+            if timing is None:
+                strict = why_cannot_cast_now(
+                    self.spell,
+                    self.caster,
+                    self.game,
+                    face=evaluated,
+                    without_alternative_flash=True,
+                )
+                if strict is not None:
+                    # Allowed only because an alternative cost grants flash
+                    # (Primal Prayers): `cast()` raises `strict` unless that
+                    # cost is the one this cast pays.
+                    self.timing_refusals_unless_flash_grant[option or ""] = strict
             if timing is not None:
                 window_refusal = self._timing_window_refusal()
                 if window_refusal is None:
@@ -2489,22 +2534,15 @@ class Casting(EngineModel):
 
         for source_name, grant in self._static_free_cast_grants():
             options.append(
-                AlternativeCostOption(
-                    index=len(options),
-                    source=AlternativeCostSource.STATIC,
-                    rule="CR 118.9",
-                    source_name=source_name,
-                    description="nothing",
-                    cost=None,
-                    unavailable=static_free_cast_refusal(
-                        self.game,
-                        self.caster,
-                        self._as_announced,
-                        self.origin_zone,
-                        source_name,
-                        grant,
-                    ),
-                    once_per_turn_key=grant.once_per_turn_key,
+                static_grant_option(
+                    len(options),
+                    source_name,
+                    grant,
+                    self.game,
+                    self.caster,
+                    self._as_announced,
+                    self.origin_zone,
+                    self.caster,
                 )
             )
 
@@ -4347,6 +4385,18 @@ class Casting(EngineModel):
                 return
             raise ValueError(self._unclaimed_zone_permission_message())
 
+    def _refuse_unless_flash_grant_claimed(self) -> None:
+        """CR 117.1a's refusal, set aside at the proposal because an alternative
+        cost grants flash (`flash_grant_sources`), comes back unless that
+        alternative cost is the one this cast pays."""
+        refusal = self.timing_refusals_unless_flash_grant.get(self.face or "")
+        if refusal is None or self.game is None:
+            return
+        sources = flash_grant_sources(self.game, self._as_announced, self.caster)
+        if self.free_cast_source in sources:
+            return
+        raise ValueError(refusal)
+
     def _refuse_unless_timing_window_claimed(self) -> None:
         """CR 117.1a's refusal, set aside at the proposal because a timing
         window was open (`timing_refusals_unless_window`), comes back unless
@@ -4473,6 +4523,7 @@ class Casting(EngineModel):
         self._refuse_if_x_changed_since_targets()
         self._refuse_unless_allowed_from_its_zone()
         self._refuse_unless_timing_window_claimed()
+        self._refuse_unless_flash_grant_claimed()
 
         self._advance_to(CastingStep.CAST)
         self._turn_face_down_if_cast_that_way()
@@ -4869,12 +4920,50 @@ def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFre
         for line in static_lines:
             grant = static_free_cast_grant(line)
             if grant is not None:
-                if grant.once_each_of_your_turns:
+                grant = grant.model_copy(update={"source_id": permanent.id})
+                if grant.once_each_of_your_turns or grant.once_each_turn:
                     grant = grant.model_copy(
                         update={"once_per_turn_key": once_per_turn_key(permanent)}
                     )
                 found.append((permanent.card.name, grant))
     return found
+
+
+def static_grant_option(
+    index: int,
+    source_name: str,
+    grant: StaticFreeCastGrant,
+    game: Any,
+    caster: str,
+    card: CardState,
+    origin_zone: Zone,
+    payer: str | None = None,
+) -> AlternativeCostOption:
+    """The CR 118.9 option one static grant makes of casting `card`: nothing
+    at all (Omniscience), or the cost the grant prints (Fist of Suns' five
+    colours, Kentaro's mana value, Conspiracy Unraveler's collected evidence)."""
+    cost: TotalCost | None = None
+    description = "nothing"
+    unavailable = static_free_cast_refusal(game, caster, card, origin_zone, source_name, grant)
+    if grant.cost_phrase is not None:
+        if grant.cost_is_mana_value:
+            cost = TotalCost.of(ManaCost.parse(f"{{{int(card.mana_value)}}}"))
+        else:
+            cost = printed_cost_total(grant.cost_phrase, payer)
+        if cost is None and unavailable is None:
+            unavailable = f"{source_name}'s alternative cost {grant.cost_phrase!r} is not read"
+        description = str(cost) if cost is not None else grant.cost_phrase
+    return AlternativeCostOption(
+        index=index,
+        source=AlternativeCostSource.STATIC,
+        rule="CR 118.9",
+        source_name=source_name,
+        description=description,
+        cost=cost,
+        requires=sum(component.required for component in cost.components) if cost else 0,
+        unavailable=unavailable,
+        once_per_turn_key=grant.once_per_turn_key,
+    )
 
 
 def static_free_cast_refusal(
@@ -4896,12 +4985,24 @@ def static_free_cast_refusal(
     any-of-them), a mana value cap, and for "Once during each of your turns"
     whose turn it is and whether that permanent's one use this turn is gone.
     """
-    in_zone = origin_zone is grant.zone
+    in_zone = grant.any_zone or origin_zone is grant.zone
     if not in_zone and grant.also_top_of_library and origin_zone is Zone.LIBRARY:
         library = game.player(caster).library if game is not None else []
         in_zone = bool(library) and library[0] is card
     if not in_zone:
         return f"{source_name} only applies to spells cast from your {grant.zone.value} (CR 118.9)"
+    if grant.quality_phrase:
+        quality = object_quality(grant.quality_phrase)
+        if quality is None or not quality(game, card):
+            return f"{source_name} only applies to {grant.quality_phrase} spells (CR 118.9)"
+    if grant.max_mana_value_counters:
+        source = game.find_by_id(grant.source_id) if grant.source_id is not None else None
+        counters = source.counter_count(grant.max_mana_value_counters) if source is not None else 0
+        if card.mana_value > counters:
+            return (
+                f"{source_name} only applies to spells with mana value {counters} or less, "
+                f"and {card.name} is {card.mana_value}"
+            )
     if grant.type_word and not spell_has_type_word(card.card, grant.type_word):
         return f"{source_name} only applies to {grant.type_word} spells, and {card.name} is not one"
     if grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
@@ -4916,6 +5017,10 @@ def static_free_cast_refusal(
                 f"{source_name} only applies to spells with mana value {cap} or less, and "
                 f"{card.name} is {card.mana_value}"
             )
+    if grant.once_each_turn:
+        used = getattr(game, "once_per_turn_cast_permissions_used", {})
+        if grant.once_per_turn_key in used:
+            return f"{source_name} was already used once this turn"
     if grant.once_each_of_your_turns:
         turn = getattr(game, "turn", None)
         if turn is None or turn.active_player != caster:

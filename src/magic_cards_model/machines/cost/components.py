@@ -101,6 +101,10 @@ class ComponentKind(StrEnum):
     DISCARD = "discard"
     EXILE = "exile"
     PAY_LIFE = "pay_life"
+    PAY_ENERGY = "pay_energy"
+    """CR 107.14: {E} is paid by removing one energy counter from the player
+    paying (Primal Prayers' "by paying {E} rather than paying their mana
+    costs"). `amount` is how many."""
     REMOVE_COUNTERS = "remove_counters"
     #: "Put a -1/-1 counter on this creature:" (Devoted Druid), the templated
     #: twin of `REMOVE_COUNTERS` (CR 118.3, 122.1, 122.6). Unlike a loyalty
@@ -536,6 +540,8 @@ class CostComponent(EngineModel):
             return self.description
         if self.kind is ComponentKind.PAY_LIFE:
             return f"pay {self.amount} life"
+        if self.kind is ComponentKind.PAY_ENERGY:
+            return "pay " + "{E}" * self.amount
         return f"{self.kind.value} {', '.join(card.name for card in self.cards) or self.required}"
 
     # -- legality ---------------------------------------------------------
@@ -562,6 +568,7 @@ class CostComponent(EngineModel):
                 or (self._why_not_controlled() if self.zone is Zone.BATTLEFIELD else None)
             ),
             ComponentKind.PAY_LIFE: self._why_not_life,
+            ComponentKind.PAY_ENERGY: self._why_not_energy,
             ComponentKind.REMOVE_COUNTERS: self._why_not_remove_counters,
             ComponentKind.PLACE_COUNTERS: self._why_not_place_counters,
             ComponentKind.LOYALTY: self._why_not_loyalty,
@@ -917,6 +924,17 @@ class CostComponent(EngineModel):
                 return f"{card.name} is in the {card.zone.value}, not the {zone.value}"
         return None
 
+    def _why_not_energy(self, game: Any) -> str | None:
+        """CR 107.14: {E} is one energy counter, so the payer needs that many."""
+        if self.amount <= 0:
+            return None
+        if game is None or self.payer is None:
+            return "paying energy needs a game and a player to pay it"
+        energy = game.player(self.payer).energy
+        if energy < self.amount:
+            return f"{self.payer} cannot pay {self.amount} energy with {energy} energy counters"
+        return None
+
     def _why_not_life(self, game: Any) -> str | None:
         """CR 119.4: life can only be paid down to zero, and 0 is always payable."""
         if self.amount < 0:
@@ -1095,6 +1113,8 @@ class CostComponent(EngineModel):
                 game.put_into_graveyard(card)
         elif self.kind is ComponentKind.PAY_LIFE and self.amount:
             game.lose_life(game.player(self.payer), self.amount)
+        elif self.kind is ComponentKind.PAY_ENERGY and self.amount:
+            game.player(self.payer).remove_counters(Counter.ENERGY, self.amount)
         elif self.kind is ComponentKind.REMOVE_COUNTERS:
             # The counters come off at payment time (CR 601.2h/602.2b: the
             # cost is paid before the ability resolves), not when the
@@ -1196,7 +1216,7 @@ class CostComponent(EngineModel):
             return
         if (
             not self._undo
-            and self.kind is not ComponentKind.PAY_LIFE
+            and self.kind not in {ComponentKind.PAY_LIFE, ComponentKind.PAY_ENERGY}
             and (self.cards or self.amount)
         ):
             raise RuntimeError(
@@ -1214,6 +1234,9 @@ class CostComponent(EngineModel):
         if self.kind is ComponentKind.PAY_LIFE:
             if self.amount:
                 game.player(self.payer).gain_life(self.amount)
+        elif self.kind is ComponentKind.PAY_ENERGY:
+            if self.amount:
+                game.player(self.payer).add_counters(Counter.ENERGY, self.amount)
         elif self.kind is ComponentKind.REVEAL:
             # Revealing moved nothing (CR 701.20b), so neither does the
             # rewind; it takes back the records the payment wrote, so an
@@ -1731,6 +1754,16 @@ def mill_cost(amount: int, payer: str | None = None, description: str = "") -> C
     """
     return CostComponent(
         kind=ComponentKind.MILL,
+        amount=amount,
+        payer=payer,
+        description=description,
+    )
+
+
+def pay_energy_cost(amount: int, payer: str | None = None, description: str = "") -> CostComponent:
+    """Pay energy as a cost (CR 107.14)."""
+    return CostComponent(
+        kind=ComponentKind.PAY_ENERGY,
         amount=amount,
         payer=payer,
         description=description,
@@ -2359,6 +2392,40 @@ class StaticFreeCastGrant(EngineModel):
     once_per_turn_key`, CR 400.7), filled in by `machines/casting.
     static_free_cast_grants` for a once-each-turn grant - what records the
     one use in `Game.once_per_turn_cast_permissions_used`."""
+    cost_phrase: str | None = None
+    """CR 118.9's alternative cost when it is not nothing: "You may pay
+    {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast" (Fist
+    of Suns), "You may collect evidence 10 rather than pay the mana cost"
+    (Conspiracy Unraveler) - the printed cost phrase, read into a `TotalCost`
+    when the option is built. `None` is Omniscience's cost of nothing."""
+    cost_is_mana_value: bool = False
+    """Kentaro's "You may pay {X} rather than pay the mana cost for Samurai
+    spells you cast, where X is that spell's mana value": the cost is that
+    much generic mana, read off the spell being cast."""
+    quality_phrase: str | None = None
+    """The kind of spell a cost-bearing grant names ("Samurai spells", "Zombie
+    creature spells", "spells"), lowercased, read against the spell by
+    `machines/cost/statics.object_quality`."""
+    once_each_turn: bool = False
+    """"Once each turn, you may pay {0} rather than ..." (As Foretold,
+    Charred Foyer): one use per turn of the granting permanent, on any
+    player's turn (unlike `once_each_of_your_turns`)."""
+    max_mana_value_counters: str | None = None
+    """As Foretold's "a spell you cast with mana value X or less, where X is
+    the number of time counters on this enchantment": the counter kind whose
+    count on the granting permanent is the live cap."""
+    only_from_exile: bool = False
+    """Charred Foyer's "a spell you cast from exile"."""
+    grants_flash: bool = False
+    """Primal Prayers' "If you cast a spell this way, you may cast it as though
+    it had flash": the spell may be cast at instant speed, but only by paying
+    this grant's cost (`Casting.cast` refuses the timing otherwise)."""
+    any_zone: bool = False
+    """A cost-bearing grant that names no zone ("spells you cast") applies
+    wherever the spell is cast from."""
+    source_id: UUID | None = None
+    """The granting permanent, filled in by `static_free_cast_grants` - what
+    As Foretold's time-counter cap is counted on."""
 
 
 #: `Waterbend {3}` (Flexible Waterbender) - CR 701.67a: "'Waterbend [cost]'

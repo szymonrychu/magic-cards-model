@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "31146f03-cb5e-4f33-aad7-ce970b914d90",
+  "oracle_id": "6835bf6d-7197-481b-ac26-276ce363b4ad",
+  "multiverse_ids": [
+    685910
+  ],
+  "mtgo_id": 135548,
+  "tcgplayer_id": 609952,
+  "cardmarket_id": 805736,
+  "name": "Rooftop Storm",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/31146f03-cb5e-4f33-aad7-ce970b914d90",
+  "scryfall_uri": "https://scryfall.com/card/inr/83/rooftop-storm?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:02:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.jpg?1783908155",
+    "normal": "https://cards.scryfall.io/normal/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.jpg?1783908155",
+    "large": "https://cards.scryfall.io/large/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.jpg?1783908155",
+    "png": "https://cards.scryfall.io/png/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.png?1783908155",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.jpg?1783908155",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.jpg?1783908155",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.webp?1783908155",
+    "grid": "https://cards.scryfall.io/grid/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.webp?1783908155",
+    "display": "https://cards.scryfall.io/display/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.webp?1783908155",
+    "art": "https://cards.scryfall.io/art/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.webp?1783908155",
+    "crop": "https://cards.scryfall.io/crop/front/3/1/31146f03-cb5e-4f33-aad7-ce970b914d90.webp?1783908155"
+  },
+  "mana_cost": "{5}{U}",
+  "cmc": 6.0,
+  "type_line": "Enchantment",
+  "oracle_text": "You may pay {0} rather than pay the mana cost for Zombie creature spells you cast.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/31146f03-cb5e-4f33-aad7-ce970b914d90/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6835bf6d-7197-481b-ac26-276ce363b4ad&unique=prints",
+  "collector_number": "83",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Let those idiot priests tremble! A new era in unlife begins here and now. Oglor, raise the lightning vane!\"\n\u2014Stitcher Geralf",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "John Stanko",
+  "artist_ids": [
+    "b0f038a0-73b5-4806-918e-9cd11b5f92e1"
+  ],
+  "illustration_id": "d5ac5b8d-8822-4f93-bf73-ce23560f48d1",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2274,
+  "penny_rank": 11516,
+  "prices": {
+    "usd": "2.64",
+    "usd_foil": "2.36",
+    "usd_etched": null,
+    "eur": "1.21",
+    "eur_foil": "1.41",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685910&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRooftop%2BStorm",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRooftop%2BStorm",
+    "edhrec": "https://edhrec.com/route/?cc=Rooftop+Storm"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609952%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805736&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135548?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

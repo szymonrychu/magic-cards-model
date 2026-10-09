@@ -14,6 +14,7 @@ from ...numbers import (
     parse_count,
 )
 from ..modes import SPEND_ONLY_ON_X_RE
+from .statics import object_quality
 from .components import (
     ActivatedAbilityGroupDiscount,
     AlternativeCostOffer,
@@ -682,12 +683,108 @@ _ONCE_EACH_TURN_FREE_CAST = re.compile(
 )
 
 
+#: CR 118.9's alternative cost applied from another permanent, with a cost:
+#: "You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you
+#: cast." (Fist of Suns), "... for Zombie creature spells you cast." (Rooftop
+#: Storm), "You may pay {X} rather than pay the mana cost for Samurai spells
+#: you cast, where X is that spell's mana value." (Kentaro), "You may collect
+#: evidence 10 rather than pay the mana cost for spells you cast." and "Once
+#: each turn, you may pay {0} rather than pay the mana cost for a spell you
+#: cast with mana value X or less, where X is the number of time counters on
+#: this enchantment." / "... for a spell you cast from exile." (As Foretold,
+#: Charred Foyer).
+_STATIC_COST_CAST = re.compile(
+    r"^(?P<once>Once each turn, )?you may (?P<cost>(?:pay )?(?:\{[^{}]+\})+|collect evidence \d+) "
+    r"rather than pay the mana cost for (?P<what>.+?)\s*you cast"
+    r"(?: with mana value x or less, where x is the number of (?P<counter>[a-z]+) counters on this "
+    r"[a-z]+| from (?P<zone>exile))?"
+    r"(?:, where x is that spell's mana value)?\.?$",
+    re.IGNORECASE,
+)
+
+
+#: "You may cast creature spells with mana value 3 or less by paying {E} rather
+#: than paying their mana costs. If you cast a spell this way, you may cast it as
+#: though it had flash." (Primal Prayers) - the same CR 118.9 grant in the other
+#: word order, with a mana-value ceiling and a flash rider.
+_STATIC_BY_PAYING = re.compile(
+    r"^you may cast (?P<what>[\w' -]*?spells?)(?: with mana value (?P<mv>\d+) or less)? "
+    r"by paying (?P<cost>(?:\{[^{}]+\})+) rather than paying their mana costs\.?"
+    r"(?P<flash> if you cast a spell this way, you may cast it as though it had flash\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _static_by_paying_grant(text: str) -> StaticFreeCastGrant | None:
+    match = _STATIC_BY_PAYING.match(text.strip())
+    if match is None:
+        return None
+    cost = match.group("cost")
+    if printed_cost_total(cost) is None:
+        return None
+    what = re.sub(r"\bspells?$", "", match.group("what").strip().lower()).strip()
+    if what and object_quality(what) is None:
+        return None
+    return StaticFreeCastGrant(
+        zone=Zone.HAND,
+        cost_phrase=cost,
+        quality_phrase=what or None,
+        max_mana_value=int(match.group("mv")) if match.group("mv") else None,
+        grants_flash=match.group("flash") is not None,
+        any_zone=True,
+    )
+
+
+def _static_cost_cast_grant(text: str) -> StaticFreeCastGrant | None:
+    text = re.sub(r"\s*\([^)]*\)", "", text).strip()
+    match = _STATIC_COST_CAST.match(text)
+    if match is None:
+        return None
+    cost = match.group("cost").strip()
+    mana_value = "where x is that spell's mana value" in text.lower()
+    phrase = re.sub(r"^pay\s+", "", cost, flags=re.IGNORECASE)
+    if mana_value:
+        if phrase.lower() != "{x}":
+            return None
+    elif printed_cost_total(cost) is None:
+        return None
+    what = re.sub(r"^(?:an?|the)\s+", "", match.group("what").strip().lower())
+    what = re.sub(r"\bspells?$", "", what).strip()
+    if what and object_quality(what) is None:
+        return None
+    zone = Zone.EXILE if match.group("zone") else Zone.HAND
+    return StaticFreeCastGrant(
+        zone=zone,
+        cost_phrase=cost,
+        cost_is_mana_value=mana_value,
+        quality_phrase=what or None,
+        any_zone=zone is Zone.HAND,
+        once_each_turn=match.group("once") is not None,
+        max_mana_value_counters=(match.group("counter") or "").lower() or None,
+        only_from_exile=zone is Zone.EXILE,
+    )
+
+
+def printed_cost_total(phrase: str, payer: str | None = None) -> "TotalCost | None":
+    """CR 118.9's cost phrase as the cost a cast pays (the verb "pay" is only
+    the sentence's own)."""
+    stripped = re.sub(r"^pay\s+", "", phrase.strip(), flags=re.IGNORECASE)
+    mana = ManaCost.try_parse(stripped) if stripped.startswith("{") else None
+    if mana is not None:
+        return TotalCost.of(mana)
+    return total_cost_for_phrase(phrase, payer=payer)
+
+
 def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
     """Read one static ability line into a `StaticFreeCastGrant`, or None.
 
     Fails closed: a line this cannot read returns None rather than a guess, so
     a spell is never quietly made free by text nobody parsed.
     """
+    text = re.sub(r"\s*\([^)]*\)", "", text).strip()
+    costed = _static_cost_cast_grant(text) or _static_by_paying_grant(text)
+    if costed is not None:
+        return costed
     once = _ONCE_EACH_TURN_FREE_CAST.match(text.strip())
     if once is not None:
         qualifier = re.sub(r"spells?$", "", once.group("what").strip().lower()).strip()
@@ -1169,6 +1266,12 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
     """
     text = phrase.strip().rstrip(".")
 
+    energy = _PHRASE_PAY_ENERGY.match(text)
+    if energy is not None:
+        return pay_energy_cost(
+            energy.group("symbols").upper().count("{E}"), payer, description=text
+        )
+
     life = _PHRASE_PAY_LIFE.match(text)
     if life is not None:
         amount = parse_amount(life.group("amount"))
@@ -1624,6 +1727,8 @@ _PAY_MANA_PART = re.compile(r"^pay (?P<mana>(?:\{[^{}]+\})+)$", re.IGNORECASE)
 #: `_ONLY_MANA`'s shape and would otherwise be handed to `ManaCost.parse`,
 #: which rightly refuses them - so `total_cost_for_phrase` checks this first
 #: and lets `cost_component_for_phrase` read them as the actions they are.
+#: CR 107.14: "pay {E}" / "{E}{E}" - one energy counter per symbol.
+_PHRASE_PAY_ENERGY = re.compile(r"^(?:pay\s+)?(?P<symbols>(?:\{E\})+)$", re.IGNORECASE)
 _ACTION_SYMBOL = re.compile(r"^\s*\{[TQ]\}\s*$", re.IGNORECASE)
 
 
@@ -1656,6 +1761,7 @@ from .components import (  # noqa: E402
     exile_and_pay_mana_cost_cost,
     exile_cost,
     mill_cost,
+    pay_energy_cost,
     pay_life_cost,
     place_counters_cost,
     remove_counters_cost,

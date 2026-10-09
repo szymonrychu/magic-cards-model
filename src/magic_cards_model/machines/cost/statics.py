@@ -144,6 +144,7 @@ def object_quality(phrase: str) -> Quality | None:
         break
     adjectives: list[Quality] = []
     nouns: list[Quality] = []
+    subtype_nouns: list[Quality] = []
     colors_any: list[Color] = []
     for raw in re.split(r"[\s,]+", text.replace("and/or", "or")):
         word = raw.strip()
@@ -175,11 +176,17 @@ def object_quality(phrase: str) -> Quality | None:
             kind = _TYPE_NOUNS[singular]
             nouns.append(lambda game, state, kind=kind: kind in _view(game, state).types)
         elif (sub := canonical_subtype(word)) is not None:
-            nouns.append(
+            subtype_nouns.append(
                 lambda game, state, sub=sub: sub in {s.lower() for s in _view(game, state).subtypes}
             )
         else:
             return None
+    if nouns and subtype_nouns:
+        # "Zombie creature spells": a creature subtype narrows the type noun
+        # it precedes, it is not a second alternative to it.
+        adjectives.extend(subtype_nouns)
+    elif subtype_nouns:
+        nouns.extend(subtype_nouns)
     if colors_any:
         wanted_colors = set(colors_any)
         adjectives.append(lambda game, state: bool(wanted_colors & set(_view(game, state).colors)))

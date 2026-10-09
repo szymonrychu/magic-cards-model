@@ -29,6 +29,7 @@ from ...machines.casting import (
     optional_additional_costs,
     play_permissions_on,
     static_free_cast_grants,
+    static_grant_option,
     static_free_cast_refusal,
     static_zone_cast_permission,
     types_being_cast,
@@ -1890,17 +1891,8 @@ class CastingMixin:
 
         for source_name, grant in static_free_cast_grants(self, caster):
             options.append(
-                AlternativeCostOption(
-                    index=len(options),
-                    source=AlternativeCostSource.STATIC,
-                    rule="CR 118.9",
-                    source_name=source_name,
-                    description="nothing",
-                    cost=None,
-                    unavailable=static_free_cast_refusal(
-                        self, caster, card, origin_zone, source_name, grant
-                    ),
-                    once_per_turn_key=grant.once_per_turn_key,
+                static_grant_option(
+                    len(options), source_name, grant, self, caster, card, origin_zone, caster
                 )
             )
         return options
