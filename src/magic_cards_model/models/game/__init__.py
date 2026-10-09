@@ -1932,7 +1932,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 133
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 141
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2225,6 +2225,10 @@ class Game(
     #: version also covers `SpendClause.class_level` on floating mana's CR
     #: 106.6 restriction (NW-06 integration, Sorcerer Class's "to gain a Class
     #: level", CR 716.2a).
+    #: 141 (EP01-R1-T8): `CardState` gained `crafted_with` (CR 702.167c, the
+    #: exiled cards used to craft a permanent) and `KeywordActivation` gained
+    #: `craft_materials`; an older dump would decode a crafted Mastercraft
+    #: Raptor with no materials, so its power would read 0.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

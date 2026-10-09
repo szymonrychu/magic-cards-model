@@ -7483,6 +7483,9 @@ _CDA_COUNTERS_RE = re.compile(
     rf"(?P<quality>[a-z ,/-]+?) {_CDA_BOARD_SCOPE}$"
 )
 _CDA_BOARD_COUNT_RE = re.compile(rf"^the number of (?P<quality>[a-z ,/-]+?) {_CDA_BOARD_SCOPE}$")
+_CDA_CRAFT_POWER_RE = re.compile(
+    r"^the total power of the exiled cards used to craft (?:it|this (?:creature|permanent))$"
+)
 _CDA_DOMAIN_RE = re.compile(r"^the number of basic land types among lands you control$")
 _CDA_SPLIT_RE = re.compile(r",\s*(?:and/or |and |or )?|\s+and/or\s+|\s+and\s+|\s+or\s+")
 
@@ -7606,6 +7609,14 @@ def _cda_base_count(phrase: str) -> CdaCountFactory | None:
     if _CDA_DRAWN_RE.fullmatch(phrase):
         return lambda source, context: FixedCount(
             value=context.cards_drawn_this_turn.get(source.controller or "", 0)
+        )
+    if _CDA_CRAFT_POWER_RE.fullmatch(phrase):
+        return lambda source, context: FixedCount(
+            value=sum(
+                _as_number(card.card.power) or 0
+                for card in context.exile
+                if card.id in source.crafted_with
+            )
         )
     if _CDA_DOMAIN_RE.fullmatch(phrase):
         return lambda source, context: count_basic_land_types_among_lands_controlled_by(

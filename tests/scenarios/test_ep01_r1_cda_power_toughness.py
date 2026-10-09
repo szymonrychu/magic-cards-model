@@ -450,3 +450,68 @@ def test_every_listed_cda_card_has_its_power_toughness_line_read(name):
     ]
     if printing.oracle_text:
         assert parsed_layer_effects(printing.oracle_text, static_only=True, card_name=printing.name)
+
+
+# --- the exiled cards used to craft it (CR 702.167a, CR 604.3) ---------------
+
+
+def _craft_raptor(*dinosaurs, graveyard=()):
+    from magic_cards_model.machines.keywords import craft_activation
+
+    scenario = build(
+        alice={
+            "battlefield": [
+                "Saheeli's Lattice // Mastercraft Raptor",
+                *dinosaurs,
+                *["Mountain"] * 5,
+            ],
+            "graveyard": list(graveyard),
+            "library": ["Forest"] * 4,
+        },
+        bob={"library": ["Island"] * 4},
+    )
+    lattice = scenario.find("Saheeli's Lattice // Mastercraft Raptor", Zone.BATTLEFIELD, "alice")
+    materials = [
+        *(scenario.creature(name, "alice") for name in dinosaurs),
+        *(scenario.find(name, Zone.GRAVEYARD, "alice") for name in graveyard),
+    ]
+    activation = craft_activation(scenario.game, lattice, "alice", materials)
+    payment = activation.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources(*["Mountain"] * 5))
+    activation.activate()
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+    return scenario, materials
+
+
+def test_mastercraft_raptor_power_is_the_total_power_of_the_cards_used_to_craft_it():
+    scenario, materials = _craft_raptor("Raptor Companion", "Orazca Frillback")
+    assert all(card.zone is Zone.EXILE for card in materials)
+    assert pt(scenario, "Mastercraft Raptor") == (7, 4)
+
+
+def test_mastercraft_raptor_counts_a_dinosaur_card_crafted_from_the_graveyard():
+    scenario, _ = _craft_raptor("Raptor Companion", graveyard=["Orazca Frillback"])
+    assert pt(scenario, "Mastercraft Raptor") == (7, 4)
+
+
+def test_mastercraft_raptor_ignores_exiled_cards_that_were_not_used_to_craft_it():
+    scenario, _ = _craft_raptor("Raptor Companion", "Orazca Frillback")
+    scenario.game.exile_cards([scenario.find("Forest", Zone.LIBRARY, "alice")])
+    assert pt(scenario, "Mastercraft Raptor") == (7, 4)
+
+
+def test_mastercraft_raptor_survives_a_snapshot_round_trip():
+    from magic_cards_model.models.game import Game
+
+    scenario, _ = _craft_raptor("Raptor Companion", "Orazca Frillback")
+    decoded = Game.model_validate(scenario.game.model_dump(mode="json"))
+    raptor = next(c for c in decoded.battlefield if c.name == "Mastercraft Raptor")
+    assert decoded.computed_board().of(raptor).power == 7
+
+
+def test_mastercraft_raptor_pool_reader_is_handled():
+    support = card_support(pool()["Saheeli's Lattice // Mastercraft Raptor"])
+    assert all(c.status == "handled" for c in support.clauses), [
+        (c.status, c.text) for c in support.clauses
+    ]

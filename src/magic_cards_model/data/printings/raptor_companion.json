@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "45385c8e-fff9-46e7-97e8-f946306b5147",
+  "oracle_id": "20e65887-c68c-4dc0-b74b-9ce093f40b06",
+  "multiverse_ids": [
+    446070
+  ],
+  "tcgplayer_id": 167853,
+  "cardmarket_id": 358946,
+  "name": "Raptor Companion",
+  "lang": "en",
+  "released_at": "2018-06-08",
+  "uri": "https://api.scryfall.com/cards/45385c8e-fff9-46e7-97e8-f946306b5147",
+  "scryfall_uri": "https://scryfall.com/card/bbd/102/raptor-companion?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:27:20Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.jpg?1783934840",
+    "normal": "https://cards.scryfall.io/normal/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.jpg?1783934840",
+    "large": "https://cards.scryfall.io/large/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.jpg?1783934840",
+    "png": "https://cards.scryfall.io/png/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.png?1783934840",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.jpg?1783934840",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.jpg?1783934840",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.webp?1783934840",
+    "grid": "https://cards.scryfall.io/grid/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.webp?1783934840",
+    "display": "https://cards.scryfall.io/display/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.webp?1783934840",
+    "art": "https://cards.scryfall.io/art/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.webp?1783934840",
+    "crop": "https://cards.scryfall.io/crop/front/4/5/45385c8e-fff9-46e7-97e8-f946306b5147.webp?1783934840"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Dinosaur",
+  "oracle_text": "",
+  "power": "3",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "95f97fbc-58ef-4645-982e-43e2db6f1124",
+  "set": "bbd",
+  "set_name": "Battlebond",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/95f97fbc-58ef-4645-982e-43e2db6f1124",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abbd&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bbd?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/45385c8e-fff9-46e7-97e8-f946306b5147/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A20e65887-c68c-4dc0-b74b-9ce093f40b06&unique=prints",
+  "collector_number": "102",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "A raptor will follow any order as long as that order is \"hunt,\" \"kill,\" or \"go for the guts.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Slawomir Maniak",
+  "artist_ids": [
+    "d887bc66-2779-416c-a1ff-d8720242063e"
+  ],
+  "illustration_id": "be31c32d-c029-46db-b39e-17f65d2a1bb1",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 15728,
+  "prices": {
+    "usd": "0.12",
+    "usd_foil": "0.46",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.17",
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=446070&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRaptor%2BCompanion",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRaptor%2BCompanion",
+    "edhrec": "https://edhrec.com/route/?cc=Raptor+Companion"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F167853%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=358946&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Raptor+Companion&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
