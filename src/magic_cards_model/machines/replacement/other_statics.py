@@ -161,18 +161,17 @@ def _whose_graveyard(whose: str) -> Callable | None:
 
 def _damaged_by(by: str | None, group: str | None):
     """CR 120.1: the creature dying was dealt damage this turn by the source
-    (`Game.deal_damage` ledgers each landed hit in `turn_facts`)."""
+    (`Game.damage_dealt_this_turn` ledgers each landed hit with its source)."""
 
     def matcher(game: "Game", source: CardState, card: CardState, event: ReplaceableEvent) -> bool:
+        hits = [d for d in game.damage_dealt_this_turn if d.recipient_id == card.id]
         if group is not None:
-            fact = f"damaged_by_controller:{source.controller}"
-        elif by is not None and by.lower() == "enchanted creature":
-            if source.attached_to is None:
-                return False
-            fact = f"damaged_by:{source.attached_to}"
-        else:
-            fact = f"damaged_by:{source.id}"
-        return game.turn_fact_holds(fact, str(card.id))
+            return any(d.source_controller == source.controller for d in hits)
+        if by is not None and by.lower() == "enchanted creature":
+            return source.attached_to is not None and any(
+                d.source_id == source.attached_to for d in hits
+            )
+        return any(d.source_id == source.id for d in hits)
 
     return matcher
 
@@ -271,6 +270,7 @@ def _library_top_optionally(game: "Game", source: CardState, event: ReplaceableE
         source.controller,
         f"Put {event.card.name} on top of its owner's library instead?",
         source=source.name,
+        source_id=str(source.id),
     ):
         _library_top(game, source, event)
 

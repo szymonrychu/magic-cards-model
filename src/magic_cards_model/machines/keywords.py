@@ -5974,6 +5974,7 @@ def _modular_effect(game: Any, ability: AbilityOnStack) -> None:
         ability.controller,
         f"put {count} +1/+1 counter(s) on {target.name} (modular)",
         source=ability.source_name,
+        source_id=source_id_of(ability),
     ):
         return
     game.add_counters(target, Counter.PLUS_ONE, count, putter=ability.controller, modular=True)

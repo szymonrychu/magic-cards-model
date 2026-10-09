@@ -80,6 +80,7 @@ def _choose(game: "Game", username: str, prompt: str, options: tuple[str, ...], 
             player=username,
             prompt=prompt,
             source=source,
+            source_id=None,
             options=options,
         )
     )
@@ -191,7 +192,7 @@ def _custom_action(clause: str, source: CardState) -> Apply | None:  # noqa: C90
             top = drawer.library[0]
             game.reveal(top, src.name)
             for other in _other_players(game, drawer.username):
-                if game.may_pay_life(other, 2, source=src.name):
+                if game.may_pay_life(other, 2, source=src.name, source_id=str(src.id)):
                     event.amount = 0
                     game.put_into_graveyard(top)
                     return
@@ -235,7 +236,9 @@ def _generic_action(clause: str, optional: bool) -> Apply | None:
         # source's controller is, "that player" the one who would have drawn.
         event.amount = 0
         controller = source.controller
-        if optional and not game.may(controller, f"Instead: {clause}?", source=source.name):
+        if optional and not game.may(
+            controller, f"Instead: {clause}?", source=source.name, source_id=str(source.id)
+        ):
             event.amount = 1
             return
         effect_fn(game, synthetic_ability(source, controller, clause))
@@ -263,7 +266,12 @@ def _compile_draw_replacement(effect: ReplacementEffect) -> CardReplacement | No
         inner = custom
 
         def action(game, source, event, _inner=inner, _clause=clause):  # noqa: F811
-            if game.may(source.controller, f"Instead: {_clause}?", source=source.name):
+            if game.may(
+                source.controller,
+                f"Instead: {_clause}?",
+                source=source.name,
+                source_id=str(source.id),
+            ):
                 _inner(game, source, event)
 
     any_player = match.group("who").lower() == "a player"
@@ -337,6 +345,7 @@ def _compile_cycling_draw(effect: ReplacementEffect) -> CardReplacement | None:
                 player=owner.username,
                 prompt=f"cast {hit.name} without paying its mana cost",
                 source=source.name,
+                source_id=str(source.id),
                 affirmative_is_legal=game.can_cast_during_resolution(hit, owner.username),
             )
             if game.ask(decision):

@@ -540,14 +540,6 @@ class DamageLifeMixin:
                     ledger[target.id] = ledger.get(target.id, 0) + event.amount
                 if source is not None and source.id in self._damage_recorders:
                     self._damage_recorders[source.id].append(target.id)
-                if source is not None:
-                    # CR 120.1: "a creature dealt damage by <source> this turn" -
-                    # `machines/replacement/other_statics.py` reads these facts.
-                    self.record_turn_fact(f"damaged_by:{source.id}", str(target.id))
-                    if source.controller:
-                        self.record_turn_fact(
-                            f"damaged_by_controller:{source.controller}", str(target.id)
-                        )
             # CR 613.5: the source's characteristics for this event are the
             # computed ones while it is still a permanent - a land animated
             # by earthbend is a creature only there - and the printed type

@@ -221,6 +221,7 @@ def _compile_token_replacement(effect: ReplacementEffect) -> CardReplacement | N
                     player=source.controller or "",
                     prompt="Instead create that many of which token (or keep the original)?",
                     source=source.name,
+                    source_id=str(source.id),
                     options=labels,
                 )
             )
