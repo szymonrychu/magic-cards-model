@@ -1628,6 +1628,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     _player_state_threshold(scenario, getattr(ability, "intervening_if", None))
     _object_state_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _chosen_parity(source, getattr(ability, "condition", None))
+    _chosen_mode(source, getattr(ability, "triggers_only_if", None))
     _equip_for_condition(scenario, source, ability)
     _enter_for_condition(scenario, ability)
     return source
@@ -2223,6 +2224,22 @@ def _chosen_parity(source: CardState, condition: str | None) -> None:
         return
     if re.search(r"\bchoose odd or even\b", source.card.oracle_text or "", re.IGNORECASE):
         source.choice = Choice(kind=ChoiceKind.ODD_OR_EVEN, value="odd")
+
+
+def _chosen_mode(source: CardState, gate: str | None) -> None:
+    """A Siege's mode bullet ("* Khans - At the beginning of combat ...") is a
+    trigger gated on the source's own "As this enters, choose Khans or Dragons"
+    answer (CR 614.12a), which the staged source skipped: the mode the gate
+    names is the answer it was staged with."""
+    match = re.match(
+        r"this permanent's chosen mode is (?P<mode>[a-z][\w'-]*)$", gate or "", re.IGNORECASE
+    )
+    if source.choice is None and match is not None:
+        printed = re.search(
+            rf"\b{match.group('mode')}\b", source.card.oracle_text or "", re.IGNORECASE
+        )
+        if printed is not None:
+            source.choice = Choice(kind=ChoiceKind.MODE, value=printed.group(0))
 
 
 def _counter_threshold(scenario: PlayedScenario, source: CardState, condition: str | None) -> None:

@@ -31,6 +31,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Choice, ChoiceKind
+from magic_cards_model.models.token import TokenDefinition, create_tokens
 from tests.scenarios.harness import Scenario
 
 
@@ -109,6 +110,26 @@ def test_citadel_siege_khans_half_puts_counters_on_your_combat_and_dragons_half_
     dragons.advance()
     assert dragons.pending_triggers == []
     assert dragons.find("Grizzly Bears", Zone.BATTLEFIELD, "alice").counters == {}
+
+
+def test_frontier_siege_khans_half_adds_mana_each_main_phase_and_dragons_half_does_not():
+    def floating_green(mode):
+        scenario = (
+            Scenario()
+            .player("alice", hand=["Frontier Siege"], library=["Forest"] * 5)
+            .player("bob", library=["Forest"] * 5)
+            .build()
+        )
+        _enter(scenario, "Frontier Siege", mode)
+        scenario.start_at(Step.UPKEEP)
+        while scenario.step is not Step.PRECOMBAT_MAIN:
+            scenario.advance()
+        _resolve_all(scenario)
+        pool = scenario.game.unspent_mana_of(scenario.player("alice")).floating
+        return sum(amount for color, amount in pool.items() if color.value == "G")
+
+    assert floating_green("Khans") == 2
+    assert floating_green("Dragons") == 0
 
 
 def test_palace_siege_dragons_half_drains_on_your_upkeep_and_khans_half_does_not():
@@ -604,6 +625,17 @@ def test_ixidron_also_turns_the_opponents_creatures_face_down():
         if state.name != "Ixidron" or state.face_down
     )
     assert (_chars(scenario, ixidron).power, _chars(scenario, ixidron).toughness) == (2, 2)
+
+
+def test_ixidron_leaves_tokens_face_up():
+    """ "Nontoken": a token creature is not turned face down (CR 708.2)."""
+    scenario = _board(hand=["Ixidron"], battlefield=["Grizzly Bears"])
+    (token,) = create_tokens(
+        scenario.game, TokenDefinition(power=1, toughness=1, subtypes=("Soldier",)), "alice"
+    )
+    scenario.put_onto_battlefield("Ixidron")
+    assert not token.face_down
+    assert scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice").face_down
 
 
 # -- exile from your graveyard as it enters (CR 607.2a) ----------------------------
