@@ -4572,7 +4572,7 @@ _MAY_REVEAL_FROM_AMONG_THEM_RE = re.compile(
 #: sentence's tail; "them" is Reality Heist's own plural for a quantity that
 #: can take more than one, "the revealed cards" is Lead the Stampede's.
 _PUT_IT_OR_THEM_INTO_YOUR_HAND_RE = re.compile(
-    r"^put (?:it|them|the revealed cards) into your hand$", re.IGNORECASE
+    r"^put (?:it|them|that card|the revealed cards) into your hand$", re.IGNORECASE
 )
 #: "put the rest on the bottom of your library in any order" - Duskwatch
 #: Recruiter's own third sentence - **or** "... in a random order", which

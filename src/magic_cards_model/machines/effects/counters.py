@@ -67,6 +67,41 @@ if TYPE_CHECKING:
 from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import _SELF_ANAPHOR, _SPELL_QUALIFIER, AbilityEffect, Effect, TargetedClause
 
+#: "Remove a `<kind>` counter from it. Then if this card has no `<kind>`
+#: counters on it, return it to the battlefield." - Darigaaz Reincarnated's
+#: egg-counter upkeep trigger, the suspend-shaped countdown of a card that
+#: waits in exile (CR 113.6b: it functions from the exile zone it names).
+#: The return puts the card onto the battlefield under its owner's control
+#: (CR 110.2a: not cast; CR 400.7: a new object).
+_COUNTER_REMOVAL_THEN_RETURN_SELF_RE = re.compile(
+    r"^remove an? (?P<kind>[a-z0-9+/-]+) counter from (?:it|this card)\. "
+    r"then if (?:this card|it) has no (?P=kind) counters? on it, "
+    r"return (?:it|this card) to the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s26")
+def _parse_counter_removal_then_return_self_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTER_REMOVAL_THEN_RETURN_SELF_RE`'s shape. The ability's source is
+    found by id wherever it is now (CR 113.7a); it counts down only while it is
+    still the exiled card, and returns only on the removal that empties it."""
+    match = _COUNTER_REMOVAL_THEN_RETURN_SELF_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.EXILE or source.counter_count(kind) < 1:
+            return
+        source.remove_counters(kind, 1)
+        if source.counter_count(kind) == 0:
+            game.put_onto_battlefield(source, source.owner)
+
+    return effect
+
+
 #: "Put a number of `<kind>` counters on it/this `<noun>`/`<Name>` equal to
 #: `<expr>`." - the resolving-effect twin of the "enters with a number of
 #: `<kind>` counters on it equal to `<expr>`" replacement (Reverent Hunter's
@@ -413,6 +448,51 @@ _COUNTER_EACH_GROUP_RE = re.compile(
     rf"{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
+
+#: "Put a +1/+1 counter on each creature you control and those creatures gain
+#: trample until end of turn." (Lisette, Dean of the Root) - the group counter
+#: clause plus a grant to the group it just marked (CR 608.2c: "those
+#: creatures" are the ones that received a counter).
+_COUNTER_EACH_GROUP_THEN_GRANT_RE = re.compile(
+    r"^(?P<head>put .+? counters? on each [^,.]+?)(?:,)? (?:and|then) "
+    r"(?:those|these) (?:creatures|permanents) gain (?P<keywords>[a-z][a-z, ]*?) "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s26")
+def _parse_counters_on_group_then_grant_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTER_EACH_GROUP_THEN_GRANT_RE`'s shape: the ordinary group-counter
+    clause, then each permanent whose counters grew gains the keywords until
+    end of turn (CR 611.2a)."""
+    match = _COUNTER_EACH_GROUP_THEN_GRANT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    head_text = match.group("head").strip()
+    head = _parse_put_counters_on_group_clause(head_text)
+    counted = _COUNTER_EACH_GROUP_RE.fullmatch(head_text)
+    keywords = split_and_validate_keywords(match.group("keywords"))
+    if head is None or counted is None or keywords is None:
+        return None
+    kind = _counter_kind(counted.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        before = {state.id: state.counter_count(kind) for state in game.battlefield}
+        head(game, ability)
+        for permanent in list(game.battlefield):
+            if permanent.counter_count(kind) > before.get(permanent.id, permanent.counter_count(kind)):
+                _grant_keywords_to(
+                    game,
+                    permanent,
+                    list(keywords),
+                    "until end of turn",
+                    controller=ability.controller,
+                    source_name=ability.source_name,
+                )
+
+    return effect
+
 
 #: Guiding Hydra: "put a +1/+1 counter on each other creature you control." -
 #: `_COUNTER_EACH_GROUP_RE`'s "each `<group>` you control" grammar only ever

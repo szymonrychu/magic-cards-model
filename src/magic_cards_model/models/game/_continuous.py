@@ -955,6 +955,12 @@ class ContinuousMixin:
             hand_size_by_player={
                 player.username: len(player.hand) for player in self.players_in_game
             },
+            # CR 401.1: Living Conundrum's "As long as there are no cards in
+            # your library" reads a library size, no more a characteristic
+            # than a hand size is.
+            library_size_by_player={
+                player.username: len(player.library) for player in self.players_in_game
+            },
             # CR 702.195b's enduring story, which "As long as you have an
             # enduring story, ..." statics read off their controller.
             enduring_story_players=frozenset(

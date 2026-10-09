@@ -675,6 +675,9 @@ _PLACE = r"in (?:your|its owner's|a) (?:graveyard|hand|library)|on the battlefie
 
 _SELF_IN_PLACES = re.compile(
     rf"{_SELF} is (?:still )?(?P<places>(?:{_PLACE})(?: or (?:{_PLACE}))*)"
+    # Darigaaz Reincarnated's "if this card is exiled with an egg counter on
+    # it": the counter rider narrows the condition, it does not move the zone.
+    r"(?: with (?:an?|\w+) [\w+/-]+ counters? on it)?"
 )
 _SELF_ONLY_IN_GRAVEYARD = re.compile(
     rf"{_SELF} is the only (?:(?P<quality>{_CARD_QUALITY}) )?card in your graveyard"

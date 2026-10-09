@@ -2056,7 +2056,13 @@ def pay_consequence_effect(text: str) -> AbilityEffect | None:
     whole_text_token = _parse_whole_text_token_clause(text)
     if whole_text_token is not None:
         return whole_text_token
-    return parse_mixed_effect(text) or _layer_consequence(text)
+    from .counters import _parse_counters_on_group_then_grant_clause
+
+    return (
+        parse_mixed_effect(text)
+        or _parse_counters_on_group_then_grant_clause(text)
+        or _layer_consequence(text)
+    )
 
 
 # --------------------------------------------------------------------------

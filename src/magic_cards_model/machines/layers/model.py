@@ -1028,9 +1028,18 @@ class QualifiedCreatures(SelectorBase):
     it entered (CR 614.12a), carried in `chosen_color`. With no colour chosen
     the group is empty rather than every creature."""
     chosen_color: Color | None = None
+    enchanted: bool = False
+    """ "... that are enchanted" (Necromancer's Magemark; CR 303.4b): only a
+    creature some Aura is attached to (CR 301.5 / 303.4), read off the board's
+    `attached_to` links on every CR 613.5 computation."""
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         if not chars.is_creature:
+            return False
+        if self.enchanted and not any(
+            other.attached_to == chars.card_id and Type.ENCHANTMENT in other.types
+            for other in board.values()
+        ):
             return False
         if self.of_chosen_color and (
             self.chosen_color is None or self.chosen_color not in chars.colors
@@ -2846,6 +2855,7 @@ def qualified_creatures(
     legendary: bool | None = None,
     of_chosen_color: bool = False,
     chosen_color: Color | None = None,
+    enchanted: bool = False,
 ) -> Selector:
     """ "[Other] [non<colour>|colorless] [[non]legendary] [nontoken]
     [land|artifact] creature[ token]s [you control|your opponents control]
@@ -2912,6 +2922,7 @@ def qualified_creatures(
         legendary=legendary,
         of_chosen_color=of_chosen_color,
         chosen_color=chosen_color,
+        enchanted=enchanted,
     )
 
 
@@ -3337,6 +3348,7 @@ class CreatureQualifiers(EngineModel):
     nontoken: bool = False
     legendary: bool | None = None
     of_chosen_color: bool = False
+    enchanted: bool = False
 
     @property
     def is_empty(self) -> bool:
@@ -3350,6 +3362,7 @@ class CreatureQualifiers(EngineModel):
             and not self.nontoken
             and self.legendary is None
             and not self.of_chosen_color
+            and not self.enchanted
         )
 
     @property

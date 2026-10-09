@@ -2059,6 +2059,33 @@ def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
     return effect
 
 
+#: "This creature can't be regenerated this turn." (Knight of the Holy Nimbus's
+#: `{2}` ability, which only the controller's opponents may activate) - the
+#: source's own CR 701.19c grant, ending with the turn (CR 611.2a).
+_SELF_CANT_BE_REGENERATED_RE = re.compile(
+    r"^this (?:creature|permanent|artifact) can'?t be regenerated this turn\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _regenerate_self_cant_be_regenerated_this_turn(text: str) -> AbilityEffect | None:
+    """`_SELF_CANT_BE_REGENERATED_RE`'s shape: the grant line
+    `replacement._regeneration_effects` and the static regeneration read off
+    the computed characteristics."""
+    if _SELF_CANT_BE_REGENERATED_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..replacement.model import CANT_BE_REGENERATED_LINE
+        from .damage import _grant_line_until_end_of_turn
+
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            _grant_line_until_end_of_turn(game, ability, [source], CANT_BE_REGENERATED_LINE)
+
+    return effect
+
+
 #: "Regenerate each creature you control." (Wail of the Nim's first mode,
 #: Wrap in Vigor, Golgari Charm, Loxodon Hierarch) - CR 701.19a's shield on
 #: every permanent of the group as the spell or ability resolves (CR 608.2h:
