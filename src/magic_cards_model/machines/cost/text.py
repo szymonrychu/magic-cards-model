@@ -898,7 +898,7 @@ _PHRASE_DISCARD = re.compile(
 #: "other" after a count the same way: never the ability's own source.
 _PHRASE_TAP = re.compile(
     rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?P<other>other )?(?:untapped )?"
-    r"(?P<quality>[\w ,]+?) "
+    r"(?P<quality>[\w ,/]+?) "
     r"you control$",
     re.IGNORECASE,
 )
@@ -1019,7 +1019,9 @@ def _requirement(quality: str) -> CardRequirement | None:
     was not understood" rather than as "anything will do" - a cost that silently
     accepts the wrong card is worse than one that refuses to be built.
     """
-    words = [word for word in quality.strip().split() if word]
+    # "artifacts, creatures, and/or lands" (Warlord's Elite, Guardian of the
+    # Great Door): "and/or" is the same one-of-these disjunction as "or".
+    words = [word for word in quality.strip().replace("and/or", "or").split() if word]
     if not words:
         return CardRequirement(description=quality.strip())
 
@@ -1496,7 +1498,7 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
     mana = ManaCost()
     components: list[CostComponent] = []
     waterbend_generic: int | None = None
-    if "," not in phrase:
+    if "," not in phrase or "and/or" in phrase:
         # `_split_cost_phrase` also splits on a bare " and " - right for a
         # comma-joined or genuinely compound cost ("Tap two untapped
         # creatures you control and discard a card", none printed yet, would
@@ -1511,6 +1513,11 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
         if whole is not None:
             return TotalCost(mana=mana, components=[whole], waterbend_generic=waterbend_generic)
     for part in _split_cost_phrase(phrase):
+        # "pay {1} and return a basic land you control to its owner's hand"
+        # (the Borderposts): the verb is only the sentence's own "pay".
+        pay_mana = _PAY_MANA_PART.match(part)
+        if pay_mana is not None:
+            part = pay_mana.group("mana")
         if _ONLY_MANA.match(part) and not _ACTION_SYMBOL.match(part):
             # A run of braced symbols that is not all mana - CR 107.14's {E}
             # among them - is a cost this phrase reader does not know how to
@@ -1605,6 +1612,7 @@ def cumulative_upkeep_cost(printed: str, count: int, payer: str | None = None) -
 
 
 _ONLY_MANA = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
+_PAY_MANA_PART = re.compile(r"^pay (?P<mana>(?:\{[^{}]+\})+)$", re.IGNORECASE)
 
 #: The two brace-wrapped symbols that are *not* mana: CR 107.5's tap symbol
 #: `{T}` and CR 107.6's untap symbol `{Q}`, each of which "in an activation

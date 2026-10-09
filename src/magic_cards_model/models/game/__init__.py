@@ -1242,6 +1242,14 @@ class Game(
     includes the resolution in progress. Counted in `_resolve_ability` and
     cleared when a new turn begins."""
 
+    noncombat_damage_to_players_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How much noncombat damage (CR 120.2a) each player has been dealt this
+    turn, keyed by the damaged player - Chandra's Incinerator's "the total
+    amount of noncombat damage dealt to your opponents this turn" sums it over
+    the caster's opponents when the cost is determined (CR 601.2f). Recorded
+    next to the `dealt_noncombat_damage` turn fact; cleared when a new turn
+    begins."""
+
     creatures_died_this_turn: int = 0
     """How many creatures have died this turn, whoever controlled them.
 
@@ -1932,7 +1940,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 133
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 140
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2225,6 +2233,9 @@ class Game(
     #: version also covers `SpendClause.class_level` on floating mana's CR
     #: 106.6 restriction (NW-06 integration, Sorcerer Class's "to gain a Class
     #: level", CR 716.2a).
+    #: 140 (EP01-R1-T7): `Game` gained `noncombat_damage_to_players_this_turn`
+    #: (Chandra's Incinerator's "the total amount of noncombat damage dealt to
+    #: your opponents this turn", CR 601.2f); an older dump would read none.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

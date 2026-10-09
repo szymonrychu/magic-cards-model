@@ -2289,6 +2289,7 @@ class TurnSbaMixin:
             self.became_tapped_count_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
+            self.noncombat_damage_to_players_this_turn = {}
             self.nontoken_creatures_died_under_control_this_turn = {}
             self.ability_resolutions_this_turn = {}
             self.cards_drawn_this_turn = {}

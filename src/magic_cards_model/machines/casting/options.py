@@ -1039,6 +1039,43 @@ def conspire_cost_option() -> OptionalAdditionalCost:
     return OptionalAdditionalCost(keyword="conspire", cost=CONSPIRE_COST, rule="CR 702.78a")
 
 
+def optional_additional_cost_for_phrase(phrase: str) -> OptionalAdditionalCost:
+    """The CR 118.8b optional additional cost one "you may ..." phrase of a
+    spell's additional-cost sentence is, `understood=False` when no reader
+    pays it - the single classification `optional_additional_costs` and the
+    static audit (`static_audit/cost_modification.py`) both ask."""
+    blight = _BLIGHT_PHRASE.match(phrase)
+    if blight is not None:
+        return OptionalAdditionalCost(keyword="blight", cost=phrase, rule="CR 701.68a")
+    elif _OPTIONAL_COLLECT_EVIDENCE.match(phrase) is not None:
+        return OptionalAdditionalCost(keyword="collect evidence", cost=phrase, rule="CR 701.59a")
+    elif _OPTIONAL_REVEAL.match(phrase) is not None:
+        return OptionalAdditionalCost(keyword="reveal", cost=phrase, rule="CR 701.20a")
+    elif _OPTIONAL_WATERBEND.match(phrase) is not None:
+        # Charged by `Casting.pay_waterbend`: CR 701.67a's mana, with
+        # CR 701.67b's tap method bounded to the waterbend's own generic.
+        return OptionalAdditionalCost(keyword="waterbend", cost=phrase, rule="CR 701.67a")
+    elif _OPTIONAL_BEHOLD_CHOSEN_TYPE.match(phrase) is not None:
+        # Charged by `Casting.behold_chosen_type_for_cost` (the type named
+        # and the creatures beheld, CR 701.4a).
+        return OptionalAdditionalCost(keyword="behold", cost=phrase, rule="CR 701.4a")
+    elif _OPTIONAL_BEHOLD.match(phrase) is not None:
+        # Charged by `Casting.behold_for_cost` - a plain, fixed quality
+        # (Dispelling Exhale's "a Dragon"), unlike the chosen-type shape
+        # just above.
+        return OptionalAdditionalCost(keyword="behold", cost=phrase, rule="CR 701.4a")
+    elif _OPTIONAL_SACRIFICE_ANY_NUMBER.match(phrase) is not None:
+        # Charged by `Casting.sacrifice_for_cost_reduction` (CR 118.7a,
+        # CR 118.8b).
+        return OptionalAdditionalCost(keyword="sacrifice any number", cost=phrase, rule="CR 118.8b")
+    elif _OPTIONAL_EXILE_ANY_NUMBER_FROM_HAND.match(phrase) is not None:
+        # Charged by `Casting.exile_for_cost_reduction` (CR 118.7a,
+        # CR 118.8b).
+        return OptionalAdditionalCost(keyword="exile any number", cost=phrase, rule="CR 118.8b")
+    else:
+        return OptionalAdditionalCost(keyword=None, cost=phrase, rule="CR 118.8b", understood=False)
+
+
 def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
     """Every optional additional cost `card` prints for CR 601.2b's
     announcement, keyword lines and "you may ..." sentences alike.
@@ -1080,50 +1117,7 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
     for phrase in additional_cost_phrases(card):
         if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:
             continue
-        blight = _BLIGHT_PHRASE.match(phrase)
-        if blight is not None:
-            found.append(OptionalAdditionalCost(keyword="blight", cost=phrase, rule="CR 701.68a"))
-        elif _OPTIONAL_COLLECT_EVIDENCE.match(phrase) is not None:
-            found.append(
-                OptionalAdditionalCost(keyword="collect evidence", cost=phrase, rule="CR 701.59a")
-            )
-        elif _OPTIONAL_REVEAL.match(phrase) is not None:
-            found.append(OptionalAdditionalCost(keyword="reveal", cost=phrase, rule="CR 701.20a"))
-        elif _OPTIONAL_WATERBEND.match(phrase) is not None:
-            # Charged by `Casting.pay_waterbend`: CR 701.67a's mana, with
-            # CR 701.67b's tap method bounded to the waterbend's own generic.
-            found.append(
-                OptionalAdditionalCost(keyword="waterbend", cost=phrase, rule="CR 701.67a")
-            )
-        elif _OPTIONAL_BEHOLD_CHOSEN_TYPE.match(phrase) is not None:
-            # Charged by `Casting.behold_chosen_type_for_cost` (the type named
-            # and the creatures beheld, CR 701.4a).
-            found.append(OptionalAdditionalCost(keyword="behold", cost=phrase, rule="CR 701.4a"))
-        elif _OPTIONAL_BEHOLD.match(phrase) is not None:
-            # Charged by `Casting.behold_for_cost` - a plain, fixed quality
-            # (Dispelling Exhale's "a Dragon"), unlike the chosen-type shape
-            # just above.
-            found.append(OptionalAdditionalCost(keyword="behold", cost=phrase, rule="CR 701.4a"))
-        elif _OPTIONAL_SACRIFICE_ANY_NUMBER.match(phrase) is not None:
-            # Charged by `Casting.sacrifice_for_cost_reduction` (CR 118.7a,
-            # CR 118.8b).
-            found.append(
-                OptionalAdditionalCost(
-                    keyword="sacrifice any number", cost=phrase, rule="CR 118.8b"
-                )
-            )
-        elif _OPTIONAL_EXILE_ANY_NUMBER_FROM_HAND.match(phrase) is not None:
-            # Charged by `Casting.exile_for_cost_reduction` (CR 118.7a,
-            # CR 118.8b).
-            found.append(
-                OptionalAdditionalCost(keyword="exile any number", cost=phrase, rule="CR 118.8b")
-            )
-        else:
-            found.append(
-                OptionalAdditionalCost(
-                    keyword=None, cost=phrase, rule="CR 118.8b", understood=False
-                )
-            )
+        found.append(optional_additional_cost_for_phrase(phrase))
     printed = additional_cost_phrases(card)
     for index, _ in life_or_mana_additional_costs(card):
         # Not optional as a whole - one half or the other is paid - but which
@@ -1350,6 +1344,17 @@ _PAY_FIRST_OR = re.compile(r"^pay (?P<mana>(?:\{[^{}]+\})+) or (?P<primary>.+)$"
 _OR_PAY_LIFE_TAIL = re.compile(r"^(?P<primary>.+?),? or (?P<mana>pay \d+ life)$", re.IGNORECASE)
 
 
+#: Two object costs, either of which pays - Souls of the Lost's "discard a card
+#: or sacrifice a permanent". The first half is the one nominated objects
+#: select (`primary`), the second is paid when the caster nominates nothing
+#: for it, the same split the "or pay [mana]" shapes above use.
+_COMPONENT_OR_COMPONENT = re.compile(
+    r"^(?P<primary>(?:discard|sacrifice|exile|return|reveal|tap|behold) .+?) or "
+    r"(?P<mana>(?:discard|sacrifice|exile|return|reveal|tap|behold) .+)$",
+    re.IGNORECASE,
+)
+
+
 def or_additional_cost_halves(phrase: str) -> tuple[str, str] | None:
     """CR 601.2b's "[cost] or [cost]" additional-cost sentence as its two halves
     `(primary, default)`, or `None` when it is not one.
@@ -1360,7 +1365,7 @@ def or_additional_cost_halves(phrase: str) -> tuple[str, str] | None:
     `Casting._additional_cost_primary_alternatives` infers from nominated
     objects (or, for a life payment, from an explicit announcement).
     """
-    for pattern in (_OR_PAY_TAIL, _PAY_FIRST_OR, _OR_PAY_LIFE_TAIL):
+    for pattern in (_OR_PAY_TAIL, _PAY_FIRST_OR, _OR_PAY_LIFE_TAIL, _COMPONENT_OR_COMPONENT):
         match = pattern.match(phrase)
         if match is not None:
             return match.group("primary"), match.group("mana")
@@ -1651,6 +1656,22 @@ def reads_or_pay_additional_cost_line(text: str) -> bool:
         and total_cost_for_phrase(halves[0]) is not None
         and total_cost_for_phrase(halves[1]) is not None
     )
+
+
+def reads_optional_additional_cost_line(text: str) -> bool:
+    """Whether one printed line is wholly an optional CR 118.8b "As an
+    additional cost to cast this spell, you may <cost>." that
+    `optional_additional_costs` offers and a `Casting` pays (collect evidence,
+    reveal, behold, blight, waterbend, sacrifice/exile any number) -
+    `support.py`'s credit for it on a permanent card (Crimestopper Sprite,
+    Orator of Ojutai)."""
+    match = _ADDITIONAL_COST_LINE.match(text.strip())
+    if match is None:
+        return False
+    phrase = match.group("what")
+    if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:
+        return False
+    return optional_additional_cost_for_phrase(phrase).understood
 
 
 def reads_printed_alternative_cost_line(text: str) -> bool:

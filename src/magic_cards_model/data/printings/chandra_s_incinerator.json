@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "ed875705-b7b6-4464-b16f-61629ffed04f",
+  "oracle_id": "515cee6a-a2e1-4eeb-8e1d-293724313b14",
+  "multiverse_ids": [
+    485459
+  ],
+  "mtgo_id": 81499,
+  "arena_id": 71918,
+  "tcgplayer_id": 215584,
+  "cardmarket_id": 468199,
+  "name": "Chandra's Incinerator",
+  "lang": "en",
+  "released_at": "2020-07-03",
+  "uri": "https://api.scryfall.com/cards/ed875705-b7b6-4464-b16f-61629ffed04f",
+  "scryfall_uri": "https://scryfall.com/card/m21/136/chandras-incinerator?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:18:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.jpg?1783930694",
+    "normal": "https://cards.scryfall.io/normal/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.jpg?1783930694",
+    "large": "https://cards.scryfall.io/large/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.jpg?1783930694",
+    "png": "https://cards.scryfall.io/png/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.png?1783930694",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.jpg?1783930694",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.jpg?1783930694",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.webp?1783930694",
+    "grid": "https://cards.scryfall.io/grid/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.webp?1783930694",
+    "display": "https://cards.scryfall.io/display/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.webp?1783930694",
+    "art": "https://cards.scryfall.io/art/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.webp?1783930694",
+    "crop": "https://cards.scryfall.io/crop/front/e/d/ed875705-b7b6-4464-b16f-61629ffed04f.webp?1783930694"
+  },
+  "mana_cost": "{5}{R}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "This spell costs {X} less to cast, where X is the total amount of noncombat damage dealt to your opponents this turn.\nTrample\nWhenever a source you control deals noncombat damage to an opponent, this creature deals that much damage to target creature or planeswalker that player controls.",
+  "power": "6",
+  "toughness": "6",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "bc94aba1-7376-4e02-a12d-3a2efb66ab0f",
+  "set": "m21",
+  "set_name": "Core Set 2021",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/bc94aba1-7376-4e02-a12d-3a2efb66ab0f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am21&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m21?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ed875705-b7b6-4464-b16f-61629ffed04f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A515cee6a-a2e1-4eeb-8e1d-293724313b14&unique=prints",
+  "collector_number": "136",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Craig J Spearing",
+  "artist_ids": [
+    "b0f15e74-0dd6-4156-959e-c5e30c5cdc52"
+  ],
+  "illustration_id": "4232ade9-f988-4448-99d7-7b30d0614308",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2658,
+  "penny_rank": 8601,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2020-06-09"
+  },
+  "prices": {
+    "usd": "2.01",
+    "usd_foil": "2.43",
+    "usd_etched": null,
+    "eur": "2.30",
+    "eur_foil": "2.00",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=485459&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChandra%2527s%2BIncinerator",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DChandra%2527s%2BIncinerator",
+    "edhrec": "https://edhrec.com/route/?cc=Chandra%27s+Incinerator"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F215584%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=468199&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/81499?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

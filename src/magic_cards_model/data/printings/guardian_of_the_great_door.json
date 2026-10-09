@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "a86f3cb2-7822-4c19-bd84-cea177e5b6e9",
+  "oracle_id": "18ba355d-a25f-4a5d-b734-11739b0b86af",
+  "multiverse_ids": [
+    636707
+  ],
+  "mtgo_id": 117810,
+  "arena_id": 87147,
+  "tcgplayer_id": 525280,
+  "cardmarket_id": 743200,
+  "name": "Guardian of the Great Door",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/a86f3cb2-7822-4c19-bd84-cea177e5b6e9",
+  "scryfall_uri": "https://scryfall.com/card/lci/16/guardian-of-the-great-door?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:36:51Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.jpg?1783913811",
+    "normal": "https://cards.scryfall.io/normal/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.jpg?1783913811",
+    "large": "https://cards.scryfall.io/large/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.jpg?1783913811",
+    "png": "https://cards.scryfall.io/png/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.png?1783913811",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.jpg?1783913811",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.jpg?1783913811",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.webp?1783913811",
+    "grid": "https://cards.scryfall.io/grid/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.webp?1783913811",
+    "display": "https://cards.scryfall.io/display/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.webp?1783913811",
+    "art": "https://cards.scryfall.io/art/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.webp?1783913811",
+    "crop": "https://cards.scryfall.io/crop/front/a/8/a86f3cb2-7822-4c19-bd84-cea177e5b6e9.webp?1783913811"
+  },
+  "mana_cost": "{W}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Angel",
+  "oracle_text": "As an additional cost to cast this spell, tap four untapped artifacts, creatures, and/or lands you control.\nFlying",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set": "lci",
+  "set_name": "The Lost Caverns of Ixalan",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alci&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lci?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a86f3cb2-7822-4c19-bd84-cea177e5b6e9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A18ba355d-a25f-4a5d-b734-11739b0b86af&unique=prints",
+  "collector_number": "16",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "The Core was sealed long ago by the Deep Gods, who set the angels to the eternal task of defending its golden gates.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Justyna Dura",
+  "artist_ids": [
+    "d2340aef-8ca9-4e0d-864c-6a4e8d5e350a"
+  ],
+  "illustration_id": "61bf29b7-68b3-4baf-81f6-0980daf47b06",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21923,
+  "penny_rank": 11695,
+  "preview": {
+    "source": "Hooked Gamers",
+    "source_uri": "https://www.hookedgamers.com/features/2023/10/30/exclusive_card_reveal_for_magic_the_gathering_-_the_lost_caverns_of_ixalan.html",
+    "previewed_at": "2023-10-30"
+  },
+  "prices": {
+    "usd": "0.10",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.07",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636707&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGuardian%2Bof%2Bthe%2BGreat%2BDoor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGuardian%2Bof%2Bthe%2BGreat%2BDoor",
+    "edhrec": "https://edhrec.com/route/?cc=Guardian+of+the+Great+Door"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525280%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743200&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/117810?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e",
+  "oracle_id": "b8141489-00fa-4aba-85d0-4c883196fece",
+  "multiverse_ids": [
+    179590
+  ],
+  "mtgo_id": 32314,
+  "mtgo_foil_id": 32315,
+  "tcgplayer_id": 31837,
+  "cardmarket_id": 20959,
+  "name": "Wildfield Borderpost",
+  "lang": "en",
+  "released_at": "2009-04-30",
+  "uri": "https://api.scryfall.com/cards/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e",
+  "scryfall_uri": "https://scryfall.com/card/arb/80/wildfield-borderpost?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:33:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.jpg?1783942424",
+    "normal": "https://cards.scryfall.io/normal/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.jpg?1783942424",
+    "large": "https://cards.scryfall.io/large/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.jpg?1783942424",
+    "png": "https://cards.scryfall.io/png/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.png?1783942424",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.jpg?1783942424",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.jpg?1783942424",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.webp?1783942424",
+    "grid": "https://cards.scryfall.io/grid/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.webp?1783942424",
+    "display": "https://cards.scryfall.io/display/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.webp?1783942424",
+    "art": "https://cards.scryfall.io/art/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.webp?1783942424",
+    "crop": "https://cards.scryfall.io/crop/front/9/0/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e.webp?1783942424"
+  },
+  "mana_cost": "{1}{G}{W}",
+  "cmc": 3.0,
+  "type_line": "Artifact",
+  "oracle_text": "You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost.\nThis artifact enters tapped.\n{T}: Add {G} or {W}.",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "G",
+    "W"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "db486ec5-141d-4781-9ee5-5456926934c1",
+  "set": "arb",
+  "set_name": "Alara Reborn",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/db486ec5-141d-4781-9ee5-5456926934c1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aarb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/arb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/90a788e7-f3c8-41cc-9f1a-2e9f58aabc0e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab8141489-00fa-4aba-85d0-4c883196fece&unique=prints",
+  "collector_number": "80",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zoltan Boros & Gabor Szikszai",
+  "artist_ids": [
+    "1885e6cb-c827-4896-994e-3d0a027d602f",
+    "44c3877f-8771-43dc-9e40-f4c765f59d2e"
+  ],
+  "illustration_id": "bb9c3ddc-2384-409b-875f-65f60668c31b",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19220,
+  "penny_rank": 3159,
+  "prices": {
+    "usd": "0.16",
+    "usd_foil": "0.48",
+    "usd_etched": null,
+    "eur": "0.22",
+    "eur_foil": "0.63",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=179590&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWildfield%2BBorderpost",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWildfield%2BBorderpost",
+    "edhrec": "https://edhrec.com/route/?cc=Wildfield+Borderpost"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F31837%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=20959&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/32314?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

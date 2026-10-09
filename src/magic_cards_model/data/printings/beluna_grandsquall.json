@@ -1,0 +1,185 @@
+{
+  "object": "card",
+  "id": "3f5acc0d-33a6-476f-95ca-a1ad788334dd",
+  "oracle_id": "06374e6d-62fa-4833-81cd-b4d0a35e7365",
+  "multiverse_ids": [
+    629721
+  ],
+  "mtgo_id": 116784,
+  "arena_id": 86930,
+  "tcgplayer_id": 512338,
+  "cardmarket_id": 728102,
+  "name": "Beluna Grandsquall // Seek Thrills",
+  "lang": "en",
+  "released_at": "2023-09-08",
+  "uri": "https://api.scryfall.com/cards/3f5acc0d-33a6-476f-95ca-a1ad788334dd",
+  "scryfall_uri": "https://scryfall.com/card/woe/220/beluna-grandsquall-seek-thrills?utm_source=api",
+  "layout": "adventure",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:57:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.jpg?1783915067",
+    "normal": "https://cards.scryfall.io/normal/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.jpg?1783915067",
+    "large": "https://cards.scryfall.io/large/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.jpg?1783915067",
+    "png": "https://cards.scryfall.io/png/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.png?1783915067",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.jpg?1783915067",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.jpg?1783915067",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.webp?1783915067",
+    "grid": "https://cards.scryfall.io/grid/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.webp?1783915067",
+    "display": "https://cards.scryfall.io/display/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.webp?1783915067",
+    "art": "https://cards.scryfall.io/art/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.webp?1783915067",
+    "crop": "https://cards.scryfall.io/crop/front/3/f/3f5acc0d-33a6-476f-95ca-a1ad788334dd.webp?1783915067"
+  },
+  "mana_cost": "{G}{U}{R} // {2}{G}{U}{R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Giant Noble // Instant \u2014 Adventure",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "G",
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "R",
+    "U"
+  ],
+  "keywords": [
+    "Trample",
+    "Mill"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Beluna Grandsquall",
+      "mana_cost": "{G}{U}{R}",
+      "type_line": "Legendary Creature \u2014 Giant Noble",
+      "oracle_text": "Trample\nPermanent spells you cast that have an Adventure cost {1} less to cast.",
+      "power": "4",
+      "toughness": "4",
+      "artist": "Victor Adame Minguez",
+      "artist_id": "bd8f7368-5b10-4554-b6b8-d052c6aca89f",
+      "illustration_id": "eda46596-ebe1-4d5d-a10d-523b03e37e5b"
+    },
+    {
+      "object": "card_face",
+      "name": "Seek Thrills",
+      "mana_cost": "{2}{G}{U}{R}",
+      "type_line": "Instant \u2014 Adventure",
+      "oracle_text": "Mill seven cards. Then put all cards that have an Adventure from among the milled cards into your hand.",
+      "artist": "Victor Adame Minguez",
+      "artist_id": "bd8f7368-5b10-4554-b6b8-d052c6aca89f"
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "5ed9d78f-a556-435f-b95f-7317ae66e5e3",
+      "component": "combo_piece",
+      "name": "Beluna Grandsquall // Seek Thrills",
+      "type_line": "Legendary Creature \u2014 Giant Noble // Instant \u2014 Adventure",
+      "uri": "https://api.scryfall.com/cards/5ed9d78f-a556-435f-b95f-7317ae66e5e3"
+    },
+    {
+      "object": "related_card",
+      "id": "fcf4c7fb-7859-4c11-8552-6817f5119d2e",
+      "component": "combo_piece",
+      "name": "On an Adventure",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/fcf4c7fb-7859-4c11-8552-6817f5119d2e"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set": "woe",
+  "set_name": "Wilds of Eldraine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/woe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3f5acc0d-33a6-476f-95ca-a1ad788334dd/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A06374e6d-62fa-4833-81cd-b4d0a35e7365&unique=prints",
+  "collector_number": "220",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Victor Adame Minguez",
+  "artist_ids": [
+    "bd8f7368-5b10-4554-b6b8-d052c6aca89f"
+  ],
+  "illustration_id": "eda46596-ebe1-4d5d-a10d-523b03e37e5b",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14373,
+  "penny_rank": 11897,
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": "0.38",
+    "usd_etched": null,
+    "eur": "0.22",
+    "eur_foil": "0.48",
+    "tix": "0.06"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629721&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBeluna%2BGrandsquall%2B%252F%252F%2BSeek%2BThrills",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBeluna%2BGrandsquall%2B%252F%252F%2BSeek%2BThrills",
+    "edhrec": "https://edhrec.com/route/?cc=Beluna+Grandsquall"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512338%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=728102&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/116784?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
