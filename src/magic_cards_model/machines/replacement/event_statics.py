@@ -174,4 +174,30 @@ def _compile_poison_cap(effect: ReplacementEffect) -> CardReplacement | None:
     return CardReplacement(label=effect.text, applies=applies, apply=apply)
 
 
-EVENT_COMPILERS = (_compile_life_event, _compile_conditional_life_floor, _compile_poison_cap)
+def _compile_skip_extra_turn(effect: ReplacementEffect) -> CardReplacement | None:
+    """ "If a player would begin an extra turn, that player skips that turn
+    instead." (CR 614.10, CR 500.7)"""
+    if (effect.event or "").strip().lower() != "a player would begin an extra turn":
+        return None
+    if _text_of(effect.replacement) != "that player skips that turn":
+        return None
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        return event.kind is EventKind.BEGIN_EXTRA_TURN and not event.replaced
+
+    def skip(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        event.replaced = True
+
+    return CardReplacement(label=effect.text, applies=applies, apply=skip)
+
+
+def _text_of(clause: str | None) -> str:
+    return strip_reminder_text(clause or "")[0].strip().rstrip(".").lower()
+
+
+EVENT_COMPILERS = (
+    _compile_life_event,
+    _compile_conditional_life_floor,
+    _compile_poison_cap,
+    _compile_skip_extra_turn,
+)

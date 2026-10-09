@@ -393,6 +393,9 @@ class EventKind(StrEnum):
     #: event is raised *before* the move and carries `replaced` rather than
     #: an amount: there is nothing to reduce, only something to call off.
     DESTROY = "destroy"
+    #: A player is about to begin an extra turn (CR 500.7, 614.10): carries
+    #: `player` and `replaced`, like `LOSE_THE_GAME` - a skip calls it off.
+    BEGIN_EXTRA_TURN = "begin_extra_turn"
     #: A player is about to draw one card (CR 121.1, 121.6, 614.11).
     DRAW = "draw"
     #: A player is about to gain life (CR 119.3).
@@ -656,7 +659,7 @@ class ReplaceableEvent:
         """
         if self.kind in (EventKind.DAMAGE, EventKind.LOSE_LIFE):
             return self.amount > 0
-        if self.kind in (EventKind.DESTROY, EventKind.LOSE_THE_GAME):
+        if self.kind in (EventKind.DESTROY, EventKind.LOSE_THE_GAME, EventKind.BEGIN_EXTRA_TURN):
             return not self.replaced
         return True
 

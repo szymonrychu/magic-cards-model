@@ -871,3 +871,107 @@ def test_maestros_does_not_cast_a_creature_spell_from_the_graveyard():
 def test_maestros_line_reads_handled():
     outcomes = classify_clauses(card("Maestros Ascendancy"))
     assert {o.category for o in outcomes} == {HANDLED}, outcomes
+
+
+# -- Ugin's Nexus: "If a player would begin an extra turn, that player skips
+#    that turn instead." / "If Ugin's Nexus would be put into a graveyard from
+#    the battlefield, instead exile it and take an extra turn after this one."
+
+
+def _nexus_board(alice, bob, *, alice_hand=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", library=["Forest"] * 4, battlefield=list(alice), hand=list(alice_hand))
+        .player("bob", library=["Island"] * 4, battlefield=list(bob))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _next_turn(scenario):
+    scenario.turn.advance_to(Step.CLEANUP)
+    scenario.advance()
+
+
+def test_nexus_skips_an_extra_turn_its_controller_would_begin():
+    scenario = _nexus_board(["Ugin's Nexus"], [])
+    scenario.game.grant_extra_turn("alice")
+
+    _next_turn(scenario)
+
+    assert scenario.turn.active_player == "bob", "alice's extra turn was skipped"
+    assert not scenario.turn.taking_extra_turn
+
+
+def test_nexus_skips_an_extra_turn_an_opponent_would_begin():
+    scenario = _nexus_board([], ["Ugin's Nexus"])
+    scenario.game.grant_extra_turn("alice")
+
+    _next_turn(scenario)
+
+    assert scenario.turn.active_player == "bob"
+    assert not scenario.turn.taking_extra_turn
+
+
+def test_without_nexus_the_extra_turn_is_taken():
+    scenario = _nexus_board([], [])
+    scenario.game.grant_extra_turn("alice")
+
+    _next_turn(scenario)
+
+    assert scenario.turn.active_player == "alice"
+    assert scenario.turn.taking_extra_turn
+
+
+def test_nexus_skips_only_the_extra_turn_not_the_ordinary_one():
+    scenario = _nexus_board(["Ugin's Nexus"], [])
+    scenario.game.grant_extra_turn("alice")
+
+    _next_turn(scenario)  # alice's extra turn is skipped: bob's ordinary turn
+    _next_turn(scenario)  # alice's ordinary turn
+
+    assert scenario.turn.active_player == "alice"
+    assert not scenario.turn.taking_extra_turn
+
+
+def test_nexus_exiles_itself_and_takes_an_extra_turn_when_it_would_be_destroyed():
+    scenario = _nexus_board(["Ugin's Nexus"], [])
+    nexus = scenario.find("Ugin's Nexus", Zone.BATTLEFIELD, "alice")
+
+    scenario.game.destroy(nexus)
+
+    assert nexus.zone is Zone.EXILE
+    assert scenario.player("alice").graveyard == []
+    _next_turn(scenario)
+    assert scenario.turn.active_player == "alice"
+    assert scenario.turn.taking_extra_turn
+
+
+def test_nexus_leaving_from_hand_is_not_the_battlefield_replacement():
+    scenario = _nexus_board([], [], alice_hand=["Ugin's Nexus"])
+    nexus = scenario.find("Ugin's Nexus", Zone.HAND, "alice")
+
+    scenario.game.put_into_graveyard(nexus)
+
+    assert nexus.zone is Zone.GRAVEYARD
+    _next_turn(scenario)
+    assert scenario.turn.active_player == "bob"
+
+
+def test_a_second_nexus_skips_the_extra_turn_the_first_one_grants():
+    scenario = _nexus_board(["Ugin's Nexus"], ["Ugin's Nexus"])
+    nexus = scenario.find("Ugin's Nexus", Zone.BATTLEFIELD, "alice")
+
+    scenario.game.destroy(nexus)
+    _next_turn(scenario)
+
+    assert nexus.zone is Zone.EXILE
+    assert scenario.turn.active_player == "bob"
+    assert not scenario.turn.taking_extra_turn
+
+
+def test_nexus_lines_read_handled():
+    outcomes = classify_clauses(card("Ugin's Nexus"))
+    assert {o.category for o in outcomes} == {HANDLED}, outcomes

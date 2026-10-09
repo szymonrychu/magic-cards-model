@@ -248,7 +248,8 @@ def _zone_action(effect: ReplacementEffect) -> Apply | None:
     if match := re.fullmatch(
         r"exile (?:it|that card)(?: with (?P<n>an?|one|two|three|four|five) "
         r"(?P<kind>[a-z+\-/0-9]+) counters? on it)?"
-        r"(?: and (?:(?P<token>create .+?)|you gain (?P<life>\d+) life))?",
+        r"(?: and (?:(?P<token>create .+?)|you gain (?P<life>\d+) life"
+        r"|(?P<turn>take an extra turn after this one)))?",
         printed,
         re.IGNORECASE,
     ):
@@ -283,6 +284,7 @@ def _exile_action(match: re.Match, effect: ReplacementEffect) -> Apply | None:
     count = _COUNTER_WORDS.get((match.group("n") or "").lower(), 0)
     kind = match.group("kind")
     life = int(match.group("life")) if match.group("life") else 0
+    extra_turn = match.group("turn") is not None
     token = None
     if match.group("token"):
         descriptor = re.fullmatch(
@@ -292,7 +294,7 @@ def _exile_action(match: re.Match, effect: ReplacementEffect) -> Apply | None:
         if token is None:
             return None
     if effect.linked_trigger is not None:
-        if count or life or token is not None:
+        if count or life or token is not None or match.group("turn"):
             return None
         return _exile_then_reflexive(effect)
 
@@ -302,6 +304,8 @@ def _exile_action(match: re.Match, effect: ReplacementEffect) -> Apply | None:
             event.exile_counters[kind] = event.exile_counters.get(kind, 0) + count
         if life and source.controller:
             game.gain_life(source.controller, life)
+        if extra_turn and source.controller:
+            game.grant_extra_turn(source.controller)  # CR 500.7
         if token is not None and source.controller:
             create_tokens(game, token, source.controller, 1)
 

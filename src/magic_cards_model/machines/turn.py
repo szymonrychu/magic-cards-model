@@ -783,6 +783,20 @@ class TurnMachine(EngineModel):
             raise KeyError(f"no player named {username}")
         self.extra_turns.append(username)
 
+    def pending_extra_turn(self) -> str | None:
+        """The player whose extra turn would begin next, or None (CR 500.7:
+        the most recently created turn is taken first); departed players'
+        turns are dropped on the way, as `_next_extra_turn` would."""
+        while self.extra_turns and self.extra_turns[-1] in self.departed:
+            self.extra_turns.pop()
+        return self.extra_turns[-1] if self.extra_turns else None
+
+    def skip_pending_extra_turn(self) -> None:
+        """The extra turn that would begin next is skipped instead (CR 614.10):
+        it is spent without being taken."""
+        if self.pending_extra_turn() is not None:
+            self.extra_turns.pop()
+
     def _next_extra_turn(self) -> str | None:
         """Pop the extra turn that is taken next, skipping departed players.
 
