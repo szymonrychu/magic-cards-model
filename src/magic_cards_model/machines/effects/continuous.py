@@ -10154,6 +10154,88 @@ def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
     return effect
 
 
+#: "All creatures able to block target creature this turn do so." - Shinen of
+#: Life's Roar's channel ability: a CR 509.1c lure put on the target for the
+#: turn (CR 611.2a), granted as the printed static's own line so
+#: `machines/block_statics.py` reads it exactly like Breaker of Armies'.
+_LURE_ON_TARGET_RE = re.compile(
+    r"^all creatures able to block (?P<phrase>(?:up to one )?target creature(?: [a-z' ]+?)?) "
+    r"this turn do so\.?$",
+    re.IGNORECASE,
+)
+
+#: "This creature must be blocked this turn if able." - a mode of Glorfindel,
+#: Dauntless Rescuer's trigger: the source's own CR 509.1c requirement for the
+#: turn, granted as the printed "must be blocked if able" line.
+_SELF_MUST_BE_BLOCKED_THIS_TURN_RE = re.compile(
+    r"^(?:[\u2022*]\s*)?(?:this creature|this permanent|it) must be blocked this turn if able\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s11")
+@SPELL_TEXT.rung("s10")
+def _parse_block_requirement_grant_clause(text: str) -> TargetedClause | None:
+    """`_LURE_ON_TARGET_RE`'s and `_SELF_MUST_BE_BLOCKED_THIS_TURN_RE`'s
+    shapes, or `None` (CR 509.1c, CR 611.2a): the requirement is granted until
+    end of turn as an ability line (layer 6, CR 613.1f) that `block_statics`
+    and `combat_statics` already enforce - on the target for a lure, on the
+    ability's own source (while it is still the same object, CR 400.7) for
+    "must be blocked this turn"."""
+    flat = " ".join(text.split())
+    if match := _LURE_ON_TARGET_RE.fullmatch(flat):
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+
+        def lure_effect(game: "Game", stack_object: "StackObject") -> None:
+            controller = game.controller_of(stack_object).username
+            source_name = (
+                stack_object.card.name
+                if isinstance(stack_object, CardState)
+                else stack_object.source_name
+            )
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                    _grant_keywords_to(
+                        game,
+                        target,
+                        ["All creatures able to block this creature do so."],
+                        "until end of turn",
+                        controller=controller,
+                        source_name=source_name,
+                    )
+
+        return lure_effect
+    if _SELF_MUST_BE_BLOCKED_THIS_TURN_RE.fullmatch(flat) is None:
+        return None
+
+    def self_effect(game: "Game", stack_object: "StackObject") -> None:
+        if isinstance(stack_object, CardState):
+            return
+        source = (
+            game.find_by_id(stack_object.source_id) if stack_object.source_id is not None else None
+        )
+        if (
+            not isinstance(source, CardState)
+            or source.zone is not Zone.BATTLEFIELD
+            or (
+                stack_object.source_stamp is not None
+                and source.zone_change_stamp != stack_object.source_stamp
+            )
+        ):
+            return
+        _grant_keywords_to(
+            game,
+            source,
+            ["This creature must be blocked if able."],
+            "until end of turn",
+            controller=game.controller_of(stack_object).username,
+            source_name=stack_object.source_name,
+        )
+
+    return self_effect
+
+
 _OPPONENTS_ATTACK_IF_ABLE_RE = re.compile(
     r"^until your next turn, creatures your opponents control attack each combat if able\.?$",
     re.IGNORECASE,

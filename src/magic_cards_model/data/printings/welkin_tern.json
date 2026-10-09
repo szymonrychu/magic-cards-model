@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "aa9b56b7-73f1-47fd-834b-37408482cebc",
+  "oracle_id": "010c660a-a67b-48f0-a63a-15470eb89f69",
+  "multiverse_ids": [
+    447053
+  ],
+  "tcgplayer_id": 168318,
+  "cardmarket_id": 359430,
+  "name": "Welkin Tern",
+  "lang": "en",
+  "released_at": "2018-06-22",
+  "uri": "https://api.scryfall.com/cards/aa9b56b7-73f1-47fd-834b-37408482cebc",
+  "scryfall_uri": "https://scryfall.com/card/gs1/5/welkin-tern?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:23:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.jpg?1783934633",
+    "normal": "https://cards.scryfall.io/normal/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.jpg?1783934633",
+    "large": "https://cards.scryfall.io/large/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.jpg?1783934633",
+    "png": "https://cards.scryfall.io/png/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.png?1783934633",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.jpg?1783934633",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.jpg?1783934633",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.webp?1783934633",
+    "grid": "https://cards.scryfall.io/grid/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.webp?1783934633",
+    "display": "https://cards.scryfall.io/display/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.webp?1783934633",
+    "art": "https://cards.scryfall.io/art/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.webp?1783934633",
+    "crop": "https://cards.scryfall.io/crop/front/a/a/aa9b56b7-73f1-47fd-834b-37408482cebc.webp?1783934633"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Bird",
+  "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nThis creature can block only creatures with flying.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "19c285e9-68e0-45e1-b82b-ac6051eb43be",
+  "set": "gs1",
+  "set_name": "Global Series Jiang Yanggu & Mu Yanling",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/19c285e9-68e0-45e1-b82b-ac6051eb43be",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ags1&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/gs1?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/aa9b56b7-73f1-47fd-834b-37408482cebc/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A010c660a-a67b-48f0-a63a-15470eb89f69&unique=prints",
+  "collector_number": "5",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "It stops flying only as its life comes to an end.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Yutaka Li",
+  "artist_ids": [
+    "c28fc66c-b2df-40ea-bf9a-45dca41de634"
+  ],
+  "illustration_id": "60c2c5af-aba7-41c8-9234-17ec990f435e",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 27286,
+  "penny_rank": 13855,
+  "prices": {
+    "usd": "0.08",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=447053&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWelkin%2BTern",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWelkin%2BTern",
+    "edhrec": "https://edhrec.com/route/?cc=Welkin+Tern"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F168318%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=359430&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Welkin+Tern&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
