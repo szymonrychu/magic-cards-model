@@ -269,7 +269,14 @@ def test_sephara_taps_four_untapped_flyers_instead_of_paying_its_mana_cost():
         .player(
             "alice",
             hand=["Sephara, Sky's Blade"],
-            battlefield=["Plains", "Wind Drake", "Wind Drake", "Wind Drake", "Wind Drake", "Grizzly Bears"],
+            battlefield=[
+                "Plains",
+                "Wind Drake",
+                "Wind Drake",
+                "Wind Drake",
+                "Wind Drake",
+                "Grizzly Bears",
+            ],
         )
         .player("bob")
         .build()
@@ -379,7 +386,9 @@ def test_security_rhox_is_cast_for_rg_paid_with_treasure_mana_only():
     rhox = scenario.find("Security Rhox", Zone.BATTLEFIELD, "alice")
     assert rhox.zone is Zone.BATTLEFIELD
     assert all(t.zone is Zone.GRAVEYARD or t not in scenario.game.battlefield for t in treasures)
-    assert not any(land.tapped for land in scenario.game.battlefield if land.name in {"Mountain", "Forest"})
+    assert not any(
+        land.tapped for land in scenario.game.battlefield if land.name in {"Mountain", "Forest"}
+    )
 
 
 def test_security_rhox_refuses_mana_from_lands():
@@ -407,7 +416,11 @@ def test_security_rhox_hard_cast_is_unrestricted():
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", hand=["Security Rhox"], battlefield=["Mountain", "Forest", "Forest", "Forest", "Forest"])
+        .player(
+            "alice",
+            hand=["Security Rhox"],
+            battlefield=["Mountain", "Forest", "Forest", "Forest", "Forest"],
+        )
         .player("bob")
         .build()
     )

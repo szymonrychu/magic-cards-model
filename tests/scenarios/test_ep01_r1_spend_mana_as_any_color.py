@@ -110,7 +110,9 @@ def test_the_permission_reaches_activated_abilities_too_when_unscoped():
     """CR 609.4b: an unscoped sentence covers abilities as well as spells
     (the scoped ones read above are about spells only)."""
     scenario = _main(
-        alice={"battlefield": ["Chromatic Orrery", "Island", "Island", "Island", "Island", "Island"]},
+        alice={
+            "battlefield": ["Chromatic Orrery", "Island", "Island", "Island", "Island", "Island"]
+        },
     )
     orrery = scenario.find("Chromatic Orrery", Zone.BATTLEFIELD, "alice")
     assert scenario.game.spends_mana_as_any_color(

@@ -53,7 +53,9 @@ def test_each_defiler_reaches_only_permanent_spells_of_its_own_colour():
         bob={},
     )
     for name in ("Grizzly Bears", "Lightning Bolt"):
-        casting = scenario.cast(name, "alice", targets=["bob"] if name == "Lightning Bolt" else None)
+        casting = scenario.cast(
+            name, "alice", targets=["bob"] if name == "Lightning Bolt" else None
+        )
         assert casting.granted_life_costs() == []
         casting.cancel()
 
@@ -78,9 +80,7 @@ def test_the_reduction_never_spills_into_generic_mana():
 
 
 def test_the_opponents_defiler_grants_nothing():
-    scenario = _main(
-        alice={"hand": ["Serra Angel"]}, bob={"battlefield": ["Defiler of Faith"]}
-    )
+    scenario = _main(alice={"hand": ["Serra Angel"]}, bob={"battlefield": ["Defiler of Faith"]})
     casting = scenario.cast("Serra Angel", "alice")
     assert casting.granted_life_costs() == []
     casting.cancel()

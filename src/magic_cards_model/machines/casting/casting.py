@@ -64,7 +64,6 @@ from ..keywords import (
 )
 from ..modes import ModalProfile, Mode, modal_profile, substitute_x, x_restriction_refusal
 from ..objects_as_costs import power_of
-from .granted_life_costs import GrantedLifeCost, granted_life_costs
 from ..spell_grants import casualty_numbers, conspire_count, granted_affinity_reductions
 from ..targeting import (
     TargetingProfile,
@@ -81,6 +80,7 @@ from ..targeting import (
 from ..teamwork import teamwork_ability, teamwork_instead_target_text, teamwork_payment_refusal
 from ..triggers import ExtraTriggerEvent, GameEvent
 from ..turn import Step
+from .granted_life_costs import GrantedLifeCost, granted_life_costs
 from .options import AlternativeCostOption, KeywordCastOption
 from .permissions import GrantedCastOption, PlayPermission
 
