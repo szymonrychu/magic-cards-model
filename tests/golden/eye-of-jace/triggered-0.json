@@ -46,7 +46,7 @@
         "source": "Eye of Jace"
       }
     ],
-    "fields_changed": ["damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "life_gained_amount_this_turn", "life_gained_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "reveals", "turn_facts", "turn_history"],
+    "fields_changed": ["damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "life_gained_amount_this_turn", "life_gained_this_turn", "noncombat_damage_to_players_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "reveals", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Eye of Jace@alice#1": {

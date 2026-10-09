@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["damage_dealt_this_turn", "turn_facts"],
+    "fields_changed": ["damage_dealt_this_turn", "noncombat_damage_to_players_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Archdemon of Greed@alice#1": {

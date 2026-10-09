@@ -152,6 +152,23 @@ def test_the_first_legendary_creature_spell_each_turn():
     assert _cost(scenario, "Thrasta, Tempest's Roar") == "{8}{G}{G}"
 
 
+def _serah_trigger_on_stack(others: int) -> bool:
+    scenario = _main(
+        alice={
+            "battlefield": ["Serah Farron // Crystallized Serah"]
+            + ["Thrasta, Tempest's Roar"] * others
+        },
+        bob={},
+    )
+    scenario.advance()
+    return any("transform Serah Farron" in item.ability.text for item in scenario.game.stack)
+
+
+def test_serah_transform_trigger_needs_two_other_legendary_creatures():
+    assert _serah_trigger_on_stack(2)
+    assert not _serah_trigger_on_stack(1)
+
+
 # -- "that target ..." -----------------------------------------------------------
 
 
