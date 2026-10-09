@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "9f764077-df2d-4ac7-b507-2c8e08386d49",
+  "oracle_id": "a0380b63-58ef-4545-beec-6ad307bbc21b",
+  "multiverse_ids": [
+    541111
+  ],
+  "mtgo_id": 94850,
+  "arena_id": 79059,
+  "tcgplayer_id": 253510,
+  "cardmarket_id": 582642,
+  "name": "Eruth, Tormented Prophet",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/9f764077-df2d-4ac7-b507-2c8e08386d49",
+  "scryfall_uri": "https://scryfall.com/card/vow/237/eruth-tormented-prophet?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:39:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.jpg?1783924793",
+    "normal": "https://cards.scryfall.io/normal/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.jpg?1783924793",
+    "large": "https://cards.scryfall.io/large/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.jpg?1783924793",
+    "png": "https://cards.scryfall.io/png/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.png?1783924793",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.jpg?1783924793",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.jpg?1783924793",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.webp?1783924793",
+    "grid": "https://cards.scryfall.io/grid/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.webp?1783924793",
+    "display": "https://cards.scryfall.io/display/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.webp?1783924793",
+    "art": "https://cards.scryfall.io/art/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.webp?1783924793",
+    "crop": "https://cards.scryfall.io/crop/front/9/f/9f764077-df2d-4ac7-b507-2c8e08386d49.webp?1783924793"
+  },
+  "mana_cost": "{1}{U}{R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Wizard",
+  "oracle_text": "If you would draw a card, exile the top two cards of your library instead. You may play those cards this turn.",
+  "power": "2",
+  "toughness": "4",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9f764077-df2d-4ac7-b507-2c8e08386d49/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa0380b63-58ef-4545-beec-6ad307bbc21b&unique=prints",
+  "collector_number": "237",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "She is cursed with visions of monsters and suffering . . . and all her visions come true.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ekaterina Burmak",
+  "artist_ids": [
+    "2a9f3780-fcc8-4ec5-b403-ee1d1370d3b4"
+  ],
+  "illustration_id": "86b38dfc-8f59-4fff-8b37-fb7058489339",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 6331,
+  "penny_rank": 6066,
+  "preview": {
+    "source": "AliasV",
+    "source_uri": "https://twitter.com/coL_AliasV/status/1455898055413313536",
+    "previewed_at": "2021-11-03"
+  },
+  "prices": {
+    "usd": "0.38",
+    "usd_foil": "0.42",
+    "usd_etched": null,
+    "eur": "0.49",
+    "eur_foil": "0.48",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=541111&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEruth%252C%2BTormented%2BProphet",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEruth%252C%2BTormented%2BProphet",
+    "edhrec": "https://edhrec.com/route/?cc=Eruth%2C+Tormented+Prophet"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253510%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=582642&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94850?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

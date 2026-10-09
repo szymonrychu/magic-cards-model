@@ -5595,7 +5595,10 @@ def _merge_reveal_top_put_all_quality_to_hand_rest_elsewhere_clauses(
                     player, rest, source=source, source_id=source_id
                 )
             # Under every card already there (CR 401.2), each revealed card
-            # once (CR 400.7).
+            # once (CR 400.7): lifted off the top first, or it would be listed
+            # twice.
+            for state in rest:
+                player.library.remove(state)
             player.library.extend(rest)
             player.note_library_changed(placed=rest)
         else:

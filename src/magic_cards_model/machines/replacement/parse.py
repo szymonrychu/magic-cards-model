@@ -3780,13 +3780,13 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
 #: as ..." qualifier is never offered to one: compiling it there would perform
 #: the replacement unconditionally and silently drop the clause, which is the
 #: exact failure the fail-closed rule at the top of this section forbids.
-from .other_statics import OTHER_COMPILERS  # noqa: E402
+from .other_statics import CONDITION_AWARE_OTHER_COMPILERS, OTHER_COMPILERS  # noqa: E402
 
 _COMPILERS = _COMPILERS + OTHER_COMPILERS
 
 _CONDITION_AWARE_COMPILERS = frozenset(
     {_compile_draw_plus, _compile_first_time_token_copies, _compile_damage_plus_amount}
-)
+) | frozenset(CONDITION_AWARE_OTHER_COMPILERS)
 
 
 def _compile(effect: ReplacementEffect) -> CardReplacement | None:
