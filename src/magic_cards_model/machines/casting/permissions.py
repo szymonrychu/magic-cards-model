@@ -1000,7 +1000,8 @@ _LINKED_EXILE_STATIC_CAST_RE = re.compile(
     r"(?: by (?P<extra>.+?) in addition to paying (?:its|their) other costs)?"
     r"\.(?P<limit>\s*you can'?t cast more than one spell this way each turn\.)?"
     r"(?:\s*if you cast an? (?:[a-z]+ )?spell this way, that (?:creature|artifact|enchantment|"
-    r"permanent) enters with (?:an additional|an?|one) (?P<rider>\+1/\+1|[a-z]+) counter on it\.)?$",
+    r"permanent) enters with (?:an additional|an?|one) "
+    r"(?P<rider>\+1/\+1|[a-z]+) counter on it\.)?$",
     re.IGNORECASE,
 )
 #: "the number of Elves and Faeries you control" - a count of the permanents
