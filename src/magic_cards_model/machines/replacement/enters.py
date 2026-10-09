@@ -96,7 +96,7 @@ _ENTERS_UNTAPPED = re.compile(rf"^(?P<subject>.+?) {_ENTERS} untapped\.?$", re.I
 _ENTERS_WITH = re.compile(
     rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} with (?P<what>.+?)"
     r"(?:\s+on it)?(?:,\s*(?P<tail>where .+?))?"
-    r"(?:\s+if (?P<trailing_condition>.+?))?\.?$",
+    r"(?:\s+(?:if (?P<trailing_condition>.+?)|(?P<trailing_unless>unless .+?)))?\.?$",
     re.IGNORECASE,
 )
 #: CR 702.138c: "An ability that reads "[This permanent] escapes with [one or
@@ -270,7 +270,12 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
             counter_kind=counter_kind,
             amount_expression=expression,
             that_many_multiplier=that_many_multiplier,
-            condition=(match.group("condition") or match.group("trailing_condition") or "").strip()
+            condition=(
+                match.group("condition")
+                or match.group("trailing_condition")
+                or match.group("trailing_unless")
+                or ""
+            ).strip()
             or None,
             self_replacement=_refers_to_self(subject, names),
         )
@@ -1242,6 +1247,39 @@ def _enters_tapped_condition(effect: ReplacementEffect) -> EntersCondition | Non
         return not inner(game, entering)
 
     return tapped_unless
+
+
+def _enters_with_condition(effect: ReplacementEffect) -> EntersCondition | None:
+    """The gate of an "enters with counters" line (CR 614.1c), as a predicate
+    on the permanent as it enters: the board-only readers of
+    `_enters_tapped_condition` first, else the shared condition registry
+    (`Game.condition_holds`) asked with the entering permanent as the source,
+    so a cast-record fact (CR 702.33d "was kicked", CR 601.2h "at least three
+    white mana was spent", raid, "you cast it from your hand") is read off the
+    spell that became this permanent and never live. A shape neither reads is
+    `None`, and a shape the registry declines to read at the moment it is asked
+    never performs (it is not silently treated as true).
+    """
+    holds = _enters_tapped_condition(effect)
+    if holds is not None:
+        return holds
+    condition = (effect.condition or "").strip().rstrip(".")
+    negated = condition.lower().startswith("unless ")
+    if negated:
+        condition = condition[len("unless ") :].strip()
+    if not condition:
+        return None
+
+    def holds_shared(game: "Game", entering: CardState) -> bool:
+        controller = entering.controller or entering.owner
+        if controller is None:
+            return False
+        answer = game.condition_holds(controller, condition, entering)
+        if answer is None:
+            return False
+        return answer != negated
+
+    return holds_shared
 
 
 def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
@@ -2514,7 +2552,11 @@ def _self_enters_modifiers(
             # whose condition does not hold never reaches CR 616.1's list at
             # all rather than being applied to no effect. A condition no reader
             # claims returns `None` and the effect is skipped, unchanged.
-            holds = _enters_tapped_condition(effect)
+            holds = (
+                _enters_with_condition(effect)
+                if effect.kind is ReplacementKind.ENTERS_WITH
+                else _enters_tapped_condition(effect)
+            )
             if holds is None or not holds(game, card_state):
                 continue
         amount = effect.amount
