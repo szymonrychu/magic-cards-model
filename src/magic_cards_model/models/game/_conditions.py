@@ -882,6 +882,22 @@ class ConditionsMixin:
                 turn=self._turns_taken(),
                 carried=False,
             )
+        # "Play with the top card of your library revealed." (Courser of
+        # Kruphix, Melek): every seat's top card is public to every viewer
+        # while a permanent its owner controls says so (CR 400.2).
+        for seat in self.players:
+            if seat.library and self.reveals_top_card(seat.username):
+                top = seat.library[0]
+                found[top.id] = KnownCard(
+                    card_id=top.id,
+                    card_name=top.name,
+                    owner=seat.username,
+                    zone=Zone.LIBRARY,
+                    index_from_top=0,
+                    source='a static "play with the top card revealed" line',
+                    turn=self._turns_taken(),
+                    carried=False,
+                )
         return list(found.values())
 
     def _live_reveal(self: "Game", reveal: Reveal, viewer: str) -> KnownCard | None:

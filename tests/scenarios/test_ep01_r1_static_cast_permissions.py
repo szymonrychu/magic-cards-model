@@ -1038,3 +1038,23 @@ def test_hogaak_is_paid_by_delve_and_convoke_alone():
     assert not payment.mana_owed.symbols
     scenario.pay_with(payment)
     assert scenario.put_on_stack(casting).zone is Zone.STACK
+
+
+def test_melek_plays_with_the_top_card_revealed_to_every_player():
+    """CR 400.2 / 611.3d: "Play with the top card of your library revealed"
+    makes the top card known to all players while the permanent stays."""
+    scenario = top_board("Melek, Izzet Paragon", ["Divination"])
+    top = scenario.player("alice").library[0]
+    for viewer in ("alice", "bob"):
+        known = [k for k in scenario.game.known_to(viewer) if k.card_id == top.id]
+        assert known and known[0].index_from_top == 0
+    scenario = top_board("Grizzly Bears", ["Divination"])
+    assert not scenario.game.known_to("bob")
+    assert top_refusal(scenario) is not None
+
+
+def test_melek_sweeps_handled():
+    from magic_cards_model.support import classify_card
+    from tests.cards import card
+
+    assert classify_card(card("Melek, Izzet Paragon"))[0] == "handled"

@@ -3479,6 +3479,11 @@ class Game(
     _REVEALS_EACH_CARD_DRAWN_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^the chosen player reveals each card they draw\.?$", re.IGNORECASE
     )
+    #: "Play with the top card of your library revealed." (Courser of
+    #: Kruphix, Melek, Garruk's Horde) - CR 400.2: the top card is public.
+    _TOP_CARD_REVEALED_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^play with the top card of your library revealed\.?$", re.IGNORECASE
+    )
     _LOOK_AT_TOP_CARD_ANY_TIME_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^you may look at the top card of your library any time\.?$", re.IGNORECASE
     )

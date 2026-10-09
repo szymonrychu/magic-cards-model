@@ -1236,6 +1236,18 @@ class ContinuousMixin:
             for line in board.of(permanent).abilities
         )
 
+    def reveals_top_card(self: "Game", username: str) -> bool:
+        """Whether `username` controls a permanent whose static line is
+        "Play with the top card of your library revealed." (CR 400.2),
+        read fresh off the computed board every call."""
+        board = self.computed_board()
+        return any(
+            self._TOP_CARD_REVEALED_RE.fullmatch(self._static_line_without_ability_word(line))
+            is not None
+            for permanent in self.permanents_controlled_by(username)
+            for line in board.of(permanent).abilities
+        )
+
     def has_granted_improvise(self: "Game", caster: str, spell: CardState) -> bool:
         """Whether some permanent `caster` controls grants `spell` CR
         702.126a's improvise right now via `_SPELLS_YOU_CAST_HAVE_IMPROVISE_
@@ -1739,6 +1751,7 @@ class ContinuousMixin:
         line = cls._static_line_without_ability_word(text)
         return (
             cls._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(line) is not None
+            or cls._TOP_CARD_REVEALED_RE.fullmatch(line) is not None
             or cls._REVEALS_EACH_CARD_DRAWN_RE.fullmatch(line) is not None
             or cls._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(line) is not None
             or cls._SPELLS_YOU_CAST_HAVE_IMPROVISE_RE.fullmatch(line) is not None
