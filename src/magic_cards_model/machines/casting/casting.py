@@ -2029,8 +2029,16 @@ class Casting(EngineModel):
             from ..cost import fill_from_among
 
             extra = option.additional_cost.model_copy(deep=True)
+            named = list(choosing or [])
             for component in extra.components:
-                fill_from_among(component, self.game, self.caster, list(choosing or []) or None)
+                if component.from_among:
+                    fill_from_among(component, self.game, self.caster, named or None)
+                elif component.required and not component.cards:
+                    # "by discarding a card" / "by sacrificing a creature": the
+                    # cards the caster names fill the components in printed
+                    # order (CR 601.2b), the way an alternative cost's do.
+                    component.cards = named[: component.required]
+                    named = named[component.required :]
             self.add_additional_cost(extra)
         if option.pays_mana_cost:
             # Warp's second half: the card is cast from exile for its own mana
