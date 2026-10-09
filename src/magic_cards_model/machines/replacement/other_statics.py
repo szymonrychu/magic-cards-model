@@ -16,7 +16,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...models.card import Type
-from ...models.card_state import CardState
+from ...models.card_state import CardState, TargetKind
 from ...models.token import create_tokens, is_token
 from ...models.zone import Zone
 from .model import (
@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from ...models.game import Game
 from .parse import (
     _exile_instead,
+    _exile_instead_then_reflexive,
     _is_opponent,
     _owner_username,
     _read_token_descriptor,
@@ -49,6 +50,13 @@ _GRAVEYARD_RE = re.compile(
     re.IGNORECASE,
 )
 _CLAUSE_SPLIT_RE = re.compile(r" or (?=an? [a-z' ]+ would )", re.IGNORECASE)
+
+#: "a creature dealt damage by this creature / Kumano / enchanted creature this
+#: turn" and "a creature dealt damage this turn by a source you controlled".
+_DAMAGED_SUBJECT_RE = re.compile(
+    r"^a creature dealt damage (?:by (?P<by>.+?) this turn|this turn by (?P<group>a source you controlled))$",
+    re.IGNORECASE,
+)
 
 _CREATURE_SUBJECT_RE = re.compile(
     r"^a(?P<nontoken> nontoken)? creature"
@@ -107,13 +115,13 @@ def _card_subject(subject: str) -> Callable[["Game", CardState, CardState, Repla
         ):
             return False
         return not enchanted or any(
-            (a.attached_to == card.id) for a in game.battlefield if "Aura" in a.subtypes
+            a.attached_to == card.id and Type.ENCHANTMENT in a.types for a in game.battlefield
         )
 
     return creature
 
 
-def _whose_graveyard(whose: str, source_enchants_player: bool) -> Callable | None:
+def _whose_graveyard(whose: str) -> Callable | None:
     whose = whose.lower()
     if whose == "a":
         return lambda game, source, card: True
@@ -123,7 +131,36 @@ def _whose_graveyard(whose: str, source_enchants_player: bool) -> Callable | Non
         return lambda game, source, card: _is_opponent(
             game, _owner_username(game, card), source.controller
         )
+    if whose == "enchanted player's":
+        # CR 303.4m: "enchanted player" is whoever the permanent is attached to.
+        def enchanted(game: "Game", source: CardState, card: CardState) -> bool:
+            attachment = source.attachment
+            return (
+                attachment is not None
+                and attachment.kind is TargetKind.PLAYER
+                and attachment.username == _owner_username(game, card)
+            )
+
+        return enchanted
     return None
+
+
+def _damaged_by(by: str | None, group: str | None):
+    """CR 120.1: the creature dying was dealt damage this turn by the source
+    (`Game.deal_damage` ledgers each landed hit in `turn_facts`)."""
+
+    def matcher(game: "Game", source: CardState, card: CardState, event: ReplaceableEvent) -> bool:
+        if group is not None:
+            fact = f"damaged_by_controller:{source.controller}"
+        elif by is not None and by.lower() == "enchanted creature":
+            if source.attached_to is None:
+                return False
+            fact = f"damaged_by:{source.attached_to}"
+        else:
+            fact = f"damaged_by:{source.id}"
+        return game.turn_fact_holds(fact, str(card.id))
+
+    return matcher
 
 
 def _clause_applies(clause: str, effect: ReplacementEffect):
@@ -142,11 +179,14 @@ def _clause_applies(clause: str, effect: ReplacementEffect):
         return None
     if tail is not None:
         return None  # "and it wasn't cycled" is read by its own compiler
-    whose_matcher = _whose_graveyard(whose, False)
+    whose_matcher = _whose_graveyard(whose)
     if whose_matcher is None:
         return None
     anywhere_self = False
-    if effect.self_replacement:
+    damaged = _DAMAGED_SUBJECT_RE.match(subject.strip()) if dies is not None else None
+    if damaged is not None:
+        subject_matcher = _damaged_by(damaged.group("by"), damaged.group("group"))
+    elif effect.self_replacement:
         subject_matcher = lambda game, source, card, event: card.id == source.id  # noqa: E731
         anywhere_self = grave is not None and not from_battlefield
     else:
@@ -214,7 +254,9 @@ def _exile_action(match: re.Match, effect: ReplacementEffect) -> Apply | None:
         if token is None:
             return None
     if effect.linked_trigger is not None:
-        return None
+        if count or life or token is not None:
+            return None
+        return _exile_then_reflexive(effect)
 
     def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
         _exile_instead(game, source, event)
@@ -224,6 +266,45 @@ def _exile_action(match: re.Match, effect: ReplacementEffect) -> Apply | None:
             game.gain_life(source.controller, life)
         if token is not None and source.controller:
             create_tokens(game, token, source.controller, 1)
+
+    return apply
+
+
+_PAY_THEN_RE = re.compile(
+    r"When you do, (?P<pay>you may pay (?:\{[^}]+\})+)\. If you do, (?P<consequence>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _exile_then_reflexive(effect: ReplacementEffect) -> Apply | None:
+    """ "... exile it instead. When you do, [you may pay {N}. If you do,] <X>."
+
+    CR 603.12: the reflexive ability is created only when this replacement
+    applied. The payment-first wording is a reflexive ability whose body is
+    "you may pay {N}. If you do, <X>" (CR 118.12, `ReflexiveMayPayManaIfYouDo`)
+    and fails closed when the effect reader declines `<X>`.
+    """
+    from ..delayed import ReflexiveMayPayManaIfYouDo
+    from ..effects.mana import _parse_may_pay_mana_if_you_do_clause
+
+    tail = effect.raw[effect.raw.find("When you do") :]
+    paid = _PAY_THEN_RE.match(tail)
+    if paid is None:
+        return _exile_instead_then_reflexive(tail)
+    body = f"{paid.group('pay')}. If you do, {paid.group('consequence').rstrip('.')}"
+    if _parse_may_pay_mana_if_you_do_clause(body) is None:
+        return None
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        _exile_instead(game, source, event)
+        if source.controller:
+            game.create_reflexive_trigger(
+                text=body,
+                controller=source.controller,
+                source_id=source.id,
+                source_name=source.name,
+                callback=ReflexiveMayPayManaIfYouDo(),
+            )
 
     return apply
 

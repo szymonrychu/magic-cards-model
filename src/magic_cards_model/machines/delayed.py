@@ -1344,6 +1344,25 @@ class ReflexivePayManaConsequence(DelayedEffectSpecBase):
             consequence_effect(game, ability)
 
 
+class ReflexiveMayPayManaIfYouDo(DelayedEffectSpecBase):
+    """ "You may pay `{N}`. If you do, `<consequence>`." as the body of a
+    reflexive ability (CR 603.12 + CR 118.12) - the "When you do, you may pay
+    {2}. If you do, create a 1/1 ... Pest" rider on Valentin, Dean of the
+    Vein's dies replacement (`machines/replacement/other_statics.py`). The
+    payment and its consequence resolve together on this one ability, read by
+    `machines/effects/mana.py`'s `_parse_may_pay_mana_if_you_do_clause`.
+    """
+
+    kind: Literal["reflexive_may_pay_mana_if_you_do"] = "reflexive_may_pay_mana_if_you_do"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects.mana import _parse_may_pay_mana_if_you_do_clause
+
+        effect = _parse_may_pay_mana_if_you_do_clause(trigger.text)
+        if effect is not None:
+            effect(game, ability)
+
+
 class ReflexiveMandatoryTokenDamageConsequence(DelayedEffectSpecBase):
     """ "Create `<n>` `<token>` token[s]. When you do, if ..., `<damage>`."
     (CR 603.12, CR 603.4) - Ajani, Nacatl Avenger's `0`,
@@ -2294,6 +2313,7 @@ DelayedEffectSpec = Annotated[
     | DungeonRoomAbility
     | ReflexivePayEnergyConsequence
     | ReflexivePayManaConsequence
+    | ReflexiveMayPayManaIfYouDo
     | ReflexiveMandatoryTokenDamageConsequence
     | ReflexiveCounterCountConsequence
     | ReflexiveAttachSubjectToTargetConsequence

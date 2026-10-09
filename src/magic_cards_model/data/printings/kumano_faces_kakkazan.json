@@ -1,0 +1,185 @@
+{
+  "object": "card",
+  "id": "28d92cad-45b0-479d-97fc-c175f3a3f259",
+  "oracle_id": "535916f8-b51a-4414-8ab0-fdccdefd9433",
+  "multiverse_ids": [
+    548455,
+    548456
+  ],
+  "mtgo_id": 97234,
+  "arena_id": 79582,
+  "tcgplayer_id": 262776,
+  "cardmarket_id": 608242,
+  "name": "Kumano Faces Kakkazan // Etching of Kumano",
+  "lang": "en",
+  "released_at": "2022-02-18",
+  "uri": "https://api.scryfall.com/cards/28d92cad-45b0-479d-97fc-c175f3a3f259",
+  "scryfall_uri": "https://scryfall.com/card/neo/152/kumano-faces-kakkazan-etching-of-kumano?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:24:30Z",
+  "cmc": 1.0,
+  "type_line": "Enchantment \u2014 Saga // Enchantment Creature \u2014 Human Shaman",
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Transform",
+    "Haste"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Kumano Faces Kakkazan",
+      "mana_cost": "{R}",
+      "type_line": "Enchantment \u2014 Saga",
+      "oracle_text": "(As this Saga enters and after your draw step, add a lore counter.)\nI \u2014 This Saga deals 1 damage to each opponent and each planeswalker they control.\nII \u2014 When you next cast a creature spell this turn, that creature enters with an additional +1/+1 counter on it.\nIII \u2014 Exile this Saga, then return it to the battlefield transformed under your control.",
+      "colors": [
+        "R"
+      ],
+      "artist": "Mike Bierek",
+      "artist_id": "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7",
+      "illustration_id": "20605f7a-1cc0-4eec-add1-14ca723839ba",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "normal": "https://cards.scryfall.io/normal/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "large": "https://cards.scryfall.io/large/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "png": "https://cards.scryfall.io/png/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.png?1783923870",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "thumb": "https://cards.scryfall.io/thumb/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870",
+        "grid": "https://cards.scryfall.io/grid/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870",
+        "display": "https://cards.scryfall.io/display/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870",
+        "art": "https://cards.scryfall.io/art/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870",
+        "crop": "https://cards.scryfall.io/crop/front/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Etching of Kumano",
+      "mana_cost": "",
+      "type_line": "Enchantment Creature \u2014 Human Shaman",
+      "oracle_text": "Haste\nIf a creature dealt damage this turn by a source you controlled would die, exile it instead.",
+      "colors": [
+        "R"
+      ],
+      "color_indicator": [
+        "R"
+      ],
+      "power": "2",
+      "toughness": "2",
+      "flavor_text": "Many kami came to demand a secret he did not know, and every one of them fell.",
+      "artist": "Mike Bierek",
+      "artist_id": "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7",
+      "illustration_id": "0251aee6-31b7-4c6e-8b90-eadc53008ec9",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "normal": "https://cards.scryfall.io/normal/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "large": "https://cards.scryfall.io/large/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "png": "https://cards.scryfall.io/png/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.png?1783923870",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.jpg?1783923870",
+        "thumb": "https://cards.scryfall.io/thumb/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870",
+        "grid": "https://cards.scryfall.io/grid/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870",
+        "display": "https://cards.scryfall.io/display/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870",
+        "art": "https://cards.scryfall.io/art/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870",
+        "crop": "https://cards.scryfall.io/crop/back/2/8/28d92cad-45b0-479d-97fc-c175f3a3f259.webp?1783923870"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59a2059f-5482-433f-8761-eb2e17859b71",
+  "set": "neo",
+  "set_name": "Kamigawa: Neon Dynasty",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59a2059f-5482-433f-8761-eb2e17859b71",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aneo&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/neo?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/28d92cad-45b0-479d-97fc-c175f3a3f259/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A535916f8-b51a-4414-8ab0-fdccdefd9433&unique=prints",
+  "collector_number": "152",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Mike Bierek",
+  "artist_ids": [
+    "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "fandfc",
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14895,
+  "penny_rank": 263,
+  "preview": {
+    "source": "Benjamin Wheeler",
+    "source_uri": "https://twitter.com/BWheelerMTG/status/1489372553449590789",
+    "previewed_at": "2022-02-03"
+  },
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.26",
+    "usd_etched": null,
+    "eur": "0.28",
+    "eur_foil": "0.35",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548455&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKumano%2BFaces%2BKakkazan%2B%252F%252F%2BEtching%2Bof%2BKumano",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKumano%2BFaces%2BKakkazan%2B%252F%252F%2BEtching%2Bof%2BKumano",
+    "edhrec": "https://edhrec.com/route/?cc=Kumano+Faces+Kakkazan"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262776%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=608242&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/97234?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
