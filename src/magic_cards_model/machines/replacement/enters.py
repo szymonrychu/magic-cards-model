@@ -384,7 +384,13 @@ def _enters_with_effects(
             return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
         amount, variable, counter_kind, expression, that_many_multiplier = counters
         defined = _WHERE_X_IS.match(tail or "")
-        if defined is not None and variable and expression is None and amount is None:
+        if (
+            defined is not None
+            and variable
+            and expression is None
+            and amount is None
+            and _TURNS_SINCE_FORETOLD_RE.search(defined.group("expression")) is None
+        ):
             # "... X +1/+1 counters on him, where X is the mana value of the
             # returned creature": the count is the defined expression, not
             # CR 107.3m's announced X.
