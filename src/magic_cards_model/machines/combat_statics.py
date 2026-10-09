@@ -34,6 +34,7 @@ session:
 """
 
 import re
+from collections.abc import Callable  # noqa: F401
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -265,7 +266,9 @@ _EACH_CREATURE_BLOCKED_BY_AT_MOST_ONE_RE = re.compile(
     re.IGNORECASE,
 )
 
-_HAS_A_COUNTER_ON_IT_RE = re.compile(r"^an? counters? on (?:it|them)$", re.IGNORECASE)
+_HAS_A_COUNTER_ON_IT_RE = re.compile(
+    r"^an? (?P<kind>[+\-\d/]+ )?counters? on (?:it|them)$", re.IGNORECASE
+)
 
 
 @dataclass(frozen=True)
@@ -278,12 +281,17 @@ class _GroupBlockedByAtMostOne:
     #: means "no filter at all" (the bare "each creature you control" shape).
     quality: "list[tuple[Type | None, str | None]] | None" = None
     has_counter: bool = False
+    #: The counter's kind ("+1/+1"), or None for "a counter" of any kind.
+    counter_kind: str | None = None
     power_operator: str | None = None
     power_bound: int | None = None
 
     def matches(self, game: "Game", candidate: CardState) -> bool:
         characteristics = game.characteristics_of(candidate)
-        if self.has_counter and not any(count > 0 for count in characteristics.counters.values()):
+        if self.has_counter and not any(
+            count > 0 and (self.counter_kind is None or str(kind) == self.counter_kind)
+            for kind, count in characteristics.counters.items()
+        ):
             return False
         if self.power_operator is not None:
             power = game.power_of(candidate)
@@ -306,8 +314,10 @@ class _GroupBlockedByAtMostOne:
 
 def _parse_each_creature_description(description: str) -> "_GroupBlockedByAtMostOne | None":
     text = description.strip()
-    if _HAS_A_COUNTER_ON_IT_RE.fullmatch(text):
-        return _GroupBlockedByAtMostOne(sentence=text, has_counter=True)
+    if counter := _HAS_A_COUNTER_ON_IT_RE.fullmatch(text):
+        return _GroupBlockedByAtMostOne(
+            sentence=text, has_counter=True, counter_kind=(counter["kind"] or "").strip() or None
+        )
     power = re.fullmatch(
         r"power (?P<number>\d+) or (?P<direction>less|greater)", text, re.IGNORECASE
     )
@@ -381,16 +391,351 @@ def group_blocked_by_at_most_one_refusal(
 # -- EP-01 R1 T4: dispatchers combat.py calls (additive hooks) ---------------
 
 
-def block_evasion_refusal(game: "Game", blocker: CardState, attacker: CardState) -> str | None:
+# -- "can't be blocked except by ...", "can't be blocked by ...", "can't block"
+#    stated by the attacker, an attachment or a group (CR 509.1b) ------------
+
+#: A predicate over (game, candidate creature).
+_Matcher = "Callable[[Game, CardState], bool]"
+
+_SENTENCE_SPLIT_RE = re.compile(r",?\s+and/or\s+|,\s*(?:or\s+|and\s+)?|\s+or\s+", re.IGNORECASE)
+_EXCEPT_BY_RE = re.compile(
+    r"^(?P<subject>.+?) can't be blocked except by (?P<desc>.+?)\.?$", re.IGNORECASE
+)
+_BLOCKED_BY_RE = re.compile(
+    r"^(?P<subject>.+?) can't be blocked by (?P<desc>.+?)\.?$", re.IGNORECASE
+)
+_POWER_LESS_CANT_BLOCK_RE = re.compile(
+    r"^creatures with power less than (?P<bound>.+?) can't block "
+    r"(?P<object>it|this creature|creatures you control)\.?$",
+    re.IGNORECASE,
+)
+_GROUP_CANT_BLOCK_RE = re.compile(r"^(?P<group>.+?) can't block\.?$", re.IGNORECASE)
+_THREE_OR_MORE_RE = re.compile(r"^(?P<count>\w+) or more creatures$", re.IGNORECASE)
+
+
+def _is_aura_attached(game: "Game", creature: CardState) -> bool:
+    """Whether `creature` is enchanted (an Aura is attached to it)."""
+    board = game.computed_board()
+    return any(
+        permanent.attached_to == creature.id and "Aura" in board.of(permanent).subtypes
+        for permanent in game.battlefield
+    )
+
+
+def _single_description(text: str):
+    """One creature description beyond `combat._parse_creature_description`'s
+    closed grammar, as a predicate, or None."""
+    from .combat import _parse_creature_description, canonical_subtype, is_token
+
+    word = text.strip().lower()
+    if word in {"creature tokens", "tokens"}:
+        return lambda game, candidate: is_token(candidate)
+    if word == "creatures that don't have a name":
+        return lambda game, candidate: not game.characteristics_of(candidate).name.strip()
+    if word in {"legendary creatures", "legendary creature"}:
+        return lambda game, candidate: any(
+            str(value).lower() == "legendary"
+            for value in game.characteristics_of(candidate).supertypes
+        )
+    if word == "enchanted creatures":
+        return lambda game, candidate: _is_aura_attached(game, candidate)
+    if word == "enchantment creatures":
+        return lambda game, candidate: Type.ENCHANTMENT in game.characteristics_of(candidate).types
+    parsed = _parse_creature_description(text)
+    if parsed is not None:
+        return parsed.matches
+    singular = re.sub(r"(es|s)$", "", word) if word.endswith("ses") else word.rstrip("s")
+    for candidate_name in (word, word[:-1], singular):
+        if canonical_subtype(candidate_name) is not None and " " not in word.strip():
+            subtype = canonical_subtype(candidate_name).lower()
+            return lambda game, candidate, subtype=subtype: (
+                subtype in {value.lower() for value in game.characteristics_of(candidate).subtypes}
+            )
+    parts = word.removesuffix("s").split()
+    if len(parts) > 1 and all(
+        canonical_subtype(part) is not None or part == "scion" for part in parts
+    ):
+        return lambda game, candidate: (
+            set(parts) <= {value.lower() for value in game.characteristics_of(candidate).subtypes}
+        )
     return None
 
 
+def parse_blocker_description(description: str):
+    """A creature description as a predicate: a disjunction of the
+    descriptions joined by "or"/"and/or"/commas, "creatures with flying or
+    reach" sharing its "creatures with" lead, or None when any side is not
+    read."""
+    text = description.strip().rstrip(".")
+    whole = _single_description(text)
+    if whole is not None:
+        return whole
+    parts = [part.strip() for part in _SENTENCE_SPLIT_RE.split(text) if part.strip()]
+    if len(parts) < 2:
+        return None
+    lead = ""
+    matchers = []
+    for part in parts:
+        candidate = part
+        if lead and "creature" not in part.lower() and not part.lower().startswith("power"):
+            candidate = lead + part
+        matcher = _single_description(candidate)
+        if matcher is None:
+            return None
+        if part.lower().startswith("creatures with "):
+            lead = "creatures with "
+        matchers.append(matcher)
+    return lambda game, candidate: any(matcher(game, candidate) for matcher in matchers)
+
+
+def _attacker_subject(subject: str, source: CardState):
+    """A predicate over attackers for a block-restriction sentence's subject
+    (the source itself, what it enchants/equips, or a group its controller
+    controls), or None."""
+    from .combat import _parse_creature_description, _self_reference_alternatives
+
+    text = subject.strip().lower()
+    if text in {name.lower() for name in _self_reference_alternatives(source)} | _OBJECT_NOUNS:
+        return lambda game, attacker: attacker.id == source.id
+    if text in {"enchanted creature", "equipped creature"}:
+        return lambda game, attacker: source.attached_to == attacker.id
+    group = re.fullmatch(
+        r"(?:each )?(?P<what>.+?) you control(?: with (?P<q>.+))?", subject.strip(), re.IGNORECASE
+    )
+    if group is None:
+        return None
+    what = group["what"].strip().lower()
+    qualifier = group["q"]
+    kind = None
+    if what not in {"creature", "creatures"}:
+        kind = parse_blocker_description(group["what"])
+        if kind is None:
+            return None
+    extra = None
+    if qualifier is not None:
+        counter = _HAS_COUNTER_RE.fullmatch(qualifier.strip())
+        if counter is not None:
+            counter_name = (counter["kind"] or "").strip().lower()
+
+            def extra(game, attacker, counter_name=counter_name):
+                counters = game.characteristics_of(attacker).counters
+                if counter_name:
+                    return any(
+                        count > 0 and str(key).lower() == counter_name
+                        for key, count in counters.items()
+                    )
+                return any(count > 0 for count in counters.values())
+
+        else:
+            parsed = _parse_creature_description("creatures with " + qualifier.strip())
+            if parsed is None:
+                return None
+            extra = parsed.matches
+
+    def predicate(game, attacker):
+        if game.controller_of(attacker).username != game.controller_of(source).username:
+            return False
+        if kind is not None and not kind(game, attacker):
+            return False
+        return extra is None or extra(game, attacker)
+
+    return predicate
+
+
+#: "This Vehicle can't be blocked by ..." - the permanent naming itself by type.
+_OBJECT_NOUNS = frozenset({"this vehicle", "this permanent", "this artifact", "this creature"})
+
+_HAS_COUNTER_RE = re.compile(r"^an? (?P<kind>[+\-\d/]+ )?counters? on (?:it|them)$", re.IGNORECASE)
+
+
+def _block_sentences(game: "Game"):
+    """(source, sentence) for every static sentence on the computed board."""
+    from .layers import layer_readable_sentences
+
+    board = game.computed_board()
+    for source in game.battlefield:
+        for ability in board.of(source).abilities:
+            lowered = ability.lower()
+            if "can't be blocked" not in lowered and "can't block" not in lowered:
+                continue
+            for sentence in layer_readable_sentences(ability, static_only=True):
+                yield source, sentence.strip()
+
+
+def block_evasion_refusal(game: "Game", blocker: CardState, attacker: CardState) -> str | None:
+    """Why a "can't be blocked except by/by ..." or "can't block" static
+    (printed, attached or group, CR 509.1b) refuses this blocker, or None."""
+    for source, sentence in _block_sentences(game):
+        if match := _EXCEPT_BY_RE.fullmatch(sentence):
+            if _THREE_OR_MORE_RE.fullmatch(match["desc"].strip()):
+                continue
+            applies = _attacker_subject(match["subject"], source)
+            matcher = parse_blocker_description(match["desc"])
+            if applies is None or matcher is None or not applies(game, attacker):
+                continue
+            if not matcher(game, blocker):
+                return (
+                    f"{attacker.name} can't be blocked except by {match['desc'].strip()}, "
+                    f'and {blocker.name} is not one: {source.name} says "{sentence}" (CR 509.1b)'
+                )
+        elif match := _BLOCKED_BY_RE.fullmatch(sentence):
+            applies = _attacker_subject(match["subject"], source)
+            matcher = parse_blocker_description(match["desc"])
+            if applies is None or matcher is None or not applies(game, attacker):
+                continue
+            if matcher(game, blocker):
+                return (
+                    f"{attacker.name} can't be blocked by {match['desc'].strip()}, and "
+                    f'{blocker.name} is one: {source.name} says "{sentence}" (CR 509.1b)'
+                )
+        elif match := _POWER_LESS_CANT_BLOCK_RE.fullmatch(sentence):
+            refusal = _power_less_cant_block(game, source, blocker, attacker, match, sentence)
+            if refusal is not None:
+                return refusal
+        elif match := _GROUP_CANT_BLOCK_RE.fullmatch(sentence):
+            refusal = _group_cant_block(game, source, blocker, match, sentence)
+            if refusal is not None:
+                return refusal
+    return None
+
+
+def _power_less_cant_block(game, source, blocker, attacker, match, sentence) -> str | None:
+    from .effects import count_expression
+
+    if match["object"].lower() == "creatures you control":
+        if game.controller_of(attacker).username != game.controller_of(source).username:
+            return None
+    elif attacker.id != source.id:
+        return None
+    bound_text = match["bound"].strip()
+    own = re.fullmatch(
+        r"(?:this creature|it)'?s power|this creature's power|.+'s power", bound_text
+    )
+    if own is not None:
+        bound = game.power_of(source)
+    else:
+        reader = count_expression(bound_text)
+        if reader is None:
+            return None
+        bound = reader(game, game.controller_of(source).username or "")
+    power = game.power_of(blocker)
+    if bound is None or power is None or power >= bound:
+        return None
+    return (
+        f"{blocker.name} can't block {attacker.name}: its power {power} is less than "
+        f'{bound} - {source.name} says "{sentence}" (CR 509.1b)'
+    )
+
+
+def _group_cant_block(game, source, blocker, match, sentence) -> str | None:
+    group = match["group"].strip()
+    if group.lower().startswith(("this ", "enchanted ", "equipped ")):
+        return None
+    if group.lower() == "creatures":
+        return None
+    matcher = parse_blocker_description(group)
+    if matcher is None:
+        return None
+    if not matcher(game, blocker):
+        return None
+    return f'{blocker.name} can\'t block: {source.name} says "{sentence}" (CR 509.1b)'
+
+
 def block_evasion_declaration_refusal(game: "Game", declared) -> str | None:
+    """ "can't be blocked except by three or more creatures" judged on the
+    whole declaration (CR 509.1b, like menace in CR 702.111b)."""
+    for attacker_id, blockers in declared.items():
+        if not blockers:
+            continue
+        attacker = game.find_by_id(attacker_id)
+        if attacker is None:
+            continue
+        for source, sentence in _block_sentences(game):
+            match = _EXCEPT_BY_RE.fullmatch(sentence)
+            if match is None:
+                continue
+            count = _THREE_OR_MORE_RE.fullmatch(match["desc"].strip())
+            if count is None:
+                continue
+            applies = _attacker_subject(match["subject"], source)
+            if applies is None or not applies(game, attacker):
+                continue
+            from ..numbers import parse_count
+
+            needed = parse_count(count["count"], article=True)
+            if needed is not None and len(blockers) < needed:
+                return (
+                    f"{attacker.name} can't be blocked except by {match['desc'].strip()}, but "
+                    f'only {len(blockers)} block it: {source.name} says "{sentence}" (CR 509.1b)'
+                )
     return None
 
 
 def reads_block_evasion_line(printing, text: str, *, card_name: str) -> bool:
+    """Whether every sentence of this static line is a block restriction the
+    functions above enforce - asked of the parsers themselves."""
+    from .layers import layer_readable_sentences
+
+    lowered = text.lower()
+    if "can't be blocked" not in lowered and "can't block" not in lowered:
+        return False
+    sentences = [s.strip() for s in layer_readable_sentences(text, static_only=True)]
+    return bool(sentences) and all(
+        _reads_block_sentence(sentence, card_name) for sentence in sentences
+    )
+
+
+def _reads_block_sentence(sentence: str, card_name: str) -> bool:
+    from ..numbers import parse_count
+
+    if match := _EXCEPT_BY_RE.fullmatch(sentence):
+        desc = match["desc"].strip()
+        count = _THREE_OR_MORE_RE.fullmatch(desc)
+        if count is not None:
+            ok = parse_count(count["count"], article=True) is not None
+        else:
+            ok = parse_blocker_description(desc) is not None
+        return ok and _subject_readable(match["subject"], card_name)
+    if match := _BLOCKED_BY_RE.fullmatch(sentence):
+        return parse_blocker_description(match["desc"]) is not None and _subject_readable(
+            match["subject"], card_name
+        )
+    if match := _POWER_LESS_CANT_BLOCK_RE.fullmatch(sentence):
+        from .effects import count_expression
+
+        bound = match["bound"].strip()
+        return bound.endswith("'s power") or count_expression(bound) is not None
+    if match := _GROUP_CANT_BLOCK_RE.fullmatch(sentence):
+        group = match["group"].strip()
+        return (
+            not group.lower().startswith(("this ", "enchanted ", "equipped "))
+            and group.lower() != "creatures"
+            and parse_blocker_description(group) is not None
+        )
     return False
+
+
+def _subject_readable(subject: str, card_name: str) -> bool:
+    from ..models.card_state import CardState as _CardState  # noqa: F401
+    from .combat import _self_reference_names
+
+    text = subject.strip().lower()
+    if text in {name.lower() for name in _self_reference_names(card_name)} | _OBJECT_NOUNS:
+        return True
+    if text in {"enchanted creature", "equipped creature"}:
+        return True
+    # A group the attacker-subject parser reads: probe it against a dummy source.
+    probe = _SubjectProbe(card_name)
+    return _attacker_subject(subject, probe) is not None
+
+
+class _SubjectProbe:
+    """The minimum of a CardState `_attacker_subject` reads while parsing."""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.id = None
+        self.attached_to = None
 
 
 def extra_attack_refusal(game: "Game", creature: CardState, defender) -> str | None:
