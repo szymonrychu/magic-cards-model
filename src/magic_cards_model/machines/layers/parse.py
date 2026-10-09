@@ -5699,6 +5699,14 @@ _ATTACHED_CREATURE_PUMP_AND_QUOTED_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
+#: "Enchanted land has "`<ability>`"." (Security Blockade) and its Equipment
+#: twins - CR 113.10a's quoted-ability grant, to the permanent the Aura or
+#: Equipment is attached to (CR 303.4b, CR 301.5a) when that is not a creature.
+_ATTACHED_PERMANENT_QUOTED_GRANT_RE = re.compile(
+    r'^(?P<attachment>equipped|enchanted) (?:land|artifact|permanent) has "(?P<granted>.+)"\.?$',
+    re.IGNORECASE | re.DOTALL,
+)
+
 _ATTACHED_CREATURE_STATIC_RE = re.compile(
     r"^(?P<attachment>equipped|enchanted) creature "
     r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
@@ -7953,6 +7961,12 @@ def quoted_ability_grants(
             text = (match.group("granted") or "").strip()
             if not text:
                 continue
+            grantable.add(text)
+            if source.attached_to is not None:
+                wanted.setdefault(source.attached_to, set()).add(text)
+            continue
+        if match := _ATTACHED_PERMANENT_QUOTED_GRANT_RE.fullmatch(normalized):
+            text = match.group("granted").strip()
             grantable.add(text)
             if source.attached_to is not None:
                 wanted.setdefault(source.attached_to, set()).add(text)
@@ -11060,6 +11074,15 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             return None
         return _attached_creature_gated_grant_builder(
             keywords, condition, subject=match.group("attachment").lower(), line=sentence
+        )
+    if match := _ATTACHED_PERMANENT_QUOTED_GRANT_RE.fullmatch(sentence):
+        return _attached_creature_static_builder(
+            0,
+            0,
+            [],
+            subject=match.group("attachment").lower(),
+            granted=match.group("granted").strip(),
+            line=sentence,
         )
     if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(sentence):
         raw_keywords = (

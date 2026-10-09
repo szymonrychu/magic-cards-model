@@ -554,3 +554,21 @@ def test_the_avengers_prevention_covers_combat_damage_only():
 
     assert _hit(scenario, avenger, 1, guide) == 1  # noncombat damage is dealt
     assert _hit(scenario, avenger, 5, guide, combat=True) == 0
+
+
+# -- prevention abilities a static grants (CR 113.10a) --------------------------------------
+
+
+def test_security_blockade_gives_the_enchanted_land_a_tap_ability_that_prevents_damage_to_you():
+    scenario = _board(alice=["Security Blockade", "Forest"], bob=["Goblin Guide"])
+    forest = _on(scenario, "Forest")
+    _on(scenario, "Security Blockade").attach_to(forest)
+    guide = scenario.creature("Goblin Guide", "bob")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.activate(forest, index=1)
+    scenario.resolve_top()
+
+    assert forest.tapped
+    assert _hit(scenario, scenario.player("alice"), 3, guide) == 2  # CR 615.7: the next 1 damage
+    assert _hit(scenario, scenario.player("alice"), 3, guide) == 3  # the shield is spent
