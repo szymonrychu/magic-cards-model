@@ -998,7 +998,9 @@ _LINKED_EXILE_STATIC_CAST_RE = re.compile(
     r" from among cards (?P<own>you own )?exiled with this \w+(?P<this_turn> this turn)?"
     r"(?P<free> without paying (?:its|their) mana costs?)?"
     r"(?: by (?P<extra>.+?) in addition to paying (?:its|their) other costs)?"
-    r"\.(?P<limit>\s*you can'?t cast more than one spell this way each turn\.)?$",
+    r"\.(?P<limit>\s*you can'?t cast more than one spell this way each turn\.)?"
+    r"(?:\s*if you cast an? (?:[a-z]+ )?spell this way, that (?:creature|artifact|enchantment|"
+    r"permanent) enters with (?:an additional|an?|one) (?P<rider>\+1/\+1|[a-z]+) counter on it\.)?$",
     re.IGNORECASE,
 )
 #: "the number of Elves and Faeries you control" - a count of the permanents
@@ -1023,6 +1025,9 @@ class LinkedExileStaticCast(EngineModel):
     this_turn: bool = False
     free: bool = False
     additional_cost: str | None = None
+    rider_counter: str | None = None
+    """The counter kind "If you cast a spell this way, that creature enters
+    with a `<kind>` counter on it." puts on the permanent (CR 614.1c)."""
 
 
 def _count_listed_subtypes(expression: str) -> Callable[[Any, str], int] | None:
@@ -1085,6 +1090,7 @@ def linked_exile_static_cast(
         this_turn=match.group("this_turn") is not None,
         free=match.group("free") is not None,
         additional_cost=extra,
+        rider_counter=(match.group("rider") or "").lower() or None,
     )
 
 
@@ -1152,6 +1158,7 @@ def _linked_exile_static_cast_option(
         timing=CastTiming.OWN,
         once_per_turn_key=key,
         additional_cost=additional,
+        enters_with_counters=(read.rider_counter,) if read.rider_counter else (),
     )
 
 

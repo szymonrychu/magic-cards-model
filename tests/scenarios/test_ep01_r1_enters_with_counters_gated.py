@@ -455,3 +455,41 @@ def test_scarlet_spider_web_slung_enters_with_the_returned_creatures_mana_value(
 
 def test_scarlet_spider_cast_normally_enters_bare():
     assert _scarlet_spider(False).counters[Counter.PLUS_ONE] == 0
+
+
+# -- "If you cast a spell this way, that creature enters with a counter"
+# (cards exiled with a permanent, CR 607.2a) ----------------------------------
+
+
+def _paleontologist_board(graveyard):
+    scenario = Scenario().manual_turn_based_actions()
+    scenario.player(
+        "alice",
+        battlefield=["Intrepid Paleontologist", *["Forest"] * 7],
+        graveyard=list(graveyard),
+    ).player("bob")
+    played = scenario.build()
+    played.start_at(Step.PRECOMBAT_MAIN)
+    return played
+
+
+def _exile_and_cast(played, name):
+    target = played.find(name, Zone.GRAVEYARD, "alice")
+    paleontologist = played.creature("Intrepid Paleontologist")
+    played.activate(paleontologist, index=1, targets=[target], username="alice", auto=True)
+    played.resolve_top()
+    casting = played.cast(name, from_zone=Zone.EXILE)
+    casting.use_keyword("Cast permission")
+    played.auto_pay(casting.begin_paying(), username="alice")
+    played.put_on_stack(casting)
+    return played.resolve_top()
+
+
+def test_a_dinosaur_cast_from_the_paleontologists_pile_enters_with_a_finality_counter():
+    played = _paleontologist_board(["Ranging Raptors"])
+    assert _exile_and_cast(played, "Ranging Raptors").counters["finality"] == 1
+
+
+def test_a_dinosaur_not_cast_that_way_has_no_finality_counter():
+    played = _board(hand=["Ranging Raptors"], battlefield=["Forest"] * 4)
+    assert _cast(played, "Ranging Raptors").counters["finality"] == 0
