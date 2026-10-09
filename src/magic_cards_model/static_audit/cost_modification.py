@@ -7,13 +7,13 @@ real cast - never a regex of its own (see `static_audit/__init__.py`).
 
 from functools import cache
 
+from magic_cards_model.machines.abilities import self_normalized_effect_text
 from magic_cards_model.machines.casting.options import (
     reads_mandatory_additional_cost_line,
     reads_optional_additional_cost_line,
     reads_or_pay_additional_cost_line,
     reads_printed_alternative_cost_line,
 )
-from magic_cards_model.machines.abilities import self_normalized_effect_text
 from magic_cards_model.machines.cost.abilities import ability_cost_modifier
 from magic_cards_model.machines.cost.groups import group_spell_modifier
 from magic_cards_model.machines.keywords import echo_alternative_cost

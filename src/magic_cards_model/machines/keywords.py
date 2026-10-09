@@ -64,11 +64,9 @@ from .abilities import (
     TriggerEvent,
     TriggerWord,
     keyword_abilities,
-    parse_abilities,
     target_cost_reduction_amount,
 )
 from .combat import has_keyword
-from .cost.abilities import KEYWORD_KINDS, ability_cost_adjustment
 from .cost import (
     ComponentKind,
     CostModifierNotice,
@@ -82,6 +80,7 @@ from .cost import (
     tap_cost,
     total_cost_for_phrase,
 )
+from .cost.abilities import KEYWORD_KINDS, ability_cost_adjustment
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import anaphoric_delayed_trigger
 from .designations import designation_holds, split_as_long_as
@@ -2314,7 +2313,8 @@ def cycling_activation(
                 ability,
                 cost_text=f"{ability.cost or ''}, Discard this card".strip(", "),
                 effect=(
-                    f"Search your library for {with_indefinite_article(f'{typed} card')}, reveal it, "
+                    "Search your library for "
+                    f"{with_indefinite_article(f'{typed} card')}, reveal it, "
                     f"and put it into your hand. "
                     f"Then shuffle."
                     if typed

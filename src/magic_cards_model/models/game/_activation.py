@@ -24,7 +24,6 @@ from ...machines.combat import (
     Keyword,
     has_keyword,
 )
-from ...machines.cost.abilities import ability_cost_adjustment
 from ...machines.cost import (
     ComponentKind,
     CostModifierNotice,
@@ -49,6 +48,7 @@ from ...machines.cost import (
     total_cost_for_phrase,
     untap_cost,
 )
+from ...machines.cost.abilities import ability_cost_adjustment
 from ...machines.decisions import (
     source_id_of,
 )

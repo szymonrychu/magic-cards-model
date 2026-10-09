@@ -91,17 +91,43 @@ _PRINTED_SELF_ZONE_CAST_WITH_ADDITIONAL_COST_RE = re.compile(
 )
 
 
-def _printed_self_zone_cast_additional_cost(text: str) -> tuple[Zone, TotalCost] | None:
-    match = _PRINTED_SELF_ZONE_CAST_WITH_ADDITIONAL_COST_RE.fullmatch(" ".join(text.split()))
+#: "You may cast this card from your graveyard by paying {2}{W} rather than
+#: paying its mana cost." (Raffine's Guidance) and "... by paying {3}{R} and
+#: exiling four other cards from your graveyard rather than paying its mana
+#: cost." (Squee, Dubious Monarch) - the same CR 604.6 permission with the cost
+#: standing in for the mana cost (CR 118.9) rather than added to it.
+_PRINTED_SELF_ZONE_CAST_ALTERNATIVE_RE = re.compile(
+    r"^you may cast this card from your (?P<zone>graveyard|exile) by (?P<cost>.+?) "
+    r"rather than paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def _as_cost_phrase(extra: str) -> str:
+    """ "paying {2}{W} and exiling four other cards" as the cost phrase
+    `total_cost_for_phrase` reads ("pay {2}{W} and exile four other cards")."""
+    extra = re.sub(r"^removing\b", "Remove", extra.strip(), flags=re.IGNORECASE)
+    extra = re.sub(r"^paying\b", "Pay", extra, flags=re.IGNORECASE)
+    extra = re.sub(r"^exiling\b", "Exile", extra, flags=re.IGNORECASE)
+    return re.sub(r" and exiling\b", " and exile", extra, flags=re.IGNORECASE)
+
+
+def _printed_self_zone_cast_additional_cost(text: str) -> tuple[Zone, TotalCost, bool] | None:
+    """(zone, cost, whether the cost replaces the mana cost) for one line."""
+    line = " ".join(text.split())
+    match = _PRINTED_SELF_ZONE_CAST_WITH_ADDITIONAL_COST_RE.fullmatch(line)
+    replaces = False
+    if match is None:
+        match = _PRINTED_SELF_ZONE_CAST_ALTERNATIVE_RE.fullmatch(line)
+        replaces = match is not None
     if match is None:
         return None
-    extra = re.sub(r"^removing\b", "Remove", match.group("extra").strip(), flags=re.IGNORECASE)
-    extra = re.sub(r"^paying\b", "Pay", extra, flags=re.IGNORECASE)
+    extra = _as_cost_phrase(match.group("cost" if replaces else "extra"))
     cost = total_cost_for_phrase(extra)
     if cost is None:
         return None
     zone = Zone.GRAVEYARD if match.group("zone").lower() == "graveyard" else Zone.EXILE
-    return zone, cost
+    return zone, cost, replaces
 
 
 def reads_printed_self_zone_cast_line(text: str) -> bool:
@@ -115,15 +141,16 @@ def _printed_self_zone_cast_with_additional_cost(card: Card) -> list[KeywordCast
         read = _printed_self_zone_cast_additional_cost(line)
         if read is None:
             continue
-        zone, cost = read
+        zone, cost, replaces = read
         found.append(
             KeywordCastOption(
                 keyword=CAST_PERMISSION,
-                rule="CR 601.3, CR 601.2f",
+                rule="CR 601.3, CR 118.9" if replaces else "CR 601.3, CR 601.2f",
                 zone=zone,
-                pays_mana_cost=True,
+                pays_mana_cost=not replaces,
                 timing=CastTiming.OWN,
-                additional_cost=cost,
+                cost=cost if replaces else None,
+                additional_cost=None if replaces else cost,
             )
         )
     return found

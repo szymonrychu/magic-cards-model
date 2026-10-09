@@ -160,3 +160,38 @@ def test_zahid_taps_an_untapped_artifact():
     assert str(casting.total_cost.mana) == "{3}{U}"
     assert [c.kind.value for c in casting.total_cost.components] == ["tap"]
     assert option is not None
+
+
+# -- casting this card from the graveyard (CR 601.3, 118.9, 601.2f) --------------
+
+
+def _graveyard_cast_cost(scenario, name):
+    from magic_cards_model.machines.casting import castable_from
+    from tests.cards import card as printing
+
+    options = castable_from(printing(name), Zone.GRAVEYARD)
+    assert options, f"{name} should be castable from the graveyard"
+    return options[0]
+
+
+def test_raffines_guidance_is_castable_from_the_graveyard_for_its_own_cost():
+    scenario = _main(alice={"graveyard": ["Raffine's Guidance"]})
+    option = _graveyard_cast_cost(scenario, "Raffine's Guidance")
+    assert not option.pays_mana_cost
+    assert str(option.cost.mana) == "{2}{W}"
+
+
+def test_squee_needs_four_other_graveyard_cards_as_well():
+    scenario = _main(alice={"graveyard": ["Squee, Dubious Monarch"]})
+    option = _graveyard_cast_cost(scenario, "Squee, Dubious Monarch")
+    assert str(option.cost.mana) == "{3}{R}"
+    (component,) = option.cost.components
+    assert component.required == 4
+
+
+def test_demilich_pays_its_mana_cost_and_exiles_four_instants_or_sorceries():
+    scenario = _main(alice={"graveyard": ["Demilich"]})
+    option = _graveyard_cast_cost(scenario, "Demilich")
+    assert option.pays_mana_cost
+    (component,) = option.additional_cost.components
+    assert component.required == 4

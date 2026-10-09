@@ -28,9 +28,6 @@ from ..casting_restrictions import (
     targeted_cant_cast_restriction,
     zone_cast_prohibition_source,
 )
-from ..cost.abilities import ability_cost_adjustment, foretell_any_turn
-from ..cost.statics import object_quality
-from ..cost.text import printed_cost_total
 from ..cost import (
     CardRequirement,
     ComponentKind,
@@ -56,6 +53,9 @@ from ..cost import (
     tap_cost,
     total_cost_for_phrase,
 )
+from ..cost.abilities import ability_cost_adjustment, foretell_any_turn
+from ..cost.statics import object_quality
+from ..cost.text import printed_cost_total
 from ..decisions import source_id_of
 from ..keywords import (
     enchant_restrictions,

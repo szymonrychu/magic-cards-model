@@ -31,8 +31,8 @@ from ...models.card_state import ChoiceKind
 from ...models.mana import ManaCost
 from ...models.zone import Zone
 from .components import increase
-from .text import activated_ability_group_discount_effect
 from .statics import CostContext, Quality, Reader, cost_count, cost_expression, object_quality
+from .text import activated_ability_group_discount_effect
 
 if TYPE_CHECKING:
     from ...models.card_state import CardState
@@ -296,9 +296,9 @@ def ability_cost_modifier(line: str) -> AbilityModifier | None:
             if target_quality is None:
                 return None
             tail_override = ""
-    elif (m := _KIND_COSTS.match(subject)) is not None and m.group("kind") in _KIND_WORDS:
-        kind = _KIND_WORDS[m.group("kind")]
-    elif (m := _NAMED_PLAYER_SPELLS.match(subject)) is not None:
+    elif ((m := _KIND_COSTS.match(subject)) is not None and m.group("kind") in _KIND_WORDS) or (
+        m := _NAMED_PLAYER_SPELLS.match(subject)
+    ) is not None:
         kind = _KIND_WORDS[m.group("kind")]
     elif (m := _KIND_OF_OTHER.match(subject)) is not None and m.group("kind") in _KIND_WORDS:
         kind, other, yours = _KIND_WORDS[m.group("kind")], True, True
@@ -425,9 +425,12 @@ def ability_cost_adjustment(
     for holder in game.battlefield:
         for line in board.of(holder).abilities:
             lowered = line.lower()
-            if " to activate" not in lowered and " costs you pay" not in lowered:
-                if "cards from your hand" not in lowered:
-                    continue
+            if (
+                " to activate" not in lowered
+                and " costs you pay" not in lowered
+                and "cards from your hand" not in lowered
+            ):
+                continue
             if activated_ability_group_discount_effect(line.strip()) is not None:
                 continue  # `Game._activated_ability_group_discount` prices this one
             modifier = ability_cost_modifier(_self_normalized(holder, line))

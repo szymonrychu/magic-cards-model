@@ -14,7 +14,6 @@ from ...numbers import (
     parse_count,
 )
 from ..modes import SPEND_ONLY_ON_X_RE
-from .statics import object_quality
 from .components import (
     ActivatedAbilityGroupDiscount,
     AlternativeCostOffer,
@@ -25,6 +24,7 @@ from .components import (
     StaticFreeCastGrant,
     TotalCost,
 )
+from .statics import object_quality
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
     "Noncreature": Type.CREATURE,
@@ -887,7 +887,7 @@ _MANA_VALUE_TAIL = r"(?: with mana value (?P<mana_value>\d+))?"
 #: battlefield; "this card" keeps its own zone default.
 _PHRASE_EXILE = re.compile(
     rf"^exile (?:this (?P<self_noun>card|artifact|creature|enchantment|land|planeswalker|permanent)"
-    rf"|(?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ]*?)cards?)"
+    rf"|(?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w /]*?)cards?)"
     + _MANA_VALUE_TAIL
     + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
     re.IGNORECASE,
