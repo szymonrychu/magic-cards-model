@@ -427,3 +427,226 @@ def test_case_of_the_locked_hothouse_works_only_when_solved():
     scenario = top_board("Case of the Locked Hothouse", ["Divination"])
     next(c for c in scenario.game.battlefield if c.name == "Case of the Locked Hothouse").solved = True
     assert top_refusal(scenario) is not None  # a sorcery is neither creature nor enchantment
+
+
+# -- "You may cast <quality> spells as though they had flash" ----------------
+
+
+def flash_board(permanent, hand, *, graveyard=(), battlefield=()):
+    scenario = build(
+        alice={
+            "battlefield": [permanent, *battlefield],
+            "hand": list(hand),
+            "graveyard": list(graveyard),
+        },
+        step=Step.BEGINNING_OF_COMBAT,
+    )
+    return scenario
+
+
+def flash_refusal(scenario, name):
+    spell = scenario.find(name, Zone.HAND, "alice")
+    return why_cannot_cast_now(spell, "alice", scenario.game)
+
+
+FLASH_GRANTS = [
+    ("Vivien, Champion of the Wilds", "Grizzly Bears", "Divination"),
+    ("Prophet of Kruphix", "Grizzly Bears", "Divination"),
+    ("Raff Capashen, Ship's Mage", "Sol Ring", "Grizzly Bears"),
+    ("Yeva, Nature's Herald", "Llanowar Elves", "Hill Giant"),
+    ("Sigarda's Aid", "Pacifism", "Grizzly Bears"),
+    ("Sigarda's Aid", "Bonesplitter", "Divination"),
+    ("Whirlwing Stormbrood // Dynamic Soar", "Shivan Dragon", "Grizzly Bears"),
+    ("Whirlwing Stormbrood // Dynamic Soar", "Divination", "Grizzly Bears"),
+    ("Gandalf the White", "Squee, the Immortal", "Grizzly Bears"),
+    ("Gandalf the White", "Sol Ring", "Grizzly Bears"),
+    ("Liberator, Urza's Battlethopter", "Eternal Scourge", "Grizzly Bears"),
+    ("Liberator, Urza's Battlethopter", "Sol Ring", "Grizzly Bears"),
+    ("Valley Floodcaller", "Divination", "Grizzly Bears"),
+    ("Rattlechains", "Cemetery Illuminator", "Grizzly Bears"),
+    ("Shimmer Myr", "Sol Ring", "Grizzly Bears"),
+    ("Najal, the Storm Runner", "Divination", "Grizzly Bears"),
+    ("Hypersonic Dragon", "Divination", "Grizzly Bears"),
+    ("Gandalf, Friend of the Shire", "Divination", "Grizzly Bears"),
+]
+
+
+@pytest.mark.parametrize(("permanent", "granted", "refused"), FLASH_GRANTS)
+def test_a_quality_flash_grant_covers_its_quality_and_nothing_else(permanent, granted, refused):
+    scenario = flash_board(permanent, [granted, refused])
+    assert flash_refusal(scenario, granted) is None
+    reason = flash_refusal(scenario, refused)
+    assert reason is not None and "is not an instant and has no flash" in reason
+
+
+def test_a_flash_grant_works_only_while_its_permanent_does():
+    scenario = flash_board("Vivien, Champion of the Wilds", ["Grizzly Bears"])
+    assert flash_refusal(scenario, "Grizzly Bears") is None
+    scenario.game.destroy(next(c for c in scenario.game.battlefield if c.name.startswith("Vivien")))
+    assert flash_refusal(scenario, "Grizzly Bears") is not None
+
+
+def test_dragon_grip_has_flash_only_with_a_power_four_creature():
+    scenario = flash_board("Grizzly Bears", ["Dragon Grip"])
+    assert flash_refusal(scenario, "Dragon Grip") is not None
+    scenario = flash_board("Shivan Dragon", ["Dragon Grip"])
+    assert flash_refusal(scenario, "Dragon Grip") is None
+
+
+def test_hungering_yeti_has_flash_with_a_green_or_blue_permanent():
+    scenario = flash_board("Hill Giant", ["Hungering Yeti"])
+    assert flash_refusal(scenario, "Hungering Yeti") is not None
+    scenario = flash_board("Llanowar Elves", ["Hungering Yeti"])
+    assert flash_refusal(scenario, "Hungering Yeti") is None
+
+
+def test_serpent_of_the_pass_has_flash_with_three_lessons_in_the_graveyard():
+    lessons = ["Airbending Lesson", "Boomerang Basics", "Combustion Technique"]
+    scenario = flash_board("Grizzly Bears", ["Serpent of the Pass"], graveyard=lessons[:2])
+    assert flash_refusal(scenario, "Serpent of the Pass") is not None
+    scenario = flash_board("Grizzly Bears", ["Serpent of the Pass"], graveyard=lessons)
+    assert flash_refusal(scenario, "Serpent of the Pass") is None
+
+
+def test_the_conditional_flash_wordings_are_read_per_line():
+    assert (
+        conditional_flash_condition(
+            "Ferocious — If you control a creature with power 4 or greater, you may cast "
+            "this spell as though it had flash."
+        )
+        == "you control a creature with power 4 or greater"
+    )
+    assert (
+        conditional_flash_condition(
+            "As long as you control a green or blue permanent, you may cast this spell as "
+            "though it had flash."
+        )
+        == "you control a green or blue permanent"
+    )
+    assert conditional_flash_condition("Flash") is None
+
+
+# -- Qasali Ambusher: a free cast and flash while it is attacked -------------
+
+
+def attacked_board(*, defender_battlefield):
+    scenario = (
+        Scenario()
+        .player("bob", battlefield=["Grizzly Bears"], library=["Island"] * 6)
+        .player(
+            "alice",
+            hand=["Qasali Ambusher"],
+            battlefield=defender_battlefield,
+            library=["Forest"] * 6,
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    return scenario
+
+
+def qasali_free_option(scenario):
+    spell = scenario.find("Qasali Ambusher", Zone.HAND, "alice")
+    return [
+        o
+        for o in scenario.game.alternative_costs_for(spell, "alice")
+        if o.description.startswith("nothing")
+    ]
+
+
+def test_qasali_ambusher_is_free_and_flash_while_attacked_with_a_forest_and_a_plains():
+    scenario = attacked_board(defender_battlefield=["Forest", "Plains"])
+    scenario.attack_with(scenario.creature("Grizzly Bears", "bob"), defending="alice")
+    assert flash_refusal(scenario, "Qasali Ambusher") is None
+    (option,) = qasali_free_option(scenario)
+    assert option.unavailable is None
+
+
+def test_qasali_ambusher_is_refused_without_the_plains_or_without_an_attacker():
+    scenario = attacked_board(defender_battlefield=["Forest", "Island"])
+    scenario.attack_with(scenario.creature("Grizzly Bears", "bob"), defending="alice")
+    assert flash_refusal(scenario, "Qasali Ambusher") is not None
+    (option,) = qasali_free_option(scenario)
+    assert "is not so" in option.unavailable
+    scenario = attacked_board(defender_battlefield=["Forest", "Plains"])
+    assert flash_refusal(scenario, "Qasali Ambusher") is not None
+    (option,) = qasali_free_option(scenario)
+    assert "is not so" in option.unavailable
+
+
+def test_qasali_ambusher_is_actually_cast_without_mana_during_the_attack():
+    scenario = attacked_board(defender_battlefield=["Forest", "Plains"])
+    scenario.attack_with(scenario.creature("Grizzly Bears", "bob"), defending="alice")
+    scenario.pass_priority()  # bob passes; alice now holds priority
+    casting = scenario.cast("Qasali Ambusher", username="alice")
+    casting.use_alternative_cost()
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    ambusher = scenario.put_on_stack(casting)
+    resolve_everything(scenario)
+    assert ambusher.zone is Zone.BATTLEFIELD
+    assert not any(land.tapped for land in scenario.game.permanents_controlled_by("alice"))
+
+
+# -- "You may cast <quality> spells without paying their mana costs" ---------
+
+
+def free_board(permanent, hand, *, battlefield=()):
+    return build(alice={"battlefield": [permanent, *battlefield], "hand": list(hand)})
+
+
+def free_options(scenario, name):
+    card = scenario.find(name, Zone.HAND, "alice")
+    return [
+        o for o in scenario.game.alternative_costs_for(card, "alice") if o.description == "nothing"
+    ]
+
+
+def test_dracogenesis_makes_dragon_spells_free():
+    scenario = free_board("Dracogenesis", ["Shivan Dragon", "Grizzly Bears"])
+    (option,) = free_options(scenario, "Shivan Dragon")
+    assert option.unavailable is None
+    assert free_options(scenario, "Grizzly Bears") == [] or all(
+        o.unavailable for o in free_options(scenario, "Grizzly Bears")
+    )
+    casting = scenario.cast("Shivan Dragon", username="alice")
+    casting.use_alternative_cost()
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    dragon = scenario.put_on_stack(casting)
+    resolve_everything(scenario)
+    assert dragon.zone is Zone.BATTLEFIELD
+    assert not any(land.tapped for land in scenario.game.permanents_controlled_by("alice"))
+
+
+def test_dracogenesis_reaches_every_zone_a_dragon_is_cast_from():
+    from magic_cards_model.machines.casting.casting import (
+        static_free_cast_grants,
+        static_free_cast_refusal,
+    )
+
+    scenario = build(
+        alice={"battlefield": ["Dracogenesis"], "graveyard": ["Shivan Dragon", "Grizzly Bears"]}
+    )
+    ((name, grant),) = static_free_cast_grants(scenario.game, "alice")
+    assert grant.zone is None
+    dragon = scenario.find("Shivan Dragon", Zone.GRAVEYARD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    assert static_free_cast_refusal(scenario.game, "alice", dragon, Zone.GRAVEYARD, name, grant) is None
+    assert "only applies to dragon spells" in static_free_cast_refusal(
+        scenario.game, "alice", bears, Zone.GRAVEYARD, name, grant
+    )
+
+
+def test_fires_of_invention_frees_a_spell_within_the_land_count():
+    scenario = free_board("Fires of Invention", ["Grizzly Bears", "Shivan Dragon"])
+    # fifteen lands: both spells have mana value within that
+    assert free_options(scenario, "Grizzly Bears")[0].unavailable is None
+    assert free_options(scenario, "Shivan Dragon")[0].unavailable is None
+
+
+def test_fires_of_invention_refuses_a_spell_above_the_land_count():
+    scenario = build(alice={"battlefield": ["Fires of Invention"], "hand": ["Shivan Dragon"]})
+    lands = [c for c in scenario.game.permanents_controlled_by("alice") if c.name != "Fires of Invention"]
+    for land in lands[5:]:
+        scenario.game.exile_permanent(land)
+    (option,) = free_options(scenario, "Shivan Dragon")
+    assert "only applies to spells with mana value 5 or less" in option.unavailable

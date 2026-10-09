@@ -2396,7 +2396,7 @@ def conditional_flash_condition(text: str) -> str | None:
     does, since the grant is always its own sentence.
     """
     for line in (text or "").split("\n"):
-        stripped, _ability_word = strip_ability_word(line)
+        stripped, _ability_word = strip_ability_word(_REMINDER_TEXT_RE.sub("", line))
         for pattern in _CONDITIONAL_FLASH_RES:
             match = pattern.fullmatch(stripped)
             if match is not None:
@@ -2410,7 +2410,9 @@ def conditional_free_cast_condition(text: str) -> str | None:
     None: CR 118.9's alternative cost of nothing, offered while it holds
     (`Casting.alternative_costs`)."""
     for line in (text or "").split("\n"):
-        match = _CONDITIONAL_FREE_CAST_AND_FLASH_RE.fullmatch(strip_ability_word(line)[0])
+        match = _CONDITIONAL_FREE_CAST_AND_FLASH_RE.fullmatch(
+            strip_ability_word(_REMINDER_TEXT_RE.sub("", line))[0]
+        )
         if match is not None:
             return match.group("condition").strip()
     return None
