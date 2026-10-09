@@ -1522,23 +1522,6 @@ def _redirect_damage_to_the_source(
 # be dealt to and dealt by this creature" is
 # `_compile_self_prevent_combat_damage`'s shape.
 REPLACEMENTS: dict[str, list[CardReplacement]] = {
-    "Kalitas, Traitor of Ghet": [
-        CardReplacement(
-            label="if a nontoken creature an opponent controls would die",
-            applies=_kalitas_applies,
-            apply=_exile_instead,
-        )
-    ],
-    # Kalitas's shape plus a life gain the generic compilers deliberately
-    # refuse to half-read (see the fail-closed note below), so it is written
-    # out here in full instead.
-    "The Darkness Crystal": [
-        CardReplacement(
-            label="instead exile it and you gain 2 life",
-            applies=_kalitas_applies,
-            apply=_exile_and_gain_two_life,
-        )
-    ],
     "Ancient Adamantoise": [
         CardReplacement(
             label=(
@@ -3797,6 +3780,10 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
 #: as ..." qualifier is never offered to one: compiling it there would perform
 #: the replacement unconditionally and silently drop the clause, which is the
 #: exact failure the fail-closed rule at the top of this section forbids.
+from .other_statics import OTHER_COMPILERS  # noqa: E402
+
+_COMPILERS = _COMPILERS + OTHER_COMPILERS
+
 _CONDITION_AWARE_COMPILERS = frozenset(
     {_compile_draw_plus, _compile_first_time_token_copies, _compile_damage_plus_amount}
 )

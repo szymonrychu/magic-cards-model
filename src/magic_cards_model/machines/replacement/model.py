@@ -621,6 +621,11 @@ class ReplaceableEvent:
     #: terminate.
     extra: list[TokenDefinition] = field(default_factory=list)
 
+    #: Where in its owner's library a `ZONE_CHANGE` redirected to `Zone.LIBRARY`
+    #: lands: "top" or "bottom" (CR 401.4 leaves a pile put on the bottom in
+    #: any order), `None` for the shuffle-it-in default (CR 701.24c).
+    library_position: Literal["top", "bottom"] | None = None
+
     #: A `DESTROY` that a replacement effect called off (CR 614.8, CR 701.8c).
     #: The destruction simply does not happen; the permanent stays where it is.
     replaced: bool = False
@@ -686,6 +691,11 @@ class CardReplacement:
     #: A prevention effect (CR 615.1a) rather than a replacement one - what
     #: CR 615.12's "can't be prevented" turns into a no-op.
     prevention: bool = False
+    #: The card's own "would be put into a graveyard from anywhere" line: it
+    #: functions in every zone the card could be moved from (CR 113.6b), not
+    #: only on the battlefield, so `applicable_effects` reads it off the moved
+    #: card itself when that card is not a permanent.
+    anywhere: bool = False
 
 
 @dataclass(frozen=True)
@@ -1016,6 +1026,32 @@ class UnreadableCopyExceptionNotice(EngineModel):
     source_id: UUID
     source_name: str
     text: str
+
+
+def _anywhere_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """A card's own "from anywhere" zone-change replacement, read off the card
+    being moved when it is not on the battlefield (CR 113.6b, CR 614.1a): the
+    object generating the effect is the object moving, in hand, library,
+    graveyard or on the stack."""
+    card = event.card
+    if event.kind is not EventKind.ZONE_CHANGE or card is None or card.zone is Zone.BATTLEFIELD:
+        return []
+    front = card.up_face_name or (card.card.card_faces[0].name if card.card.card_faces else None)
+    found: list[ApplicableEffect] = []
+    for index, effect in enumerate(parse_replacement_effects(card.card)):
+        if effect.face not in (None, front):
+            continue
+        compiled = _compile(effect)
+        if compiled is not None and compiled.anywhere and compiled.applies(game, card, event):
+            found.append(
+                ApplicableEffect(
+                    key=f"{card.id}:anywhere:{index}",
+                    source=card,
+                    label=compiled.label,
+                    apply=compiled.apply,
+                )
+            )
+    return found
 
 
 def _leaving_the_stack(event: ReplaceableEvent) -> bool:
@@ -2021,6 +2057,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
         found.extend(_vanishing_entering_counters(game, event))
 
     found.extend(_stack_replacements(game, event))
+    found.extend(_anywhere_effects(game, event))
 
     # One board, hoisted out of the loop below: `computed_board()` recomputes
     # the whole battlefield on every call (CR 613.5), and `replacements_of_

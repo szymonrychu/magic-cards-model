@@ -2867,7 +2867,14 @@ class ZonesMixin:
                 # clause for this one the way a search effect prints its own.
                 owner = self._owner_of(card_state)
                 owner.add(card_state, Zone.LIBRARY)
-                self.shuffle_library(owner)
+                if event.library_position == "top":
+                    # CR 401.4-style placement: "put it on top of its owner's library".
+                    owner.library.insert(0, owner.library.pop())
+                elif event.library_position is None:
+                    self.shuffle_library(owner)
+                # "bottom": `Player.add` appended it below every other card (CR 401.2).
+            elif event.destination is Zone.HAND:
+                self._owner_of(card_state).add(card_state, Zone.HAND)
             else:
                 raise ValueError(f"a graveyard replacement sent {card_state.name} nowhere")
 

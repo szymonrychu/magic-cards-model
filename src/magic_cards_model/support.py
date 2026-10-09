@@ -37,7 +37,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict
 
-from magic_cards_model import __version__
+from magic_cards_model import __version__, static_audit
 from magic_cards_model.data.creature_types import creature_types
 from magic_cards_model.ids import install_id_allocator, reset_id_allocator
 from magic_cards_model.machines import keywords as keyword_machine
@@ -2248,6 +2248,9 @@ def _static_ability_category(
         # excludes convoke (it is a cost-payment method, not a triggered-
         # ability expansion), so `objects_as_costs.has_convoke_now` reads the
         # identical grant itself, live, at a real cast.
+        return HANDLED
+    if static_audit.reads_static_line(printing, text, card_name=effective_name, legendary=legendary):
+        # EP-01 per-family audits: credited only when the production reader performs the line.
         return HANDLED
     return STATIC_UNAUDITED
 

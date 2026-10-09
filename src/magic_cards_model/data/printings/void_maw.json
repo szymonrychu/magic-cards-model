@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "ba464b81-2633-4422-a4b5-3593dfb7e7aa",
+  "oracle_id": "ad2a1b07-58f5-44c2-92e0-464ea2d45e7e",
+  "multiverse_ids": [
+    121129
+  ],
+  "mtgo_id": 24537,
+  "mtgo_foil_id": 24538,
+  "tcgplayer_id": 14143,
+  "cardmarket_id": 13750,
+  "name": "Void Maw",
+  "lang": "en",
+  "released_at": "2006-07-21",
+  "uri": "https://api.scryfall.com/cards/ba464b81-2633-4422-a4b5-3593dfb7e7aa",
+  "scryfall_uri": "https://scryfall.com/card/csp/74/void-maw?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:49:04Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.jpg?1783943344",
+    "normal": "https://cards.scryfall.io/normal/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.jpg?1783943344",
+    "large": "https://cards.scryfall.io/large/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.jpg?1783943344",
+    "png": "https://cards.scryfall.io/png/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.png?1783943344",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.jpg?1783943344",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.jpg?1783943344",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.webp?1783943344",
+    "grid": "https://cards.scryfall.io/grid/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.webp?1783943344",
+    "display": "https://cards.scryfall.io/display/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.webp?1783943344",
+    "art": "https://cards.scryfall.io/art/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.webp?1783943344",
+    "crop": "https://cards.scryfall.io/crop/front/b/a/ba464b81-2633-4422-a4b5-3593dfb7e7aa.webp?1783943344"
+  },
+  "mana_cost": "{4}{B}{B}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Horror",
+  "oracle_text": "Trample\nIf another creature would die, exile it instead.\nPut a card exiled with this creature into its owner's graveyard: This creature gets +2/+2 until end of turn.",
+  "power": "4",
+  "toughness": "5",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1f4f105f-73e4-4f03-849e-82a204807847",
+  "set": "csp",
+  "set_name": "Coldsnap",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1f4f105f-73e4-4f03-849e-82a204807847",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acsp&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/csp?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ba464b81-2633-4422-a4b5-3593dfb7e7aa/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aad2a1b07-58f5-44c2-92e0-464ea2d45e7e&unique=prints",
+  "collector_number": "74",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "E. M. Gist",
+  "artist_ids": [
+    "7a9aaa63-73ae-492c-948e-7531415fdf31"
+  ],
+  "illustration_id": "323fdaae-54f6-4524-8a2c-564689902865",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 22443,
+  "prices": {
+    "usd": "0.41",
+    "usd_foil": "7.57",
+    "usd_etched": null,
+    "eur": "0.34",
+    "eur_foil": "6.72",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=121129&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVoid%2BMaw",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVoid%2BMaw",
+    "edhrec": "https://edhrec.com/route/?cc=Void+Maw"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F14143%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=13750&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/24537?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
