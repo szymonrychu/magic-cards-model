@@ -4164,7 +4164,16 @@ class Casting(EngineModel):
             # spells from exile" asks about where the cast *started*.
             spend=ManaSpend.casting(
                 self.spell, zone=self.origin_zone, x_value=self.x_value
-            ).model_copy(update={"treasure_only": self.treasure_mana_only}),
+            ).model_copy(
+                update={
+                    "treasure_only": self.treasure_mana_only,
+                    # CR 609.4b: Chromatic Orrery, Oath of Nissa, Case File
+                    # Auditor - "spend mana as though it were mana of any color".
+                    "any_color": self.game.spends_mana_as_any_color_for_spell(
+                        self.spell, self.caster
+                    ),
+                }
+            ),
         )
         self.payment.paying_for = "spell"
         self.payment.paying_for_keyword = (self.keyword_used or "").lower() or None

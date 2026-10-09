@@ -576,6 +576,9 @@ def _cast_action(
     # announced), so `card.zone` is that zone and is the same answer
     # `from_zone` below reports.
     spend = ManaSpend.casting(card, zone=card.zone)
+    if game.spends_mana_as_any_color_for_spell(card, player):
+        # CR 609.4b, read here exactly as `Casting.determine_cost` reads it.
+        spend = spend.model_copy(update={"any_color": True})
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )

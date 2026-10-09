@@ -197,3 +197,15 @@ _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE = re.compile(
     r"|(?P<those>those abilities))\.?$",
     re.IGNORECASE,
 )
+
+#: The unscoped and cast-scoped siblings of the sentence above: Chromatic
+#: Orrery's "You may spend mana as though it were mana of any color.",
+#: Mycosynth Lattice's "Players may ...", Oath of Nissa's "... to cast
+#: planeswalker spells." and Case File Auditor's "... to cast Case spells."
+#: (CR 609.4b). An unscoped sentence reaches every spell and ability its
+#: subject pays for; `scope` narrows it to spells of a quality.
+_SPEND_AS_ANY_COLOR_STATIC_RE = re.compile(
+    r"^(?P<who>you|players) may spend mana as though it were mana of any colou?r"
+    r"(?: to cast (?P<scope>[\w' ,-]+?) spells)?\.?$",
+    re.IGNORECASE,
+)

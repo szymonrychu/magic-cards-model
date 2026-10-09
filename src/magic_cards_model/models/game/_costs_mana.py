@@ -581,6 +581,10 @@ class CostsManaMixin:
             return False
         if self.controller_of(permanent).username != controller:
             return False
+        if any(scope is None for _source, scope in self._spend_as_any_color_grants(controller)):
+            # An unscoped sentence (Chromatic Orrery, Mycosynth Lattice)
+            # reaches abilities as well as spells.
+            return True
         for source in list(self.battlefield):
             if self.controller_of(source).username != controller:
                 continue
@@ -623,6 +627,40 @@ class CostsManaMixin:
                         for kind in types
                     ):
                         return True
+        return False
+
+    def _spend_as_any_color_grants(
+        self: "Game", player: str
+    ) -> Iterator[tuple[CardState, str | None]]:
+        """Every battlefield permanent's CR 609.4b sentence ("You may spend
+        mana as though it were mana of any color[ to cast <quality> spells].",
+        or its "Players may" form) that applies to `player`, as `(source,
+        scope quality or None)`. Gated on `_still_has_static_line` (CR 613.1f)."""
+        for source in list(self.battlefield):
+            mine = self.controller_of(source).username == player
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                for sentence in (part for part in re.split(r"(?<=\.)\s+", text) if part):
+                    match = _SPEND_AS_ANY_COLOR_STATIC_RE.match(sentence)
+                    if match is None:
+                        continue
+                    if match.group("who").lower() == "you" and not mine:
+                        continue
+                    if not self._still_has_static_line(source, text):
+                        continue
+                    yield source, (match.group("scope") or None)
+
+    def spends_mana_as_any_color_for_spell(self: "Game", spell: CardState, caster: str) -> bool:
+        """Whether `caster` may spend mana as though it were mana of any color
+        to cast `spell` (CR 609.4b): an unscoped permission always, a scoped
+        one when `spell` has the quality it names ("planeswalker", "Case")."""
+        from ...machines.next_spell import spell_has_quality
+
+        for _source, scope in self._spend_as_any_color_grants(caster):
+            if scope is None or spell_has_quality(spell, scope.lower()):
+                return True
         return False
 
     @staticmethod
@@ -1839,6 +1877,7 @@ class CostsManaMixin:
 from ._common import (  # noqa: E402
     _ABILITY_WORD_PREFIX_RE,
     _COLOR_WORDS,
+    _SPEND_AS_ANY_COLOR_STATIC_RE,
     _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE,
     ENERGY_PAID_OR_LOST,
     Targetable,

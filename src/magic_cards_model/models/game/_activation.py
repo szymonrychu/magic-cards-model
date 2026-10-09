@@ -406,7 +406,9 @@ def reads_activation_rule_line(
         return True
     sentences = [part for part in re.split(r"(?<=\.)\s+", line) if part]
     return bool(sentences) and all(
-        _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE.match(sentence) for sentence in sentences
+        _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE.match(sentence)
+        or _SPEND_AS_ANY_COLOR_STATIC_RE.match(sentence)
+        for sentence in sentences
     )
 
 
@@ -3159,7 +3161,7 @@ class ActivationMixin:
             return on_stack
 
 
-from ._common import _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE  # noqa: E402
+from ._common import _SPEND_AS_ANY_COLOR_STATIC_RE, _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE  # noqa: E402
 from ._conditions import (  # noqa: E402
     _card_type_named,
     _is_minus_symbol,
