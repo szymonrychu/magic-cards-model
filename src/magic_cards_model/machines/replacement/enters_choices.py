@@ -18,6 +18,7 @@ from ...models.card_state import CardState, Choice, ChoiceKind, ExileAnnotation,
 from ...models.token import is_token
 from ...models.zone import Zone
 from ..chosen_body import split_body_options
+from ..chosen_type import matches_restricted_creature_type_choice
 from ..decisions import Decision, DecisionKind, source_id_of
 from .model import Apply, CardReplacement, EventKind, ReplaceableEvent, ReplacementEffect
 
@@ -753,6 +754,10 @@ def enters_choice_apply(effect: ReplacementEffect, card_name: str) -> Apply | No
     """What an "As [this] enters, choose ..." sentence of the shapes T2 adds does
     as the permanent enters, or None when no shape here reads it."""
     text = (effect.replacement or "").strip().rstrip(".")
+    if matches_restricted_creature_type_choice(text):
+        # "choose Elemental, Elf, ... or Treefolk" is a creature-type choice
+        # narrowed to a printed list (`_classify_choice`), not a mode word.
+        return None
     match = _CHOOSE_PHRASES_RE.match(text) or _CHOOSE_MODE_RE.match(text)
     if match is not None:
         options = _split_options(match.group("opts"))
