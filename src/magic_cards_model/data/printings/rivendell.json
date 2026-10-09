@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "1127eb51-50ef-47f3-abfe-48895c832296",
+  "oracle_id": "2550099d-b3e2-4eb6-9f36-0fc412828ca6",
+  "multiverse_ids": [],
+  "resource_id": "B20F89F498A0FCBAB219FEDC835487B4D86304B0C6F107AF8818B74EB87BA811",
+  "mtgo_id": 154616,
+  "arena_id": 107488,
+  "tcgplayer_id": 707105,
+  "cardmarket_id": 898847,
+  "name": "Rivendell",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/1127eb51-50ef-47f3-abfe-48895c832296",
+  "scryfall_uri": "https://scryfall.com/card/hoc/51/rivendell?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-18T12:21:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.jpg?1784377291",
+    "normal": "https://cards.scryfall.io/normal/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.jpg?1784377291",
+    "large": "https://cards.scryfall.io/large/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.jpg?1784377291",
+    "png": "https://cards.scryfall.io/png/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.png?1784377291",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.jpg?1784377291",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.jpg?1784377291",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.webp?1784377291",
+    "grid": "https://cards.scryfall.io/grid/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.webp?1784377291",
+    "display": "https://cards.scryfall.io/display/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.webp?1784377291",
+    "art": "https://cards.scryfall.io/art/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.webp?1784377291",
+    "crop": "https://cards.scryfall.io/crop/front/1/1/1127eb51-50ef-47f3-abfe-48895c832296.webp?1784377291"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Legendary Land",
+  "oracle_text": "Rivendell enters tapped unless you control a legendary creature.\n{T}: Add {U}.\n{1}{U}, {T}: Scry 2. Activate only if you control a legendary creature.",
+  "colors": [],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Scry"
+  ],
+  "produced_mana": [
+    "U"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a185c905-5359-4f40-85c3-a3eae2ca4ff0",
+  "set": "hoc",
+  "set_name": "The Hobbit Eternal",
+  "set_type": "eternal",
+  "set_uri": "https://api.scryfall.com/sets/a185c905-5359-4f40-85c3-a3eae2ca4ff0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahoc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hoc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1127eb51-50ef-47f3-abfe-48895c832296/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2550099d-b3e2-4eb6-9f36-0fc412828ca6&unique=prints",
+  "collector_number": "51",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "Many desired to see the house of Elrond, and breathe the air of that deep valley where the Fair Folk dwelt in peace.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mark Poole",
+  "artist_ids": [
+    "bfdeaf09-f915-4058-8e8b-bcac3bc43c33"
+  ],
+  "illustration_id": "dc56a2fc-5e41-49b1-9038-090262180f28",
+  "border_color": "borderless",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary",
+    "inverted"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 1016,
+  "penny_rank": 2593,
+  "prices": {
+    "usd": "5.21",
+    "usd_foil": "5.15",
+    "usd_etched": null,
+    "eur": "5.29",
+    "eur_foil": "6.62",
+    "tix": "0.20"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRivendell",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRivendell",
+    "edhrec": "https://edhrec.com/route/?cc=Rivendell"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707105%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898847&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154616?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -19,6 +19,8 @@ Every CR number was looked up with `mise run rules:find` for this task:
 CR 614.12, CR 614.12a, CR 614.1d, CR 502.3.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -342,3 +344,65 @@ def test_ashlings_prerogative_gives_haste_to_creatures_with_the_chosen_parity():
     board = scenario.game.computed_board()
     assert "haste" in {k.lower() for k in board.of(elves).abilities}
     assert "haste" not in {k.lower() for k in board.of(bears).abilities}
+
+
+# --------------------------------------------------------------------------
+# The remaining listed lands, each with its condition read both ways
+# --------------------------------------------------------------------------
+
+_LEGENDARY_LANDS = ["Barad-dûr", "Mines of Moria", "Rivendell", "The Shire"]
+_MOUNT_OR_VEHICLE_LANDS = ["Foul Roads", "Reef Roads", "Rocky Roads", "Wild Roads"]
+
+
+@pytest.mark.parametrize("land", _LEGENDARY_LANDS)
+def test_legendary_creature_lands_untapped_with_a_legendary_creature(land):
+    scenario = _board(hand=[land], battlefield=["Rick Jones, Destined Sidekick"])
+    assert not scenario.play_land(land).tapped
+
+
+@pytest.mark.parametrize("land", _LEGENDARY_LANDS)
+def test_legendary_creature_lands_tapped_with_a_nonlegendary_creature(land):
+    scenario = _board(hand=[land], battlefield=["Grizzly Bears"])
+    assert scenario.play_land(land).tapped
+
+
+@pytest.mark.parametrize("land", _LEGENDARY_LANDS)
+def test_legendary_creature_lands_tapped_with_a_legendary_noncreature(land):
+    scenario = _board(hand=[land], battlefield=["Esika's Chariot"])
+    assert scenario.play_land(land).tapped
+
+
+@pytest.mark.parametrize("land", _MOUNT_OR_VEHICLE_LANDS)
+def test_road_lands_untapped_with_a_mount_or_a_vehicle(land):
+    for permanent in ("Drover Grizzly", "Smuggler's Copter"):
+        scenario = _board(hand=[land], battlefield=[permanent])
+        assert not scenario.play_land(land).tapped
+
+
+@pytest.mark.parametrize("land", _MOUNT_OR_VEHICLE_LANDS)
+def test_road_lands_tapped_with_neither_or_only_an_opponents_mount(land):
+    assert _board(hand=[land], battlefield=["Grizzly Bears"]).play_land(land).tapped
+    only_theirs = _board(hand=[land], opp_battlefield=["Drover Grizzly"])
+    assert only_theirs.play_land(land).tapped
+
+
+# --------------------------------------------------------------------------
+# Reidane: "Snow lands your opponents control enter tapped." (CR 614.1d)
+# --------------------------------------------------------------------------
+
+_REIDANE = "Reidane, God of the Worthy"
+
+
+def test_reidane_taps_a_snow_land_an_opponent_plays():
+    scenario = _board(hand=["Snow-Covered Island"], opp_battlefield=[_REIDANE])
+    assert scenario.play_land("Snow-Covered Island").tapped
+
+
+def test_reidane_leaves_a_nonsnow_land_untapped():
+    scenario = _board(hand=["Island"], opp_battlefield=[_REIDANE])
+    assert not scenario.play_land("Island").tapped
+
+
+def test_reidane_does_not_tap_its_controllers_own_snow_land():
+    scenario = _board(hand=["Snow-Covered Island"], battlefield=[_REIDANE])
+    assert not scenario.play_land("Snow-Covered Island").tapped

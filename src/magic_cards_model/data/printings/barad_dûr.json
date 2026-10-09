@@ -1,0 +1,160 @@
+{
+  "object": "card",
+  "id": "4f1aa00f-aa33-4c89-9014-6184356649ca",
+  "oracle_id": "88159872-d37d-4847-b048-e4a9af6437bd",
+  "multiverse_ids": [
+    619712
+  ],
+  "mtgo_id": 111574,
+  "tcgplayer_id": 498435,
+  "cardmarket_id": 716046,
+  "name": "Barad-d\u00fbr",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/4f1aa00f-aa33-4c89-9014-6184356649ca",
+  "scryfall_uri": "https://scryfall.com/card/ltr/425/barad-d%C3%BBr?utm_source=api",
+  "layout": "normal",
+  "highres_image": false,
+  "image_status": "lowres",
+  "image_updated_at": "2026-07-13T04:15:58Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.jpg?1783916158",
+    "normal": "https://cards.scryfall.io/normal/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.jpg?1783916158",
+    "large": "https://cards.scryfall.io/large/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.jpg?1783916158",
+    "png": "https://cards.scryfall.io/png/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.png?1783916158",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.jpg?1783916158",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.jpg?1783916158",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.webp?1783916158",
+    "grid": "https://cards.scryfall.io/grid/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.webp?1783916158",
+    "display": "https://cards.scryfall.io/display/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.webp?1783916158",
+    "art": "https://cards.scryfall.io/art/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.webp?1783916158",
+    "crop": "https://cards.scryfall.io/crop/front/4/f/4f1aa00f-aa33-4c89-9014-6184356649ca.webp?1783916158"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Legendary Land",
+  "oracle_text": "Barad-d\u00fbr enters tapped unless you control a legendary creature.\n{T}: Add {B}.\n{X}{X}{B}, {T}: Amass Orcs X. Activate only if a creature died this turn.",
+  "colors": [],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Amass"
+  ],
+  "produced_mana": [
+    "B"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "6943f966-fd21-427c-a13f-44727edcaa4b",
+      "component": "token",
+      "name": "Orc Army",
+      "type_line": "Token Creature \u2014 Orc Army",
+      "uri": "https://api.scryfall.com/cards/6943f966-fd21-427c-a13f-44727edcaa4b"
+    },
+    {
+      "object": "related_card",
+      "id": "8306fe9f-e6c2-4875-958c-e79c0513e254",
+      "component": "combo_piece",
+      "name": "Barad-d\u00fbr",
+      "type_line": "Legendary Land",
+      "uri": "https://api.scryfall.com/cards/8306fe9f-e6c2-4875-958c-e79c0513e254"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "08078706-ac5d-439b-8f01-894d38751367",
+  "set": "ltr",
+  "set_name": "The Lord of the Rings: Tales of Middle-earth",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/08078706-ac5d-439b-8f01-894d38751367",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4f1aa00f-aa33-4c89-9014-6184356649ca/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A88159872-d37d-4847-b048-e4a9af6437bd&unique=prints",
+  "collector_number": "425",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tyler Jacobson",
+  "artist_ids": [
+    "522af130-8db4-4b4b-950c-6e2b246339cf"
+  ],
+  "illustration_id": "d97dcf26-07ad-4150-b75e-61d90838e5d7",
+  "border_color": "borderless",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary",
+    "inverted"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "boosterfun",
+    "universesbeyond"
+  ],
+  "edhrec_rank": 1751,
+  "penny_rank": 2579,
+  "prices": {
+    "usd": "4.18",
+    "usd_foil": "5.35",
+    "usd_etched": null,
+    "eur": "3.10",
+    "eur_foil": "5.38",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=619712&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBarad-d%25C3%25BBr",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBarad-d%25C3%25BBr",
+    "edhrec": "https://edhrec.com/route/?cc=Barad-d%C3%BBr"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F498435%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=716046&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/111574?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

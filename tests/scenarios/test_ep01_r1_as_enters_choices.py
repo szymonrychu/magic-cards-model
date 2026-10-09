@@ -846,3 +846,42 @@ def test_frostcliff_siege_jeskai_draws_when_creatures_connect_and_temur_does_not
 
     assert run("Jeskai") == 1
     assert run("Temur") == 0
+
+
+# -- the as-enters lines of The Rack, Umori and Sarpadian Empires, Vol. VII ----
+# (their other lines belong to other rounds; each is proven where it lives)
+
+
+def test_the_rack_with_one_opponent_chooses_them_without_asking():
+    """Only one opponent to pick between: no question (Tribute's convention)."""
+    scenario = _board(hand=["The Rack"])
+    rack = scenario.put_onto_battlefield("The Rack")
+    assert rack.chosen_player == "bob"
+    assert not [d for d in scenario.questions_asked() if d.source == "The Rack"]
+
+
+def test_umori_chooses_a_card_type_and_refuses_a_non_type():
+    scenario = _board(hand=["Umori, the Collector"])
+    umori = _enter(scenario, "Umori, the Collector", "artifact")
+    assert umori.choice == Choice(kind=ChoiceKind.CARD_TYPE, value="artifact")
+    refused = _board(hand=["Umori, the Collector"])
+    refused.will_choose("goblin", source="Umori, the Collector")
+    with pytest.raises(ValueError, match="goblin"):
+        refused.put_onto_battlefield("Umori, the Collector")
+
+
+def test_sarpadian_empires_chooses_one_of_its_five_color_and_type_pairs():
+    scenario = _board(hand=["Sarpadian Empires, Vol. VII"])
+    empires = _enter(scenario, "Sarpadian Empires, Vol. VII", "green Saproling")
+    assert empires.choice is not None
+    assert empires.choice.value == "green Saproling"
+    offered = _question(scenario, "Sarpadian Empires, Vol. VII").options
+    assert len(offered) == 5
+    assert "white Citizen" in offered
+
+
+def test_sarpadian_empires_refuses_a_pair_it_does_not_print():
+    scenario = _board(hand=["Sarpadian Empires, Vol. VII"])
+    scenario.will_choose("green Goblin", source="Sarpadian Empires, Vol. VII")
+    with pytest.raises(ValueError, match="green Goblin"):
+        scenario.put_onto_battlefield("Sarpadian Empires, Vol. VII")
