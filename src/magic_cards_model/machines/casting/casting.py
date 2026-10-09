@@ -832,6 +832,10 @@ class Casting(EngineModel):
     """The once-each-turn grant the chosen option spends
     (`KeywordCastOption.once_per_turn_key`), recorded as used when `cast()`
     completes - not before, since CR 601.6 can still rewind the announcement."""
+    treasure_mana_only: bool = False
+    """The chosen alternative cost says "Spend only mana produced by Treasures
+    to cast it this way." (Security Rhox) - `determine_cost` hands it to the
+    payment's `ManaSpend`."""
     alternative_cost: TotalCost | None = None
     free_cast_source: str | None = None
     """The permanent whose static ability applied CR 118.9's alternative cost
@@ -2433,6 +2437,7 @@ class Casting(EngineModel):
                     if cost
                     else 0,
                     unavailable=unavailable,
+                    treasure_only=offer.treasure_only,
                 )
             )
 
@@ -2653,6 +2658,7 @@ class Casting(EngineModel):
             if component.required and not component.cards:
                 component.cards = remaining[: component.required]
                 remaining = remaining[component.required :]
+        self.treasure_mana_only = option.treasure_only
         self.choose_alternative_cost(cost)
         return self.step
 
@@ -4156,7 +4162,9 @@ class Casting(EngineModel):
             # to the stack five steps ago, so the stack is the only answer the
             # object itself still has, and Interdimensional Web Watch's "cast
             # spells from exile" asks about where the cast *started*.
-            spend=ManaSpend.casting(self.spell, zone=self.origin_zone, x_value=self.x_value),
+            spend=ManaSpend.casting(
+                self.spell, zone=self.origin_zone, x_value=self.x_value
+            ).model_copy(update={"treasure_only": self.treasure_mana_only}),
         )
         self.payment.paying_for = "spell"
         self.payment.paying_for_keyword = (self.keyword_used or "").lower() or None

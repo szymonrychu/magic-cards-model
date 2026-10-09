@@ -499,7 +499,9 @@ _ADDITIONAL = re.compile(
     r"^As an additional cost to cast this spell, (?P<what>[^.]+)\.", re.MULTILINE
 )
 _ALTERNATIVE = re.compile(
-    r"^You may (?P<what>[^.]+?) rather than pay this spell's mana cost\.", re.MULTILINE
+    r"^You may (?P<what>[^.]+?) rather than pay this spell's mana cost\."
+    r"(?P<treasure> Spend only mana produced by Treasures to cast it this way\.)?",
+    re.MULTILINE,
 )
 #: Force of Negation's and Force of Vigor's own cousin of `_ALTERNATIVE`: the
 #: same CR 118.9 offer, gated on a plain "if it's not your turn" timing
@@ -553,7 +555,9 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
     than pay this spell's mana cost." alike.
     """
     offers = [
-        AlternativeCostOffer(phrase=match.group("what"))
+        AlternativeCostOffer(
+            phrase=match.group("what"), treasure_only=match.group("treasure") is not None
+        )
         for match in _ALTERNATIVE.finditer(card.oracle_text or "")
     ]
     offers.extend(

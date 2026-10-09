@@ -2358,6 +2358,9 @@ class AlternativeCostOffer(EngineModel):
     requires_not_your_turn: bool = False
     """Force of Negation's and Force of Vigor's own gate: the offer only
     exists "if it's not your turn"."""
+    treasure_only: bool = False
+    """Security Rhox's trailing "Spend only mana produced by Treasures to cast
+    it this way." - the cost is payable only with mana a Treasure made."""
 
 
 class StaticFreeCastGrant(EngineModel):

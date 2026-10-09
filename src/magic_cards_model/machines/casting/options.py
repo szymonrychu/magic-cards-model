@@ -1316,6 +1316,9 @@ class AlternativeCostOption(EngineModel):
     once_per_turn_key: str | None = None
     """For a once-each-turn `STATIC` grant, the granting permanent's key -
     recorded as used when the spell becomes cast (CR 601.2i)."""
+    treasure_only: bool = False
+    """Security Rhox's "Spend only mana produced by Treasures to cast it this
+    way." - the payment accepts only Treasure-made mana (CR 106.6)."""
 
     @property
     def available(self) -> bool:

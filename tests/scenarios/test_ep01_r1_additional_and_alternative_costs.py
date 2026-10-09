@@ -19,6 +19,7 @@ from magic_cards_model.machines.casting.options import (
     reads_optional_additional_cost_line,
 )
 from magic_cards_model.models import Color, Zone
+from magic_cards_model.models.token import create_predefined_tokens
 from tests.scenarios.harness import Scenario
 
 
@@ -324,3 +325,97 @@ def test_sephara_gives_other_flyers_indestructible_and_only_them():
     assert not has_keyword(bears, "indestructible", game)
     assert not has_keyword(sephara, "indestructible", game)
     assert not has_keyword(enemy, "indestructible", game)
+
+
+# -- "Spend only mana produced by Treasures to cast it this way." ------------------
+
+
+def _rhox_board() -> Scenario:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Security Rhox"],
+            battlefield=["Mountain", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    create_predefined_tokens(scenario.game, "Treasure", "alice", 2)
+    scenario.game.put_triggers_on_stack()
+    return scenario
+
+
+def _treasure_ability_index(scenario, treasure) -> int:
+    for index, ability in enumerate(scenario.game.activated_abilities(treasure)):
+        if ability.mana is not None:
+            return index
+    raise AssertionError("no mana ability")
+
+
+def _rhox_alternative(scenario):
+    casting = scenario.cast("Security Rhox")
+    (option,) = [found for found in casting.alternative_costs if found.available]
+    assert option.treasure_only
+    casting.use_alternative_cost(option.index)
+    return casting
+
+
+def test_security_rhox_is_cast_for_rg_paid_with_treasure_mana_only():
+    scenario = _rhox_board()
+    treasures = [s for s in scenario.game.battlefield if "Treasure" in s.subtypes]
+    casting = _rhox_alternative(scenario)
+    payment = casting.begin_paying()
+    for treasure, color in zip(treasures, (Color.RED, Color.GREEN), strict=True):
+        payment.activate_mana_ability(
+            treasure, _treasure_ability_index(scenario, treasure), color=[color]
+        )
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+
+    rhox = scenario.find("Security Rhox", Zone.BATTLEFIELD, "alice")
+    assert rhox.zone is Zone.BATTLEFIELD
+    assert all(t.zone is Zone.GRAVEYARD or t not in scenario.game.battlefield for t in treasures)
+    assert not any(land.tapped for land in scenario.game.battlefield if land.name in {"Mountain", "Forest"})
+
+
+def test_security_rhox_refuses_mana_from_lands():
+    scenario = _rhox_board()
+    casting = _rhox_alternative(scenario)
+    payment = casting.begin_paying()
+    mountain, forest = scenario.untapped_sources("Mountain", "Forest")
+    with pytest.raises(ValueError, match="Treasure"):
+        payment.tap_for_mana(mountain, [Color.RED])
+    with pytest.raises(ValueError, match="Treasure"):
+        payment.tap_for_mana(forest, [Color.GREEN])
+
+
+def test_security_rhox_refuses_floating_mana_that_no_treasure_made():
+    scenario = _rhox_board()
+    casting = _rhox_alternative(scenario)
+    payment = casting.begin_paying()
+    payment.add_mana(Color.RED)
+    payment.add_mana(Color.GREEN)
+    with pytest.raises(ValueError, match="cannot pay"):
+        payment.pay()
+
+
+def test_security_rhox_hard_cast_is_unrestricted():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Security Rhox"], battlefield=["Mountain", "Forest", "Forest", "Forest", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Security Rhox")
+    payment = casting.begin_paying()
+    payment.auto_tap(scenario.untapped_sources("Mountain", "Forest", "Forest", "Forest", "Forest"))
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+    assert scenario.find("Security Rhox", Zone.BATTLEFIELD, "alice").zone is Zone.BATTLEFIELD

@@ -589,6 +589,13 @@ class ManaSpend(EngineModel):
     the mana itself. A `{C}` symbol still wants colorless mana (colorless is
     not a color, CR 105.1) and `{S}` still wants snow mana."""
 
+    treasure_only: bool = False
+    """Security Rhox's "Spend only mana produced by Treasures to cast it this
+    way." (CR 106.6): only mana a Treasure produced (`ManaPool.treasure`) may
+    pay this cost. A restriction on the *cost* rather than on the mana, so it
+    lives on the spend, not in `ManaRestriction`; floating mana from any other
+    source is simply not available to this payment."""
+
     mana_value: float | None = None
     """CR 202.3's mana value of the spell being cast - X counted as the number
     chosen for it (CR 202.3e: the spell is on the stack by the time its cost
@@ -1437,6 +1444,15 @@ class ManaPool(EngineModel):
             raise ValueError("resolve X with ManaCost.with_x before paying")
         if choices is not None and len(choices) != len(cost.symbols):
             raise ValueError(f"expected {len(cost.symbols)} choices, got {len(choices)}")
+        if spend is not None and spend.treasure_only:
+            # Only the Treasure-made part of the pool is spendable at all.
+            treasures = ManaPool(floating=dict(self.treasure), treasure=dict(self.treasure))
+            return treasures.payment_for(
+                cost,
+                life_available=life_available,
+                choices=choices,
+                spend=spend.model_copy(update={"treasure_only": False}),
+            )
 
         best: ManaPayment | None = None
         for options in _candidate_options(cost, choices):

@@ -3515,6 +3515,13 @@ class CostPayment(EngineModel):
         # and the CR 602.5 refusals collected on the way - `_activated_mana_
         # ability`, shared with `mana_ability_index` so the ability a
         # `TapPlan` entry reports is the ability the tap actually activates.
+        if self.spend is not None and self.spend.treasure_only and not is_treasure_source(
+            source, self.game
+        ):
+            raise ValueError(
+                f"{source.name} is not a Treasure, and only mana produced by Treasures "
+                "may be spent to cast this spell this way (CR 106.6)"
+            )
         activated, refusals, produces, triggered_colors = _activated_mana_ability_with_triggers(
             self, source, produces, restriction
         )
