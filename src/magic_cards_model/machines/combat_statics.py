@@ -376,3 +376,69 @@ def group_blocked_by_at_most_one_refusal(
                 f'{source.name} says "{restriction.sentence}" (CR 509.1b)'
             )
     return None
+
+
+# -- EP-01 R1 T4: dispatchers combat.py calls (additive hooks) ---------------
+
+
+def block_evasion_refusal(game: "Game", blocker: CardState, attacker: CardState) -> str | None:
+    return None
+
+
+def block_evasion_declaration_refusal(game: "Game", declared) -> str | None:
+    return None
+
+
+def reads_block_evasion_line(printing, text: str, *, card_name: str) -> bool:
+    return False
+
+
+def extra_attack_refusal(game: "Game", creature: CardState, defender) -> str | None:
+    from . import attached_restrictions, attacking_statics, group_attack_statics
+
+    return (
+        attached_restrictions.attached_attack_refusal(game, creature)
+        or attacking_statics.self_attack_condition_refusal(game, creature, defender)
+        or group_attack_statics.group_attack_refusal(game, creature, defender)
+    )
+
+
+def extra_block_refusal(game: "Game", blocker: CardState, attacker: CardState) -> str | None:
+    from . import attached_restrictions, attacking_statics, group_attack_statics
+
+    return (
+        block_evasion_refusal(game, blocker, attacker)
+        or attached_restrictions.attached_block_refusal(game, blocker)
+        or attacking_statics.self_block_condition_refusal(game, blocker, attacker)
+        or group_attack_statics.group_block_refusal(game, blocker, attacker)
+    )
+
+
+def extra_declaration_refusal(game: "Game", declared) -> str | None:
+    from . import attacking_statics
+
+    return block_evasion_declaration_refusal(
+        game, declared
+    ) or attacking_statics.self_block_declaration_refusal(game, declared)
+
+
+def extra_attack_declaration_refusal(game: "Game", attacks) -> str | None:
+    from . import attacking_statics
+
+    return attacking_statics.self_attack_declaration_refusal(game, attacks)
+
+
+def extra_attack_requirements(game: "Game", creature: CardState) -> list[bool]:
+    from . import attached_restrictions, attacking_statics, group_attack_statics
+
+    return [
+        *attached_restrictions.attached_attack_requirements(game, creature),
+        *attacking_statics.self_attack_requirements(game, creature),
+        *group_attack_statics.group_attack_requirements(game, creature),
+    ]
+
+
+def extra_attack_costs(game: "Game", creature: CardState, defender) -> list:
+    from . import attack_block_costs
+
+    return attack_block_costs.attack_costs(game, creature, defender)

@@ -292,6 +292,19 @@ class CombatMixin:
                     f"but {others} were also declared as attackers"
                 )
 
+    def _refuse_extra_attack_restrictions(
+        self: "Game", attacks: "Sequence[tuple[CardState, Targetable | str]]"
+    ) -> None:
+        """CR 508.1c: restrictions that judge the whole attack declaration
+        ("can't attack alone", "can't attack unless a creature with greater
+        power also attacks") - `combat_statics.extra_attack_declaration_refusal`."""
+        from ...machines.combat_statics import extra_attack_declaration_refusal
+
+        refs = [(creature, self.attack_target(defender)) for creature, defender in attacks]
+        refusal = extra_attack_declaration_refusal(self, refs)
+        if refusal is not None:
+            raise ValueError(refusal)
+
     def _required_attack_declaration(self: "Game", active: str) -> list[tuple[UUID, UUID | str]]:
         """The fewest attackers that obey every requirement that can be obeyed
         (CR 508.1d), each attacking the defender that obeys the most of its
@@ -338,6 +351,7 @@ class CombatMixin:
             self._refuse_unobeyed_attack_requirements(attacks)
             self._refuse_illegal_attacker_caps(attacks)
             self._refuse_attack_alone_violations(attacks)
+            self._refuse_extra_attack_restrictions(attacks)
             # CR 508.1: an illegal declaration returns the game to the moment
             # before it, so every attacker is judged before any one taps.
             # CR 508.1a-b: each chosen creature attacks one player,

@@ -215,3 +215,33 @@ def parse_tapped_group_keyword_grant(sentence: str) -> EffectBuilder | None:
     return _tapped_group_keyword_grant_builder(
         keywords, line=sentence, legendary=match.group("legendary") is not None
     )
+
+
+# -- self "can't attack/block unless ..." restrictions (CR 508.1c, 509.1b) ---
+
+
+def self_attack_condition_refusal(game, creature, defender) -> str | None:
+    return None
+
+
+def self_block_condition_refusal(game, blocker, attacker) -> str | None:
+    return None
+
+
+def self_attack_declaration_refusal(game, attacks) -> str | None:
+    """`attacks` is `[(creature, defender)]`, the whole declaration."""
+    return None
+
+
+def self_block_declaration_refusal(game, declared) -> str | None:
+    """`declared` maps attacker id to its blockers, the whole declaration."""
+    return None
+
+
+def self_attack_requirements(game, creature) -> list[bool]:
+    """One entry per attack requirement; True when only an attack on a player obeys it."""
+    return []
+
+
+def reads_self_condition_line(printing, text: str, *, card_name: str) -> bool:
+    return False
