@@ -43,6 +43,7 @@ from ...machines.keywords import (
     dredge_count,
     enters_transformed_at_night,
     granted_keyword_triggered_abilities,
+    has_first_draw_reveal,
     is_indestructible,
     keyword_triggered_abilities,
     why_cannot_dredge,
@@ -1933,6 +1934,7 @@ class ZonesMixin:
                         # you've drawn this turn" - asked here, mid-draw, and
                         # only for this one card (CR 121.2).
                         self._offer_miracle_reveal(drawer, card)
+                        self._offer_first_draw_reveals(drawer, card)
                     self._reveal_drawn_card(drawer.username, card)
                     self.emit(
                         GameEvent(
@@ -2086,6 +2088,54 @@ class ZonesMixin:
                 and triggered.ability.effect == instance.effect
             )
             return
+
+    def _offer_first_draw_reveals(self: "Game", player: Player, card: CardState) -> None:
+        """God-Eternal Kefnet's static ability: "You may reveal the first card
+        you draw each turn as you draw it."
+
+        One `MAY` per permanent `player` controls that has it (each is its own
+        ability, CR 607.2h), asked as the first card is drawn (CR 121.2) and
+        naming the card. Declining reveals nothing and triggers nothing; an
+        unscripted player declines (revealing gives away hidden information).
+        Revealing records the reveal (CR 701.20a) and raises
+        `ExtraTriggerEvent.REVEALED_FIRST_DRAW`, which only that permanent's
+        linked "Whenever you reveal an instant or sorcery card this way"
+        trigger answers (CR 603.11).
+        """
+        if card.zone is not Zone.HAND:
+            return
+        for source in [
+            permanent
+            for permanent in self.battlefield
+            if permanent.controller == player.username and has_first_draw_reveal(permanent.card)
+        ]:
+            if not self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=player.username,
+                    prompt=(
+                        f"reveal {card.name} as you draw it, the first card you've drawn this "
+                        f"turn, for {source.name}"
+                    ),
+                    source=source.name,
+                    source_id=source_id_of(source),
+                    card=card.id,
+                    cards=(card.id,),
+                    default_may=False,
+                )
+            ):
+                continue
+            self.reveal(card, source=source.name)
+            self.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.REVEALED_FIRST_DRAW,
+                    subject_id=card.id,
+                    subject_name=card.name,
+                    subject_controller=player.username,
+                    subject_card=card.card,
+                    player=player.username,
+                )
+            )
 
     def revealed_for_miracle(self: "Game", card_state: CardState) -> bool:
         """Whether `card_state` is being played revealed under CR 702.94b:

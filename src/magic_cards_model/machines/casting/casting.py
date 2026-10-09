@@ -8,7 +8,14 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 
 from ...models.card import Card, Color, Layout, Type, types_of
-from ...models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
+from ...models.card_state import (
+    CardState,
+    Counter,
+    Counters,
+    ExileAnnotation,
+    ExileMarker,
+    TargetRef,
+)
 from ...models.mana import ManaCost, ManaSpend
 from ...models.zone import Zone
 from ...numbers import VariableX, parse_amount, parse_count
@@ -836,6 +843,8 @@ class Casting(EngineModel):
     """The once-each-turn grant the chosen option spends
     (`KeywordCastOption.once_per_turn_key`), recorded as used when `cast()`
     completes - not before, since CR 601.6 can still rewind the announcement."""
+    keyword_any_color: bool = False
+    """The claimed option's `KeywordCastOption.any_color` (CR 609.4b)."""
     treasure_mana_only: bool = False
     """The chosen alternative cost says "Spend only mana produced by Treasures
     to cast it this way." (Security Rhox) - `determine_cost` hands it to the
@@ -1035,6 +1044,11 @@ class Casting(EngineModel):
     """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
+    announced_counters: dict[str, int] | None = None
+    """The counters the card had before that move (CR 122.1, CR 400.7 clears
+    them): Evelyn, the Covetous opens only exiled cards "with a collection
+    counter on it", which a grant asked about the announced card still has to
+    see."""
     announced_discarded_by: str | None = None
     """Who had discarded the card before that move (CR 701.9a), and"""
     announced_discarded_on_turn: int | None = None
@@ -1199,6 +1213,7 @@ class Casting(EngineModel):
         self.announced_zone = self.spell.zone
         self.announced_stamp = self.spell.zone_change_stamp
         self.announced_exile_annotation = self.spell.exile_annotation
+        self.announced_counters = self.spell.counters.model_dump()
         self.announced_discarded_by = self.spell.discarded_by
         self.announced_discarded_on_turn = self.spell.discarded_on_turn
         if self.spell.zone is Zone.LIBRARY:
@@ -1283,6 +1298,7 @@ class Casting(EngineModel):
                 "zone": self.announced_zone,
                 "zone_change_stamp": self.announced_stamp,
                 "exile_annotation": self.announced_exile_annotation,
+                "counters": Counters(self.announced_counters or {}),
                 "discarded_by": self.announced_discarded_by,
                 "discarded_on_turn": self.announced_discarded_on_turn,
             }
@@ -2047,6 +2063,7 @@ class Casting(EngineModel):
         self.keyword_exiles_instead = option.exile_instead_of_graveyard
         self.keyword_enters_with_counters = option.enters_with_counters
         self.keyword_once_per_turn_key = option.once_per_turn_key
+        self.keyword_any_color = option.any_color
         self.keyword_cost_paid = not option.pays_mana_cost
         self.keyword_pays_life_for_mana_value = option.pays_life_for_mana_value
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
@@ -4229,9 +4246,8 @@ class Casting(EngineModel):
                     "treasure_only": self.treasure_mana_only,
                     # CR 609.4b: Chromatic Orrery, Oath of Nissa, Case File
                     # Auditor - "spend mana as though it were mana of any color".
-                    "any_color": self.game.spends_mana_as_any_color_for_spell(
-                        self.spell, self.caster
-                    ),
+                    "any_color": self.keyword_any_color
+                    or self.game.spends_mana_as_any_color_for_spell(self.spell, self.caster),
                 }
             ),
         )

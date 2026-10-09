@@ -1671,6 +1671,70 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
 }
 
 
+#: God-Eternal Kefnet's whole line - the static "You may reveal the first card
+#: you draw each turn as you draw it" and the trigger linked to it (CR 603.11,
+#: CR 607.2h). The reduction is the number of generic mana the copy costs
+#: less (CR 601.2f, CR 118.7).
+_FIRST_DRAW_REVEAL_LINE_RE = re.compile(
+    r"^You may reveal the first card you draw each turn as you draw it\.\s*"
+    r"Whenever you reveal an instant or sorcery card this way, "
+    r"copy that card and you may cast the copy\.\s*"
+    r"That copy costs \{(?P<less>\d+)\} less to cast\.?$"
+)
+
+
+def is_first_draw_reveal_line(text: str) -> bool:
+    """Whether `text` is `_FIRST_DRAW_REVEAL_LINE_RE`'s whole line - asked by
+    `static_audit/cost_modification`."""
+    return _FIRST_DRAW_REVEAL_LINE_RE.fullmatch(text.split("(")[0].strip()) is not None
+
+
+def first_draw_reveal_lines(card: Card) -> list[str]:
+    """Each printed line of `card` that is `_FIRST_DRAW_REVEAL_LINE_RE`'s
+    shape - the static reveal ability and its linked trigger in one line."""
+    return [
+        line
+        for line in (card.oracle_text or "").splitlines()
+        if _FIRST_DRAW_REVEAL_LINE_RE.fullmatch(line.split("(")[0].strip())
+    ]
+
+
+def has_first_draw_reveal(card: Card) -> bool:
+    """Whether `card` lets its controller reveal the turn's first draw as it
+    is drawn (God-Eternal Kefnet) - asked by `Game._offer_first_draw_reveals`
+    and `support._static_ability_category`."""
+    return bool(first_draw_reveal_lines(card))
+
+
+def first_draw_reveal_abilities(card: Card) -> list[TriggeredAbility]:
+    """The triggered half of each `first_draw_reveal_lines` line, written out
+    as the ability it is: "Whenever you reveal an instant or sorcery card this
+    way, copy that card and you may cast the copy. That copy costs {N} less to
+    cast." It fires only off a reveal the static half made
+    (`ExtraTriggerEvent.REVEALED_FIRST_DRAW`)."""
+    built: list[TriggeredAbility] = []
+    for line in first_draw_reveal_lines(card):
+        match = _FIRST_DRAW_REVEAL_LINE_RE.fullmatch(line.split("(")[0].strip())
+        assert match is not None
+        condition = "you reveal an instant or sorcery card this way"
+        effect = (
+            "copy that card and you may cast the copy. "
+            f"That copy costs {{{match.group('less')}}} less to cast"
+        )
+        built.append(
+            TriggeredAbility(
+                raw=line,
+                text=f"Whenever {condition}, {effect}",
+                face=card.name,
+                word=TriggerWord.WHENEVER,
+                condition=condition,
+                effect=effect,
+                event=None,
+            )
+        )
+    return built
+
+
 def keyword_triggered_abilities(card: Card) -> list[TriggeredAbility]:
     """Every triggered ability this card has that is printed as a keyword (CR 702.1).
 
@@ -1689,6 +1753,7 @@ def keyword_triggered_abilities(card: Card) -> list[TriggeredAbility]:
         expand = _TRIGGER_EXPANSIONS.get(ability.canonical.lower())
         if expand is not None:
             built.extend(expand(ability))
+    built.extend(first_draw_reveal_abilities(card))
     return built
 
 

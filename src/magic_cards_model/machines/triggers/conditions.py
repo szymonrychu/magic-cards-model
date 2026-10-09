@@ -3501,6 +3501,17 @@ def _unread_condition_matches(
             and event.player == controller
         )
 
+    if _REVEALED_FIRST_DRAW_CONDITION.match(condition):
+        # CR 607.2h: only a reveal the static "reveal the first card you draw
+        # each turn" made, by the controller of this source, of an instant or
+        # sorcery card.
+        return (
+            event.event is ExtraTriggerEvent.REVEALED_FIRST_DRAW
+            and event.player == controller
+            and event.subject_card is not None
+            and bool({Type.INSTANT, Type.SORCERY} & set(event.subject_card.types))
+        )
+
     if _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(condition):
         # CR 603.2c: one trigger per step's damage to a player, however many
         # of the described creatures dealt it.
@@ -5766,6 +5777,7 @@ from ._common import (  # noqa: E402
     _PLAY_A_LAND_OR_CAST_CONDITION,
     _PLAYER_COUNTERS_PUT_CONDITION,
     _PUT_INTO_LIBRARY_CONDITION,
+    _REVEALED_FIRST_DRAW_CONDITION,
     _REVEALED_THIS_WAY_CONDITION,
     _RING_TEMPTS_YOU_CONDITION,
     _SEARCHES_LIBRARY_CONDITION,

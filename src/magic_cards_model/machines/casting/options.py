@@ -191,6 +191,11 @@ class KeywordCastOption(EngineModel):
     [quality]" - and so the mark that the total cost is then reduced by that
     permanent's mana value (`Casting._use_keyword`). None for every other
     keyword."""
+    any_color: bool = False
+    """The permission says "you may spend mana as though it were mana of any
+    color to cast" the spells it opens (Rogue Class level 3, Evelyn, the
+    Covetous; CR 609.4b). `Casting._use_keyword` carries it to the payment's
+    `ManaSpend`, because the card has left its pile (and its link) by then."""
     once_per_turn_key: str | None = None
     """Set for "Once during each of your turns, you may cast ... from your
     graveyard" (Rivaz of the Claw, Gisa and Geralf, Kess, Dissident Mage):

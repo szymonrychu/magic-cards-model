@@ -656,12 +656,17 @@ class CostsManaMixin:
         """Whether `caster` may spend mana as though it were mana of any color
         to cast `spell` (CR 609.4b): an unscoped permission always, a scoped
         one when `spell` has the quality it names ("planeswalker", "Case")."""
+        from ...machines.casting import linked_exile_play_grant
         from ...machines.next_spell import spell_has_quality
 
         for _source, scope in self._spend_as_any_color_grants(caster):
             if scope is None or spell_has_quality(spell, scope.lower()):
                 return True
-        return False
+        # Rogue Class's and Evelyn's "... and you may spend mana as though it
+        # were mana of any color to cast those spells / it": the cards of the
+        # pile the same sentence opens to play.
+        grant = linked_exile_play_grant(self, spell, caster)
+        return grant is not None and grant.line.any_color
 
     @staticmethod
     def _resulting_mana_value(card: CardState, option: str | None) -> int:

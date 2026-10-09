@@ -24,8 +24,9 @@ from ...machines.casting import (
     granted_cast_options,
     keyword_cast_options,
     life_or_mana_additional_costs,
-    linked_exile_play_source,
+    linked_exile_play_grant,
     marker_cast_options,
+    once_per_turn_key,
     optional_additional_costs,
     play_permissions_on,
     static_free_cast_grants,
@@ -619,6 +620,7 @@ class CastingMixin:
         pays_mana_cost: bool = False,
         exile_instead_of_graveyard: bool = False,
         transformed: bool = False,
+        cost_reduction: int = 0,
     ) -> CardState | None:
         """CR 608.2g: cast `card` without paying its mana cost while the
         resolving spell or ability that allows it is still resolving - the one
@@ -659,6 +661,9 @@ class CastingMixin:
         sources the same way a resolution cast's other owed mana is
         (`_pay_resolution_cast_mana`), an X in it chosen by the caster (CR
         107.3a).
+
+        `cost_reduction` is the "That copy costs {N} less to cast" rider (God-Eternal
+        Kefnet): N generic mana off the total cost (CR 601.2f, CR 118.7).
 
         `transformed` casts a nonmodal double-faced card with its back face up
         (CR 712.11a, 712.8c) - a Siege's "cast it transformed" (CR 310.12b).
@@ -752,6 +757,8 @@ class CastingMixin:
                 targets = self._announce_resolution_targets(casting, card, caster, chosen_modes)
                 if targets:
                     casting.choose_targets(targets)
+                if cost_reduction:
+                    casting.reduce_cost(f"{{{cost_reduction}}}")
                 payment = casting.determine_cost(x_value=x_value)
                 self._choose_waterbend_taps(casting, payment, card, caster)
                 if payment.shortfall:
@@ -2253,6 +2260,7 @@ class CastingMixin:
         if refusal is not None:
             raise ValueError(refusal)
         permission: PlayPermission | None = None
+        exile_grant = linked_exile_play_grant(self, land, username)
         if land.zone is not Zone.HAND:
             # CR 305.1 plays a land "from their hand"; CR 701.18a's "from the
             # zone it's in (usually the hand)" is the wider action, and only an
@@ -2266,7 +2274,7 @@ class CastingMixin:
                 permission is None
                 and self.graveyard_land_permission(land, username) is None
                 and self.land_from_top_of_library_permission(land, username) is None
-                and linked_exile_play_source(self, land, username) is None
+                and exile_grant is None
             ):
                 granted = play_permissions_on(self, land)
                 if granted:
@@ -2286,6 +2294,10 @@ class CastingMixin:
         # CR 406.3a: a card exiled face down "is turned face up just before
         # the player announces that they are playing the card".
         land.face_up = True
+        if exile_grant is not None and exile_grant.line.once_each_turn:
+            # "Once each turn, you may play a card from exile ..." (Evelyn):
+            # this play is the turn's use of that permanent's permission.
+            self.once_per_turn_cast_permissions_used[once_per_turn_key(exile_grant.permanent)] = 1
 
         # CR 305.2a counts "lands played as special actions and lands played
         # during the resolution of spells and abilities", so any future effect

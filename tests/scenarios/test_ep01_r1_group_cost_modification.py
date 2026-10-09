@@ -178,6 +178,25 @@ def test_spellwild_ouphe_discounts_only_spells_that_target_it():
     assert _cost(scenario, "Swampsnare Trap", targets=[bears]) == "{2}{B}"
 
 
+def test_infectious_curse_discounts_only_spells_that_target_the_enchanted_player():
+    """CR 303.4m: "enchanted player" is whoever the Curse is attached to; a
+    spell aimed at anyone else, or at nobody, pays full price."""
+    scenario = _main(
+        alice={
+            "hand": ["Mind Rot"],
+            "battlefield": ["Accursed Witch // Infectious Curse"],
+        },
+        bob={},
+        carol={},
+    )
+    curse = scenario.find("Accursed Witch // Infectious Curse", Zone.BATTLEFIELD, "alice")
+    curse.transformed = True
+    curse.attach_to(scenario.player("bob"))
+    assert _cost(scenario, "Mind Rot", targets=["bob"]) == "{1}{B}"
+    assert _cost(scenario, "Mind Rot", targets=["carol"]) == "{2}{B}"
+    assert _cost(scenario, "Mind Rot", targets=["alice"]) == "{2}{B}"
+
+
 def test_battlefield_thaumaturge_discounts_per_creature_targeted():
     scenario = _main(
         alice={"hand": ["Lacerate Flesh"], "battlefield": ["Battlefield Thaumaturge"]},

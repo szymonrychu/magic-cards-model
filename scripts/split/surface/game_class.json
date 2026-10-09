@@ -232,6 +232,7 @@
     "_note_unread_trigger",
     "_offer_additional_cost",
     "_offer_dredge",
+    "_offer_first_draw_reveals",
     "_offer_miracle_reveal",
     "_opening_hand_offers",
     "_order_triggers_by_controller",

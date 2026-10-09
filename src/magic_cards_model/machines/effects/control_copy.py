@@ -355,6 +355,69 @@ _COPY_EXILED_CARD_AND_CAST_RE = re.compile(
 )
 
 
+#: God-Eternal Kefnet's trigger effect: "copy that card and you may cast the
+#: copy. That copy costs {2} less to cast." - the card is the one the linked
+#: reveal named (`ExtraTriggerEvent.REVEALED_FIRST_DRAW`).
+_COPY_REVEALED_CARD_CAST_LESS_RE = re.compile(
+    r"^copy that card and you may cast the copy\.\s*"
+    r"that copy costs \{(?P<less>\d+)\} less to cast\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s22")
+def _parse_copy_revealed_card_and_cast_for_less(text: str) -> AbilityEffect | None:
+    """`_COPY_REVEALED_CARD_CAST_LESS_RE`'s shape.
+
+    CR 707.12: the copy is created in the zone the revealed card is in - the
+    hand - and cast following CR 601.2a-i with its mana cost owed less the
+    stated generic reduction (CR 601.2f, CR 118.7); "may" is one CR 608.2d
+    question inside `Game.may_cast_during_resolution`. A revealed card that
+    has left the hand since is a new object (CR 400.7), so nothing is copied.
+    CR 707.10a: a copy that is not cast ceases to exist.
+    """
+    match = _COPY_REVEALED_CARD_CAST_LESS_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    less = int(match.group("less"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        revealed = ability.event
+        original = next(
+            (c for c in controller.hand if revealed is not None and c.id == revealed.subject_id),
+            None,
+        )
+        if original is None:
+            return
+        copy = CardState(
+            card=original.card,
+            zone=Zone.HAND,
+            controller=controller.username,
+            owner=controller.username,  # CR 112.2a
+            is_copy=True,
+        )
+        controller.hand.append(copy)
+        game.may_cast_during_resolution(
+            copy,
+            controller.username,
+            prompt=f"cast the copy of {copy.name} (it costs {{{less}}} less)",
+            source=source_name,
+            source_id=source_id_of(ability),
+            source_name=source_name,
+            rule="CR 707.12",
+            pays_mana_cost=True,
+            cost_reduction=less,
+        )
+        if copy in controller.hand:
+            controller.hand.remove(copy)  # CR 707.10a
+
+    return effect
+
+
 @ABILITY_TEXT.rung("s22")
 def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
     """`_COPY_EXILED_CARD_AND_CAST_RE`'s shape - Isochron Scepter's activated

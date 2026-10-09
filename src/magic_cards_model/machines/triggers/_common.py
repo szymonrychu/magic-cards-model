@@ -196,6 +196,12 @@ _LAST_COUNTER_CONDITION = re.compile(
 #: this condition only ever arrives from that expansion.
 _REVEALED_THIS_WAY_CONDITION = re.compile(r"^you reveal this card this way$")
 
+#: God-Eternal Kefnet's linked trigger: "Whenever you reveal an instant or
+#: sorcery card this way" - the card a player revealed through the static
+#: "You may reveal the first card you draw each turn as you draw it" (the same
+#: CR 607.2h link miracle has), never any other reveal.
+_REVEALED_FIRST_DRAW_CONDITION = re.compile(r"^you reveal an instant or sorcery card this way$")
+
 #: Voltaic Visionary's "When you play a card exiled with this creature" - CR
 #: 601.1a's "play" (a land played or a spell cast) of a card out of this
 #: object's own CR 607.2a pile.

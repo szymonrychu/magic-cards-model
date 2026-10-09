@@ -2,7 +2,7 @@ import re
 from collections.abc import Callable, Iterable, Sequence
 from enum import StrEnum
 from functools import lru_cache
-from typing import Any
+from typing import Any, NamedTuple
 from uuid import UUID
 
 from pydantic import ConfigDict
@@ -901,29 +901,78 @@ def _static_zone_cast_option(
 # --------------------------------------------------------------------------
 
 #: "[During your turn, ]you may play cards exiled with `<this>`." (The
-#: Temporal Anchor) and "You may play lands and cast spells from among cards
-#: exiled with this creature." (Nightveil Specter) - CR 601.1a's "play" (a
-#: land drop or a cast) opened to CR 607.2a's linked pile, read after the
-#: object's own name is normalised to "this `<noun>`" (CR 201.5).
+#: Temporal Anchor), "You may play lands and cast spells from among cards
+#: exiled with this creature." (Nightveil Specter) and Rogue Class's level 3
+#: "You may play cards exiled with this Class, and you may spend mana as
+#: though it were mana of any color to cast those spells." - CR 601.1a's
+#: "play" (a land drop or a cast) opened to CR 607.2a's linked pile, read
+#: after the object's own name is normalised to "this `<noun>`" (CR 201.5).
 _PLAY_CARDS_EXILED_WITH_STATIC_RE = re.compile(
     r"^(?P<during>during your turn, )?you may play (?:cards|lands and cast spells from among "
-    r"cards) exiled with this \w+\.?$",
+    r"cards) exiled with this \w+"
+    r"(?P<any_color>, and you may spend mana as though it were mana of any colou?r "
+    r"to cast those spells)?\.?$",
+    re.IGNORECASE,
+)
+
+#: Evelyn, the Covetous's "Once each turn, you may play a card from exile with
+#: a collection counter on it if it was exiled by an ability you controlled,
+#: and you may spend mana as though it were mana of any color to cast it." -
+#: the pile is named by a counter and by who controlled the exiling ability
+#: (read as: the permanent whose ability exiled it, `ExileAnnotation.
+#: linked_permanent_id`, is one the player controls), not by "this" object.
+_PLAY_COUNTER_CARDS_FROM_EXILE_STATIC_RE = re.compile(
+    r"^once each turn, you may play a card from exile with an? (?P<counter>[\w-]+) counter "
+    r"on it if it was exiled by an ability you controlled"
+    r"(?P<any_color>, and you may spend mana as though it were mana of any colou?r "
+    r"to cast it)?\.?$",
     re.IGNORECASE,
 )
 
 
+class LinkedExilePlayLine(NamedTuple):
+    """One line that opens a pile of exiled cards to being played."""
+
+    during_your_turn: bool
+    any_color: bool
+    once_each_turn: bool = False
+    counter: str | None = None
+    """The kind of counter a card needs to be in the pile (Evelyn), or None
+    for CR 607.2a's "exiled with this object"."""
+
+
+class LinkedExilePlayGrant(NamedTuple):
+    """`linked_exile_play_grant`'s answer: the permanent whose line lets the
+    player play the card, and what that line says."""
+
+    permanent: CardState
+    line: LinkedExilePlayLine
+
+
 def play_cards_exiled_with_line(
     permanent_name: str, text: str, *, legendary: bool = True
-) -> tuple[bool] | None:
-    """`(during_your_turn,)` for a `_PLAY_CARDS_EXILED_WITH_STATIC_RE` line
-    of the permanent named `permanent_name`, or None."""
+) -> LinkedExilePlayLine | None:
+    """The `LinkedExilePlayLine` of a `_PLAY_CARDS_EXILED_WITH_STATIC_RE` or
+    `_PLAY_COUNTER_CARDS_FROM_EXILE_STATIC_RE` line of the permanent named
+    `permanent_name`, or None."""
     from ..abilities import self_normalized_effect_text
 
     normalized = self_normalized_effect_text(permanent_name, text.strip(), legendary=legendary)
     match = _PLAY_CARDS_EXILED_WITH_STATIC_RE.fullmatch(normalized.strip())
-    if match is None:
-        return None
-    return (match.group("during") is not None,)
+    if match is not None:
+        return LinkedExilePlayLine(
+            during_your_turn=match.group("during") is not None,
+            any_color=match.group("any_color") is not None,
+        )
+    counter = _PLAY_COUNTER_CARDS_FROM_EXILE_STATIC_RE.fullmatch(normalized.strip())
+    if counter is not None:
+        return LinkedExilePlayLine(
+            during_your_turn=False,
+            any_color=counter.group("any_color") is not None,
+            once_each_turn=True,
+            counter=counter.group("counter").lower(),
+        )
+    return None
 
 
 def reads_play_cards_exiled_with_line(card: Card, text: str) -> bool:
@@ -938,12 +987,15 @@ def reads_play_cards_exiled_with_line(card: Card, text: str) -> bool:
     )
 
 
-def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
-    """The permanent `player` controls whose "you may play cards exiled with
-    `<this>`" lets them play `card` right now, or None: `card` is face up in
-    exile (CR 406.3b), exiled with that very object (CR 607.2a, CR 400.7 -
-    `ExileAnnotation.links_to`), and the line's "during your turn" holds."""
-    if game is None or card.zone is not Zone.EXILE or not card.face_up:
+def linked_exile_play_grant(game: Any, card: CardState, player: str) -> LinkedExilePlayGrant | None:
+    """The permanent `player` controls whose line lets them play `card` right
+    now, with that line, or None: `card` is in exile and either exiled with
+    that very object (CR 607.2a, CR 400.7 - `ExileAnnotation.links_to`) or, for
+    a counter-named pile, carries the counter and was exiled by an ability of
+    a permanent `player` controls; the line's "during your turn" and "once
+    each turn" hold. A card exiled face down is playable too (CR 406.3a: the
+    ability that exiled it may allow it to be played)."""
+    if game is None or card.zone is not Zone.EXILE:
         return None
     annotation = card.exile_annotation
     if annotation is None:
@@ -952,20 +1004,43 @@ def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardSta
 
     board = game.computed_board()
     for permanent in game.permanents_controlled_by(player):
-        if not annotation.links_to(permanent.id, permanent.zone_change_stamp):
-            continue
         legendary = Supertype.LEGENDARY in permanent.card.supertypes
         for line in class_gated_lines(permanent, board.of(permanent).abilities):
             read = play_cards_exiled_with_line(permanent.name, line, legendary=legendary)
             if read is None:
                 continue
-            (during_your_turn,) = read
-            if during_your_turn:
+            if read.counter is None:
+                if not annotation.links_to(permanent.id, permanent.zone_change_stamp):
+                    continue
+            else:
+                if card.counters[read.counter] <= 0 or annotation.linked_permanent_id is None:
+                    continue
+                exiler = next(
+                    (
+                        held
+                        for held in game.permanents_controlled_by(player)
+                        if held.id == annotation.linked_permanent_id
+                    ),
+                    None,
+                )
+                if exiler is None:
+                    continue
+            if read.during_your_turn:
                 turn = getattr(game, "turn", None)
                 if turn is None or turn.active_player != player:
                     continue
-            return permanent
+            if read.once_each_turn and once_per_turn_key(permanent) in getattr(
+                game, "once_per_turn_cast_permissions_used", {}
+            ):
+                continue
+            return LinkedExilePlayGrant(permanent, read)
     return None
+
+
+def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
+    """`linked_exile_play_grant`'s permanent, or None."""
+    grant = linked_exile_play_grant(game, card, player)
+    return grant.permanent if grant is not None else None
 
 
 #: A permanent's standing permission to cast from its own linked pile (CR
@@ -1155,7 +1230,8 @@ def _linked_exile_play_option(
     if origin_zone is not Zone.EXILE:
         return None
     probe = spell if spell.zone is Zone.EXILE else None
-    if probe is None or linked_exile_play_source(game, probe, caster) is None:
+    grant = linked_exile_play_grant(game, probe, caster) if probe is not None else None
+    if grant is None:
         return None
     return KeywordCastOption(
         keyword=CAST_PERMISSION,
@@ -1163,6 +1239,10 @@ def _linked_exile_play_option(
         zone=Zone.EXILE,
         pays_mana_cost=True,
         timing=CastTiming.OWN,
+        any_color=grant.line.any_color,
+        once_per_turn_key=(
+            once_per_turn_key(grant.permanent) if grant.line.once_each_turn else None
+        ),
     )
 
 

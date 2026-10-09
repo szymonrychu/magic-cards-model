@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING, Any
 
+from ...models.card_state import TargetKind
 from ...models.mana import ManaCost
 from ...models.zone import Zone
 from .statics import (
@@ -150,9 +151,24 @@ def _shares_type_with_imprint(game: "Game", spell: "CardState", source: "CardSta
 def _target_clause(what: str) -> Any:
     """ "that target <what>" as a predicate over the announced targets
     (CR 601.2c): this permanent, or any object of a printed quality
-    (optionally "you control"). "Enchanted player" is left unread: nothing in
-    the engine attaches an Aura to a player."""
+    (optionally "you control"), or the player this Curse is attached to
+    (CR 303.4m: "enchanted player" is whoever the permanent is attached to)."""
     text = what.strip()
+    if text == "enchanted player":
+
+        def targets_enchanted_player(ctx: CostContext) -> bool:
+            attached = ctx.source.attachment
+            return (
+                attached is not None
+                and attached.kind is TargetKind.PLAYER
+                and any(
+                    getattr(t, "kind", None) is TargetKind.PLAYER
+                    and t.username == attached.username
+                    for t in ctx.targets
+                )
+            )
+
+        return targets_enchanted_player
     if text in {"this creature", "this permanent", "this artifact", "this enchantment"}:
         return lambda ctx: any(getattr(t, "card_id", None) == ctx.source.id for t in ctx.targets)
     match = re.match(r"^(?:a|an) (?P<quality>.+?)(?P<yours> you control)?$", text)
