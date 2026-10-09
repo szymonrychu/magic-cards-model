@@ -157,3 +157,36 @@ def test_game_cast_takes_the_granted_life_cost_as_a_count():
     scenario.game.cast(card, "alice", granted_life_costs=1, mana_sources=sources)
     assert scenario.game.player("alice").life == 18
     assert all(source.tapped for source in sources)
+
+
+def _cascade_into_a_white_permanent(*, pay_life: bool):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Bloodbraid Elf"],
+            library=["Savannah Lions"],
+            battlefield=["Forest", "Mountain", "Forest", "Mountain", "Defiler of Faith"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(True, source="Bloodbraid Elf")
+    scenario.cast_onto_stack(
+        "Bloodbraid Elf", *scenario.untapped_sources("Forest", "Mountain", "Forest", "Mountain")
+    )
+    scenario.will_take_the_may(pay_life, source="Savannah Lions")
+    scenario.resolve_top()
+    return scenario
+
+
+def test_a_cast_during_resolution_offers_the_granted_life_cost():
+    scenario = _cascade_into_a_white_permanent(pay_life=True)
+    assert scenario.game.player("alice").life == 18
+
+
+def test_a_cast_during_resolution_may_decline_the_granted_life_cost():
+    scenario = _cascade_into_a_white_permanent(pay_life=False)
+    assert scenario.game.player("alice").life == 20
