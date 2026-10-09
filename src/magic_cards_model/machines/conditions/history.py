@@ -335,8 +335,15 @@ def _record_crew(game: "Game", event: "GameEvent") -> None:
 def _record_activated(game: "Game", event: "GameEvent") -> None:
     """An activated ability that is not a mana ability, with its source as it
     was - what "the first activated ability of an artifact you activate each
-    turn" (`machines/cost/abilities.py`) counts."""
+    turn" (`machines/cost/abilities.py`) counts. Only an artifact's activation
+    is kept: artifact is the one quality that line prints, and an entry per
+    activation of anything else would churn every recorded game state for a
+    count nothing reads."""
+    from ...models.card import Type
     from ...models.game import TurnHistoryEntry
+
+    if Type.ARTIFACT not in (event.subject_types or ()):
+        return
 
     state = game.find_by_id(event.subject_id) if event.subject_id is not None else None
     state = state if _is_card_state(state) else None
