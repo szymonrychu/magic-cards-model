@@ -10,6 +10,7 @@ sentence means here. A sentence whose gate the engine cannot read is skipped by
 the production entry in every staging, so it is not credited.
 """
 
+import re
 from functools import cache
 
 from magic_cards_model.machines.replacement.enters import _self_enters_modifiers
@@ -24,6 +25,8 @@ from magic_cards_model.models.game import Game
 from magic_cards_model.models.game.records import CastRecord
 from magic_cards_model.models.player import Player
 from magic_cards_model.models.zone import Zone
+
+_ENTERS_WITH_CUE = re.compile(r"\benters?(?: the battlefield)?(?: tapped)? with\b|\bescapes with\b")
 
 
 @cache
@@ -89,6 +92,26 @@ def _stagings(printing: Card):
     yield _stage(printing, rich=True, record=CastRecord(origin_zone=Zone.GRAVEYARD, x_value=0))
 
 
+def _could_perform(effect) -> bool:
+    """Cheap pre-filter before any staging: the parse must have produced a
+    counter kind, a count (printed, X, or an expression a count reader claims)
+    and a gate the production condition reader claims - otherwise the
+    production entry skips it in every staging and staging would be wasted."""
+    from magic_cards_model.machines.keyword_counters import enters_count_reader
+    from magic_cards_model.machines.replacement.enters import _enters_with_condition
+
+    if effect.counter_kind is None:
+        return False
+    if effect.condition is not None and _enters_with_condition(effect) is None:
+        return False
+    if effect.amount is not None or effect.variable_amount and effect.amount_expression is None:
+        return True
+    expression = effect.amount_expression
+    return expression is not None and (
+        expression.lower().startswith("time") or enters_count_reader(expression) is not None
+    )
+
+
 def _line_effects(printing: Card, text: str):
     return [
         effect
@@ -117,20 +140,20 @@ def _group_line_performed(printing: Card, text: str) -> bool:
     if not specs:
         return False
     for spec in specs:
+        game, source = _stage(printing, rich=True, record=None)
+        if spec["in_graveyard"]:
+            source.zone = Zone.GRAVEYARD
+            game.players[0].graveyard.append(source)
+        else:
+            game.battlefield.append(source)
         performed = False
         for candidate in _probe_pool().values():
-            game, source = _stage(printing, rich=True, record=None)
             entering = CardState(
                 card=candidate, zone=Zone.STACK, controller="sweep_you", owner="sweep_you"
             )
             entering.bind_to_game(game)
             if not spec["predicate"](source, entering):
                 continue
-            if spec["in_graveyard"]:
-                source.zone = Zone.GRAVEYARD
-                game.players[0].graveyard.append(source)
-            else:
-                game.battlefield.append(source)
             event = ReplaceableEvent(kind=EventKind.ENTERS_BATTLEFIELD, card=entering)
             try:
                 effects = _group_entering_counters(game, event)
@@ -149,12 +172,14 @@ def reads_static_line(
     printing: Card, text: str, *, card_name: str | None = None, legendary: bool = False
 ) -> bool:
     lowered = text.lower()
-    if "counter" not in lowered or not ("enter" in lowered or "escape" in lowered):
+    if "counter" not in lowered or _ENTERS_WITH_CUE.search(lowered) is None:
         return False
     if "additional" in lowered and _group_line_performed(printing, text):
         return True
     effects = _line_effects(printing, text)
     if not effects or any(effect.kind is not ReplacementKind.ENTERS_WITH for effect in effects):
+        return False
+    if not all(_could_perform(effect) for effect in effects):
         return False
     pending = {effect.text.strip() for effect in effects}
     for game, state in _stagings(printing):
