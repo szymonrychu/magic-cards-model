@@ -24,9 +24,11 @@ from magic_cards_model.models.card_state import Counter
 from .harness import Scenario
 
 
-def _board(*, hand, battlefield=()):
+def _board(*, hand=(), battlefield=(), graveyard=()):
     scenario = Scenario().manual_turn_based_actions()
-    scenario.player("alice", hand=list(hand), battlefield=list(battlefield)).player("bob")
+    scenario.player(
+        "alice", hand=list(hand), battlefield=list(battlefield), graveyard=list(graveyard)
+    ).player("bob")
     played = scenario.build()
     played.start_at(Step.PRECOMBAT_MAIN)
     return played
@@ -364,3 +366,66 @@ def test_mimeoplasm_exiles_up_to_x_creature_cards_for_three_counters_each():
     played.put_on_stack(casting)
     mimeoplasm = played.resolve_top()
     assert mimeoplasm.counters[Counter.PLUS_ONE] == 6
+
+
+# -- "You may cast this card from your graveyard. If you do, it enters with
+# counters" (CR 601.3, CR 604.6, CR 614.1c) -----------------------------------
+
+
+def _from_graveyard(played, name):
+    casting = played.cast(name, from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Cast permission")
+    played.auto_pay(casting.begin_paying(), username="alice")
+    played.put_on_stack(casting)
+    return played.resolve_top()
+
+
+def test_undead_sprinter_cast_from_the_graveyard_after_a_non_zombie_died():
+    played = _board(
+        graveyard=["Undead Sprinter"], battlefield=["Grizzly Bears", "Swamp", "Mountain"]
+    )
+    played.game.sacrifice(played.creature("Grizzly Bears"))
+    assert _from_graveyard(played, "Undead Sprinter").counters[Counter.PLUS_ONE] == 1
+
+
+def test_undead_sprinter_is_not_castable_from_the_graveyard_without_a_death():
+    played = _board(graveyard=["Undead Sprinter"], battlefield=["Swamp", "Mountain"])
+    with pytest.raises(ValueError):
+        _from_graveyard(played, "Undead Sprinter")
+
+
+def test_undead_sprinter_is_not_castable_after_only_a_zombie_died():
+    played = _board(
+        graveyard=["Undead Sprinter"], battlefield=["Walking Corpse", "Swamp", "Mountain"]
+    )
+    played.game.sacrifice(played.creature("Walking Corpse"))
+    with pytest.raises(ValueError):
+        _from_graveyard(played, "Undead Sprinter")
+
+
+def test_undead_sprinter_cast_from_hand_enters_bare():
+    played = _board(hand=["Undead Sprinter"], battlefield=["Swamp", "Mountain"])
+    assert _cast(played, "Undead Sprinter").counters[Counter.PLUS_ONE] == 0
+
+
+def test_worldheart_phoenix_cast_for_five_colours_from_the_graveyard_gets_two_counters():
+    played = _board(
+        graveyard=["Worldheart Phoenix"],
+        battlefield=["Plains", "Island", "Swamp", "Mountain", "Forest"],
+    )
+    assert _from_graveyard(played, "Worldheart Phoenix").counters[Counter.PLUS_ONE] == 2
+
+
+def test_worldheart_phoenix_cast_from_hand_enters_bare():
+    played = _board(hand=["Worldheart Phoenix"], battlefield=["Mountain"] * 4)
+    assert _cast(played, "Worldheart Phoenix").counters[Counter.PLUS_ONE] == 0
+
+
+def test_hundred_battle_veteran_cast_from_the_graveyard_gets_a_finality_counter():
+    played = _board(graveyard=["Hundred-Battle Veteran"], battlefield=["Swamp"] * 4)
+    assert _from_graveyard(played, "Hundred-Battle Veteran").counters["finality"] == 1
+
+
+def test_hundred_battle_veteran_cast_from_hand_has_no_finality_counter():
+    played = _board(hand=["Hundred-Battle Veteran"], battlefield=["Swamp"] * 4)
+    assert _cast(played, "Hundred-Battle Veteran").counters["finality"] == 0

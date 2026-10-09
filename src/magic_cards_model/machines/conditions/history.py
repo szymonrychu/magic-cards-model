@@ -790,7 +790,10 @@ def _died_under(context: "ConditionContext", match: re.Match[str]) -> bool:
     needed = _count(match.group("count"))
     if quality is None or needed is None:
         return False
-    whose = _players(context, "you" if match.group("whose") == "your" else "an opponent")
+    whose = _players(
+        context,
+        {"your": "you", "an opponent's": "an opponent", None: "a player"}[match.group("whose")],
+    )
     died = [
         entry
         for entry in _entries(context, "to_graveyard")
@@ -1830,8 +1833,8 @@ READERS: tuple[ConditionReader, ...] = (
     # H2
     ConditionReader(
         re.compile(
-            rf"(?:(?P<count>{COUNT}) or more |an? ){_QUALITY} died under "
-            r"(?P<whose>your|an opponent's) control this turn"
+            rf"(?:(?P<count>{COUNT}) or more |an? ){_QUALITY} died "
+            r"(?:under (?P<whose>your|an opponent's) control )?this turn"
         ),
         _died_under,
     ),
