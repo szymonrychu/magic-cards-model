@@ -982,3 +982,41 @@ def test_panglacial_wurm_in_the_hand_is_not_offered_while_searching():
     _search_alice_library(scenario)
     assert not scenario.game.stack
     assert not _may_questions(scenario)
+
+
+# -- Hogaak: "You can't spend mana to cast this spell." ---------------------
+
+
+def _hogaak_casting(*, graveyard_extra=5, creatures=2, lands=7):
+    scenario = build(
+        alice={
+            "graveyard": ["Hogaak, Arisen Necropolis", *["Mountain"] * graveyard_extra],
+            "battlefield": ["Grizzly Bears"] * creatures,
+        },
+        lands=["Forest"] * lands,
+    )
+    casting = scenario.cast("Hogaak, Arisen Necropolis", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword(CAST_PERMISSION)
+    return scenario, casting
+
+
+def test_hogaak_cannot_be_paid_with_mana_even_when_the_mana_is_there():
+    scenario, casting = _hogaak_casting()
+    payment = casting.begin_paying()
+    with pytest.raises(ValueError, match="can't spend mana"):
+        scenario.pay_with(payment, *scenario.untapped_sources(*["Forest"] * 7))
+
+
+def test_hogaak_is_paid_by_delve_and_convoke_alone():
+    from magic_cards_model.machines.objects_as_costs import convoke, delve
+    from magic_cards_model.models.card import Color
+
+    scenario, casting = _hogaak_casting()
+    payment = casting.begin_paying()
+    binned = [c for c in scenario.player("alice").graveyard if c.name == "Mountain"]
+    delve(payment, casting.spell, *binned)
+    for bears in scenario.creatures("Grizzly Bears", "Grizzly Bears", username="alice"):
+        convoke(payment, casting.spell, bears, Color.GREEN)
+    assert not payment.mana_owed.symbols
+    scenario.pay_with(payment)
+    assert scenario.put_on_stack(casting).zone is Zone.STACK

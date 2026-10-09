@@ -14,6 +14,7 @@ from magic_cards_model.machines.casting import (
     strip_ability_word,
 )
 from magic_cards_model.machines.effects.continuous import _CAST_EXILED_CARD_STATIC_RE
+from magic_cards_model.models.mana import reads_cant_spend_mana_line
 
 
 def reads_static_line(printing, text, *, card_name=None, legendary=False) -> bool:
@@ -28,6 +29,7 @@ def reads_static_line(printing, text, *, card_name=None, legendary=False) -> boo
         reads_static_zone_cast_permission_line(text)
         or reads_quality_flash_grant_line(text)
         or reads_search_cast_permission_line(text)
+        or reads_cant_spend_mana_line(text)
     ):
         return True
     free_condition = conditional_free_cast_condition(text)

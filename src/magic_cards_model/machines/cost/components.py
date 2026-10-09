@@ -2482,6 +2482,15 @@ def cost_less(cost: ManaCost, options: Iterable[PaymentOption]) -> ManaCost:
         if option.color is not None:
             colored[option.color] = colored.get(option.color, 0) + 1
 
+    # CR 107.4e: a hybrid symbol is paid with one mana of either of its colours,
+    # so a coloured option covers it too - after every plain coloured symbol of
+    # that colour has had its pick (Hogaak's {B/G}{B/G} under convoke).
+    for symbol in cost.symbols:
+        if symbol.kind is SymbolKind.COLORED and colored.get(symbol.colors[0], 0):
+            colored[symbol.colors[0]] -= 1
+    covered_plain = {
+        color: sum(1 for o in options if o.color is color) - left for color, left in colored.items()
+    }
     remaining: list[ManaSymbol] = []
     for symbol in cost.symbols:
         if symbol.kind is SymbolKind.GENERIC and generic:
@@ -2490,9 +2499,14 @@ def cost_less(cost: ManaCost, options: Iterable[PaymentOption]) -> ManaCost:
             if symbol.amount - taken:
                 remaining.append(ManaSymbol(kind=SymbolKind.GENERIC, amount=symbol.amount - taken))
             continue
-        if symbol.kind is SymbolKind.COLORED and colored.get(symbol.colors[0], 0):
-            colored[symbol.colors[0]] -= 1
+        if symbol.kind is SymbolKind.COLORED and covered_plain.get(symbol.colors[0], 0):
+            covered_plain[symbol.colors[0]] -= 1
             continue
+        if symbol.kind in (SymbolKind.HYBRID, SymbolKind.MONOCOLORED_HYBRID):
+            paying = next((c for c in symbol.colors if colored.get(c, 0)), None)
+            if paying is not None:
+                colored[paying] -= 1
+                continue
         remaining.append(symbol)
     return ManaCost(symbols=tuple(remaining))
 
