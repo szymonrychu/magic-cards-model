@@ -22,6 +22,7 @@ from ..chosen_type import RESTRICTED_TRIBAL_TYPES, matches_restricted_creature_t
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import ReflexiveExileCopiedCard
 from ..keyword_counters import enters_count_reader
+from .as_enters_actions import Action, as_enters_action, counters_for
 
 if TYPE_CHECKING:
     from ...models.game import Game
@@ -950,6 +951,36 @@ def _sacrifice_any_number_choice(effect: ReplacementEffect) -> tuple[str, bool] 
     if match is None:
         return None
     return match.group("restriction").strip(), match.group("optional") is not None
+
+
+def _action_then_enter_with_counters(
+    action: "Action", follower: ReplacementEffect, card_name: str
+) -> Apply:
+    """CR 614.12a: an "As [this] enters" action (reveal, return, exile, put),
+    then the counters the sentence after it sizes from how many objects it
+    acted on (`as_enters_actions.counters_for`)."""
+    kind = follower.counter_kind
+    assert kind is not None
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        entering = event.card
+        who = entering.controller if entering is not None else None
+        if who is None or entering is None:
+            return
+        done = action(game, who, event, source, card_name)
+        amount = counters_for(
+            game,
+            who,
+            entering,
+            done,
+            amount=follower.amount,
+            expression=follower.amount_expression,
+            condition=follower.condition,
+        )
+        if amount > 0:
+            event.counters[kind] = event.counters.get(kind, 0) + amount
+
+    return apply
 
 
 def _sacrifice_any_number_then_enter_with_counters(
@@ -2604,6 +2635,30 @@ def _self_enters_modifiers(
             continue
 
         if effect.kind is ReplacementKind.AS_ENTERS and effect.condition is None:
+            counted_action = as_enters_action(effect.replacement or "")
+            follower = next(
+                (
+                    other
+                    for other, candidate in enumerate(parsed)
+                    if other > index
+                    and candidate.kind is ReplacementKind.ENTERS_WITH
+                    and candidate.counter_kind is not None
+                ),
+                None,
+            )
+            if counted_action is not None and follower is not None:
+                consumed.add(follower)
+                performable.append(
+                    (
+                        f"{key}:{index}",
+                        _action_then_enter_with_counters(
+                            counted_action, parsed[follower], card_state.card.name
+                        ),
+                        f"{effect.text} {parsed[follower].text}",
+                        False,
+                    )
+                )
+                continue
             sacrifice_choice = _sacrifice_any_number_choice(effect)
             if sacrifice_choice is not None:
                 restriction_text, optional = sacrifice_choice

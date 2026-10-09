@@ -197,7 +197,8 @@ def test_a_choice_answer_outside_the_printed_options_is_refused():
 
 def test_avatar_of_the_resolute_counts_other_creatures_with_a_plus_counter():
     played = _board(
-        battlefield=["Elvish Warrior", "Goblin Piker", "Squad Captain"], hand=["Avatar of the Resolute"]
+        battlefield=["Elvish Warrior", "Goblin Piker", "Squad Captain"],
+        hand=["Avatar of the Resolute"],
     )
     for name in ("Elvish Warrior", "Goblin Piker"):
         played.game.add_counters(played.creature(name), Counter.PLUS_ONE, 1)
@@ -222,7 +223,9 @@ def test_metallic_mimic_buffs_other_creatures_of_the_chosen_type_only():
 
 
 def test_thunderous_velocipede_gives_one_counter_at_mana_value_four_or_less():
-    played = _board(battlefield=["Thunderous Velocipede"], hand=["Grizzly Bears", "Smuggler's Copter"])
+    played = _board(
+        battlefield=["Thunderous Velocipede"], hand=["Grizzly Bears", "Smuggler's Copter"]
+    )
     assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 1
     assert played.put_onto_battlefield("Smuggler's Copter").counters[Counter.PLUS_ONE] == 1
 

@@ -13,9 +13,12 @@ T1). Each gate is asserted both true and false.
 Every number was looked up with `mise run rules:find <n>`.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.machines.objects_as_costs import convoke
+from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 
 from .harness import Scenario
@@ -245,9 +248,11 @@ def _imperiosaur_convoked_by(convokers):
     )
     casting = played.cast("Ancient Imperiosaur")
     payment = casting.begin_paying()
-    for bear in played.creatures("Grizzly Bears", *["Grizzly Bears"] * (convokers - 1))[
-        :convokers
-    ] if convokers else []:
+    for bear in (
+        played.creatures("Grizzly Bears", *["Grizzly Bears"] * (convokers - 1))[:convokers]
+        if convokers
+        else []
+    ):
         convoke(payment, casting.spell, bear)
     played.auto_pay(payment, username="alice")
     played.put_on_stack(casting)
@@ -260,3 +265,102 @@ def test_ancient_imperiosaur_gets_two_counters_per_creature_that_convoked_it():
 
 def test_ancient_imperiosaur_cast_without_convoke_enters_bare():
     assert _imperiosaur_convoked_by(0).counters[Counter.PLUS_ONE] == 0
+
+
+# -- "As this enters, you may <action>. ... enters with counters" (CR 614.12a) --
+
+
+def _hand_cards(played, *names):
+    return [card for name in names for card in played.player("alice").hand if card.name == name]
+
+
+def test_dragons_disciple_revealing_a_dragon_gets_a_counter():
+    played = _board(hand=["Dragon's Disciple", "Hellkite Whelp"])
+    played.will_choose_cards(*_hand_cards(played, "Hellkite Whelp"), source="Dragon's Disciple")
+    assert played.put_onto_battlefield("Dragon's Disciple").counters[Counter.PLUS_ONE] == 1
+
+
+def test_dragons_disciple_controlling_a_dragon_gets_a_counter_without_revealing():
+    played = _board(hand=["Dragon's Disciple"], battlefield=["Hellkite Whelp"])
+    assert played.put_onto_battlefield("Dragon's Disciple").counters[Counter.PLUS_ONE] == 1
+
+
+def test_dragons_disciple_with_neither_enters_bare():
+    played = _board(hand=["Dragon's Disciple", "Hellkite Whelp"])
+    assert played.put_onto_battlefield("Dragon's Disciple").counters[Counter.PLUS_ONE] == 0
+
+
+def test_arsenal_thresher_gets_a_counter_for_each_artifact_revealed():
+    played = _board(hand=["Arsenal Thresher", "Mishra's Bauble", "Mishra's Bauble"])
+    played.will_choose_cards(*_hand_cards(played, "Mishra's Bauble"), source="Arsenal Thresher")
+    assert played.put_onto_battlefield("Arsenal Thresher").counters[Counter.PLUS_ONE] == 2
+
+
+def test_arsenal_thresher_revealing_nothing_enters_bare():
+    played = _board(hand=["Arsenal Thresher", "Mishra's Bauble"])
+    played.will_choose_cards(source="Arsenal Thresher")
+    assert played.put_onto_battlefield("Arsenal Thresher").counters[Counter.PLUS_ONE] == 0
+
+
+def test_rescuer_sphinx_returning_a_permanent_gets_a_counter():
+    played = _board(hand=["Rescuer Sphinx"], battlefield=["Grizzly Bears"])
+    bears = played.creature("Grizzly Bears")
+    played.will_choose_cards(bears, source="Rescuer Sphinx")
+    sphinx = played.put_onto_battlefield("Rescuer Sphinx")
+    assert sphinx.counters[Counter.PLUS_ONE] == 1
+    assert bears.zone is Zone.HAND
+
+
+def test_rescuer_sphinx_declining_keeps_the_permanent_and_gets_nothing():
+    played = _board(hand=["Rescuer Sphinx"], battlefield=["Grizzly Bears"])
+    played.will_choose_cards(source="Rescuer Sphinx")
+    sphinx = played.put_onto_battlefield("Rescuer Sphinx")
+    assert sphinx.counters[Counter.PLUS_ONE] == 0
+    assert played.creature("Grizzly Bears").zone is Zone.BATTLEFIELD
+
+
+def test_ulamogs_despoiler_putting_two_exiled_cards_into_graveyards_gets_four_counters():
+    scenario = Scenario().manual_turn_based_actions()
+    scenario.player("alice", hand=["Ulamog's Despoiler"]).player(
+        "bob", exile=["Grizzly Bears", "Goblin Piker"]
+    )
+    played = scenario.build()
+    played.start_at(Step.PRECOMBAT_MAIN)
+    exiled = list(played.game.exile)
+    played.will_choose_cards(*exiled, source="Ulamog's Despoiler")
+    despoiler = played.put_onto_battlefield("Ulamog's Despoiler")
+    assert despoiler.counters[Counter.PLUS_ONE] == 4
+    assert all(card.zone is Zone.GRAVEYARD for card in exiled)
+
+
+def test_ulamogs_despoiler_refuses_a_single_card():
+    scenario = Scenario().manual_turn_based_actions()
+    scenario.player("alice", hand=["Ulamog's Despoiler"]).player(
+        "bob", exile=["Grizzly Bears", "Goblin Piker"]
+    )
+    played = scenario.build()
+    played.start_at(Step.PRECOMBAT_MAIN)
+    played.will_choose_cards(played.game.exile[0], source="Ulamog's Despoiler")
+    with pytest.raises(ValueError):
+        played.put_onto_battlefield("Ulamog's Despoiler")
+
+
+def test_mimeoplasm_exiles_up_to_x_creature_cards_for_three_counters_each():
+    scenario = Scenario().manual_turn_based_actions()
+    scenario.player(
+        "alice",
+        hand=["Mimeoplasm, Revered One"],
+        graveyard=["Grizzly Bears", "Goblin Piker", "Elvish Warrior"],
+        battlefield=["Island", "Swamp", "Forest", "Forest", "Forest"],
+    ).player("bob")
+    played = scenario.build()
+    played.start_at(Step.PRECOMBAT_MAIN)
+    casting = played.cast("Mimeoplasm, Revered One")
+    casting.determine_cost(x_value=2)
+    played.will_choose_cards(
+        *played.player("alice").graveyard[:2], source="Mimeoplasm, Revered One"
+    )
+    played.auto_pay(casting.begin_paying(), username="alice")
+    played.put_on_stack(casting)
+    mimeoplasm = played.resolve_top()
+    assert mimeoplasm.counters[Counter.PLUS_ONE] == 6
