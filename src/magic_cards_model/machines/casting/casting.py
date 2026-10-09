@@ -8,7 +8,14 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 
 from ...models.card import Card, Layout, Type, types_of
-from ...models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
+from ...models.card_state import (
+    CardState,
+    Counter,
+    Counters,
+    ExileAnnotation,
+    ExileMarker,
+    TargetRef,
+)
 from ...models.mana import ManaCost, ManaSpend
 from ...models.zone import Zone
 from ...numbers import VariableX, parse_amount, parse_count
@@ -804,6 +811,8 @@ class Casting(EngineModel):
     cast this way would be put into a graveyard, exile it instead." - copied
     onto `CastRecord.exile_instead_of_graveyard` by `cast()`."""
     keyword_once_per_turn_key: str | None = None
+    keyword_any_type_mana: bool = False
+    """The claimed option's CR 609.4b \"mana of any type can be spent\"."""
     """The once-each-turn grant the chosen option spends
     (`KeywordCastOption.once_per_turn_key`), recorded as used when `cast()`
     completes - not before, since CR 601.6 can still rewind the announcement."""
@@ -995,6 +1004,10 @@ class Casting(EngineModel):
     """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
+    announced_counters: Counters | None = None
+    """The counters the card carried before that move ("cards you own in exile
+    with croak counters on them", Grolnok) - CR 400.7 drops them with the move,
+    and the permission is judged as the cast is proposed (CR 601.3)."""
     announced_discarded_by: str | None = None
     """Who had discarded the card before that move (CR 701.9a), and"""
     announced_discarded_on_turn: int | None = None
@@ -1146,6 +1159,7 @@ class Casting(EngineModel):
         self.announced_zone = self.spell.zone
         self.announced_stamp = self.spell.zone_change_stamp
         self.announced_exile_annotation = self.spell.exile_annotation
+        self.announced_counters = self.spell.counters.model_copy(deep=True)
         self.announced_discarded_by = self.spell.discarded_by
         self.announced_discarded_on_turn = self.spell.discarded_on_turn
         if self.spell.zone is Zone.LIBRARY:
@@ -1230,6 +1244,11 @@ class Casting(EngineModel):
                 "zone": self.announced_zone,
                 "zone_change_stamp": self.announced_stamp,
                 "exile_annotation": self.announced_exile_annotation,
+                **(
+                    {"counters": self.announced_counters}
+                    if self.announced_counters is not None
+                    else {}
+                ),
                 "discarded_by": self.announced_discarded_by,
                 "discarded_on_turn": self.announced_discarded_on_turn,
             }
@@ -1994,6 +2013,7 @@ class Casting(EngineModel):
         self.keyword_exiles_instead = option.exile_instead_of_graveyard
         self.keyword_enters_with_counters = option.enters_with_counters
         self.keyword_once_per_turn_key = option.once_per_turn_key
+        self.keyword_any_type_mana = option.any_type_mana
         self.keyword_cost_paid = not option.pays_mana_cost
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
         if option.keyword.lower() == "bestow":
@@ -4106,10 +4126,9 @@ class Casting(EngineModel):
 
         payable_total = self.total_cost.assign_payer(self.caster)
         if (
-            self.permission_used is not None
-            and self.permission_used.any_type_mana
-            and payable_total.mana.symbols
-        ):
+            self.keyword_any_type_mana
+            or (self.permission_used is not None and self.permission_used.any_type_mana)
+        ) and payable_total.mana.symbols:
             # "... and mana of any type can be spent to cast it/that spell."
             # CR 202.3b: the spell's own printed/reduced mana cost is
             # unchanged everywhere else (`self.total_cost` itself, `Action.
@@ -4140,7 +4159,9 @@ class Casting(EngineModel):
         )
         self.payment.paying_for = "spell"
         self.payment.paying_for_keyword = (self.keyword_used or "").lower() or None
-        if self.permission_used is None or not self.permission_used.any_type_mana:
+        if not self.keyword_any_type_mana and (
+            self.permission_used is None or not self.permission_used.any_type_mana
+        ):
             # "Spend only black mana on X." (Consume Spirit): X's share of the
             # cost (`x_count * X`, CR 107.3a) is payable only with that colour,
             # unless mana of any type may be spent (CR 609.4b).

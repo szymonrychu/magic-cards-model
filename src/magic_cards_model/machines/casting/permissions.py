@@ -1228,30 +1228,142 @@ def _static_zone_cast_option(
 # (CR 601.3, CR 607.2a)
 # --------------------------------------------------------------------------
 
-#: "[During your turn, ]you may play cards exiled with `<this>`." (The
-#: Temporal Anchor) and "You may play lands and cast spells from among cards
-#: exiled with this creature." (Nightveil Specter) - CR 601.1a's "play" (a
-#: land drop or a cast) opened to CR 607.2a's linked pile, read after the
-#: object's own name is normalised to "this `<noun>`" (CR 201.5).
-_PLAY_CARDS_EXILED_WITH_STATIC_RE = re.compile(
-    r"^(?P<during>during your turn, )?you may play (?:cards|lands and cast spells from among "
-    r"cards) exiled with this \w+\.?$",
+#: A permanent's standing permission to play (cast and/or land-drop) the cards
+#: in a pile of exile (CR 601.3, CR 305.1, CR 607.2a), read after the object's
+#: own name is normalised to "this `<noun>`" (CR 201.5):
+#:
+#: - "[During your turn, ]you may play cards exiled with `<this>`." (The
+#:   Temporal Anchor) and "You may play lands and cast spells from among cards
+#:   exiled with this creature." (Nightveil Specter);
+#: - "You may play lands from among cards exiled with this enchantment."
+#:   (Hedonist's Trove) - the land half alone;
+#: - "You may look at the cards exiled with this enchantment, and you may play
+#:   lands and cast spells from among those cards." (Colfenor's Plans);
+#: - "During your turn, if an opponent lost life this turn, you may play lands
+#:   and cast spells from among cards exiled with this enchantment." (Theater of
+#:   Horrors);
+#: - "Once during each of your turns, you may play a land or cast a spell from
+#:   among the cards exiled with this permanent without paying its mana cost."
+#:   (Jacob Hauken);
+#: - "You may play lands and cast spells from among cards you own in exile with
+#:   croak counters on them." (Grolnok) and "During your turn, you may play
+#:   cards you don't own with stash counters on them from exile, and mana of
+#:   any type can be spent to cast those spells." (Tinybones) - a pile named by
+#:   a counter on the exiled card rather than by what exiled it;
+#: - "During your turn, you may cast cards exiled with this permanent and you
+#:   may cast them as though they had flash. Mana of any type can be spent to
+#:   cast those spells." (Azula);
+#: - "As long as there are seven or more cards in your graveyard, you may cast
+#:   the exiled card, and mana of any type can be spent to cast that spell."
+#:   (Null Summoner's Threshold).
+_PILE_PERMISSION_LEADS = (
+    (re.compile(r"^as long as (?P<c>.+?), (?=you may )", re.IGNORECASE), "condition"),
+    (re.compile(r"^if (?P<c>.+?), (?=you may )", re.IGNORECASE), "condition"),
+    (re.compile(r"^during your turn, ", re.IGNORECASE), "during"),
+    (re.compile(r"^once during each of your turns, ", re.IGNORECASE), "once_during"),
+    (re.compile(r"^once each turn, ", re.IGNORECASE), "once"),
+)
+_PILE_PERMISSION_BODY_RE = re.compile(
+    r"^you may (?P<look>look at the cards exiled with this \w+, and you may )?"
+    r"(?P<act>"
+    r"play cards exiled with this \w+"
+    r"|play lands and cast spells from among (?P<pile>cards (?P<own>you own )?exiled with this \w+"
+    r"|those cards"
+    r"|cards you own in exile with (?P<counter>\w+) counters on them)"
+    r"|play lands from among cards exiled with this \w+"
+    r"|play a land or cast a spell from among the cards exiled with this \w+"
+    r"|play cards you don't own with (?P<counter2>\w+) counters on them from exile"
+    r"|cast cards exiled with this \w+(?P<flash> and you may cast them as though they had flash)?"
+    r"|cast the exiled card"
+    r")"
+    r"(?P<free> without paying its mana cost)?"
+    r"(?P<any1>, and mana of any type can be spent to cast (?:that|those) spells?)?"
+    r"\.(?P<any2> Mana of any type can be spent to cast those spells\.)?$",
     re.IGNORECASE,
 )
+
+
+class ExilePilePermission(EngineModel):
+    """One `_PILE_PERMISSION_BODY_RE` line, read."""
+
+    model_config = ConfigDict(frozen=True)
+
+    during_your_turn: bool = False
+    once_each_turn: bool = False
+    conditions: tuple[str, ...] = ()
+    lands: bool = True
+    casts: bool = True
+    counter: str | None = None
+    """The counter kind that names the pile ("croak", "stash"), or None when the
+    pile is what the permanent exiled (CR 607.2a)."""
+    own_cards_only: bool = False
+    not_own_cards: bool = False
+    free: bool = False
+    any_mana: bool = False
+    flash: bool = False
+    looks: bool = False
+
+
+@lru_cache(maxsize=2048)
+def exile_pile_permission(
+    permanent_name: str, text: str, legendary: bool
+) -> ExilePilePermission | None:
+    """Read one static line as `_PILE_PERMISSION_BODY_RE`, or None - failing
+    closed on a condition this engine does not read."""
+    from ..abilities import self_normalized_effect_text
+
+    line, word_condition = strip_ability_word(_REMINDER_TEXT_RE.sub("", text))
+    line = " ".join(
+        self_normalized_effect_text(permanent_name, line.strip(), legendary=legendary).split()
+    )
+    conditions: list[str] = [word_condition] if word_condition else []
+    during = once = False
+    changed = True
+    while changed:
+        changed = False
+        for pattern, kind in _PILE_PERMISSION_LEADS:
+            match = pattern.match(line)
+            if match is None:
+                continue
+            changed = True
+            line = line[match.end() :]
+            if kind == "condition":
+                conditions.append(match.group("c").strip())
+            elif kind == "during":
+                during = True
+            else:
+                once = True
+                during = during or kind == "once_during"
+    match = _PILE_PERMISSION_BODY_RE.fullmatch(line)
+    if match is None:
+        return None
+    if any(not cast_condition_readable(condition) for condition in conditions):
+        return None
+    act = match.group("act").lower()
+    counter = (match.group("counter") or match.group("counter2") or "").lower() or None
+    return ExilePilePermission(
+        during_your_turn=during,
+        once_each_turn=once,
+        conditions=tuple(conditions),
+        lands=not act.startswith("cast"),
+        casts=not act.startswith("play lands from"),
+        counter=counter,
+        own_cards_only=match.group("own") is not None or (counter is not None and "you own" in act),
+        not_own_cards="you don't own" in act,
+        free=match.group("free") is not None,
+        any_mana=match.group("any1") is not None or match.group("any2") is not None,
+        flash=match.group("flash") is not None,
+        looks=match.group("look") is not None,
+    )
 
 
 def play_cards_exiled_with_line(
     permanent_name: str, text: str, *, legendary: bool = True
 ) -> tuple[bool] | None:
-    """`(during_your_turn,)` for a `_PLAY_CARDS_EXILED_WITH_STATIC_RE` line
-    of the permanent named `permanent_name`, or None."""
-    from ..abilities import self_normalized_effect_text
-
-    normalized = self_normalized_effect_text(permanent_name, text.strip(), legendary=legendary)
-    match = _PLAY_CARDS_EXILED_WITH_STATIC_RE.fullmatch(normalized.strip())
-    if match is None:
-        return None
-    return (match.group("during") is not None,)
+    """`(during_your_turn,)` for an `exile_pile_permission` line of the
+    permanent named `permanent_name`, or None."""
+    read = exile_pile_permission(permanent_name, text.strip(), legendary)
+    return None if read is None else (read.during_your_turn,)
 
 
 def reads_play_cards_exiled_with_line(card: Card, text: str) -> bool:
@@ -1259,39 +1371,72 @@ def reads_play_cards_exiled_with_line(card: Card, text: str) -> bool:
     from ...models.card import Supertype
 
     return (
-        play_cards_exiled_with_line(
-            card.name, text, legendary=Supertype.LEGENDARY in card.supertypes
-        )
-        is not None
+        exile_pile_permission(card.name, text, Supertype.LEGENDARY in card.supertypes) is not None
     )
 
 
-def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
-    """The permanent `player` controls whose "you may play cards exiled with
-    `<this>`" lets them play `card` right now, or None: `card` is face up in
-    exile (CR 406.3b), exiled with that very object (CR 607.2a, CR 400.7 -
-    `ExileAnnotation.links_to`), and the line's "during your turn" holds."""
-    if game is None or card.zone is not Zone.EXILE or not card.face_up:
-        return None
-    annotation = card.exile_annotation
-    if annotation is None:
-        return None
+def _pile_membership_holds(
+    game: Any, card: CardState, permanent: CardState, read: ExilePilePermission, player: str
+) -> bool:
+    """Whether `card` is in the pile `read` names for `permanent`: exiled with
+    that very object (CR 607.2a, CR 400.7 - `ExileAnnotation.links_to`), or
+    bearing the named counter, owned (or not) by `player`."""
+    if card.zone is not Zone.EXILE:
+        return False
+    if read.counter is not None:
+        if card.counter_count(read.counter) <= 0:
+            return False
+    else:
+        annotation = card.exile_annotation
+        if annotation is None or not annotation.links_to(permanent.id, permanent.zone_change_stamp):
+            return False
+    owner = card.owner or player
+    if read.own_cards_only and owner != player:
+        return False
+    return not (read.not_own_cards and owner == player)
+
+
+def _pile_permissions_for(
+    game: Any, card: CardState, player: str
+) -> list[tuple[CardState, ExilePilePermission]]:
+    """Every `(permanent, permission)` of `player`'s that lets them play `card`
+    out of exile right now (before the spell-versus-land and cost questions):
+    the pile holds it, "during your turn", the printed conditions and the
+    once-each-turn use all hold."""
+    if game is None or card.zone is not Zone.EXILE:
+        return []
     from ...models.card import Supertype
 
+    found: list[tuple[CardState, ExilePilePermission]] = []
     board = game.computed_board()
     for permanent in game.permanents_controlled_by(player):
-        if not annotation.links_to(permanent.id, permanent.zone_change_stamp):
-            continue
         legendary = Supertype.LEGENDARY in permanent.card.supertypes
         for line in class_gated_lines(permanent, board.of(permanent).abilities):
-            read = play_cards_exiled_with_line(permanent.name, line, legendary=legendary)
-            if read is None:
+            read = exile_pile_permission(permanent.name, line, legendary)
+            if read is None or not _pile_membership_holds(game, card, permanent, read, player):
                 continue
-            (during_your_turn,) = read
-            if during_your_turn:
+            if read.during_your_turn:
                 turn = getattr(game, "turn", None)
                 if turn is None or turn.active_player != player:
                     continue
+            if read.once_each_turn and once_per_turn_key(permanent) in getattr(
+                game, "once_per_turn_cast_permissions_used", {}
+            ):
+                continue
+            if not all(
+                cast_condition_holds(game, player, condition, permanent)
+                for condition in read.conditions
+            ):
+                continue
+            found.append((permanent, read))
+    return found
+
+
+def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
+    """The permanent `player` controls whose pile permission lets them play
+    `card` as a land right now (CR 305.1, CR 601.3), or None."""
+    for permanent, read in _pile_permissions_for(game, card, player):
+        if read.lands:
             return permanent
     return None
 
@@ -1478,19 +1623,29 @@ def _linked_exile_static_cast_option(
 def _linked_exile_play_option(
     game: Any, spell: CardState, caster: str, origin_zone: Zone
 ) -> KeywordCastOption | None:
-    """`linked_exile_play_source`'s cast half: CR 601.3's permission to cast
-    `spell` out of the pile, at its own cost and its own timing."""
-    if origin_zone is not Zone.EXILE:
+    """The pile permission's cast half: CR 601.3's permission to cast `spell`
+    out of the pile - at its own cost and timing, or free (CR 118.9), or at
+    any time (CR 702.8a, "as though they had flash"), or with mana of any type
+    (CR 609.4b), as the line reads."""
+    if origin_zone is not Zone.EXILE or spell.zone is not Zone.EXILE:
         return None
-    probe = spell if spell.zone is Zone.EXILE else None
-    if probe is None or linked_exile_play_source(game, probe, caster) is None:
+    options = [
+        (permanent, read)
+        for permanent, read in _pile_permissions_for(game, spell, caster)
+        if read.casts
+    ]
+    if not options:
         return None
+    # An unlimited permission is the one to claim when both apply.
+    permanent, read = min(options, key=lambda option: option[1].once_each_turn)
     return KeywordCastOption(
         keyword=CAST_PERMISSION,
         rule="CR 601.3, CR 607.2a",
         zone=Zone.EXILE,
-        pays_mana_cost=True,
-        timing=CastTiming.OWN,
+        pays_mana_cost=not read.free,
+        timing=CastTiming.ANY if read.flash else CastTiming.OWN,
+        once_per_turn_key=once_per_turn_key(permanent) if read.once_each_turn else None,
+        any_type_mana=read.any_mana,
     )
 
 
@@ -2704,6 +2859,7 @@ def reads_printed_zone_permission_line(card: Card, text: str) -> bool:
 _PRINTED_SELF_ZONE_CAST_WITH_ADDITIONAL_COST_RE = _PRINTED_SELF_ZONE_CAST_RE
 _STATIC_ZONE_CAST_PERMISSION_RE = _STATIC_ZONE_CAST_BODY_RE
 _CONDITIONAL_FLASH_RE = _CONDITIONAL_FLASH_RES[0]
+_PLAY_CARDS_EXILED_WITH_STATIC_RE = _PILE_PERMISSION_BODY_RE
 
 from .options import (  # noqa: E402
     CastTiming,

@@ -201,6 +201,9 @@ class KeywordCastOption(EngineModel):
     other costs (CR 601.2f) - Noctis, Prince of Lucis's "by paying 3 life in
     addition to paying their other costs". Added by `Casting._use_keyword`
     through `add_additional_cost` when the option is claimed."""
+    any_type_mana: bool = False
+    """CR 609.4b's "mana of any type can be spent to cast that spell" (Azula,
+    Tinybones, Null Summoner): the payment is judged as one generic count."""
     condition: str | None = None
     """The printed condition the permission is gated on - "as long as you
     control a Zombie", "if you gained life this turn" (Gravecrawler, Oathsworn

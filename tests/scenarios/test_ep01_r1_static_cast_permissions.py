@@ -44,10 +44,10 @@ CAST_PERMISSION = "Cast permission"
 LANDS = ["Plains", "Island", "Swamp", "Mountain", "Forest"] * 3
 
 
-def build(*, alice=None, bob=None, step=Step.PRECOMBAT_MAIN):
+def build(*, alice=None, bob=None, step=Step.PRECOMBAT_MAIN, lands=LANDS):
     alice = dict(alice or {})
     alice.setdefault("battlefield", [])
-    alice["battlefield"] = [*alice["battlefield"], *LANDS]
+    alice["battlefield"] = [*alice["battlefield"], *lands]
     alice.setdefault("library", ["Forest"] * 6)
     scenario = (
         Scenario().player("alice", **alice).player("bob", **(bob or {"library": ["Island"] * 6}))
@@ -650,3 +650,163 @@ def test_fires_of_invention_refuses_a_spell_above_the_land_count():
         scenario.game.exile_permanent(land)
     (option,) = free_options(scenario, "Shivan Dragon")
     assert "only applies to spells with mana value 5 or less" in option.unavailable
+
+
+# -- a permanent's permission to play the cards in its pile of exile ---------
+
+
+def exile_linked(scenario, card_name, permanent, *, zone=Zone.LIBRARY, owner="alice", face_up=True):
+    """Exile `card_name` from `zone` as if `permanent`'s own ability had (CR
+    607.2a): the annotation is the one the exiling effects write."""
+    from magic_cards_model.models.card_state import ExileAnnotation, ExileMarker
+
+    card = scenario.find(card_name, zone, owner)
+    scenario.game.exile_cards([card])
+    card.exile_annotation = ExileAnnotation(
+        marker=ExileMarker.LINKED,
+        owner=owner,
+        linked_permanent_id=permanent.id,
+        linked_permanent_stamp=permanent.zone_change_stamp,
+    )
+    card.face_up = face_up
+    return card
+
+
+def permanent_named(scenario, name):
+    return next(c for c in scenario.game.battlefield if c.name == name)
+
+
+def exile_refusal(scenario, card):
+    return why_cannot_cast_from(card, "alice", Zone.EXILE, scenario.game)
+
+
+def cast_from_pile(scenario, card, **kwargs):
+    casting = Casting(spell=card, caster="alice", origin_zone=Zone.EXILE, game=scenario.game)
+    casting.use_keyword(CAST_PERMISSION, **kwargs)
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    scenario.put_on_stack(casting)
+    resolve_everything(scenario)
+    return card
+
+
+def test_hedonists_trove_plays_lands_but_casts_nothing_from_its_pile():
+    scenario = build(
+        alice={"battlefield": ["Hedonist's Trove"], "library": ["Forest", "Grizzly Bears"]}
+    )
+    trove = permanent_named(scenario, "Hedonist's Trove")
+    forest = exile_linked(scenario, "Forest", trove)
+    bears = exile_linked(scenario, "Grizzly Bears", trove)
+    scenario.game.play_land(forest, "alice")
+    assert forest.zone is Zone.BATTLEFIELD
+    # the creature half is the card's second sentence, not this one
+    assert exile_refusal(scenario, bears) is None
+
+
+def test_hedonists_trove_ignores_a_card_it_did_not_exile():
+    scenario = build(
+        alice={"battlefield": ["Hedonist's Trove"], "library": ["Forest", "Grizzly Bears"]}
+    )
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
+    scenario.game.exile_cards([bears])
+    assert exile_refusal(scenario, bears).startswith("nothing allows alice")
+
+
+def test_colfenors_plans_plays_a_face_down_card_it_exiled():
+    scenario = build(
+        alice={"battlefield": ["Colfenor's Plans"], "library": ["Forest", "Grizzly Bears"]}
+    )
+    plans = permanent_named(scenario, "Colfenor's Plans")
+    bears = exile_linked(scenario, "Grizzly Bears", plans, face_up=False)
+    assert exile_refusal(scenario, bears) is None
+    assert on_battlefield(cast_from_pile(scenario, bears))
+
+
+def test_theater_of_horrors_needs_your_turn_and_an_opponent_who_lost_life():
+    scenario = build(alice={"battlefield": ["Theater of Horrors"], "library": ["Grizzly Bears"]})
+    theater = permanent_named(scenario, "Theater of Horrors")
+    bears = exile_linked(scenario, "Grizzly Bears", theater)
+    reason = exile_refusal(scenario, bears)
+    assert reason is not None and "nothing allows alice" in reason
+    scenario.game.lose_life("bob", 1)
+    assert exile_refusal(scenario, bears) is None
+    assert on_battlefield(cast_from_pile(scenario, bears))
+
+
+def test_jacob_hauken_is_a_free_cast_once_per_turn():
+    scenario = build(
+        alice={
+            "battlefield": ["Jacob Hauken, Inspector // Hauken's Insight"],
+            "library": ["Grizzly Bears", "Hill Giant"],
+        }
+    )
+    jacob = permanent_named(scenario, "Jacob Hauken, Inspector")
+    jacob.transform()  # Hauken's Insight carries the permission
+    bears = exile_linked(scenario, "Grizzly Bears", jacob, face_up=False)
+    giant = exile_linked(scenario, "Hill Giant", jacob, face_up=False)
+    assert exile_refusal(scenario, bears) is None
+    cast_from_pile(scenario, bears)
+    assert not any(land.tapped for land in scenario.game.permanents_controlled_by("alice"))
+    assert exile_refusal(scenario, giant).startswith("nothing allows alice")
+
+
+def test_grolnok_plays_the_cards_it_owns_with_croak_counters():
+    scenario = build(
+        alice={"battlefield": ["Grolnok, the Omnivore"], "library": ["Grizzly Bears", "Hill Giant"]}
+    )
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
+    giant = scenario.find("Hill Giant", Zone.LIBRARY, "alice")
+    scenario.game.exile_cards([bears, giant])
+    scenario.game.add_counters(bears, "croak", 1)
+    assert exile_refusal(scenario, bears) is None
+    assert exile_refusal(scenario, giant).startswith("nothing allows alice")
+    assert on_battlefield(cast_from_pile(scenario, bears))
+
+
+def test_grolnok_does_not_reach_cards_alice_does_not_own():
+    scenario = build(
+        alice={"battlefield": ["Grolnok, the Omnivore"]}, bob={"library": ["Grizzly Bears"]}
+    )
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "bob")
+    scenario.game.exile_cards([bears])
+    scenario.game.add_counters(bears, "croak", 1)
+    assert exile_refusal(scenario, bears).startswith("nothing allows alice")
+
+
+def test_tinybones_plays_only_cards_it_does_not_own_with_stash_counters_on_its_turn():
+    scenario = build(
+        alice={"battlefield": ["Tinybones, Bauble Burglar"]},
+        bob={"library": ["Shivan Dragon", "Grizzly Bears"]},
+        lands=["Swamp"] * 6,
+    )
+    dragon = scenario.find("Shivan Dragon", Zone.LIBRARY, "bob")
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "bob")
+    scenario.game.exile_cards([dragon, bears])
+    scenario.game.add_counters(dragon, "stash", 1)
+    assert exile_refusal(scenario, dragon) is None
+    assert exile_refusal(scenario, bears).startswith("nothing allows alice")
+    # mana of any type: six Swamps pay the red dragon's {4}{R}{R}
+    assert on_battlefield(cast_from_pile(scenario, dragon))
+
+
+def test_azula_casts_what_it_exiled_at_any_time_during_your_turn_with_any_mana():
+    scenario = build(
+        alice={"battlefield": ["Azula, Cunning Usurper"]},
+        bob={"library": ["Grizzly Bears"]},
+    )
+    azula = permanent_named(scenario, "Azula, Cunning Usurper")
+    bears = exile_linked(scenario, "Grizzly Bears", azula, owner="bob")
+    scenario.start_at(Step.DECLARE_ATTACKERS)  # creature spells are sorcery-speed without flash
+    assert exile_refusal(scenario, bears) is None
+    assert on_battlefield(cast_from_pile(scenario, bears))
+
+
+def test_null_summoner_needs_threshold_to_cast_the_exiled_card():
+    for graveyard_size, castable in ((6, False), (7, True)):
+        scenario = build(
+            alice={"battlefield": ["Null Summoner"], "graveyard": ["Island"] * graveyard_size},
+            bob={"library": ["Grizzly Bears"]},
+        )
+        summoner = permanent_named(scenario, "Null Summoner")
+        bears = exile_linked(scenario, "Grizzly Bears", summoner, owner="bob")
+        assert (exile_refusal(scenario, bears) is None) is castable
+    assert on_battlefield(cast_from_pile(scenario, bears))
