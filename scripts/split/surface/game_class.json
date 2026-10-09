@@ -262,6 +262,7 @@
     "_record_shown",
     "_record_unread_static_line",
     "_refuse_attack_alone_violations",
+    "_refuse_extra_attack_restrictions",
     "_refuse_if_over",
     "_refuse_illegal_attacker_caps",
     "_refuse_unobeyed_attack_requirements",
