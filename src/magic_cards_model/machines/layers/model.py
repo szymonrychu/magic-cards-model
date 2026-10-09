@@ -1418,9 +1418,14 @@ class CreaturesControlledByQuality(SelectorBase):
     kind: Literal["creatures_controlled_by_quality"] = "creatures_controlled_by_quality"
     username: str | None = None
     quality: str = ""
+    excluding_card_id: UUID | None = None
+    """The granting permanent itself, left out of its own group: Sephara,
+    Sky's Blade's "*Other* creatures you control with flying" (CR 613.1f)."""
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         if not chars.is_creature or chars.controller != self.username:
+            return False
+        if self.excluding_card_id is not None and chars.card_id == self.excluding_card_id:
             return False
         matcher = _parse_creature_description(self.quality)
         if matcher is None:

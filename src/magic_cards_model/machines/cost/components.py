@@ -246,6 +246,10 @@ class CardRequirement(EngineModel):
     token: bool | None = None
     """Fountainport's "Sacrifice a token" (CR 111.1): True asks for a token,
     False ("a nontoken creature") for a card, None either."""
+    keywords: list[str] = Field(default_factory=list)
+    """Sephara's "tap four untapped creatures you control *with flying*": the
+    permanent must have **all** of these keyword abilities (CR 702), read
+    through `combat.has_keyword` so a granted ability counts."""
 
     @property
     def is_empty(self) -> bool:
@@ -259,6 +263,7 @@ class CardRequirement(EngineModel):
             or self.mana_value is not None
             or self.tapped is not None
             or self.token is not None
+            or self.keywords
         )
 
     def why_not(self, card: CardState, game: Any = None, payer: str | None = None) -> str | None:
@@ -326,6 +331,12 @@ class CardRequirement(EngineModel):
             return f"{card.name} is {with_indefinite_article(unwanted)}"
         if self.subtypes and not subtypes & self._wanted_subtypes():
             return f"{card.name} is not {with_indefinite_article('/'.join(self.subtypes))}"
+        if self.keywords:
+            from ..combat import has_keyword
+
+            for keyword in self.keywords:
+                if not has_keyword(card, keyword, game):
+                    return f"{card.name} does not have {keyword}"
         if self.mana_value is not None and mana_value != self.mana_value:
             # CR 202.3: the mana value is read off the object, not off the
             # printed front face - computed when there is a board to compute

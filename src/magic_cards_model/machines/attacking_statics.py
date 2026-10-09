@@ -34,6 +34,7 @@ from ..models.card_state import CardState
 from .layers import (
     AttackingGroupControlledBy,
     ContinuousEffect,
+    CreaturesControlledByQuality,
     EffectBuilder,
     Layer,
     LayerContext,
@@ -215,3 +216,53 @@ def parse_tapped_group_keyword_grant(sentence: str) -> EffectBuilder | None:
     return _tapped_group_keyword_grant_builder(
         keywords, line=sentence, legendary=match.group("legendary") is not None
     )
+
+
+# --------------------------------------------------------------------------
+# Keyword-filtered group keyword grants (CR 613.1f)
+# --------------------------------------------------------------------------
+
+#: "Other creatures you control with flying have indestructible." (Sephara,
+#: Sky's Blade) - the group is picked by a keyword the creature has when
+#: layer 6 is applied, through `CreaturesControlledByQuality`'s closed
+#: "with <keyword>" grammar, with the granting permanent itself left out.
+_KEYWORD_FILTERED_GROUP_GRANT_RE = re.compile(
+    r"^other creatures you control with (?P<filter>[a-z]+) (?:have|has) "
+    r"(?P<keywords>[a-z][a-z ,{}0-9]*?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_keyword_filtered_group_keyword_grant(sentence: str) -> EffectBuilder | None:
+    """`_KEYWORD_FILTERED_GROUP_GRANT_RE`'s shape, or `None`. Tried by
+    `machines/layers._parse_layer_sentence`."""
+    match = _KEYWORD_FILTERED_GROUP_GRANT_RE.fullmatch(sentence)
+    if match is None:
+        return None
+    keywords = _split_and_validate_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+    quality = f"creatures with {match.group('filter').lower()}"
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: other {quality} you control have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, sentence),
+                selector=CreaturesControlledByQuality(
+                    username=source.controller, quality=quality, excluding_card_id=source.id
+                ),
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+
+    return builder

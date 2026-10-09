@@ -18,7 +18,7 @@ from magic_cards_model.machines.casting.options import (
     or_additional_cost_alternatives,
     reads_optional_additional_cost_line,
 )
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Color, Zone
 from tests.scenarios.harness import Scenario
 
 
@@ -256,3 +256,71 @@ def test_force_of_virtue_needs_a_white_card_to_exile():
     assert not payability(
         scenario.game, "bob", scenario.find("Force of Virtue", Zone.HAND, "bob")
     ).payable
+
+
+def test_sephara_taps_four_untapped_flyers_instead_of_paying_its_mana_cost():
+    """CR 118.9 + 118.3: "You may pay {W} and tap four untapped creatures you
+    control with flying rather than pay this spell's mana cost." - a creature
+    without flying cannot be chosen for the tap."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Sephara, Sky's Blade"],
+            battlefield=["Plains", "Wind Drake", "Wind Drake", "Wind Drake", "Wind Drake", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    flyers = [s for s in scenario.game.battlefield if s.name == "Wind Drake"]
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+
+    casting = scenario.cast("Sephara, Sky's Blade")
+    (option,) = [found for found in casting.alternative_costs if found.available]
+    plains = scenario.find("Plains", Zone.BATTLEFIELD, "alice")
+    casting.use_alternative_cost(option.index, choosing=[*flyers[:3], bears])
+    payment = casting.begin_paying()
+    payment.tap_for_mana(plains, [Color.WHITE])
+    with pytest.raises(ValueError, match="does not have flying"):
+        payment.pay()
+    casting.cancel()
+
+    casting = scenario.cast("Sephara, Sky's Blade")
+    casting.use_alternative_cost(option.index, choosing=flyers)
+    payment = casting.begin_paying()
+    payment.tap_for_mana(plains, [Color.WHITE])
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+
+    assert scenario.find("Sephara, Sky's Blade", Zone.BATTLEFIELD, "alice").zone is Zone.BATTLEFIELD
+    assert all(flyer.tapped for flyer in flyers)
+    assert not bears.tapped
+
+
+def test_sephara_gives_other_flyers_indestructible_and_only_them():
+    """CR 613.1f: "Other creatures you control with flying have indestructible."
+    selects by the keyword the creature has when layer 6 is applied, and
+    leaves Sephara herself and any creature without flying out."""
+    from magic_cards_model.machines.combat import has_keyword
+
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Sephara, Sky's Blade", "Wind Drake", "Grizzly Bears"])
+        .player("bob", battlefield=["Wind Drake"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    game = scenario.game
+    drake = scenario.find("Wind Drake", Zone.BATTLEFIELD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    sephara = scenario.find("Sephara, Sky's Blade", Zone.BATTLEFIELD, "alice")
+    enemy = scenario.find("Wind Drake", Zone.BATTLEFIELD, "bob")
+
+    assert has_keyword(drake, "indestructible", game)
+    assert not has_keyword(bears, "indestructible", game)
+    assert not has_keyword(sephara, "indestructible", game)
+    assert not has_keyword(enemy, "indestructible", game)

@@ -1002,7 +1002,7 @@ _PHRASE_DISCARD = re.compile(
 _PHRASE_TAP = re.compile(
     rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?P<other>other )?(?:untapped )?"
     r"(?P<quality>[\w ,/]+?) "
-    r"you control$",
+    r"you control(?: with (?P<keyword>[a-z]+))?$",
     re.IGNORECASE,
 )
 #: `Return a land you control to its owner's hand` (Tameshi, Reality
@@ -1582,6 +1582,8 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         if read is None or requirement is None:
             return None
         requirement.excludes_source = another or tap.group("other") is not None
+        if tap.group("keyword"):
+            requirement.keywords = [tap.group("keyword").lower()]
         component = tap_cost(payer=payer, description=text)
         component.required = read[0]
         component.requirement = requirement

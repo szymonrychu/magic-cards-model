@@ -2236,6 +2236,10 @@ class Game(
     #: 140 (EP01-R1-T7): `Game` gained `noncombat_damage_to_players_this_turn`
     #: (Chandra's Incinerator's "the total amount of noncombat damage dealt to
     #: your opponents this turn", CR 601.2f); an older dump would read none.
+    #: 140 also: `CardRequirement.keywords` (Sephara, Sky's Blade's "tap four
+    #: untapped creatures you control with flying") and
+    #: `CreaturesControlledByQuality.excluding_card_id` (its "other creatures
+    #: you control with flying"), both defaulting to nothing in an older dump.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
