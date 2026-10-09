@@ -48,6 +48,8 @@ from ...machines.layers import (
     Layer,
     LayerContext,
     all_activated_abilities_grant,
+    compute_board,
+    effects_for,
     grant_ability,
     off_battlefield_characteristics_of,
     only_this_incarnation,
@@ -880,7 +882,32 @@ class ContinuousMixin:
     def _compute_board(self: "Game", *, base_power_toughness: bool = False) -> ComputedBoard:
         """`computed_board`, always computed afresh."""
         self.continuous_effects.note(self.battlefield)
-        context = LayerContext(
+        context = self._layer_context()
+        # The effects a board is built from are rebuilt on every computation and
+        # discarded with it, so they must not draw on `_allocate_id`: how often a
+        # command computes the board (which a snapshot scope, or another
+        # thread's change moving its epoch, decides) would otherwise move
+        # `objects_created` and every id minted after it, and a replayed command
+        # would stop minting the ids it minted the first time. Each computation
+        # numbers its own effects from zero instead, the same way every time.
+        minted = itertools.count()
+
+        def board_effect_id() -> UUID:
+            return uuid5(NAMESPACE_OID, f"{self.game_uid}:board:{next(minted)}")
+
+        token = install_id_allocator(board_effect_id)
+        try:
+            return self.continuous_effects.board(
+                self.battlefield, context, self, base_power_toughness=base_power_toughness
+            )
+        finally:
+            reset_id_allocator(token)
+
+    def _layer_context(self: "Game") -> LayerContext:
+        """The transient `LayerContext` every board computation reads: what the
+        layer engine cannot see standing on the battlefield (graveyards, exile,
+        life totals, turn facts, ...)."""
+        return LayerContext(
             graveyards=tuple(card for player in self.players_in_game for card in player.graveyard),
             graveyard_by_controller={
                 player.username: tuple(player.graveyard) for player in self.players_in_game
@@ -982,25 +1009,6 @@ class ContinuousMixin:
                 if self.turn is not None and permanent.turn_entered == self.turn.turns_taken
             ),
         )
-        # The effects a board is built from are rebuilt on every computation and
-        # discarded with it, so they must not draw on `_allocate_id`: how often a
-        # command computes the board (which a snapshot scope, or another
-        # thread's change moving its epoch, decides) would otherwise move
-        # `objects_created` and every id minted after it, and a replayed command
-        # would stop minting the ids it minted the first time. Each computation
-        # numbers its own effects from zero instead, the same way every time.
-        minted = itertools.count()
-
-        def board_effect_id() -> UUID:
-            return uuid5(NAMESPACE_OID, f"{self.game_uid}:board:{next(minted)}")
-
-        token = install_id_allocator(board_effect_id)
-        try:
-            return self.continuous_effects.board(
-                self.battlefield, context, self, base_power_toughness=base_power_toughness
-            )
-        finally:
-            reset_id_allocator(token)
 
     def characteristics_of(self: "Game", permanent: CardState) -> Characteristics:
         """This permanent's characteristics right now, layers included (CR 613.5).
@@ -1025,9 +1033,42 @@ class ContinuousMixin:
         if permanent.zone is not Zone.BATTLEFIELD:
             # CR 113.6c: plus an "as long as this isn't on the battlefield"
             # grant, which applies exactly here (Grist, the Hunger Tide).
-            return off_battlefield_characteristics_of(permanent)
+            return self._with_defined_power_toughness(
+                permanent, off_battlefield_characteristics_of(permanent)
+            )
         board = self.computed_board()
         return self._supplement_characteristics(permanent, board.of(permanent), board)
+
+    def _with_defined_power_toughness(
+        self: "Game", card: CardState, chars: Characteristics
+    ) -> Characteristics:
+        """CR 604.3: a characteristic-defining ability "functions in all
+        zones", so a creature card in a hand, graveyard, library or exile whose
+        printed power or toughness is `*` has the value its CDA defines (CR
+        208.2a) - Tarmogoyf in the graveyard is not a blank-boxed card. Only
+        the characteristic-defining effects of the card's own text are applied
+        (sublayer 7a, CR 613.4a); nothing else reaches an object off the
+        battlefield (CR 611.1)."""
+        if Type.CREATURE not in chars.types or (
+            chars.power is not None and chars.toughness is not None
+        ):
+            return chars
+        owner = card.owner or card.controller
+        source = card.model_copy(update={"controller": owner})
+        defining = [
+            effect
+            for effect in effects_for(source, 0, (), self._layer_context(), [], static_only=True)
+            if effect.characteristic_defining and effect.layer is Layer.POWER_TOUGHNESS
+        ]
+        if not defining:
+            return chars
+        defined = compute_board([source], defining).of(source)
+        return chars.model_copy(
+            update={
+                "power": chars.power if chars.power is not None else defined.power,
+                "toughness": chars.toughness if chars.toughness is not None else defined.toughness,
+            }
+        )
 
     def _supplement_characteristics(
         self: "Game", permanent: CardState, chars: Characteristics, board: ComputedBoard

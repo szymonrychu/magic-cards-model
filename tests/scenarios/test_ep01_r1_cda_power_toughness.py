@@ -515,3 +515,25 @@ def test_mastercraft_raptor_pool_reader_is_handled():
     assert all(c.status == "handled" for c in support.clauses), [
         (c.status, c.text) for c in support.clauses
     ]
+
+
+# --- a CDA works in every zone (CR 604.3) ------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("zone", "expected"), [("hand", (1, 2)), ("graveyard", (2, 3)), ("exile", (1, 2))]
+)
+def test_a_creature_card_off_the_battlefield_has_its_cda_power_and_toughness(zone, expected):
+    others = ["Grizzly Bears", "Lightning Bolt"]
+    scenario = build(
+        alice={
+            "hand": ["Lhurgoyf"] if zone == "hand" else [],
+            "exile": ["Lhurgoyf"] if zone == "exile" else [],
+            "graveyard": others + (["Lhurgoyf"] if zone == "graveyard" else []),
+            "library": ["Forest"] * 4,
+        },
+        bob={"library": ["Island"] * 4},
+    )
+    state = scenario.find("Lhurgoyf", Zone(zone), "alice" if zone != "exile" else None)
+    chars = scenario.game.characteristics_of(state)
+    assert (chars.power, chars.toughness) == expected
