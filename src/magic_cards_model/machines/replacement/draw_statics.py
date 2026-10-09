@@ -19,8 +19,8 @@ from typing import TYPE_CHECKING
 from ...models.card import Type
 from ...models.card_state import CardState
 from ...models.zone import Zone
-from ..decisions import Decision, DecisionKind
 from ..abilities import AbilityKind, TriggeredAbility, TriggerWord
+from ..decisions import Decision, DecisionKind
 from ..triggers.events import AbilityOnStack
 from .model import (
     Apply,

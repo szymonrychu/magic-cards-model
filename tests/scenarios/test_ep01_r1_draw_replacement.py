@@ -19,7 +19,9 @@ from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
-def _board(alice, bob=(), *, hand=(), library=("Island",) * 6, bob_library=("Island",) * 6, bob_hand=()):
+def _board(
+    alice, bob=(), *, hand=(), library=("Island",) * 6, bob_library=("Island",) * 6, bob_hand=()
+):
     scenario = (
         Scenario()
         .player("alice", battlefield=list(alice), hand=list(hand), library=list(library))
@@ -152,7 +154,8 @@ def test_underrealm_lich_one_to_hand_the_rest_to_the_graveyard():
 
 def test_tomorrow_azamis_familiar_one_to_hand_the_rest_to_the_bottom():
     scenario = _board(
-        ["Tomorrow, Azami's Familiar"], library=["Grizzly Bears", "Island", "Llanowar Elves", "Forest"]
+        ["Tomorrow, Azami's Familiar"],
+        library=["Grizzly Bears", "Island", "Llanowar Elves", "Forest"],
     )
     top = scenario.player("alice").library[:3]
 
@@ -186,7 +189,9 @@ def test_asmodeus_exiles_the_top_card_face_down():
 
 
 def test_shared_fate_exiles_from_an_opponents_library_for_either_player():
-    scenario = _board(["Shared Fate"], bob_library=["Grizzly Bears", "Forest"], library=["Island", "Swamp"])
+    scenario = _board(
+        ["Shared Fate"], bob_library=["Grizzly Bears", "Forest"], library=["Island", "Swamp"]
+    )
 
     _draw(scenario, "alice")  # alice draws -> exiles the top of bob's library
     _draw(scenario, "bob")  # bob draws -> exiles the top of alice's library
@@ -208,7 +213,7 @@ def test_uba_mask_exiles_the_card_face_up_instead_of_drawing_it():
 
 def test_zur_weirding_draws_when_nobody_pays_and_buries_when_someone_does():
     scenario = _board(["Zur's Weirding"], library=["Grizzly Bears", "Island"])
-    scenario.will_pay_the_life(False, username="bob") if hasattr(scenario, "will_pay_the_life") else None
+    scenario.will_pay_the_life(False, username="bob")
     _draw(scenario)
     assert _names(scenario.player("alice").hand) == ["Grizzly Bears"]
 

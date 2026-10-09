@@ -55,11 +55,13 @@ def _event_and_replacement(effect: ReplacementEffect) -> tuple[str, str] | None:
 # -- counters ----------------------------------------------------------------
 
 _COUNTER_EVENT_RE = re.compile(
-    r"^one or more (?:(?P<kind>[+\-]\d+/[+\-]\d+|[a-z]+) )?counters would be put on (?P<subject>.+)$",
+    r"^one or more (?:(?P<kind>[+\-]\d+/[+\-]\d+|[a-z]+) )?counters "
+    r"would be put on (?P<subject>.+)$",
     re.IGNORECASE,
 )
 _PLUS_REPLACEMENT_RE = re.compile(
-    r"^that many plus (?P<n>one|two|three) (?P<kind>[+\-]\d+/[+\-]\d+|[a-z]+) counters are put on it$",
+    r"^that many plus (?P<n>one|two|three) "
+    r"(?P<kind>[+\-]\d+/[+\-]\d+|[a-z]+) counters are put on it$",
     re.IGNORECASE,
 )
 _EACH_KIND_REPLACEMENT_RE = re.compile(
@@ -131,7 +133,8 @@ def _compile_counter_plus(effect: ReplacementEffect) -> CardReplacement | None:
 # -- tokens ------------------------------------------------------------------
 
 _TOKEN_EVENT_RE = re.compile(
-    r"^(?:you would create (?:one or more (?P<filter>[a-z]+) tokens?|a (?P<trio>clue, food, or treasure) token|one or more tokens)"
+    r"^(?:you would create (?:one or more (?P<filter>[a-z]+) tokens?"
+    r"|a (?P<trio>clue, food, or treasure) token|one or more tokens)"
     r"|one or more tokens would be created under your control)$",
     re.IGNORECASE,
 )
@@ -205,9 +208,7 @@ def _compile_token_replacement(effect: ReplacementEffect) -> CardReplacement | N
     if match := _EITHER_RE.match(replacement):
         options: list[TokenDefinition] = []
         for group in ("a", "b"):
-            definition = _read_token_descriptor(
-                re.sub(r"\btokens\b", "token", match.group(group))
-            )
+            definition = _read_token_descriptor(re.sub(r"\btokens\b", "token", match.group(group)))
             if definition is None:
                 return None
             options.append(definition)

@@ -447,7 +447,11 @@ def test_valentin_own_creature_dying_creates_no_reflexive_ability():
 
 @pytest.mark.parametrize(
     "name",
-    ["Frostwielder", "Kumano Faces Kakkazan // Etching of Kumano", "Valentin, Dean of the Vein // Lisette, Dean of the Root"],
+    [
+        "Frostwielder",
+        "Kumano Faces Kakkazan // Etching of Kumano",
+        "Valentin, Dean of the Vein // Lisette, Dean of the Root",
+    ],
 )
 def test_damage_ledger_and_reflexive_lines_are_handled(name):
     _every_static_clause_handled(name)

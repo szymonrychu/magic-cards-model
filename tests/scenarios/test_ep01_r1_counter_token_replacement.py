@@ -145,7 +145,9 @@ def test_peregrin_took_adds_a_food_to_any_token_you_create():
 def test_academy_manufactor_makes_one_of_each():
     scenario = _board(["Academy Manufactor"])
     _make(scenario, PREDEFINED["Treasure"])
-    assert [len(_on_battlefield(scenario, n)) for n in ("Clue Token", "Food Token", "Treasure Token")] == [1, 1, 1]
+    assert [
+        len(_on_battlefield(scenario, n)) for n in ("Clue Token", "Food Token", "Treasure Token")
+    ] == [1, 1, 1]
 
 
 def test_academy_manufactor_ignores_other_tokens():
@@ -257,7 +259,14 @@ def test_melira_does_not_cap_the_opponents_poison():
 
 @pytest.mark.parametrize(
     "name",
-    ["Tainted Remedy", "Rain of Gore", "Phial of Galadriel", "Bloodletter of Aclazotz", "Worship", "Melira, the Living Cure"],
+    [
+        "Tainted Remedy",
+        "Rain of Gore",
+        "Phial of Galadriel",
+        "Bloodletter of Aclazotz",
+        "Worship",
+        "Melira, the Living Cure",
+    ],
 )
 def test_life_and_poison_lines_are_handled(name):
     _handled(name)

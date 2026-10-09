@@ -22,12 +22,12 @@ from ...models.zone import Zone
 from .model import (
     Apply,
     CardReplacement,
-    EventKind,
     ReplaceableEvent,
     ReplacementEffect,
     ReplacementKind,
     _shuffle_into_library_instead,
 )
+
 if TYPE_CHECKING:
     from ...models.game import Game
 from .parse import (
@@ -54,7 +54,8 @@ _CLAUSE_SPLIT_RE = re.compile(r" or (?=an? [a-z' ]+ would )", re.IGNORECASE)
 #: "a creature dealt damage by this creature / Kumano / enchanted creature this
 #: turn" and "a creature dealt damage this turn by a source you controlled".
 _DAMAGED_SUBJECT_RE = re.compile(
-    r"^a creature dealt damage (?:by (?P<by>.+?) this turn|this turn by (?P<group>a source you controlled))$",
+    r"^a creature dealt damage (?:by (?P<by>.+?) this turn"
+    r"|this turn by (?P<group>a source you controlled))$",
     re.IGNORECASE,
 )
 
@@ -73,7 +74,9 @@ def _types_of(game: "Game", card: CardState) -> frozenset[Type]:
     return frozenset(card.types)
 
 
-def _card_subject(subject: str) -> Callable[["Game", CardState, CardState, ReplaceableEvent], bool] | None:
+def _card_subject(
+    subject: str,
+) -> Callable[["Game", CardState, CardState, ReplaceableEvent], bool] | None:
     """A predicate for the moved object, from the printed subject phrase."""
     text = subject.strip().lower()
     if text == "a card":
@@ -106,7 +109,9 @@ def _card_subject(subject: str) -> Callable[["Game", CardState, CardState, Repla
             return False
         if nontoken and is_token(card):
             return False
-        if who == "an opponent controls" and not _is_opponent(game, card.controller, source.controller):
+        if who == "an opponent controls" and not _is_opponent(
+            game, card.controller, source.controller
+        ):
             return False
         if who == "you control" and card.controller != source.controller:
             return False
@@ -217,9 +222,7 @@ def _zone_action(effect: ReplacementEffect) -> Apply | None:
     text = printed.lower()
     subject = (effect.event or "").split(" would ")[0].strip().lower()
 
-    if match := re.fullmatch(
-        r"reveal (?P<name>.+?) and shuffle it into its owner's library", text
-    ):
+    if match := re.fullmatch(r"reveal (?P<name>.+?) and shuffle it into its owner's library", text):
         if effect.self_replacement and match.group("name") == subject:
             return _shuffle_into_library_instead
         return None
@@ -249,7 +252,9 @@ def _exile_action(match: re.Match, effect: ReplacementEffect) -> Apply | None:
     life = int(match.group("life")) if match.group("life") else 0
     token = None
     if match.group("token"):
-        descriptor = re.fullmatch(r"create an? (?P<d>.+ token)", match.group("token"), re.IGNORECASE)
+        descriptor = re.fullmatch(
+            r"create an? (?P<d>.+ token)", match.group("token"), re.IGNORECASE
+        )
         token = _read_token_descriptor(descriptor.group("d")) if descriptor else None
         if token is None:
             return None

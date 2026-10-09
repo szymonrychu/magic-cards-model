@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 from ...models.card import Type
 from ...models.card_state import CardState
-from .model import CardReplacement, EventKind, ReplaceableEvent, ReplacementEffect, ReplacementKind
+from .model import CardReplacement, EventKind, ReplaceableEvent, ReplacementEffect
 from .parse import _read_damage_life_floor, strip_reminder_text
 
 if TYPE_CHECKING:
@@ -43,7 +43,9 @@ _TWICE_LOSS_RE = re.compile(
     r"^if an opponent would lose life during your turn, they lose twice that much life instead$",
     re.IGNORECASE,
 )
-_WORSHIP_RE = re.compile(r"^if you control an? (?P<type>[a-z]+), (?P<rest>damage .+)$", re.IGNORECASE)
+_WORSHIP_RE = re.compile(
+    r"^if you control an? (?P<type>[a-z]+), (?P<rest>damage .+)$", re.IGNORECASE
+)
 _POISON_RE = re.compile(
     r"^if you would get one or more poison counters, instead you get one poison counter "
     r"and you can't get additional poison counters this turn$",
