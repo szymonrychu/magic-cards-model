@@ -919,6 +919,13 @@ class LayerContext(EngineModel):
     #: resolved.
     hand_size_by_player: Mapping[str, int] = Field(default_factory=dict)
 
+    #: `Game.cards_drawn_this_turn` - how many cards each player has drawn this
+    #: turn (CR 121.2), the number Duelist of the Mind's characteristic-defining
+    #: "power is equal to the number of cards you've drawn this turn" reads. A
+    #: per-turn history fact the battlefield does not show; the board is rebuilt
+    #: on every computation (CR 613.5), so the power tracks each draw.
+    cards_drawn_this_turn: Mapping[str, int] = Field(default_factory=dict)
+
     def hand_size_of(self, player: str | None) -> int:
         """How many cards `player` holds, or 0 for a player this context
         knows nothing about - the same empty-is-zero default `unspent_mana_of`

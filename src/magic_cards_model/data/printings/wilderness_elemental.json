@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "25d25e02-a266-4fad-bc8c-aa45487fab90",
+  "oracle_id": "478d1acf-93fa-4695-83be-693b839ebf80",
+  "multiverse_ids": [
+    420847
+  ],
+  "tcgplayer_id": 124688,
+  "cardmarket_id": 293727,
+  "name": "Wilderness Elemental",
+  "lang": "en",
+  "released_at": "2016-11-11",
+  "uri": "https://api.scryfall.com/cards/25d25e02-a266-4fad-bc8c-aa45487fab90",
+  "scryfall_uri": "https://scryfall.com/card/c16/230/wilderness-elemental?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:04:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.jpg?1783937042",
+    "normal": "https://cards.scryfall.io/normal/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.jpg?1783937042",
+    "large": "https://cards.scryfall.io/large/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.jpg?1783937042",
+    "png": "https://cards.scryfall.io/png/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.png?1783937042",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.jpg?1783937042",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.jpg?1783937042",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.webp?1783937042",
+    "grid": "https://cards.scryfall.io/grid/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.webp?1783937042",
+    "display": "https://cards.scryfall.io/display/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.webp?1783937042",
+    "art": "https://cards.scryfall.io/art/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.webp?1783937042",
+    "crop": "https://cards.scryfall.io/crop/front/2/5/25d25e02-a266-4fad-bc8c-aa45487fab90.webp?1783937042"
+  },
+  "mana_cost": "{1}{R}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "Trample\nWilderness Elemental's power is equal to the number of nonbasic lands your opponents control.",
+  "power": "*",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "3e0d713a-b5cb-4287-81b9-a57d4dcaf415",
+  "set": "c16",
+  "set_name": "Commander 2016",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/3e0d713a-b5cb-4287-81b9-a57d4dcaf415",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac16&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c16?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/25d25e02-a266-4fad-bc8c-aa45487fab90/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A478d1acf-93fa-4695-83be-693b839ebf80&unique=prints",
+  "collector_number": "230",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Don't be so quick to reclaim the thawing lands. They might have acquired a taste for freedom.\"\n\u2014Taaveti of Kelsinko, elvish hunter",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Anthony S. Waters",
+  "artist_ids": [
+    "f009de11-3c8d-4663-b996-ca0c3e997fad"
+  ],
+  "illustration_id": "809d58e3-197f-4334-9126-a38bd4615d31",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 20953,
+  "penny_rank": 18144,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.18",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=420847&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWilderness%2BElemental",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWilderness%2BElemental",
+    "edhrec": "https://edhrec.com/route/?cc=Wilderness+Elemental"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F124688%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=293727&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Wilderness+Elemental&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

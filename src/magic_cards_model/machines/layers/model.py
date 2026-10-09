@@ -724,6 +724,149 @@ class CountControlledAndGraveyardCards(CountBase):
         return board_count + self.graveyard_count
 
 
+def devotion_to(
+    colors: Iterable[Color],
+    mana_costs: Iterable[tuple[UUID, str]],
+    controller: str | None,
+    board: Board,
+) -> int:
+    """CR 700.5's devotion: "A player's devotion to [color 1] and [color 2] is
+    equal to the number of mana symbols among the mana costs of permanents that
+    player controls that are [color 1], [color 2], or both colors" - a hybrid
+    symbol of both colours is one symbol, counted once. Whose permanent each is
+    comes off the board being computed, so a control change already applied
+    counts (CR 700.5a)."""
+    from ...models.mana import ManaCost
+
+    wanted = set(colors)
+    devotion = 0
+    for permanent_id, cost in mana_costs:
+        other = board.get(permanent_id)
+        if other is None or other.controller != controller:
+            continue
+        printed = ManaCost.try_parse(cost)
+        if printed is None:
+            continue
+        for symbol in printed.symbols:
+            if wanted & set(symbol.colors):
+                devotion += 1
+    return devotion
+
+
+class CountDevotion(CountBase):
+    """The asking object's controller's devotion to some colours (CR 700.5) -
+    Anax, Hardened in the Forge's "Anax's power is equal to your devotion to
+    red." `mana_costs` is the `(permanent id, printed cost)` snapshot taken as
+    the effect was built, exactly as `SelfIfDevotionBelow` carries it; whose
+    each permanent is, is read off the board as it stands in the sublayer that
+    asks."""
+
+    kind: Literal["devotion"] = "devotion"
+    colors: tuple[Color, ...]
+    mana_costs: tuple[tuple[UUID, str], ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return devotion_to(self.colors, self.mana_costs, chars.controller, board)
+
+
+#: CR 700.8: "Your party consists of up to one each of Cleric, Rogue, Warrior,
+#: and Wizard" among the creatures you control.
+PARTY_ROLES: tuple[str, ...] = ("cleric", "rogue", "warrior", "wizard")
+
+
+class CountParty(CountBase):
+    """How many creatures are in the asking object's controller's party (CR
+    700.8, CR 700.8a) - Archpriest of Iona's "the number of creatures in your party". A
+    creature with two party types fills one slot only, and the best assignment
+    of creatures to slots counts (CR 700.8b), found by augmenting-path matching
+    of the four roles to distinct creatures."""
+
+    kind: Literal["party"] = "party"
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        candidates = [
+            {role for role in PARTY_ROLES if any(word.lower() == role for word in other.subtypes)}
+            for other in board.values()
+            if other.is_creature and other.controller == chars.controller
+        ]
+        owner_of_role: dict[str, int] = {}
+
+        def assign(creature: int, seen: set[str]) -> bool:
+            for role in candidates[creature]:
+                if role in seen:
+                    continue
+                seen.add(role)
+                holder = owner_of_role.get(role)
+                if holder is None or assign(holder, seen):
+                    owner_of_role[role] = creature
+                    return True
+            return False
+
+        return sum(1 for creature in range(len(candidates)) if assign(creature, set()))
+
+
+class CountBoardWhere(CountBase):
+    """A count (or greatest value) over the permanents on the board that match
+    a quality, relative to the asking object's controller - the board half of a
+    characteristic-defining ability (CR 604.3, CR 613.4a): "the number of
+    nonbasic lands your opponents control" (Wilderness Elemental), "the number
+    of Forests on the battlefield" (Traproot Kami), "the greatest mana value
+    among artifacts you control" (Daretti, Rocketeer Engineer), "the number of
+    +1/+1 counters on lands you control" (Toph, the Blind Bandit).
+
+    `types_any` and `subtypes_any` together are one disjunction ("artifacts
+    and/or enchantments", "Spirits and/or enchantments"; CR 205.2b), empty
+    meaning every permanent; `types_none`, `nonbasic` and `colorless` each
+    narrow it. `measure` is what is taken of the matches: how many there are,
+    the greatest mana value / power / toughness among them (0 for none), or
+    the total of `counter` counters on them (CR 122.1).
+    """
+
+    kind: Literal["board_where"] = "board_where"
+    scope: Literal["you", "opponents", "any"] = "you"
+    types_any: tuple[Type, ...] = ()
+    types_none: tuple[Type, ...] = ()
+    subtypes_any: tuple[str, ...] = ()
+    nonbasic: bool = False
+    colorless: bool = False
+    measure: Literal[
+        "count", "greatest_mana_value", "greatest_power", "greatest_toughness", "counters"
+    ] = "count"
+    counter: str | None = None
+
+    def _matches(self, chars: Characteristics, other: Characteristics) -> bool:
+        if self.scope == "you" and other.controller != chars.controller:
+            return False
+        if self.scope == "opponents" and (
+            other.controller is None or other.controller == chars.controller
+        ):
+            return False
+        if self.types_any or self.subtypes_any:
+            by_type = any(card_type in other.types for card_type in self.types_any)
+            by_subtype = any(word.lower() in self.subtypes_any for word in other.subtypes)
+            if not (by_type or by_subtype):
+                return False
+        if any(card_type in other.types for card_type in self.types_none):
+            return False
+        if self.nonbasic and other.is_basic:
+            return False
+        return not (self.colorless and other.colors)
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        matched = [other for other in board.values() if self._matches(chars, other)]
+        if self.measure == "count":
+            return len(matched)
+        if self.measure == "counters":
+            return sum(other.counters.get(self.counter or "", 0) for other in matched)
+        if self.measure == "greatest_mana_value":
+            return max((int(other.mana_value) for other in matched), default=0)
+        values = [
+            (other.power if self.measure == "greatest_power" else other.toughness) or 0
+            for other in matched
+        ]
+        return max(values, default=0)
+
+
 #: How many of something an effect counts, judged against one object and the
 #: board as it stands in that sublayer (CR 613.5).
 Count = Annotated[
@@ -741,7 +884,10 @@ Count = Annotated[
     | CountBasicLandTypesAmongLandsControlledBy
     | CountPermanentsWithSubtypeControlledBy
     | CountAttachedWithSubtype
-    | CountColorsAmongControlledBy,
+    | CountColorsAmongControlledBy
+    | CountDevotion
+    | CountParty
+    | CountBoardWhere,
     Field(discriminator="kind"),
 ]
 
@@ -929,22 +1075,9 @@ class SelfIfDevotionBelow(SelectorBase):
     mana_costs: tuple[tuple[UUID, str], ...] = ()
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
-        from ...models.mana import ManaCost
-
         if chars.card_id != self.card_id:
             return False
-        devotion = 0
-        for permanent_id, cost in self.mana_costs:
-            other = board.get(permanent_id)
-            if other is None or other.controller != chars.controller:
-                continue
-            printed = ManaCost.try_parse(cost)
-            if printed is None:
-                continue
-            for symbol in printed.symbols:
-                if self.colors & set(symbol.colors):
-                    devotion += 1
-        return devotion < self.threshold
+        return devotion_to(self.colors, self.mana_costs, chars.controller, board) < self.threshold
 
 
 class PermanentsWithName(SelectorBase):
@@ -2100,6 +2233,19 @@ class DefinePower(ModificationBase):
         return chars.with_(power=self.count(chars, board) + self.power)
 
 
+class DefineToughness(ModificationBase):
+    """Sublayer 7a, toughness only (CR 613.4a) - Tymaret, Chosen from Death's
+    printed power is a plain `2`, so only its toughness box carries the
+    ability (CR 208.2a)."""
+
+    kind: Literal["define_toughness"] = "define_toughness"
+    count: Count
+    toughness: int = 0
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(toughness=self.count(chars, board) + self.toughness)
+
+
 class ModifyPowerToughness(ModificationBase):
     """Sublayer 7c (CR 613.4c). Adds; never sets."""
 
@@ -2307,6 +2453,7 @@ Modification = Annotated[
     | SetPowerToughnessToManaValue
     | DefinePowerToughness
     | DefinePower
+    | DefineToughness
     | ModifyPowerToughness
     | ModifyPowerToughnessPer
     | SwitchPowerToughness
@@ -3164,6 +3311,12 @@ def define_power(count: Count, power: int = 0) -> Modification:
     ability ever named. This leaves toughness exactly as layers 1-6 left it.
     """
     return DefinePower(count=count, power=power)
+
+
+def define_toughness(count: Count, toughness: int = 0) -> Modification:
+    """Sublayer 7a, toughness only (CR 613.4a): the mirror of `define_power`,
+    leaving power exactly as layers 1-6 left it."""
+    return DefineToughness(count=count, toughness=toughness)
 
 
 def modify_power_toughness(power: int, toughness: int) -> Modification:

@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "018414d2-adee-454b-9b00-7065ed8e2f11",
+  "oracle_id": "740fe41a-16bb-4c97-a03c-f678f15a0a0c",
+  "multiverse_ids": [],
+  "tcgplayer_id": 244417,
+  "cardmarket_id": 572555,
+  "name": "Wizard's Spellbook",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/018414d2-adee-454b-9b00-7065ed8e2f11",
+  "scryfall_uri": "https://scryfall.com/card/pafr/82p/wizards-spellbook?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:01:10Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.jpg?1783926070",
+    "normal": "https://cards.scryfall.io/normal/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.jpg?1783926070",
+    "large": "https://cards.scryfall.io/large/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.jpg?1783926070",
+    "png": "https://cards.scryfall.io/png/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.png?1783926070",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.jpg?1783926070",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.jpg?1783926070",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.webp?1783926070",
+    "grid": "https://cards.scryfall.io/grid/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.webp?1783926070",
+    "display": "https://cards.scryfall.io/display/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.webp?1783926070",
+    "art": "https://cards.scryfall.io/art/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.webp?1783926070",
+    "crop": "https://cards.scryfall.io/crop/front/0/1/018414d2-adee-454b-9b00-7065ed8e2f11.webp?1783926070"
+  },
+  "mana_cost": "{5}{U}{U}",
+  "cmc": 7.0,
+  "type_line": "Artifact \u2014 Book",
+  "oracle_text": "{T}: Exile target instant or sorcery card from a graveyard. Roll a d20. Activate only as a sorcery.\n1\u20149 | Copy that card. You may cast the copy.\n10\u201419 | Copy that card. You may cast the copy by paying {1} rather than paying its mana cost.\n20 | Copy each card exiled with this artifact. You may cast any number of the copies without paying their mana costs.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": true,
+  "reprint": true,
+  "variation": false,
+  "set_id": "983f027f-76f9-462d-8eb5-458dcbf029b4",
+  "set": "pafr",
+  "set_name": "Adventures in the Forgotten Realms Promos",
+  "set_type": "promo",
+  "set_uri": "https://api.scryfall.com/sets/983f027f-76f9-462d-8eb5-458dcbf029b4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Apafr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/pafr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/018414d2-adee-454b-9b00-7065ed8e2f11/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A740fe41a-16bb-4c97-a03c-f678f15a0a0c&unique=prints",
+  "collector_number": "82p",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Iris Compiet",
+  "artist_ids": [
+    "aa807c8c-d07f-4f09-90d3-b2cbf5b86dbf"
+  ],
+  "illustration_id": "c36d62ff-d840-4987-af3e-abac160895db",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "promopack",
+    "stamped"
+  ],
+  "edhrec_rank": 9123,
+  "penny_rank": 14485,
+  "prices": {
+    "usd": "1.00",
+    "usd_foil": "1.95",
+    "usd_etched": null,
+    "eur": "0.37",
+    "eur_foil": "0.58",
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWizard%2527s%2BSpellbook",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWizard%2527s%2BSpellbook",
+    "edhrec": "https://edhrec.com/route/?cc=Wizard%27s+Spellbook"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F244417%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=572555&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Wizard%27s+Spellbook&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

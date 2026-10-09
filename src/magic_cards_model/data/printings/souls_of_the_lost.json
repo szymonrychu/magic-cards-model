@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "22d753e9-30ec-42e2-9cb6-cbb8b391e474",
+  "oracle_id": "c05d5a51-8e39-4475-9743-1adc60283c5a",
+  "multiverse_ids": [],
+  "tcgplayer_id": 526679,
+  "cardmarket_id": 744362,
+  "name": "Souls of the Lost",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/22d753e9-30ec-42e2-9cb6-cbb8b391e474",
+  "scryfall_uri": "https://scryfall.com/card/plci/121s/souls-of-the-lost?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:32:22Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.jpg?1783913542",
+    "normal": "https://cards.scryfall.io/normal/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.jpg?1783913542",
+    "large": "https://cards.scryfall.io/large/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.jpg?1783913542",
+    "png": "https://cards.scryfall.io/png/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.png?1783913542",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.jpg?1783913542",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.jpg?1783913542",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.webp?1783913542",
+    "grid": "https://cards.scryfall.io/grid/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.webp?1783913542",
+    "display": "https://cards.scryfall.io/display/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.webp?1783913542",
+    "art": "https://cards.scryfall.io/art/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.webp?1783913542",
+    "crop": "https://cards.scryfall.io/crop/front/2/2/22d753e9-30ec-42e2-9cb6-cbb8b391e474.webp?1783913542"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Spirit",
+  "oracle_text": "As an additional cost to cast this spell, discard a card or sacrifice a permanent.\nFathomless descent \u2014 Souls of the Lost's power is equal to the number of permanent cards in your graveyard and its toughness is equal to that number plus 1.",
+  "power": "*",
+  "toughness": "*+1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Fathomless descent"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": false,
+  "finishes": [
+    "foil"
+  ],
+  "oversized": false,
+  "promo": true,
+  "reprint": true,
+  "variation": false,
+  "set_id": "c2d4f3dd-aea0-4aec-bf7d-477e625483a6",
+  "set": "plci",
+  "set_name": "The Lost Caverns of Ixalan Promos",
+  "set_type": "promo",
+  "set_uri": "https://api.scryfall.com/sets/c2d4f3dd-aea0-4aec-bf7d-477e625483a6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aplci&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/plci?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/22d753e9-30ec-42e2-9cb6-cbb8b391e474/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac05d5a51-8e39-4475-9743-1adc60283c5a&unique=prints",
+  "collector_number": "121s",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Do you remember us?\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Nils Hamm",
+  "artist_ids": [
+    "c540d1fc-1500-457f-93cf-d6069ee66546"
+  ],
+  "illustration_id": "3b12a3b4-92cc-45fd-b94c-ecde29747d29",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "prerelease",
+    "datestamped"
+  ],
+  "edhrec_rank": 10095,
+  "penny_rank": 1728,
+  "prices": {
+    "usd": null,
+    "usd_foil": "0.99",
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": "0.72",
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSouls%2Bof%2Bthe%2BLost",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSouls%2Bof%2Bthe%2BLost",
+    "edhrec": "https://edhrec.com/route/?cc=Souls+of+the+Lost"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F526679%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=744362&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Souls+of+the+Lost&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

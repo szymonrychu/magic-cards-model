@@ -7430,6 +7430,365 @@ def _graveyard_card_count_cda_builder(
     return builder
 
 
+# ---------------------------------------------------------------------------
+# The general "<this>'s power/toughness is equal to <count>" characteristic-
+# defining ability (CR 604.3, CR 604.3a, CR 613.4a)
+# ---------------------------------------------------------------------------
+
+#: "`<Name>`'s power is equal to X.", "... toughness is equal to X.", "...
+#: power is equal to X and its toughness is equal to Y/that number plus N." and
+#: "... power and toughness are each equal to X." - CR 208.2a's two printed
+#: wordings of a CDA that sets power and/or toughness, the subject's own name
+#: already rewritten to "this creature/permanent/token/vehicle" by
+#: `self_normalized_effect_text`. The `X` phrase is `_cda_value`'s business.
+_CDA_SENTENCE_RE = re.compile(
+    r"^this (?:creature|permanent|token|vehicle)'s "
+    r"(?:(?P<each>power and toughness are each)|(?P<stat>power|toughness) is) equal to "
+    r"(?P<first>.+?)"
+    r"(?: and its (?P<second_stat>toughness|power) is equal to (?P<second>.+?))?\.?$",
+    re.IGNORECASE,
+)
+
+#: A count of the ways a CDA value is built: given the CDA's source and the
+#: transient layer context, the `Count` its modification will ask.
+CdaCountFactory = Callable[[CardState, "LayerContext"], "Count"]
+
+_CDA_OFFSET_PREFIX_RE = re.compile(r"^(?P<n>\d+) plus (?P<rest>.+)$")
+_CDA_OFFSET_SUFFIX_RE = re.compile(r"^(?P<rest>.+?) (?P<op>plus|minus) (?P<n>\d+)$")
+_CDA_GRAVEYARD_SCOPE = r"(?P<where>your graveyard|all graveyards|your opponents' graveyards)"
+_CDA_BOARD_SCOPE = r"(?P<who>you control|your opponents control|on the battlefield)"
+
+_CDA_DEVOTION_RE = re.compile(r"^your devotion to (?P<colors>[a-z, ]+?)$")
+_CDA_PARTY_RE = re.compile(r"^the number of creatures in your party$")
+_CDA_DRAWN_RE = re.compile(r"^the number of cards you've drawn this turn$")
+_CDA_CARD_TYPES_AMONG_RE = re.compile(
+    rf"^the number of card types among cards in {_CDA_GRAVEYARD_SCOPE}$"
+)
+_CDA_OWN_IN_EXILE_RE = re.compile(
+    r"^the (?P<total>total )?number of (?:(?P<quality>[a-z ,/-]+?) )?cards you own in exile"
+    r"(?P<and_graveyard> and in your graveyard)?$"
+)
+_CDA_CARDS_IN_GRAVEYARD_RE = re.compile(
+    rf"^the number of (?:(?P<quality>[a-z ,/-]+?) )?cards in {_CDA_GRAVEYARD_SCOPE}$"
+)
+_CDA_GREATEST_GRAVEYARD_RE = re.compile(
+    rf"^the greatest mana value among cards in {_CDA_GRAVEYARD_SCOPE}$"
+)
+_CDA_GREATEST_BOARD_RE = re.compile(
+    rf"^the greatest (?P<measure>mana value|power|toughness) among (?P<quality>[a-z ,/-]+?) "
+    rf"{_CDA_BOARD_SCOPE}$"
+)
+_CDA_COUNTERS_RE = re.compile(
+    rf"^the number of (?P<counter>[+\-0-9x]+/[+\-0-9x]+|[a-z]+) counters on "
+    rf"(?P<quality>[a-z ,/-]+?) {_CDA_BOARD_SCOPE}$"
+)
+_CDA_BOARD_COUNT_RE = re.compile(rf"^the number of (?P<quality>[a-z ,/-]+?) {_CDA_BOARD_SCOPE}$")
+_CDA_DOMAIN_RE = re.compile(r"^the number of basic land types among lands you control$")
+_CDA_SPLIT_RE = re.compile(r",\s*(?:and/or |and |or )?|\s+and/or\s+|\s+and\s+|\s+or\s+")
+
+_PERMANENT_CARD_TYPE_SET = frozenset(
+    {Type.ARTIFACT, Type.BATTLE, Type.CREATURE, Type.ENCHANTMENT, Type.LAND, Type.PLANESWALKER}
+)
+
+
+class _CdaQuality(NamedTuple):
+    """A "<quality> cards/permanents" noun phrase, read once: `types_any` and
+    `subtypes_any` are one disjunction (CR 205.2b), `types_none` its negations
+    ("noncreature, nonland"), `nonbasic`/`colorless` the two further narrowing
+    words the CDAs print."""
+
+    types_any: tuple[Type, ...]
+    types_none: tuple[Type, ...]
+    subtypes_any: tuple[str, ...]
+    nonbasic: bool
+    colorless: bool
+
+
+@functools.lru_cache(maxsize=512)
+def _cda_quality(phrase: str) -> _CdaQuality | None:
+    """`phrase` ("instant and sorcery", "noncreature, nonland", "nonbasic
+    land", "artifacts and/or enchantments", "Knights", "permanent") as a
+    `_CdaQuality`, or `None` for a word it cannot place - the caller then
+    fails closed rather than counting too much."""
+    types_any: list[Type] = []
+    types_none: list[Type] = []
+    subtypes_any: list[str] = []
+    nonbasic = colorless = False
+    for word in _CDA_SPLIT_RE.split(phrase.strip()):
+        # "nonbasic land" / "colorless creature" are one token to the splitter:
+        # an adjective run ahead of its noun.
+        for part in word.split():
+            if part == "nonbasic":
+                nonbasic = True
+            elif part == "colorless":
+                colorless = True
+            elif part.startswith("non") and (card_type := _card_type_word(part[3:])) is not None:
+                types_none.append(card_type)
+            elif part in {"permanent", "permanents"}:
+                types_any.extend(sorted(_PERMANENT_CARD_TYPE_SET, key=lambda t: t.value))
+            elif (card_type := _card_type_word(part)) is not None:
+                types_any.append(card_type)
+            elif (subtype := _singular_subtype_word(part)) is not None:
+                subtypes_any.append(subtype)
+            else:
+                return None
+    return _CdaQuality(
+        tuple(dict.fromkeys(types_any)),
+        tuple(dict.fromkeys(types_none)),
+        tuple(dict.fromkeys(subtypes_any)),
+        nonbasic,
+        colorless,
+    )
+
+
+def _cda_card_matches(quality: _CdaQuality, card: CardState) -> bool:
+    """Whether a card in a graveyard/exile pile satisfies `quality` (CR 205.2b:
+    an object with several card types satisfies any criterion naming one)."""
+    if quality.types_any or quality.subtypes_any:
+        by_type = any(card_type in card.types for card_type in quality.types_any)
+        by_subtype = any(word.lower() in quality.subtypes_any for word in card.subtypes)
+        if not (by_type or by_subtype):
+            return False
+    if any(card_type in card.types for card_type in quality.types_none):
+        return False
+    if quality.nonbasic and Supertype.BASIC in card.supertypes:
+        return False
+    return not (quality.colorless and card.colors)
+
+
+def _cda_pile(where: str, source: CardState, context: LayerContext) -> tuple[CardState, ...]:
+    """The graveyard(s) a CDA phrase names, for `source`'s controller."""
+    if where == "all graveyards":
+        return context.graveyards
+    if where == "your opponents' graveyards":
+        return context.opponents_graveyard_of(source.controller)
+    return context.graveyard_of(source.controller)
+
+
+def _cda_owned_exile(source: CardState, context: LayerContext) -> tuple[CardState, ...]:
+    """Every card in exile `source`'s controller owns (CR 108.3)."""
+    return tuple(card for card in context.exile if (card.owner or None) == source.controller)
+
+
+def _cda_board_count(
+    quality: _CdaQuality, who: str, measure: str, counter: str | None = None
+) -> CdaCountFactory:
+    scope = {"you control": "you", "your opponents control": "opponents"}.get(who, "any")
+    count = CountBoardWhere(
+        scope=scope,
+        types_any=quality.types_any,
+        types_none=quality.types_none,
+        subtypes_any=quality.subtypes_any,
+        nonbasic=quality.nonbasic,
+        colorless=quality.colorless,
+        measure=measure,
+        counter=counter,
+    )
+    return lambda source, context: count
+
+
+@functools.lru_cache(maxsize=1024)
+def _cda_base_count(phrase: str) -> CdaCountFactory | None:
+    """One count phrase ("the number of instant and sorcery cards in your
+    graveyard", "your devotion to red", "the greatest mana value among
+    artifacts you control", ...) as the factory of its `Count`, or `None` for
+    wording it does not read.
+
+    Counts of cards in a pile off the battlefield (a graveyard, exile) are
+    read when the effect is built into a `FixedCount` - the layer engine never
+    sees those zones, and the board is rebuilt on every CR 613.5 computation,
+    so the value tracks the pile live. Counts of permanents are `Count`s over
+    the board as it stands in sublayer 7a, so a land that became an Island in
+    layer 4 counts (CR 613.4a).
+    """
+    if _CDA_PARTY_RE.fullmatch(phrase):
+        return lambda source, context: CountParty()
+    if _CDA_DRAWN_RE.fullmatch(phrase):
+        return lambda source, context: FixedCount(
+            value=context.cards_drawn_this_turn.get(source.controller or "", 0)
+        )
+    if _CDA_DOMAIN_RE.fullmatch(phrase):
+        return lambda source, context: count_basic_land_types_among_lands_controlled_by(
+            source.controller
+        )
+    if match := _CDA_DEVOTION_RE.fullmatch(phrase):
+        words = [word for word in re.findall(r"[a-z]+", match.group("colors")) if word != "and"]
+        if not words or any(word not in _COLOR_WORDS for word in words):
+            return None
+        colors = tuple(_COLOR_WORDS[word] for word in words)
+        return lambda source, context: CountDevotion(
+            colors=colors, mana_costs=tuple(context.mana_cost_by_id.items())
+        )
+    if match := _CDA_CARD_TYPES_AMONG_RE.fullmatch(phrase):
+        where = match.group("where")
+        return lambda source, context: FixedCount(
+            value=count_card_types(_cda_pile(where, source, context))
+        )
+    if match := _CDA_OWN_IN_EXILE_RE.fullmatch(phrase):
+        quality = (
+            _cda_quality(match.group("quality"))
+            if match.group("quality")
+            else _CdaQuality((), (), (), False, False)
+        )
+        if quality is None:
+            return None
+        with_graveyard = match.group("and_graveyard") is not None
+
+        def exile_count(source: CardState, context: LayerContext) -> Count:
+            cards = list(_cda_owned_exile(source, context))
+            if with_graveyard:
+                cards.extend(context.graveyard_of(source.controller))
+            return FixedCount(value=sum(1 for card in cards if _cda_card_matches(quality, card)))
+
+        return exile_count
+    if match := _CDA_CARDS_IN_GRAVEYARD_RE.fullmatch(phrase):
+        quality = (
+            _cda_quality(match.group("quality"))
+            if match.group("quality")
+            else _CdaQuality((), (), (), False, False)
+        )
+        if quality is None:
+            return None
+        where = match.group("where")
+        return lambda source, context: FixedCount(
+            value=sum(
+                1 for card in _cda_pile(where, source, context) if _cda_card_matches(quality, card)
+            )
+        )
+    if match := _CDA_GREATEST_GRAVEYARD_RE.fullmatch(phrase):
+        where = match.group("where")
+        return lambda source, context: FixedCount(
+            value=max(
+                (int(card.mana_value) for card in _cda_pile(where, source, context)), default=0
+            )
+        )
+    if match := _CDA_GREATEST_BOARD_RE.fullmatch(phrase):
+        quality = _cda_quality(match.group("quality"))
+        if quality is None:
+            return None
+        measure = "greatest_" + match.group("measure").replace(" ", "_")
+        return _cda_board_count(quality, match.group("who"), measure)
+    if match := _CDA_COUNTERS_RE.fullmatch(phrase):
+        quality = _cda_quality(match.group("quality"))
+        if quality is None:
+            return None
+        return _cda_board_count(quality, match.group("who"), "counters", match.group("counter"))
+    if match := _CDA_BOARD_COUNT_RE.fullmatch(phrase):
+        quality = _cda_quality(match.group("quality"))
+        if quality is None:
+            return None
+        return _cda_board_count(quality, match.group("who"), "count")
+    return None
+
+
+@functools.lru_cache(maxsize=1024)
+def _cda_value(phrase: str) -> tuple[CdaCountFactory, int] | None:
+    """A CDA value phrase as `(count factory, constant added to it)`: the
+    count phrase alone, "1 plus the number of ...", or "... plus/minus N"."""
+    text = phrase.strip().rstrip(".").lower()
+    offset = 0
+    if match := _CDA_OFFSET_PREFIX_RE.fullmatch(text):
+        offset, text = int(match.group("n")), match.group("rest")
+    elif match := _CDA_OFFSET_SUFFIX_RE.fullmatch(text):
+        sign = 1 if match.group("op") == "plus" else -1
+        offset, text = sign * int(match.group("n")), match.group("rest")
+    factory = _cda_base_count(text)
+    return None if factory is None else (factory, offset)
+
+
+_CDA_THAT_NUMBER_RE = re.compile(r"^that number(?: (?P<op>plus|minus) (?P<n>\d+))?$", re.IGNORECASE)
+
+
+def _cda_general_builder(
+    line: str,
+    power: tuple[CdaCountFactory, int] | None,
+    toughness: tuple[CdaCountFactory, int] | None,
+    *,
+    shared: bool,
+) -> EffectBuilder:
+    """The CDA sentence `_CDA_SENTENCE_RE` read, as sublayer 7a effects
+    (CR 613.4a): *defining*, never adding (CR 604.3, CR 208.2a), only the
+    half(s) the sentence names - a printed `2` toughness is no `*` and is left
+    alone. `shared` is "that number plus N" / "each equal to": one count
+    defines both halves."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        def effect(description: str, modification: Modification) -> ContinuousEffect:
+            return ContinuousEffect(
+                description=f"{source.name}: {description}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                characteristic_defining=True,
+                selector=_only(source.id),
+                modification=modification,
+            )
+
+        if shared and power is not None and toughness is not None:
+            count = power[0](source, context)
+            return [
+                effect(
+                    "P/T defined by a characteristic-defining ability",
+                    define_power_toughness(count, power[1], toughness[1]),
+                )
+            ]
+        effects = []
+        if power is not None:
+            effects.append(
+                effect("power defined", define_power(power[0](source, context), power[1]))
+            )
+        if toughness is not None:
+            effects.append(
+                effect(
+                    "toughness defined",
+                    define_toughness(toughness[0](source, context), toughness[1]),
+                )
+            )
+        return effects
+
+    return builder
+
+
+def _cda_general_sentence_builder(sentence: str) -> EffectBuilder | None:
+    """`parsed_layer_effects`' reader for `_CDA_SENTENCE_RE`, failing closed
+    (`None`) on any value phrase `_cda_value` cannot read."""
+    if "equal to" not in sentence.lower():
+        return None
+    match = _CDA_SENTENCE_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    first = _cda_value(match.group("first"))
+    if first is None:
+        return None
+    if match.group("each") is not None:
+        return _cda_general_builder(sentence, first, first, shared=True)
+    stat = match.group("stat").lower()
+    second_stat = (match.group("second_stat") or "").lower()
+    if not second_stat:
+        pair = (first, None) if stat == "power" else (None, first)
+        return _cda_general_builder(sentence, *pair, shared=False)
+    if second_stat == stat:
+        return None
+    that = _CDA_THAT_NUMBER_RE.fullmatch(match.group("second").strip().rstrip("."))
+    if that is not None:
+        sign = -1 if (that.group("op") or "").lower() == "minus" else 1
+        derived = (first[0], sign * int(that.group("n") or 0))
+        pair = (first, derived) if stat == "power" else (derived, first)
+        return _cda_general_builder(sentence, *pair, shared=True)
+    second = _cda_value(match.group("second"))
+    if second is None:
+        return None
+    pair = (first, second) if stat == "power" else (second, first)
+    return _cda_general_builder(sentence, *pair, shared=False)
+
+
 def _attached_creature_static_builder(
     power: int,
     toughness: int,
@@ -11038,6 +11397,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
                 count,
                 power_only=match.group("stats").lower() == "power is",
             )
+    if (cda_builder := _cda_general_sentence_builder(sentence)) is not None:
+        return cda_builder
     if match := _ATTACHED_CREATURE_PUMP_AND_QUOTED_RE.fullmatch(sentence):
         keywords = []
         if match.group("keywords") is not None:
@@ -12158,12 +12519,15 @@ from .model import (  # noqa: E402
     CopySublayer,
     Count,
     CountAttachedWithSubtype,
+    CountBoardWhere,
     CountColorsAmongControlledBy,
     CountControlledAndGraveyardCards,
     CountCountersOnIt,
     CountCountersOnObject,
     CountCreaturesWithSubtypesControlledBy,
+    CountDevotion,
     CountOtherCreaturesLikeThatOne,
+    CountParty,
     CountPermanentsControlledBy,
     CountPermanentsControlledByItsController,
     CountPermanentsWithSubtypeControlledBy,
@@ -12216,6 +12580,7 @@ from .model import (  # noqa: E402
     creatures_controlled_by_with_subtype,
     define_power,
     define_power_toughness,
+    define_toughness,
     every_creature,
     every_land,
     grant_ability,

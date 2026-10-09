@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "a8232acd-4645-489c-8cf1-4efdc75d9322",
+  "oracle_id": "481fb71a-11b9-462e-a4da-ca35ffd1bd22",
+  "multiverse_ids": [
+    559847
+  ],
+  "tcgplayer_id": 269339,
+  "cardmarket_id": 652859,
+  "name": "Squee, the Immortal",
+  "lang": "en",
+  "released_at": "2022-04-29",
+  "uri": "https://api.scryfall.com/cards/a8232acd-4645-489c-8cf1-4efdc75d9322",
+  "scryfall_uri": "https://scryfall.com/card/ncc/275/squee-the-immortal?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:14:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.jpg?1783923257",
+    "normal": "https://cards.scryfall.io/normal/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.jpg?1783923257",
+    "large": "https://cards.scryfall.io/large/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.jpg?1783923257",
+    "png": "https://cards.scryfall.io/png/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.png?1783923257",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.jpg?1783923257",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.jpg?1783923257",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.webp?1783923257",
+    "grid": "https://cards.scryfall.io/grid/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.webp?1783923257",
+    "display": "https://cards.scryfall.io/display/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.webp?1783923257",
+    "art": "https://cards.scryfall.io/art/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.webp?1783923257",
+    "crop": "https://cards.scryfall.io/crop/front/a/8/a8232acd-4645-489c-8cf1-4efdc75d9322.webp?1783923257"
+  },
+  "mana_cost": "{1}{R}{R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Goblin",
+  "oracle_text": "You may cast this card from your graveyard or from exile.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "c51de34b-d4d6-4179-a432-573744ded119",
+  "set": "ncc",
+  "set_name": "New Capenna Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/c51de34b-d4d6-4179-a432-573744ded119",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ancc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ncc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a8232acd-4645-489c-8cf1-4efdc75d9322/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A481fb71a-11b9-462e-a4da-ca35ffd1bd22&unique=prints",
+  "collector_number": "275",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"You gotta be pretty smart to live long as me, but not being able to die helps.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Svetlin Velinov",
+  "artist_ids": [
+    "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
+  ],
+  "illustration_id": "3cf292f8-161b-48bd-aa74-f8e3783e80c2",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 2273,
+  "penny_rank": 7505,
+  "prices": {
+    "usd": "1.57",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.42",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=559847&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSquee%252C%2Bthe%2BImmortal",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSquee%252C%2Bthe%2BImmortal",
+    "edhrec": "https://edhrec.com/route/?cc=Squee%2C+the+Immortal"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269339%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=652859&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Squee%2C+the+Immortal&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

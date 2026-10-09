@@ -948,6 +948,7 @@ class ContinuousMixin:
             hand_size_by_player={
                 player.username: len(player.hand) for player in self.players_in_game
             },
+            cards_drawn_this_turn=dict(self.cards_drawn_this_turn),
             # CR 702.195b's enduring story, which "As long as you have an
             # enduring story, ..." statics read off their controller.
             enduring_story_players=frozenset(

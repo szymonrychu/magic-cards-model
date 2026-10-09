@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "3ee3945e-5089-4751-b7b3-5961c39d2a33",
+  "oracle_id": "040cbd8a-a9e5-454b-a5ae-9b66bb66b8e9",
+  "multiverse_ids": [
+    662255
+  ],
+  "mtgo_id": 126223,
+  "arena_id": 90952,
+  "tcgplayer_id": 548576,
+  "cardmarket_id": 768041,
+  "name": "Nethergoyf",
+  "lang": "en",
+  "released_at": "2024-06-14",
+  "uri": "https://api.scryfall.com/cards/3ee3945e-5089-4751-b7b3-5961c39d2a33",
+  "scryfall_uri": "https://scryfall.com/card/mh3/103/nethergoyf?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:54:37Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.jpg?1783911277",
+    "normal": "https://cards.scryfall.io/normal/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.jpg?1783911277",
+    "large": "https://cards.scryfall.io/large/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.jpg?1783911277",
+    "png": "https://cards.scryfall.io/png/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.png?1783911277",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.jpg?1783911277",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.jpg?1783911277",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.webp?1783911277",
+    "grid": "https://cards.scryfall.io/grid/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.webp?1783911277",
+    "display": "https://cards.scryfall.io/display/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.webp?1783911277",
+    "art": "https://cards.scryfall.io/art/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.webp?1783911277",
+    "crop": "https://cards.scryfall.io/crop/front/3/e/3ee3945e-5089-4751-b7b3-5961c39d2a33.webp?1783911277"
+  },
+  "mana_cost": "{B}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Lhurgoyf",
+  "oracle_text": "Nethergoyf's power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus 1.\nEscape\u2014{2}{B}, Exile any number of other cards from your graveyard with four or more card types among them. (You may cast this card from your graveyard for its escape cost.)",
+  "power": "*",
+  "toughness": "1+*",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Escape"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set": "mh3",
+  "set_name": "Modern Horizons 3",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3ee3945e-5089-4751-b7b3-5961c39d2a33/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A040cbd8a-a9e5-454b-a5ae-9b66bb66b8e9&unique=prints",
+  "collector_number": "103",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Xavier Ribeiro",
+  "artist_ids": [
+    "e17c2662-0491-47b2-bf1d-8c111a8ad3f8"
+  ],
+  "illustration_id": "bb6cb876-531b-452a-b1cf-87eeb977d5ca",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 9573,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/news/announcements/the-modern-horizons-3-leaks-nulldrifters-and-you",
+    "previewed_at": "2024-04-30"
+  },
+  "prices": {
+    "usd": "5.28",
+    "usd_foil": "5.60",
+    "usd_etched": null,
+    "eur": "6.68",
+    "eur_foil": "8.61",
+    "tix": "3.80"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=662255&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNethergoyf",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNethergoyf",
+    "edhrec": "https://edhrec.com/route/?cc=Nethergoyf"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F548576%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=768041&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/126223?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

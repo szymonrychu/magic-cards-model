@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "06659985-c6eb-4281-8ff5-8bda7d252f44",
+  "oracle_id": "927fb139-0493-48be-8cc4-2c7d854d6a55",
+  "multiverse_ids": [],
+  "tcgplayer_id": 217336,
+  "cardmarket_id": 476214,
+  "name": "Radha, Heart of Keld",
+  "lang": "en",
+  "released_at": "2020-07-03",
+  "uri": "https://api.scryfall.com/cards/06659985-c6eb-4281-8ff5-8bda7d252f44",
+  "scryfall_uri": "https://scryfall.com/card/pm21/224s/radha-heart-of-keld?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:15:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.jpg?1783930532",
+    "normal": "https://cards.scryfall.io/normal/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.jpg?1783930532",
+    "large": "https://cards.scryfall.io/large/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.jpg?1783930532",
+    "png": "https://cards.scryfall.io/png/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.png?1783930532",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.jpg?1783930532",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.jpg?1783930532",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.webp?1783930532",
+    "grid": "https://cards.scryfall.io/grid/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.webp?1783930532",
+    "display": "https://cards.scryfall.io/display/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.webp?1783930532",
+    "art": "https://cards.scryfall.io/art/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.webp?1783930532",
+    "crop": "https://cards.scryfall.io/crop/front/0/6/06659985-c6eb-4281-8ff5-8bda7d252f44.webp?1783930532"
+  },
+  "mana_cost": "{1}{R}{G}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Elf Warrior",
+  "oracle_text": "During your turn, Radha has first strike.\nYou may look at the top card of your library any time, and you may play lands from the top of your library.\n{4}{R}{G}: Radha gets +X/+X until end of turn, where X is the number of lands you control.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": false,
+  "finishes": [
+    "foil"
+  ],
+  "oversized": false,
+  "promo": true,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d4474b31-acac-4d3b-9baa-b596f829070b",
+  "set": "pm21",
+  "set_name": "Core Set 2021 Promos",
+  "set_type": "promo",
+  "set_uri": "https://api.scryfall.com/sets/d4474b31-acac-4d3b-9baa-b596f829070b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Apm21&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/pm21?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/06659985-c6eb-4281-8ff5-8bda7d252f44/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A927fb139-0493-48be-8cc4-2c7d854d6a55&unique=prints",
+  "collector_number": "224s",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rahn",
+  "artist_ids": [
+    "7742047e-0f80-4c0f-a530-d07460165e86"
+  ],
+  "illustration_id": "83d214b5-1749-4cea-af12-6dcc342b22c5",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "prerelease",
+    "datestamped"
+  ],
+  "edhrec_rank": 8282,
+  "penny_rank": 2287,
+  "prices": {
+    "usd": null,
+    "usd_foil": "2.08",
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": "1.33",
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRadha%252C%2BHeart%2Bof%2BKeld",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRadha%252C%2BHeart%2Bof%2BKeld",
+    "edhrec": "https://edhrec.com/route/?cc=Radha%2C+Heart+of+Keld"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F217336%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=476214&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Radha%2C+Heart+of+Keld&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

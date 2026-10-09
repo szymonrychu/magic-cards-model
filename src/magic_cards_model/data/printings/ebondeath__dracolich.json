@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "e6b3f460-92ba-4af0-aad9-cf86615d4177",
+  "oracle_id": "1a6fce11-e77c-41f1-9ff7-9a93b18071db",
+  "multiverse_ids": [
+    527387
+  ],
+  "mtgo_id": 91702,
+  "arena_id": 77205,
+  "tcgplayer_id": 243073,
+  "cardmarket_id": 571091,
+  "name": "Ebondeath, Dracolich",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/e6b3f460-92ba-4af0-aad9-cf86615d4177",
+  "scryfall_uri": "https://scryfall.com/card/afr/100/ebondeath-dracolich?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:08:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.jpg?1783926497",
+    "normal": "https://cards.scryfall.io/normal/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.jpg?1783926497",
+    "large": "https://cards.scryfall.io/large/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.jpg?1783926497",
+    "png": "https://cards.scryfall.io/png/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.png?1783926497",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.jpg?1783926497",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.jpg?1783926497",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.webp?1783926497",
+    "grid": "https://cards.scryfall.io/grid/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.webp?1783926497",
+    "display": "https://cards.scryfall.io/display/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.webp?1783926497",
+    "art": "https://cards.scryfall.io/art/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.webp?1783926497",
+    "crop": "https://cards.scryfall.io/crop/front/e/6/e6b3f460-92ba-4af0-aad9-cf86615d4177.webp?1783926497"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Zombie Dragon",
+  "oracle_text": "Flash\nFlying\nEbondeath enters tapped.\nYou may cast this card from your graveyard if a creature not named Ebondeath, Dracolich died this turn.",
+  "power": "5",
+  "toughness": "2",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Flying",
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set": "afr",
+  "set_name": "Adventures in the Forgotten Realms",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aafr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/afr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e6b3f460-92ba-4af0-aad9-cf86615d4177/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1a6fce11-e77c-41f1-9ff7-9a93b18071db&unique=prints",
+  "collector_number": "100",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lars Grant-West",
+  "artist_ids": [
+    "21ed6499-c4d3-4965-ab02-6c7228275bec"
+  ],
+  "illustration_id": "1f889639-f9b7-4dc6-b574-ad8afbba53ed",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 6911,
+  "penny_rank": 2037,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://dnd.dragonmag.com/2021/06/28/magic-the-gathering-adventures-in-the-forgotten-realms-exclusive-card-reveals/content.html",
+    "previewed_at": "2021-06-29"
+  },
+  "prices": {
+    "usd": "4.29",
+    "usd_foil": "4.24",
+    "usd_etched": null,
+    "eur": "4.22",
+    "eur_foil": "4.04",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=527387&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEbondeath%252C%2BDracolich",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEbondeath%252C%2BDracolich",
+    "edhrec": "https://edhrec.com/route/?cc=Ebondeath%2C+Dracolich"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243073%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=571091&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/91702?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
