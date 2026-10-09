@@ -21,6 +21,7 @@ from ...numbers import COUNT, parse_count
 from ..chosen_type import RESTRICTED_TRIBAL_TYPES, matches_restricted_creature_type_choice
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import ReflexiveExileCopiedCard
+from ..keyword_counters import enters_count_reader
 
 if TYPE_CHECKING:
     from ...models.game import Game
@@ -2615,7 +2616,9 @@ def _self_enters_modifiers(
             # leaves `amount` None, skips the counters, and says so.
             from ..effects import UnreadableCounterAmountNotice, amount_expression
 
-            reader = amount_expression(effect.amount_expression)
+            reader = amount_expression(effect.amount_expression) or enters_count_reader(
+                effect.amount_expression
+            )
             if reader is None:
                 game.unreadable_counter_amount_notices.append(
                     UnreadableCounterAmountNotice(
@@ -2971,7 +2974,10 @@ def self_enters_effects_read(card: Card, effects: Sequence[ReplacementEffect]) -
         if effect.amount_expression is not None:
             if _TIMES_KICKED_RE.match(effect.amount_expression):
                 continue  # CR 702.33d: `_kicked_count`.
-            if amount_expression(effect.amount_expression) is None:
+            if (
+                amount_expression(effect.amount_expression) is None
+                and enters_count_reader(effect.amount_expression) is None
+            ):
                 return False
             continue
         if not effect.variable_amount:

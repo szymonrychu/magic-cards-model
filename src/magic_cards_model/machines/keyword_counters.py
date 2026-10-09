@@ -223,3 +223,271 @@ def conditional_group_keyword_grant_of_line(
         match.group("subtype").strip(),
         match.group("keyword").strip().lower(),
     )
+
+
+# -- "enters with a counter for each <description>" counts (CR 614.1c) ------
+#
+# `enters_count_reader` turns the description after "for each" of an
+# "enters with" line into a reader evaluated as the permanent enters (CR
+# 614.12): `(game, controller, entering, x) -> int`. The shared
+# `machines/effects.amount_expression` reads the "the number of <plural>"
+# phrasing; these printings say "for each other Kithkin you control", so the
+# singular description is first re-phrased into that plural form, and the
+# shapes `amount_expression` has no term for (counters on other creatures,
+# spells cast by anyone, mana spent, distinct mana costs, ...) are read here.
+
+_PERMANENT_TYPES = {
+    "creature": "creature",
+    "artifact": "artifact",
+    "land": "land",
+    "planeswalker": "planeswalker",
+    "enchantment": "enchantment",
+    "permanent": None,
+}
+_COLOR_LETTERS = {"white": "W", "blue": "U", "black": "B", "red": "R", "green": "G"}
+_BOARD_COUNT_RE = re.compile(
+    r"^(?P<other>other )?(?P<nontoken>nontoken )?(?P<color>white |blue |black |red |green )?"
+    r"(?P<kinds>[a-z][a-z-]*(?: and/or [a-z][a-z-]*)?)"
+    r" you (?:already )?control(?P<counter> with an? \+1/\+1 counter on (?:it|them))?$"
+)
+_GRAVEYARD_COUNT_RE = re.compile(
+    r"^(?P<kinds>[a-z][a-z-]*) cards? in (?P<whose>your|all) graveyards?$"
+)
+_SPLIT_TERMS_RE = re.compile(
+    r" and (?:an? \+1/\+1 counter on it )?for each | and each ", re.IGNORECASE
+)
+
+
+def _characteristics(game, permanent):
+    return game.computed_board().of(permanent)
+
+
+def _kind_matcher(word: str):
+    """A predicate over computed characteristics for one type or subtype
+    word as printed ("creature", "artifact", "Kithkin"), or `None`."""
+    from ..models.card import Type
+
+    lowered = word.lower()
+    if lowered in _PERMANENT_TYPES:
+        wanted = _PERMANENT_TYPES[lowered]
+        if wanted is None:
+            return lambda chars: True
+        return lambda chars: Type(wanted) in chars.types
+    from ..data.creature_types import creature_types
+
+    for subtype in creature_types():
+        if subtype.lower() == lowered or f"{subtype.lower()}s" == lowered:
+            return lambda chars, subtype=subtype: subtype in chars.subtypes
+    return None
+
+
+def _board_count_term(original: str, text: str):
+    match = _BOARD_COUNT_RE.match(text)
+    if match is None:
+        return None
+    matchers = [_kind_matcher(word) for word in match.group("kinds").split(" and/or ")]
+    if any(matcher is None for matcher in matchers):
+        return None
+    letter = _COLOR_LETTERS.get((match.group("color") or "").strip())
+    other, nontoken = match.group("other"), match.group("nontoken")
+    with_counter = match.group("counter") is not None
+
+    def count(game, controller, entering, _x):
+        from ..models.card import Color
+
+        total = 0
+        for permanent in game.permanents_controlled_by(controller):
+            if other and permanent.id == entering.id:
+                continue
+            if nontoken and permanent.token:
+                continue
+            chars = _characteristics(game, permanent)
+            if not any(matcher(chars) for matcher in matchers):
+                continue
+            if letter is not None and Color(letter) not in chars.colors:
+                continue
+            if with_counter and not permanent.counters.get("+1/+1", 0):
+                continue
+            total += 1
+        return total
+
+    return count
+
+
+def _graveyard_count_term(text: str):
+    match = _GRAVEYARD_COUNT_RE.match(text)
+    if match is None:
+        return None
+    matcher = _kind_matcher(match.group("kinds"))
+    if matcher is None:
+        return None
+    everyone = match.group("whose") == "all"
+
+    def count(game, controller, entering, _x):
+        players = game.players if everyone else [game.player(controller)]
+        return sum(
+            1 for player in players for card in player.graveyard if matcher(_FakeChars(card))
+        )
+
+    return count
+
+
+class _FakeChars:
+    """Printed characteristics of a card in a graveyard (CR 109.3), shaped
+    like the computed characteristics `_kind_matcher` predicates read."""
+
+    def __init__(self, card: CardState) -> None:
+        self.types = tuple(card.types)
+        self.subtypes = tuple(card.card.subtypes)
+
+
+def _spent_total(game, entering) -> int:
+    record = game.cast_record_of(entering)
+    return sum(record.mana_spent.values()) if record is not None else 0
+
+
+def _other_spells_cast(game, controller, entering, _x) -> int:
+    total = sum(len(spells) for spells in game.spells_cast_this_turn.values())
+    own = any(
+        spell.id == entering.id
+        for spells in game.spells_cast_this_turn.values()
+        for spell in spells
+    )
+    return max(total - (1 if own else 0), 0)
+
+
+def _loyalty_on_planeswalkers(game, controller, entering, _x) -> int:
+    from ..models.card import Type
+
+    return sum(
+        permanent.counters.get("loyalty", 0)
+        for permanent in game.permanents_controlled_by(controller)
+        if Type.PLANESWALKER in _characteristics(game, permanent).types
+    )
+
+
+def _different_mana_costs(game, controller, entering, _x) -> int:
+    from ..models.card import Type
+
+    return len(
+        {
+            str(card.card.mana_cost)
+            for card in game.player(controller).graveyard
+            if Type.LAND not in card.types
+        }
+    )
+
+
+def _greatest_creature_count(game, controller, entering, _x) -> int:
+    from ..models.card import Type
+
+    return max(
+        (
+            sum(
+                1
+                for permanent in game.permanents_controlled_by(player.username)
+                if Type.CREATURE in _characteristics(game, permanent).types
+            )
+            for player in game.players_in_game
+        ),
+        default=0,
+    )
+
+
+def _opponents_who_lost_life(game, controller, entering, _x) -> int:
+    return sum(
+        1
+        for player in game.players_in_game
+        if player.username != controller and player.life_lost_this_turn > 0
+    )
+
+
+def _treasure_mana_spent(game, controller, entering, _x) -> int:
+    record = game.cast_record_of(entering)
+    return record.treasure_mana_spent if record is not None else 0
+
+
+def _chosen_type_count(game, controller, entering, _x) -> int:
+    from ..models.card import Type
+
+    chosen = getattr(entering.choice, "value", entering.choice)
+    if not chosen:
+        return 0
+    return sum(
+        1
+        for permanent in game.permanents_controlled_by(controller)
+        if permanent.id != entering.id
+        and Type.CREATURE in _characteristics(game, permanent).types
+        and chosen in _characteristics(game, permanent).subtypes
+    )
+
+
+def _chosen_opponent_creatures(game, controller, entering, _x) -> int:
+    from ..models.card import Type
+
+    chosen = getattr(entering.choice, "value", entering.choice)
+    return sum(
+        1
+        for permanent in game.permanents_controlled_by(str(chosen))
+        if Type.CREATURE in _characteristics(game, permanent).types
+    )
+
+
+_FIXED_COUNT_TERMS = {
+    "creature that died this turn": lambda game, c, e, x: game.creatures_died_this_turn,
+    "other spell cast this turn": _other_spells_cast,
+    "loyalty counter on planeswalkers you control": _loyalty_on_planeswalkers,
+    "different mana cost among nonland cards in your graveyard": _different_mana_costs,
+    "greatest number of creatures a player controls": _greatest_creature_count,
+    "opponent who lost life this turn": _opponents_who_lost_life,
+    "mana spent to cast it": lambda game, c, e, x: _spent_total(game, e),
+    "mana from a treasure spent to cast them": _treasure_mana_spent,
+    "creature you control of the chosen type": _chosen_type_count,
+    "creature that player controls": _chosen_opponent_creatures,
+}
+
+
+def _pluralised_variants(text: str):
+    yield text
+    words = text.split(" ")
+    for index, word in enumerate(words):
+        if word in {"other", "you", "control", "already", "in", "of", "the", "a", "an"}:
+            continue
+        for suffix in ("s", "es"):
+            yield " ".join([*words[:index], word + suffix, *words[index + 1 :]])
+
+
+def _one_term(description: str):
+    text = " ".join(description.strip().rstrip(".").split())
+    lowered = text.lower()
+    for article in ("the amount of ", "the number of ", "the "):
+        if lowered.startswith(article):
+            lowered = lowered[len(article) :]
+            break
+    fixed = _FIXED_COUNT_TERMS.get(lowered)
+    if fixed is not None:
+        return fixed
+    term = _board_count_term(text, lowered) or _graveyard_count_term(lowered)
+    if term is not None:
+        return term
+    from .effects import amount_expression
+
+    prefix = "" if lowered.startswith(("the ", "a ")) else "the number of "
+    for variant in _pluralised_variants(text):
+        reader = amount_expression(prefix + variant)
+        if reader is not None:
+            return reader
+    return None
+
+
+def enters_count_reader(description: str):
+    """The reader for a "for each `<description>`" count evaluated as the
+    permanent enters, or `None` when any term of it is not one this engine
+    can count (the caller then fails closed with a notice)."""
+    terms = [_one_term(part) for part in _SPLIT_TERMS_RE.split(description.strip())]
+    if not terms or any(term is None for term in terms):
+        return None
+    readers = [term for term in terms if term is not None]
+    return lambda game, controller, entering, x: sum(
+        reader(game, controller, entering, x) for reader in readers
+    )

@@ -56,7 +56,9 @@ def _stage(printing: Card, *, rich: bool, record: CastRecord | None) -> tuple[Ga
                 zone=Zone.BATTLEFIELD,
                 controller="sweep_you",
                 owner="sweep_you",
-                counters=Counters({Counter.PLUS_ONE: 1}) if Type.CREATURE in card.types else Counters(),
+                counters=Counters({Counter.PLUS_ONE: 1})
+                if Type.CREATURE in card.types
+                else Counters(),
             )
             permanent.bind_to_game(game)
             game.battlefield.append(permanent)
@@ -97,7 +99,9 @@ def _line_effects(printing: Card, text: str):
     ]
 
 
-def reads_static_line(printing: Card, text: str, *, card_name: str | None = None, legendary: bool = False) -> bool:
+def reads_static_line(
+    printing: Card, text: str, *, card_name: str | None = None, legendary: bool = False
+) -> bool:
     lowered = text.lower()
     if "counter" not in lowered or not ("enter" in lowered or "escape" in lowered):
         return False
@@ -107,7 +111,9 @@ def reads_static_line(printing: Card, text: str, *, card_name: str | None = None
     pending = {effect.text.strip() for effect in effects}
     for game, state in _stagings(printing):
         try:
-            labels = " ".join(label for _suffix, _apply, label, _copy in _self_enters_modifiers(game, state))
+            labels = " ".join(
+                label for _suffix, _apply, label, _copy in _self_enters_modifiers(game, state)
+            )
         except Exception:
             continue
         pending = {sentence for sentence in pending if sentence not in labels}
