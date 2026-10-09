@@ -537,6 +537,37 @@ def _parse_that_player_mills_that_many_clause(
     return effect
 
 
+#: Ingest's "that player exiles the top card of their library" (CR 702.115a):
+#: the anaphor is the player the trigger event names - the one dealt combat
+#: damage (CR 607.1) - not the ability's controller.
+_THAT_PLAYER_EXILES_TOP_CARD_RE = re.compile(
+    r"^that player exiles the top card of their library\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
+def _parse_that_player_exiles_top_card_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_THAT_PLAYER_EXILES_TOP_CARD_RE`'s shape, or `None`."""
+    if for_spell:
+        return None
+    if _THAT_PLAYER_EXILES_TOP_CARD_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object) or stack_object.event is None:
+            return
+        username = stack_object.event.player
+        if username is None:
+            return
+        library = game.player(username).library
+        if library:
+            game.exile_cards([library[0]])
+
+    return effect
+
+
 def put_ability_targets_on_bottom_of_owners_library(
     game: "Game", stack_object: "StackObject"
 ) -> None:

@@ -537,3 +537,27 @@ def test_a_creature_card_off_the_battlefield_has_its_cda_power_and_toughness(zon
     state = scenario.find("Lhurgoyf", Zone(zone), "alice" if zone != "exile" else None)
     chars = scenario.game.characteristics_of(state)
     assert (chars.power, chars.toughness) == expected
+
+
+# --- Vile Aggregate's Ingest (CR 702.115a) -----------------------------------
+
+
+def test_ingest_exiles_the_top_card_of_the_damaged_players_library():
+    scenario = build(
+        alice={"battlefield": ["Vile Aggregate"], "library": ["Forest"] * 4},
+        bob={"library": ["Island", "Swamp", "Swamp", "Swamp"]},
+    )
+    aggregate = scenario.creature("Vile Aggregate", "alice")
+    aggregate.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(aggregate)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    while scenario.game.stack or scenario.game.pending_triggers:
+        scenario.game.put_triggers_on_stack()
+        if scenario.game.stack:
+            scenario.resolve_top()
+    exiled = [c for c in scenario.game.exile if c.name == "Island"]
+    assert len(exiled) == 1
+    assert len(scenario.player("bob").library) == 3
+    assert scenario.player("alice").library and len(scenario.player("alice").library) == 4
