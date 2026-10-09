@@ -1738,7 +1738,7 @@ class TriggersDecisionsMixin:
         if not answer:
             return False
         if amount > 0:
-            self.lose_life(player, amount)
+            self.lose_life(player, amount, payment=True)  # CR 119.4
         return True
 
     def may_pay_energy(
@@ -1913,7 +1913,7 @@ class TriggersDecisionsMixin:
             return False
         self._pay_mana_while_resolving(player, cost, sources, prompt=full_prompt, spend=spend)
         if life > 0:
-            self.lose_life(player, life)
+            self.lose_life(player, life, payment=True)  # CR 119.4
         return True
 
     def _may_pay_mana_while_resolving(

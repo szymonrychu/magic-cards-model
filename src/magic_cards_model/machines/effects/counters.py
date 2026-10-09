@@ -3950,7 +3950,10 @@ def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
         )
         x_value = stack_object.x_value if isinstance(stack_object, AbilityOnStack) else 0
         times = times_reader(game, controller.username, None, x_value or 0) if times_reader else 1
-        for _ in range(max(times, 0)):
+        # CR 614.1a: each proliferate is its own event (Tekuthal: "proliferate
+        # twice instead"), and each of the resulting ones is its own choice.
+        repeats = sum(game.proliferation_count(controller.username) for _ in range(max(times, 0)))
+        for _ in range(repeats):
             candidates = [
                 state
                 for state in game.battlefield

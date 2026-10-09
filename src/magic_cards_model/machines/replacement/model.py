@@ -436,6 +436,22 @@ class EventKind(StrEnum):
     #: (see `happens` below) - the same shape `DESTROY` already uses for a
     #: yes/no event with nothing to scale.
     LOSE_THE_GAME = "lose_the_game"
+    #: A player is about to search their library (CR 701.23a): `search_limit`
+    #: is how many cards from the top they may look at (Aven Mindcensor).
+    SEARCH = "search"
+    #: A player is about to mill cards (CR 701.17a): `amount` is how many.
+    MILL = "mill"
+    #: A player is about to flip coins (CR 705.1, 614.1a): `amount` coins are
+    #: flipped and `ignore` of them are ignored (Krark's Thumb).
+    FLIP_COIN = "flip_coin"
+    #: A player is about to proliferate (CR 701.34a): `amount` times.
+    PROLIFERATE = "proliferate"
+    #: A permanent is about to explore (CR 701.44a): `card` explores for
+    #: `player`, who controls it.
+    EXPLORE = "explore"
+    #: A player is about to roll dice (CR 706.2): `amount` dice, `ignore` of the
+    #: lowest rolls ignored (Pixie Guide).
+    ROLL_DICE = "roll_dice"
 
 
 @dataclass
@@ -632,6 +648,18 @@ class ReplaceableEvent:
     #: lands: "top" or "bottom" (CR 401.4 leaves a pile put on the bottom in
     #: any order), `None` for the shuffle-it-in default (CR 701.24c).
     library_position: Literal["top", "bottom"] | None = None
+
+    #: `SEARCH`: how many cards from the top of the library may be searched,
+    #: `None` for the whole library (CR 701.23a, Aven Mindcensor).
+    search_limit: int | None = None
+    #: `FLIP_COIN` / `ROLL_DICE`: how many of the flips or rolls are ignored
+    #: (CR 705.1, 706.2; Krark's Thumb ignores a losing flip, Pixie Guide the lowest roll).
+    ignore: int = 0
+    #: True for a `LOSE_LIFE` that is the payment of a cost or of "you may pay N
+    #: life" (CR 118.3b, 119.4) rather than an effect's "you lose N life".
+    payment: bool = False
+    #: The card whose cycling ability caused a `DRAW` (CR 702.29a), else `None`.
+    cycled_card: CardState | None = None
 
     #: A `DESTROY` that a replacement effect called off (CR 614.8, CR 701.8c).
     #: The destruction simply does not happen; the permanent stays where it is.

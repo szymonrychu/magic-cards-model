@@ -916,7 +916,7 @@ class CostsManaMixin:
         paid = self.ask(decision)
         assert isinstance(paid, int)
         if paid > 0:
-            self.lose_life(player, paid)
+            self.lose_life(player, paid, payment=True)  # CR 119.4
         return paid
 
     def unspent_mana_of(self: "Game", player: Player) -> ManaPool:

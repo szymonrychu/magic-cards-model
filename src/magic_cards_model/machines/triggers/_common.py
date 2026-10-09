@@ -245,6 +245,10 @@ _CRIME_COMMITTED_CONDITION = re.compile(r"^you(?:'ve| have)? commits? a crime$",
 _SEARCHES_LIBRARY_CONDITION = re.compile(
     r"^(?P<who>you|an opponent|a player) search(?:es)? (?:your|their) library$", re.IGNORECASE
 )
+#: CR 706.2: "you roll one or more dice" (Barbarian Class's level 2).
+_ROLLS_DICE_CONDITION = re.compile(
+    r"^(?P<who>you|an opponent|a player) rolls? one or more dice$", re.IGNORECASE
+)
 #: CR 603.6c: "an ability that triggers when a card is put into a certain
 #: zone 'from anywhere' is never treated as a leaves-the-battlefield
 #: ability" - so, unlike `DIES`'s battlefield-only CR 700.4 move, this is not

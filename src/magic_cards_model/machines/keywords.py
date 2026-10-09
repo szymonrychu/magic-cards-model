@@ -2332,7 +2332,7 @@ def _cycling_effect(activation: KeywordActivation) -> list[CardState]:
     game = activation.game
     with game._id_allocator_scope():  # noqa: SLF001
         if typed is None:
-            return game.draw_cards(activation.player, 1)
+            return game.draw_cards(activation.player, 1, cycled=activation.card)
         # CR 702.29e: "Search your library for a [type] card, reveal it, and put
         # it into your hand. Then shuffle your library."
         return _search_reveal_to_hand_and_shuffle(

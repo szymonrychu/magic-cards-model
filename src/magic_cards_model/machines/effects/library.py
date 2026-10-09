@@ -41,6 +41,7 @@ from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     ReflexiveWhenYouDoConsequence,
 )
+from ..replacement import EventKind, ReplaceableEvent, apply_replacements
 from ..triggers import (
     AbilityOnStack,
     is_ability,
@@ -392,7 +393,7 @@ def _mill(game: "Game", player: Player, count: int) -> list[CardState]:
     the Hunger Tide's `+1` and Tyvar, Jubilant Brawler's `-2` both act on
     *which* cards this specific mill moved, not the graveyard generally.
     """
-    milled = list(player.library[:count])
+    milled = list(player.library[: game.replaced_mill_count(player, count)])
     for card in milled:
         game.put_into_graveyard(card)
     game.record_count(len(milled))
@@ -5211,6 +5212,11 @@ def _explore(
     of the ability, though for every printing in the pool they are the same
     object.
     """
+    # CR 614.1a: "If a creature you control would explore, instead you scry 1,
+    # then that creature explores" (Twists and Turns) happens before the reveal.
+    apply_replacements(
+        game, ReplaceableEvent(kind=EventKind.EXPLORE, card=permanent, player=controller)
+    )
     library = controller.library
     if not library:
         return  # CR 701.44b: it explored anyway; there was nothing to reveal.

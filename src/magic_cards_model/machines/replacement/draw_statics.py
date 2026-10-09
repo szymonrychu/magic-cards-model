@@ -285,4 +285,80 @@ def _compile_draw_replacement(effect: ReplacementEffect) -> CardReplacement | No
     return CardReplacement(label=effect.text, applies=applies, apply=action)
 
 
-DRAW_COMPILERS = (_compile_draw_replacement,)
+_CYCLING_DRAW_LINE = (
+    "if a cycling ability of another nonland card would cause you to draw a card, instead "
+    "exile cards from the top of your library until you exile a card that shares a "
+    "card type with the cycled card. you may cast that card without paying its mana cost. "
+    "then put the exiled cards that weren't cast this way on the bottom of your library "
+    "in a random order."
+)
+
+
+def _compile_cycling_draw(effect: ReplacementEffect) -> CardReplacement | None:
+    """Unpredictable Cyclone: "If a cycling ability of another nonland card would
+    cause you to draw a card, instead exile cards from the top of your library
+    until you exile a card that shares a card type with the cycled card. You may
+    cast that card without paying its mana cost. Then put the exiled cards that
+    weren't cast this way on the bottom of your library in a random order."
+    (CR 702.29a, 614.11a) Cascade's own half-by-half process (CR 702.85a)."""
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD or effect.from_trigger:
+        return None
+    if " ".join(strip_reminder_text(effect.raw)[0].lower().split()) != _CYCLING_DRAW_LINE:
+        return None
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        cycled = event.cycled_card
+        return (
+            event.kind is EventKind.DRAW
+            and event.amount > 0
+            and cycled is not None
+            and cycled.id != source.id
+            and Type.LAND not in cycled.types
+            and event.player is not None
+            and event.player.username == source.controller
+        )
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        import random
+
+        from ..keywords import exile_until
+
+        event.amount = 0
+        owner = event.player
+        shared = set(event.cycled_card.types)
+        exiled = exile_until(
+            game, owner, lambda state, _: bool(shared & set(state.types)), source_name=source.name
+        )
+        hit = exiled[-1] if exiled and shared & set(exiled[-1].types) else None
+        cast = False
+        if hit is not None:
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=owner.username,
+                prompt=f"cast {hit.name} without paying its mana cost",
+                source=source.name,
+                affirmative_is_legal=game.can_cast_during_resolution(hit, owner.username),
+            )
+            if game.ask(decision):
+                cast = (
+                    game.cast_during_resolution(
+                        hit,
+                        owner.username,
+                        source_name=f"{source.name}'s replacement",
+                        rule="CR 614.11a",
+                    )
+                    is not None
+                )
+        bottomed = [state for state in exiled if not (cast and state is hit)]
+        seed = f"{game.shuffle_seed}:{game.shuffles_performed}:cyclone"
+        random.Random(seed).shuffle(bottomed)  # noqa: S311
+        if bottomed:
+            game.shuffles_performed += 1
+        for state in bottomed:
+            game.exile.remove(state)
+            owner.add(state, Zone.LIBRARY)  # the bottom of the library
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
+DRAW_COMPILERS = (_compile_draw_replacement, _compile_cycling_draw)

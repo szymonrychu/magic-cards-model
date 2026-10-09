@@ -276,6 +276,10 @@ class ExtraTriggerEvent(StrEnum):
     #: search (CR 701.23a's own "look at all cards in that zone" is one
     #: action, regardless of how many finds it allows).
     SEARCHES_LIBRARY = "searches_library"
+    #: CR 706.2: a player rolled one or more dice (Barbarian Class's "Whenever
+    #: you roll one or more dice"). `GameEvent.player` is who rolled.
+    #: **Emitted by:** `Game.roll_dice`, once per roll instruction.
+    ROLLS_DICE = "rolls_dice"
     #: CR 709.5h: "Some abilities trigger when a player unlocks a particular
     #: half of a permanent. These abilities trigger when that permanent is
     #: given the appropriate unlocked designation, regardless of whether it

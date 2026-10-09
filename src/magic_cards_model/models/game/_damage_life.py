@@ -129,7 +129,7 @@ class DamageLifeMixin:
             )
         return player.life
 
-    def lose_life(self: "Game", player: Player | str, amount: int) -> int:
+    def lose_life(self: "Game", player: Player | str, amount: int, *, payment: bool = False) -> int:
         """A player loses life, returning the new total (CR 119.3).
 
         Every life loss comes through here - an effect's "loses N life",
@@ -153,7 +153,9 @@ class DamageLifeMixin:
             player = self.player(player)
         if amount <= 0:
             return player.life
-        event = ReplaceableEvent(kind=EventKind.LOSE_LIFE, player=player, amount=amount)
+        event = ReplaceableEvent(
+            kind=EventKind.LOSE_LIFE, player=player, amount=amount, payment=payment
+        )
         apply_replacements(self, event)
         if event.amount <= 0:
             return player.life

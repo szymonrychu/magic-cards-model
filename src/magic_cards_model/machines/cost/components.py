@@ -1094,7 +1094,7 @@ class CostComponent(EngineModel):
                 self._remember(card)
                 game.put_into_graveyard(card)
         elif self.kind is ComponentKind.PAY_LIFE and self.amount:
-            game.lose_life(game.player(self.payer), self.amount)
+            game.lose_life(game.player(self.payer), self.amount, payment=True)  # CR 119.4
         elif self.kind is ComponentKind.REMOVE_COUNTERS:
             # The counters come off at payment time (CR 601.2h/602.2b: the
             # cost is paid before the ability resolves), not when the

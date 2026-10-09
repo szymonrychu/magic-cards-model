@@ -3583,6 +3583,17 @@ def _unread_condition_matches(
             return event.player != controller
         return True  # "a player" - anyone.
 
+    match = _ROLLS_DICE_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.ROLLS_DICE or event.player is None:
+            return False
+        who = match.group("who")
+        if who == "you":
+            return event.player == controller
+        if who == "an opponent":
+            return event.player != controller
+        return True  # "a player" - anyone.
+
     if _DOOR_UNLOCKED_CONDITION.match(condition):
         # CR 709.5h: the permanent this ability is printed on, and only the
         # door it is printed on (`BaseAbility.face`) - Ritual Chamber's own
@@ -5768,6 +5779,7 @@ from ._common import (  # noqa: E402
     _PUT_INTO_LIBRARY_CONDITION,
     _REVEALED_THIS_WAY_CONDITION,
     _RING_TEMPTS_YOU_CONDITION,
+    _ROLLS_DICE_CONDITION,
     _SEARCHES_LIBRARY_CONDITION,
     _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION,
     _STATE_COUNTER_TRIGGER_RE,
