@@ -5,8 +5,6 @@ Each test plays the line through the engine and asserts the outcome, with the
 negative (the condition or controller that must not apply) beside it.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.support import HANDLED, classify_clauses
@@ -188,7 +186,9 @@ def test_darigaaz_loses_an_egg_counter_each_of_its_owners_upkeeps_and_returns_at
 
 def test_a_darigaaz_exiled_without_egg_counters_never_returns():
     scenario = _board(
-        [], alice_exile=["Darigaaz Reincarnated"], alice_library=["Island"] * 10,
+        [],
+        alice_exile=["Darigaaz Reincarnated"],
+        alice_library=["Island"] * 10,
         bob_library=["Island"] * 10,
     )
     darigaaz = scenario.find("Darigaaz Reincarnated", Zone.EXILE, "alice")
@@ -227,7 +227,9 @@ def test_lisette_pays_one_to_grow_and_trample_every_creature_you_control():
     assert "trample" in _abilities(scenario, bears)
     assert elves.counter_count("+1/+1") == 0
     assert "trample" not in _abilities(scenario, elves)
-    _clause_handled("Valentin, Dean of the Vein // Lisette, Dean of the Root", "Whenever you gain life")
+    _clause_handled(
+        "Valentin, Dean of the Vein // Lisette, Dean of the Root", "Whenever you gain life"
+    )
 
 
 def test_lisette_does_nothing_when_you_decline_to_pay():
@@ -445,3 +447,20 @@ def test_enduring_renewal_does_not_return_a_creature_milled_from_the_library():
     scenario.pass_until_resolved()
 
     assert bears.zone is Zone.GRAVEYARD
+
+
+# -- Enduring Renewal: "Play with your hand revealed." -------------------------
+
+
+def test_a_revealed_hand_is_known_to_the_opponent_while_the_permanent_stays():
+    scenario = _board(["Enduring Renewal"], alice_hand=["Lightning Bolt", "Island"])
+
+    assert scenario.game.hand_is_revealed("alice")
+    assert not scenario.game.hand_is_revealed("bob")
+    known = {k.card_name for k in scenario.game.known_to("bob") if k.owner == "alice"}
+    assert known == {"Lightning Bolt", "Island"}
+
+    scenario.game.destroy(scenario.find("Enduring Renewal", Zone.BATTLEFIELD, "alice"))
+    assert not scenario.game.hand_is_revealed("alice")
+    assert [k for k in scenario.game.known_to("bob") if k.owner == "alice"] == []
+    _clause_handled("Enduring Renewal", "Play with your hand revealed")

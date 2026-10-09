@@ -1195,6 +1195,19 @@ class ContinuousMixin:
         without_word = match.group("rest").strip() if match else text.strip()
         return cls._TRAILING_REMINDER_TEXT_RE.sub("", without_word).strip()
 
+    def hand_is_revealed(self: "Game", username: str) -> bool:
+        """Whether `username` controls a permanent that makes them "play with
+        your hand revealed" right now (CR 701.20a: a reveal shows the cards to
+        every player) - read fresh off the computed board every call, like
+        `controls_look_at_top_permission`, so it ends when the permanent does."""
+        board = self.computed_board()
+        return any(
+            self._PLAY_WITH_HAND_REVEALED_RE.fullmatch(self._static_line_without_ability_word(line))
+            is not None
+            for permanent in self.permanents_controlled_by(username)
+            for line in board.of(permanent).abilities
+        )
+
     def controls_look_at_top_permission(self: "Game", username: str) -> bool:
         """Whether `username` controls a permanent granting CR 611.3d's "you
         may look at the top card of your library any time" - read fresh off
@@ -1710,6 +1723,7 @@ class ContinuousMixin:
         line = cls._static_line_without_ability_word(text)
         return (
             cls._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(line) is not None
+            or cls._PLAY_WITH_HAND_REVEALED_RE.fullmatch(line) is not None
             or cls._REVEALS_EACH_CARD_DRAWN_RE.fullmatch(line) is not None
             or cls._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(line) is not None
             or cls._SPELLS_YOU_CAST_HAVE_IMPROVISE_RE.fullmatch(line) is not None

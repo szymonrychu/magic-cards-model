@@ -4340,9 +4340,8 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # Flagstones of Trokair spells that phrase out instead of saying "dies",
     # and the two are the same event by definition. "die" (no s) is the
     # plural form printed on "one or more other Cats you control die".
-    if (
-        re.search(r"\bdi(?:es|e)\b", lowered)
-        or re.search(r"\bput into (?:a|your) graveyard from the battlefield\b", lowered)
+    if re.search(r"\bdi(?:es|e)\b", lowered) or re.search(
+        r"\bput into (?:a|your) graveyard from the battlefield\b", lowered
     ):
         return TriggerEvent.DIES
     # CR 508.3f/509.3g/702.68a: "attacks [a player] and isn't blocked" -

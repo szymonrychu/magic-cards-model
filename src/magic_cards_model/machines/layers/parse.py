@@ -6767,9 +6767,7 @@ _PLAYER_LIFE_COMPARISON_RE = re.compile(
 
 #: "there are no cards in your library" (Living Conundrum): CR 401.1's zone,
 #: counted for the source's controller (`LayerContext.library_size_of`).
-_NO_CARDS_IN_YOUR_LIBRARY_RE = re.compile(
-    r"^there are no cards in your library$", re.IGNORECASE
-)
+_NO_CARDS_IN_YOUR_LIBRARY_RE = re.compile(r"^there are no cards in your library$", re.IGNORECASE)
 
 #: "As long as `<condition>`, this creature has base power and toughness N/N
 #: [and has `<keywords>`]." (Living Conundrum) - the gated twin of

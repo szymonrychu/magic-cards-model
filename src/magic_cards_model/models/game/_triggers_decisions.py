@@ -116,7 +116,10 @@ def _has_exile_conditioned_trigger(card: CardState) -> bool:
     if found is None:
         found = any(
             ability.intervening_if is not None
-            and ("exiled" in ability.intervening_if.lower() or "in exile" in ability.intervening_if.lower())
+            and (
+                "exiled" in ability.intervening_if.lower()
+                or "in exile" in ability.intervening_if.lower()
+            )
             for ability in triggered_abilities_of(card.card)
         )
         _EXILE_CONDITIONED_TRIGGER[key] = found

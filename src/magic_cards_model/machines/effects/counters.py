@@ -481,7 +481,9 @@ def _parse_counters_on_group_then_grant_clause(text: str) -> AbilityEffect | Non
         before = {state.id: state.counter_count(kind) for state in game.battlefield}
         head(game, ability)
         for permanent in list(game.battlefield):
-            if permanent.counter_count(kind) > before.get(permanent.id, permanent.counter_count(kind)):
+            if permanent.counter_count(kind) > before.get(
+                permanent.id, permanent.counter_count(kind)
+            ):
                 _grant_keywords_to(
                     game,
                     permanent,
