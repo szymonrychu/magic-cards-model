@@ -467,6 +467,11 @@ def _one_term(description: str):
     fixed = _FIXED_COUNT_TERMS.get(lowered)
     if fixed is not None:
         return fixed
+    if lowered in ("time it was kicked", "times it was kicked"):
+        return _kicked_times
+    symbols = _SYMBOLS_SPENT_RE.match(lowered)
+    if symbols is not None:
+        return _symbol_groups_spent(symbols.group("symbols"))
     term = _board_count_term(text, lowered) or _graveyard_count_term(lowered)
     if term is not None:
         return term
@@ -480,10 +485,43 @@ def _one_term(description: str):
     return None
 
 
+_N_TIMES_RE = re.compile(rf"^(?P<n>{COUNT}) (?P<op>times|plus) (?P<rest>.+)$", re.IGNORECASE)
+_SYMBOLS_SPENT_RE = re.compile(r"^(?P<symbols>(?:\{[wubrg]\})+) spent to cast it$")
+
+
+def _kicked_times(game, controller, entering, _x) -> int:
+    record = game.cast_record_of(entering)
+    return record.kicked if record is not None else 0
+
+
+def _symbol_groups_spent(symbols: str):
+    """ "for each {G}{G} spent to cast it" (Clay Champion): how many whole
+    groups of that many mana of that colour the spell's payment holds."""
+    from ..models.card import Color
+
+    letters = re.findall(r"[wubrg]", symbols)
+    color = Color(letters[0].upper())
+
+    def count(game, controller, entering, _x):
+        record = game.cast_record_of(entering)
+        return record.mana_spent.get(color, 0) // len(letters) if record is not None else 0
+
+    return count
+
+
 def enters_count_reader(description: str):
     """The reader for a "for each `<description>`" count evaluated as the
     permanent enters, or `None` when any term of it is not one this engine
     can count (the caller then fails closed with a notice)."""
+    multiplied = _N_TIMES_RE.match(description.strip())
+    if multiplied is not None:
+        n = parse_count(multiplied.group("n"))
+        inner = enters_count_reader(multiplied.group("rest"))
+        if n is None or inner is None:
+            return None
+        if multiplied.group("op").lower() == "plus":
+            return lambda game, controller, entering, x: n + inner(game, controller, entering, x)
+        return lambda game, controller, entering, x: n * inner(game, controller, entering, x)
     terms = [_one_term(part) for part in _SPLIT_TERMS_RE.split(description.strip())]
     if not terms or any(term is None for term in terms):
         return None

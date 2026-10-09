@@ -248,39 +248,93 @@ def _try_enters_untapped(sentence: str, names: tuple[str, ...]) -> list[Replacem
     ]
 
 
+#: "two +1/+1 counters on it for each `<count>`" (Hamlet Vanguard, Clay
+#: Champion, Vodalian Mindsinger) and "a +1/+1 counter on it plus an
+#: additional +1/+1 counter on it for each `<count>`" (Sheriff of Safe
+#: Passage): read as an `amount_expression` the count reader
+#: (`keyword_counters.enters_count_reader`) understands - "`<n>` times
+#: `<count>`" and "`<n>` plus `<count>`".
+_MULTIPLE_PER_EACH = re.compile(
+    rf"^(?P<n>{COUNT}) (?P<kind>[^ ]+) counters? on it for each (?P<each>.+)$", re.IGNORECASE
+)
+_PLUS_ADDITIONAL_PER_EACH = re.compile(
+    rf"^(?P<n>{COUNT}) (?P<kind>[^ ]+) counters? on it plus an additional (?P=kind) counter"
+    r" on it for each (?P<each>.+)$",
+    re.IGNORECASE,
+)
+
+
+def _read_multiplied_counters(
+    what: str,
+) -> tuple[int | None, bool, str | None, str | None, int | None] | None:
+    plus = _PLUS_ADDITIONAL_PER_EACH.match(what)
+    if plus is not None:
+        return None, True, plus.group("kind"), f"{plus.group('n')} plus {plus.group('each')}", None
+    times = _MULTIPLE_PER_EACH.match(what)
+    if times is not None and times.group("n").lower() not in ("a", "an"):
+        return (
+            None,
+            True,
+            times.group("kind"),
+            f"{times.group('n')} times {times.group('each')}",
+            None,
+        )
+    return None
+
+
+#: "... and with haste" (Pouncing Wurm, Voidpouncer): CR 614.1c's "enters
+#: with" also covers an ability the permanent enters with. Kept on the
+#: effect's `replacement` text and read back by `_apply_self_enters`.
+_AND_WITH_HASTE = re.compile(r"\s+and with haste$", re.IGNORECASE)
+#: "two +1/+1 counters and a trample counter" - one `ENTERS_WITH` per kind.
+_AND_ANOTHER_KIND = re.compile(
+    rf"^(?P<first>.+? counters?) and (?P<second>(?:an?|{COUNT}) [^ ]+ counters?)$", re.IGNORECASE
+)
+
+
 def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
     match = _ENTERS_WITH.match(sentence)
     if not match:
         return []
     subject = match.group("subject").strip()
     what = match.group("what").strip()
-    counters = _read_counters(what)
-    if counters is None:
-        # A counter count this cannot read fails closed as UNPARSED rather
-        # than as an enters-with effect with a made-up amount or kind.
-        return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
-    amount, variable, counter_kind, expression, that_many_multiplier = counters
-    return [
-        _make(
-            ReplacementKind.ENTERS_WITH,
-            sentence,
-            subject=subject,
-            replacement=what,
-            amount=amount,
-            variable_amount=variable,
-            counter_kind=counter_kind,
-            amount_expression=expression,
-            that_many_multiplier=that_many_multiplier,
-            condition=(
-                match.group("condition")
-                or match.group("trailing_condition")
-                or match.group("trailing_unless")
-                or ""
-            ).strip()
-            or None,
-            self_replacement=_refers_to_self(subject, names),
+    parts = [what]
+    haste = _AND_WITH_HASTE.search(what)
+    if haste is not None:
+        parts = [what[: haste.start()]]
+    paired = _AND_ANOTHER_KIND.match(parts[0])
+    if paired is not None:
+        parts = [paired.group("first"), paired.group("second")]
+    condition = (
+        match.group("condition")
+        or match.group("trailing_condition")
+        or match.group("trailing_unless")
+        or ""
+    ).strip() or None
+    effects = []
+    for index, part in enumerate(parts):
+        counters = _read_multiplied_counters(part) or _read_counters(part)
+        if counters is None:
+            # A counter count this cannot read fails closed as UNPARSED rather
+            # than as an enters-with effect with a made-up amount or kind.
+            return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
+        amount, variable, counter_kind, expression, that_many_multiplier = counters
+        effects.append(
+            _make(
+                ReplacementKind.ENTERS_WITH,
+                sentence,
+                subject=subject,
+                replacement=part + (" and with haste" if haste and index == 0 else ""),
+                amount=amount,
+                variable_amount=variable,
+                counter_kind=counter_kind,
+                amount_expression=expression,
+                that_many_multiplier=that_many_multiplier,
+                condition=condition,
+                self_replacement=_refers_to_self(subject, names),
+            )
         )
-    ]
+    return effects
 
 
 def _try_escapes_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
@@ -3138,6 +3192,8 @@ def _apply_self_enters(effect: ReplacementEffect, amount: int | None) -> Apply:
             event.prepared = True
         else:
             assert effect.counter_kind is not None and amount is not None
+            if _AND_WITH_HASTE.search(effect.replacement or ""):
+                event.grants_haste = True
             event.counters[effect.counter_kind] = (
                 event.counters.get(effect.counter_kind, 0) + amount
             )
@@ -3345,3 +3401,223 @@ from .parse import (  # noqa: E402
     parse_replacement_effects,
     strip_reminder_text,
 )
+
+# -- "Each <group> you control enters with an additional <kind> counter" -----
+#
+# CR 614.1c: "[This permanent] enters with ..." is a replacement effect, and
+# CR 614.12 lets a *static ability of another permanent* modify how a permanent
+# enters when it affects the entering object. A battlefield permanent (or,
+# for "as long as this creature is in your graveyard", a graveyard card) that
+# prints such a line adds counters to every matching permanent of its
+# controller's as it enters. The counters ride the entering event
+# (`ReplaceableEvent.counters`) exactly like a self "enters with" does.
+
+_GROUP_ENTERS_RE = re.compile(
+    r"^(?:as long as (?P<lead>.+?), )?"
+    r"(?P<subject>.+? you control(?: that(?:'s| has) [^,]+?| of the chosen type)?)"
+    r" enters? with (?:an|(?P<n>\w+)) additional (?P<kind>[^ ]+) counters? on (?:it|them)"
+    r"(?: for each (?P<each>.+?))?(?: if (?P<trail>its mana value is 4 or less))?\.?$",
+    re.IGNORECASE,
+)
+_GROUP_OTHERWISE_RE = re.compile(
+    r"^otherwise, it enters with (?P<n>\w+) additional (?P<kind>[^ ]+) counters? on it\.?$",
+    re.IGNORECASE,
+)
+_GROUP_SUBJECT_RE = re.compile(
+    r"^(?:(?P<each>each other|each|other) )?(?P<desc>.+?) you control(?P<tail> .+)?$",
+    re.IGNORECASE,
+)
+_IN_YOUR_GRAVEYARD_RE = re.compile(
+    r"^this (?:creature|card|permanent) is in your graveyard$", re.IGNORECASE
+)
+
+
+def _is_subtype(entering: CardState, word: str) -> bool:
+    return any(subtype.lower() == word for subtype in entering.card.subtypes)
+
+
+def _noun_matches(entering: CardState, word: str) -> bool:
+    """One noun of a group subject: a card type ("creature", "vehicle" is a
+    subtype, "planeswalker") or a creature/permanent subtype."""
+    singular = word[:-1] if word.endswith("s") else word
+    card_type = _CARD_TYPE_WORDS.get(singular)
+    if card_type is not None:
+        return card_type in entering.types
+    return _is_subtype(entering, singular)
+
+
+def _group_subject_predicate(subject: str):
+    """`(other, predicate(source, entering) -> bool)` for the subject phrase of
+    a group "enters with" line ("each other Rogue creature you control",
+    "legendary creatures you control", "each other Vehicle and creature you
+    control", "each creature you control that's a Wolf or a Werewolf"), or
+    `None` when it names a group not read."""
+    match = _GROUP_SUBJECT_RE.match(subject.strip())
+    if match is None:
+        return None
+    other = (match.group("each") or "").lower() in ("each other", "other")
+    words = match.group("desc").lower().split()
+    tail = (match.group("tail") or "").strip().lower()
+    any_of = " and " in f" {match.group('desc').lower()} "
+    qualifiers = [w for w in words if w == "legendary" or w.startswith("non-")]
+    nouns = [w for w in words if w not in qualifiers and w != "and"]
+    if not nouns:
+        return None
+    wanted_subtypes: set[str] = set()
+    adventure = False
+    if tail.startswith(("that's a ", "that's an ")):
+        wanted_subtypes = {
+            part.strip().lower()
+            for part in re.split(r",| or ", tail.split(" a", 1)[1])
+            if part.strip()
+        }
+        wanted_subtypes = {
+            w.removeprefix("a ").removeprefix("an ").strip() for w in wanted_subtypes
+        }
+    elif tail == "that has an adventure":
+        adventure = True
+    elif tail and tail != "of the chosen type":
+        return None
+    chosen_type = tail == "of the chosen type"
+
+    def predicate(source: CardState, entering: CardState) -> bool:
+        hits = [_noun_matches(entering, noun) for noun in nouns]
+        if not (any(hits) if any_of else all(hits)):
+            return False
+        for word in qualifiers:
+            if word == "legendary":
+                if Supertype.LEGENDARY not in entering.card.supertypes:
+                    return False
+            elif _is_subtype(entering, word[4:]):
+                return False
+        if wanted_subtypes and not any(_is_subtype(entering, w) for w in wanted_subtypes):
+            return False
+        if adventure and "Adventure" not in entering.card.subtypes:
+            return False
+        if chosen_type:
+            chosen = getattr(source.choice, "value", source.choice)
+            return bool(chosen) and chosen in entering.card.subtypes
+        return True
+
+    return other, predicate
+
+
+def _group_mana_value_cap(entering: CardState) -> bool:
+    return entering.card.mana_value <= 4
+
+
+def group_enters_specs(lines: Iterable[str]):
+    """Each group "enters with additional counters" line among `lines`, as
+    `(in_graveyard, lead_condition, other, predicate, kind, count, each)` -
+    `count` the fixed number, `each` the "for each" description or `None`."""
+    found = []
+    pending = None
+    for raw in lines:
+        sentences = [part.strip() for part in re.split(r"(?<=\.)\s+", raw.strip()) if part.strip()]
+        for sentence in sentences:
+            otherwise = _GROUP_OTHERWISE_RE.match(sentence)
+            if otherwise is not None and pending is not None:
+                pending["otherwise"] = (
+                    parse_count(otherwise.group("n")) or 1,
+                    otherwise.group("kind"),
+                )
+                continue
+            match = _GROUP_ENTERS_RE.match(sentence)
+            if match is None:
+                continue
+            subject = _group_subject_predicate(match.group("subject"))
+            if subject is None:
+                continue
+            lead = match.group("lead")
+            in_graveyard = (
+                lead is not None and _IN_YOUR_GRAVEYARD_RE.match(lead.strip()) is not None
+            )
+            pending = {
+                "in_graveyard": in_graveyard,
+                "lead": None if in_graveyard else lead,
+                "other": subject[0],
+                "predicate": subject[1],
+                "kind": match.group("kind"),
+                "count": parse_count(match.group("n")) if match.group("n") else 1,
+                "each": match.group("each"),
+                "cap": match.group("trail") is not None,
+                "otherwise": None,
+                "text": sentence,
+            }
+            found.append(pending)
+    return found
+
+
+def _group_apply(spec, controller: str):
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        entering = event.card
+        if entering is None:
+            return
+        if spec["cap"] and not _group_mana_value_cap(entering):
+            kind_count = spec["otherwise"]
+            if kind_count is None:
+                return
+            amount, kind = kind_count
+        else:
+            kind = spec["kind"]
+            amount = spec["count"]
+            if spec["each"] is not None:
+                reader = enters_count_reader(spec["each"])
+                if reader is None:
+                    return
+                amount = amount * reader(game, controller, entering, 0)
+        if amount > 0:
+            event.counters[kind] = event.counters.get(kind, 0) + amount
+
+    return apply
+
+
+def _group_entering_counters(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """Every battlefield permanent's (and graveyard card's "as long as this
+    creature is in your graveyard") group "enters with an additional counter"
+    line that applies to the permanent entering in `event` (CR 614.1c)."""
+    entering = event.card
+    if entering is None:
+        return []
+    found: list[ApplicableEffect] = []
+    sources: list[CardState] = list(game.battlefield)
+    for player in game.players:
+        sources.extend(player.graveyard)
+    board = None
+    for source in sources:
+        oracle = source.card.oracle_text or ""
+        lowered = oracle.lower()
+        if "additional" not in lowered or " enter" not in lowered or "counter" not in lowered:
+            continue
+        on_battlefield = source.zone is Zone.BATTLEFIELD
+        if on_battlefield:
+            if "Class" in source.card.subtypes:
+                lines = (source.class_ability_text or "").splitlines()
+            else:
+                board = board or game.computed_board()
+                lines = list(board.of(source).abilities)
+        else:
+            lines = oracle.splitlines()
+        controller = source.controller or source.owner
+        if controller is None or entering.controller != controller:
+            continue
+        for index, spec in enumerate(group_enters_specs(lines)):
+            if spec["in_graveyard"] == on_battlefield:
+                continue
+            if spec["other"] and source.id == entering.id:
+                continue
+            if not spec["predicate"](source, entering):
+                continue
+            if spec["lead"] is not None:
+                answer = game.condition_holds(controller, spec["lead"], source)
+                if answer is not True:
+                    continue
+            found.append(
+                ApplicableEffect(
+                    key=f"{source.id}:group:{index}",
+                    source=source,
+                    label=spec["text"],
+                    apply=_group_apply(spec, controller),
+                )
+            )
+    return found

@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "f31e108b-8cb5-4f30-b68b-274aa7ac2a81",
+  "oracle_id": "fa0bff4f-af97-4733-b9d3-a0bc9ef1e2ca",
+  "multiverse_ids": [
+    541064
+  ],
+  "mtgo_id": 94756,
+  "arena_id": 79012,
+  "tcgplayer_id": 253242,
+  "cardmarket_id": 581926,
+  "name": "Hamlet Vanguard",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/f31e108b-8cb5-4f30-b68b-274aa7ac2a81",
+  "scryfall_uri": "https://scryfall.com/card/vow/201/hamlet-vanguard?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:40:12Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.jpg?1783924812",
+    "normal": "https://cards.scryfall.io/normal/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.jpg?1783924812",
+    "large": "https://cards.scryfall.io/large/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.jpg?1783924812",
+    "png": "https://cards.scryfall.io/png/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.png?1783924812",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.jpg?1783924812",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.jpg?1783924812",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.webp?1783924812",
+    "grid": "https://cards.scryfall.io/grid/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.webp?1783924812",
+    "display": "https://cards.scryfall.io/display/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.webp?1783924812",
+    "art": "https://cards.scryfall.io/art/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.webp?1783924812",
+    "crop": "https://cards.scryfall.io/crop/front/f/3/f31e108b-8cb5-4f30-b68b-274aa7ac2a81.webp?1783924812"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature — Human Warrior",
+  "oracle_text": "Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)\nThis creature enters with two +1/+1 counters on it for each other nontoken Human you control.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Ward"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f31e108b-8cb5-4f30-b68b-274aa7ac2a81/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afa0bff4f-af97-4733-b9d3-a0bc9ef1e2ca&unique=prints",
+  "collector_number": "201",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "PINDURSKI",
+  "artist_ids": [
+    "f333a7f0-7330-40e9-8c58-667eea2f0f60"
+  ],
+  "illustration_id": "c4485a55-1a31-44d5-a222-ea7b5f0f05fa",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18340,
+  "penny_rank": 9476,
+  "preview": {
+    "source": "PleasantKenobi",
+    "source_uri": "https://www.youtube.com/watch?v=CxWNkMXcVYo",
+    "previewed_at": "2021-11-01"
+  },
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.26",
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": "0.12",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=541064&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHamlet%2BVanguard",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHamlet%2BVanguard",
+    "edhrec": "https://edhrec.com/route/?cc=Hamlet+Vanguard"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253242%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581926&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94756?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
