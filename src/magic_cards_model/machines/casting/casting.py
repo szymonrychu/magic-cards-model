@@ -3741,7 +3741,11 @@ class Casting(EngineModel):
         floor: int | None = None
         if self.game is not None:
             board_increases, board_reductions, floor = self.game.static_cost_modifiers_for(
-                self.spell, self.caster, origin_zone=self.origin_zone, targets=self.targets
+                self.spell,
+                self.caster,
+                origin_zone=self.origin_zone,
+                targets=self.targets,
+                casting=self,
             )
             increases = increases + board_increases
             reductions = reductions + board_reductions

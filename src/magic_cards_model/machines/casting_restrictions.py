@@ -449,6 +449,19 @@ def static_uncounterable_source(game: Any, spell: Any) -> Any:
                 continue
             quality = _static_uncounterable_quality(line)
             if quality is None:
+                # "Spells with flash you cast cost {1} less to cast and can't
+                # be countered." (Cunning Nightbonder, Thryx): the cost-
+                # modification grammar reads the quality and the rider.
+                from .cost.groups import group_spell_modifier
+
+                group = group_spell_modifier(line)
+                if (
+                    group is not None
+                    and group.cant_be_countered
+                    and group.scope == "you"
+                    and (group.quality is None or group.quality(game, spell))
+                ):
+                    return permanent
                 continue
             if not quality or spell_has_quality(spell, quality):
                 return permanent

@@ -100,7 +100,7 @@ def object_quality(phrase: str) -> Quality | None:
     """A predicate for a printed object quality, or `None` when any word of it
     is unread (the caller then leaves the whole sentence unread rather than
     pricing on a guess)."""
-    text = phrase.strip().lower().rstrip(".")
+    text = " " + phrase.strip().lower().rstrip(".")
     tests: list[Quality] = []
     for _ in range(3):
         numeric = _NUMERIC.search(text)

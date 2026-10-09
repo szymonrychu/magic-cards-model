@@ -13,6 +13,7 @@ from magic_cards_model.machines.casting.options import (
     reads_or_pay_additional_cost_line,
     reads_printed_alternative_cost_line,
 )
+from magic_cards_model.machines.cost.groups import group_spell_modifier
 
 #: Cheap lowercase gate: every shape this module can credit carries one of these.
 _GATES = (
@@ -29,7 +30,8 @@ _GATES = (
 @cache
 def _reads(text: str) -> bool:
     return (
-        reads_mandatory_additional_cost_line(text)
+        group_spell_modifier(text) is not None
+        or reads_mandatory_additional_cost_line(text)
         or reads_optional_additional_cost_line(text)
         or reads_or_pay_additional_cost_line(text)
         or reads_printed_alternative_cost_line(text)

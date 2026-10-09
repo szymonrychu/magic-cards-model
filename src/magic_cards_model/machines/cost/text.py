@@ -450,6 +450,10 @@ def looks_like_unparsed_cost_modifier(text: str) -> bool:
     a cost increase that fails to apply looks identical to ordinary play)."""
     if cost_modifier_effect(text) is not None:
         return False
+    from .groups import group_spell_modifier
+
+    if group_spell_modifier(text) is not None:
+        return False
     return bool(_COST_MODIFIER_SIGNAL.search(text)) or bool(_COST_DECREASE_SIGNAL.search(text))
 
 
