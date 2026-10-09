@@ -1988,10 +1988,19 @@ def granted_optional_additional_costs(
     granted_conspire = conspire_count(game, card, caster, card.zone) - printed_conspire_count(
         card.card
     )
-    return [
-        casualty_cost_option(number)
-        for number in casualty_numbers(game, card, caster, card.zone)[printed:]
-    ] + [conspire_cost_option() for _ in range(max(granted_conspire, 0))]
+    from .granted_life_costs import granted_life_costs
+
+    return (
+        [
+            casualty_cost_option(number)
+            for number in casualty_numbers(game, card, caster, card.zone)[printed:]
+        ]
+        + [conspire_cost_option() for _ in range(max(granted_conspire, 0))]
+        + [
+            OptionalAdditionalCost(keyword=None, cost=f"pay {grant.life} life", rule="CR 118.8b")
+            for grant in granted_life_costs(game, card, caster)
+        ]
+    )
 
 
 def has_flash(card: Card) -> bool:

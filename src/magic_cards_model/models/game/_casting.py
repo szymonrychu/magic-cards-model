@@ -866,6 +866,7 @@ class CastingMixin:
                 casting.pay_offspring()
         self._announce_casualty(casting, card, caster, taken)
         self._announce_conspire(casting, card, caster, taken)
+        self._announce_granted_life_costs(casting, card, caster)
         if "gift" in printed:
             opponents = [p.username for p in self.players_in_game if p.username != caster]
             promised = self.ask(
@@ -930,6 +931,28 @@ class CastingMixin:
                     )
                 )
                 casting.pay_blight(next(state for state in creatures if state.id == answer[0]))
+
+    def _announce_granted_life_costs(
+        self: "Game", casting: Casting, card: CardState, caster: str
+    ) -> None:
+        """CR 118.8b's optional "you may pay N life" other permanents grant
+        (the Defilers), one `MAY` per granting permanent, legal only while the
+        life can be paid (CR 119.4)."""
+        for grant in casting.granted_life_costs():
+            if self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=(
+                        f"pay {grant.life} life ({grant.source_name}) as you cast {card.name}, "
+                        f"so it costs {{{grant.color.value}}} less (CR 118.8b)"
+                    ),
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=self.player(caster).life >= grant.life,
+                )
+            ):
+                casting.pay_granted_life_cost(grant)
 
     def _announce_casualty(
         self: "Game", casting: Casting, card: CardState, caster: str, taken: set[UUID]
@@ -1941,6 +1964,7 @@ class CastingMixin:
         reveal_for_cost: CardState | None = None,
         casualty: Sequence[CardState] | None = None,
         conspire: Sequence[Sequence[CardState]] | None = None,
+        granted_life_costs: int = 0,
         exile_for_cost_reduction: Sequence[CardState] | None = None,
         waterbend: bool = False,
         waterbend_tapping: Sequence[CardState] | None = None,
@@ -2080,6 +2104,13 @@ class CastingMixin:
             # with the rest of CR 601.2b's additional costs.
             for pair in conspire or ():
                 casting.pay_conspire(list(pair))
+            # CR 118.8b: how many of the optional life costs other permanents
+            # grant this spell (the Defilers) are paid, taken in order.
+            for _ in range(granted_life_costs):
+                offered = casting.granted_life_costs()
+                if not offered:
+                    raise ValueError(f"{card.name} has no more granted life costs to pay")
+                casting.pay_granted_life_cost(offered[0])
             if exile_for_cost_reduction is not None:
                 casting.exile_for_cost_reduction(exile_for_cost_reduction)
             # CR 601.2b announces every additional cost before CR 601.2c's

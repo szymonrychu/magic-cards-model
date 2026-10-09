@@ -132,6 +132,9 @@ from ..cost import why_not_unblocked as why_not_unblocked
 from ...phrases import with_indefinite_article as with_indefinite_article
 from ..modes import x_restriction_refusal as x_restriction_refusal
 from ..casting_restrictions import zone_cast_prohibition_source as zone_cast_prohibition_source
+from .granted_life_costs import GrantedLifeCost as GrantedLifeCost
+from .granted_life_costs import granted_life_costs as granted_life_costs
+from .granted_life_costs import reads_granted_life_cost_line as reads_granted_life_cost_line
 from .options import (
     AlternativeCostOption,
     AlternativeCostSource,
@@ -490,6 +493,7 @@ __all__ = [
     "reads_optional_sacrifice_reduction_line",
     "reads_or_pay_additional_cost_line",
     "reads_play_cards_exiled_with_line",
+    "reads_granted_life_cost_line",
     "reads_printed_alternative_cost_line",
     "reads_printed_self_zone_cast_line",
     "reads_printed_zone_permission_line",

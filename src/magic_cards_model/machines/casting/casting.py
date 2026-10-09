@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import ConfigDict, Field
 
-from ...models.card import Card, Layout, Type, types_of
+from ...models.card import Card, Color, Layout, Type, types_of
 from ...models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
 from ...models.mana import ManaCost, ManaSpend
 from ...models.zone import Zone
@@ -64,6 +64,7 @@ from ..keywords import (
 )
 from ..modes import ModalProfile, Mode, modal_profile, substitute_x, x_restriction_refusal
 from ..objects_as_costs import power_of
+from .granted_life_costs import GrantedLifeCost, granted_life_costs
 from ..spell_grants import casualty_numbers, conspire_count, granted_affinity_reductions
 from ..targeting import (
     TargetingProfile,
@@ -918,6 +919,13 @@ class Casting(EngineModel):
     plain-kicker-style single-payment restriction the way CR 702.33a/c
     distinguishes kicker from multikicker.
     """
+    granted_life_paid: list[GrantedLifeCost] = Field(default_factory=list)
+    """The optional life costs other permanents grant this spell that were
+    announced (CR 118.8b), set by `pay_granted_life_cost`."""
+    colored_only_reductions: list[Color] = Field(default_factory=list)
+    """The colours whose `{C}` reduction a paid granted life cost applies to
+    the spell's mana cost - and only if the cost has such a coloured symbol
+    (CR 118.7a, the Defilers' "reduces only the amount of ... mana you pay")."""
     casualty_paid: int = 0
     """How many of this spell's casualty instances were paid (CR 702.153a,
     CR 702.153b: "each is paid separately"), set by `pay_casualty`."""
@@ -2864,6 +2872,44 @@ class Casting(EngineModel):
         self.bargained = True
         return self.step
 
+    def granted_life_costs(self) -> list[GrantedLifeCost]:
+        """The optional life costs the caster's permanents grant this spell
+        and that are not yet announced (`machines/casting/granted_life_costs`)."""
+        offered = granted_life_costs(self.game, self.spell, self.caster)
+        for paid in self.granted_life_paid:
+            if paid in offered:
+                offered.remove(paid)
+        return offered
+
+    def pay_granted_life_cost(self, grant: GrantedLifeCost) -> CastingStep:
+        """CR 118.8b / 601.2b: announce a granted optional "you may pay N
+        life" additional cost, and with it the reduction "if you paid life
+        this way" (CR 601.2f). The life is paid with the rest of the total
+        cost at CR 601.2h and must be payable now (CR 119.4)."""
+        if grant not in self.granted_life_costs():
+            raise ValueError(
+                f"{grant.source_name} grants {self.spell.name} no unpaid life cost (CR 118.8b)"
+            )
+        if self.game is not None and self.game.player(self.caster).life < grant.life:
+            raise ValueError(
+                f"{self.caster} cannot pay {grant.life} life with only "
+                f"{self.game.player(self.caster).life} life (CR 119.4)"
+            )
+        self.add_additional_cost(
+            TotalCost(
+                components=[
+                    pay_life_cost(
+                        grant.life,
+                        payer=self.caster,
+                        description=f"pay {grant.life} life ({grant.source_name})",
+                    )
+                ]
+            )
+        )
+        self.granted_life_paid.append(grant)
+        self.colored_only_reductions.append(grant.color)
+        return self.step
+
     def casualty_numbers(self) -> list[int]:
         """The N of every casualty instance this spell has as it is cast
         (CR 702.153a): printed, then granted ("Each instant and sorcery spell
@@ -3814,6 +3860,14 @@ class Casting(EngineModel):
             reductions = reductions + granted_affinity_reductions(
                 self.game, self.spell, self.caster, self.origin_zone
             )
+        for color in self.colored_only_reductions:
+            # CR 118.7a: "reduces only the amount of <colour> mana you pay" -
+            # nothing to take off when the cost has no such symbol, so the
+            # reduction never spills into generic (CR 118.7b).
+            symbol = ManaCost.parse(f"{{{color.value}}}")
+            taken = sum(reduction.colored.get(color, 0) for reduction in reductions)
+            if base.with_x(self.x_value).colored.get(color, 0) > taken:
+                reductions.append(symbol)
         own = self.self_reduction if self.self_reduction is not None else self._own_cost_reduction()
         if own.symbols:
             if own in reductions:

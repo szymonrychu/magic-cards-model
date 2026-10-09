@@ -73,6 +73,7 @@ from magic_cards_model.machines.casting import (
     reads_optional_sacrifice_reduction_line,
     reads_or_pay_additional_cost_line,
     reads_play_cards_exiled_with_line,
+    reads_granted_life_cost_line,
     reads_printed_alternative_cost_line,
     reads_printed_self_zone_cast_line,
     reads_printed_zone_permission_line,
@@ -2212,6 +2213,11 @@ def _static_ability_category(
         return HANDLED
     if reads_or_pay_additional_cost_line(text):
         # `casting.mandatory_additional_costs` charges either half.
+        return HANDLED
+    if reads_granted_life_cost_line(text):
+        # CR 118.8b / CR 118.7a: `Casting.pay_granted_life_cost` announces the
+        # optional life cost and the coloured-only reduction tied to it
+        # (the Defilers).
         return HANDLED
     if reads_printed_alternative_cost_line(text):
         # CR 118.9: `Casting.alternative_costs` offers the printed "You may
