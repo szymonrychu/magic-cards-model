@@ -14,6 +14,8 @@ mill) and asserted by where the card ends up; every shape has the negative
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting import Casting
+from magic_cards_model.machines.casting.permissions import CAST_PERMISSION
 from magic_cards_model.models import TargetKind, TargetRef, Zone
 from magic_cards_model.support import HANDLED, classify_clauses
 from tests.cards import card
@@ -683,4 +685,189 @@ def test_the_grant_ends_when_pulmonic_sliver_leaves():
 
 def test_pulmonic_sliver_grant_line_reads_handled():
     outcomes = [o for o in classify_clauses(card("Pulmonic Sliver")) if "graveyard" in o.text]
+    assert {o.category for o in outcomes} == {HANDLED}, outcomes
+
+
+# -- Abandoned Sarcophagus: "You may cast spells that have a cycling ability
+#    from your graveyard." / "If a card that has a cycling ability would be put
+#    into your graveyard from anywhere and it wasn't cycled, exile it instead."
+
+
+def _sarcophagus(graveyard=(), hand=(), bob=(), mine=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[
+                "Abandoned Sarcophagus",
+                "Island",
+                "Island",
+                "Island",
+                "Island",
+                "Island",
+                *mine,
+            ],
+            hand=list(hand),
+            graveyard=list(graveyard),
+            library=["Island"] * 5,
+        )
+        .player("bob", battlefield=list(bob), library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_sarcophagus_exiles_a_cycling_card_that_dies():
+    scenario = _sarcophagus(mine=["Hollow One"])
+    hollow = scenario.creature("Hollow One", "alice")
+
+    scenario.game.destroy(hollow)
+
+    assert hollow.zone is Zone.EXILE
+
+
+def test_sarcophagus_exiles_a_cycling_card_discarded_from_hand():
+    scenario = _sarcophagus(hand=["Hollow One"])
+    hollow = scenario.find("Hollow One", Zone.HAND, "alice")
+
+    scenario.game.discard_cards("alice", [hollow], source=None)
+
+    assert hollow.zone is Zone.EXILE
+
+
+def test_sarcophagus_lets_a_cycled_card_reach_the_graveyard():
+    scenario = _sarcophagus(hand=["Hollow One"])
+    hollow = scenario.find("Hollow One", Zone.HAND, "alice")
+    islands = scenario.game.permanents_controlled_by("alice")
+
+    scenario.cycle(hollow, *[i for i in islands if i.name == "Island"][:2])
+
+    assert hollow.zone is Zone.GRAVEYARD
+
+
+def test_sarcophagus_leaves_a_card_without_cycling_alone():
+    scenario = _sarcophagus(mine=["Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.game.destroy(bears)
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_sarcophagus_only_watches_your_graveyard():
+    scenario = _sarcophagus(bob=["Hollow One"])
+    theirs = scenario.creature("Hollow One", "bob")
+
+    scenario.game.destroy(theirs)
+
+    assert theirs.zone is Zone.GRAVEYARD
+
+
+def test_sarcophagus_casts_a_cycling_card_from_the_graveyard():
+    scenario = _sarcophagus(graveyard=["Hollow One"])
+    hollow = scenario.find("Hollow One", Zone.GRAVEYARD, "alice")
+
+    scenario.game.cast(
+        hollow,
+        "alice",
+        keyword=CAST_PERMISSION,
+        mana_sources=scenario.game.permanents_controlled_by("alice"),
+    )
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert hollow.zone is Zone.BATTLEFIELD
+
+
+def test_sarcophagus_does_not_cast_a_card_without_cycling_from_the_graveyard():
+    scenario = _sarcophagus(graveyard=["Grizzly Bears"])
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+
+    with pytest.raises(ValueError):
+        scenario.game.cast(
+            bears,
+            "alice",
+            keyword=CAST_PERMISSION,
+            mana_sources=scenario.game.permanents_controlled_by("alice"),
+        )
+
+
+def test_sarcophagus_lines_read_handled():
+    outcomes = classify_clauses(card("Abandoned Sarcophagus"))
+    assert {o.category for o in outcomes} == {HANDLED}, outcomes
+
+
+# -- Maestros Ascendancy: "Once during each of your turns, you may cast an
+#    instant or sorcery spell from your graveyard by sacrificing a creature in
+#    addition to paying its other costs. If a spell cast this way would be put
+#    into your graveyard, exile it instead."
+
+
+def _maestros(graveyard=("Lightning Bolt",), creatures=("Grizzly Bears",)):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Maestros Ascendancy", "Mountain", "Mountain", *creatures],
+            graveyard=list(graveyard),
+            library=["Island"] * 5,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _cast_with_sacrifice(scenario, spell, victim, target):
+    casting = Casting(spell=spell, caster="alice", origin_zone=Zone.GRAVEYARD, game=scenario.game)
+    casting.use_keyword(CAST_PERMISSION, choosing=[victim])
+    casting.choose_targets([target])
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    return scenario.put_on_stack(casting)
+
+
+def test_maestros_casts_from_the_graveyard_sacrificing_a_creature_then_exiles_it():
+    scenario = _maestros()
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    mine = scenario.creature("Grizzly Bears", "alice")
+
+    _cast_with_sacrifice(scenario, bolt, mine, scenario.player("bob"))
+    scenario.resolve_top()
+
+    assert mine.zone is Zone.GRAVEYARD
+    assert bolt.zone is Zone.EXILE
+    assert scenario.player("bob").life == 17
+
+
+def test_maestros_works_once_during_each_of_your_turns():
+    scenario = _maestros(
+        graveyard=("Lightning Bolt", "Shock"), creatures=("Grizzly Bears", "Llanowar Elves")
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    shock = scenario.find("Shock", Zone.GRAVEYARD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    _cast_with_sacrifice(scenario, bolt, bears, scenario.player("bob"))
+    scenario.resolve_top()
+
+    with pytest.raises(ValueError):
+        _cast_with_sacrifice(scenario, shock, elves, scenario.player("bob"))
+
+
+def test_maestros_does_not_cast_a_creature_spell_from_the_graveyard():
+    scenario = _maestros(graveyard=("Llanowar Elves",))
+    elves = scenario.find("Llanowar Elves", Zone.GRAVEYARD, "alice")
+    mine = scenario.creature("Grizzly Bears", "alice")
+
+    with pytest.raises(ValueError):
+        casting = Casting(
+            spell=elves, caster="alice", origin_zone=Zone.GRAVEYARD, game=scenario.game
+        )
+        casting.use_keyword(CAST_PERMISSION, choosing=[mine])
+
+
+def test_maestros_line_reads_handled():
+    outcomes = classify_clauses(card("Maestros Ascendancy"))
     assert {o.category for o in outcomes} == {HANDLED}, outcomes

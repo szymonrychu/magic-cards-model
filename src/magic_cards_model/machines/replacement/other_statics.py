@@ -98,7 +98,9 @@ def _card_subject(
             event.origin is not Zone.BATTLEFIELD and Type.CREATURE in _types_of(game, card)
         )
     if text == "a card that has a cycling ability":
-        return lambda game, source, card, event: "cycling" in (card.card.oracle_text or "").lower()
+        return lambda game, source, card, event: any(
+            keyword.lower().endswith("cycling") for keyword in card.card.keywords
+        )  # CR 702.29f: every typecycling is a cycling ability
     match = _CREATURE_SUBJECT_RE.match(text)
     if match is None:
         return None
@@ -124,6 +126,13 @@ def _card_subject(
         )
 
     return creature
+
+
+def _is_being_cycled(game: "Game") -> bool:
+    """Whether the card moving now is being discarded as a cycling cost (CR
+    702.29a): `Game.paying_cost_of` names the keyword whose cost is being paid."""
+    paying = game._paying_cost  # noqa: SLF001
+    return paying is not None and paying[0] == "ability" and (paying[1] or "").endswith("cycling")
 
 
 def _whose_graveyard(whose: str) -> Callable | None:
@@ -182,8 +191,8 @@ def _clause_applies(clause: str, effect: ReplacementEffect):
         whose, tail = grave.group("whose"), grave.group("tail")
     else:
         return None
-    if tail is not None:
-        return None  # "and it wasn't cycled" is read by its own compiler
+    if tail is not None and not subject.lower().endswith("has a cycling ability"):
+        return None
     whose_matcher = _whose_graveyard(whose)
     if whose_matcher is None:
         return None
@@ -203,6 +212,8 @@ def _clause_applies(clause: str, effect: ReplacementEffect):
         card = event.card
         if card is None or not _to_graveyard(event):
             return False
+        if tail is not None and _is_being_cycled(game):
+            return False  # "and it wasn't cycled": the cycling cost's own discard
         if from_battlefield and event.origin is not Zone.BATTLEFIELD:
             return False
         return whose_matcher(game, source, card) and subject_matcher(game, source, card, event)

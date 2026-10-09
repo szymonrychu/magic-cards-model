@@ -549,7 +549,8 @@ def _cast_spells_from_a_zone(
 #: in addition to paying its other costs") is not this shape.
 _ONCE_EACH_TURN_CAST_FROM_GRAVEYARD = re.compile(
     r"^Once during each of your turns, you may cast an? (?P<what>[\w' -]+?) spell "
-    r"from your graveyard\.(?P<tail>.*)$",
+    r"from your graveyard(?: by sacrificing (?P<sacrifice>a creature) in addition to paying "
+    r"its other costs)?\.(?P<tail>.*)$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -613,6 +614,13 @@ def _once_each_turn_cast_from_graveyard(
         timing=timing,
         exile_instead_of_graveyard=bool(match.group("tail").strip()),
         once_per_turn_key=key,
+        # Maestros Ascendancy: "by sacrificing a creature in addition to paying
+        # its other costs" (CR 601.2f), the creature chosen at CR 601.2b.
+        additional_cost=(
+            total_cost_for_phrase(f"Sacrifice {match.group('sacrifice')}")
+            if match.group("sacrifice")
+            else None
+        ),
     )
 
 
@@ -658,6 +666,7 @@ def _graveyard_cast_grant_option(
 _STATIC_ZONE_CAST_PERMISSION_RE = re.compile(
     r"^(?P<during>during your turn, )?you may (?P<lands>play lands and )?cast "
     r"(?:(?P<what>[\w' ,-]+?) )?spells"
+    r"(?: that have an? (?P<ability>[a-z]+) ability)?"
     r"(?: with (?P<stat>power or toughness|power|toughness|mana value) (?P<n>\d+) or "
     r"(?P<direction>less|greater))?"
     r" from (?P<zone>your graveyard|the top of your library)"
@@ -700,6 +709,9 @@ class StaticZoneCastPermission(EngineModel):
     """"power or toughness", "power", "toughness" or "mana value"."""
     bound: int | None = None
     greater: bool = False
+    has_ability: str | None = None
+    """"spells that have a cycling ability": the keyword the spell must carry
+    (CR 702.29f counts every `[type]cycling`)."""
     life: int = 0
     """Life paid in addition to the spell's other costs (CR 601.2f, CR 119.4)."""
     rider_type: str | None = None
@@ -760,6 +772,7 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
         stat=match.group("stat").lower() if match.group("stat") else None,
         bound=int(match.group("n")) if match.group("n") else None,
         greater=(match.group("direction") or "").lower() == "greater",
+        has_ability=(match.group("ability") or "").lower() or None,
         life=int(match.group("life") or 0),
         rider_type=rider_type,
         rider_counter=rider_counter,
@@ -770,6 +783,15 @@ def reads_static_zone_cast_permission_line(text: str) -> bool:
     """What `support.py` asks before crediting the line: whether
     `static_zone_cast_permission` reads all of it."""
     return static_zone_cast_permission(text) is not None
+
+
+def _has_keyword_ability(spell: CardState, ability: str) -> bool:
+    """Whether the spell's card has a `<ability>` ability - CR 702.29f's "every
+    typecycling ability is a cycling ability" included."""
+    return any(
+        keyword.lower() == ability or (ability == "cycling" and keyword.lower().endswith("cycling"))
+        for keyword in spell.card.keywords
+    )
 
 
 def _within_bound(spell: CardState, permission: StaticZoneCastPermission) -> bool:
@@ -831,6 +853,8 @@ def _static_zone_cast_option(
         if turn is None or turn.active_player != caster:
             return None
     if permission.quality and not spell_has_quality(spell, permission.quality):
+        return None
+    if permission.has_ability and not _has_keyword_ability(spell, permission.has_ability):
         return None
     if not _within_bound(spell, permission):
         return None

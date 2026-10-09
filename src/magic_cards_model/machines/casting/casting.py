@@ -2021,8 +2021,14 @@ class Casting(EngineModel):
             from ..cost import fill_from_among
 
             extra = option.additional_cost.model_copy(deep=True)
+            sacrificed = list(choosing or [])
             for component in extra.components:
                 fill_from_among(component, self.game, self.caster, list(choosing or []) or None)
+                if component.kind is ComponentKind.SACRIFICE and not component.cards:
+                    # Maestros Ascendancy: "by sacrificing a creature" - the
+                    # permanent is chosen at CR 601.2b like any announced cost.
+                    component.cards = sacrificed[: component.required]
+                    sacrificed = sacrificed[component.required :]
             self.add_additional_cost(extra)
         if option.pays_mana_cost:
             # Warp's second half: the card is cast from exile for its own mana
