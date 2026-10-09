@@ -1262,7 +1262,7 @@ def _unlock_door_actions(
     for face in locked_doors(permanent):
         if why_cannot_unlock_door(game, player, permanent, face.name) is not None:
             continue
-        total = unlock_cost(permanent, face.name)
+        total = unlock_cost(permanent, face.name, game, player)
         affordable, reason, pays_with = _cost_affordability(game, player, total, candidate_scan)
         cost_str, mana_cost_str = _cost_strings(total)
         actions.append(

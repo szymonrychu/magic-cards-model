@@ -68,6 +68,7 @@ from .abilities import (
     target_cost_reduction_amount,
 )
 from .combat import has_keyword
+from .cost.abilities import KEYWORD_KINDS, ability_cost_adjustment
 from .cost import (
     ComponentKind,
     CostModifierNotice,
@@ -1817,6 +1818,30 @@ def granted_keyword_triggered_abilities(texts: Sequence[str]) -> list[TriggeredA
 # --------------------------------------------------------------------------
 
 
+def statically_priced(activation: "KeywordActivation") -> "KeywordActivation":
+    """`activation` with every ability cost modifier in play applied to its
+    mana (`machines/cost/abilities.py`: "Abilities you activate that aren't
+    mana abilities cost {2} less", "Activated abilities of creature cards in
+    your graveyard cost {1} less", ...). Equip and ninjutsu price themselves
+    (their builders know the target and the returned creature), and an
+    activation built from `Game.activation_cost` is already priced."""
+    game = activation.game
+    if game is None:
+        return activation
+    kind = activation.keyword.lower()
+    adjusted = ability_cost_adjustment(
+        game,
+        activation.player,
+        activation.card,
+        activation.cost.mana,
+        kind=kind if kind in KEYWORD_KINDS else "",
+        from_zone=activation.card.zone,
+    )
+    if adjusted != activation.cost.mana:
+        activation.cost = TotalCost(mana=adjusted, components=activation.cost.components)
+    return activation
+
+
 class KeywordActivation(EngineModel):
     """One activation of a keyword's activated ability (CR 602.2).
 
@@ -2277,25 +2302,27 @@ def cycling_activation(
     )
 
     typed = _typecycling_type(ability.canonical)
-    return KeywordActivation(
-        card=card,
-        player=player,
-        keyword=ability.canonical,
-        rule=str(KeywordRule.TYPECYCLING if typed else KeywordRule.CYCLING),
-        zone=Zone.HAND,
-        cost=cost,
-        ability=_synthetic_ability(
-            ability,
-            cost_text=f"{ability.cost or ''}, Discard this card".strip(", "),
-            effect=(
-                f"Search your library for {with_indefinite_article(f'{typed} card')}, reveal it, "
-                f"and put it into your hand. "
-                f"Then shuffle."
-                if typed
-                else "Draw a card."
+    return statically_priced(
+        KeywordActivation(
+            card=card,
+            player=player,
+            keyword=ability.canonical,
+            rule=str(KeywordRule.TYPECYCLING if typed else KeywordRule.CYCLING),
+            zone=Zone.HAND,
+            cost=cost,
+            ability=_synthetic_ability(
+                ability,
+                cost_text=f"{ability.cost or ''}, Discard this card".strip(", "),
+                effect=(
+                    f"Search your library for {with_indefinite_article(f'{typed} card')}, reveal it, "
+                    f"and put it into your hand. "
+                    f"Then shuffle."
+                    if typed
+                    else "Draw a card."
+                ),
             ),
-        ),
-        game=game,
+            game=game,
+        )
     )
 
 
@@ -2460,23 +2487,25 @@ def unearth_activation(
             f"{card.name}'s {ability.keyword} cost {ability.cost!r} could not be read, "
             f"so it cannot be paid"
         )
-    return KeywordActivation(
-        card=card,
-        player=player,
-        keyword=ability.canonical,
-        rule=str(KeywordRule.UNEARTH),
-        zone=Zone.GRAVEYARD,
-        cost=cost,
-        sorcery_only=True,
-        ability=_synthetic_ability(
-            ability,
-            cost_text=ability.cost or "",
-            effect=(
-                "Return this card from your graveyard to the battlefield. It gains haste. "
-                "Exile it at the beginning of the next end step."
+    return statically_priced(
+        KeywordActivation(
+            card=card,
+            player=player,
+            keyword=ability.canonical,
+            rule=str(KeywordRule.UNEARTH),
+            zone=Zone.GRAVEYARD,
+            cost=cost,
+            sorcery_only=True,
+            ability=_synthetic_ability(
+                ability,
+                cost_text=ability.cost or "",
+                effect=(
+                    "Return this card from your graveyard to the battlefield. It gains haste. "
+                    "Exile it at the beginning of the next end step."
+                ),
             ),
-        ),
-        game=game,
+            game=game,
+        )
     )
 
 
@@ -2692,20 +2721,22 @@ def craft_activation(
     if in_graveyard:
         components.append(exile_cost(*in_graveyard, payer=player, zone=Zone.GRAVEYARD))
     cost = TotalCost(mana=ManaCost.parse(mana), components=components)
-    return KeywordActivation(
-        card=card,
-        player=player,
-        keyword=ability.canonical,
-        rule=str(KeywordRule.CRAFT),
-        zone=Zone.BATTLEFIELD,
-        cost=cost,
-        sorcery_only=True,
-        ability=_synthetic_ability(
-            ability,
-            cost_text=f"{mana}, Exile this permanent, Exile the materials",
-            effect="Return this card to the battlefield transformed under its owner's control.",
-        ),
-        game=game,
+    return statically_priced(
+        KeywordActivation(
+            card=card,
+            player=player,
+            keyword=ability.canonical,
+            rule=str(KeywordRule.CRAFT),
+            zone=Zone.BATTLEFIELD,
+            cost=cost,
+            sorcery_only=True,
+            ability=_synthetic_ability(
+                ability,
+                cost_text=f"{mana}, Exile this permanent, Exile the materials",
+                effect="Return this card to the battlefield transformed under its owner's control.",
+            ),
+            game=game,
+        )
     )
 
 
@@ -2773,23 +2804,25 @@ def transmute_activation(
             discard_cost(card, payer=player, required=1, description="Discard this card"),
         ],
     )
-    return KeywordActivation(
-        card=card,
-        player=player,
-        keyword=ability.canonical,
-        rule=str(KeywordRule.TRANSMUTE),
-        zone=Zone.HAND,
-        cost=cost,
-        sorcery_only=True,
-        ability=_synthetic_ability(
-            ability,
-            cost_text=f"{ability.cost or ''}, Discard this card".strip(", "),
-            effect=(
-                "Search your library for a card with the same mana value as the discarded "
-                "card, reveal that card, and put it into your hand. Then shuffle your library."
+    return statically_priced(
+        KeywordActivation(
+            card=card,
+            player=player,
+            keyword=ability.canonical,
+            rule=str(KeywordRule.TRANSMUTE),
+            zone=Zone.HAND,
+            cost=cost,
+            sorcery_only=True,
+            ability=_synthetic_ability(
+                ability,
+                cost_text=f"{ability.cost or ''}, Discard this card".strip(", "),
+                effect=(
+                    "Search your library for a card with the same mana value as the discarded "
+                    "card, reveal that card, and put it into your hand. Then shuffle your library."
+                ),
             ),
-        ),
-        game=game,
+            game=game,
+        )
     )
 
 
@@ -2964,38 +2997,10 @@ _EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE = re.compile(
 
 def is_equip_discount_for_this_line(line: str) -> bool:
     """Whether one printed static line is `_EQUIP_ABILITIES_TARGETING_THIS_
-    COST_LESS_RE`'s discount, which `_equip_cost_reduction_for_target`
+    COST_LESS_RE`'s discount, which `machines/cost/abilities.py`
     applies to every equip activation aimed at this creature - `support.py`'s
     credit for it."""
     return _EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE.fullmatch(line.strip()) is not None
-
-
-def _equip_cost_reduction_for_target(game: Any, target: CardState, player: str) -> int:
-    """The total `{N}` an equip activation's own target discounts it by,
-    read off that target's *own* static text (`_EQUIP_ABILITIES_TARGETING_
-    THIS_COST_LESS_RE`) rather than off the Equipment being activated.
-
-    Scoped to `player`'s own such statics ("Equip abilities *you* activate")
-    and to a target still actually on the battlefield - the same two checks
-    `equip_activation`'s own `reduction.target_quality` branch above already
-    makes for the Equipment's own printed discount. Summed across every
-    static line that qualifies, in case more than one is ever printed the
-    same way, the same way `Game.static_cost_modifiers_for` sums a spell's
-    own board-wide discounts rather than stopping at the first.
-    """
-    if target.zone is not Zone.BATTLEFIELD:
-        return 0
-    if game.controller_of(target).username != player:
-        return 0
-    up_face_name = target.up_face_name or target.card.name
-    total = 0
-    for ability in parse_abilities(target.card):
-        if ability.face != up_face_name or ability.kind is not AbilityKind.STATIC:
-            continue
-        match = _EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE.fullmatch(ability.raw.strip())
-        if match is not None:
-            total += int(match.group("amount"))
-    return total
 
 
 def equip_activation(
@@ -3048,7 +3053,7 @@ def equip_activation(
     if candidates and chosen is None:
         raise ValueError(next(refusal for refusal in refusals if refusal is not None))
     activation = unannounced_equip_activation(
-        game, equipment, player, ability=chosen, pay_zero=pay_zero
+        game, equipment, player, ability=chosen, pay_zero=pay_zero, target=target
     )
     profile_for_text(EQUIP_EFFECT).check([target], player, game, source_id=equipment.id)
     # CR 702.16b: the equip ability is "from a source with the stated quality"
@@ -3083,19 +3088,6 @@ def equip_activation(
                     mana=activation.cost.mana.minus(ManaCost.parse(f"{{{reduced_by}}}")),
                     components=activation.cost.components,
                 )
-    # "Equip abilities you activate that target this creature cost {N} less
-    # to activate." (Dwarven Mauler) - a static ability on a *different*
-    # permanent than the Equipment being activated, so it is never part of
-    # `ability.cost_reduction` above (that field is read off the Equipment's
-    # own printed text). Summed rather than only the first found: CR 601.2f
-    # folds every applicable discount together the same way `static_cost_
-    # modifiers_for` already does for a spell.
-    target_discount = _equip_cost_reduction_for_target(game, target, player)
-    if target_discount:
-        activation.cost = TotalCost(
-            mana=activation.cost.mana.minus(ManaCost.parse(f"{{{target_discount}}}")),
-            components=activation.cost.components,
-        )
     return activation
 
 
@@ -3106,6 +3098,7 @@ def unannounced_equip_activation(
     *,
     ability: KeywordAbility | None = None,
     pay_zero: bool = True,
+    target: CardState | None = None,
 ) -> KeywordActivation:
     """An equip activation with no target announced yet: its cost, timing and
     rule, for a caller that asks about the activation before choosing
@@ -3128,6 +3121,22 @@ def unannounced_equip_activation(
     free_from = free_first_equip_source(game, player) if pay_zero and game is not None else None
     if free_from is not None:
         cost = TotalCost(mana=ManaCost.parse("{0}"))
+    elif game is not None:
+        # "Equip abilities you activate cost {1} less" and its siblings
+        # (`machines/cost/abilities.py`, CR 601.2f via CR 602.2b); the
+        # alternative cost above replaces the cost whole (CR 118.9), so there
+        # is nothing left for them to change.
+        cost = TotalCost(
+            mana=ability_cost_adjustment(
+                game,
+                player,
+                equipment,
+                cost.mana,
+                kind="equip",
+                targets=(target,) if target is not None else (),
+            ),
+            components=cost.components,
+        )
     return KeywordActivation(
         card=equipment,
         player=player,
@@ -3287,18 +3296,20 @@ def outlast_activation(
         mana=cost.mana,
         components=[*cost.components, tap_cost(creature, payer=player, description="{T}")],
     )
-    return KeywordActivation(
-        card=creature,
-        player=player,
-        keyword=ability.canonical,
-        rule=str(KeywordRule.OUTLAST),
-        zone=Zone.BATTLEFIELD,
-        cost=cost,
-        sorcery_only=True,
-        ability=_synthetic_ability(
-            ability, cost_text=f"{ability.cost or ''}, {{T}}".strip(", "), effect=OUTLAST_EFFECT
-        ),
-        game=game,
+    return statically_priced(
+        KeywordActivation(
+            card=creature,
+            player=player,
+            keyword=ability.canonical,
+            rule=str(KeywordRule.OUTLAST),
+            zone=Zone.BATTLEFIELD,
+            cost=cost,
+            sorcery_only=True,
+            ability=_synthetic_ability(
+                ability, cost_text=f"{ability.cost or ''}, {{T}}".strip(", "), effect=OUTLAST_EFFECT
+            ),
+            game=game,
+        )
     )
 
 
@@ -3381,22 +3392,24 @@ def crew_activation(
     ability = _keyword(vehicle.card, "crew")
     assert ability is not None  # `crew_number` already found it
     cost = TotalCost(components=[offer.component(creature, player) for creature in chosen])
-    return KeywordActivation(
-        card=vehicle,
-        player=player,
-        keyword="Crew",
-        rule=str(KeywordRule.CREW),
-        zone=Zone.BATTLEFIELD,
-        cost=cost,
-        ability=_synthetic_ability(
-            ability,
-            cost_text=(
-                f"Tap any number of other untapped creatures you control "
-                f"with total power {number} or greater"
+    return statically_priced(
+        KeywordActivation(
+            card=vehicle,
+            player=player,
+            keyword="Crew",
+            rule=str(KeywordRule.CREW),
+            zone=Zone.BATTLEFIELD,
+            cost=cost,
+            ability=_synthetic_ability(
+                ability,
+                cost_text=(
+                    f"Tap any number of other untapped creatures you control "
+                    f"with total power {number} or greater"
+                ),
+                effect="This permanent becomes an artifact creature until end of turn.",
             ),
-            effect="This permanent becomes an artifact creature until end of turn.",
-        ),
-        game=game,
+            game=game,
+        )
     )
 
 
@@ -3545,23 +3558,25 @@ def saddle_activation(
     ability = _keyword(mount.card, "saddle")
     assert ability is not None  # `saddle_number` already found it
     cost = TotalCost(components=[offer.component(creature, player) for creature in chosen])
-    return KeywordActivation(
-        card=mount,
-        player=player,
-        keyword="Saddle",
-        rule=str(KeywordRule.SADDLE),
-        zone=Zone.BATTLEFIELD,
-        cost=cost,
-        sorcery_only=True,
-        ability=_synthetic_ability(
-            ability,
-            cost_text=(
-                f"Tap any number of other untapped creatures you control "
-                f"with total power {number} or greater"
+    return statically_priced(
+        KeywordActivation(
+            card=mount,
+            player=player,
+            keyword="Saddle",
+            rule=str(KeywordRule.SADDLE),
+            zone=Zone.BATTLEFIELD,
+            cost=cost,
+            sorcery_only=True,
+            ability=_synthetic_ability(
+                ability,
+                cost_text=(
+                    f"Tap any number of other untapped creatures you control "
+                    f"with total power {number} or greater"
+                ),
+                effect="This permanent becomes saddled until end of turn.",
             ),
-            effect="This permanent becomes saddled until end of turn.",
-        ),
-        game=game,
+            game=game,
+        )
     )
 
 
@@ -3638,23 +3653,25 @@ def station_activation(
     if game.controller_of(tapped).username != player:
         raise ValueError(f"{tapped.name} is not controlled by {player} ({KeywordRule.STATION})")
     cost = TotalCost(components=[tap_cost(tapped, payer=player)])
-    return KeywordActivation(
-        card=permanent,
-        player=player,
-        keyword="Station",
-        rule=str(KeywordRule.STATION),
-        zone=Zone.BATTLEFIELD,
-        cost=cost,
-        sorcery_only=True,
-        ability=_synthetic_ability(
-            ability,
-            cost_text="Tap another untapped creature you control",
-            effect=(
-                "Put a number of charge counters on this permanent equal to the tapped "
-                "creature's power."
+    return statically_priced(
+        KeywordActivation(
+            card=permanent,
+            player=player,
+            keyword="Station",
+            rule=str(KeywordRule.STATION),
+            zone=Zone.BATTLEFIELD,
+            cost=cost,
+            sorcery_only=True,
+            ability=_synthetic_ability(
+                ability,
+                cost_text="Tap another untapped creature you control",
+                effect=(
+                    "Put a number of charge counters on this permanent equal to the tapped "
+                    "creature's power."
+                ),
             ),
-        ),
-        game=game,
+            game=game,
+        )
     )
 
 
@@ -3738,7 +3755,9 @@ def ninjutsu_activation(
             f"{card.name}'s ninjutsu cost {ability.cost!r} could not be read, so it cannot be paid"
         )
     cost = TotalCost(
-        mana=mana.mana,
+        mana=ability_cost_adjustment(
+            game, player, card, mana.mana, kind="ninjutsu", from_zone=Zone.HAND
+        ),
         components=[
             *mana.components,
             return_to_hand_cost(

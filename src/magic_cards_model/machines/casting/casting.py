@@ -28,6 +28,7 @@ from ..casting_restrictions import (
     targeted_cant_cast_restriction,
     zone_cast_prohibition_source,
 )
+from ..cost.abilities import ability_cost_adjustment, foretell_any_turn
 from ..cost import (
     CardRequirement,
     ComponentKind,
@@ -2030,6 +2031,19 @@ class Casting(EngineModel):
             return self.step
 
         cost = option.cost.model_copy(deep=True) if option.cost is not None else TotalCost()
+        if option.keyword.lower() == "dash" and option.cost is not None and self.game is not None:
+            # "Dash costs you pay cost {2} less" (`machines/cost/abilities.py`).
+            cost = TotalCost(
+                mana=ability_cost_adjustment(
+                    self.game,
+                    self.caster,
+                    self.spell,
+                    cost.mana,
+                    kind="dash",
+                    from_zone=self.origin_zone,
+                ),
+                components=cost.components,
+            )
         remaining = list(choosing or [])
         for component in cost.components:
             if component.required and not component.cards:
@@ -4943,6 +4957,19 @@ def annotate_exile(
     return card
 
 
+def _marked_exile_cost(
+    game: Any, card: CardState, player: str, cost: TotalCost, kind: str
+) -> TotalCost:
+    """`cost` after "Foretelling cards from your hand costs {1} less" and its
+    plot twin (`machines/cost/abilities.py`, CR 601.2f)."""
+    if game is None:
+        return cost
+    return TotalCost(
+        mana=ability_cost_adjustment(game, player, card, cost.mana, kind=kind, from_zone=Zone.HAND),
+        components=cost.components,
+    )
+
+
 class MarkedExile(EngineModel):
     """One of CR 116.2's exile-it-now, cast-it-later special actions.
 
@@ -4989,6 +5016,7 @@ class MarkedExile(EngineModel):
                 f"empty (CR 116.2k, CR 702.170a)"
             )
         cost = total_cost_for_phrase(ability.cost or "") or TotalCost()
+        cost = _marked_exile_cost(game, card, player, cost, "plot")
         return cls(
             card=card,
             player=player,
@@ -5012,13 +5040,20 @@ class MarkedExile(EngineModel):
         """
         if _keyword(card.card, "foretell") is None:
             raise ValueError(f"{card.name} has no foretell ability (CR 702.143a)")
-        if game is not None and game.turn is not None and game.turn.active_player != player:
+        if (
+            game is not None
+            and game.turn is not None
+            and game.turn.active_player != player
+            and not foretell_any_turn(game, player)
+        ):
             raise ValueError(f"{player} can only foretell during their own turn (CR 116.2h)")
         return cls(
             card=card,
             player=player,
             marker=ExileMarker.FORETOLD,
-            cost=TotalCost.of(ManaCost.parse("{2}")).assign_payer(player),
+            cost=_marked_exile_cost(
+                game, card, player, TotalCost.of(ManaCost.parse("{2}")), "foretell"
+            ).assign_payer(player),
             rule="CR 116.2h",
             face_down=True,
             game=game,

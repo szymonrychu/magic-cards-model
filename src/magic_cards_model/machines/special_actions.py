@@ -133,14 +133,25 @@ def locked_doors(permanent: CardState) -> list[Any]:
     ]
 
 
-def unlock_cost(permanent: CardState, door: str) -> TotalCost:
+def unlock_cost(
+    permanent: CardState, door: str, game: "Game | None" = None, username: str | None = None
+) -> TotalCost:
     """CR 709.5e: "pay the mana cost of a locked half of that permanent" -
     the half's own printed mana cost, nothing else. Not a spell being cast,
     so CR 601.2f's cost increases and reductions never apply to it."""
     face = door_face(permanent, door)
     if face is None:
         raise ValueError(f"{door!r} is not a door of {permanent.card.name} (CR 709.5j)")
-    return TotalCost.of(face.mana_cost or None)
+    base = TotalCost.of(face.mana_cost or None)
+    if game is None or username is None:
+        return base
+    # "Unlock costs you pay cost {1} less" (`machines/cost/abilities.py`).
+    from .cost.abilities import ability_cost_adjustment
+
+    return TotalCost(
+        mana=ability_cost_adjustment(game, username, permanent, base.mana, kind="unlock"),
+        components=base.components,
+    )
 
 
 def why_cannot_unlock_door(
@@ -196,7 +207,7 @@ def why_cannot_unlock_door_as(
     reason = why_cannot_unlock_door(game, username, permanent, door)
     if reason is not None:
         return reason
-    total = unlock_cost(permanent, door)
+    total = unlock_cost(permanent, door, game, username)
     sources = game.permanents_controlled_by(username)
     if not could_pay_mana_cost(total.mana, sources, game=game, payer=username):
         return f"{username} cannot pay {total.mana} to unlock {door} right now (CR 118.3)"

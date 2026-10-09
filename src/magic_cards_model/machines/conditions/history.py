@@ -130,6 +130,7 @@ def record(game: "Game", event: "GameEvent") -> None:
         _record_crew(game, event)
     elif kind is ExtraTriggerEvent.ABILITY_ACTIVATED:
         _bind_crew(game, event)
+        _record_activated(game, event)
     elif kind in (TriggerEvent.CAST_SPELL, ExtraTriggerEvent.PLAYS_LAND):
         _record_played(game, event)
 
@@ -325,6 +326,25 @@ def _record_crew(game: "Game", event: "GameEvent") -> None:
         TurnHistoryEntry(
             kind="crewed",
             player=player,
+            object_id=event.subject_id,
+            characteristics=_light_characteristics(event, state, event.subject_controller),
+        )
+    )
+
+
+def _record_activated(game: "Game", event: "GameEvent") -> None:
+    """An activated ability that is not a mana ability, with its source as it
+    was - what "the first activated ability of an artifact you activate each
+    turn" (`machines/cost/abilities.py`) counts."""
+    from ...models.game import TurnHistoryEntry
+
+    state = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+    state = state if _is_card_state(state) else None
+    game.turn_history.append(
+        TurnHistoryEntry(
+            kind="activated",
+            player=event.player,
+            owner=state.owner if state is not None else None,
             object_id=event.subject_id,
             characteristics=_light_characteristics(event, state, event.subject_controller),
         )

@@ -24,6 +24,7 @@ from ...machines.combat import (
     Keyword,
     has_keyword,
 )
+from ...machines.cost.abilities import ability_cost_adjustment
 from ...machines.cost import (
     ComponentKind,
     CostModifierNotice,
@@ -703,7 +704,9 @@ class ActivationMixin:
         refusal = self.why_cannot_unlock_door(username, permanent, door)
         if refusal is not None:
             raise ValueError(refusal)
-        return CostPayment.for_total(unlock_cost(permanent, door), game=self, payer=username)
+        return CostPayment.for_total(
+            unlock_cost(permanent, door, self, username), game=self, payer=username
+        )
 
     def finish_unlocking_door(
         self: "Game", username: str, permanent: CardState, door: str
@@ -1963,6 +1966,24 @@ class ActivationMixin:
             mana = mana.minus(self._power_up_group_discount(permanent, controller))
         mana = mana.minus(self._activation_target_cost_reduction(permanent, ability, targets))
         mana = self._activated_ability_group_discount(permanent, controller, mana)
+        # EP-01 T7: "Equip abilities you activate cost {1} less", "Boast
+        # abilities ...", "Activated abilities cost {2} more" and the rest of
+        # `machines/cost/abilities.py`'s grammar (CR 601.2f via CR 602.2b).
+        mana = ability_cost_adjustment(
+            self,
+            controller,
+            permanent,
+            mana,
+            kind="exhaust"
+            if ability.exhaust
+            else "boast"
+            if (ability.raw or "").lower().startswith("boast")
+            else "",
+            is_mana=ability.mana is not None,
+            is_loyalty=ability.loyalty is not None,
+            targets=tuple(targets or ()),
+            from_zone=permanent.zone,
+        )
 
         return TotalCost(
             mana=mana, components=components, waterbend_generic=waterbend_generic
