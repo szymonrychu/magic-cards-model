@@ -3,8 +3,12 @@ enters" choices (CR 614.12, CR 614.1d, CR 614.12a).
 
 A line is credited only when the PRODUCTION reader performs it: a group
 "<objects> enter tapped" static must compile into the replacement effect the
-engine registers (`_compile_opponents_permanents_enter_tapped`) and that
-effect must fire on a matching entering object of a throwaway real board.
+engine registers (`_compile_opponents_permanents_enter_tapped`), and an "as
+[this] enters, choose ..." sentence must be one the production chooser builders
+(`enters_choice_apply`, `_classify_choice`) return a performer for - the same
+builders `_self_enters_modifiers` registers as the permanent enters. Conditional
+self "enters tapped unless ..." lines are credited by the existing
+`_self_enters_line_category` once `_enters_tapped_condition` reads them.
 """
 
 from ..machines.abilities import _strip_reminder
@@ -12,9 +16,9 @@ from ..machines.replacement import (
     ReplacementKind,
     _classify_choice,
     _compile_opponents_permanents_enter_tapped,
-    enters_choice_apply,
     parse_replacement_effects,
 )
+from ..machines.replacement.enters_choices import enters_choice_apply
 
 
 def _effects_of_line(printing, text):
