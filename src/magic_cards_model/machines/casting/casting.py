@@ -829,6 +829,9 @@ class Casting(EngineModel):
     """The keyword option `use_keyword` chose carries CR 614.1a's "If a spell
     cast this way would be put into a graveyard, exile it instead." - copied
     onto `CastRecord.exile_instead_of_graveyard` by `cast()`."""
+    keyword_pays_life_for_mana_value: bool = False
+    """The claimed option's `KeywordCastOption.pays_life_for_mana_value`:
+    `total_cost` adds the life equal to the spell's mana value."""
     keyword_once_per_turn_key: str | None = None
     """The once-each-turn grant the chosen option spends
     (`KeywordCastOption.once_per_turn_key`), recorded as used when `cast()`
@@ -2045,6 +2048,7 @@ class Casting(EngineModel):
         self.keyword_enters_with_counters = option.enters_with_counters
         self.keyword_once_per_turn_key = option.once_per_turn_key
         self.keyword_cost_paid = not option.pays_mana_cost
+        self.keyword_pays_life_for_mana_value = option.pays_life_for_mana_value
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
         if option.keyword.lower() == "bestow":
             # CR 702.103b: "As a spell cast bestowed is put onto the stack, it
@@ -3876,7 +3880,9 @@ class Casting(EngineModel):
         mana = apply_modifications(base.with_x(self.x_value), increases, reductions, floor=floor)
 
         components = list(self.alternative_cost.components) if self.alternative_cost else []
-        if self.permission_used is not None and self.permission_used.pays_life_for_mana_value:
+        if self.keyword_pays_life_for_mana_value or (
+            self.permission_used is not None and self.permission_used.pays_life_for_mana_value
+        ):
             # CR 118.9b's required alternative cost: life equal to the spell's
             # mana value as it will be on the stack (CR 202.3e: X counts).
             components.append(

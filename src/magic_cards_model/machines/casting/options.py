@@ -97,6 +97,9 @@ class KeywordCastOption(EngineModel):
     means nothing at all is paid."""
     pays_mana_cost: bool = True
     """False when the keyword replaces the printed mana cost (CR 118.9)."""
+    pays_life_for_mana_value: bool = False
+    """The replacing cost is life equal to the spell's mana value, X counted
+    (Bolas's Citadel, CR 118.9, CR 202.3e)."""
     timing: CastTiming = CastTiming.ANY
     marker: ExileMarker | None = None
     """The exile pile the card must be in (CR 406.4)."""

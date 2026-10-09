@@ -137,6 +137,7 @@ from .cost import (
     additional_cost_phrases,
     mana_ability_index,
     mana_candidate_scan,
+    pay_life_cost,
     plan_mana_payment,
     spend_restriction,
 )
@@ -1077,6 +1078,20 @@ def _cast_actions(
                 _record_blocked(blocked, card, None, option_refusal)
                 continue
             total = option.cost if option.cost is not None else TotalCost()
+            if option.pays_life_for_mana_value:
+                # Bolas's Citadel: the life is the spell's mana value (X as 0
+                # while it is still unannounced, CR 107.3b).
+                total = TotalCost(
+                    mana=total.mana,
+                    components=[
+                        *total.components,
+                        pay_life_cost(
+                            int(card.mana_value or 0),
+                            payer=player,
+                            description="pay life equal to its mana value",
+                        ),
+                    ],
+                )
             actions.append(
                 _cast_action(
                     game,

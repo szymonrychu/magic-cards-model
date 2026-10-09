@@ -709,6 +709,15 @@ _ENTERS_WITH_A_COUNTER_RIDER_RE = re.compile(
 #: would die, exile it instead.)" has no game function of its own.
 _REMINDER_TEXT_RE = re.compile(r"\s*\([^()]*\)")
 
+#: Bolas's Citadel's rider: "If you cast a spell this way, pay life equal to its
+#: mana value rather than pay its mana cost." (CR 118.9: life as the
+#: alternative cost; CR 202.3e: X counts toward the mana value.)
+_PAY_LIFE_FOR_MANA_VALUE_RIDER_RE = re.compile(
+    r"^if you cast a spell this way, pay life equal to its mana value rather than pay "
+    r"its mana cost\.?$",
+    re.IGNORECASE,
+)
+
 
 class StaticZoneCastPermission(EngineModel):
     """One `_STATIC_ZONE_CAST_PERMISSION_RE` line, read."""
@@ -734,6 +743,9 @@ class StaticZoneCastPermission(EngineModel):
     spell this way"), or None when it covers every spell cast this way."""
     rider_counter: str | None = None
     """The counter kind the rider puts on the permanent, or None: no rider."""
+    pays_life_for_mana_value: bool = False
+    """Bolas's Citadel: the spells cast this way are paid for with life equal to
+    their mana value rather than their mana cost (CR 118.9)."""
 
 
 def _normalized_spell_quality(what: str | None) -> str:
@@ -765,7 +777,10 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
     rider_type: str | None = None
     rider_counter: str | None = None
     tail = match.group("tail").strip()
-    if tail:
+    pays_life_for_mana_value = False
+    if tail and _PAY_LIFE_FOR_MANA_VALUE_RIDER_RE.fullmatch(tail):
+        pays_life_for_mana_value = True
+    elif tail:
         rider = _ENTERS_WITH_A_COUNTER_RIDER_RE.fullmatch(tail)
         if rider is None:
             return None
@@ -790,6 +805,7 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
         life=int(match.group("life") or 0),
         rider_type=rider_type,
         rider_counter=rider_counter,
+        pays_life_for_mana_value=pays_life_for_mana_value,
     )
 
 
@@ -871,10 +887,11 @@ def _static_zone_cast_option(
         keyword=CAST_PERMISSION,
         rule="CR 601.3, CR 611.3d",
         zone=origin_zone,
-        pays_mana_cost=True,
+        pays_mana_cost=not permission.pays_life_for_mana_value,
         timing=CastTiming.OWN,
         additional_cost=additional,
         enters_with_counters=counters,
+        pays_life_for_mana_value=permission.pays_life_for_mana_value,
     )
 
 
