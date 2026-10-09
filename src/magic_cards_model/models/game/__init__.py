@@ -2227,8 +2227,9 @@ class Game(
     #: level", CR 716.2a).
     #: 141 (EP01-R1-T8): `CardState` gained `crafted_with` (CR 702.167c, the
     #: exiled cards used to craft a permanent), `KeywordActivation` gained
-    #: `craft_materials` and `ManaSpend` gained `no_mana` (Hogaak); an older dump would decode a crafted Mastercraft
-    #: Raptor with no materials, so its power would read 0.
+    #: `craft_materials` and `ManaSpend` gained `no_mana` (Hogaak); an older
+    #: dump would decode a crafted Mastercraft Raptor with no materials, so its
+    #: power would read 0.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

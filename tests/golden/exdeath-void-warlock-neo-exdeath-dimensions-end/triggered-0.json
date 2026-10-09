@@ -1,0 +1,61 @@
+{
+  "ability": "When Exdeath enters, you gain 3 life.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Exdeath, Void Warlock@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Exdeath, Void Warlock // Neo Exdeath, Dimension's End"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Exdeath, Void Warlock // Neo Exdeath, Dimension's End",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["life_gained_amount_this_turn", "life_gained_this_turn"],
+    "notices": {},
+    "objects": {},
+    "players": {
+      "alice": {
+        "life": [20, 23]
+      }
+    },
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "enters_the_battlefield",
+  "number": 0,
+  "recipe": {
+    "attempt": "put",
+    "index": 0,
+    "params": {
+      "tapped": false
+    },
+    "variant": "quiet"
+  }
+}

@@ -302,6 +302,24 @@ def test_instant_and_sorcery_spells_are_castable_from_the_top(permanent):
     assert top_refusal(scenario).startswith("nothing allows alice")
 
 
+def test_melek_copies_an_instant_or_sorcery_cast_from_the_library():
+    """Melek's second line: the copy doubles Divination's draw (CR 707.10)."""
+    scenario = top_board("Melek, Izzet Paragon", ["Divination", *["Forest"] * 4])
+    before = len(scenario.player("alice").hand)
+    cast_top(scenario)
+    assert len(scenario.player("alice").hand) - before == 4
+
+
+def test_melek_does_not_copy_a_spell_cast_from_the_hand():
+    scenario = top_board("Melek, Izzet Paragon", ["Forest"], hand=["Divination"])
+    before = len(scenario.player("alice").hand)
+    casting = scenario.cast("Divination", username="alice")
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    scenario.put_on_stack(casting)
+    resolve_everything(scenario)
+    assert len(scenario.player("alice").hand) - before == 1
+
+
 def test_artifact_and_colorless_spells_from_the_top_with_mystic_forge():
     scenario = top_board("Mystic Forge", ["Sol Ring"])
     assert on_battlefield(cast_top(scenario))
