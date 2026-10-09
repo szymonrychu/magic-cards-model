@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "af6e976c-3c0b-4ba5-b614-e1b576b57e86",
+  "oracle_id": "d82bde29-1576-4736-a755-df9c37765202",
+  "multiverse_ids": [
+    87897
+  ],
+  "mtgo_id": 23136,
+  "mtgo_foil_id": 23137,
+  "tcgplayer_id": 13329,
+  "cardmarket_id": 13435,
+  "name": "Indentured Oaf",
+  "lang": "en",
+  "released_at": "2005-10-07",
+  "uri": "https://api.scryfall.com/cards/af6e976c-3c0b-4ba5-b614-e1b576b57e86",
+  "scryfall_uri": "https://scryfall.com/card/rav/133/indentured-oaf?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:54:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.jpg?1783943651",
+    "normal": "https://cards.scryfall.io/normal/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.jpg?1783943651",
+    "large": "https://cards.scryfall.io/large/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.jpg?1783943651",
+    "png": "https://cards.scryfall.io/png/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.png?1783943651",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.jpg?1783943651",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.jpg?1783943651",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.webp?1783943651",
+    "grid": "https://cards.scryfall.io/grid/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.webp?1783943651",
+    "display": "https://cards.scryfall.io/display/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.webp?1783943651",
+    "art": "https://cards.scryfall.io/art/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.webp?1783943651",
+    "crop": "https://cards.scryfall.io/crop/front/a/f/af6e976c-3c0b-4ba5-b614-e1b576b57e86.webp?1783943651"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Ogre Warrior",
+  "oracle_text": "Prevent all damage that this creature would deal to red creatures.",
+  "power": "4",
+  "toughness": "3",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "15fccbe8-2825-41ca-9d0a-67aebdf91c4a",
+  "set": "rav",
+  "set_name": "Ravnica: City of Guilds",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/15fccbe8-2825-41ca-9d0a-67aebdf91c4a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Arav&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rav?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/af6e976c-3c0b-4ba5-b614-e1b576b57e86/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad82bde29-1576-4736-a755-df9c37765202&unique=prints",
+  "collector_number": "133",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "All it knows is the difference between friend and food.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Glenn Fabry",
+  "artist_ids": [
+    "813fbec8-6592-40f4-a6c1-8c2c1a669dc5"
+  ],
+  "illustration_id": "13efadcf-f20f-429c-9a93-cb328cee7fe9",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 32185,
+  "prices": {
+    "usd": "0.08",
+    "usd_foil": "0.43",
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": "0.20",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=87897&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DIndentured%2BOaf",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DIndentured%2BOaf",
+    "edhrec": "https://edhrec.com/route/?cc=Indentured+Oaf"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F13329%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=13435&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/23136?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

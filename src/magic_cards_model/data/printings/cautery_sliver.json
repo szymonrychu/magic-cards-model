@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "11df0ed7-ae08-4a95-8b79-d6be0df9e31a",
+  "oracle_id": "93a9423c-2b1b-41ce-80f4-157140c684ad",
+  "multiverse_ids": [
+    509613
+  ],
+  "mtgo_id": 86871,
+  "tcgplayer_id": 234206,
+  "cardmarket_id": 547786,
+  "name": "Cautery Sliver",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/11df0ed7-ae08-4a95-8b79-d6be0df9e31a",
+  "scryfall_uri": "https://scryfall.com/card/tsr/248/cautery-sliver?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:29:23Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.jpg?1783927763",
+    "normal": "https://cards.scryfall.io/normal/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.jpg?1783927763",
+    "large": "https://cards.scryfall.io/large/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.jpg?1783927763",
+    "png": "https://cards.scryfall.io/png/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.png?1783927763",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.jpg?1783927763",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.jpg?1783927763",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.webp?1783927763",
+    "grid": "https://cards.scryfall.io/grid/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.webp?1783927763",
+    "display": "https://cards.scryfall.io/display/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.webp?1783927763",
+    "art": "https://cards.scryfall.io/art/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.webp?1783927763",
+    "crop": "https://cards.scryfall.io/crop/front/1/1/11df0ed7-ae08-4a95-8b79-d6be0df9e31a.webp?1783927763"
+  },
+  "mana_cost": "{R}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Sliver",
+  "oracle_text": "All Slivers have \"{1}, Sacrifice this permanent: This permanent deals 1 damage to any target.\"\nAll Slivers have \"{1}, Sacrifice this permanent: Prevent the next 1 damage that would be dealt to target player, planeswalker, or Sliver creature this turn.\"",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/11df0ed7-ae08-4a95-8b79-d6be0df9e31a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A93a9423c-2b1b-41ce-80f4-157140c684ad&unique=prints",
+  "collector_number": "248",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Dany Orizio",
+  "artist_ids": [
+    "fcd5ea36-64e0-4af0-992a-3c68a34a400f"
+  ],
+  "illustration_id": "e9f7b63e-c920-4a5d-92bf-b86390acbca6",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21090,
+  "penny_rank": 12252,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/card-preview/its-time-sliver-lining-2021-03-04",
+    "previewed_at": "2021-03-04"
+  },
+  "prices": {
+    "usd": "0.38",
+    "usd_foil": "0.77",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.70",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509613&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCautery%2BSliver",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCautery%2BSliver",
+    "edhrec": "https://edhrec.com/route/?cc=Cautery+Sliver"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F234206%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=547786&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86871?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

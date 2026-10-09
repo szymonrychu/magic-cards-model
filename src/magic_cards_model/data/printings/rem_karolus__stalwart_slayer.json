@@ -1,0 +1,149 @@
+{
+  "object": "card",
+  "id": "b31e307a-9689-4e11-8c5f-96b7a4b50bed",
+  "oracle_id": "21971c8b-ff9b-40f8-8c9a-93d26c2615b7",
+  "multiverse_ids": [
+    535031
+  ],
+  "resource_id": "EEDD5AAA57EAD956797C010EC897FCD68089707824B3515425FCC27B19BEDFF8",
+  "mtgo_id": 93476,
+  "arena_id": 78602,
+  "tcgplayer_id": 248116,
+  "cardmarket_id": 574933,
+  "name": "Rem Karolus, Stalwart Slayer",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/b31e307a-9689-4e11-8c5f-96b7a4b50bed",
+  "scryfall_uri": "https://scryfall.com/card/mid/235/rem-karolus-stalwart-slayer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:52:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.jpg?1783925556",
+    "normal": "https://cards.scryfall.io/normal/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.jpg?1783925556",
+    "large": "https://cards.scryfall.io/large/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.jpg?1783925556",
+    "png": "https://cards.scryfall.io/png/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.png?1783925556",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.jpg?1783925556",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.jpg?1783925556",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.webp?1783925556",
+    "grid": "https://cards.scryfall.io/grid/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.webp?1783925556",
+    "display": "https://cards.scryfall.io/display/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.webp?1783925556",
+    "art": "https://cards.scryfall.io/art/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.webp?1783925556",
+    "crop": "https://cards.scryfall.io/crop/front/b/3/b31e307a-9689-4e11-8c5f-96b7a4b50bed.webp?1783925556"
+  },
+  "mana_cost": "{1}{R}{W}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Knight",
+  "oracle_text": "Flying, haste\nIf a spell would deal damage to you or another permanent you control, prevent that damage.\nIf a spell would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Haste"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b31e307a-9689-4e11-8c5f-96b7a4b50bed/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A21971c8b-ff9b-40f8-8c9a-93d26c2615b7&unique=prints",
+  "collector_number": "235",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Francisco Miyara",
+  "artist_ids": [
+    "fa64fc53-a243-4a94-a4d2-97625ea24b4f"
+  ],
+  "illustration_id": "f673c159-a61b-479f-aaf8-746109d199c8",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8020,
+  "penny_rank": 3370,
+  "preview": {
+    "source": "Mani Davoudi",
+    "source_uri": "https://twitter.com/Zapgaze/status/1435528674552397828",
+    "previewed_at": "2021-09-08"
+  },
+  "prices": {
+    "usd": "0.36",
+    "usd_foil": "0.48",
+    "usd_etched": null,
+    "eur": "0.36",
+    "eur_foil": "0.48",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=535031&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRem%2BKarolus%252C%2BStalwart%2BSlayer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRem%2BKarolus%252C%2BStalwart%2BSlayer",
+    "edhrec": "https://edhrec.com/route/?cc=Rem+Karolus%2C+Stalwart+Slayer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248116%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574933&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/93476?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
