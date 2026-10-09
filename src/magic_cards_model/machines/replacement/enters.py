@@ -21,7 +21,7 @@ from ...numbers import COUNT, parse_count
 from ..chosen_type import RESTRICTED_TRIBAL_TYPES, matches_restricted_creature_type_choice
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import ReflexiveExileCopiedCard
-from ..keyword_counters import enters_count_reader
+from ..keyword_counters import enters_count_reader, fixed_enters_count_reader
 from .as_enters_actions import Action, as_enters_action, counters_for
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ from .model import (
 
 #: "this creature", "this land", "this permanent", "this" - a self reference.
 _THIS = re.compile(
-    r"^(this|it)\b|^this (creature|land|permanent|artifact|enchantment|"
+    r"^(this|it|he|she)\b|^this (creature|land|permanent|artifact|enchantment|"
     r"planeswalker|battle|card|spell|vehicle|equipment|token)\b",
     re.IGNORECASE,
 )
@@ -306,6 +306,7 @@ _CHOICE_OF_DIFFERENT = re.compile(
     rf"^your choice of (?P<n>{COUNT}) different counters(?: on it)? from among (?P<kinds>.+)$",
     re.IGNORECASE,
 )
+_WHERE_X_IS = re.compile(r"^where x is (?P<expression>.+)$", re.IGNORECASE)
 _TRAILING_ON_IT = re.compile(r"\s+on (?:it|him|her|them)$", re.IGNORECASE)
 
 
@@ -336,6 +337,7 @@ def _enters_with_effects(
     what: str,
     condition: str | None,
     tapped: bool = False,
+    tail: str | None = None,
 ) -> list[ReplacementEffect]:
     """The effects of one "[This] enters [tapped] with `what`" sentence:
     CR 614.1d's tapped entry when printed, then one `ENTERS_WITH` per counter
@@ -376,6 +378,12 @@ def _enters_with_effects(
             # than as an enters-with effect with a made-up amount or kind.
             return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
         amount, variable, counter_kind, expression, that_many_multiplier = counters
+        defined = _WHERE_X_IS.match(tail or "")
+        if defined is not None and variable and expression is None and amount is None:
+            # "... X +1/+1 counters on him, where X is the mana value of the
+            # returned creature": the count is the defined expression, not
+            # CR 107.3m's announced X.
+            expression = defined.group("expression").strip().rstrip(".")
         effects.append(
             _make(
                 ReplacementKind.ENTERS_WITH,
@@ -409,6 +417,7 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
         what=match.group("what").strip(),
         condition=condition,
         tapped=match.group("tapped") is not None,
+        tail=match.group("tail"),
     )
 
 
@@ -2826,8 +2835,10 @@ def _self_enters_modifiers(
             # leaves `amount` None, skips the counters, and says so.
             from ..effects import UnreadableCounterAmountNotice, amount_expression
 
-            reader = amount_expression(effect.amount_expression) or enters_count_reader(
-                effect.amount_expression
+            reader = (
+                fixed_enters_count_reader(effect.amount_expression)
+                or amount_expression(effect.amount_expression)
+                or enters_count_reader(effect.amount_expression)
             )
             if reader is None:
                 game.unreadable_counter_amount_notices.append(

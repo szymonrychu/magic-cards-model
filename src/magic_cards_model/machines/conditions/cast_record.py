@@ -467,6 +467,13 @@ def _keyword_cost_paid(context: "ConditionContext", match: re.Match[str]) -> boo
     return source is not None and turn is not None and source.turn_entered == turn.turns_taken
 
 
+def _cast_using(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "it was cast using web-slinging" / "Scarlet Spider was cast using
+    web-slinging" (CR 201.5: the source's own name): `_keyword_cost_paid`
+    once the subject is the object the clause is about."""
+    return _names_its_object(match.group("subject"), context) and _keyword_cost_paid(context, match)
+
+
 def _bargained(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "it was bargained" (CR 702.166b)."""
     if not _names_its_object(match.group("subject"), context):
@@ -667,9 +674,10 @@ READERS: tuple[ConditionReader, ...] = (
         _keyword_cost_paid,
     ),
     _reader(
-        r"(?:it was|he was|she was|they were) cast using (?P<keyword>web-slinging|sneak|surge"
+        rf"{_NAMED_SUBJECT} (?:was|were) cast using "
+        r"(?P<keyword>web-slinging|sneak|surge"
         r"|prowl|spectacle|madness|emerge|dash|blitz|evoke|mayhem|warp)(?P<this_turn> this turn)?",
-        _keyword_cost_paid,
+        _cast_using,
     ),
     _reader(rf"{_SUBJECT} (?:was|were){_NEGATED} bargained", _bargained),
     _reader(r"evidence was(?P<negated>n't| not)? collected", _evidence_collected),

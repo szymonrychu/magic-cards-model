@@ -429,3 +429,29 @@ def test_hundred_battle_veteran_cast_from_the_graveyard_gets_a_finality_counter(
 def test_hundred_battle_veteran_cast_from_hand_has_no_finality_counter():
     played = _board(hand=["Hundred-Battle Veteran"], battlefield=["Swamp"] * 4)
     assert _cast(played, "Hundred-Battle Veteran").counters["finality"] == 0
+
+
+# -- web-slinging: "X is the mana value of the returned creature" (CR 702.188a) --
+
+
+def _scarlet_spider(web_slung):
+    played = _board(
+        hand=["Scarlet Spider, Ben Reilly"],
+        battlefield=["Cultivator Colossus", "Mountain", "Forest", "Mountain", "Forest", "Mountain"],
+    )
+    colossus = played.creature("Cultivator Colossus")
+    casting = played.cast("Scarlet Spider, Ben Reilly")
+    if web_slung:
+        played.game.tap_permanent(colossus)
+        casting.use_keyword("Web-slinging", choosing=[colossus])
+    played.auto_pay(casting.begin_paying(), username="alice")
+    played.put_on_stack(casting)
+    return played.resolve_top()
+
+
+def test_scarlet_spider_web_slung_enters_with_the_returned_creatures_mana_value():
+    assert _scarlet_spider(True).counters[Counter.PLUS_ONE] == 7
+
+
+def test_scarlet_spider_cast_normally_enters_bare():
+    assert _scarlet_spider(False).counters[Counter.PLUS_ONE] == 0

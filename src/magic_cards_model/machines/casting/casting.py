@@ -746,6 +746,10 @@ class Casting(EngineModel):
     """Whether `keyword_used`'s option carries a timing window of its own
     (`CastTiming.OWN_DECLARE_BLOCKERS`) - what lets `cast()` drop a held
     `timing_refusals_unless_window` entry."""
+    returned_mana_value: int = 0
+    """The mana value of the creature chosen to be returned for web-slinging
+    (CR 702.188a), read as it is chosen (CR 601.2b) and copied onto
+    `CastRecord.returned_mana_value`."""
     returned_creature_defender: TargetRef | None = None
     """The player, planeswalker or battle the creature returned to pay a
     sneak cost was attacking (CR 702.190b), read as the creature is chosen
@@ -2073,6 +2077,7 @@ class Casting(EngineModel):
         reason = component.why_not(self.game)
         if reason is not None:
             raise ValueError(reason)
+        self.returned_mana_value = int(self.game.characteristics_of(chosen).mana_value)
 
     def _reduce_by_emerged_permanent(self, option: KeywordCastOption) -> None:
         """CR 702.119a's second ability: the total cost is reduced by an
@@ -4590,6 +4595,7 @@ class Casting(EngineModel):
                     if self.payment is not None and self.payment.mana_payment is not None
                     else 0
                 ),
+                returned_mana_value=self.returned_mana_value,
                 convoked=(
                     sum(1 for entry in self.payment.substitutions if entry.keyword == "convoke")
                     if self.payment is not None

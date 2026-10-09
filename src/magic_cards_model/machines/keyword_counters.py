@@ -346,6 +346,11 @@ def _spent_total(game, entering) -> int:
     return sum(record.mana_spent.values()) if record is not None else 0
 
 
+def _returned_mana_value(game, entering) -> int:
+    record = game.cast_record_of(entering)
+    return record.returned_mana_value if record is not None else 0
+
+
 def _convoked_total(game, entering) -> int:
     record = game.cast_record_of(entering)
     return record.convoked if record is not None else 0
@@ -445,6 +450,8 @@ _FIXED_COUNT_TERMS = {
     "different mana cost among nonland cards in your graveyard": _different_mana_costs,
     "greatest number of creatures a player controls": _greatest_creature_count,
     "opponent who lost life this turn": _opponents_who_lost_life,
+    # CR 702.188a: web-slinging's returned creature, fixed as it was chosen.
+    "mana value of the returned creature": lambda game, c, e, x: _returned_mana_value(game, e),
     "mana spent to cast it": lambda game, c, e, x: _spent_total(game, e),
     # CR 702.51c: a creature tapped to pay for a spell with convoke "convoked" it.
     "creature that convoked it": lambda game, c, e, x: _convoked_total(game, e),
@@ -514,6 +521,18 @@ def _symbol_groups_spent(symbols: str):
         return record.mana_spent.get(color, 0) // len(letters) if record is not None else 0
 
     return count
+
+
+def fixed_enters_count_reader(description: str):
+    """The reader for a count this module defines outright ("mana value of the
+    returned creature", "creature that convoked it"), tried ahead of the
+    general expression readers so a phrase they would half-read is not."""
+    text = " ".join(description.strip().rstrip(".").split()).lower()
+    for article in ("the amount of ", "the number of ", "the "):
+        if text.startswith(article):
+            text = text[len(article) :]
+            break
+    return _FIXED_COUNT_TERMS.get(text)
 
 
 def enters_count_reader(description: str):

@@ -115,6 +115,13 @@ def _stagings(printing: Card):
         record=CastRecord(origin_zone=Zone.GRAVEYARD, keyword="Escape", x_value=0),
     )
     yield _stage(printing, rich=True, record=CastRecord(origin_zone=Zone.GRAVEYARD, x_value=0))
+    yield _stage(
+        printing,
+        rich=True,
+        record=CastRecord(
+            keyword="Web-slinging", keyword_cost_paid=True, returned_mana_value=3, convoked=2
+        ),
+    )
 
 
 def _could_perform(effect) -> bool:

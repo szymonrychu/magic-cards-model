@@ -566,6 +566,11 @@ class CastRecord(EngineModel):
     """How much of `mana_spent` came from creatures (CR 106.3), from
     `ManaPayment.creature_spent` - "three or more mana from creatures was
     spent to cast it"."""
+    returned_mana_value: int = 0
+    """The mana value of the creature returned to its owner's hand to pay a
+    web-slinging cost (CR 702.188a), fixed as it was chosen (CR 601.2b) -
+    "where X is the mana value of the returned creature". 0 when no creature
+    was returned, and for a copy (CR 707.10)."""
     convoked: int = 0
     """How many creatures were tapped to pay for the spell with convoke (CR
     702.51a), each of which "convoked" it (CR 702.51c) - "for each creature

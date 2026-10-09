@@ -2226,8 +2226,9 @@ class Game(
     #: 106.6 restriction (NW-06 integration, Sorcerer Class's "to gain a Class
     #: level", CR 716.2a).
     #: 134 (EP01-R1-T1): `CastRecord` gained `convoked` (CR 702.51c, "for each
-    #: creature that convoked it"); an older dump would read every convoked
-    #: spell as convoked by none.
+    #: creature that convoked it") and `returned_mana_value` (CR 702.188a,
+    #: web-slinging's "mana value of the returned creature"); an older dump
+    #: would read every convoked spell as convoked by none.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
