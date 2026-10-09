@@ -283,6 +283,7 @@
     "_seat",
     "_self_loyalty_instant_speed",
     "_setattr_handler",
+    "_skip_replaced_extra_turns",
     "_sneak_defender_of",
     "_source_card_of",
     "_spell_mode_is_legal",
