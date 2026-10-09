@@ -110,6 +110,7 @@ from magic_cards_model.machines.cost import (
     cost_announces_x,
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
+    reads_black_mana_as_life_line,
     static_free_cast_grant,
     waterbend_mana_cost,
 )
@@ -2213,6 +2214,10 @@ def _static_ability_category(
         return HANDLED
     if reads_or_pay_additional_cost_line(text):
         # `casting.mandatory_additional_costs` charges either half.
+        return HANDLED
+    if reads_black_mana_as_life_line(text):
+        # CR 107.4f: `payable_with_black_as_life` reads each {B} the
+        # controller pays as a Phyrexian {B/P} (K'rrik).
         return HANDLED
     if reads_granted_life_cost_line(text):
         # CR 118.8b / CR 118.7a: `Casting.pay_granted_life_cost` announces the
