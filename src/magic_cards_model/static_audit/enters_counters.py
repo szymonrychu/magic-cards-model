@@ -99,12 +99,60 @@ def _line_effects(printing: Card, text: str):
     ]
 
 
+def _group_line_performed(printing: Card, text: str) -> bool:
+    """A group line ("Each Dragon you control enters with an additional ...")
+    is credited when the production reader (`_group_entering_counters`),
+    asked with the printing staged as the source on the battlefield (or in the
+    graveyard for its "as long as this creature is in your graveyard" form)
+    and a real printing from the pool entering under the same controller,
+    produces an effect for it that applies cleanly."""
+    from magic_cards_model.machines.replacement.enters import (
+        _group_entering_counters,
+        group_enters_specs,
+    )
+    from magic_cards_model.machines.replacement.model import EventKind, ReplaceableEvent
+    from magic_cards_model.support import _probe_pool
+
+    specs = group_enters_specs([text])
+    if not specs:
+        return False
+    for spec in specs:
+        performed = False
+        for candidate in _probe_pool().values():
+            game, source = _stage(printing, rich=True, record=None)
+            entering = CardState(
+                card=candidate, zone=Zone.STACK, controller="sweep_you", owner="sweep_you"
+            )
+            entering.bind_to_game(game)
+            if not spec["predicate"](source, entering):
+                continue
+            if spec["in_graveyard"]:
+                source.zone = Zone.GRAVEYARD
+                game.players[0].graveyard.append(source)
+            else:
+                game.battlefield.append(source)
+            event = ReplaceableEvent(kind=EventKind.ENTERS_BATTLEFIELD, card=entering)
+            try:
+                effects = _group_entering_counters(game, event)
+                for effect in effects:
+                    effect.apply(game, effect.source, event)
+            except Exception:
+                return False
+            performed = bool(effects)
+            break
+        if not performed:
+            return False
+    return True
+
+
 def reads_static_line(
     printing: Card, text: str, *, card_name: str | None = None, legendary: bool = False
 ) -> bool:
     lowered = text.lower()
     if "counter" not in lowered or not ("enter" in lowered or "escape" in lowered):
         return False
+    if "additional" in lowered and _group_line_performed(printing, text):
+        return True
     effects = _line_effects(printing, text)
     if not effects or any(effect.kind is not ReplacementKind.ENTERS_WITH for effect in effects):
         return False

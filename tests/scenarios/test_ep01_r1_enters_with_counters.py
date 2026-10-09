@@ -41,14 +41,14 @@ def test_dragonstorm_globe_ignores_a_non_dragon():
 
 
 def test_dragonstorm_globe_does_not_help_an_opponents_dragon():
-    played = _board(battlefield=["Dragonstorm Globe"])
     scenario = Scenario().manual_turn_based_actions()
-    scenario.player("alice", battlefield=["Dragonstorm Globe"]).player("bob", hand=["Hellkite Whelp"])
+    scenario.player("alice", battlefield=["Dragonstorm Globe"]).player(
+        "bob", hand=["Hellkite Whelp"]
+    )
     opp = scenario.build()
     opp.start_at(Step.PRECOMBAT_MAIN)
     whelp = opp.put_onto_battlefield("Hellkite Whelp", "bob")
     assert whelp.counters[Counter.PLUS_ONE] == 0
-    assert played is not None
 
 
 def test_bramblewood_paragon_helps_other_warriors_but_not_itself():
@@ -67,9 +67,7 @@ def test_oath_of_gideon_adds_a_loyalty_counter_to_a_planeswalker():
 
 
 def test_squad_captain_counts_each_other_creature_you_control():
-    played = _board(
-        battlefield=["Elvish Warrior", "Goblin Piker"], hand=["Squad Captain"]
-    )
+    played = _board(battlefield=["Elvish Warrior", "Goblin Piker"], hand=["Squad Captain"])
     captain = played.put_onto_battlefield("Squad Captain")
     assert captain.counters[Counter.PLUS_ONE] == 2
 
