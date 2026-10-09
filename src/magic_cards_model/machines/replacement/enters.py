@@ -25,6 +25,12 @@ from ..delayed import ReflexiveExileCopiedCard
 if TYPE_CHECKING:
     from ...models.game import Game
     from ..effects import _SacrificeRestriction
+from .enters_choices import (
+    REVEALED_OR_CONTROL_RE,
+    compile_group_enter_tapped,
+    read_extra_enters_condition,
+    reveal_follow_up_subtype,
+)
 from .model import (
     ApplicableEffect,
     Applies,
@@ -196,7 +202,58 @@ def _try_enters_as_copy(sentence: str, names: tuple[str, ...]) -> list[Replaceme
     ]
 
 
+#: "Artifacts, creatures, and lands your opponents control enter tapped." (Frozen
+#: Aether, Loxodon Gatekeeper) - `_ENTERS_TAPPED`'s subject cannot hold a comma
+#: (its leading "If <condition>," needs that), so an unconditional comma list
+#: of objects is read here.
+_ENTERS_TAPPED_LIST = re.compile(
+    rf"^(?P<subject>[A-Z][^.]*?,[^.]+?) {_ENTERS} tapped\.?$",
+)
+#: "This creature enters tapped and doesn't untap during your untap step."
+#: (Grimgrin, Leviathan, Traxos) and "This artifact enters tapped and with
+#: three charge counters on it." (Sphere of the Suns) - CR 614.1d's tapped half
+#: plus a second clause: the untap restriction is the continuous effect
+#: `layers.parse._SELF_DOESNT_UNTAP_RE` reads off the same line, the counters an
+#: ordinary `ENTERS_WITH` (CR 614.1c).
+_ENTERS_TAPPED_AND = re.compile(
+    rf"^(?P<subject>[^,]+?) {_ENTERS} tapped and "
+    r"(?:(?P<untap>doesn'?t untap during your untap step)|with (?P<what>.+?)(?: on it)?)\.?$",
+    re.IGNORECASE,
+)
+
+
 def _try_enters_tapped(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    both = _ENTERS_TAPPED_AND.match(sentence)
+    if both is not None:
+        subject = both.group("subject").strip()
+        tapped = _make(
+            ReplacementKind.ENTERS_TAPPED,
+            sentence,
+            subject=subject,
+            tapped=True,
+            condition=None,
+            self_replacement=_refers_to_self(subject, names),
+        )
+        if both.group("untap"):
+            return [tapped]
+        with_counters = _try_enters_with(f"{subject} enters with {both.group('what')} on it.", names)
+        return [
+            tapped,
+            *(effect.model_copy(update={"text": sentence, "raw": sentence}) for effect in with_counters),
+        ]
+    listed = _ENTERS_TAPPED_LIST.match(sentence)
+    if listed is not None and not sentence.lower().startswith("if "):
+        subject = listed.group("subject").strip()
+        return [
+            _make(
+                ReplacementKind.ENTERS_TAPPED,
+                sentence,
+                subject=subject,
+                tapped=True,
+                condition=None,
+                self_replacement=_refers_to_self(subject, names),
+            )
+        ]
     match = _ENTERS_TAPPED.match(sentence)
     if not match:
         return []
@@ -425,9 +482,11 @@ def _compile_opponents_permanents_enter_tapped(
         return None
     if effect.condition:
         return None
+    if effect.replacement is not None:
+        return None
     classes = _read_opponents_permanent_classes(effect.subject or "")
     if classes is None:
-        return None
+        return compile_group_enter_tapped(effect)
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
         card = event.card
@@ -666,6 +725,22 @@ def _optional_enters_payment(effect: ReplacementEffect, card_name: str) -> Apply
     ):
         return None
     return _reveal_or_tapped(phrase, card_name)
+
+
+def _or_you_control(choice: Apply, subtype: str) -> Apply:
+    """A reveal land's "...unless you revealed a <type> card this way or you
+    control a <type>" (CR 614.12a): the same optional reveal, then the land
+    stays untapped anyway when its controller already controls the subtype."""
+    controls = _controls_a_subtype(frozenset({subtype}))
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        was_tapped = event.tapped
+        choice(game, source, event)
+        if not was_tapped and event.tapped and event.card is not None:
+            if controls(game, event.card):
+                event.tapped = False
+
+    return apply
 
 
 def _reveal_or_tapped(phrase: str, card_name: str) -> Apply:
@@ -1277,7 +1352,7 @@ def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
         condition = (effect.condition or "").strip()
         if not condition:
             continue
-        if _IF_YOU_DONT.match(condition):
+        if _IF_YOU_DONT.match(condition) or REVEALED_OR_CONTROL_RE.match(condition.rstrip(".")):
             if pending_payments:
                 pending_payments -= 1
             else:
@@ -1346,7 +1421,7 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
     if condition.strip().lower() == ESCAPED_CONDITION:
         return _escaped
 
-    return None
+    return read_extra_enters_condition(condition)
 
 
 def _revolt_clauses() -> frozenset[str]:
@@ -2391,12 +2466,18 @@ def _self_enters_modifiers(
                     for other, candidate in enumerate(parsed)
                     if other > index
                     and candidate.kind is ReplacementKind.ENTERS_TAPPED
-                    and _IF_YOU_DONT.match((candidate.condition or "").strip())
+                    and (
+                        _IF_YOU_DONT.match((candidate.condition or "").strip())
+                        or reveal_follow_up_subtype(candidate) is not None
+                    )
                 ),
                 None,
             )
             if follower is not None:
                 consumed.add(follower)
+                subtype = reveal_follow_up_subtype(parsed[follower])
+                if subtype is not None:
+                    choice = _or_you_control(choice, subtype)
                 performable.append(
                     (
                         f"{key}:{index}",
@@ -2907,7 +2988,9 @@ def self_enters_effects_read(card: Card, effects: Sequence[ReplacementEffect]) -
                 return False
             continue
         if effect.condition is not None:
-            if _IF_YOU_DONT.match(effect.condition.strip()):
+            if _IF_YOU_DONT.match(effect.condition.strip()) or REVEALED_OR_CONTROL_RE.match(
+                effect.condition.strip().rstrip(".")
+            ):
                 paired = any(
                     other.kind is ReplacementKind.AS_ENTERS
                     and other.optional

@@ -5897,8 +5897,8 @@ _DONT_CAUSE_TRIGGERS_RE = re.compile(
 #: normalized_effect_text`. Basalt Monolith's identical shape on an artifact
 #: proves this is the mechanic, not the creature type.
 _SELF_DOESNT_UNTAP_RE = re.compile(
-    r"^this (?:creature|artifact|permanent|token) doesn'?t untap during your "
-    r"untap step\.?$",
+    r"^this (?:creature|artifact|permanent|token) (?:enters tapped and )?doesn'?t untap "
+    r"during your untap step\.?$",
     re.IGNORECASE,
 )
 
