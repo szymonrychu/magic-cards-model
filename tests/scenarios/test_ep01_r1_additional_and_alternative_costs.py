@@ -12,7 +12,7 @@ applied to a spell (CR 118.9a); a cost is paid in full or not at all (CR 118.3).
 
 import pytest
 
-from magic_cards_model.machines import Step
+from magic_cards_model.machines import Step, payability
 from magic_cards_model.machines.casting.options import (
     optional_additional_costs,
     or_additional_cost_alternatives,
@@ -195,3 +195,64 @@ def test_demilich_pays_its_mana_cost_and_exiles_four_instants_or_sorceries():
     assert option.pays_mana_cost
     (component,) = option.additional_cost.components
     assert component.required == 4
+
+
+def _force_of_virtue_board() -> Scenario:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Grizzly Bears"])
+        .player("bob", hand=["Force of Virtue", "Savannah Lions", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)  # alice is active, so it is not bob's turn
+    return scenario
+
+
+def test_force_of_virtue_is_cast_on_an_opponents_turn_by_exiling_a_white_card():
+    """CR 118.9: "If it's not your turn, you may exile a white card from your
+    hand rather than pay this spell's mana cost." - the printed line the
+    sweep reads as a permanent card's alternative cost."""
+    scenario = _force_of_virtue_board()
+    white = scenario.find("Savannah Lions", Zone.HAND, "bob")
+    scenario.pass_priority("alice")
+
+    casting = scenario.cast("Force of Virtue", username="bob")
+    (option,) = [found for found in casting.alternative_costs if found.available]
+    casting.use_alternative_cost(option.index, choosing=[white])
+    payment = casting.begin_paying()
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+
+    assert white.zone is Zone.EXILE
+    assert scenario.find("Force of Virtue", Zone.BATTLEFIELD, "bob").zone is Zone.BATTLEFIELD
+
+
+def test_force_of_virtue_offers_nothing_on_its_controllers_own_turn():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Force of Virtue", "Savannah Lions"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Force of Virtue", username="alice")
+    assert not [found for found in casting.alternative_costs if found.available]
+    casting.cancel()
+
+
+def test_force_of_virtue_needs_a_white_card_to_exile():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice")
+        .player("bob", hand=["Force of Virtue", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.pass_priority("alice")
+    assert not payability(
+        scenario.game, "bob", scenario.find("Force of Virtue", Zone.HAND, "bob")
+    ).payable

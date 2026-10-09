@@ -633,10 +633,12 @@ def per_object_exile_reduction_of_sentence(sentence: str) -> ManaCost | None:
 
 
 def alternative_cost_phrase_of_line(text: str) -> str | None:
-    """The cost of a line that is wholly `alternative_cost_offers`'
-    unconditional "You may <cost> rather than pay this spell's mana cost."
-    (CR 118.9), else None."""
-    match = _ALTERNATIVE.fullmatch(text.strip())
+    """The cost of a line that is wholly one of `alternative_cost_offers`'
+    "You may <cost> rather than pay this spell's mana cost." (CR 118.9),
+    unconditional or gated on "If it's not your turn", else None."""
+    match = _ALTERNATIVE.fullmatch(text.strip()) or _ALTERNATIVE_IF_NOT_YOUR_TURN.fullmatch(
+        text.strip()
+    )
     return None if match is None else match.group("what")
 
 
