@@ -31,6 +31,7 @@ from ...machines.casting import (
     marker_cast_options,
     optional_additional_costs,
     play_permissions_on,
+    record_graveyard_land_use,
     static_free_cast_grants,
     static_free_cast_refusal,
     static_permission_applies_now,
@@ -2290,6 +2291,11 @@ class CastingMixin:
 
         if permission is not None:
             self.spend_play_permission_choice(permission)
+        gained_ability = (
+            record_graveyard_land_use(self, land, username)
+            if permission is None and land.zone is Zone.GRAVEYARD
+            else None
+        )
         # CR 406.3a: a card exiled face down "is turned face up just before
         # the player announces that they are playing the card".
         land.face_up = True
@@ -2313,6 +2319,8 @@ class CastingMixin:
         played = self._land_play_event(land, username)
         with self._id_allocator_scope():
             self.enter_the_battlefield(land, username, was_cast=False)
+            if gained_ability is not None:
+                land.granted_ability_texts = (*land.granted_ability_texts, gained_ability)
             # CR 601.1a: playing a land is playing a card - Voltaic
             # Visionary's "When you play a card exiled with this creature".
             self.emit(played)

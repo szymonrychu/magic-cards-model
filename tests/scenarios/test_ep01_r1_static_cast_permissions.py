@@ -824,3 +824,108 @@ def test_azula_casts_what_it_exiled_at_any_time_during_your_turn_with_any_mana()
     scenario.start_at(Step.DECLARE_ATTACKERS)  # creature spells are sorcery-speed without flash
     assert exile_refusal(scenario, bears) is None
     assert on_battlefield(cast_from_pile(scenario, bears))
+
+
+# -- playing from the graveyard: Lurrus, Serra Paragon, Muldrotha, Emet-Selch -
+
+
+def test_lurrus_casts_a_cheap_permanent_spell_once_each_turn():
+    scenario = build(
+        alice={
+            "battlefield": ["Lurrus of the Dream-Den"],
+            "graveyard": ["Grizzly Bears", "Savannah Lions", "Hill Giant", "Divination"],
+        }
+    )
+    assert refusal(scenario, "Hill Giant", Zone.GRAVEYARD).startswith("nothing allows alice")
+    assert refusal(scenario, "Divination", Zone.GRAVEYARD).startswith("nothing allows alice")
+    assert on_battlefield(cast_with_permission(scenario, "Grizzly Bears", Zone.GRAVEYARD))
+    assert refusal(scenario, "Savannah Lions", Zone.GRAVEYARD).startswith("nothing allows alice")
+
+
+def test_serra_paragon_plays_a_land_or_casts_a_cheap_spell_once_and_the_card_gains_an_ability():
+    scenario = build(
+        alice={
+            "battlefield": ["Serra Paragon"],
+            "graveyard": ["Forest", "Grizzly Bears", "Hill Giant"],
+        }
+    )
+    forest = scenario.find("Forest", Zone.GRAVEYARD, "alice")
+    assert refusal(scenario, "Hill Giant", Zone.GRAVEYARD).startswith("nothing allows alice")
+    scenario.game.play_land(forest, "alice")
+    assert forest.zone is Zone.BATTLEFIELD
+    assert "exile it and you gain 2 life" in forest.granted_ability_texts[0]
+    # the one use of the turn is spent by the land
+    assert refusal(scenario, "Grizzly Bears", Zone.GRAVEYARD).startswith("nothing allows alice")
+
+
+def test_serra_paragon_cast_spell_gains_the_ability_and_spends_the_use():
+    scenario = build(
+        alice={"battlefield": ["Serra Paragon"], "graveyard": ["Forest", "Grizzly Bears"]}
+    )
+    bears = cast_with_permission(scenario, "Grizzly Bears", Zone.GRAVEYARD)
+    assert on_battlefield(bears)
+    assert "gain 2 life" in bears.granted_ability_texts[0]
+    forest = scenario.find("Forest", Zone.GRAVEYARD, "alice")
+    with pytest.raises(ValueError):
+        scenario.game.play_land(forest, "alice")
+
+
+def test_muldrotha_plays_one_land_and_casts_one_permanent_spell_of_each_type():
+    scenario = build(
+        alice={
+            "battlefield": ["Muldrotha, the Gravetide"],
+            "graveyard": [
+                "Forest",
+                "Island",
+                "Grizzly Bears",
+                "Hill Giant",
+                "Sol Ring",
+                "Mind Stone",
+            ],
+        }
+    )
+    scenario.game.play_land(scenario.find("Forest", Zone.GRAVEYARD, "alice"), "alice")
+    with pytest.raises(ValueError):
+        scenario.game.play_land(scenario.find("Island", Zone.GRAVEYARD, "alice"), "alice")
+    assert on_battlefield(cast_with_permission(scenario, "Grizzly Bears", Zone.GRAVEYARD))
+    assert refusal(scenario, "Hill Giant", Zone.GRAVEYARD).startswith("nothing allows alice")
+    assert on_battlefield(cast_with_permission(scenario, "Sol Ring", Zone.GRAVEYARD))
+    assert refusal(scenario, "Mind Stone", Zone.GRAVEYARD).startswith("nothing allows alice")
+
+
+def test_muldrotha_does_not_cast_a_nonpermanent_spell():
+    scenario = build(
+        alice={"battlefield": ["Muldrotha, the Gravetide"], "graveyard": ["Divination"]}
+    )
+    assert refusal(scenario, "Divination", Zone.GRAVEYARD).startswith("nothing allows alice")
+
+
+def test_emet_selch_plays_any_card_from_the_graveyard_on_your_turn():
+    scenario = build(
+        alice={
+            "battlefield": ["Emet-Selch, Unsundered // Hades, Sorcerer of Eld"],
+            "graveyard": ["Forest", "Divination", "Hill Giant"],
+        }
+    )
+    next(c for c in scenario.game.battlefield if c.name.startswith("Emet-Selch")).transform()
+    assert refusal(scenario, "Divination", Zone.GRAVEYARD) is None
+    assert refusal(scenario, "Hill Giant", Zone.GRAVEYARD) is None
+    scenario.game.play_land(scenario.find("Forest", Zone.GRAVEYARD, "alice"), "alice")
+    # the back face's own replacement exiles what would reach the graveyard
+    assert cast_with_permission(scenario, "Divination", Zone.GRAVEYARD).zone is Zone.EXILE
+
+
+def test_emet_selch_does_nothing_on_an_opponents_turn():
+    scenario = (
+        Scenario()
+        .player("bob", library=["Island"] * 6)
+        .player(
+            "alice",
+            battlefield=["Emet-Selch, Unsundered // Hades, Sorcerer of Eld", *LANDS],
+            graveyard=["Divination"],
+            library=["Forest"] * 6,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    assert refusal(scenario, "Divination", Zone.GRAVEYARD).startswith("nothing allows alice")

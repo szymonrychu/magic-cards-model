@@ -3330,7 +3330,10 @@ class ZonesMixin:
         for permanent in self.permanents_controlled_by(username):
             if any(plays_lands_from_graveyard_line(line) for line in board.of(permanent).abilities):
                 return permanent
-        return None
+        from ...machines.casting import static_graveyard_land_source
+
+        source = static_graveyard_land_source(self, land, username)
+        return None if source is None else source[0]
 
     def _looks_at_top_card_any_time_line(self: "Game", text: str) -> bool:
         """Whether one static line is "You may look at the top card of your

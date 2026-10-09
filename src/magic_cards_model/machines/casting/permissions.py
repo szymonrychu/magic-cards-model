@@ -26,7 +26,13 @@ from ..keywords import (
     printed_casualty_numbers,
     printed_conspire_count,
 )
-from ..layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
+from ..layers import (
+    ContinuousEffect,
+    Layer,
+    grant_ability,
+    only_this_incarnation,
+    plays_lands_from_graveyard_line,
+)
 from ..spell_grants import casualty_numbers, conspire_count
 from ..turn import Step
 from .options import KeywordCastOption, OptionalAdditionalCost
@@ -499,11 +505,18 @@ def granted_cast_options(
                 option = _once_each_turn_cast_from_graveyard(
                     text, spell, origin_zone, game, caster, permanent
                 )
-            if option is None:
-                option = _static_zone_cast_option(
+            static_options = (
+                _static_zone_cast_options(
                     text, game, spell, caster, origin_zone, library_top, permanent
                 )
-            if option is None:
+                if option is None
+                else []
+            )
+            found.extend(
+                GrantedCastOption(source_name=permanent.name, option=static_option)
+                for static_option in static_options
+            )
+            if option is None and not static_options:
                 option = _linked_exile_static_cast_option(
                     text, game, spell, caster, origin_zone, permanent
                 )
@@ -900,6 +913,7 @@ _STATIC_ZONE_CAST_BODY_RE = re.compile(
     r"play historic lands and cast historic spells"
     r"|play lands and cast (?:(?P<qlands>[\w' ,-]+?) )?spells"
     r"|play lands"
+    r"|play cards"
     r"|cast (?:an? )?(?:(?P<q>[\w' ,-]+?) )?spells?)"
     r"(?: with (?P<stat>power or toughness|power|toughness|mana value) (?P<n>\d+) or "
     r"(?P<direction>less|greater))?"
@@ -910,6 +924,24 @@ _STATIC_ZONE_CAST_BODY_RE = re.compile(
     r"(?: if (?P<iff>it shares a card type with a card exiled with this \w+))?"
     r"\.(?P<tail>.*)$",
     re.IGNORECASE | re.DOTALL,
+)
+#: Serra Paragon: "Once during each of your turns, you may play a land from
+#: your graveyard or cast a permanent spell with mana value 3 or less from your
+#: graveyard. If you do, it gains "..."." - one use of the turn, for either
+#: half, and the permanent it makes gains the quoted ability.
+_GRAVEYARD_LAND_OR_SPELL_RE = re.compile(
+    r"^(?P<lead>once during each of your turns), you may play a land from your graveyard or "
+    r"cast an? (?P<q>[\w' ,-]+?) spell(?: with (?P<stat>mana value) (?P<n>\d+) or "
+    r"(?P<direction>less|greater))? from your graveyard\."
+    r'(?: If you do, it gains "(?P<gain>[^"]+)")?\.?$',
+    re.IGNORECASE,
+)
+#: Muldrotha: "During each of your turns, you may play a land and cast a
+#: permanent spell of each permanent type from your graveyard."
+_GRAVEYARD_EACH_PERMANENT_TYPE_RE = re.compile(
+    r"^during each of your turns, you may play a land and cast a permanent spell of each "
+    r"permanent type from your graveyard\.$",
+    re.IGNORECASE,
 )
 _STATIC_ZONE_CAST_LEADS = (
     (re.compile(r"^as long as (?P<c>.+?), (?=you may )", re.IGNORECASE), "condition"),
@@ -982,6 +1014,13 @@ class StaticZoneCastPermission(EngineModel):
     shares_type_with_exiled: bool = False
     """Cemetery Illuminator: the spell shares a card type with a card exiled
     with the permanent (CR 607.2a)."""
+    per_permanent_type: bool = False
+    """Muldrotha: one land and one permanent spell of each permanent type (CR
+    110.4) per turn - each type is its own use, a card of several types
+    choosing one as it is played."""
+    gained_line: str | None = None
+    """Serra Paragon: the ability the permanent played or cast this way gains
+    (CR 611.3d)."""
     rider_type: str | None = None
     """The card type the enters-with rider names ("If you cast a creature
     spell this way"), or None when it covers every spell cast this way."""
@@ -1002,6 +1041,7 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
     if not line or _ONCE_EACH_TURN_CAST_FROM_GRAVEYARD.match(line):
         return None  # the plain once-per-turn graveyard shape has its own reader
     conditions: list[str] = [word_condition] if word_condition else []
+    whole_line = line
     during = once = False
     changed = True
     while changed:
@@ -1020,6 +1060,30 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
                 once = True
             else:
                 once = during = True
+    serra = _GRAVEYARD_LAND_OR_SPELL_RE.fullmatch(whole_line)
+    if serra is not None and not conditions:
+        quality = normalized_spell_quality(serra.group("q"))
+        if spell_quality_predicate(quality) is None:
+            return None
+        return StaticZoneCastPermission(
+            zone=Zone.GRAVEYARD,
+            quality=quality,
+            during_your_turn=True,
+            once_each_turn=True,
+            plays_lands=True,
+            stat=serra.group("stat").lower() if serra.group("stat") else None,
+            bound=int(serra.group("n")) if serra.group("n") else None,
+            greater=(serra.group("direction") or "").lower() == "greater",
+            gained_line=serra.group("gain"),
+        )
+    if _GRAVEYARD_EACH_PERMANENT_TYPE_RE.fullmatch(whole_line) and not conditions:
+        return StaticZoneCastPermission(
+            zone=Zone.GRAVEYARD,
+            quality="permanent",
+            during_your_turn=True,
+            plays_lands=True,
+            per_permanent_type=True,
+        )
     looks = _LOOK_AT_TOP_PREFIX_RE.match(line) is not None
     line = _LOOK_AT_TOP_PREFIX_RE.sub("", line)
     line = _PLAY_THE_TOP_CARD_RE.sub(
@@ -1031,7 +1095,7 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
     act = match.group("act").lower()
     historic_lands = act.startswith("play historic lands")
     plays_lands = act.startswith("play")
-    casts = not act.startswith("play lands") or " and cast " in act
+    casts = not act.startswith("play lands") or " and cast " in act or act == "play cards"
     quality = normalized_spell_quality(
         "historic" if historic_lands else match.group("qlands") or match.group("q")
     )
@@ -1054,10 +1118,7 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
             return None
         rider_counter = rider.group("counter").lower()
     zone = Zone.GRAVEYARD if "graveyard" in match.group("zone").lower() else Zone.LIBRARY
-    if plays_lands and zone is Zone.GRAVEYARD:
-        # The land half is read for the top of the library only
-        # (`Game.land_from_top_of_library_permission`); a graveyard one would
-        # be credited with a land drop nothing performs.
+    if act == "play cards" and zone is not Zone.GRAVEYARD:
         return None
     return StaticZoneCastPermission(
         zone=zone,
@@ -1159,6 +1220,88 @@ def _shares_a_type_with_exiled(game: Any, spell: CardState, permanent: CardState
     )
 
 
+_PERMANENT_SPELL_TYPES = (
+    Type.ARTIFACT,
+    Type.CREATURE,
+    Type.ENCHANTMENT,
+    Type.PLANESWALKER,
+    Type.BATTLE,
+)
+
+
+def _static_zone_cast_options(
+    text: str,
+    game: Any,
+    spell: CardState,
+    caster: str,
+    origin_zone: Zone,
+    library_top: bool | None,
+    permanent: CardState | None = None,
+) -> list[KeywordCastOption]:
+    """`static_zone_cast_permission`'s grants for `spell`: none, one, or - for
+    Muldrotha's "each permanent type" - one per permanent type the spell has
+    whose use this turn is still unspent (a card of several types chooses one
+    as it is cast, CR 110.4)."""
+    permission = static_zone_cast_permission(text)
+    if permission is None or permission.zone is not origin_zone or not permission.casts:
+        return []
+    if (spell.owner or caster) != caster:
+        return []
+    if origin_zone is Zone.LIBRARY:
+        on_top = library_top if library_top is not None else is_top_of_library(game, spell, caster)
+        if not on_top:
+            return []
+    if not static_permission_applies_now(permission, game, caster, permanent):
+        return []
+    predicate = spell_quality_predicate(permission.quality)
+    if predicate is None or not predicate(spell):
+        return []
+    if permission.keywords and not _spell_has_any_keyword(spell, permission.keywords):
+        return []
+    if permission.of_chosen_type:
+        chosen = permanent.choice.value.lower() if permanent and permanent.choice else None
+        if chosen is None or chosen not in {subtype.lower() for subtype in spell.subtypes}:
+            return []
+    if not _within_bound(spell, permission):
+        return []
+    if permission.shares_type_with_exiled and not _shares_a_type_with_exiled(
+        game, spell, permanent
+    ):
+        return []
+    counters: tuple[str, ...] = ()
+    if permission.rider_counter is not None and (
+        permission.rider_type is None or Type(permission.rider_type) in spell.types
+    ):
+        counters = (permission.rider_counter,)
+    additional = (
+        additional_cost_for_gerunds(permission.extra_cost) if permission.extra_cost else None
+    )
+    keys: list[str | None] = [None]
+    if permanent is not None and permission.per_permanent_type:
+        used = getattr(game, "once_per_turn_cast_permissions_used", {})
+        keys = [
+            f"{once_per_turn_key(permanent)}:{type_.value}"
+            for type_ in _PERMANENT_SPELL_TYPES
+            if type_ in spell.types and f"{once_per_turn_key(permanent)}:{type_.value}" not in used
+        ]
+    elif permanent is not None and permission.once_each_turn:
+        keys = [once_per_turn_key(permanent)]
+    return [
+        KeywordCastOption(
+            keyword=CAST_PERMISSION,
+            rule="CR 601.3, CR 611.3d",
+            zone=origin_zone,
+            pays_mana_cost=True,
+            timing=CastTiming.OWN,
+            additional_cost=additional,
+            enters_with_counters=counters,
+            once_per_turn_key=key,
+            granted_line=permission.gained_line,
+        )
+        for key in keys
+    ]
+
+
 def _static_zone_cast_option(
     text: str,
     game: Any,
@@ -1168,59 +1311,69 @@ def _static_zone_cast_option(
     library_top: bool | None,
     permanent: CardState | None = None,
 ) -> KeywordCastOption | None:
-    """`static_zone_cast_permission`'s grant for `spell`, or None.
+    """The first of `_static_zone_cast_options`, or None."""
+    options = _static_zone_cast_options(
+        text, game, spell, caster, origin_zone, library_top, permanent
+    )
+    return options[0] if options else None
 
-    "your graveyard" / "your library" are the caster's own (CR 108.3's owner);
-    the library permission reaches its top card only - `library_top` is the
-    announcing `Casting`'s own record of that, taken before CR 601.2a moved
-    the card, and None asks the library as it stands. Timing is the spell's
-    own (`CastTiming.OWN`)."""
-    permission = static_zone_cast_permission(text)
-    if permission is None or permission.zone is not origin_zone or not permission.casts:
+
+def static_graveyard_land_source(
+    game: Any, land: CardState, username: str
+) -> tuple[CardState, StaticZoneCastPermission, str | None] | None:
+    """The permanent whose static permission lets `username` play `land` out
+    of their graveyard right now (CR 305.1, CR 611.3d) - Emet-Selch's "play
+    cards from your graveyard", Serra Paragon's once-a-turn land or spell,
+    Muldrotha's one land a turn - with the permission and the use it spends
+    (None for an unlimited one). An unlimited permission is the one to claim
+    when two apply."""
+    if game is None or land.zone is not Zone.GRAVEYARD or (land.owner or username) != username:
         return None
-    if (spell.owner or caster) != caster:
-        return None
-    if origin_zone is Zone.LIBRARY:
-        on_top = library_top if library_top is not None else is_top_of_library(game, spell, caster)
-        if not on_top:
-            return None
-    if not static_permission_applies_now(permission, game, caster, permanent):
-        return None
-    predicate = spell_quality_predicate(permission.quality)
-    if predicate is None or not predicate(spell):
-        return None
-    if permission.keywords and not _spell_has_any_keyword(spell, permission.keywords):
-        return None
-    if permission.of_chosen_type:
-        chosen = permanent.choice.value.lower() if permanent and permanent.choice else None
-        if chosen is None or chosen not in {subtype.lower() for subtype in spell.subtypes}:
-            return None
-    if not _within_bound(spell, permission):
-        return None
-    if permission.shares_type_with_exiled and not _shares_a_type_with_exiled(
-        game, spell, permanent
+    used = getattr(game, "once_per_turn_cast_permissions_used", {})
+    board = game.computed_board()
+    found: list[tuple[CardState, StaticZoneCastPermission, str | None]] = []
+    for permanent in game.permanents_controlled_by(username):
+        for line in class_gated_lines(permanent, board.of(permanent).abilities):
+            permission = static_zone_cast_permission(line)
+            if (
+                permission is None
+                or not permission.plays_lands
+                or permission.zone is not Zone.GRAVEYARD
+                or not static_permission_applies_now(permission, game, username, permanent)
+            ):
+                continue
+            key: str | None = None
+            if permission.per_permanent_type:
+                key = f"{once_per_turn_key(permanent)}:{Type.LAND.value}"
+            elif permission.once_each_turn:
+                key = once_per_turn_key(permanent)
+            if key is not None and key in used:
+                continue
+            found.append((permanent, permission, key))
+    return min(found, key=lambda entry: entry[2] is not None, default=None)
+
+
+def record_graveyard_land_use(game: Any, land: CardState, username: str) -> str | None:
+    """Spend the use a static graveyard permission gave the land play (Serra
+    Paragon's, Muldrotha's), and return the ability the land gains (CR 611.3d),
+    for the caller to stamp once the land has entered (CR 400.7 gives the
+    object that enters no memory of what it was granted in the graveyard). A
+    land the older "You may play lands from your graveyard." grants is no use
+    of either."""
+    board = game.computed_board()
+    if any(
+        plays_lands_from_graveyard_line(line)
+        for permanent in game.permanents_controlled_by(username)
+        for line in board.of(permanent).abilities
     ):
         return None
-    counters: tuple[str, ...] = ()
-    if permission.rider_counter is not None and (
-        permission.rider_type is None or Type(permission.rider_type) in spell.types
-    ):
-        counters = (permission.rider_counter,)
-    additional = (
-        additional_cost_for_gerunds(permission.extra_cost) if permission.extra_cost else None
-    )
-    return KeywordCastOption(
-        keyword=CAST_PERMISSION,
-        rule="CR 601.3, CR 611.3d",
-        zone=origin_zone,
-        pays_mana_cost=True,
-        timing=CastTiming.OWN,
-        additional_cost=additional,
-        enters_with_counters=counters,
-        once_per_turn_key=once_per_turn_key(permanent)
-        if permission.once_each_turn and permanent is not None
-        else None,
-    )
+    source = static_graveyard_land_source(game, land, username)
+    if source is None:
+        return None
+    _permanent, permission, key = source
+    if key is not None:
+        game.once_per_turn_cast_permissions_used[key] = 1
+    return permission.gained_line
 
 
 # --------------------------------------------------------------------------
