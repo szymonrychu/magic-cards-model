@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 from ...models.card import Color, Type
 from ...models.card_state import CardState
+from ...models.zone import Zone
 from .model import CardReplacement, EventKind, ReplaceableEvent, ReplacementEffect
 from .parse import _read_damage_life_floor, strip_reminder_text
 
@@ -375,6 +376,30 @@ def _compile_extra_die(effect: ReplacementEffect) -> CardReplacement | None:
     return CardReplacement(label=effect.text, applies=applies, apply=apply)
 
 
+def _compile_assemble_twice(effect: ReplacementEffect) -> CardReplacement | None:
+    """Steamflogger Boss: "If a Rigger you control would assemble a Contraption, it
+    assembles two Contraptions instead." (CR 701.45a, 614.1a)"""
+    if _clauses(effect) != (
+        "a rigger you control would assemble a contraption",
+        "it assembles two contraptions",
+    ):
+        return None
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        return (
+            event.kind is EventKind.ASSEMBLE
+            and event.card is not None
+            and event.card.zone is Zone.BATTLEFIELD
+            and event.card.controller == source.controller
+            and "rigger" in {s.lower() for s in game.characteristics_of(event.card).subtypes}
+        )
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        event.amount *= 2
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
 _DAMAGE_FLOOR_HEAD_RE = re.compile(
     r"^a (?P<color>white|blue|black|red|green) source you control would deal an amount of "
     r"noncombat damage less than (?P<name>.+?)'s power to an opponent$"
@@ -432,4 +457,5 @@ EVENT_COMPILERS = (
     _compile_exile_instead_of_paying_life,
     _compile_extra_die,
     _compile_noncombat_damage_floor,
+    _compile_assemble_twice,
 )

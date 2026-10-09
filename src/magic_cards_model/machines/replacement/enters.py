@@ -3199,6 +3199,41 @@ def _bloodthirst_entering_counters(game: "Game", event: ReplaceableEvent) -> lis
     return found
 
 
+def _modular_entering_counters(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """CR 702.43a's first ability: "'Modular N' means 'This permanent enters with N
+    +1/+1 counters on it'" - a CR 614.1c "enters with" replacement on the entering
+    permanent itself, cast or not, each instance separately. (The dying half is a
+    triggered ability, `machines/keywords._modular_ability`.)"""
+    from ...models.card_state import Counter
+    from ..abilities import keyword_abilities
+
+    entering = event.card
+    if entering is None:
+        return []
+    found = []
+    amounts = [
+        ability.count
+        for ability in keyword_abilities(entering.card)
+        if ability.canonical.lower() == "modular" and ability.count is not None
+    ]
+    for index, amount in enumerate(amounts):
+
+        def apply(
+            game: "Game", source: CardState, event: ReplaceableEvent, n: int = amount
+        ) -> None:
+            event.counters[Counter.PLUS_ONE] = event.counters.get(Counter.PLUS_ONE, 0) + n
+
+        found.append(
+            ApplicableEffect(
+                key=f"{entering.id}:modular:{index}",
+                source=entering,
+                label=f"modular: enters with {amount} +1/+1 counters (CR 702.43a)",
+                apply=apply,
+            )
+        )
+    return found
+
+
 def _vanishing_entering_counters(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """CR 702.63a's first ability: "'Vanishing N' means 'This permanent enters
     with N time counters on it,' ...' " - a CR 614.1c "enters with" replacement

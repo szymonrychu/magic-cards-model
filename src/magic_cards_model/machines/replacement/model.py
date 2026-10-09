@@ -452,6 +452,9 @@ class EventKind(StrEnum):
     #: A player is about to roll dice (CR 706.2): `amount` dice, `ignore` of the
     #: lowest rolls ignored (Pixie Guide).
     ROLL_DICE = "roll_dice"
+    #: A permanent is about to assemble `amount` Contraptions (CR 701.45a,
+    #: Steamflogger Boss): `card` is the assembling Rigger.
+    ASSEMBLE = "assemble"
 
 
 @dataclass
@@ -658,6 +661,8 @@ class ReplaceableEvent:
     #: True for a `LOSE_LIFE` that is the payment of a cost or of "you may pay N
     #: life" (CR 118.3b, 119.4) rather than an effect's "you lose N life".
     payment: bool = False
+    #: True for an `ADD_COUNTERS` that a modular triggered ability puts (CR 702.43a).
+    modular: bool = False
     #: The card whose cycling ability caused a `DRAW` (CR 702.29a), else `None`.
     cycled_card: CardState | None = None
 
@@ -2108,6 +2113,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
         found.extend(_impending_entering_counters(game, event))
         found.extend(_bloodthirst_entering_counters(game, event))
         found.extend(_vanishing_entering_counters(game, event))
+        found.extend(_modular_entering_counters(game, event))
 
     found.extend(_stack_replacements(game, event))
     found.extend(_anywhere_effects(game, event))
@@ -2266,6 +2272,7 @@ from .enters import (  # noqa: E402
     _bloodthirst_entering_counters,
     _cant_enter_replacements,
     _impending_entering_counters,
+    _modular_entering_counters,
     _refers_to_self,
     _self_enters_modifiers,
     _vanishing_entering_counters,

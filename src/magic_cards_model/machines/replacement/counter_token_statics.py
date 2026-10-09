@@ -233,4 +233,41 @@ def _compile_token_replacement(effect: ReplacementEffect) -> CardReplacement | N
     return None
 
 
-COUNTER_TOKEN_COMPILERS = (_compile_counter_plus, _compile_token_replacement)
+_MODULAR_EVENT_RE = re.compile(
+    r"^a modular triggered ability would put one or more (?P<kind>[+\-]\d+/[+\-]\d+) counters "
+    r"on a creature you control$",
+    re.IGNORECASE,
+)
+
+
+def _compile_modular_plus(effect: ReplacementEffect) -> CardReplacement | None:
+    """Zabaz, the Glimmerwasp: "If a modular triggered ability would put one or more
+    +1/+1 counters on a creature you control, that many plus one +1/+1 counters
+    are put on it instead." (CR 702.43a, 614.1a, 122.6)"""
+    if not effect.event or not effect.replacement:
+        return None
+    head = _MODULAR_EVENT_RE.match(effect.event.strip())
+    tail = _PLUS_REPLACEMENT_RE.match(effect.replacement.strip())
+    if head is None or tail is None or head.group("kind") != tail.group("kind"):
+        return None
+    extra = _NUMBER[tail.group("n").lower()]
+    kind = head.group("kind")
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        return (
+            event.kind is EventKind.ADD_COUNTERS
+            and event.modular
+            and event.card is not None
+            and event.amount > 0
+            and str(event.counter_kind).lower() == kind
+            and event.card.controller == source.controller
+            and Type.CREATURE in game.characteristics_of(event.card).types
+        )
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        event.amount += extra
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
+COUNTER_TOKEN_COMPILERS = (_compile_counter_plus, _compile_token_replacement, _compile_modular_plus)

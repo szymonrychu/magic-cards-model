@@ -1490,16 +1490,20 @@ def _become_a_copy_builder(
 #: reading, minus that one's own "other" exclusion, since haste applies to
 #: the source creature that grants it too, if it is one.
 _ALL_CREATURES_KEYWORD_GRANT_RE = re.compile(
-    r"^all creatures (?:have|has) "
+    r"^all (?:(?P<subtype>[a-z]+) )?creatures (?:have|has) "
     r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
     re.IGNORECASE,
 )
 
 
-def _all_creatures_keyword_grant_builder(keywords: list[str], *, line: str) -> EffectBuilder:
+def _all_creatures_keyword_grant_builder(
+    keywords: list[str], *, line: str, subtype: str | None = None
+) -> EffectBuilder:
     """`_ALL_CREATURES_KEYWORD_GRANT_RE`'s shape - one permanent (CR 611.3,
     indefinite duration) layer 6 grant per keyword, over every creature on
-    the battlefield."""
+    the battlefield (or, for "All Sliver creatures have flying", every creature
+    of that subtype, whoever controls it - CR 205.3)."""
+    selector = every_creature if subtype is None else CreaturesWithSubtype(subtype=subtype)
 
     def builder(
         source: CardState,
@@ -1509,12 +1513,12 @@ def _all_creatures_keyword_grant_builder(keywords: list[str], *, line: str) -> E
     ) -> list[ContinuousEffect]:
         return [
             ContinuousEffect(
-                description=f"{source.name}: all creatures have {keyword}",
+                description=f"{source.name}: all {subtype or ''} creatures have {keyword}",
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
-                selector=every_creature,
+                selector=selector,
                 modification=grant_ability(keyword),
             )
             for keyword in keywords
@@ -10114,9 +10118,14 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         return tapped_group
     if match := _ALL_CREATURES_KEYWORD_GRANT_RE.fullmatch(sentence):
         all_creatures_keywords = _split_and_validate_keywords(match.group("keywords"))
-        if all_creatures_keywords is None:
+        grant_subtype = match.group("subtype")
+        if all_creatures_keywords is None or (
+            grant_subtype is not None and grant_subtype.lower() not in subtype_vocabulary()
+        ):
             return None
-        return _all_creatures_keyword_grant_builder(all_creatures_keywords, line=sentence)
+        return _all_creatures_keyword_grant_builder(
+            all_creatures_keywords, line=sentence, subtype=grant_subtype
+        )
     if (gated := split_as_long_as(sentence)) is not None:
         return _parse_designation_gated_sentence(sentence, *gated)
     if _BOARD_COUNT_GATE_RE.fullmatch(sentence):
@@ -12190,6 +12199,7 @@ from .model import (  # noqa: E402
     CreaturesControlledBy,
     CreaturesControlledByQuality,
     CreaturesControlledByWithSubtype,
+    CreaturesWithSubtype,
     Duration,
     EquippedCreatureIfToughnessExceedsPower,
     FixedCount,

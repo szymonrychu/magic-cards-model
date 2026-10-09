@@ -816,3 +816,145 @@ def test_ojer_axonil_does_not_raise_damage_to_its_controller():
 
 def test_ojer_axonil_is_handled():
     _handled("Ojer Axonil, Deepest Might // Temple of Power", "noncombat damage")
+
+
+# -- Modular (CR 702.43) and Zabaz, the Glimmerwasp (CR 614.1a, 122.6) -----------------
+
+
+def _modular_board(alice, bob=(), *, worker=True):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=list(alice),
+            hand=["Arcbound Worker"] if worker else [],
+            library=["Island"] * 3,
+        )
+        .player("bob", battlefield=list(bob), library=["Island"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _worker_dies_onto(scenario, target):
+    """Arcbound Worker enters (with its Modular counter), then is destroyed."""
+    worker = scenario.put_onto_battlefield("Arcbound Worker", "alice")
+    scenario.game.destroy(worker)
+    scenario.choose_trigger_targets("Arcbound Worker", [target])
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+
+def test_modular_enters_with_its_counters():
+    scenario = _modular_board([])
+
+    worker = scenario.put_onto_battlefield("Arcbound Worker", "alice")
+
+    assert worker.counter_count("+1/+1") == 1
+    assert scenario.game.characteristics_of(worker).power == 1
+
+
+def test_modular_moves_its_counters_to_a_target_artifact_creature_when_it_dies():
+    scenario = _modular_board(["Arcbound Ravager"])
+    ravager = scenario.creature("Arcbound Ravager", "alice")
+
+    _worker_dies_onto(scenario, ravager)
+
+    assert ravager.counter_count("+1/+1") == 1
+
+
+def test_modular_counts_every_counter_the_dying_permanent_had():
+    scenario = _modular_board(["Arcbound Ravager"])
+    ravager = scenario.creature("Arcbound Ravager", "alice")
+    worker = scenario.put_onto_battlefield("Arcbound Worker", "alice")
+    scenario.game.add_counters(worker, "+1/+1", 2)
+    scenario.game.destroy(worker)
+    scenario.choose_trigger_targets("Arcbound Worker", [ravager])
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert ravager.counter_count("+1/+1") == 3
+
+
+def test_zabaz_adds_one_counter_to_a_modular_trigger_putting_counters_on_your_creature():
+    scenario = _modular_board(["Arcbound Ravager", "Zabaz, the Glimmerwasp"])
+    ravager = scenario.creature("Arcbound Ravager", "alice")
+
+    _worker_dies_onto(scenario, ravager)
+
+    assert ravager.counter_count("+1/+1") == 2
+
+
+def test_zabaz_leaves_counters_that_are_not_from_a_modular_trigger_alone():
+    scenario = _modular_board(["Arcbound Ravager", "Zabaz, the Glimmerwasp"], worker=False)
+    ravager = scenario.creature("Arcbound Ravager", "alice")
+
+    scenario.game.add_counters(ravager, "+1/+1", 1)
+
+    assert ravager.counter_count("+1/+1") == 1
+
+
+def test_an_opponents_zabaz_does_not_change_my_modular_trigger():
+    scenario = _modular_board(["Arcbound Ravager"], ["Zabaz, the Glimmerwasp"])
+    ravager = scenario.creature("Arcbound Ravager", "alice")
+
+    _worker_dies_onto(scenario, ravager)
+
+    assert ravager.counter_count("+1/+1") == 1
+
+
+def test_zabaz_is_handled_and_modular_is_executed():
+    from magic_cards_model.support import executed_keywords
+
+    _handled("Zabaz, the Glimmerwasp", "modular triggered ability")
+    assert "modular" in executed_keywords(card("Arcbound Worker"))
+
+
+# -- Steamflogger Boss: CR 701.45a, 614.1a ----------------------------------------------
+#
+# CR 701.45a: assemble is an Unstable keyword action outside the Comprehensive
+# Rules, and Steamflogger Boss is the only legal card that refers to it. The hook
+# every assembling effect would ask is `Game.assembling_count`.
+
+
+def _assemble_board(alice, bob=()):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=list(alice), library=["Island"] * 2)
+        .player("bob", battlefield=list(bob), library=["Island"] * 2)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_steamflogger_boss_makes_its_own_assemble_assemble_two():
+    scenario = _assemble_board(["Steamflogger Boss"])
+    boss = scenario.creature("Steamflogger Boss", "alice")
+
+    assert scenario.game.assembling_count("alice", boss) == 2
+
+
+def test_steamflogger_boss_leaves_a_creature_that_is_not_a_rigger_alone():
+    scenario = _assemble_board(["Steamflogger Boss", "Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    assert scenario.game.assembling_count("alice", bears) == 1
+
+
+def test_steamflogger_boss_does_not_double_an_opponents_non_rigger():
+    scenario = _assemble_board(["Steamflogger Boss"], ["Grizzly Bears"])
+    theirs = scenario.creature("Grizzly Bears", "bob")
+
+    assert scenario.game.assembling_count("bob", theirs) == 1
+
+
+def test_assemble_without_steamflogger_boss_is_one():
+    scenario = _assemble_board(["Grizzly Bears"])
+
+    assert scenario.game.assembling_count("alice", scenario.creature("Grizzly Bears", "alice")) == 1
+
+
+def test_steamflogger_boss_is_handled():
+    _handled("Steamflogger Boss", "assemble a Contraption")

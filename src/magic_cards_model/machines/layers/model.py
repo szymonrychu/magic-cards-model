@@ -1490,6 +1490,17 @@ class CreaturesControlledByWithSubtype(SelectorBase):
         )
 
 
+class CreaturesWithSubtype(SelectorBase):
+    """ "All `<subtype>` creatures" - every creature of a subtype, whoever controls it
+    (Pulmonic Sliver's "All Sliver creatures have flying", CR 205.3m)."""
+
+    kind: Literal["creatures_with_subtype"] = "creatures_with_subtype"
+    subtype: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.is_creature and self.subtype.lower() in {s.lower() for s in chars.subtypes}
+
+
 class PermanentsControlledByWithSubtype(SelectorBase):
     """ "Other permanents you control of that type" (Selfless Safewright) -
     `CreaturesControlledByWithSubtype`'s own non-creature-gated twin.
@@ -1728,6 +1739,7 @@ Selector = Annotated[
     | PermanentsOfTypesControlledBy
     | PermanentsOfTypes
     | CreaturesControlledByWithSubtype
+    | CreaturesWithSubtype
     | PermanentsControlledByWithSubtype
     | CreaturesControlledByWithColor
     | PermanentsControlledByWithCounters

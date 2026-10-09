@@ -688,6 +688,23 @@ def test_pulmonic_sliver_grant_line_reads_handled():
     assert {o.category for o in outcomes} == {HANDLED}, outcomes
 
 
+def test_every_sliver_has_flying_and_nothing_else_does():
+    from magic_cards_model.machines.combat import has_keyword
+
+    scenario = _sliver_board()
+    mine = scenario.creature("Sliver Construct", "alice")
+    theirs = scenario.creature("Sliver Construct", "bob")
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    assert has_keyword(mine, "flying", scenario.game)
+    assert has_keyword(theirs, "flying", scenario.game)
+    assert not has_keyword(bears, "flying", scenario.game)
+
+
+def test_pulmonic_sliver_reads_handled_line_by_line():
+    assert {o.category for o in classify_clauses(card("Pulmonic Sliver"))} == {HANDLED}
+
+
 # -- Abandoned Sarcophagus: "You may cast spells that have a cycling ability
 #    from your graveyard." / "If a card that has a cycling ability would be put
 #    into your graveyard from anywhere and it wasn't cycled, exile it instead."

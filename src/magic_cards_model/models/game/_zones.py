@@ -1420,6 +1420,16 @@ class ZonesMixin:
         apply_replacements(self, event)
         return event.amount
 
+    def assembling_count(self: "Game", player: "Player | str", source: CardState) -> int:
+        """CR 701.45a, 614.1a: how many Contraptions `source` assembles for `player`
+        when told to assemble one (Steamflogger Boss: a Rigger "assembles two
+        Contraptions instead"). Assemble is an Unstable action outside the
+        Comprehensive Rules, so this is the hook an assembling effect asks."""
+        who = self.player(player) if isinstance(player, str) else player
+        event = ReplaceableEvent(kind=EventKind.ASSEMBLE, player=who, card=source, amount=1)
+        apply_replacements(self, event)
+        return event.amount
+
     def proliferation_count(self: "Game", player: "Player | str") -> int:
         """CR 701.34a, 614.1a: how many times `player` proliferates when told to
         once (Tekuthal's "proliferate twice instead")."""

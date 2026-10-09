@@ -555,7 +555,13 @@ class ContinuousMixin:
         )
 
     def add_counters(
-        self: "Game", permanent: CardState, kind: str, amount: int = 1, *, putter: str | None = None
+        self: "Game",
+        permanent: CardState,
+        kind: str,
+        amount: int = 1,
+        *,
+        putter: str | None = None,
+        modular: bool = False,
     ) -> int:
         """Put counters on a permanent, replacement effects included (CR 122.1).
 
@@ -591,6 +597,7 @@ class ContinuousMixin:
                 counter_kind=kind,
                 amount=amount,
                 putter=putter or self._counter_putter(permanent.controller),
+                modular=modular,
             )
             apply_replacements(self, event)
             if event.amount <= 0:
