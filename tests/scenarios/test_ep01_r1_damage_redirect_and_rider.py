@@ -507,3 +507,50 @@ def test_questing_beast_makes_combat_damage_by_your_creatures_unpreventable():
     bears = scenario.creature("Grizzly Bears", "alice")
     assert _hit(scenario, bob, 2, bears, combat=True) == 2
     assert _hit(scenario, bob, 2, bears) == 0  # noncombat damage is still preventable
+
+
+# -- exert as it attacks, then prevent combat damage to it (CR 701.43d, CR 508.1g) -----------------
+
+
+def _attack_with_the_avenger(exert: bool):
+    scenario = _board(alice=["Oketra's Avenger"], bob=["Goblin Guide"])
+    avenger = _on(scenario, "Oketra's Avenger")
+    avenger.summoning_sick = False
+    guide = scenario.creature("Goblin Guide", "bob")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.will_take_the_may(exert)
+    scenario.attack_with(avenger, defending="bob")
+    return scenario, avenger, guide
+
+
+def test_exerting_the_avenger_as_it_attacks_prevents_combat_damage_dealt_to_it():
+    scenario, avenger, guide = _attack_with_the_avenger(exert=True)
+
+    assert avenger.exerted
+    assert scenario.stack_names() == ["Oketra's Avenger's triggered ability"]  # CR 603.12
+    scenario.resolve_top()
+    scenario.block(avenger, guide)
+    scenario.combat_damage()
+
+    assert avenger.zone is Zone.BATTLEFIELD
+    assert avenger.damage == 0  # the Guide's combat damage to it was prevented
+    assert guide.zone is Zone.GRAVEYARD or guide.damage == 3  # the Avenger still deals its own
+
+
+def test_the_avenger_attacking_without_exerting_takes_the_damage():
+    scenario, avenger, guide = _attack_with_the_avenger(exert=False)
+
+    assert not avenger.exerted
+    assert scenario.stack_names() == []
+    scenario.block(avenger, guide)
+    scenario.combat_damage()
+
+    assert avenger.damage == 2 or avenger.zone is Zone.GRAVEYARD
+
+
+def test_the_avengers_prevention_covers_combat_damage_only():
+    scenario, avenger, guide = _attack_with_the_avenger(exert=True)
+    scenario.resolve_top()
+
+    assert _hit(scenario, avenger, 1, guide) == 1  # noncombat damage is dealt
+    assert _hit(scenario, avenger, 5, guide, combat=True) == 0

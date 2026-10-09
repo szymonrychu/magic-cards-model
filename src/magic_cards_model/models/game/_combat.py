@@ -14,6 +14,7 @@ from ...machines.decisions import (
     ask_attackers,
     ask_blockers,
 )
+from ...machines.exert_on_attack import offer_exert_as_it_attacks
 from ...machines.triggers import (
     GameEvent,
 )
@@ -382,6 +383,10 @@ class CombatMixin:
                     enlisted = enlist_choices.get(creature.id)
                     if enlisted is not None:
                         enlist.apply_enlist(self, creature, enlisted)
+            for creature, _attack in registered:
+                # CR 508.1g / CR 701.43d: "You may exert [this creature] as it
+                # attacks" is an optional cost chosen with the declaration.
+                offer_exert_as_it_attacks(self, creature)
             for creature, attack in registered:
                 self._emit_attacks(creature, attack)
                 # A per-turn historical fact, not `machines.combat.Combat`'s
