@@ -1,0 +1,195 @@
+{
+  "object": "card",
+  "id": "e414e208-2e90-4b0d-b107-7a387b3f779b",
+  "oracle_id": "30c3f88f-11d3-4b5f-8936-bab1c65bd693",
+  "multiverse_ids": [
+    686060
+  ],
+  "mtgo_id": 135850,
+  "tcgplayer_id": 610069,
+  "cardmarket_id": 805838,
+  "name": "Shrill Howler // Howling Chorus",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/e414e208-2e90-4b0d-b107-7a387b3f779b",
+  "scryfall_uri": "https://scryfall.com/card/inr/214/shrill-howler-howling-chorus?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:01:35Z",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Werewolf Horror // Creature \u2014 Eldrazi Werewolf",
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Transform"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Shrill Howler",
+      "mana_cost": "{2}{G}",
+      "type_line": "Creature \u2014 Werewolf Horror",
+      "oracle_text": "Creatures with power less than this creature's power can't block it.\n{5}{G}: Transform this creature.",
+      "colors": [
+        "G"
+      ],
+      "power": "3",
+      "toughness": "1",
+      "flavor_text": "\"A werewolf's howl is terrifying, to be sure. But this . . . this was a chilling sound I somehow felt. I fear what will reply to it.\"\n\u2014Alena, trapper of Kessig",
+      "artist": "Matt Stewart",
+      "artist_id": "20871267-2d8a-41d5-b03a-be3d557c5734",
+      "illustration_id": "097b2689-da10-4b32-ac65-312f441f4dcd",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "normal": "https://cards.scryfall.io/normal/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "large": "https://cards.scryfall.io/large/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "png": "https://cards.scryfall.io/png/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.png?1783908095",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "thumb": "https://cards.scryfall.io/thumb/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095",
+        "grid": "https://cards.scryfall.io/grid/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095",
+        "display": "https://cards.scryfall.io/display/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095",
+        "art": "https://cards.scryfall.io/art/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095",
+        "crop": "https://cards.scryfall.io/crop/front/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Howling Chorus",
+      "mana_cost": "",
+      "type_line": "Creature \u2014 Eldrazi Werewolf",
+      "oracle_text": "Creatures with power less than this creature's power can't block it.\nWhenever this creature deals combat damage to a player, create a 3/2 colorless Eldrazi Horror creature token.",
+      "colors": [],
+      "power": "3",
+      "toughness": "5",
+      "artist": "Matt Stewart",
+      "artist_id": "20871267-2d8a-41d5-b03a-be3d557c5734",
+      "illustration_id": "a074d746-0dbf-4a62-a71d-03aee38d7808",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "normal": "https://cards.scryfall.io/normal/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "large": "https://cards.scryfall.io/large/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "png": "https://cards.scryfall.io/png/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.png?1783908095",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.jpg?1783908095",
+        "thumb": "https://cards.scryfall.io/thumb/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095",
+        "grid": "https://cards.scryfall.io/grid/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095",
+        "display": "https://cards.scryfall.io/display/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095",
+        "art": "https://cards.scryfall.io/art/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095",
+        "crop": "https://cards.scryfall.io/crop/back/e/4/e414e208-2e90-4b0d-b107-7a387b3f779b.webp?1783908095"
+      }
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "a106fc38-c321-4afa-8e66-ea6a9e594a55",
+      "component": "token",
+      "name": "Eldrazi Horror",
+      "type_line": "Token Creature \u2014 Eldrazi Horror",
+      "uri": "https://api.scryfall.com/cards/a106fc38-c321-4afa-8e66-ea6a9e594a55"
+    },
+    {
+      "object": "related_card",
+      "id": "246885ac-4e8e-4856-b796-5d72dfb7fb29",
+      "component": "combo_piece",
+      "name": "Shrill Howler // Howling Chorus",
+      "type_line": "Creature \u2014 Werewolf Horror // Creature \u2014 Eldrazi Werewolf",
+      "uri": "https://api.scryfall.com/cards/246885ac-4e8e-4856-b796-5d72dfb7fb29"
+    },
+    {
+      "object": "related_card",
+      "id": "cd8586f9-97e2-438d-b74f-1e53c811f314",
+      "component": "combo_piece",
+      "name": "Eldritch Moon Checklist",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/cd8586f9-97e2-438d-b74f-1e53c811f314"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e414e208-2e90-4b0d-b107-7a387b3f779b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A30c3f88f-11d3-4b5f-8936-bab1c65bd693&unique=prints",
+  "collector_number": "214",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Matt Stewart",
+  "artist_ids": [
+    "20871267-2d8a-41d5-b03a-be3d557c5734"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21515,
+  "penny_rank": 12469,
+  "prices": {
+    "usd": "0.31",
+    "usd_foil": "0.32",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.10",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=686060&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DShrill%2BHowler%2B%252F%252F%2BHowling%2BChorus",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DShrill%2BHowler%2B%252F%252F%2BHowling%2BChorus",
+    "edhrec": "https://edhrec.com/route/?cc=Shrill+Howler"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F610069%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805838&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135850?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

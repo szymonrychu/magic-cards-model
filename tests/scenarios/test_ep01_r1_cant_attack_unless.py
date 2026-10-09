@@ -251,7 +251,7 @@ def test_a_creature_died_under_your_control_this_turn() -> None:
 
 def test_you_have_cast_a_spell_this_turn() -> None:
     """Goblin Cohort wants a creature spell; Silburlind Snapper a noncreature one."""
-    for creature, spell, lands, other in (
+    for creature, spell, _lands, other in (
         ("Goblin Cohort", "Grizzly Bears", ["Forest", "Forest"], "Sol Ring"),
         ("Silburlind Snapper", "Sol Ring", ["Mountain"], "Grizzly Bears"),
     ):

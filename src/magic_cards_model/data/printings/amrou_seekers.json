@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "379c3c08-a91d-48cc-8837-993614b6a32e",
+  "oracle_id": "396efb56-7a54-4d91-b2ce-7f3c62c3238b",
+  "multiverse_ids": [
+    509367
+  ],
+  "mtgo_id": 86367,
+  "tcgplayer_id": 233391,
+  "cardmarket_id": 542496,
+  "name": "Amrou Seekers",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/379c3c08-a91d-48cc-8837-993614b6a32e",
+  "scryfall_uri": "https://scryfall.com/card/tsr/2/amrou-seekers?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:31:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.jpg?1783927885",
+    "normal": "https://cards.scryfall.io/normal/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.jpg?1783927885",
+    "large": "https://cards.scryfall.io/large/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.jpg?1783927885",
+    "png": "https://cards.scryfall.io/png/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.png?1783927885",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.jpg?1783927885",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.jpg?1783927885",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.webp?1783927885",
+    "grid": "https://cards.scryfall.io/grid/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.webp?1783927885",
+    "display": "https://cards.scryfall.io/display/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.webp?1783927885",
+    "art": "https://cards.scryfall.io/art/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.webp?1783927885",
+    "crop": "https://cards.scryfall.io/crop/front/3/7/379c3c08-a91d-48cc-8837-993614b6a32e.webp?1783927885"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Kithkin Rebel",
+  "oracle_text": "This creature can't be blocked except by artifact creatures and/or white creatures.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/379c3c08-a91d-48cc-8837-993614b6a32e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A396efb56-7a54-4d91-b2ce-7f3c62c3238b&unique=prints",
+  "collector_number": "2",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "The paradise of Amrou Haven had become a field of cinders. Its people struggled to survive, hoping to see visions of its past in the strange storms that quickly passed.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Quinton Hoover",
+  "artist_ids": [
+    "1a2db619-92a5-431a-822b-101cdcc5bd5d"
+  ],
+  "illustration_id": "a72b504c-922b-4710-8658-b5d87ec5fbd9",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23144,
+  "penny_rank": 15351,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=fgxDbofU4-k",
+    "previewed_at": "2021-02-25"
+  },
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": "0.40",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.22",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509367&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAmrou%2BSeekers",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAmrou%2BSeekers",
+    "edhrec": "https://edhrec.com/route/?cc=Amrou+Seekers"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F233391%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=542496&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86367?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

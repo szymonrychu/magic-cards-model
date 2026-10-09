@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "d34c717b-224b-4289-826d-f5b1f7c3dbfb",
+  "oracle_id": "e844ded0-821a-4378-8f58-bf1e1c0269d5",
+  "multiverse_ids": [
+    398602
+  ],
+  "mtgo_id": 57844,
+  "mtgo_foil_id": 57845,
+  "tcgplayer_id": 100349,
+  "cardmarket_id": 283580,
+  "name": "Suppression Bonds",
+  "lang": "en",
+  "released_at": "2015-07-17",
+  "uri": "https://api.scryfall.com/cards/d34c717b-224b-4289-826d-f5b1f7c3dbfb",
+  "scryfall_uri": "https://scryfall.com/card/ori/34/suppression-bonds?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:25:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.jpg?1783938357",
+    "normal": "https://cards.scryfall.io/normal/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.jpg?1783938357",
+    "large": "https://cards.scryfall.io/large/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.jpg?1783938357",
+    "png": "https://cards.scryfall.io/png/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.png?1783938357",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.jpg?1783938357",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.jpg?1783938357",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.webp?1783938357",
+    "grid": "https://cards.scryfall.io/grid/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.webp?1783938357",
+    "display": "https://cards.scryfall.io/display/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.webp?1783938357",
+    "art": "https://cards.scryfall.io/art/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.webp?1783938357",
+    "crop": "https://cards.scryfall.io/crop/front/d/3/d34c717b-224b-4289-826d-f5b1f7c3dbfb.webp?1783938357"
+  },
+  "mana_cost": "{3}{W}",
+  "cmc": 4.0,
+  "type_line": "Enchantment \u2014 Aura",
+  "oracle_text": "Enchant nonland permanent\nEnchanted permanent can't attack or block, and its activated abilities can't be activated.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "0eeb9a9a-20ac-404d-b55f-aeb7a43a7f62",
+  "set": "ori",
+  "set_name": "Magic Origins",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/0eeb9a9a-20ac-404d-b55f-aeb7a43a7f62",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aori&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ori?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d34c717b-224b-4289-826d-f5b1f7c3dbfb/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae844ded0-821a-4378-8f58-bf1e1c0269d5&unique=prints",
+  "collector_number": "34",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"A master of hieromancy can see the advantage in any scenario.\"\n\u2014Warden Hixus, to Kytheon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rallis",
+  "artist_ids": [
+    "a8e7b854-b15a-421a-b66d-6e68187ae285"
+  ],
+  "illustration_id": "ec6ff114-7a6b-4117-8077-9bb17e24187f",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23028,
+  "penny_rank": 15199,
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.44",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.14",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=398602&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSuppression%2BBonds",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSuppression%2BBonds",
+    "edhrec": "https://edhrec.com/route/?cc=Suppression+Bonds"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F100349%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=283580&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/57844?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
