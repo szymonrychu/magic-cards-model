@@ -20,9 +20,12 @@ from ...machines.casting import (
     PlayPermission,
     _printed_alternative_total_cost,
     castable_faces,
+    conditional_free_cast_condition,
+    conditional_free_cast_unavailable,
     face_being_cast,
     granted_cast_options,
     keyword_cast_options,
+    land_quality_allows,
     life_or_mana_additional_costs,
     linked_exile_play_source,
     marker_cast_options,
@@ -30,6 +33,7 @@ from ...machines.casting import (
     play_permissions_on,
     static_free_cast_grants,
     static_free_cast_refusal,
+    static_permission_applies_now,
     static_zone_cast_permission,
     types_being_cast,
     usable_play_permission,
@@ -1709,11 +1713,20 @@ class CastingMixin:
             return None
         board = self.computed_board()
         for permanent in self.permanents_controlled_by(username):
-            if any(
-                self._plays_lands_from_top_of_library_line(line)
-                for line in board.of(permanent).abilities
-            ):
-                return permanent
+            for line in board.of(permanent).abilities:
+                if self._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(
+                    self._static_line_without_ability_word(line)
+                ):
+                    return permanent
+                permission = static_zone_cast_permission(line)
+                if (
+                    permission is not None
+                    and permission.plays_lands
+                    and permission.zone is Zone.LIBRARY
+                    and static_permission_applies_now(permission, self, username, permanent)
+                    and land_quality_allows(permission, land)
+                ):
+                    return permanent
         return None
 
     def why_cannot_play_land(self: "Game", username: str) -> str | None:
@@ -1823,6 +1836,22 @@ class CastingMixin:
                     if cost
                     else 0,
                     unavailable=unavailable,
+                )
+            )
+
+        free_condition = conditional_free_cast_condition(card.oracle_text or "")
+        if free_condition is not None:
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.PRINTED,
+                    rule="CR 118.9",
+                    source_name=card.name,
+                    description=f"nothing (if {free_condition})",
+                    cost=None,
+                    unavailable=conditional_free_cast_unavailable(
+                        self, caster, card, origin_zone, free_condition
+                    ),
                 )
             )
 

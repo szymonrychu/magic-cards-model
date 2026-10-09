@@ -3337,7 +3337,12 @@ class ZonesMixin:
         library any time." - Daredevil's own "Radar Sense — " label stripped
         first."""
         stripped = self._static_line_without_ability_word(text)
-        return self._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(stripped) is not None
+        if self._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(stripped) is not None:
+            return True
+        from ...machines.casting import static_zone_cast_permission
+
+        permission = static_zone_cast_permission(text)
+        return permission is not None and permission.looks_at_top
 
     def become_prepared(self: "Game", permanent: CardState) -> CardState | None:
         """CR 722.3a: give `permanent` the prepared designation.

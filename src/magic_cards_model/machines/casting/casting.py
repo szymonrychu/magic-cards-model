@@ -136,6 +136,12 @@ def why_cannot_cast_from(
     airbend - `marker_cast_options`) - or some effect has to have handed out a
     `PlayPermission`, and that grant's own conditions have to hold.
     """
+    only_from = printed_cast_only_zones(spell.card)
+    if only_from is not None and zone not in only_from:
+        where = " or ".join(only_zone.value for only_zone in only_from)
+        return (
+            f"{spell.name} may be cast only from the {where}, not from the {zone.value} (CR 601.3)"
+        )
     if zone is Zone.HAND:
         return None
     if usable_play_permission(game, spell, caster) is not None:
@@ -398,8 +404,10 @@ def why_cannot_cast_now(
     if Type.SORCERY in types and has_sorcery_speed_flash_grant(game, caster):
         return None  # Teferi, Time Raveler's +1
     condition = conditional_flash_condition(spell.oracle_text or "")
-    if condition is not None and game.condition_holds(caster, condition, spell) is True:
+    if condition is not None and cast_condition_holds(game, caster, condition, spell):
         return None  # Bard's Company's own conditional flash grant
+    if has_quality_flash_grant(game, caster, spell):
+        return None  # Vivien, Champion of the Wilds' "creature spells ... flash"
     if game.has_first_spell_flash_grant(caster, spell):
         return None  # Radagast of Rhosgobel's own first-creature-spell flash grant
     if spell.zone is not Zone.HAND and (
@@ -2401,6 +2409,26 @@ class Casting(EngineModel):
                     if cost
                     else 0,
                     unavailable=unavailable,
+                )
+            )
+
+        free_condition = conditional_free_cast_condition(self.spell.oracle_text or "")
+        if free_condition is not None:
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.PRINTED,
+                    rule="CR 118.9",
+                    source_name=self.spell.name,
+                    description=f"nothing (if {free_condition})",
+                    cost=None,
+                    unavailable=conditional_free_cast_unavailable(
+                        self.game,
+                        self.caster,
+                        self._as_announced,
+                        self.origin_zone,
+                        free_condition,
+                    ),
                 )
             )
 
@@ -4878,12 +4906,15 @@ def static_free_cast_refusal(
     any-of-them), a mana value cap, and for "Once during each of your turns"
     whose turn it is and whether that permanent's one use this turn is gone.
     """
-    in_zone = origin_zone is grant.zone
+    in_zone = grant.zone is None or origin_zone is grant.zone
     if not in_zone and grant.also_top_of_library and origin_zone is Zone.LIBRARY:
         library = game.player(caster).library if game is not None else []
         in_zone = bool(library) and library[0] is card
     if not in_zone:
-        return f"{source_name} only applies to spells cast from your {grant.zone.value} (CR 118.9)"
+        return (
+            f"{source_name} only applies to spells cast from your "
+            f"{grant.zone.value if grant.zone else 'hand'} (CR 118.9)"
+        )
     if grant.type_word and not spell_has_type_word(card.card, grant.type_word):
         return f"{source_name} only applies to {grant.type_word} spells, and {card.name} is not one"
     if grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
@@ -5305,15 +5336,20 @@ from .options import (  # noqa: E402
 )
 from .permissions import (  # noqa: E402
     adventure_face,
+    cast_condition_holds,
     castable_faces,
     castable_from,
     conditional_flash_condition,
+    conditional_free_cast_condition,
+    conditional_free_cast_unavailable,
     granted_cast_options,
     has_flash,
+    has_quality_flash_grant,
     is_top_of_library,
     modal_dfc_spell_back_faces,
     once_per_turn_key,
     play_permissions_on,
+    printed_cast_only_zones,
     split_second_restriction_source,
     usable_play_permission,
 )

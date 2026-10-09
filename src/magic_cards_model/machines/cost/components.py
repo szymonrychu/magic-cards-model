@@ -2331,8 +2331,10 @@ class StaticFreeCastGrant(EngineModel):
 
     model_config = ConfigDict(frozen=True)
 
-    zone: Zone
-    """Where the spell has to be cast from for the grant to apply."""
+    zone: Zone | None
+    """Where the spell has to be cast from for the grant to apply, or None
+    when the line names no zone (Dracogenesis, Fires of Invention): every
+    zone."""
     type_word: str | None = None
     """The card type the grant is narrowed to, lowercased ("creature spells
     from your hand"), or None for every spell."""

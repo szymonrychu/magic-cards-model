@@ -201,6 +201,11 @@ class KeywordCastOption(EngineModel):
     other costs (CR 601.2f) - Noctis, Prince of Lucis's "by paying 3 life in
     addition to paying their other costs". Added by `Casting._use_keyword`
     through `add_additional_cost` when the option is claimed."""
+    condition: str | None = None
+    """The printed condition the permission is gated on - "as long as you
+    control a Zombie", "if you gained life this turn" (Gravecrawler, Oathsworn
+    Vampire). `why_not` asks it live (`permissions.cast_condition_holds`),
+    and a condition nobody reads refuses rather than allows."""
     enters_with_counters: tuple[str, ...] = ()
     """One counter kind per counter the spell's permanent enters with because
     it was cast under this permission - "If you cast a spell this way, that
@@ -245,6 +250,15 @@ class KeywordCastOption(EngineModel):
                 f"{self.keyword} casts {spell.name} from the {self.zone.value}, "
                 f"but it is in the {where.value} ({self.rule})"
             )
+
+        if self.condition is not None and game is not None:
+            from .permissions import cast_condition_holds
+
+            if not cast_condition_holds(game, caster, self.condition, spell):
+                return (
+                    f"{self.keyword} lets {caster} cast {spell.name} only if {self.condition}, "
+                    f"and that is not so ({self.rule})"
+                )
 
         if self.marker is not None:
             annotation = spell.exile_annotation
