@@ -32,7 +32,6 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import (
     Casting,
     conditional_flash_condition,
-    granted_cast_options,
     why_cannot_cast_from,
     why_cannot_cast_now,
 )
@@ -120,7 +119,9 @@ def test_marang_river_prowler_needs_a_black_or_green_permanent():
     scenario = build(alice={"graveyard": ["Marang River Prowler"], "battlefield": ["Plains"]})
     reason = refusal(scenario, "Marang River Prowler", Zone.GRAVEYARD)
     assert reason is not None and "black or green permanent" in reason
-    scenario = build(alice={"graveyard": ["Marang River Prowler"], "battlefield": ["Grizzly Bears"]})
+    scenario = build(
+        alice={"graveyard": ["Marang River Prowler"], "battlefield": ["Grizzly Bears"]}
+    )
     assert refusal(scenario, "Marang River Prowler", Zone.GRAVEYARD) is None
     assert on_battlefield(cast_with_permission(scenario, "Marang River Prowler", Zone.GRAVEYARD))
 
@@ -200,7 +201,11 @@ def test_haakon_is_confined_to_the_graveyard():
 
 def test_alien_symbiosis_discards_a_card_to_be_cast_from_the_graveyard():
     scenario = build(
-        alice={"graveyard": ["Alien Symbiosis"], "hand": ["Island"], "battlefield": ["Grizzly Bears"]}
+        alice={
+            "graveyard": ["Alien Symbiosis"],
+            "hand": ["Island"],
+            "battlefield": ["Grizzly Bears"],
+        }
     )
     island = scenario.find("Island", Zone.HAND, "alice")
     cast_with_permission(
@@ -218,14 +223,20 @@ def test_rona_discards_two_cards():
         alice={"graveyard": ["Rona, Sheoldred's Faithful"], "hand": ["Island", "Swamp"]}
     )
     hand = list(scenario.player("alice").hand)
-    rona = cast_with_permission(scenario, "Rona, Sheoldred's Faithful", Zone.GRAVEYARD, choosing=hand)
+    rona = cast_with_permission(
+        scenario, "Rona, Sheoldred's Faithful", Zone.GRAVEYARD, choosing=hand
+    )
     assert on_battlefield(rona)
     assert all(card.zone is Zone.GRAVEYARD for card in hand)
 
 
 def test_demonic_embrace_pays_three_life_and_discards():
     scenario = build(
-        alice={"graveyard": ["Demonic Embrace"], "hand": ["Island"], "battlefield": ["Grizzly Bears"]}
+        alice={
+            "graveyard": ["Demonic Embrace"],
+            "hand": ["Island"],
+            "battlefield": ["Grizzly Bears"],
+        }
     )
     island = scenario.find("Island", Zone.HAND, "alice")
     cast_with_permission(
@@ -240,9 +251,13 @@ def test_demonic_embrace_pays_three_life_and_discards():
 
 
 def test_wickerfolk_pays_two_life_and_sacrifices_a_creature():
-    scenario = build(alice={"graveyard": ["Wickerfolk Indomitable"], "battlefield": ["Grizzly Bears"]})
+    scenario = build(
+        alice={"graveyard": ["Wickerfolk Indomitable"], "battlefield": ["Grizzly Bears"]}
+    )
     bears = scenario.creature("Grizzly Bears", "alice")
-    folk = cast_with_permission(scenario, "Wickerfolk Indomitable", Zone.GRAVEYARD, choosing=[bears])
+    folk = cast_with_permission(
+        scenario, "Wickerfolk Indomitable", Zone.GRAVEYARD, choosing=[bears]
+    )
     assert on_battlefield(folk)
     assert bears.zone is Zone.GRAVEYARD
     assert scenario.player("alice").life == 18
@@ -253,7 +268,11 @@ def test_wickerfolk_pays_two_life_and_sacrifices_a_creature():
 
 def top_board(permanent, library, *, battlefield=(), hand=()):
     return build(
-        alice={"battlefield": [permanent, *battlefield], "library": [*library, "Forest", "Forest"], "hand": list(hand)}
+        alice={
+            "battlefield": [permanent, *battlefield],
+            "library": [*library, "Forest", "Forest"],
+            "hand": list(hand),
+        }
     )
 
 
@@ -425,7 +444,9 @@ def test_case_of_the_locked_hothouse_works_only_when_solved():
     case.solved = True
     assert top_refusal(scenario) is None
     scenario = top_board("Case of the Locked Hothouse", ["Divination"])
-    next(c for c in scenario.game.battlefield if c.name == "Case of the Locked Hothouse").solved = True
+    next(
+        c for c in scenario.game.battlefield if c.name == "Case of the Locked Hothouse"
+    ).solved = True
     assert top_refusal(scenario) is not None  # a sorcery is neither creature nor enchantment
 
 
@@ -630,7 +651,10 @@ def test_dracogenesis_reaches_every_zone_a_dragon_is_cast_from():
     assert grant.zone is None
     dragon = scenario.find("Shivan Dragon", Zone.GRAVEYARD, "alice")
     bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
-    assert static_free_cast_refusal(scenario.game, "alice", dragon, Zone.GRAVEYARD, name, grant) is None
+    assert (
+        static_free_cast_refusal(scenario.game, "alice", dragon, Zone.GRAVEYARD, name, grant)
+        is None
+    )
     assert "only applies to dragon spells" in static_free_cast_refusal(
         scenario.game, "alice", bears, Zone.GRAVEYARD, name, grant
     )
@@ -645,7 +669,9 @@ def test_fires_of_invention_frees_a_spell_within_the_land_count():
 
 def test_fires_of_invention_refuses_a_spell_above_the_land_count():
     scenario = build(alice={"battlefield": ["Fires of Invention"], "hand": ["Shivan Dragon"]})
-    lands = [c for c in scenario.game.permanents_controlled_by("alice") if c.name != "Fires of Invention"]
+    lands = [
+        c for c in scenario.game.permanents_controlled_by("alice") if c.name != "Fires of Invention"
+    ]
     for land in lands[5:]:
         scenario.game.exile_permanent(land)
     (option,) = free_options(scenario, "Shivan Dragon")
@@ -797,16 +823,4 @@ def test_azula_casts_what_it_exiled_at_any_time_during_your_turn_with_any_mana()
     bears = exile_linked(scenario, "Grizzly Bears", azula, owner="bob")
     scenario.start_at(Step.DECLARE_ATTACKERS)  # creature spells are sorcery-speed without flash
     assert exile_refusal(scenario, bears) is None
-    assert on_battlefield(cast_from_pile(scenario, bears))
-
-
-def test_null_summoner_needs_threshold_to_cast_the_exiled_card():
-    for graveyard_size, castable in ((6, False), (7, True)):
-        scenario = build(
-            alice={"battlefield": ["Null Summoner"], "graveyard": ["Island"] * graveyard_size},
-            bob={"library": ["Grizzly Bears"]},
-        )
-        summoner = permanent_named(scenario, "Null Summoner")
-        bears = exile_linked(scenario, "Grizzly Bears", summoner, owner="bob")
-        assert (exile_refusal(scenario, bears) is None) is castable
     assert on_battlefield(cast_from_pile(scenario, bears))

@@ -1253,9 +1253,6 @@ def _static_zone_cast_option(
 #: - "During your turn, you may cast cards exiled with this permanent and you
 #:   may cast them as though they had flash. Mana of any type can be spent to
 #:   cast those spells." (Azula);
-#: - "As long as there are seven or more cards in your graveyard, you may cast
-#:   the exiled card, and mana of any type can be spent to cast that spell."
-#:   (Null Summoner's Threshold).
 _PILE_PERMISSION_LEADS = (
     (re.compile(r"^as long as (?P<c>.+?), (?=you may )", re.IGNORECASE), "condition"),
     (re.compile(r"^if (?P<c>.+?), (?=you may )", re.IGNORECASE), "condition"),
@@ -1274,7 +1271,6 @@ _PILE_PERMISSION_BODY_RE = re.compile(
     r"|play a land or cast a spell from among the cards exiled with this \w+"
     r"|play cards you don't own with (?P<counter2>\w+) counters on them from exile"
     r"|cast cards exiled with this \w+(?P<flash> and you may cast them as though they had flash)?"
-    r"|cast the exiled card"
     r")"
     r"(?P<free> without paying its mana cost)?"
     r"(?P<any1>, and mana of any type can be spent to cast (?:that|those) spells?)?"
