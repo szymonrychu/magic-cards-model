@@ -14,6 +14,7 @@ Every number was looked up with `mise run rules:find <n>`.
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.models.card_state import Counter
 
 from .harness import Scenario
@@ -123,3 +124,111 @@ def test_dearly_departed_in_the_graveyard_buffs_entering_humans():
     assert in_yard.put_onto_battlefield("Elite Vanguard").counters[Counter.PLUS_ONE] == 1
     bare = _board(hand=["Elite Vanguard"])
     assert bare.put_onto_battlefield("Elite Vanguard").counters[Counter.PLUS_ONE] == 0
+
+
+# -- kicked, plus haste and a second counter kind (CR 702.33d, CR 614.1c) ------
+
+
+def test_a_kicked_pouncing_wurm_enters_with_counters_and_haste():
+    played = _board(hand=["Pouncing Wurm"], battlefield=["Forest"] * 8)
+    wurm = _cast(played, "Pouncing Wurm", kicked=True)
+    assert wurm.counters[Counter.PLUS_ONE] == 3
+    assert has_keyword(wurm, Keyword.HASTE, played.game)
+
+
+def test_an_unkicked_pouncing_wurm_has_neither():
+    played = _board(hand=["Pouncing Wurm"], battlefield=["Forest"] * 8)
+    wurm = _cast(played, "Pouncing Wurm")
+    assert wurm.counters[Counter.PLUS_ONE] == 0
+    assert not has_keyword(wurm, Keyword.HASTE, played.game)
+
+
+def test_a_kicked_voidpouncer_enters_with_two_kinds_of_counter_and_haste():
+    played = _board(
+        hand=["Voidpouncer"],
+        battlefield=["Mountain", "Mountain", "Mountain", "Wastes", "Wastes", "Wastes"],
+    )
+    pouncer = _cast(played, "Voidpouncer", kicked=True)
+    assert pouncer.counters[Counter.PLUS_ONE] == 2
+    assert pouncer.counters["trample"] == 1
+    assert has_keyword(pouncer, Keyword.HASTE, played.game)
+
+
+def test_an_unkicked_voidpouncer_enters_bare():
+    played = _board(
+        hand=["Voidpouncer"],
+        battlefield=["Mountain", "Mountain", "Mountain", "Wastes", "Wastes", "Wastes"],
+    )
+    pouncer = _cast(played, "Voidpouncer")
+    assert pouncer.counters[Counter.PLUS_ONE] == 0
+    assert pouncer.counters["trample"] == 0
+    assert not has_keyword(pouncer, Keyword.HASTE, played.game)
+
+
+# -- cast-record gates (CR 601.2h, CR 601.2i) ----------------------------------
+
+
+def test_steel_exemplar_with_one_colour_spent_keeps_its_counters():
+    played = _board(hand=["Steel Exemplar"], battlefield=["Plains"] * 5)
+    assert _cast(played, "Steel Exemplar").counters[Counter.PLUS_ONE] == 2
+
+
+def test_steel_exemplar_with_two_colours_spent_enters_bare():
+    played = _board(
+        hand=["Steel Exemplar"], battlefield=["Plains", "Plains", "Plains", "Island", "Island"]
+    )
+    assert _cast(played, "Steel Exemplar").counters[Counter.PLUS_ONE] == 0
+
+
+def test_freestrider_commando_cast_for_mana_enters_bare():
+    played = _board(hand=["Freestrider Commando"], battlefield=["Forest"] * 6)
+    assert _cast(played, "Freestrider Commando").counters[Counter.PLUS_ONE] == 0
+
+
+def test_freestrider_commando_put_onto_the_battlefield_was_not_cast():
+    played = _board(hand=["Freestrider Commando"])
+    assert played.put_onto_battlefield("Freestrider Commando").counters[Counter.PLUS_ONE] == 2
+
+
+def test_nine_lives_familiar_cast_gets_eight_revival_counters():
+    played = _board(hand=["Nine-Lives Familiar"], battlefield=["Swamp"] * 3)
+    assert _cast(played, "Nine-Lives Familiar").counters["revival"] == 8
+
+
+def test_nine_lives_familiar_put_onto_the_battlefield_gets_none():
+    played = _board(hand=["Nine-Lives Familiar"])
+    assert played.put_onto_battlefield("Nine-Lives Familiar").counters["revival"] == 0
+
+
+def _master_after(bolts):
+    played = _board(
+        hand=["Lightning Bolt"] * bolts + ["Effortless Master"],
+        battlefield=["Mountain"] * 5 + ["Island"],
+    )
+    for _ in range(bolts):
+        played.cast_and_resolve("Lightning Bolt", targets=["bob"], auto=True)
+    return played.cast_and_resolve("Effortless Master", auto=True)
+
+
+def test_effortless_master_after_two_other_spells_gets_counters():
+    assert _master_after(2).counters[Counter.PLUS_ONE] == 2
+
+
+def test_effortless_master_as_the_second_spell_cast_this_turn_counts():
+    """The master itself is a spell cast this turn (CR 601.2i), so one earlier
+    spell is enough."""
+    assert _master_after(1).counters[Counter.PLUS_ONE] == 2
+
+
+def test_effortless_master_cast_first_enters_bare():
+    assert _master_after(0).counters[Counter.PLUS_ONE] == 0
+
+
+def test_ascendant_packleader_needs_a_big_permanent():
+    played = _board(hand=["Ascendant Packleader"], battlefield=["Plains"] * 2)
+    assert played.put_onto_battlefield("Ascendant Packleader").counters[Counter.PLUS_ONE] == 0
+
+
+def test_ascendant_packleader_with_a_mana_value_four_permanent_gets_a_counter():
+    played = _board(hand=["Ascendant Packleader"], battlefield=["Steel Exemplar"])
+    assert played.put_onto_battlefield("Ascendant Packleader").counters[Counter.PLUS_ONE] == 1

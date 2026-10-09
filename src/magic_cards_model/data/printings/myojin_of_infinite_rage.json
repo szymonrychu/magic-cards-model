@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "df630ae9-aa17-46e9-95e7-4980f4a76ade",
+  "oracle_id": "aba1d01e-c340-47a3-8432-9d8c4a5cdfe0",
+  "multiverse_ids": [
+    78986
+  ],
+  "mtgo_id": 21281,
+  "mtgo_foil_id": 21282,
+  "tcgplayer_id": 12100,
+  "cardmarket_id": 12119,
+  "name": "Myojin of Infinite Rage",
+  "lang": "en",
+  "released_at": "2004-10-01",
+  "uri": "https://api.scryfall.com/cards/df630ae9-aa17-46e9-95e7-4980f4a76ade",
+  "scryfall_uri": "https://scryfall.com/card/chk/181/myojin-of-infinite-rage?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:04:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.jpg?1783944297",
+    "normal": "https://cards.scryfall.io/normal/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.jpg?1783944297",
+    "large": "https://cards.scryfall.io/large/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.jpg?1783944297",
+    "png": "https://cards.scryfall.io/png/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.png?1783944297",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.jpg?1783944297",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.jpg?1783944297",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.webp?1783944297",
+    "grid": "https://cards.scryfall.io/grid/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.webp?1783944297",
+    "display": "https://cards.scryfall.io/display/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.webp?1783944297",
+    "art": "https://cards.scryfall.io/art/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.webp?1783944297",
+    "crop": "https://cards.scryfall.io/crop/front/d/f/df630ae9-aa17-46e9-95e7-4980f4a76ade.webp?1783944297"
+  },
+  "mana_cost": "{7}{R}{R}{R}",
+  "cmc": 10.0,
+  "type_line": "Legendary Creature — Spirit",
+  "oracle_text": "Myojin of Infinite Rage enters with a divinity counter on it if you cast it from your hand.\nMyojin of Infinite Rage has indestructible as long as it has a divinity counter on it.\nRemove a divinity counter from Myojin of Infinite Rage: Destroy all lands.",
+  "power": "7",
+  "toughness": "4",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6183d21f-a0af-4118-ba58-aca1d8719c01",
+  "set": "chk",
+  "set_name": "Champions of Kamigawa",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6183d21f-a0af-4118-ba58-aca1d8719c01",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Achk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/chk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/df630ae9-aa17-46e9-95e7-4980f4a76ade/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaba1d01e-c340-47a3-8432-9d8c4a5cdfe0&unique=prints",
+  "collector_number": "181",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kev Walker",
+  "artist_ids": [
+    "f366a0ee-a0cd-466d-ba6a-90058c7a31a6"
+  ],
+  "illustration_id": "38a8fc7c-f088-4f6b-abad-f4e88f7ac280",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17736,
+  "penny_rank": 5504,
+  "prices": {
+    "usd": "2.54",
+    "usd_foil": "18.49",
+    "usd_etched": null,
+    "eur": "0.87",
+    "eur_foil": "9.12",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=78986&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMyojin%2Bof%2BInfinite%2BRage",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMyojin%2Bof%2BInfinite%2BRage",
+    "edhrec": "https://edhrec.com/route/?cc=Myojin+of+Infinite+Rage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F12100%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12119&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/21281?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

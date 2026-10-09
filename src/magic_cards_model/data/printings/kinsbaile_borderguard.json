@@ -1,0 +1,151 @@
+{
+  "object": "card",
+  "id": "82a2e219-9e84-4f54-88e2-3925e48c4827",
+  "oracle_id": "b420d983-4edf-4cc1-b442-af2b67e49c76",
+  "multiverse_ids": [
+    152977
+  ],
+  "mtgo_id": 29144,
+  "mtgo_foil_id": 29145,
+  "tcgplayer_id": 18002,
+  "cardmarket_id": 18843,
+  "name": "Kinsbaile Borderguard",
+  "lang": "en",
+  "released_at": "2008-02-01",
+  "uri": "https://api.scryfall.com/cards/82a2e219-9e84-4f54-88e2-3925e48c4827",
+  "scryfall_uri": "https://scryfall.com/card/mor/14/kinsbaile-borderguard?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:40:04Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.jpg?1783942804",
+    "normal": "https://cards.scryfall.io/normal/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.jpg?1783942804",
+    "large": "https://cards.scryfall.io/large/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.jpg?1783942804",
+    "png": "https://cards.scryfall.io/png/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.png?1783942804",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.jpg?1783942804",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.jpg?1783942804",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.webp?1783942804",
+    "grid": "https://cards.scryfall.io/grid/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.webp?1783942804",
+    "display": "https://cards.scryfall.io/display/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.webp?1783942804",
+    "art": "https://cards.scryfall.io/art/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.webp?1783942804",
+    "crop": "https://cards.scryfall.io/crop/front/8/2/82a2e219-9e84-4f54-88e2-3925e48c4827.webp?1783942804"
+  },
+  "mana_cost": "{1}{W}{W}",
+  "cmc": 3.0,
+  "type_line": "Creature — Kithkin Soldier",
+  "oracle_text": "This creature enters with a +1/+1 counter on it for each other Kithkin you control.\nWhen this creature dies, create a 1/1 white Kithkin Soldier creature token for each counter on it.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "82a2e219-9e84-4f54-88e2-3925e48c4827",
+      "component": "combo_piece",
+      "name": "Kinsbaile Borderguard",
+      "type_line": "Creature — Kithkin Soldier",
+      "uri": "https://api.scryfall.com/cards/82a2e219-9e84-4f54-88e2-3925e48c4827"
+    },
+    {
+      "object": "related_card",
+      "id": "ad29eb21-7ee3-4a67-9601-a62ea0cbe4c0",
+      "component": "token",
+      "name": "Kithkin Soldier",
+      "type_line": "Token Creature — Kithkin Soldier",
+      "uri": "https://api.scryfall.com/cards/ad29eb21-7ee3-4a67-9601-a62ea0cbe4c0"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c41550df-7b41-41a3-85ab-8612eb2f168f",
+  "set": "mor",
+  "set_name": "Morningtide",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/c41550df-7b41-41a3-85ab-8612eb2f168f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amor&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mor?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/82a2e219-9e84-4f54-88e2-3925e48c4827/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab420d983-4edf-4cc1-b442-af2b67e49c76&unique=prints",
+  "collector_number": "14",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Christopher Moeller",
+  "artist_ids": [
+    "21e10012-06ae-44f2-b38d-3824dd2e73d4"
+  ],
+  "illustration_id": "270caf53-1d5a-438b-8db1-0cc8ff69329c",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18434,
+  "penny_rank": 8136,
+  "prices": {
+    "usd": "6.23",
+    "usd_foil": "11.75",
+    "usd_etched": null,
+    "eur": "1.22",
+    "eur_foil": "3.51",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=152977&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKinsbaile%2BBorderguard",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKinsbaile%2BBorderguard",
+    "edhrec": "https://edhrec.com/route/?cc=Kinsbaile+Borderguard"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F18002%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=18843&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/29144?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

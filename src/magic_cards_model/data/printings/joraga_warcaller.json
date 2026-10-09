@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "fa125071-ced8-4ccc-bbff-a2cbff13b9d2",
+  "oracle_id": "8959a147-75b1-4f4a-a699-cb354ff55e59",
+  "multiverse_ids": [
+    430339
+  ],
+  "tcgplayer_id": 132069,
+  "cardmarket_id": 298069,
+  "name": "Joraga Warcaller",
+  "lang": "en",
+  "released_at": "2017-06-09",
+  "uri": "https://api.scryfall.com/cards/fa125071-ced8-4ccc-bbff-a2cbff13b9d2",
+  "scryfall_uri": "https://scryfall.com/card/cma/120/joraga-warcaller?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:50:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.jpg?1783936257",
+    "normal": "https://cards.scryfall.io/normal/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.jpg?1783936257",
+    "large": "https://cards.scryfall.io/large/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.jpg?1783936257",
+    "png": "https://cards.scryfall.io/png/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.png?1783936257",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.jpg?1783936257",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.jpg?1783936257",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.webp?1783936257",
+    "grid": "https://cards.scryfall.io/grid/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.webp?1783936257",
+    "display": "https://cards.scryfall.io/display/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.webp?1783936257",
+    "art": "https://cards.scryfall.io/art/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.webp?1783936257",
+    "crop": "https://cards.scryfall.io/crop/front/f/a/fa125071-ced8-4ccc-bbff-a2cbff13b9d2.webp?1783936257"
+  },
+  "mana_cost": "{G}",
+  "cmc": 1.0,
+  "type_line": "Creature — Elf Warrior",
+  "oracle_text": "Multikicker {1}{G} (You may pay an additional {1}{G} any number of times as you cast this spell.)\nThis creature enters with a +1/+1 counter on it for each time it was kicked.\nOther Elf creatures you control get +1/+1 for each +1/+1 counter on this creature.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Multikicker"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set": "cma",
+  "set_name": "Commander Anthology",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acma&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cma?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fa125071-ced8-4ccc-bbff-a2cbff13b9d2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8959a147-75b1-4f4a-a699-cb354ff55e59&unique=prints",
+  "collector_number": "120",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Steven Belledin",
+  "artist_ids": [
+    "f07d73b9-52a0-4fe5-858b-61f7b42174a5"
+  ],
+  "illustration_id": "710bb5ae-14ba-43ab-a81b-d02a0869ccaf",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 4421,
+  "penny_rank": 2115,
+  "prices": {
+    "usd": "12.53",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "6.70",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430339&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJoraga%2BWarcaller",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJoraga%2BWarcaller",
+    "edhrec": "https://edhrec.com/route/?cc=Joraga+Warcaller"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F132069%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298069&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Joraga+Warcaller&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

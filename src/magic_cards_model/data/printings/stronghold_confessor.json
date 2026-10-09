@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a",
+  "oracle_id": "e7c200a9-4793-44c8-ba8d-6298dc83bbac",
+  "multiverse_ids": [
+    442993
+  ],
+  "mtgo_id": 67675,
+  "arena_id": 67314,
+  "tcgplayer_id": 164751,
+  "cardmarket_id": 355415,
+  "name": "Stronghold Confessor",
+  "lang": "en",
+  "released_at": "2018-04-27",
+  "uri": "https://api.scryfall.com/cards/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a",
+  "scryfall_uri": "https://scryfall.com/card/dom/105/stronghold-confessor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:30:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.jpg?1783935002",
+    "normal": "https://cards.scryfall.io/normal/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.jpg?1783935002",
+    "large": "https://cards.scryfall.io/large/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.jpg?1783935002",
+    "png": "https://cards.scryfall.io/png/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.png?1783935002",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.jpg?1783935002",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.jpg?1783935002",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.webp?1783935002",
+    "grid": "https://cards.scryfall.io/grid/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.webp?1783935002",
+    "display": "https://cards.scryfall.io/display/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.webp?1783935002",
+    "art": "https://cards.scryfall.io/art/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.webp?1783935002",
+    "crop": "https://cards.scryfall.io/crop/front/a/b/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a.webp?1783935002"
+  },
+  "mana_cost": "{B}",
+  "cmc": 1.0,
+  "type_line": "Creature — Human Cleric",
+  "oracle_text": "Kicker {3} (You may pay an additional {3} as you cast this spell.)\nMenace (This creature can't be blocked except by two or more creatures.)\nIf this creature was kicked, it enters with two +1/+1 counters on it.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Menace",
+    "Kicker"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "be1daba3-51c9-4e7e-9212-36e68addc26c",
+  "set": "dom",
+  "set_name": "Dominaria",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/be1daba3-51c9-4e7e-9212-36e68addc26c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adom&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dom?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ab3fcc43-839b-48c1-91e3-7cc80d8c7f9a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae7c200a9-4793-44c8-ba8d-6298dc83bbac&unique=prints",
+  "collector_number": "105",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Igor Kieryluk",
+  "artist_ids": [
+    "9c3e9d17-509f-485c-9360-46d897ce716b"
+  ],
+  "illustration_id": "45f22037-658e-4994-a55c-c6f16662886d",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 26879,
+  "penny_rank": 11088,
+  "prices": {
+    "usd": "0.07",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.04",
+    "eur_foil": "0.21",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=442993&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStronghold%2BConfessor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStronghold%2BConfessor",
+    "edhrec": "https://edhrec.com/route/?cc=Stronghold+Confessor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F164751%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=355415&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/67675?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

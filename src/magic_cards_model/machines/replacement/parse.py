@@ -961,7 +961,8 @@ _COUNTERS = re.compile(r"^(?P<amount>[\w+/-]+) (?P<kind>.+?) counters?$", re.IGN
 #: of counter is still plainly readable, so it is read here rather than the
 #: whole clause being abandoned to `variable_amount`.
 _COUNTERS_EQUAL_TO = re.compile(
-    r"^an? number of (?P<kind>.+?) counters?(?: on it)? equal to (?P<expression>.+?)$",
+    r"^an? number of (?P<kind>.+?) counters?(?: on (?:it|him|her|them))? equal to "
+    r"(?P<expression>.+?)$",
     re.IGNORECASE,
 )
 

@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "1f08749e-05e0-4fb4-a4ae-35e7187584ab",
+  "oracle_id": "50fcb431-626c-4db5-aa2c-445f3b81e7fa",
+  "multiverse_ids": [
+    574630
+  ],
+  "mtgo_id": 102776,
+  "arena_id": 82202,
+  "tcgplayer_id": 282816,
+  "cardmarket_id": 671621,
+  "name": "Viashino Branchrider",
+  "lang": "en",
+  "released_at": "2022-09-09",
+  "uri": "https://api.scryfall.com/cards/1f08749e-05e0-4fb4-a4ae-35e7187584ab",
+  "scryfall_uri": "https://scryfall.com/card/dmu/150/viashino-branchrider?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:41:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.jpg?1783921307",
+    "normal": "https://cards.scryfall.io/normal/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.jpg?1783921307",
+    "large": "https://cards.scryfall.io/large/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.jpg?1783921307",
+    "png": "https://cards.scryfall.io/png/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.png?1783921307",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.jpg?1783921307",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.jpg?1783921307",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.webp?1783921307",
+    "grid": "https://cards.scryfall.io/grid/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.webp?1783921307",
+    "display": "https://cards.scryfall.io/display/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.webp?1783921307",
+    "art": "https://cards.scryfall.io/art/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.webp?1783921307",
+    "crop": "https://cards.scryfall.io/crop/front/1/f/1f08749e-05e0-4fb4-a4ae-35e7187584ab.webp?1783921307"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Creature — Lizard Warrior",
+  "oracle_text": "Kicker {2}{G} (You may pay an additional {2}{G} as you cast this spell.)\nHaste\nIf this creature was kicked, it enters with two +1/+1 counters on it.\n{2}{R}: This creature gets +2/+0 until end of turn.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [
+    "Haste",
+    "Kicker"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set": "dmu",
+  "set_name": "Dominaria United",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Admu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dmu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1f08749e-05e0-4fb4-a4ae-35e7187584ab/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A50fcb431-626c-4db5-aa2c-445f3b81e7fa&unique=prints",
+  "collector_number": "150",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Andrew Mar",
+  "artist_ids": [
+    "adad79bf-cd52-456a-b170-740ed8bff0fc"
+  ],
+  "illustration_id": "909a8d2b-18ee-4343-991a-8e499f033ea8",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 24498,
+  "penny_rank": 11580,
+  "preview": {
+    "source": "TheGamer",
+    "source_uri": "https://www.thegamer.com/magic-the-gathering-mtg-dmu-dominaria-united-card-reveals/",
+    "previewed_at": "2022-08-19"
+  },
+  "prices": {
+    "usd": "0.07",
+    "usd_foil": "0.06",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.05",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=574630&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DViashino%2BBranchrider",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DViashino%2BBranchrider",
+    "edhrec": "https://edhrec.com/route/?cc=Viashino+Branchrider"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F282816%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=671621&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/102776?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

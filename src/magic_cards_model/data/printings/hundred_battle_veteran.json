@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "e53adf93-2db5-4087-a2dc-c8f53401d700",
+  "oracle_id": "9ed6aa5b-4369-42f7-9853-aae1ac9b17e2",
+  "multiverse_ids": [
+    693562
+  ],
+  "mtgo_id": 139115,
+  "arena_id": 95601,
+  "tcgplayer_id": 625230,
+  "cardmarket_id": 819373,
+  "name": "Hundred-Battle Veteran",
+  "lang": "en",
+  "released_at": "2025-04-11",
+  "uri": "https://api.scryfall.com/cards/e53adf93-2db5-4087-a2dc-c8f53401d700",
+  "scryfall_uri": "https://scryfall.com/card/tdm/82/hundred-battle-veteran?utm_source=api",
+  "layout": "normal",
+  "highres_image": false,
+  "image_status": "lowres",
+  "image_updated_at": "2026-07-13T01:49:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.jpg?1783907376",
+    "normal": "https://cards.scryfall.io/normal/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.jpg?1783907376",
+    "large": "https://cards.scryfall.io/large/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.jpg?1783907376",
+    "png": "https://cards.scryfall.io/png/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.png?1783907376",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.jpg?1783907376",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.jpg?1783907376",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.webp?1783907376",
+    "grid": "https://cards.scryfall.io/grid/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.webp?1783907376",
+    "display": "https://cards.scryfall.io/display/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.webp?1783907376",
+    "art": "https://cards.scryfall.io/art/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.webp?1783907376",
+    "crop": "https://cards.scryfall.io/crop/front/e/5/e53adf93-2db5-4087-a2dc-c8f53401d700.webp?1783907376"
+  },
+  "mana_cost": "{3}{B}",
+  "cmc": 4.0,
+  "type_line": "Creature — Zombie Warrior",
+  "oracle_text": "As long as there are three or more different kinds of counters among creatures you control, this creature gets +2/+4.\nYou may cast this card from your graveyard. If you do, it enters with a finality counter on it. (If a creature with a finality counter on it would die, exile it instead.)",
+  "power": "4",
+  "toughness": "2",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set": "tdm",
+  "set_name": "Tarkir: Dragonstorm",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atdm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tdm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e53adf93-2db5-4087-a2dc-c8f53401d700/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9ed6aa5b-4369-42f7-9853-aae1ac9b17e2&unique=prints",
+  "collector_number": "82",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "She's eager to start a new winning streak.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wayne Wu",
+  "artist_ids": [
+    "2b551106-f94f-4c81-8b5c-197cdfa29d4a"
+  ],
+  "illustration_id": "4f8b0ee6-79da-492f-842d-c885abbe10f3",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 25483,
+  "preview": {
+    "source": "MTG Collectors Corner",
+    "source_uri": "https://www.youtube.com/shorts/uPL6NzeI_uI",
+    "previewed_at": "2025-03-27"
+  },
+  "prices": {
+    "usd": "0.09",
+    "usd_foil": "0.06",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.09",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693562&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHundred-Battle%2BVeteran",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHundred-Battle%2BVeteran",
+    "edhrec": "https://edhrec.com/route/?cc=Hundred-Battle+Veteran"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F625230%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=819373&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/139115?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

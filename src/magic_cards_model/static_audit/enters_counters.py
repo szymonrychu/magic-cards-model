@@ -13,7 +13,10 @@ the production entry in every staging, so it is not credited.
 import re
 from functools import cache
 
-from magic_cards_model.machines.replacement.enters import _self_enters_modifiers
+from magic_cards_model.machines.replacement.enters import (
+    _self_enters_modifiers,
+    choice_counter_options,
+)
 from magic_cards_model.machines.replacement.model import ENTERS_KINDS, ReplacementKind
 from magic_cards_model.machines.replacement.parse import (
     parse_replacement_effects,
@@ -35,7 +38,11 @@ def _board_cards() -> tuple[Card, ...]:
     creature, a mana value 4+ permanent, five lands."""
     from magic_cards_model.support import _cards_by_power_or_toughness, _cards_by_type
 
-    big = _cards_by_power_or_toughness("power", "more", 4)[:1]
+    big = [
+        card
+        for card in _cards_by_power_or_toughness("power", "more", 4)
+        if (card.cmc or 0) >= 4 and Type.CREATURE in card.types
+    ][:1]
     lands = tuple(_cards_by_type().get(Type.LAND, ()))[:1] * 5
     return (*big, *lands)
 
@@ -68,6 +75,12 @@ def _stage(printing: Card, *, rich: bool, record: CastRecord | None) -> tuple[Ga
         opponent.lose_life(1)
         game.record_turn_fact("attacked", "sweep_you")
         game.creatures_died_this_turn = 1
+        for card in _board_cards()[:2]:
+            spell = CardState(
+                card=card, zone=Zone.GRAVEYARD, controller="sweep_you", owner="sweep_you"
+            )
+            spell.bind_to_game(game)
+            game.spells_cast_this_turn.setdefault("sweep_you", []).append(spell)
     if record is not None:
         game.cast_records[state.zone_change_stamp] = record
     return game, state
@@ -81,7 +94,13 @@ def _stagings(printing: Card):
     "unless" gate, a plain line), a kicked cast with every colour spent from
     a rich board (raid, adamant, kicker, "cast it from your hand", "five or
     more untapped lands"), and an escape cast (CR 702.138b)."""
-    cast = CastRecord(origin_zone=Zone.HAND, kicked=1, mana_spent=dict(_ALL_MANA), x_value=6)
+    cast = CastRecord(
+        origin_zone=Zone.HAND,
+        kicked=1,
+        mana_spent=dict(_ALL_MANA),
+        x_value=6,
+        controlled_subtypes_as_cast=("dragon",),
+    )
     yield _stage(printing, rich=False, record=None)
     yield _stage(printing, rich=True, record=cast)
     yield _stage(
@@ -100,8 +119,10 @@ def _could_perform(effect) -> bool:
     from magic_cards_model.machines.keyword_counters import enters_count_reader
     from magic_cards_model.machines.replacement.enters import _enters_with_condition
 
+    if effect.kind is ReplacementKind.ENTERS_TAPPED:
+        return effect.condition is None
     if effect.counter_kind is None:
-        return False
+        return choice_counter_options(effect.replacement or "") is not None
     if effect.condition is not None and _enters_with_condition(effect) is None:
         return False
     if effect.amount is not None or effect.variable_amount and effect.amount_expression is None:
@@ -177,19 +198,26 @@ def reads_static_line(
     if "additional" in lowered and _group_line_performed(printing, text):
         return True
     effects = _line_effects(printing, text)
-    if not effects or any(effect.kind is not ReplacementKind.ENTERS_WITH for effect in effects):
+    if not effects or any(
+        effect.kind not in (ReplacementKind.ENTERS_WITH, ReplacementKind.ENTERS_TAPPED)
+        for effect in effects
+    ):
         return False
     if not all(_could_perform(effect) for effect in effects):
         return False
-    pending = {effect.text.strip() for effect in effects}
+    wanted: dict[str, int] = {}
+    for effect in effects:
+        wanted[effect.text.strip()] = wanted.get(effect.text.strip(), 0) + 1
     for game, state in _stagings(printing):
         try:
-            labels = " ".join(
+            labels = [
                 label for _suffix, _apply, label, _copy in _self_enters_modifiers(game, state)
-            )
+            ]
         except Exception:
             continue
-        pending = {sentence for sentence in pending if sentence not in labels}
-        if not pending:
+        if all(
+            sum(1 for label in labels if sentence in label) >= count
+            for sentence, count in wanted.items()
+        ):
             return True
     return False

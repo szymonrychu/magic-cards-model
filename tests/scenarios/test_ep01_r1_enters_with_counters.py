@@ -14,6 +14,8 @@ fact - counted ("for each"), typed (-1/-1), and the group replacement "Each
 Every number was looked up with `mise run rules:find <n>`.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
@@ -102,3 +104,92 @@ def test_patched_plaything_put_onto_the_battlefield_has_none():
     played = _board(hand=["Patched Plaything"])
     thing = played.put_onto_battlefield("Patched Plaything")
     assert thing.counters[Counter.MINUS_ONE] == 0
+
+
+# -- "enters tapped with <counters>" (CR 614.1c, CR 614.1d) -------------------
+
+
+def test_vivid_marsh_enters_tapped_with_two_charge_counters():
+    played = _board(hand=["Vivid Marsh"])
+    land = played.put_onto_battlefield("Vivid Marsh")
+    assert land.tapped
+    assert land.counters[Counter.CHARGE] == 2
+
+
+def test_vivid_crag_enters_tapped_with_two_charge_counters():
+    played = _board(hand=["Vivid Crag"])
+    land = played.play_land("Vivid Crag")
+    assert land.tapped
+    assert land.counters[Counter.CHARGE] == 2
+
+
+def test_steel_dromedary_enters_tapped_with_two_plus_counters():
+    played = _board(hand=["Steel Dromedary"])
+    camel = played.put_onto_battlefield("Steel Dromedary")
+    assert camel.tapped
+    assert camel.counters[Counter.PLUS_ONE] == 2
+
+
+def test_stun_counters_ride_the_tapped_entry():
+    for name, count in (
+        ("Tonberry", 1),
+        ("Sleep-Cursed Faerie", 3),
+        ("The Watcher in the Water", 9),
+    ):
+        played = _board(hand=[name])
+        creature = played.put_onto_battlefield(name)
+        assert creature.tapped, name
+        assert creature.counters[Counter.STUN] == count, name
+
+
+# -- "enters with your choice of a <kind> counter or a <kind> counter" ---------
+# CR 614.12a: the choice is made before the permanent enters.
+
+
+def _entered_choosing(name, *answers):
+    played = _board(hand=[name])
+    for answer in answers:
+        played.will_choose(answer, source=name)
+    return played.put_onto_battlefield(name)
+
+
+def test_boot_nipper_takes_the_chosen_keyword_counter():
+    lifelink = _entered_choosing("Boot Nipper", "lifelink")
+    assert lifelink.counters["lifelink"] == 1
+    assert lifelink.counters["deathtouch"] == 0
+    deathtouch = _entered_choosing("Boot Nipper", "deathtouch")
+    assert deathtouch.counters["deathtouch"] == 1
+    assert deathtouch.counters["lifelink"] == 0
+
+
+def test_each_other_choice_card_gives_exactly_the_picked_counter():
+    for name, picked, other in (
+        ("Ferocious Tigorilla", "menace", "trample"),
+        ("Flycatcher Giraffid", "vigilance", "reach"),
+        ("Helica Glider", "first strike", "flying"),
+        ("Wingfold Pteron", "hexproof", "flying"),
+    ):
+        creature = _entered_choosing(name, picked)
+        assert creature.counters[picked] == 1, name
+        assert creature.counters[other] == 0, name
+
+
+def test_grimdancer_takes_two_different_counters():
+    creature = _entered_choosing("Grimdancer", "menace", "lifelink")
+    assert creature.counters["menace"] == 1
+    assert creature.counters["lifelink"] == 1
+    assert creature.counters["deathtouch"] == 0
+
+
+def test_grimdancer_refuses_the_same_counter_twice():
+    played = _board(hand=["Grimdancer"])
+    played.will_choose("menace", source="Grimdancer", times=2)
+    with pytest.raises(ValueError):
+        played.put_onto_battlefield("Grimdancer")
+
+
+def test_a_choice_answer_outside_the_printed_options_is_refused():
+    played = _board(hand=["Boot Nipper"])
+    played.will_choose("flying", source="Boot Nipper")
+    with pytest.raises(ValueError):
+        played.put_onto_battlefield("Boot Nipper")

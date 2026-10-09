@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "002fe870-eae5-42cc-a44c-32906f60719e",
+  "oracle_id": "796f1e1f-7fec-429d-82ae-125f541d6cc7",
+  "multiverse_ids": [
+    571622
+  ],
+  "mtgo_id": 102062,
+  "tcgplayer_id": 277029,
+  "cardmarket_id": 665797,
+  "name": "Ulasht, the Hate Seed",
+  "lang": "en",
+  "released_at": "2022-07-08",
+  "uri": "https://api.scryfall.com/cards/002fe870-eae5-42cc-a44c-32906f60719e",
+  "scryfall_uri": "https://scryfall.com/card/2x2/289/ulasht-the-hate-seed?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:49:58Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.jpg?1783921798",
+    "normal": "https://cards.scryfall.io/normal/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.jpg?1783921798",
+    "large": "https://cards.scryfall.io/large/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.jpg?1783921798",
+    "png": "https://cards.scryfall.io/png/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.png?1783921798",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.jpg?1783921798",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.jpg?1783921798",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.webp?1783921798",
+    "grid": "https://cards.scryfall.io/grid/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.webp?1783921798",
+    "display": "https://cards.scryfall.io/display/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.webp?1783921798",
+    "art": "https://cards.scryfall.io/art/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.webp?1783921798",
+    "crop": "https://cards.scryfall.io/crop/front/0/0/002fe870-eae5-42cc-a44c-32906f60719e.webp?1783921798"
+  },
+  "mana_cost": "{2}{R}{G}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature — Hellion Hydra",
+  "oracle_text": "Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control.\n{1}, Remove a +1/+1 counter from Ulasht: Choose one —\n• Ulasht deals 1 damage to target creature.\n• Create a 1/1 green Saproling creature token.",
+  "power": "0",
+  "toughness": "0",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "b2c9bcf4-4e8c-467c-8c72-4a9cd0556e93",
+      "component": "token",
+      "name": "Saproling",
+      "type_line": "Token Creature — Saproling",
+      "uri": "https://api.scryfall.com/cards/b2c9bcf4-4e8c-467c-8c72-4a9cd0556e93"
+    },
+    {
+      "object": "related_card",
+      "id": "8ecb8a87-85d9-48ae-b0b3-84b9420ae082",
+      "component": "combo_piece",
+      "name": "Ulasht, the Hate Seed",
+      "type_line": "Legendary Creature — Hellion Hydra",
+      "uri": "https://api.scryfall.com/cards/8ecb8a87-85d9-48ae-b0b3-84b9420ae082"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set": "2x2",
+  "set_name": "Double Masters 2022",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A2x2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/2x2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/002fe870-eae5-42cc-a44c-32906f60719e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A796f1e1f-7fec-429d-82ae-125f541d6cc7&unique=prints",
+  "collector_number": "289",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Nottsuo",
+  "artist_ids": [
+    "78ae4348-24fb-401f-bfba-0d5c34c106ab"
+  ],
+  "illustration_id": "b1ba816e-f123-4355-97e6-e09ab8cd6646",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13027,
+  "penny_rank": 14446,
+  "preview": {
+    "source": "Amy the Amazonian",
+    "source_uri": "https://twitter.com/coL_Amazonian/status/1539990752457113600",
+    "previewed_at": "2022-06-23"
+  },
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.40",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.29",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=571622&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUlasht%252C%2Bthe%2BHate%2BSeed",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUlasht%252C%2Bthe%2BHate%2BSeed",
+    "edhrec": "https://edhrec.com/route/?cc=Ulasht%2C+the+Hate+Seed"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F277029%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=665797&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/102062?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

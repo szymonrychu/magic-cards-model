@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "c9082527-aa88-42f7-b2f2-de21878cb179",
+  "oracle_id": "2da7c49f-cc1e-45d9-9cbf-067e92b0daef",
+  "multiverse_ids": [
+    560016
+  ],
+  "tcgplayer_id": 269442,
+  "cardmarket_id": 653028,
+  "name": "Vivid Creek",
+  "lang": "en",
+  "released_at": "2022-04-29",
+  "uri": "https://api.scryfall.com/cards/c9082527-aa88-42f7-b2f2-de21878cb179",
+  "scryfall_uri": "https://scryfall.com/card/ncc/444/vivid-creek?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:13:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.jpg?1783923181",
+    "normal": "https://cards.scryfall.io/normal/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.jpg?1783923181",
+    "large": "https://cards.scryfall.io/large/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.jpg?1783923181",
+    "png": "https://cards.scryfall.io/png/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.png?1783923181",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.jpg?1783923181",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.jpg?1783923181",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.webp?1783923181",
+    "grid": "https://cards.scryfall.io/grid/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.webp?1783923181",
+    "display": "https://cards.scryfall.io/display/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.webp?1783923181",
+    "art": "https://cards.scryfall.io/art/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.webp?1783923181",
+    "crop": "https://cards.scryfall.io/crop/front/c/9/c9082527-aa88-42f7-b2f2-de21878cb179.webp?1783923181"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Land",
+  "oracle_text": "This land enters tapped with two charge counters on it.\n{T}: Add {U}.\n{T}, Remove a charge counter from this land: Add one mana of any color.",
+  "colors": [],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "c51de34b-d4d6-4179-a432-573744ded119",
+  "set": "ncc",
+  "set_name": "New Capenna Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/c51de34b-d4d6-4179-a432-573744ded119",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ancc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ncc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c9082527-aa88-42f7-b2f2-de21878cb179/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2da7c49f-cc1e-45d9-9cbf-067e92b0daef&unique=prints",
+  "collector_number": "444",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Fred Fields",
+  "artist_ids": [
+    "9c77c81a-3b3f-4e94-a834-327d01cd6b35"
+  ],
+  "illustration_id": "b2d07fea-385d-44af-ae7a-69331fe1070a",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 4631,
+  "penny_rank": 753,
+  "prices": {
+    "usd": "0.42",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.23",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=560016&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVivid%2BCreek",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVivid%2BCreek",
+    "edhrec": "https://edhrec.com/route/?cc=Vivid+Creek"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269442%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=653028&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Vivid+Creek&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

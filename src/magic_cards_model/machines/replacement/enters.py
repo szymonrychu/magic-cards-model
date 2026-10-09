@@ -95,7 +95,8 @@ _ENTERS_UNTAPPED = re.compile(rf"^(?P<subject>.+?) {_ENTERS} untapped\.?$", re.I
 #: same `condition` field, and `_read_enters_condition` is what has to
 #: recognise the text itself.
 _ENTERS_WITH = re.compile(
-    rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} with (?P<what>.+?)"
+    rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS}(?P<tapped> tapped)?"
+    r" with (?P<what>.+?)"
     r"(?:\s+on it)?(?:,\s*(?P<tail>where .+?))?"
     r"(?:\s+(?:if (?P<trailing_condition>.+?)|(?P<trailing_unless>unless .+?)))?\.?$",
     re.IGNORECASE,
@@ -292,27 +293,82 @@ _AND_ANOTHER_KIND = re.compile(
 )
 
 
-def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
-    match = _ENTERS_WITH.match(sentence)
-    if not match:
-        return []
-    subject = match.group("subject").strip()
-    what = match.group("what").strip()
+#: CR 614.1c's "enters with your choice of a `<kind>` counter or a `<kind>`
+#: counter" (Boot Nipper, Wingfold Pteron) and "your choice of two different
+#: counters from among `<list>`" (Grimdancer): one counter per pick, picked
+#: from the printed kinds as the permanent enters (CR 614.12a).
+_CHOICE_OF_TWO_KINDS = re.compile(
+    r"^your choice of an? (?P<a>.+?) counter or an? (?P<b>.+?) counter(?: on it)?$",
+    re.IGNORECASE,
+)
+_CHOICE_OF_DIFFERENT = re.compile(
+    rf"^your choice of (?P<n>{COUNT}) different counters(?: on it)? from among (?P<kinds>.+)$",
+    re.IGNORECASE,
+)
+_TRAILING_ON_IT = re.compile(r"\s+on (?:it|him|her|them)$", re.IGNORECASE)
+
+
+def choice_counter_options(what: str) -> tuple[int, tuple[str, ...]] | None:
+    """`(picks, kinds)` for a "your choice of ..." counter phrase, else None."""
+    text = what.strip()
+    pair = _CHOICE_OF_TWO_KINDS.match(text)
+    if pair is not None:
+        return 1, (pair.group("a").lower(), pair.group("b").lower())
+    different = _CHOICE_OF_DIFFERENT.match(text)
+    if different is not None:
+        picks = parse_count(different.group("n"))
+        kinds = tuple(
+            part.strip().lower()
+            for part in re.split(r",\s*(?:and |or )?|\s+(?:and|or)\s+", different.group("kinds"))
+            if part.strip()
+        )
+        if picks is not None and 0 < picks <= len(kinds):
+            return picks, kinds
+    return None
+
+
+def _enters_with_effects(
+    sentence: str,
+    names: tuple[str, ...],
+    *,
+    subject: str,
+    what: str,
+    condition: str | None,
+    tapped: bool = False,
+) -> list[ReplacementEffect]:
+    """The effects of one "[This] enters [tapped] with `what`" sentence:
+    CR 614.1d's tapped entry when printed, then one `ENTERS_WITH` per counter
+    kind (CR 614.1c), carrying a trailing "and with haste" rider."""
+    effects: list[ReplacementEffect] = []
+    if tapped:
+        effects.append(
+            _make(
+                ReplacementKind.ENTERS_TAPPED,
+                sentence,
+                subject=subject,
+                tapped=True,
+                self_replacement=_refers_to_self(subject, names),
+            )
+        )
+    shared = {
+        "subject": subject,
+        "condition": condition,
+        "self_replacement": _refers_to_self(subject, names),
+    }
+    if choice_counter_options(what) is not None:
+        effects.append(
+            _make(ReplacementKind.ENTERS_WITH, sentence, replacement=what.strip(), **shared)
+        )
+        return effects
     parts = [what]
     haste = _AND_WITH_HASTE.search(what)
     if haste is not None:
         parts = [what[: haste.start()]]
-    paired = _AND_ANOTHER_KIND.match(parts[0])
+    paired = _AND_ANOTHER_KIND.match(_TRAILING_ON_IT.sub("", parts[0]))
     if paired is not None:
         parts = [paired.group("first"), paired.group("second")]
-    condition = (
-        match.group("condition")
-        or match.group("trailing_condition")
-        or match.group("trailing_unless")
-        or ""
-    ).strip() or None
-    effects = []
     for index, part in enumerate(parts):
+        part = _TRAILING_ON_IT.sub("", part)
         counters = _read_multiplied_counters(part) or _read_counters(part)
         if counters is None:
             # A counter count this cannot read fails closed as UNPARSED rather
@@ -323,18 +379,36 @@ def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementE
             _make(
                 ReplacementKind.ENTERS_WITH,
                 sentence,
-                subject=subject,
                 replacement=part + (" and with haste" if haste and index == 0 else ""),
                 amount=amount,
                 variable_amount=variable,
                 counter_kind=counter_kind,
                 amount_expression=expression,
                 that_many_multiplier=that_many_multiplier,
-                condition=condition,
-                self_replacement=_refers_to_self(subject, names),
+                **shared,
             )
         )
     return effects
+
+
+def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    match = _ENTERS_WITH.match(sentence)
+    if not match:
+        return []
+    condition = (
+        match.group("condition")
+        or match.group("trailing_condition")
+        or match.group("trailing_unless")
+        or ""
+    ).strip() or None
+    return _enters_with_effects(
+        sentence,
+        names,
+        subject=match.group("subject").strip(),
+        what=match.group("what").strip(),
+        condition=condition,
+        tapped=match.group("tapped") is not None,
+    )
 
 
 def _try_escapes_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
@@ -343,27 +417,13 @@ def _try_escapes_with(sentence: str, names: tuple[str, ...]) -> list[Replacement
     match = _ESCAPES_WITH.match(sentence)
     if not match:
         return []
-    subject = match.group("subject").strip()
-    what = match.group("what").strip()
-    counters = _read_counters(what)
-    if counters is None:
-        return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
-    amount, variable, counter_kind, expression, that_many_multiplier = counters
-    return [
-        _make(
-            ReplacementKind.ENTERS_WITH,
-            sentence,
-            subject=subject,
-            replacement=what,
-            amount=amount,
-            variable_amount=variable,
-            counter_kind=counter_kind,
-            amount_expression=expression,
-            that_many_multiplier=that_many_multiplier,
-            condition=ESCAPED_CONDITION,
-            self_replacement=_refers_to_self(subject, names),
-        )
-    ]
+    return _enters_with_effects(
+        sentence,
+        names,
+        subject=match.group("subject").strip(),
+        what=match.group("what").strip(),
+        condition=ESCAPED_CONDITION,
+    )
 
 
 def _escaped(game: "Game", entering: CardState) -> bool:
@@ -1805,6 +1865,35 @@ def _basic_land_name_refusal(value: str) -> str | None:
     return None
 
 
+def _choose_counters(picks: int, kinds: tuple[str, ...], card_name: str) -> Apply:
+    """ "enters with your choice of a flying counter or a first strike counter"
+    - CR 614.12a's choice, asked before the permanent enters, one question per
+    pick over the printed kinds not yet picked; each pick is one counter (CR
+    614.1c, CR 122.6)."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if who is None or source is None:
+            return
+        remaining = list(kinds)
+        for _ in range(picks):
+            value = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_QUALITY,
+                    player=who,
+                    prompt="choose a kind of counter",
+                    source=card_name,
+                    source_id=source_id_of(source),
+                    options=tuple(remaining),
+                )
+            )
+            assert isinstance(value, str)
+            remaining.remove(value)
+            event.counters[value] = event.counters.get(value, 0) + 1
+
+    return apply
+
+
 def _choose_a_player(replacement_text: str, card_name: str) -> Apply | None:
     """`_CHOOSE_A_PLAYER_RE`'s choice, asked before the permanent enters (CR
     614.12a) of its own controller: any player in the game for "a player",
@@ -2613,6 +2702,18 @@ def _self_enters_modifiers(
                 else _enters_tapped_condition(effect)
             )
             if holds is None or not holds(game, card_state):
+                continue
+        if effect.kind is ReplacementKind.ENTERS_WITH and effect.counter_kind is None:
+            choice_of_counters = choice_counter_options(effect.replacement or "")
+            if choice_of_counters is not None:
+                performable.append(
+                    (
+                        f"{key}:{index}",
+                        _choose_counters(*choice_of_counters, card_state.card.name),
+                        effect.text,
+                        False,
+                    )
+                )
                 continue
         amount = effect.amount
         if (
