@@ -24,20 +24,22 @@ from magic_cards_model.models.card_state import Counter
 from .harness import Scenario
 
 
-def _board(*, hand=(), battlefield=(), graveyard=()):
+def _board(*, hand=(), battlefield=(), graveyard=(), opponent=()):
     scenario = Scenario().manual_turn_based_actions()
     scenario.player(
         "alice", hand=list(hand), battlefield=list(battlefield), graveyard=list(graveyard)
-    ).player("bob")
+    ).player("bob", battlefield=list(opponent))
     played = scenario.build()
     played.start_at(Step.PRECOMBAT_MAIN)
     return played
 
 
-def _cast(played, name, *, kicked=False):
+def _cast(played, name, *, kicked=False, which=()):
     casting = played.cast(name)
     if kicked:
-        casting.pay_kicker()
+        casting.pay_kicker(int(kicked))
+    for cost in which:
+        casting.pay_kicker(1, which=cost)
     payment = casting.begin_paying()
     played.auto_pay(payment, username="alice")
     played.put_on_stack(casting)
@@ -493,3 +495,284 @@ def test_a_dinosaur_cast_from_the_paleontologists_pile_enters_with_a_finality_co
 def test_a_dinosaur_not_cast_that_way_has_no_finality_counter():
     played = _board(hand=["Ranging Raptors"], battlefield=["Forest"] * 4)
     assert _cast(played, "Ranging Raptors").counters["finality"] == 0
+
+
+def _cast_with_extra_mana(played, name, amount):
+    casting = played.cast(name)
+    casting.pay_extra_mana_for_counters(amount)
+    played.auto_pay(casting.begin_paying(), username="alice")
+    played.put_on_stack(casting)
+    return played.resolve_top()
+
+
+def test_chorus_of_the_conclave_pays_any_amount_for_that_many_counters():
+    played = _board(hand=["Grizzly Bears"], battlefield=["Chorus of the Conclave"] + ["Forest"] * 6)
+    bears = _cast_with_extra_mana(played, "Grizzly Bears", 4)
+    assert bears.counters[Counter.PLUS_ONE] == 4
+
+
+def test_chorus_of_the_conclave_charges_the_extra_mana():
+    played = _board(hand=["Grizzly Bears"], battlefield=["Chorus of the Conclave", "Forest"] * 1)
+    casting = played.cast("Grizzly Bears")
+    casting.pay_extra_mana_for_counters(3)
+    assert casting.total_cost.mana.converted == 5
+
+
+def test_chorus_of_the_conclave_paying_nothing_adds_nothing():
+    played = _board(hand=["Grizzly Bears"], battlefield=["Chorus of the Conclave"] + ["Forest"] * 2)
+    assert _cast_with_extra_mana(played, "Grizzly Bears", 0).counters[Counter.PLUS_ONE] == 0
+
+
+def test_chorus_of_the_conclave_needs_the_permanent():
+    played = _board(hand=["Grizzly Bears"], battlefield=["Forest"] * 6)
+    casting = played.cast("Grizzly Bears")
+    with pytest.raises(ValueError, match="additional cost"):
+        casting.pay_extra_mana_for_counters(2)
+
+
+def test_chorus_of_the_conclave_only_helps_creature_spells():
+    played = _board(hand=["Lightning Bolt"], battlefield=["Chorus of the Conclave", "Mountain"] * 1)
+    casting = played.cast("Lightning Bolt")
+    with pytest.raises(ValueError, match="creature"):
+        casting.pay_extra_mana_for_counters(1)
+
+
+# -- every kicker line, multikicker "for each time it was kicked" (CR 702.33) --
+
+#: (card, lands, times kicked, counter kind, expected). Each row pays the whole
+#: cost (the printed cost plus the kicker cost per kick) from basic lands.
+KICKED_ROWS = [
+    ("Aether Figment", ["Island"] * 5, 1, Counter.PLUS_ONE, 2),
+    ("Cragplate Baloth", ["Forest"] * 10, 1, Counter.PLUS_ONE, 4),
+    ("Ghastly Gloomhunter", ["Swamp"] * 6, 1, Counter.PLUS_ONE, 2),
+    ("Gnarlid Colony", ["Forest"] * 5, 1, Counter.PLUS_ONE, 2),
+    ("Grunn, the Lonely King", ["Forest"] * 9, 1, Counter.PLUS_ONE, 5),
+    ("Kavu Primarch", ["Forest"] * 8, 1, Counter.PLUS_ONE, 4),
+    ("Moss-Pit Skeleton", ["Swamp"] * 4 + ["Forest"], 1, Counter.PLUS_ONE, 3),
+    ("Pixie Illusionist", ["Island"] * 4 + ["Forest"], 1, Counter.PLUS_ONE, 2),
+    ("Shalai's Acolyte", ["Plains"] * 6 + ["Forest"], 1, Counter.PLUS_ONE, 2),
+    ("Shatterskull Charger", ["Mountain"] * 5, 1, Counter.PLUS_ONE, 1),
+    ("Skyclave Sentinel", ["Mountain"] * 7, 1, Counter.PLUS_ONE, 2),
+    ("Skyclave Shade", ["Swamp"] * 5, 1, Counter.PLUS_ONE, 2),
+    ("Stronghold Confessor", ["Swamp"] * 4, 1, Counter.PLUS_ONE, 2),
+    ("Untamed Kavu", ["Forest"] * 5, 1, Counter.PLUS_ONE, 3),
+    ("Viashino Branchrider", ["Mountain"] * 3 + ["Forest"], 1, Counter.PLUS_ONE, 2),
+    ("Ravaging Riftwurm", ["Forest"] * 7, 1, "time", 5),
+    ("Apex Hawks", ["Plains"] * 7, 2, Counter.PLUS_ONE, 2),
+    ("Enclave Elite", ["Island"] * 7, 2, Counter.PLUS_ONE, 2),
+    ("Gnarlid Pack", ["Forest"] * 6, 2, Counter.PLUS_ONE, 2),
+    ("Joraga Warcaller", ["Forest"] * 5, 2, Counter.PLUS_ONE, 2),
+    ("Quag Vampires", ["Swamp"] * 5, 2, Counter.PLUS_ONE, 2),
+    ("Skitter of Lizards", ["Mountain"] * 7, 3, Counter.PLUS_ONE, 3),
+    ("Everflowing Chalice", ["Mountain"] * 4, 2, Counter.CHARGE, 2),
+]
+
+
+@pytest.mark.parametrize("name,lands,kicks,kind,expected", KICKED_ROWS)
+def test_a_kicked_card_enters_with_the_counters_its_line_names(name, lands, kicks, kind, expected):
+    played = _board(hand=[name], battlefield=lands)
+    assert _cast(played, name, kicked=kicks).counters[kind] == expected
+
+
+@pytest.mark.parametrize("name,lands,kicks,kind,expected", KICKED_ROWS)
+def test_the_same_card_unkicked_enters_with_the_printed_amount(name, lands, kicks, kind, expected):
+    played = _board(hand=[name], battlefield=lands)
+    unkicked = {"Ravaging Riftwurm": 2}.get(name, 0)
+    assert _cast(played, name).counters[kind] == unkicked
+
+
+def test_vodalian_mindsinger_gets_two_counters_for_each_kicker_paid():
+    both = _board(
+        hand=["Vodalian Mindsinger"], battlefield=["Island"] * 3 + ["Mountain"] * 2 + ["Forest"] * 2
+    )
+    mindsinger = _cast(both, "Vodalian Mindsinger", which=("{1}{R}", "{1}{G}"))
+    assert mindsinger.counters[Counter.PLUS_ONE] == 4
+    one = _board(hand=["Vodalian Mindsinger"], battlefield=["Island"] * 3 + ["Mountain"] * 2)
+    assert _cast(one, "Vodalian Mindsinger", which=("{1}{R}",)).counters[Counter.PLUS_ONE] == 2
+
+
+def test_myriad_construct_counts_the_nonbasic_lands_opponents_control():
+    played = _board(
+        hand=["Myriad Construct"],
+        battlefield=["Mountain"] * 7,
+        opponent=["Vivid Creek", "Vivid Marsh", "Swamp"],
+    )
+    assert _cast(played, "Myriad Construct", kicked=True).counters[Counter.PLUS_ONE] == 2
+
+
+def test_flametongue_yearling_gets_a_counter_for_each_time_it_was_kicked():
+    played = _board(hand=["Flametongue Yearling"], battlefield=["Mountain"] * 6)
+    yearling = _cast(played, "Flametongue Yearling", kicked=2)
+    assert yearling.counters[Counter.PLUS_ONE] == 2
+
+
+# -- Raid and Ferocious (CR 207.2c ability words, the condition decides) -------
+
+RAID_CARDS = [
+    "Cruel Administrator",
+    "Rigging Runner",
+    "Storm Fleet Aerialist",
+    "Swaggering Corsair",
+    "War-Name Aspirant",
+]
+
+
+@pytest.mark.parametrize("name", RAID_CARDS)
+def test_raid_cards_enter_with_a_counter_after_an_attack(name):
+    played = _board(hand=[name])
+    played.game.record_turn_fact("attacked", "alice")
+    assert played.put_onto_battlefield(name).counters[Counter.PLUS_ONE] == 1
+
+
+@pytest.mark.parametrize("name", RAID_CARDS)
+def test_raid_cards_enter_bare_when_you_did_not_attack(name):
+    played = _board(hand=[name])
+    assert played.put_onto_battlefield(name).counters[Counter.PLUS_ONE] == 0
+
+
+def test_raid_ignores_an_attack_the_opponent_made():
+    played = _board(hand=["Swaggering Corsair"])
+    played.game.record_turn_fact("attacked", "bob")
+    assert played.put_onto_battlefield("Swaggering Corsair").counters[Counter.PLUS_ONE] == 0
+
+
+def test_ferocious_needs_a_creature_with_power_four_or_greater():
+    big = _board(hand=["Frontier Mastodon"], battlefield=["Craw Wurm"])
+    assert big.put_onto_battlefield("Frontier Mastodon").counters[Counter.PLUS_ONE] == 1
+    small = _board(hand=["Frontier Mastodon"], battlefield=["Grizzly Bears"])
+    assert small.put_onto_battlefield("Frontier Mastodon").counters[Counter.PLUS_ONE] == 0
+
+
+# -- Adamant (CR 207.2c, CR 601.2h) ---------------------------------------------
+
+ADAMANT_ROWS = [
+    ("Locthwain Paladin", "Swamp", 4),
+    ("Vantress Paladin", "Island", 4),
+    ("Ardenvale Paladin", "Plains", 4),
+    ("Garenbrig Paladin", "Forest", 5),
+    ("Henge Walker", "Mountain", 3),
+]
+
+
+@pytest.mark.parametrize("name,land,count", ADAMANT_ROWS)
+def test_adamant_with_three_mana_of_the_colour_adds_a_counter(name, land, count):
+    played = _board(hand=[name], battlefield=[land] * count)
+    assert _cast(played, name).counters[Counter.PLUS_ONE] == 1
+
+
+@pytest.mark.parametrize("name,land,count", ADAMANT_ROWS[:4])
+def test_adamant_with_a_mixed_payment_adds_nothing(name, land, count):
+    other = "Mountain" if land != "Mountain" else "Forest"
+    played = _board(hand=[name], battlefield=[land] * 2 + [other] * (count - 2))
+    assert _cast(played, name).counters[Counter.PLUS_ONE] == 0
+
+
+def test_henge_walker_needs_three_mana_of_one_colour_not_any_three():
+    played = _board(hand=["Henge Walker"], battlefield=["Mountain", "Forest", "Island"])
+    assert _cast(played, "Henge Walker").counters[Counter.PLUS_ONE] == 0
+
+
+# -- Scaleguard Sentinels (CR 702 reveal as an additional cost, CR 601.2b) -----
+
+
+def test_scaleguard_sentinels_revealing_a_dragon_enters_with_a_counter():
+    played = _board(hand=["Scaleguard Sentinels", "Hellkite Whelp"], battlefield=["Forest"] * 2)
+    whelp = played.find("Hellkite Whelp", Zone.HAND, "alice")
+    casting = played.cast("Scaleguard Sentinels")
+    casting.reveal_for_cost(whelp)
+    played.auto_pay(casting.begin_paying(), username="alice")
+    played.put_on_stack(casting)
+    assert played.resolve_top().counters[Counter.PLUS_ONE] == 1
+
+
+def test_scaleguard_sentinels_controlling_a_dragon_enters_with_a_counter():
+    played = _board(hand=["Scaleguard Sentinels"], battlefield=["Forest"] * 2 + ["Hellkite Whelp"])
+    assert _cast(played, "Scaleguard Sentinels").counters[Counter.PLUS_ONE] == 1
+
+
+def test_scaleguard_sentinels_with_no_dragon_enters_bare():
+    played = _board(hand=["Scaleguard Sentinels"], battlefield=["Forest"] * 2)
+    assert _cast(played, "Scaleguard Sentinels").counters[Counter.PLUS_ONE] == 0
+
+
+# -- "if you cast it from your hand" and "if you didn't" (CR 614.1c) ------------
+
+MYOJIN_ROWS = [
+    ("Myojin of Seeing Winds", "Island", 10),
+    ("Myojin of Cleansing Fire", "Plains", 8),
+    ("Myojin of Infinite Rage", "Mountain", 10),
+    ("Myojin of Life's Web", "Forest", 9),
+    ("Myojin of Night's Reach", "Swamp", 8),
+]
+
+
+@pytest.mark.parametrize("name,land,count", MYOJIN_ROWS)
+def test_a_myojin_cast_from_hand_enters_with_a_divinity_counter(name, land, count):
+    played = _board(hand=[name], battlefield=[land] * count)
+    assert _cast(played, name).counters["divinity"] == 1
+
+
+@pytest.mark.parametrize("name,land,count", MYOJIN_ROWS)
+def test_a_myojin_put_onto_the_battlefield_has_no_divinity_counter(name, land, count):
+    played = _board(hand=[name])
+    assert played.put_onto_battlefield(name).counters["divinity"] == 0
+
+
+def test_epochrasite_not_cast_from_hand_enters_with_three_counters():
+    played = _board(hand=["Epochrasite"], battlefield=["Mountain"] * 2)
+    assert played.put_onto_battlefield("Epochrasite").counters[Counter.PLUS_ONE] == 3
+
+
+def test_epochrasite_cast_from_hand_enters_bare():
+    played = _board(hand=["Epochrasite"], battlefield=["Mountain"] * 2)
+    assert _cast(played, "Epochrasite").counters[Counter.PLUS_ONE] == 0
+
+
+# -- X, mana spent and converge (CR 107.3, CR 601.2h) --------------------------
+
+
+def _cast_x(played, name, x):
+    card = played.find(name, Zone.HAND, "alice")
+    sources = played.game.permanents_controlled_by("alice")
+    lands = [permanent for permanent in sources if "Land" in permanent.card.type_line]
+    played.game.cast(card, "alice", x_value=x, mana_sources=lands)
+    return played.resolve_top()
+
+
+def test_apocalypse_hydra_enters_with_x_counters():
+    played = _board(hand=["Apocalypse Hydra"], battlefield=["Mountain", "Forest"] + ["Forest"] * 3)
+    assert _cast_x(played, "Apocalypse Hydra", 3).counters[Counter.PLUS_ONE] == 3
+
+
+def test_apocalypse_hydra_with_x_of_five_or_more_doubles_it():
+    played = _board(hand=["Apocalypse Hydra"], battlefield=["Mountain", "Forest"] + ["Forest"] * 5)
+    assert _cast_x(played, "Apocalypse Hydra", 5).counters[Counter.PLUS_ONE] == 10
+
+
+def test_morlun_enters_with_x_counters():
+    played = _board(hand=["Morlun, Devourer of Spiders"], battlefield=["Swamp"] * 4)
+    assert _cast_x(played, "Morlun, Devourer of Spiders", 2).counters[Counter.PLUS_ONE] == 2
+
+
+def test_dyadrine_counts_all_the_mana_spent_to_cast_it():
+    played = _board(
+        hand=["Dyadrine, Synthesis Amalgam"], battlefield=["Forest", "Plains"] + ["Forest"] * 2
+    )
+    assert _cast_x(played, "Dyadrine, Synthesis Amalgam", 2).counters[Counter.PLUS_ONE] == 4
+
+
+def test_verazol_counts_all_the_mana_spent_to_cast_it():
+    played = _board(hand=["Verazol, the Split Current"], battlefield=["Forest", "Island", "Island"])
+    assert _cast_x(played, "Verazol, the Split Current", 1).counters[Counter.PLUS_ONE] == 3
+
+
+def test_glinting_creeper_gets_two_counters_per_colour_of_mana_spent():
+    two = _board(hand=["Glinting Creeper"], battlefield=["Forest"] * 4 + ["Plains"])
+    assert _cast(two, "Glinting Creeper").counters[Counter.PLUS_ONE] == 4
+    one = _board(hand=["Glinting Creeper"], battlefield=["Forest"] * 5)
+    assert _cast(one, "Glinting Creeper").counters[Counter.PLUS_ONE] == 2
+
+
+def test_clay_champion_counts_each_pair_of_green_mana_spent():
+    played = _board(hand=["Clay Champion"], battlefield=["Forest"] * 4)
+    assert _cast(played, "Clay Champion").counters[Counter.PLUS_ONE] == 6

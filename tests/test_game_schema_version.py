@@ -2324,3 +2324,10 @@ def test_a_snapshot_written_before_the_convoked_count_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R1_T1_CONVOKED}",
     ):
         Game.model_validate(dumped)
+
+
+def test_the_lands_entered_ledger_is_a_134_field() -> None:
+    """134 also added `Game.lands_entered_this_turn`; a dump before it would
+    read no land as having entered this turn."""
+    assert "lands_entered_this_turn" in Game.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP01_R1_T1_CONVOKED

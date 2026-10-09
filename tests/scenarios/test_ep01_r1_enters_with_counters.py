@@ -17,8 +17,9 @@ Every number was looked up with `mise run rules:find <n>`.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Color, Zone
 from magic_cards_model.models.card_state import Counter
+from magic_cards_model.models.token import create_predefined_tokens
 
 from .harness import Scenario
 
@@ -241,3 +242,283 @@ def test_mysterious_pathlighter_buffs_creatures_with_an_adventure_only():
     )
     assert played.put_onto_battlefield("Bonecrusher Giant").counters[Counter.PLUS_ONE] == 1
     assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 0
+
+
+# -- board and zone counts ("for each", "equal to", CR 614.1c) -------------------
+
+
+def _two_sided(alice, bob=None):
+    scenario = Scenario().manual_turn_based_actions().player("alice", **alice)
+    scenario.player("bob", **(bob or {}))
+    played = scenario.build()
+    played.start_at(Step.PRECOMBAT_MAIN)
+    return played
+
+
+def test_luxknight_breacher_counts_other_creatures_and_artifacts():
+    played = _board(
+        battlefield=["Grizzly Bears", "Mishra's Bauble", "Plains"], hand=["Luxknight Breacher"]
+    )
+    assert played.put_onto_battlefield("Luxknight Breacher").counters[Counter.PLUS_ONE] == 2
+
+
+def test_sheriff_of_safe_passage_gets_one_plus_one_per_other_creature():
+    played = _board(
+        battlefield=["Grizzly Bears", "Elvish Warrior"], hand=["Sheriff of Safe Passage"]
+    )
+    assert played.put_onto_battlefield("Sheriff of Safe Passage").counters[Counter.PLUS_ONE] == 3
+
+
+def test_ulasht_counts_other_red_creatures_and_other_green_creatures_separately():
+    played = _board(battlefield=["Goblin Piker", "Grizzly Bears"], hand=["Ulasht, the Hate Seed"])
+    assert played.put_onto_battlefield("Ulasht, the Hate Seed").counters[Counter.PLUS_ONE] == 2
+
+
+def test_ulasht_alone_enters_bare():
+    played = _board(hand=["Ulasht, the Hate Seed"])
+    assert played.put_onto_battlefield("Ulasht, the Hate Seed").counters[Counter.PLUS_ONE] == 0
+
+
+def test_kinsbaile_borderguard_counts_other_kithkin():
+    played = _board(
+        battlefield=["Kithkin Billyrider", "Zealous Guardian", "Grizzly Bears"],
+        hand=["Kinsbaile Borderguard"],
+    )
+    assert played.put_onto_battlefield("Kinsbaile Borderguard").counters[Counter.PLUS_ONE] == 2
+
+
+def test_grizzly_ghoul_counts_creatures_that_died_this_turn():
+    played = _board(hand=["Grizzly Ghoul"])
+    played.game.creatures_died_this_turn = 2
+    assert played.put_onto_battlefield("Grizzly Ghoul").counters[Counter.PLUS_ONE] == 2
+
+
+@pytest.mark.parametrize("name", ["Frilled Sparkshooter", "Mounted Dreadknight"])
+def test_an_opponent_losing_life_this_turn_gates_the_counter(name):
+    lost = _board(hand=[name])
+    lost.game.player("bob").lose_life(1)
+    assert lost.put_onto_battlefield(name).counters[Counter.PLUS_ONE] == 1
+    bare = _board(hand=[name])
+    assert bare.put_onto_battlefield(name).counters[Counter.PLUS_ONE] == 0
+
+
+def test_heir_of_the_ancient_fang_needs_a_modified_creature():
+    played = _board(battlefield=["Grizzly Bears"], hand=["Heir of the Ancient Fang"])
+    played.game.add_counters(played.creature("Grizzly Bears"), Counter.PLUS_ONE, 1)
+    assert played.put_onto_battlefield("Heir of the Ancient Fang").counters[Counter.PLUS_ONE] == 1
+    bare = _board(battlefield=["Grizzly Bears"], hand=["Heir of the Ancient Fang"])
+    assert bare.put_onto_battlefield("Heir of the Ancient Fang").counters[Counter.PLUS_ONE] == 0
+
+
+def test_storm_entity_counts_the_other_spells_cast_this_turn():
+    played = _board(hand=["Lightning Bolt", "Storm Entity"], battlefield=["Mountain"] * 3)
+    played.cast_and_resolve("Lightning Bolt", targets=["bob"], auto=True)
+    assert played.cast_and_resolve("Storm Entity", auto=True).counters[Counter.PLUS_ONE] == 1
+
+
+def test_embodiment_of_agonies_counts_different_mana_costs_in_the_graveyard():
+    played = _board(
+        hand=["Embodiment of Agonies"],
+        graveyard=["Lightning Bolt", "Shock", "Giant Growth", "Forest"],
+    )
+    assert played.put_onto_battlefield("Embodiment of Agonies").counters[Counter.PLUS_ONE] == 2
+
+
+def test_undergrowth_scavenger_counts_creature_cards_in_all_graveyards():
+    played = _two_sided(
+        {"hand": ["Undergrowth Scavenger"], "graveyard": ["Grizzly Bears", "Elvish Warrior"]},
+        {"graveyard": ["Goblin Piker", "Lightning Bolt"]},
+    )
+    assert played.put_onto_battlefield("Undergrowth Scavenger").counters[Counter.PLUS_ONE] == 3
+
+
+def test_aeve_counts_the_other_oozes_you_control():
+    played = _board(
+        battlefield=["Scavenging Ooze", "Corrosive Ooze"], hand=["Aeve, Progenitor Ooze"]
+    )
+    assert played.put_onto_battlefield("Aeve, Progenitor Ooze").counters[Counter.PLUS_ONE] == 2
+
+
+def test_dakkon_enters_with_a_loyalty_counter_per_land_you_control():
+    played = _board(battlefield=["Plains"] * 4, hand=["Dakkon, Shadow Slayer"])
+    assert played.put_onto_battlefield("Dakkon, Shadow Slayer").counters["loyalty"] == 4
+
+
+def test_investigators_journal_uses_the_greatest_creature_count_of_any_player():
+    played = _two_sided(
+        {"hand": ["Investigator's Journal"], "battlefield": ["Grizzly Bears"]},
+        {"battlefield": ["Grizzly Bears", "Elvish Warrior", "Goblin Piker"]},
+    )
+    assert played.put_onto_battlefield("Investigator's Journal").counters["suspect"] == 3
+
+
+def test_bioessence_hydra_counts_loyalty_counters_on_your_planeswalkers():
+    played = _board(battlefield=["Jace Beleren"], hand=["Bioessence Hydra"])
+    loyalty = played.creature("Jace Beleren").counters["loyalty"] if False else None
+    jace = next(
+        p for p in played.game.permanents_controlled_by("alice") if p.name == "Jace Beleren"
+    )
+    hydra = played.put_onto_battlefield("Bioessence Hydra")
+    assert hydra.counters[Counter.PLUS_ONE] == jace.counters["loyalty"]
+    assert loyalty is None
+
+
+@pytest.mark.parametrize("name", ["Vivid Creek", "Vivid Grove", "Vivid Meadow"])
+def test_every_vivid_land_enters_tapped_with_two_charge_counters(name):
+    played = _board(hand=[name])
+    land = played.put_onto_battlefield(name)
+    assert land.tapped
+    assert land.counters[Counter.CHARGE] == 2
+
+
+def test_banner_of_kinship_counts_creatures_of_the_chosen_type():
+    played = _board(battlefield=["Elvish Warrior", "Elvish Warrior"], hand=["Banner of Kinship"])
+    played.will_choose("Elf", source="Banner of Kinship")
+    assert played.put_onto_battlefield("Banner of Kinship").counters["fellowship"] == 2
+
+
+def test_canker_abomination_counts_the_chosen_opponents_creatures():
+    played = _two_sided(
+        {"hand": ["Canker Abomination"]},
+        {"battlefield": ["Grizzly Bears", "Elvish Warrior"]},
+    )
+    played.will_choose("bob", source="Canker Abomination")
+    assert played.put_onto_battlefield("Canker Abomination").counters[Counter.MINUS_ONE] == 2
+
+
+# -- group replacements, one more card for every shape (CR 614.1c, CR 614.12) ---
+
+
+def test_gev_gives_a_counter_per_opponent_who_lost_life():
+    lost = _board(battlefield=["Gev, Scaled Scorch"], hand=["Grizzly Bears"])
+    lost.game.player("bob").lose_life(1)
+    assert lost.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 1
+    bare = _board(battlefield=["Gev, Scaled Scorch"], hand=["Grizzly Bears"])
+    assert bare.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 0
+
+
+def test_kalain_gives_a_counter_per_treasure_mana_spent_to_cast_the_creature():
+    played = _board(battlefield=["Kalain, Reclusive Painter", "Forest"], hand=["Grizzly Bears"])
+    (treasure,) = create_predefined_tokens(played.game, "Treasure", "alice")
+    played.game.activate_ability(treasure, 0, "alice", color=Color.GREEN)
+    bears = played.cast_and_resolve("Grizzly Bears", auto=True)
+    assert bears.counters[Counter.PLUS_ONE] == 1
+
+
+def test_kalain_gives_nothing_for_a_creature_not_paid_with_a_treasure():
+    played = _board(
+        battlefield=["Kalain, Reclusive Painter", "Forest", "Forest"], hand=["Grizzly Bears"]
+    )
+    assert played.cast_and_resolve("Grizzly Bears", auto=True).counters[Counter.PLUS_ONE] == 0
+
+
+def test_giada_counts_the_angels_you_already_control():
+    played = _board(battlefield=["Giada, Font of Hope"], hand=["Serra Angel"])
+    assert played.put_onto_battlefield("Serra Angel").counters[Counter.PLUS_ONE] == 1
+
+
+def test_grumgully_helps_a_non_human_and_not_a_human():
+    played = _board(
+        battlefield=["Grumgully, the Generous"], hand=["Elvish Warrior", "Elite Vanguard"]
+    )
+    assert played.put_onto_battlefield("Elvish Warrior").counters[Counter.PLUS_ONE] == 1
+    assert played.put_onto_battlefield("Elite Vanguard").counters[Counter.PLUS_ONE] == 0
+
+
+def test_oonas_blackguard_helps_another_rogue_only():
+    played = _board(battlefield=["Oona's Blackguard"], hand=["Krovikan Scoundrel", "Grizzly Bears"])
+    assert played.put_onto_battlefield("Krovikan Scoundrel").counters[Counter.PLUS_ONE] == 1
+    assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 0
+
+
+def test_sage_of_fables_helps_another_wizard_only():
+    played = _board(battlefield=["Sage of Fables"], hand=["Fugitive Wizard", "Grizzly Bears"])
+    assert played.put_onto_battlefield("Fugitive Wizard").counters[Counter.PLUS_ONE] == 1
+    assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 0
+
+
+def test_arlinn_voice_of_the_pack_helps_a_wolf_and_not_a_bear():
+    played = _board(battlefield=["Arlinn, Voice of the Pack"], hand=["Watchwolf", "Grizzly Bears"])
+    assert played.put_onto_battlefield("Watchwolf").counters[Counter.PLUS_ONE] == 1
+    assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 0
+
+
+def test_bard_class_helps_a_legendary_creature_only():
+    played = _board(battlefield=["Bard Class"], hand=["Isamaru, Hound of Konda", "Grizzly Bears"])
+    assert played.put_onto_battlefield("Isamaru, Hound of Konda").counters[Counter.PLUS_ONE] == 1
+    assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 0
+
+
+def test_bioengineered_future_counts_the_lands_that_entered_this_turn():
+    played = _board(battlefield=["Bioengineered Future"], hand=["Forest", "Grizzly Bears"])
+    played.play_land("Forest")
+    assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 1
+
+
+def test_bioengineered_future_with_no_land_this_turn_adds_nothing():
+    played = _board(battlefield=["Bioengineered Future"], hand=["Grizzly Bears"])
+    assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 0
+
+
+def test_renata_gives_another_creature_a_counter_but_not_herself():
+    played = _board(hand=["Renata, Called to the Hunt", "Grizzly Bears"])
+    renata = played.put_onto_battlefield("Renata, Called to the Hunt")
+    assert renata.counters[Counter.PLUS_ONE] == 0
+    assert played.put_onto_battlefield("Grizzly Bears").counters[Counter.PLUS_ONE] == 1
+
+
+# -- escape: "escapes with <counters>" (CR 702.138, CR 614.1c) -----------------
+
+ESCAPE_ROWS = [
+    ("Phoenix of Ash", ["Mountain"] * 4, 3, Counter.PLUS_ONE, 1),
+    ("Ox of Agonas", ["Mountain"] * 2, 8, Counter.PLUS_ONE, 1),
+    ("Underworld Charger", ["Swamp"] * 5, 3, Counter.PLUS_ONE, 2),
+    ("Woe Strider", ["Swamp"] * 5, 4, Counter.PLUS_ONE, 2),
+    ("Chainweb Aracnir", ["Forest"] * 5, 4, Counter.PLUS_ONE, 3),
+    ("Pharika's Spawn", ["Swamp"] * 6, 3, Counter.PLUS_ONE, 2),
+    ("Voracious Typhon", ["Forest"] * 7, 4, Counter.PLUS_ONE, 3),
+    ("Loathsome Chimera", ["Forest"] * 5, 3, Counter.PLUS_ONE, 1),
+    ("Underworld Rage-Hound", ["Mountain"] * 4, 3, Counter.PLUS_ONE, 1),
+]
+
+
+def _escape(name, lands, fuel, *answers):
+    played = _board(graveyard=[name, *["Mishra's Bauble"] * fuel], battlefield=lands, hand=[])
+    for answer in answers:
+        played.will_choose(answer, source=name)
+    exiled = [c for c in played.game.player("alice").graveyard if c.name != name]
+    casting = played.cast(name, from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Escape", choosing=exiled)
+    played.auto_pay(casting.begin_paying(), username="alice")
+    played.put_on_stack(casting)
+    return played.resolve_top()
+
+
+@pytest.mark.parametrize("name,lands,fuel,kind,expected", ESCAPE_ROWS)
+def test_a_card_cast_with_escape_enters_with_its_counters(name, lands, fuel, kind, expected):
+    assert _escape(name, lands, fuel).counters[kind] == expected
+
+
+@pytest.mark.parametrize("name,lands,fuel,kind,expected", ESCAPE_ROWS)
+def test_the_same_card_cast_from_hand_enters_without_them(name, lands, fuel, kind, expected):
+    played = _board(hand=[name], battlefield=["Mountain", "Swamp", "Forest"] * 4)
+    assert played.cast_and_resolve(name, auto=True).counters[kind] == 0
+
+
+def test_tizerus_charger_escapes_with_the_chosen_plus_counter():
+    charger = _escape("Tizerus Charger", ["Swamp"] * 5, 5, "+1/+1")
+    assert charger.counters[Counter.PLUS_ONE] == 1
+    assert charger.counters["flying"] == 0
+
+
+def test_tizerus_charger_escapes_with_the_chosen_flying_counter():
+    charger = _escape("Tizerus Charger", ["Swamp"] * 5, 5, "flying")
+    assert charger.counters["flying"] == 1
+    assert charger.counters[Counter.PLUS_ONE] == 0
+
+
+def test_tizerus_charger_cast_from_hand_has_neither_counter():
+    played = _board(hand=["Tizerus Charger"], battlefield=["Swamp"] * 3)
+    charger = played.cast_and_resolve("Tizerus Charger", auto=True)
+    assert charger.counters["flying"] == 0
+    assert charger.counters[Counter.PLUS_ONE] == 0

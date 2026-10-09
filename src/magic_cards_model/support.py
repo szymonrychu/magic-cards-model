@@ -153,6 +153,7 @@ from magic_cards_model.machines.effects.counters import _SUPPORT_RE
 from magic_cards_model.machines.keyword_counters import (
     conditional_group_keyword_grant_of_line,
     enters_with_counters_pronoun_fallback,
+    reads_extra_mana_counters_line,
 )
 from magic_cards_model.machines.layers import (
     LAYER_EFFECTS,
@@ -2248,6 +2249,11 @@ def _static_ability_category(
         # excludes convoke (it is a cost-payment method, not a triggered-
         # ability expansion), so `objects_as_costs.has_convoke_now` reads the
         # identical grant itself, live, at a real cast.
+        return HANDLED
+    if reads_extra_mana_counters_line(text):
+        # CR 118.8 / CR 614.1c: "As an additional cost to cast creature
+        # spells, you may pay any amount of mana" (Chorus of the Conclave) -
+        # `Casting.pay_extra_mana_for_counters` and the enters modifier.
         return HANDLED
     if static_audit.reads_static_line(
         printing, text, card_name=effective_name, legendary=legendary

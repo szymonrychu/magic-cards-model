@@ -228,6 +228,7 @@ class CastingMixin:
         creature_mana_spent: int = 0,
         convoked: int = 0,
         returned_mana_value: int = 0,
+        extra_mana_counters: int = 0,
         snow_mana_spent: dict[Color, int] | None = None,
         controlled_subtypes_as_cast: Sequence[str] = (),
         controlled_modified_creature_as_cast: bool = False,
@@ -330,6 +331,7 @@ class CastingMixin:
             creature_mana_spent=0 if is_copy else creature_mana_spent,
             convoked=0 if is_copy else convoked,
             returned_mana_value=0 if is_copy else returned_mana_value,
+            extra_mana_counters=0 if is_copy else extra_mana_counters,
             snow_mana_spent={} if is_copy else dict(snow_mana_spent or {}),
         )
         self.forget_cast_record(spell)
@@ -1458,6 +1460,9 @@ class CastingMixin:
                 # under your control this turn" (Searing Blaze) - a fact of
                 # the turn, still true once the land has left again.
                 self.record_turn_fact("land_entered", card_state.controller)
+                self.lands_entered_this_turn[card_state.controller] = (
+                    self.lands_entered_this_turn.get(card_state.controller, 0) + 1
+                )
             if card_state.controller:
                 # "if an artifact entered the battlefield under your control
                 # this turn" (Iron Man, Master of Machines), "a Hero entered
@@ -1957,6 +1962,7 @@ class CastingMixin:
         exile_for_cost_reduction: Sequence[CardState] | None = None,
         waterbend: bool = False,
         waterbend_tapping: Sequence[CardState] | None = None,
+        extra_mana_counters: int = 0,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -2123,6 +2129,8 @@ class CastingMixin:
                 casting.pay_replicate(replicate)
             if offspring:
                 casting.pay_offspring()
+            if extra_mana_counters:
+                casting.pay_extra_mana_for_counters(extra_mana_counters)
             if blight is not None:
                 casting.pay_blight(blight)
             if (keyword or "").lower() == "harmonize":

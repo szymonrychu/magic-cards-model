@@ -2284,6 +2284,7 @@ class TurnSbaMixin:
             self.spells_cast_this_turn = {}
             self.previous_turn_active_player = previous_active_player
             self.permanents_left_battlefield_this_turn = {}
+            self.lands_entered_this_turn = {}
             self.attacked_this_turn = set()
             self.attacked_players_this_turn = {}
             self.became_tapped_count_this_turn = {}

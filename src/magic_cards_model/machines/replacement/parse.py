@@ -997,6 +997,16 @@ _THAT_MANY_COUNTERS = re.compile(
 )
 
 
+#: "three additional time counters" (Ravaging Riftwurm), "an additional X
+#: +1/+1 counters" (Apocalypse Hydra): "additional" only says the counters come
+#: on top of the others the permanent enters with (CR 614.1c applies every
+#: such replacement, so they add), and is not part of the counter's kind or
+#: count.
+_ADDITIONAL_COUNTERS = re.compile(
+    r"^(?P<count>an?|\w+) additional (?P<rest>(?:X |[+\-\w/]+ )?.*counters?.*)$", re.IGNORECASE
+)
+
+
 def _read_counters(
     what: str,
 ) -> tuple[int | None, bool, str | None, str | None, int | None] | None:
@@ -1017,6 +1027,10 @@ def _read_counters(
     word that is neither of the above ("your choice of") is None: unreadable.
     """
     text = what.strip()
+    additional = _ADDITIONAL_COUNTERS.match(text)
+    if additional is not None and "for each" not in text.lower():
+        rest = additional.group("rest")
+        text = rest if rest[:2].upper() == "X " else f"{additional.group('count')} {rest}"
     equal_to = _COUNTERS_EQUAL_TO.match(text)
     if equal_to:
         return (

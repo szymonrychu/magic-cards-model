@@ -370,10 +370,14 @@ def _loyalty_on_planeswalkers(game, controller, entering, _x) -> int:
     from ..models.card import Type
 
     return sum(
-        permanent.counters.get("loyalty", 0)
+        permanent.counters["loyalty"]
         for permanent in game.permanents_controlled_by(controller)
         if Type.PLANESWALKER in _characteristics(game, permanent).types
     )
+
+
+def _lands_entered_this_turn(game, controller, entering, _x) -> int:
+    return game.lands_entered_this_turn.get(controller, 0)
 
 
 def _different_mana_costs(game, controller, entering, _x) -> int:
@@ -435,7 +439,9 @@ def _chosen_type_count(game, controller, entering, _x) -> int:
 def _chosen_opponent_creatures(game, controller, entering, _x) -> int:
     from ..models.card import Type
 
-    chosen = getattr(entering.choice, "value", entering.choice)
+    chosen = entering.chosen_player
+    if chosen is None:
+        return 0
     return sum(
         1
         for permanent in game.permanents_controlled_by(str(chosen))
@@ -458,6 +464,7 @@ _FIXED_COUNT_TERMS = {
     "mana from a treasure spent to cast them": _treasure_mana_spent,
     "creature you control of the chosen type": _chosen_type_count,
     "creature that player controls": _chosen_opponent_creatures,
+    "land that entered the battlefield under your control this turn": _lands_entered_this_turn,
 }
 
 
@@ -555,3 +562,34 @@ def enters_count_reader(description: str):
     return lambda game, controller, entering, x: sum(
         reader(game, controller, entering, x) for reader in readers
     )
+
+
+#: CR 118.8 / CR 614.1c: "As an additional cost to cast creature spells, you
+#: may pay any amount of mana. If you do, that creature enters with that many
+#: additional +1/+1 counters on it." (Chorus of the Conclave). A static
+#: ability of a permanent that offers its controller an optional additional
+#: cost on the creature spells they cast; `Casting.pay_extra_mana_for_counters`
+#: pays it and `CastRecord.extra_mana_counters` carries the amount to the
+#: entering permanent.
+_EXTRA_MANA_COUNTERS_LINE_RE = re.compile(
+    r"^As an additional cost to cast (?P<what>creature) spells, you may pay any amount of "
+    r"mana\. If you do, that creature enters with that many additional \+1/\+1 counters "
+    r"on it\.$",
+    re.IGNORECASE,
+)
+
+
+def reads_extra_mana_counters_line(text: str) -> bool:
+    """Whether `text` is the "pay any amount of mana for that many counters"
+    additional-cost static (see `_EXTRA_MANA_COUNTERS_LINE_RE`)."""
+    return _EXTRA_MANA_COUNTERS_LINE_RE.match(text.strip()) is not None
+
+
+def controls_extra_mana_counters_offer(game, caster: str) -> bool:
+    """Whether `caster` controls a permanent whose static offers the optional
+    additional cost `reads_extra_mana_counters_line` describes."""
+    for permanent in game.permanents_controlled_by(caster):
+        for line in (permanent.oracle_text or "").splitlines():
+            if reads_extra_mana_counters_line(line):
+                return True
+    return False

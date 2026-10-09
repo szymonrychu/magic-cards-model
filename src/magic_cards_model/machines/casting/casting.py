@@ -728,6 +728,10 @@ class Casting(EngineModel):
     by nothing else. The keyword is not announced until `use_keyword`, after
     the proposal, so the refusal is held here and `cast()` raises it unless
     the keyword actually used was the one that opened the window."""
+    extra_mana_counters: int = 0
+    """The amount of mana paid as "any amount of mana" for that many +1/+1
+    counters (`pay_extra_mana_for_counters`), copied onto
+    `CastRecord.extra_mana_counters`."""
     keyword_enters_with_counters: tuple[str, ...] = ()
     """The claimed option's `KeywordCastOption.enters_with_counters`, copied
     onto `CastRecord.enters_with_counters` as the spell becomes cast."""
@@ -3305,6 +3309,38 @@ class Casting(EngineModel):
         self.offspring_paid = True
         return self.step
 
+    def pay_extra_mana_for_counters(self, amount: int) -> CastingStep:
+        """CR 118.8 / CR 601.2b: pay "any amount of mana" as an optional
+        additional cost to cast this creature spell, so that it enters with
+        that many additional +1/+1 counters (CR 614.1c) - Chorus of the
+        Conclave.
+
+        The amount is generic mana added to the total cost like any other
+        additional cost; paying 0 is the same as not paying. Refused unless
+        the spell is a creature spell and its caster controls a permanent
+        that offers the cost.
+        """
+        from ..keyword_counters import controls_extra_mana_counters_offer
+
+        if amount < 0:
+            raise ValueError("an amount of mana cannot be negative")
+        if Type.CREATURE not in self.spell.card.types:
+            raise ValueError(
+                f"{self.spell.name} is not a creature spell, so no permanent offers it the "
+                f"additional cost 'pay any amount of mana' (CR 601.2b)"
+            )
+        if self.game is None or not controls_extra_mana_counters_offer(self.game, self.caster):
+            raise ValueError(
+                f"{self.caster} controls no permanent offering the additional cost 'pay any "
+                f"amount of mana' to cast {self.spell.name} (CR 601.2b)"
+            )
+        if self.extra_mana_counters:
+            raise ValueError("the additional cost 'pay any amount of mana' was already paid")
+        if amount:
+            self.add_additional_cost(ManaCost(generic=amount))
+            self.extra_mana_counters = amount
+        return self.step
+
     def pay_blight(self, creature: CardState) -> CastingStep:
         """CR 701.68a: put N -1/-1 counters on a creature you control, as
         this spell's optional additional cost.
@@ -4596,6 +4632,7 @@ class Casting(EngineModel):
                     else 0
                 ),
                 returned_mana_value=self.returned_mana_value,
+                extra_mana_counters=self.extra_mana_counters,
                 convoked=(
                     sum(1 for entry in self.payment.substitutions if entry.keyword == "convoke")
                     if self.payment is not None

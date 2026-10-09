@@ -2885,6 +2885,7 @@ def _self_enters_modifiers(
 
     performable.extend(_riot_modifiers(game, card_state))
     performable.extend(_cast_permission_rider_modifiers(game, card_state))
+    performable.extend(_extra_mana_counter_modifiers(game, card_state))
 
     return performable
 
@@ -2920,6 +2921,30 @@ def _cast_permission_rider_modifiers(
             )
         )
     return found
+
+
+def _extra_mana_counter_modifiers(
+    game: "Game", card_state: CardState
+) -> list[tuple[str, Apply, str, bool]]:
+    """CR 614.1c: the creature a spell becomes enters with as many additional
+    +1/+1 counters as the "any amount of mana" additional cost paid for it
+    (`CastRecord.extra_mana_counters`; Chorus of the Conclave)."""
+    record = game.cast_record_of(card_state)
+    if record is None or not record.extra_mana_counters:
+        return []
+    amount = record.extra_mana_counters
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        event.counters[Counter.PLUS_ONE] = event.counters.get(Counter.PLUS_ONE, 0) + amount
+
+    return [
+        (
+            "extra-mana-counters",
+            apply,
+            f"enters with {amount} additional +1/+1 counters for the mana paid (CR 614.1c)",
+            False,
+        )
+    ]
 
 
 def _riot_modifiers(game: "Game", card_state: CardState) -> list[tuple[str, Apply, str, bool]]:
