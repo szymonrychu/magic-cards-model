@@ -182,3 +182,82 @@ def test_jinnie_fay_may_swap_for_cats_or_dogs():
 )
 def test_counter_and_token_lines_are_handled(name):
     _handled(name)
+
+
+# -- life and poison -------------------------------------------------------------
+
+
+def test_tainted_remedy_turns_an_opponents_gain_into_a_loss():
+    scenario = _board(["Tainted Remedy"])
+    scenario.game.gain_life("bob", 3)
+    assert scenario.player("bob").life == 17
+
+
+def test_tainted_remedy_leaves_your_own_gain_alone():
+    scenario = _board(["Tainted Remedy"])
+    scenario.game.gain_life("alice", 3)
+    assert scenario.player("alice").life == 23
+
+
+def test_rain_of_gore_hits_any_player_but_not_lifelink():
+    scenario = _board(["Rain of Gore", "Vampire Nighthawk"])
+    scenario.game.gain_life("alice", 3)
+    assert scenario.player("alice").life == 17
+
+    hawk = scenario.creature("Vampire Nighthawk", "alice")
+    scenario.game.deal_damage(scenario.player("bob"), 2, source=hawk)  # lifelink gain
+    assert scenario.player("alice").life == 19  # 17 + 2: lifelink is not a spell or ability
+
+
+def test_phial_doubles_life_gain_at_five_or_less_only():
+    scenario = _board(["Phial of Galadriel"])
+    scenario.game.gain_life("alice", 2)
+    assert scenario.player("alice").life == 22
+
+    scenario.player("alice").life = 5
+    scenario.game.gain_life("alice", 2)
+    assert scenario.player("alice").life == 9  # twice 2 at 5 life
+
+
+def test_bloodletter_doubles_opponent_life_loss_on_your_turn_only():
+    scenario = _board(["Bloodletter of Aclazotz"])
+    assert scenario.game.active_player.username == "alice"
+    scenario.game.lose_life("bob", 2)
+    assert scenario.player("bob").life == 16
+
+    scenario.game.lose_life("alice", 2)
+    assert scenario.player("alice").life == 18  # your own loss is not doubled
+
+
+def test_worship_floors_damage_at_one_only_while_you_control_a_creature():
+    scenario = _board(["Worship", "Grizzly Bears"])
+    scenario.player("alice").life = 3
+    scenario.game.deal_damage(scenario.player("alice"), 10, source=None)
+    assert scenario.player("alice").life == 1
+
+    scenario = _board(["Worship"])
+    scenario.player("alice").life = 3
+    scenario.game.deal_damage(scenario.player("alice"), 10, source=None)
+    assert scenario.player("alice").life == -7
+
+
+def test_melira_caps_poison_at_one_counter_this_turn():
+    scenario = _board(["Melira, the Living Cure"])
+    scenario.game.add_player_counters("alice", "poison", 3)
+    assert scenario.player("alice").counter_count("poison") == 1
+    scenario.game.add_player_counters("alice", "poison", 2)
+    assert scenario.player("alice").counter_count("poison") == 1  # none additional
+
+
+def test_melira_does_not_cap_the_opponents_poison():
+    scenario = _board(["Melira, the Living Cure"])
+    scenario.game.add_player_counters("bob", "poison", 3)
+    assert scenario.player("bob").counter_count("poison") == 3
+
+
+@pytest.mark.parametrize(
+    "name",
+    ["Tainted Remedy", "Rain of Gore", "Phial of Galadriel", "Bloodletter of Aclazotz", "Worship", "Melira, the Living Cure"],
+)
+def test_life_and_poison_lines_are_handled(name):
+    _handled(name)

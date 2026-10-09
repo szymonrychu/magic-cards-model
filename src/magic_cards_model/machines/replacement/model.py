@@ -621,6 +621,10 @@ class ReplaceableEvent:
     #: terminate.
     extra: list[TokenDefinition] = field(default_factory=list)
 
+    #: True for a `GAIN_LIFE` that a source's lifelink causes (CR 702.15b) - not
+    #: "a spell or ability" (Rain of Gore's cause).
+    lifelink: bool = False
+
     #: Where in its owner's library a `ZONE_CHANGE` redirected to `Zone.LIBRARY`
     #: lands: "top" or "bottom" (CR 401.4 leaves a pile put on the bottom in
     #: any order), `None` for the shuffle-it-in default (CR 701.24c).
