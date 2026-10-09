@@ -22,8 +22,8 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import DecisionKind
-from magic_cards_model.models.card_state import Choice, ChoiceKind
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Choice, ChoiceKind
 from tests.scenarios.harness import Scenario
 
 
@@ -217,9 +217,7 @@ def test_sorcerous_spyglass_looks_at_the_opponents_hand_then_names_a_card():
     scenario = _board(hand=["Sorcerous Spyglass"], opp_hand=["Lightning Bolt", "Mountain"])
     spyglass = _enter(scenario, "Sorcerous Spyglass", "Lightning Bolt")
     question = _question(scenario, "Sorcerous Spyglass")
-    assert set(question.cards) == {
-        card.id for card in scenario.game.player("bob").hand
-    }
+    assert set(question.cards) == {card.id for card in scenario.game.player("bob").hand}
     assert spyglass.choice == Choice(kind=ChoiceKind.CARD_NAME, value="Lightning Bolt")
 
 
@@ -235,3 +233,139 @@ def test_anointed_peacekeeper_names_any_card_after_looking():
     scenario = _board(hand=["Anointed Peacekeeper"], opp_hand=["Mountain"])
     peacekeeper = _enter(scenario, "Anointed Peacekeeper", "Mountain")
     assert peacekeeper.choice == Choice(kind=ChoiceKind.CARD_NAME, value="Mountain")
+
+
+# -- choosing a permanent -----------------------------------------------------------
+
+
+def _object_choice(scenario, source_name):
+    return scenario.find(source_name, Zone.BATTLEFIELD, "alice").choice
+
+
+def test_dauntless_bodyguard_chooses_another_creature_you_control():
+    scenario = _board(hand=["Dauntless Bodyguard"], battlefield=["Grizzly Bears"])
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose_cards(bears, source="Dauntless Bodyguard")
+    scenario.put_onto_battlefield("Dauntless Bodyguard")
+    assert _object_choice(scenario, "Dauntless Bodyguard") == Choice(
+        kind=ChoiceKind.OBJECT, value=str(bears.id)
+    )
+
+
+def test_tyrannical_pitlord_cannot_choose_itself_or_an_opponents_creature():
+    scenario = _board(hand=["Tyrannical Pitlord"], battlefield=["Grizzly Bears"])
+    theirs = (
+        Scenario()
+        .player("alice", hand=["Tyrannical Pitlord"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    theirs.start_at(Step.PRECOMBAT_MAIN)
+    theirs.put_onto_battlefield("Tyrannical Pitlord")
+    assert theirs.find("Tyrannical Pitlord", Zone.BATTLEFIELD, "alice").choice is None
+    assert scenario.questions_asked() == []
+
+
+def test_metamorphic_alteration_chooses_any_creature():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Metamorphic Alteration"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    theirs = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    scenario.will_choose_cards(theirs, source="Metamorphic Alteration")
+    scenario.put_onto_battlefield("Metamorphic Alteration")
+    assert _object_choice(scenario, "Metamorphic Alteration") == Choice(
+        kind=ChoiceKind.OBJECT, value=str(theirs.id)
+    )
+
+
+def test_scheming_fence_may_decline_to_choose():
+    scenario = _board(hand=["Scheming Fence"], battlefield=["Citadel Siege"])
+    scenario.will_take_the_may(False)
+    scenario.put_onto_battlefield("Scheming Fence")
+    assert _object_choice(scenario, "Scheming Fence") is None
+
+
+def test_scheming_fence_chooses_a_nonland_permanent_when_it_may():
+    scenario = _board(hand=["Scheming Fence"], battlefield=["Citadel Siege", "Mountain"])
+    siege = scenario.find("Citadel Siege", Zone.BATTLEFIELD, "alice")
+    scenario.will_take_the_may(True)
+    scenario.will_choose_cards(siege, source="Scheming Fence")
+    scenario.put_onto_battlefield("Scheming Fence")
+    assert _object_choice(scenario, "Scheming Fence") == Choice(
+        kind=ChoiceKind.OBJECT, value=str(siege.id)
+    )
+
+
+# -- other as-enters actions --------------------------------------------------------
+
+
+def test_phylactery_lich_puts_its_counter_on_an_artifact_you_control():
+    scenario = _board(hand=["Phylactery Lich"], battlefield=["Smuggler's Copter"])
+    scenario.put_onto_battlefield("Phylactery Lich")
+    copter = scenario.find("Smuggler's Copter", Zone.BATTLEFIELD, "alice")
+    assert copter.counters == {"phylactery": 1}
+
+
+def test_phylactery_lich_with_no_artifact_puts_no_counter():
+    scenario = _board(hand=["Phylactery Lich"], battlefield=["Grizzly Bears"])
+    scenario.put_onto_battlefield("Phylactery Lich")
+    assert scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice").counters == {}
+
+
+def test_sigardas_splendor_notes_your_life_total_as_it_enters():
+    scenario = _board(hand=["Sigarda's Splendor"])
+    scenario.player("alice").life = 13
+    splendor = scenario.put_onto_battlefield("Sigarda's Splendor")
+    assert splendor.choice == Choice(kind=ChoiceKind.NUMBER, value="13")
+
+
+def test_alhammarret_reveals_the_opponents_hand_and_names_a_nonland_card_from_it():
+    scenario = _board(hand=["Alhammarret, High Arbiter"], opp_hand=["Lightning Bolt", "Mountain"])
+    alhammarret = _enter(scenario, "Alhammarret, High Arbiter", "Lightning Bolt")
+    assert _question(scenario, "Alhammarret, High Arbiter").options == ("Lightning Bolt",)
+    assert sorted(shown.card_name for shown in scenario.game.reveals) == [
+        "Lightning Bolt",
+        "Mountain",
+    ]
+    assert alhammarret.choice == Choice(kind=ChoiceKind.CARD_NAME, value="Lightning Bolt")
+
+
+def _cast_kicked(scenario, name, *, kicked):  # noqa: C901
+    casting = scenario.cast(name)
+    if kicked:
+        casting.pay_kicker(which="{B}") if name == "Urborg Lhurgoyf" else casting.pay_kicker()
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+
+@pytest.mark.parametrize(
+    ("name", "kicked", "milled"),
+    [
+        ("Monstrous War-Leech", True, 4),
+        ("Monstrous War-Leech", False, 0),
+        ("Urborg Lhurgoyf", True, 3),
+        ("Urborg Lhurgoyf", False, 0),
+    ],
+)
+def test_kicker_mills_as_the_creature_enters(name, kicked, milled):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[name],
+            battlefield=["Swamp"] * 8 + ["Island"] * 3 + ["Forest"] * 3,
+            library=["Forest"] * 10,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _cast_kicked(scenario, name, kicked=kicked)
+    assert len(scenario.player("alice").graveyard) == milled
+    assert len(scenario.player("alice").library) == 10 - milled

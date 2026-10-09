@@ -2249,7 +2249,9 @@ def _static_ability_category(
         # ability expansion), so `objects_as_costs.has_convoke_now` reads the
         # identical grant itself, live, at a real cast.
         return HANDLED
-    if static_audit.reads_static_line(printing, text, card_name=effective_name, legendary=legendary):
+    if static_audit.reads_static_line(
+        printing, text, card_name=effective_name, legendary=legendary
+    ):
         # CR 614.12 / 614.1d and the other EP-01 families: the production reader performs it.
         return HANDLED
     return STATIC_UNAUDITED

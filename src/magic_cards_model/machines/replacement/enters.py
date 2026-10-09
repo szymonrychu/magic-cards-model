@@ -237,10 +237,15 @@ def _try_enters_tapped(sentence: str, names: tuple[str, ...]) -> list[Replacemen
         )
         if both.group("untap"):
             return [tapped]
-        with_counters = _try_enters_with(f"{subject} enters with {both.group('what')} on it.", names)
+        with_counters = _try_enters_with(
+            f"{subject} enters with {both.group('what')} on it.", names
+        )
         return [
             tapped,
-            *(effect.model_copy(update={"text": sentence, "raw": sentence}) for effect in with_counters),
+            *(
+                effect.model_copy(update={"text": sentence, "raw": sentence})
+                for effect in with_counters
+            ),
         ]
     listed = _ENTERS_TAPPED_LIST.match(sentence)
     if listed is not None and not sentence.lower().startswith("if "):
@@ -737,9 +742,13 @@ def _or_you_control(choice: Apply, subtype: str) -> Apply:
     def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
         was_tapped = event.tapped
         choice(game, source, event)
-        if not was_tapped and event.tapped and event.card is not None:
-            if controls(game, event.card):
-                event.tapped = False
+        if (
+            not was_tapped
+            and event.tapped
+            and event.card is not None
+            and controls(game, event.card)
+        ):
+            event.tapped = False
 
     return apply
 

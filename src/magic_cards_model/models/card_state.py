@@ -546,6 +546,10 @@ class ChoiceKind(StrEnum):
     PLANESWALKER_TYPE = "planeswalker_type"
     #: "choose a color word" (Swirl the Mists), `Choice.value` the color's name.
     COLOR_WORD = "color_word"
+    #: "choose a creature" / "choose another creature you control" / "you may
+    #: choose a nonland permanent" (Metamorphic Alteration, Dauntless Bodyguard,
+    #: Scheming Fence): `Choice.value` the chosen permanent's id.
+    OBJECT = "object"
     BASIC_LAND_TYPE = "basic_land_type"
     """Multiversal Passage's own "As this land enters, choose a basic land
     type." - CR 305.6's five (`Choice.value` one of "Plains"/"Island"/

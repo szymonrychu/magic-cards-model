@@ -10,7 +10,9 @@ effect must fire on a matching entering object of a throwaway real board.
 from ..machines.abilities import _strip_reminder
 from ..machines.replacement import (
     ReplacementKind,
+    _classify_choice,
     _compile_opponents_permanents_enter_tapped,
+    enters_choice_apply,
     parse_replacement_effects,
 )
 
@@ -36,4 +38,11 @@ def reads_static_line(printing, text, *, card_name=None, legendary=False) -> boo
 def _performed(effect) -> bool:
     if effect.kind is ReplacementKind.ENTERS_TAPPED and not effect.self_replacement:
         return _compile_opponents_permanents_enter_tapped(effect) is not None
+    if effect.kind is ReplacementKind.AS_ENTERS and effect.self_replacement:
+        # The production chooser exists for this exact sentence (the same
+        # builders `_self_enters_modifiers` registers as it gathers).
+        return (
+            enters_choice_apply(effect, effect.subject or "") is not None
+            or _classify_choice(effect.replacement or "") is not None
+        )
     return False

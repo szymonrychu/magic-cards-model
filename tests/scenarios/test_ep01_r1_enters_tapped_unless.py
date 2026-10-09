@@ -62,16 +62,12 @@ def test_minas_tirith_ignores_an_opponents_legendary_creature():
 
 
 def test_argoth_untapped_with_a_legendary_green_creature():
-    scenario = _board(
-        hand=["Argoth, Sanctum of Nature"], battlefield=["Questing Beast"]
-    )
+    scenario = _board(hand=["Argoth, Sanctum of Nature"], battlefield=["Questing Beast"])
     assert not scenario.play_land("Argoth, Sanctum of Nature").tapped
 
 
 def test_argoth_tapped_with_a_legendary_creature_that_is_not_green():
-    scenario = _board(
-        hand=["Argoth, Sanctum of Nature"], battlefield=["Madame Masque"]
-    )
+    scenario = _board(hand=["Argoth, Sanctum of Nature"], battlefield=["Madame Masque"])
     assert scenario.play_land("Argoth, Sanctum of Nature").tapped
 
 

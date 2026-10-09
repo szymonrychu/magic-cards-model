@@ -21,13 +21,13 @@ from .model import Apply, CardReplacement, EventKind, ReplaceableEvent, Replacem
 if TYPE_CHECKING:
     from ...models.game import Game
 
-EntersCondition = Callable[["Game", CardState], bool]
+_Condition = Callable[["Game", CardState], bool]
 
 # --------------------------------------------------------------------------
 # "unless you control a <quality>" conditions (CR 614.1d, CR 614.12)
 # --------------------------------------------------------------------------
 
-_COLOR_WORDS: dict[str, Color] = {
+_COLOR_BY_WORD: dict[str, Color] = {
     "white": Color.WHITE,
     "blue": Color.BLUE,
     "black": Color.BLACK,
@@ -75,13 +75,13 @@ def _controlled_matching(game: "Game", entering: CardState, test) -> bool:
     )
 
 
-def read_extra_enters_condition(condition: str) -> EntersCondition | None:
+def read_extra_enters_condition(condition: str) -> _Condition | None:
     """The conditions T2 adds to `enters._read_enters_condition`."""
     match = _YOU_CONTROL_QUALIFIED_RE.match(condition)
     if match is not None:
         words = match.group("quals").lower().split()
         card_type = _CARD_TYPES[match.group("type").lower()]
-        colors = {_COLOR_WORDS[w] for w in words if w in _COLOR_WORDS}
+        colors = {_COLOR_BY_WORD[w] for w in words if w in _COLOR_BY_WORD}
         legendary = "legendary" in words
         snow = "snow" in words
 
@@ -151,8 +151,10 @@ def _noun_test(noun: str) -> Callable[[CardState], bool] | None:
         elif word.startswith("non-") and len(word) > 4:
             banned = word[4:]
             tests.append(
-                lambda card, b=banned: b not in {s.lower() for s in card.subtypes}
-                and all(t.value.lower() != b for t in card.types)
+                lambda card, b=banned: (
+                    b not in {s.lower() for s in card.subtypes}
+                    and all(t.value.lower() != b for t in card.types)
+                )
             )
         elif word.startswith("non") and word[3:] in _CARD_TYPES:
             banned_type = _CARD_TYPES[word[3:]]
@@ -163,7 +165,7 @@ def _noun_test(noun: str) -> Callable[[CardState], bool] | None:
 
 
 def read_group_subject(subject: str) -> GroupTest | None:
-    """"Artifacts, creatures, and lands your opponents control", "Permanents",
+    """ "Artifacts, creatures, and lands your opponents control", "Permanents",
     "Non-Phyrexian creatures", "Snow lands your opponents control", "Creatures
     enchanted player controls" as `(game, source, entering) -> bool`, or None
     for any noun this does not read (fail closed rather than drop it)."""
@@ -209,8 +211,10 @@ def compile_group_enter_tapped(effect: ReplacementEffect) -> CardReplacement | N
 
     def applies(game: "Game", source: CardState, event) -> bool:
         card = event.card
-        return event.kind is EventKind.ENTERS_BATTLEFIELD and card is not None and test(
-            game, source, card
+        return (
+            event.kind is EventKind.ENTERS_BATTLEFIELD
+            and card is not None
+            and test(game, source, card)
         )
 
     def apply(game: "Game", source: CardState, event) -> None:
@@ -237,9 +241,12 @@ CARD_TYPE_OPTIONS = (
 )
 _COLOR_WORD_OPTIONS = ("white", "blue", "black", "red", "green")
 
-_CHOOSE_MODE_RE = re.compile(r"^choose (?P<opts>[A-Z][\w'-]*(?:, [A-Z][\w'-]*)*(?:,? or [A-Z][\w'-]*)+)$")
+_CHOOSE_MODE_RE = re.compile(
+    r"^choose (?P<opts>[A-Z][\w'-]*(?:, [A-Z][\w'-]*)*(?:,? or [A-Z][\w'-]*)+)$"
+)
 _CHOOSE_PHRASES_RE = re.compile(
-    r"^choose (?P<opts>(?:white|blue|black|red|green) [A-Z]\w+(?:, (?:white|blue|black|red|green) [A-Z]\w+)*"
+    r"^choose (?P<opts>(?:white|blue|black|red|green) [A-Z]\w+"
+    r"(?:, (?:white|blue|black|red|green) [A-Z]\w+)*"
     r",? or (?:white|blue|black|red|green) [A-Z]\w+)$"
 )
 _CHOOSE_TYPE_LIST_RE = re.compile(
@@ -248,14 +255,17 @@ _CHOOSE_TYPE_LIST_RE = re.compile(
     r",? or (?:artifact|battle|creature|enchantment|instant|land|planeswalker|sorcery))$"
 )
 _CHOOSE_CARD_TYPE_RE = re.compile(
-    r"^(?:look at an opponent's hand, then )?choose a card type(?: other than (?P<ex>creature(?: or land)?))?$"
+    r"^(?:look at an opponent's hand, then )?choose a card type"
+    r"(?: other than (?P<ex>creature(?: or land)?))?$"
 )
 _CHOOSE_NUMBER_RE = re.compile(r"^choose a number(?: between (?P<lo>\d+) and (?P<hi>\d+))?$")
 _LOOK_THEN_NAME_RE = re.compile(r"^look at an opponent's hand, then choose any card name$")
 
 
 def _split_options(text: str) -> tuple[str, ...]:
-    return tuple(part.strip() for part in re.split(r",\s*(?:or\s+)?|\s+or\s+", text) if part.strip())
+    return tuple(
+        part.strip() for part in re.split(r",\s*(?:or\s+)?|\s+or\s+", text) if part.strip()
+    )
 
 
 def _ask_quality(
@@ -322,6 +332,163 @@ def _number_validator(low: int | None, high: int | None) -> Callable[[str], str 
     return check
 
 
+_CHOOSE_OBJECT_RE = re.compile(
+    r"^(?P<may>you may )?choose "
+    r"(?P<what>another creature you control|a creature|a nonland permanent)$"
+)
+_KICKED_MILL_RE = re.compile(r"^if it was kicked, mill (?P<n>\w+) cards$")
+_KICKED_EACH_MILL_RE = re.compile(r"^mill (?P<n>\w+) cards for each time it was kicked$")
+_PHYLACTERY_RE = re.compile(r"^put an? (?P<kind>[a-z]+) counter on an artifact you control$")
+_NOTE_LIFE_RE = re.compile(r"^note your life total$")
+
+
+def _choose_object(card_name: str, what: str, optional: bool) -> Apply:
+    """CR 614.12a: choose a permanent as this one enters; recorded as
+    `ChoiceKind.OBJECT` (the permanent's id)."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if who is None:
+            return
+        candidates = [
+            permanent
+            for permanent in game.battlefield
+            if (source is None or permanent.id != source.id)
+            and (
+                (what == "a creature" and Type.CREATURE in permanent.types)
+                or (
+                    what == "another creature you control"
+                    and Type.CREATURE in permanent.types
+                    and permanent.controller == who
+                )
+                or (what == "a nonland permanent" and Type.LAND not in permanent.types)
+            )
+        ]
+        if not candidates:
+            return
+        source_id = source_id_of(source)
+        if optional and not game.may(
+            who, f"choose {what}", source=card_name, source_id=source_id, cards=candidates
+        ):
+            return
+        (chosen,) = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=who,
+                prompt=f"choose {what} as {card_name} enters",
+                source=card_name,
+                source_id=source_id,
+                amount=1,
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        if chosen not in {card.id for card in candidates}:
+            raise ValueError(f"{card_name}: that is not a permanent it can choose")
+        source.choice = Choice(kind=ChoiceKind.OBJECT, value=str(chosen))
+
+    return apply
+
+
+def _mill_if_kicked(count: int, per_kick: bool) -> Apply:
+    """ "As this enters, if it was kicked, mill N cards" / "mill N cards for each
+    time it was kicked" (CR 702.33d: the kick count is read off the cast
+    record, fixed as the spell was cast)."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        from ..effects.library import _mill
+
+        if source is None or source.controller is None:
+            return
+        record = game.cast_record_of(source)
+        kicked = record.kicked if record is not None else 0
+        amount = count * kicked if per_kick else (count if kicked else 0)
+        if amount:
+            _mill(game, game.player(source.controller), amount)
+
+    return apply
+
+
+def _put_counter_on_an_artifact(kind: str, card_name: str) -> Apply:
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if who is None:
+            return
+        artifacts = [
+            permanent
+            for permanent in game.permanents_controlled_by(who)
+            if Type.ARTIFACT in game.computed_board().of(permanent).types
+        ]
+        if not artifacts:
+            return
+        target = artifacts[0]
+        if len(artifacts) > 1:
+            (picked,) = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=who,
+                    prompt=f"choose an artifact you control for {card_name}'s {kind} counter",
+                    source=card_name,
+                    source_id=source_id_of(source),
+                    amount=1,
+                    cards=tuple(card.id for card in artifacts),
+                )
+            )
+            target = next(card for card in artifacts if card.id == picked)
+        game.add_counters(target, kind, 1, putter=who)
+
+    return apply
+
+
+def _note_life_total(card_name: str) -> Apply:
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        if source is None or source.controller is None:
+            return
+        source.choice = Choice(
+            kind=ChoiceKind.NUMBER, value=str(game.player(source.controller).life)
+        )
+
+    return apply
+
+
+def _each_opponent_reveals_hand_then_name(effect: ReplacementEffect, card_name: str) -> Apply:
+    """Alhammarret, High Arbiter: "each opponent reveals their hand. You choose
+    the name of a nonland card revealed this way." (CR 701.20a)"""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if who is None:
+            return
+        shown = [
+            card
+            for opponent in game.players_in_game
+            if opponent.username != who
+            for card in list(game.player(opponent.username).hand)
+        ]
+        for card in shown:
+            game.reveal(card, source=card_name)
+        names = tuple(sorted({card.name for card in shown if Type.LAND not in card.types}))
+        if not names:
+            return
+        value = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=who,
+                prompt="choose the name of a nonland card revealed this way",
+                source=card_name,
+                source_id=source_id_of(source),
+                options=names,
+                quality=ChoiceKind.CARD_NAME.value,
+                cards=tuple(card.id for card in shown),
+            )
+        )
+        assert isinstance(value, str)
+        if value not in names:
+            raise ValueError(f"{card_name}: {value!r} is not a nonland card revealed this way")
+        source.choice = Choice(kind=ChoiceKind.CARD_NAME, value=value)
+
+    return apply
+
+
 def enters_choice_apply(effect: ReplacementEffect, card_name: str) -> Apply | None:
     """What an "As [this] enters, choose ..." sentence of the shapes T2 adds does
     as the permanent enters, or None when no shape here reads it."""
@@ -329,9 +496,7 @@ def enters_choice_apply(effect: ReplacementEffect, card_name: str) -> Apply | No
     match = _CHOOSE_PHRASES_RE.match(text) or _CHOOSE_MODE_RE.match(text)
     if match is not None:
         options = _split_options(match.group("opts"))
-        return _ask_quality(
-            ChoiceKind.MODE, options, f"choose {', '.join(options)}", card_name
-        )
+        return _ask_quality(ChoiceKind.MODE, options, f"choose {', '.join(options)}", card_name)
     match = _CHOOSE_TYPE_LIST_RE.match(text)
     if match is not None:
         return _ask_quality(
@@ -369,10 +534,34 @@ def enters_choice_apply(effect: ReplacementEffect, card_name: str) -> Apply | No
             (),
             "choose a planeswalker type",
             card_name,
-            validator=lambda v: None if v[:1].isupper() and v.isalpha() else f"{v!r} is not a planeswalker type",
+            validator=lambda v: (
+                None if v[:1].isupper() and v.isalpha() else f"{v!r} is not a planeswalker type"
+            ),
         )
     if text == "choose a color word":
-        return _ask_quality(ChoiceKind.COLOR_WORD, _COLOR_WORD_OPTIONS, "choose a color word", card_name)
+        return _ask_quality(
+            ChoiceKind.COLOR_WORD, _COLOR_WORD_OPTIONS, "choose a color word", card_name
+        )
+    match = _CHOOSE_OBJECT_RE.match(text)
+    if match is not None:
+        return _choose_object(card_name, match.group("what"), match.group("may") is not None)
+    match = _KICKED_MILL_RE.match(text) or _KICKED_EACH_MILL_RE.match(text)
+    if match is not None:
+        from ...numbers import parse_count
+
+        count = parse_count(match.group("n"))
+        if count:
+            return _mill_if_kicked(count, per_kick=_KICKED_EACH_MILL_RE.match(text) is not None)
+    match = _PHYLACTERY_RE.match(text)
+    if match is not None:
+        return _put_counter_on_an_artifact(match.group("kind"), card_name)
+    if _NOTE_LIFE_RE.match(text):
+        return _note_life_total(card_name)
+    if (
+        text == "each opponent reveals their hand"
+        and "you choose the name of a nonland card" in (effect.raw or "").lower()
+    ):
+        return _each_opponent_reveals_hand_then_name(effect, card_name)
     if _LOOK_THEN_NAME_RE.match(text):
         return _ask_quality(
             ChoiceKind.CARD_NAME, (), "choose a card name", card_name, look_at_opponent_hand=True
