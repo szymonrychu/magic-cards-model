@@ -584,6 +584,24 @@ class TurnDamageGroup(EngineModel):
         return self.model_copy(update={"parts": parts}) if parts else None
 
 
+def static_source_damage_unpreventable(
+    game: "Game", holder: CardState, text: str, event: "ReplaceableEvent"
+) -> bool:
+    """Whether a permanent's static "[Combat] damage that would be dealt by
+    `<sources>` can't be prevented." (Excruciator, Questing Beast) covers this
+    damage (CR 615.12), the sources checked as the damage would be dealt
+    (CR 609.7b). `text` is one of the permanent's static lines."""
+    from .replacement.prevention_statics import unpreventable_source
+
+    read = unpreventable_source(holder.card, text)
+    if read is None or event.source is None:
+        return False
+    source_test, combat_only = read
+    if combat_only and not event.combat:
+        return False
+    return source_test(game, holder, event.source)
+
+
 def created_damage_unpreventable(game: "Game", event: "ReplaceableEvent") -> str | None:
     """Why a created record makes this damage unpreventable (CR 615.12)."""
     for record in game.created_replacements:

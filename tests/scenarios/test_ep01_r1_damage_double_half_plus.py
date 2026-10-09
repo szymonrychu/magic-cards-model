@@ -22,7 +22,6 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
-from tests.cards import card_state
 from tests.scenarios.harness import Scenario
 
 
@@ -49,12 +48,20 @@ def _hit(scenario, target, amount, source, *, combat=False):
         game._dealing_combat_damage = False
 
 
-def _spell(scenario, name, owner):
-    """A real card on the stack, controlled by `owner` - a damage source that is a spell."""
-    spell = card_state(name, Zone.STACK, controller=owner, owner=owner)
-    spell.bind_to_game(scenario.game)
-    scenario.game.stack.append(spell)
-    return spell
+def _spell(scenario, name, owner, land="Mountain", at=None):
+    """A real spell `owner` cast from their hand and left on the stack - a
+    damage source that is a spell (CR 112.1)."""
+    game = scenario.game
+    if scenario.step is Step.UNTAP:
+        scenario.start_at(Step.PRECOMBAT_MAIN)
+    if game.priority is not None and game.priority.seat != owner:
+        game.pass_priority(game.priority.seat)  # CR 117.3d: the next player in turn order
+    other = "bob" if owner == "alice" else "alice"
+    source = next(
+        c for c in game.battlefield if c.name == land and c.controller == owner and not c.tapped
+    )
+    targets = None if name == "Brainstorm" else [at or scenario.player(other)]
+    return scenario.cast_onto_stack(name, source, username=owner, targets=targets)
 
 
 # -- double -----------------------------------------------------------------------
@@ -115,11 +122,16 @@ def test_charging_tuskodon_doubles_only_its_own_combat_damage_to_a_player():
 
 
 def test_fire_servant_doubles_damage_from_red_instants_and_sorceries_you_control():
-    scenario = _board(alice=["Fire Servant"], bob=["Grizzly Bears"])
+    scenario = _board(
+        alice=["Fire Servant", "Mountain", "Island"],
+        bob=["Grizzly Bears", "Mountain"],
+        alice_hand=["Lightning Bolt", "Brainstorm"],
+        bob_hand=["Lightning Bolt"],
+    )
     bears = scenario.creature("Grizzly Bears", "bob")
     mine = _spell(scenario, "Lightning Bolt", "alice")
     theirs = _spell(scenario, "Lightning Bolt", "bob")
-    blue = _spell(scenario, "Counterspell", "alice")
+    blue = _spell(scenario, "Brainstorm", "alice", land="Island")
 
     assert _hit(scenario, bears, 3, mine) == 6
     assert _hit(scenario, bears, 3, theirs) == 3  # not "you control"
@@ -146,7 +158,7 @@ def test_neriv_doubles_damage_from_creatures_that_entered_this_turn():
         alice=["Neriv, Heart of the Storm", "Grizzly Bears", "Llanowar Elves"], bob=["Goblin Guide"]
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    turn = scenario.game.turn.number
+    turn = scenario.game.turn.turns_taken
     new = scenario.creature("Grizzly Bears", "alice")
     old = scenario.creature("Llanowar Elves", "alice")
     new.turn_entered = turn
@@ -161,6 +173,7 @@ def test_kuja_doubles_damage_from_wizards_you_control():
     scenario = _board(
         alice=["Kuja, Genome Sorcerer", "Tester of the Tangential", "Grizzly Bears"], bob=[]
     )
+    _on(scenario, "Kuja, Genome Sorcerer").transform()  # the doubling is Trance Kuja's
     bob = scenario.player("bob")
     assert _hit(scenario, bob, 2, scenario.creature("Tester of the Tangential", "alice")) == 4
     assert _hit(scenario, bob, 2, scenario.creature("Grizzly Bears", "alice")) == 2
@@ -197,22 +210,34 @@ def test_embermaw_hellion_adds_one_to_damage_from_other_red_sources_you_control(
 
 
 def test_pyromancers_swath_adds_two_to_instant_and_sorcery_sources_you_control():
-    scenario = _board(alice=["Pyromancer's Swath"], bob=["Grizzly Bears"])
-    bears = scenario.creature("Grizzly Bears", "bob")
-    assert _hit(scenario, bears, 3, _spell(scenario, "Lightning Bolt", "alice")) == 5
-    assert _hit(scenario, bears, 3, _spell(scenario, "Lightning Bolt", "bob")) == 3
-    assert _hit(scenario, bears, 3, scenario.creature("Grizzly Bears", "bob")) == 3  # not a spell
+    scenario = _board(
+        alice=["Pyromancer's Swath", "Mountain"],
+        bob=["Grizzly Bears", "Mountain"],
+        alice_hand=["Lightning Bolt"],
+        bob_hand=["Lightning Bolt"],
+    )
+    bob = scenario.player("bob")
+    assert _hit(scenario, bob, 3, _spell(scenario, "Lightning Bolt", "alice")) == 5
+    assert _hit(scenario, bob, 3, _spell(scenario, "Lightning Bolt", "bob")) == 3
+    assert _hit(scenario, bob, 3, scenario.creature("Grizzly Bears", "bob")) == 3  # not a spell
 
 
 def test_pyromancers_gauntlet_covers_red_spells_and_red_planeswalkers_you_control():
     scenario = _board(
-        alice=["Pyromancer's Gauntlet", "Chandra, Torch of Defiance", "Jace Beleren"], bob=[]
+        alice=[
+            "Pyromancer's Gauntlet",
+            "Chandra, Torch of Defiance",
+            "Jace Beleren",
+            "Mountain",
+            "Island",
+        ],
+        alice_hand=["Lightning Bolt", "Brainstorm"],
     )
     bob = scenario.player("bob")
     assert _hit(scenario, bob, 3, _spell(scenario, "Lightning Bolt", "alice")) == 5
     assert _hit(scenario, bob, 3, _on(scenario, "Chandra, Torch of Defiance")) == 5
     assert _hit(scenario, bob, 3, _on(scenario, "Jace Beleren")) == 3  # not red
-    assert _hit(scenario, bob, 3, _spell(scenario, "Counterspell", "alice")) == 3  # not red
+    assert _hit(scenario, bob, 3, _spell(scenario, "Brainstorm", "alice", land="Island")) == 3
 
 
 def test_valley_flamecaller_adds_one_for_the_listed_creature_types_only():
@@ -252,7 +277,10 @@ def test_fated_firepower_adds_its_fire_counters():
 
 def test_rem_karolus_prevents_spell_damage_to_you_and_adds_one_to_spell_damage_to_opponents():
     scenario = _board(
-        alice=["Rem Karolus, Stalwart Slayer", "Grizzly Bears"], bob=["Grizzly Bears"]
+        alice=["Rem Karolus, Stalwart Slayer", "Grizzly Bears", "Mountain"],
+        bob=["Grizzly Bears", "Mountain"],
+        alice_hand=["Lightning Bolt"],
+        bob_hand=["Lightning Bolt"],
     )
     rem = _on(scenario, "Rem Karolus, Stalwart Slayer")
     mine = scenario.creature("Grizzly Bears", "alice")
@@ -297,10 +325,12 @@ def test_protection_of_the_hekma_only_works_against_sources_an_opponent_controls
 
 
 def test_orbs_of_warding_works_against_creatures_only():
-    scenario = _board(alice=["Orbs of Warding"], bob=["Goblin Guide"])
+    scenario = _board(alice=["Orbs of Warding"], bob=["Goblin Guide", "Mountain"], bob_hand=["Lightning Bolt"])
     alice = scenario.player("alice")
     assert _hit(scenario, alice, 3, scenario.creature("Goblin Guide", "bob")) == 2
-    assert _hit(scenario, alice, 3, _spell(scenario, "Lightning Bolt", "bob")) == 3
+    # Orbs of Warding gives its controller hexproof, so the Bolt is aimed at bob's own creature.
+    bolt = _spell(scenario, "Lightning Bolt", "bob", at=scenario.creature("Goblin Guide", "bob"))
+    assert _hit(scenario, alice, 3, bolt) == 3
 
 
 def test_sphere_of_purity_works_against_artifacts_only():
@@ -319,7 +349,12 @@ def test_guardian_seraph_prevents_one_from_each_opposing_source():
 
 
 def test_plated_pegasus_prevents_one_of_each_spells_damage():
-    scenario = _board(alice=["Plated Pegasus", "Grizzly Bears"], bob=["Goblin Guide"])
+    scenario = _board(
+        alice=["Plated Pegasus", "Grizzly Bears", "Mountain"],
+        bob=["Goblin Guide", "Mountain"],
+        alice_hand=["Lightning Bolt"],
+        bob_hand=["Lightning Bolt"],
+    )
     bears = scenario.creature("Grizzly Bears", "alice")
     assert _hit(scenario, bears, 3, _spell(scenario, "Lightning Bolt", "bob")) == 2
     assert (

@@ -17,8 +17,8 @@ Every CR number here was looked up with `mise run rules:find`: 614.9, 615.5,
 
 import pytest
 
+from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
-from tests.cards import card_state
 from tests.scenarios.harness import Scenario
 
 
@@ -27,18 +27,30 @@ def _board(
     bob=(),
     alice_graveyard=(),
     alice_library=("Plains", "Plains", "Plains", "Plains", "Plains"),
+    *,
+    alice_hand=(),
+    bob_hand=(),
+    first="alice",
 ):
-    return (
-        Scenario()
-        .player(
-            "alice",
-            library=list(alice_library),
-            graveyard=list(alice_graveyard),
-            battlefield=list(alice),
-        )
-        .player("bob", library=["Mountain", "Mountain", "Mountain"], battlefield=list(bob))
-        .build()
-    )
+    """`first` is the active player: the first one added takes the first turn."""
+    seats = {
+        "alice": {
+            "library": list(alice_library),
+            "graveyard": list(alice_graveyard),
+            "hand": list(alice_hand),
+            "battlefield": list(alice),
+        },
+        "bob": {
+            "library": ["Mountain", "Mountain", "Mountain"],
+            "hand": list(bob_hand),
+            "battlefield": list(bob),
+        },
+    }
+    order = ["alice", "bob"] if first == "alice" else ["bob", "alice"]
+    scenario = Scenario()
+    for name in order:
+        scenario.player(name, **seats[name])
+    return scenario.build()
 
 
 def _on(scenario, name, owner="alice"):
@@ -55,11 +67,19 @@ def _hit(scenario, target, amount, source, *, combat=False, unpreventable=False)
         game._dealing_combat_damage = False
 
 
-def _spell(scenario, name, owner):
-    spell = card_state(name, Zone.STACK, controller=owner, owner=owner)
-    spell.bind_to_game(scenario.game)
-    scenario.game.stack.append(spell)
-    return spell
+def _spell(scenario, name, owner, land="Mountain"):
+    """A real spell `owner` cast from their hand and left on the stack - a
+    damage source that is a spell (CR 112.1)."""
+    game = scenario.game
+    if scenario.step is Step.UNTAP:
+        scenario.start_at(Step.PRECOMBAT_MAIN)
+    if game.priority is not None and game.priority.seat != owner:
+        game.pass_priority(game.priority.seat)  # CR 117.3d: the next player in turn order
+    other = "bob" if owner == "alice" else "alice"
+    source = next(
+        c for c in game.battlefield if c.name == land and c.controller == owner and not c.tapped
+    )
+    return scenario.cast_onto_stack(name, source, username=owner, targets=[scenario.player(other)])
 
 
 def _counters(state, kind="+1/+1"):
@@ -150,10 +170,9 @@ def test_ancient_adamantoise_redirects_damage_to_you_and_your_other_permanents()
 
 
 def test_weathered_bodyguards_redirect_unblocked_combat_damage_while_untapped():
-    from magic_cards_model.machines import Step
-
-    scenario = _board(alice=["Weathered Bodyguards"], bob=["Goblin Guide", "Grizzly Bears"])
-    scenario.game.turn.active_player = "bob"
+    scenario = _board(
+        alice=["Weathered Bodyguards"], bob=["Goblin Guide", "Grizzly Bears"], first="bob"
+    )
     bodyguards = _on(scenario, "Weathered Bodyguards")
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(scenario.creature("Goblin Guide", "bob"), defending="alice")
@@ -165,10 +184,7 @@ def test_weathered_bodyguards_redirect_unblocked_combat_damage_while_untapped():
 
 
 def test_weathered_bodyguards_do_nothing_while_tapped():
-    from magic_cards_model.machines import Step
-
-    scenario = _board(alice=["Weathered Bodyguards"], bob=["Goblin Guide"])
-    scenario.game.turn.active_player = "bob"
+    scenario = _board(alice=["Weathered Bodyguards"], bob=["Goblin Guide"], first="bob")
     bodyguards = _on(scenario, "Weathered Bodyguards")
     bodyguards.tap()
     scenario.start_at(Step.DECLARE_ATTACKERS)
@@ -235,7 +251,9 @@ def test_stormwild_capridor_only_converts_noncombat_damage():
 
 
 def test_ironscale_hydra_gets_one_counter_per_prevented_combat_damage_event():
-    scenario = _board(alice=["Ironscale Hydra"], bob=["Goblin Guide"])
+    scenario = _board(
+        alice=["Ironscale Hydra"], bob=["Goblin Guide", "Mountain"], bob_hand=["Lightning Bolt"]
+    )
     hydra = _on(scenario, "Ironscale Hydra")
     guide = scenario.creature("Goblin Guide", "bob")
     assert _hit(scenario, hydra, 4, guide, combat=True) == 0
@@ -332,9 +350,10 @@ def test_magma_pummeler_deals_damage_equal_to_the_counters_removed_to_any_target
     assert _counters(pummeler) == 1
     assert len(scenario.pending_triggers) == 1  # CR 603.12: a reflexive trigger, on the stack next
 
+    scenario.choose_trigger_targets("Magma Pummeler", [scenario.player("bob")])
     scenario.game.put_triggers_on_stack()
     scenario.resolve_top()
-    # No scripted target: the engine's default pick is the first legal one, never skipped.
+    assert scenario.player("bob").life == 17  # that much damage: the 3 counters removed
     assert scenario.stack_names() == []
 
 
@@ -346,7 +365,7 @@ def test_sekki_removes_counters_and_creates_that_many_spirit_tokens():
     assert _hit(scenario, sekki, 3, scenario.creature("Goblin Guide", "bob")) == 0
 
     assert _counters(sekki) == 5
-    spirits = [c for c in scenario.game.battlefield if c.name == "Spirit"]
+    spirits = [c for c in scenario.game.battlefield if c.name == "Spirit Token"]
     assert len(spirits) == 3
 
 
@@ -385,10 +404,12 @@ def test_nine_lives_prevents_the_damage_and_collects_an_incarnation_counter():
 
 
 def test_hostility_prevents_spell_damage_to_opponents_and_makes_a_token_per_damage():
-    scenario = _board(alice=["Hostility"], bob=[])
+    scenario = _board(
+        alice=["Hostility", "Mountain", "Mountain"], alice_hand=["Lightning Bolt", "Lightning Bolt"]
+    )
     bolt = _spell(scenario, "Lightning Bolt", "alice")
     assert _hit(scenario, scenario.player("bob"), 3, bolt) == 0
-    elementals = [c for c in scenario.game.battlefield if c.name == "Elemental Shaman"]
+    elementals = [c for c in scenario.game.battlefield if c.name == "Elemental Shaman Token"]
     assert len(elementals) == 3
     # Damage to its controller, and damage from a creature, is untouched.
     assert (

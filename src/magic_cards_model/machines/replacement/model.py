@@ -838,6 +838,8 @@ def replacements_of_state(
     call, so a caller looping over it must hoist one board rather than pay for
     N of them.
     """
+    from .prevention_statics import damage_static_replacements  # imports `parse`
+
     explicit = REPLACEMENTS.get(permanent.card.name)
     if explicit is not None:
         return explicit
@@ -851,6 +853,7 @@ def replacements_of_state(
         + _double_all_damage_replacements(_rules_lines("\n".join(chars.abilities)))
         + _leave_exile_line_replacements(chars.abilities)
         + _damage_life_floor_replacements(_rules_lines("\n".join(chars.abilities)))
+        + damage_static_replacements(card, _rules_lines("\n".join(chars.abilities)))
     )
     if "Class" not in chars.subtypes:
         # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
