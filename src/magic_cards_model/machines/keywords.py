@@ -81,7 +81,7 @@ from .cost import (
     tap_cost,
     total_cost_for_phrase,
 )
-from .cost.abilities import KEYWORD_KINDS, ability_cost_adjustment
+from .cost.abilities import KEYWORD_KINDS, ability_cost_adjustment, cycling_costs_nothing
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import anaphoric_delayed_trigger
 from .designations import designation_holds, split_as_long_as
@@ -2291,6 +2291,9 @@ def cycling_activation(
             f"{card.name}'s {ability.keyword} cost {ability.cost!r} could not be read, "
             f"so it cannot be paid"
         )
+    if game is not None and cycling_costs_nothing(game, player):
+        # CR 118.9: "you may pay {0} rather than pay cycling costs".
+        cost = TotalCost()
     # CR 702.29a: discarding the card is part of the activation cost, not the
     # effect - which is what makes a cycled card findable in the graveyard by
     # the time the draw happens.

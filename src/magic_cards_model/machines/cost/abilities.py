@@ -476,3 +476,36 @@ def foretell_any_turn(game: "Game", player: str) -> bool:
             if modifier is not None and modifier.any_turn:
                 return True
     return False
+
+
+#: New Perspectives: "As long as you have seven or more cards in hand, you may
+#: pay {0} rather than pay cycling costs." (CR 118.9, CR 702.29a). Cycling
+#: and typecycling alike; the player may always decline, but a cost of nothing
+#: is never worse than the printed one, so the activation is simply priced so.
+_CYCLING_FREE = re.compile(
+    r"^as long as (?P<condition>.+?), you may pay \{0\} rather than pay cycling costs\.?$",
+    re.IGNORECASE,
+)
+
+
+def reads_free_cycling_line(line: str) -> bool:
+    """Whether `line` is New Perspectives' sentence with a condition the
+    engine reads."""
+    from ...models.game import condition_is_readable
+
+    match = _CYCLING_FREE.match(line.strip())
+    return match is not None and condition_is_readable(match.group("condition"))
+
+
+def cycling_costs_nothing(game: "Game", player: str) -> bool:
+    """Whether a permanent `player` controls lets them pay {0} rather than
+    pay cycling costs right now."""
+    board = game.computed_board()
+    for holder in game.permanents_controlled_by(player):
+        for line in board.of(holder).abilities:
+            match = _CYCLING_FREE.match(line.strip())
+            if match is not None and game.condition_holds(
+                player, match.group("condition"), source=holder
+            ):
+                return True
+    return False
