@@ -650,6 +650,7 @@ def _parse_sentence(sentence: str, names: tuple[str, ...]) -> list[ReplacementEf
         _try_first_time_would,
         _try_source_damage_plus_recipient_list,
         _try_if_would,
+        _try_static_regeneration,
         # "As X enters or is turned face up" must be read by the enters parser
         # first, or the face-up parser swallows "X enters or" as the subject.
         _try_as_enters,
@@ -804,6 +805,31 @@ def _try_first_time_would(sentence: str, names: tuple[str, ...]) -> list[Replace
             condition=(match.group("condition") or "").strip() or None,
             optional=_is_optional(rest),
             first_time_each_turn=True,
+        )
+    ]
+
+
+_STATIC_REGENERATION = re.compile(
+    r"^If (?P<event>.+? would be destroyed), (?P<rest>regenerate (?:it|that \w+))\.?$",
+    re.IGNORECASE,
+)
+
+
+def _try_static_regeneration(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    """ "If this creature would be destroyed, regenerate it." (CR 701.19a): the
+    printed form of a regeneration replacement carries no "instead" - the verb
+    is the replacement - so `_try_if_would` does not claim it."""
+    match = _STATIC_REGENERATION.match(sentence)
+    if not match:
+        return []
+    event = match.group("event").strip()
+    return [
+        _make(
+            ReplacementKind.IF_WOULD_INSTEAD,
+            sentence,
+            event=event,
+            replacement=match.group("rest").strip(),
+            self_replacement=_refers_to_self(event, names),
         )
     ]
 

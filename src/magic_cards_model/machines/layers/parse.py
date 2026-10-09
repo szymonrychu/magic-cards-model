@@ -2075,6 +2075,15 @@ _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
 )
 
 
+#: "All Slivers have "If this permanent would be put into a graveyard, ..."" -
+#: the whole-battlefield, both-players twin of `_GROUP_QUOTED_ABILITY_GRANT_RE`
+#: for a creature subtype (Pulmonic Sliver). CR 613.1f: a layer 6 grant, the
+#: source's own subtype included.
+_ALL_SUBTYPE_QUOTED_GRANT_RE = re.compile(
+    r'^all (?P<subtype>[a-z]+?)s have "(?P<ability>.+)"\.?$', re.IGNORECASE | re.DOTALL
+)
+
+
 def group_quoted_ability_grant_selector(match: re.Match[str], source: CardState) -> Selector | None:
     """The group `_GROUP_QUOTED_ABILITY_GRANT_RE` names, for `source` - `None`
     when neither qualifier is printed, or a chosen-name group's source has no
@@ -7982,6 +7991,16 @@ def quoted_ability_grants(
                 if other and permanent.id == source.id:
                     continue
                 if selector(printed_characteristics(permanent), {}):
+                    wanted.setdefault(permanent.id, set()).add(text)
+            continue
+        if (match := _ALL_SUBTYPE_QUOTED_GRANT_RE.fullmatch(normalized)) and (
+            match.group("subtype").lower() in subtype_vocabulary()
+        ):
+            text = (match.group("ability") or "").strip()
+            subtype = match.group("subtype").lower()
+            grantable.add(text)
+            for permanent in permanents:
+                if subtype in {t.lower() for t in printed_characteristics(permanent).subtypes}:
                     wanted.setdefault(permanent.id, set()).add(text)
             continue
         if match := _INDEFINITE_KEYWORD_AND_QUOTED_GRANT_RE.fullmatch(normalized):

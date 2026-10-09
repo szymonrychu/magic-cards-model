@@ -226,6 +226,10 @@ def _zone_action(effect: ReplacementEffect) -> Apply | None:
         if effect.self_replacement and match.group("name") == subject:
             return _shuffle_into_library_instead
         return None
+    if re.fullmatch(r"return it to its owner's hand", text):
+        return _return_to_hand
+    if re.fullmatch(r"(you may )?put it on top of its owner's library", text):
+        return _library_top_optionally if text.startswith("you may") else _library_top
     if re.fullmatch(r"put it on the bottom of its owner's library", text) or re.fullmatch(
         r"that card is revealed and put on the bottom of that player's library", text
     ):
@@ -239,6 +243,24 @@ def _zone_action(effect: ReplacementEffect) -> Apply | None:
     ):
         return _exile_action(match, effect)
     return None
+
+
+def _return_to_hand(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+    event.destination = Zone.HAND
+
+
+def _library_top(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+    event.destination = Zone.LIBRARY
+    event.library_position = "top"
+
+
+def _library_top_optionally(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+    if source.controller and game.may(
+        source.controller,
+        f"Put {event.card.name} on top of its owner's library instead?",
+        source=source.name,
+    ):
+        _library_top(game, source, event)
 
 
 def _library_bottom(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
@@ -338,6 +360,7 @@ def _compile_zone_change(effect: ReplacementEffect) -> CardReplacement | None:
 
 
 from .counter_token_statics import COUNTER_TOKEN_COMPILERS  # noqa: E402
+from .destroy_statics import DESTROY_COMPILERS  # noqa: E402
 from .draw_statics import DRAW_COMPILERS  # noqa: E402
 from .event_statics import EVENT_COMPILERS  # noqa: E402
 
@@ -346,6 +369,7 @@ OTHER_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ..
     *DRAW_COMPILERS,
     *COUNTER_TOKEN_COMPILERS,
     *EVENT_COMPILERS,
+    *DESTROY_COMPILERS,
 )
 
 #: Compilers that read `ReplacementEffect.condition` (or the whole printed

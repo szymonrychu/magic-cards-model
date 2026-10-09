@@ -757,6 +757,23 @@ def leaves_the_battlefield_not_to_exile(event: ReplaceableEvent) -> bool:
     )
 
 
+def _granted_line_replacements(card: Card, granted: Iterable[str]) -> list[CardReplacement]:
+    """The replacement effects of quoted lines another permanent grants this one
+    ("All Slivers have "If this permanent would be put into a graveyard, you may
+    put it on top of its owner's library instead.""), read exactly as if printed
+    on it (CR 613.1f, CR 113.6)."""
+    found: list[CardReplacement] = []
+    for line in granted:
+        lowered = line.lower()
+        if " would " not in lowered or "instead" not in lowered:
+            continue
+        for effect in _parse_oracle_text(line, face=None, names=_names_of(card)):
+            compiled = _compile(effect)
+            if compiled is not None:
+                found.append(compiled)
+    return found
+
+
 def _leave_exile_line_replacements(lines: Iterable[str]) -> list[CardReplacement]:
     """Every such line among a permanent's computed abilities (CR 613.1f), so
     a layer 6 removal of it takes the replacement away with it."""
@@ -865,6 +882,7 @@ def replacements_of_state(
         + _double_all_damage_replacements(_rules_lines("\n".join(chars.abilities)))
         + _leave_exile_line_replacements(chars.abilities)
         + _damage_life_floor_replacements(_rules_lines("\n".join(chars.abilities)))
+        + _granted_line_replacements(card, permanent.granted_ability_texts)
     )
     if "Class" not in chars.subtypes:
         # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the

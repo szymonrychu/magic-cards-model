@@ -455,3 +455,232 @@ def test_valentin_own_creature_dying_creates_no_reflexive_ability():
 )
 def test_damage_ledger_and_reflexive_lines_are_handled(name):
     _every_static_clause_handled(name)
+
+
+# -- "If this creature would be destroyed, regenerate it." (CR 614.1a, 701.19a)
+#    Knight of the Holy Nimbus, Mossbridge Troll ------------------------------
+
+
+@pytest.mark.parametrize("name", ["Knight of the Holy Nimbus", "Mossbridge Troll"])
+def test_static_regeneration_saves_the_creature_from_destruction(name):
+    scenario = _board([name], [])
+    troll = scenario.creature(name, "alice")
+    troll.damage = 2
+
+    scenario.game.destroy(troll)
+
+    assert troll.zone is Zone.BATTLEFIELD
+    assert troll.damage == 0
+    assert troll.tapped
+    _every_static_clause_handled(name, "would be destroyed")
+
+
+@pytest.mark.parametrize("name", ["Knight of the Holy Nimbus", "Mossbridge Troll"])
+def test_static_regeneration_is_not_a_shield_it_works_every_time(name):
+    scenario = _board([name], [])
+    troll = scenario.creature(name, "alice")
+
+    scenario.game.destroy(troll)
+    troll.tapped = False
+    scenario.game.destroy(troll)
+
+    assert troll.zone is Zone.BATTLEFIELD
+
+
+@pytest.mark.parametrize("name", ["Knight of the Holy Nimbus", "Mossbridge Troll"])
+def test_static_regeneration_does_not_stop_a_sacrifice(name):
+    scenario = _board([name], [])
+    troll = scenario.creature(name, "alice")
+
+    scenario.game.sacrifice(troll)  # CR 701.8b: a sacrifice is not a destruction
+
+    assert troll.zone is Zone.GRAVEYARD
+
+
+def test_static_regeneration_is_not_applied_when_it_cant_be_regenerated():
+    scenario = _board(["Mossbridge Troll"], [])
+    troll = scenario.creature("Mossbridge Troll", "alice")
+
+    scenario.game.destroy(troll, regeneration_allowed=False)  # CR 701.19c
+
+    assert troll.zone is Zone.GRAVEYARD
+
+
+def test_static_regeneration_only_protects_its_own_creature():
+    scenario = _board(["Mossbridge Troll", "Grizzly Bears"], [])
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.game.destroy(bears)
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+# -- "If enchanted land would be destroyed, instead sacrifice this Aura and that
+#    land gains indestructible until end of turn." (Crackling / Harmonious) ----
+
+
+def _enchanted_land(aura):
+    scenario = _board([aura, "Mountain", "Forest"], [])
+    land = scenario.find("Mountain", Zone.BATTLEFIELD, "alice")
+    scenario.find(aura, Zone.BATTLEFIELD, "alice").attach_to(land)
+    return scenario, land
+
+
+@pytest.mark.parametrize("aura", ["Crackling Emergence", "Harmonious Emergence"])
+def test_emergence_sacrifices_itself_and_the_land_survives(aura):
+    scenario, land = _enchanted_land(aura)
+
+    scenario.game.destroy(land)
+
+    assert land.zone is Zone.BATTLEFIELD
+    assert [c.name for c in scenario.player("alice").graveyard] == [aura]
+    _every_static_clause_handled(aura, "would be destroyed")
+
+
+@pytest.mark.parametrize("aura", ["Crackling Emergence", "Harmonious Emergence"])
+def test_emergence_land_is_indestructible_until_end_of_turn(aura):
+    scenario, land = _enchanted_land(aura)
+
+    scenario.game.destroy(land)
+    scenario.game.destroy(land)  # indestructible now (CR 702.12b)
+
+    assert land.zone is Zone.BATTLEFIELD
+    assert "Indestructible" in scenario.game.characteristics_of(land).abilities
+
+
+@pytest.mark.parametrize("aura", ["Crackling Emergence", "Harmonious Emergence"])
+def test_emergence_does_not_protect_other_lands_or_a_sacrifice(aura):
+    scenario, land = _enchanted_land(aura)
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+
+    scenario.game.destroy(forest)
+    scenario.game.sacrifice(land)  # not a destruction (CR 701.8b)
+
+    assert forest.zone is Zone.GRAVEYARD
+    assert land.zone is Zone.GRAVEYARD
+
+
+# -- "If a creature you control that's enchanted would die, return it to its
+#    owner's hand instead." (Necromancer's Magemark) -------------------------
+
+
+def _magemark_board():
+    scenario = _board(
+        ["Necromancer's Magemark", "Grizzly Bears", "Llanowar Elves"], ["Grizzly Bears"]
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.find("Necromancer's Magemark", Zone.BATTLEFIELD, "alice").attach_to(bears)
+    return scenario, bears
+
+
+def test_magemark_returns_an_enchanted_creature_to_hand_instead_of_dying():
+    scenario, bears = _magemark_board()
+
+    scenario.game.destroy(bears)
+
+    assert bears.zone is Zone.HAND
+    assert bears in scenario.player("alice").hand
+    assert bears not in scenario.player("alice").graveyard
+    _every_static_clause_handled("Necromancer's Magemark", "would die")
+
+
+def test_magemark_does_not_save_a_creature_that_is_not_enchanted():
+    scenario, bears = _magemark_board()
+    elves = scenario.creature("Llanowar Elves", "alice")
+
+    scenario.game.destroy(elves)
+
+    assert elves.zone is Zone.GRAVEYARD
+
+
+def test_magemark_does_not_save_an_enchanted_creature_you_do_not_control():
+    scenario = _board(["Necromancer's Magemark"], ["Grizzly Bears"])
+    theirs = scenario.creature("Grizzly Bears", "bob")
+    scenario.find("Necromancer's Magemark", Zone.BATTLEFIELD, "alice").attach_to(theirs)
+
+    scenario.game.destroy(theirs)
+
+    assert theirs.zone is Zone.GRAVEYARD
+
+
+def test_magemark_returns_a_stolen_enchanted_creature_to_its_owners_hand():
+    scenario = _board(["Necromancer's Magemark"], ["Grizzly Bears"])
+    theirs = scenario.creature("Grizzly Bears", "bob")
+    theirs.controller = "alice"
+    scenario.find("Necromancer's Magemark", Zone.BATTLEFIELD, "alice").attach_to(theirs)
+
+    scenario.game.destroy(theirs)
+
+    assert theirs in scenario.player("bob").hand
+
+
+# -- "All Slivers have 'If this permanent would be put into a graveyard, you may
+#    put it on top of its owner's library instead.'" (Pulmonic Sliver) --------
+
+
+def _sliver_board(**kwargs):
+    return _board(
+        ["Pulmonic Sliver", "Sliver Construct", "Grizzly Bears"], ["Sliver Construct"], **kwargs
+    )
+
+
+def test_a_granted_sliver_goes_on_top_of_its_owners_library_if_you_choose():
+    scenario = _sliver_board()
+    construct = scenario.creature("Sliver Construct", "alice")
+    scenario.will_take_the_may(True, username="alice")
+
+    scenario.game.destroy(construct)
+
+    assert scenario.player("alice").library[0] is construct
+    assert construct.zone is Zone.LIBRARY
+    assert scenario.player("alice").graveyard == []
+
+
+def test_a_granted_sliver_dies_normally_if_you_decline():
+    scenario = _sliver_board()
+    construct = scenario.creature("Sliver Construct", "alice")
+    scenario.will_take_the_may(False, username="alice")
+
+    scenario.game.destroy(construct)
+
+    assert construct.zone is Zone.GRAVEYARD
+
+
+def test_the_grant_reaches_the_pulmonic_sliver_itself_and_the_opponents_slivers():
+    scenario = _sliver_board()
+    pulmonic = scenario.creature("Pulmonic Sliver", "alice")
+    theirs = scenario.creature("Sliver Construct", "bob")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_take_the_may(True, username="bob")
+
+    scenario.game.destroy(theirs)
+    scenario.game.destroy(pulmonic)
+
+    assert scenario.player("bob").library[0] is theirs
+    assert scenario.player("alice").library[0] is pulmonic
+
+
+def test_the_grant_does_not_reach_a_non_sliver():
+    scenario = _sliver_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.game.destroy(bears)
+
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_the_grant_ends_when_pulmonic_sliver_leaves():
+    scenario = _sliver_board()
+    pulmonic = scenario.creature("Pulmonic Sliver", "alice")
+    construct = scenario.creature("Sliver Construct", "alice")
+    scenario.will_take_the_may(False, username="alice")
+    scenario.game.destroy(pulmonic)  # declines its own replacement
+
+    scenario.game.destroy(construct)
+
+    assert construct.zone is Zone.GRAVEYARD
+
+
+def test_pulmonic_sliver_grant_line_reads_handled():
+    outcomes = [o for o in classify_clauses(card("Pulmonic Sliver")) if "graveyard" in o.text]
+    assert {o.category for o in outcomes} == {HANDLED}, outcomes
