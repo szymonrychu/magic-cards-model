@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 
 from ...models.card import Color, Supertype, Type
 from ...models.card_state import (
     CardState,
+    ChoiceKind,
     Counter,
 )
 from ...models.zone import Zone
@@ -544,6 +546,36 @@ def _granted_ability_effects(source: CardState, *, static_only: bool) -> EffectB
     return None
 
 
+_MODE_BULLET_LINE_RE = re.compile(r"^•\s*(?P<mode>[A-Z][\w'-]*)\s+—\s+(?P<body>.+)$", re.DOTALL)
+_CHOOSES_MODE_LINE_RE = re.compile(r"\benters, choose [A-Z][\w'-]*(?:, [A-Z][\w'-]*)*,? or [A-Z]")
+
+
+def _mode_gated_text(text: str | None, source: CardState) -> tuple[str | None, dict[str, str]]:
+    """CR 614.12a: under an as-enters "choose Jeskai or Temur" line, a
+    "• Temur — <static>" bullet is in effect only while that mode is the
+    recorded choice (Frostcliff Siege's anthem). The chosen bullet reads as
+    its bare body and every other bullet is dropped, so the ordinary
+    sentence parser sees exactly the lines the permanent has. Triggered
+    bullets are gated separately (`abilities._parse_line_mode_gated`) and are
+    never read by the static sweep either way. Also returns each kept body ->
+    its printed bullet line, the ability text CR 613.6 looks for on the
+    permanent."""
+    if not text or "•" not in text or not _CHOOSES_MODE_LINE_RE.search(text):
+        return text, {}
+    choice = source.choice
+    chosen = choice.value.lower() if choice and choice.kind is ChoiceKind.MODE else None
+    kept: list[str] = []
+    printed: dict[str, str] = {}
+    for line in text.split("\n"):
+        bullet = _MODE_BULLET_LINE_RE.match(line.strip())
+        if bullet is None:
+            kept.append(line)
+        elif bullet.group("mode").lower() == chosen:
+            kept.append(bullet.group("body"))
+            printed[bullet.group("body")] = line.strip()
+    return "\n".join(kept), printed
+
+
 def effects_for(
     source: CardState,
     timestamp: int,
@@ -627,7 +659,7 @@ def effects_for(
     # level - CR 716.2a's own gate. Without that, Innkeeper's Talent's level-2
     # "Permanents you control with counters on them have ward {1}" would be
     # read off a level-1 Class that does not have the ability yet.
-    text = source.class_ability_text
+    text, printed_bullets = _mode_gated_text(source.class_ability_text, source)
     # A keyword's own static ability has no printed sentence for the parser to
     # read, so it is added beside whatever the text produced.
     keyword_statics = (
@@ -667,7 +699,17 @@ def effects_for(
     # every builder (a `LAYER_EFFECTS` row, the generic parser's per-sentence
     # `combined`, a granted-ability grant) to have stamped it itself. See
     # `ContinuousEffect.order`.
-    return [effect.model_copy(update={"order": index}) for index, effect in enumerate(built)]
+    return [
+        effect.model_copy(
+            update={
+                "order": index,
+                "source_ability": printed_bullets.get(
+                    effect.source_ability or "", effect.source_ability
+                ),
+            }
+        )
+        for index, effect in enumerate(built)
+    ]
 
 
 def _impending_not_a_creature(source: CardState, timestamp: int) -> list[ContinuousEffect]:
