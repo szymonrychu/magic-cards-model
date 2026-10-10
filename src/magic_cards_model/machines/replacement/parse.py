@@ -54,6 +54,7 @@ _COST_PREFIX = re.compile(r"^[^:\n]{0,80}\{[^}]+\}[^:\n]{0,40}:\s*")
 _TRIGGER_OPENER = re.compile(r"^(When|Whenever|At)\b")
 
 
+@functools.lru_cache(maxsize=16384)
 def strip_reminder_text(text: str) -> tuple[str, str | None]:
     """Split oracle text into rules text and the reminder text in parentheses.
 

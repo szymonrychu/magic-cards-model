@@ -1,3 +1,4 @@
+import functools
 import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
@@ -80,6 +81,8 @@ from ._common import (
     ClauseEffect,
     Effect,
     TargetedClause,
+    memoised_clauses,
+    memoised_reading,
 )
 
 # --------------------------------------------------------------------------
@@ -2772,6 +2775,7 @@ def _parse_put_cards_that_died_this_turn_clause(text: str) -> Effect | None:
     return effect
 
 
+@memoised_reading
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -3286,6 +3290,7 @@ _EACH_PLAYER_SACRIFICES_COLORED_RE = re.compile(
 )
 
 
+@memoised_reading
 def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     """The spell-side twin of `_ability_effect_or_notice`, for `effect_for`.
 
@@ -3968,6 +3973,7 @@ def _parse_you_and_target_player_each_clause(clause: str) -> TargetedClause | No
     return effect
 
 
+@functools.lru_cache(maxsize=16384)
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -4414,6 +4420,7 @@ def _reorder_token_named_after_tail(text: str) -> str:
     return _TOKEN_WITH_TAIL_THEN_NAMED_RE.sub(swap, text)
 
 
+@memoised_clauses
 def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
     """Every clause of `text`, or `None` the moment one clause (or one
     anaphoric pair of clauses) matches nothing this wave reads.

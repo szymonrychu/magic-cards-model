@@ -3638,6 +3638,11 @@ def _unread_condition_matches(
             and event.subject_name == ability.face
         )
 
+    if _SOLVE_A_CASE_CONDITION.match(condition):
+        # CR 719.3a-b: you solve a Case when a Case you control becomes
+        # solved; the event's player is that Case's controller.
+        return event.event is ExtraTriggerEvent.CASE_SOLVED and event.player == controller
+
     if _ENLISTS_A_CREATURE_CONDITION.match(condition) and mine:
         # CR 702.154b: Guardian of New Benalia's own "Whenever this creature
         # enlists a creature, scry 2." - self-referential only (CR 700.7's
@@ -5827,6 +5832,7 @@ from ._common import (  # noqa: E402
     _ROLLS_DICE_CONDITION,
     _SEARCHES_LIBRARY_CONDITION,
     _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION,
+    _SOLVE_A_CASE_CONDITION,
     _STATE_COUNTER_TRIGGER_RE,
     _UNTAPPED_DURING_UNTAP_STEP_CONDITION,
     _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION,

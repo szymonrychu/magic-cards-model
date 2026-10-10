@@ -301,6 +301,12 @@ class ExtraTriggerEvent(StrEnum):
     #: 709.5d's cast-half unlock) and `Game.unlock_door` (CR 709.5e's special
     #: action and CR 709.5f's "unlock" instruction alike).
     DOOR_UNLOCKED = "door_unlocked"
+    #: "whenever you solve a Case" (Case File Auditor; CR 719.3a-b: a Case
+    #: "becomes solved", the solved designation). `GameEvent.subject_id` is
+    #: the Case, `GameEvent.player` its controller, the player who solved it.
+    #: **Emitted by:** `machines/designations.parse_becomes_solved_clause`,
+    #: the resolution of every Case's "To solve" end-step trigger.
+    CASE_SOLVED = "case_solved"
 
 
 class GameEvent(EngineModel):

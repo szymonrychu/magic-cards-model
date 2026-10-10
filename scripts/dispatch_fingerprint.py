@@ -107,7 +107,7 @@ def _ladder_def(module, entry: str) -> tuple[ast.FunctionDef, dict]:
     """The ladder's top-level def, found by name in the AST of the file that
     defines it (not the module's own file, which is a facade once split), and
     the globals the function resolves its names in."""
-    fn = getattr(module, entry)
+    fn = inspect.unwrap(getattr(module, entry))  # a memoised ladder keeps its def
     tree = _source_tree(inspect.getsourcefile(fn))
     defs = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
     return defs[entry], fn.__globals__

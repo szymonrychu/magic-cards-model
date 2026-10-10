@@ -2,7 +2,8 @@ import functools
 import re
 from collections.abc import Callable, Iterable
 from enum import StrEnum
-from typing import TYPE_CHECKING, NamedTuple
+from types import FunctionType
+from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
 from pydantic import ConfigDict
@@ -57,6 +58,78 @@ AbilityEffect = Callable[["Game", AbilityOnStack], None]
 #: `Game.resolve_targets`/`Game.controller_of` already take either, so one
 #: function serves both `Effect` and `AbilityEffect`.
 TargetedClause = Callable[["Game", "StackObject"], None]
+
+
+def _fresh_copy(reading: Any) -> Any:
+    """A new function object sharing `reading`'s code, cells, defaults and
+    attributes - a closure a reader built inside its own body
+    (`<locals>` in its qualified name). Anything else (a module-level
+    sentinel, whose identity callers compare) is handed back as is."""
+    if not isinstance(reading, FunctionType) or "<locals>" not in reading.__qualname__:
+        return reading
+    clone = FunctionType(
+        reading.__code__,
+        reading.__globals__,
+        reading.__name__,
+        reading.__defaults__,
+        reading.__closure__,
+    )
+    clone.__kwdefaults__ = reading.__kwdefaults__
+    clone.__qualname__ = reading.__qualname__
+    clone.__module__ = reading.__module__
+    clone.__doc__ = reading.__doc__
+    clone.__dict__.update(reading.__dict__)
+    return clone
+
+
+class memoised_reading[T]:  # noqa: N801 - used as a decorator
+    """Memoise a text reader on the (pure) text it was handed.
+
+    The pool prints the same sentence on many cards and a reading walks the
+    reader's whole dispatch ladder. Every call still gets its own function
+    object (`_fresh_copy`), which is what `unparsed_remainder`'s walk limit
+    and `same_closure` count on; the code and cells underneath are shared.
+    `cache_clear`/`cache_info` mirror a `functools` cache so the support
+    oracle's cold-pass test can reset it.
+    """
+
+    def __init__(self, reader: Callable[[str], T | None]) -> None:
+        self._reader = reader
+        self._readings: dict[str, T | None] = {}
+        # Instance attributes, not methods: the cold-pass test's cache walk
+        # clears every module-level object that has both, and must find this
+        # memo's instances, not the class.
+        self.cache_clear = self._readings.clear
+        self.cache_info = self._readings.__len__
+        functools.update_wrapper(self, reader)
+
+    def __call__(self, text: str) -> T | None:
+        if text in self._readings:
+            reading = self._readings[text]
+            return None if reading is None else _fresh_copy(reading)
+        reading = self._reader(text)
+        self._readings[text] = reading
+        return reading
+
+
+class memoised_clauses:  # noqa: N801 - used as a decorator
+    """`memoised_reading` for a clause-list reader taking `for_spell`: the
+    (pure) text and flag key the memo, and every caller gets its own list."""
+
+    def __init__(self, reader: Callable[..., list[TargetedClause] | None]) -> None:
+        self._readings: dict[tuple[str, bool], tuple[TargetedClause, ...] | None] = {}
+        self._reader = reader
+        self.cache_clear = self._readings.clear
+        self.cache_info = self._readings.__len__
+        functools.update_wrapper(self, reader)
+
+    def __call__(self, text: str, *, for_spell: bool) -> list[TargetedClause] | None:
+        key = (text, for_spell)
+        if key not in self._readings:
+            read = self._reader(text, for_spell=for_spell)
+            self._readings[key] = None if read is None else tuple(read)
+        stored = self._readings[key]
+        return None if stored is None else list(stored)
 
 
 def computed_permanents(

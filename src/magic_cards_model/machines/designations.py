@@ -143,6 +143,17 @@ def parse_becomes_solved_clause(text: str) -> Any:
             return
         if source.zone.value != "battlefield":
             return
+        if source.solved:
+            return
         source.solved = True
+        from .triggers import ExtraTriggerEvent, GameEvent
+
+        game.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.CASE_SOLVED,
+                subject_id=source.id,
+                player=source.controller,
+            )
+        )
 
     return effect

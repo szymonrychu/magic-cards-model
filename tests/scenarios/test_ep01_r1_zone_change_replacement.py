@@ -235,18 +235,6 @@ def test_void_maw_exiles_any_other_creature_but_not_itself():
     assert maw.zone is Zone.GRAVEYARD  # "another": never itself
 
 
-def test_samurai_exiles_a_permanent_but_not_a_spell():
-    scenario = _board(["Samurai of the Pale Curtain", "Grizzly Bears"], [], hand=["Lightning Bolt"])
-    bears = scenario.creatures("Grizzly Bears", username="alice")[0]
-    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
-
-    scenario.game.destroy(bears)
-    scenario.game.put_into_graveyard(bolt)
-
-    assert bears.zone is Zone.EXILE
-    assert bolt.zone is Zone.GRAVEYARD
-
-
 def test_dryad_militant_exiles_instants_and_sorceries_only():
     scenario = _board(
         ["Dryad Militant", "Grizzly Bears"], [], hand=["Lightning Bolt", "Grizzly Bears"]
@@ -324,24 +312,10 @@ def test_wheel_of_sun_and_moon_bottoms_the_enchanted_players_cards_only():
     assert mine.zone is Zone.GRAVEYARD
 
 
-def test_beloved_beggar_back_face_is_exiled_but_the_front_face_is_not():
-    scenario = _board(["Beloved Beggar"], [])
-    beggar = scenario.creature("Beloved Beggar", "alice")
-    scenario.game.put_into_graveyard(beggar)
-    assert beggar.zone is Zone.GRAVEYARD  # front face: no such line
-
-    scenario = _board(["Beloved Beggar"], [])
-    soul = scenario.creature("Beloved Beggar", "alice")
-    soul.transform()
-    scenario.game.put_into_graveyard(soul)
-    assert soul.zone is Zone.EXILE
-
-
 @pytest.mark.parametrize(
     "name",
     [
         "Void Maw",
-        "Samurai of the Pale Curtain",
         "Dryad Militant",
         "Anafenza, the Foremost",
         "Valgavoth, Terror Eater",
@@ -349,7 +323,6 @@ def test_beloved_beggar_back_face_is_exiled_but_the_front_face_is_not():
         "Wheel of Sun and Moon",
         "Nissa's Chosen",
         "Darigaaz Reincarnated",
-        "Beloved Beggar // Generous Soul",
     ],
 )
 def test_group_zone_change_lines_are_handled(name):

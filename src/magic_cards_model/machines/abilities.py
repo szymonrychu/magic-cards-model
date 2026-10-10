@@ -3297,6 +3297,7 @@ def _faces(card: Card) -> list[tuple[str, str]]:
     return [(name, text) for name, text in faces if text.strip()]
 
 
+@functools.lru_cache(maxsize=16384)
 def _strip_reminder(line: str) -> tuple[str, str | None]:
     """Split a line into its rules text and its reminder text (CR 207.2a)."""
     found = _REMINDER.findall(line)

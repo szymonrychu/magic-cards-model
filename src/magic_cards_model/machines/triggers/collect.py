@@ -114,6 +114,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.ROLLS_DICE})
     if _DOOR_UNLOCKED_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.DOOR_UNLOCKED})
+    if _SOLVE_A_CASE_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.CASE_SOLVED})
     if _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.PUT_INTO_GRAVEYARD})
     if _ENLISTS_A_CREATURE_CONDITION.match(lowered):
@@ -1920,6 +1922,7 @@ from ._common import (  # noqa: E402
     _ROLLS_DICE_CONDITION,
     _SEARCHES_LIBRARY_CONDITION,
     _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION,
+    _SOLVE_A_CASE_CONDITION,
     _STATE_COUNTER_TRIGGER_RE,
     _UNTAPPED_DURING_UNTAP_STEP_CONDITION,
     _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION,
