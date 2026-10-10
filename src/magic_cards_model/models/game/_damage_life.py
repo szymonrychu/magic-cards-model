@@ -312,6 +312,12 @@ class DamageLifeMixin:
         prevented." (Leyline of Punishment, Frenzied Baloth), read fresh off
         the battlefield like `life_gain_prohibited` (CR 604.2, CR 611.3a).
         """
+        from ...machines.damage_modification import (
+            created_damage_unpreventable,
+            spell_damage_unpreventable,
+            static_source_damage_unpreventable,
+        )
+
         if event.kind is not EventKind.DAMAGE:
             return None
         if event.unpreventable:
@@ -326,7 +332,15 @@ class DamageLifeMixin:
                     continue
                 text = (line.text or "").strip()
                 match = _DAMAGE_CANT_BE_PREVENTED_RE.fullmatch(text)
-                if match is None or (match.group("combat") and not event.combat):
+                if match is None:
+                    if (
+                        "can't be prevented" in text
+                        and static_source_damage_unpreventable(self, source, text, event)
+                        and self._still_has_static_line(source, text)
+                    ):
+                        return f"{source.name}: its damage can't be prevented (CR 615.12)"
+                    continue
+                if match.group("combat") and not event.combat:
                     continue
                 if not self._still_has_static_line(source, text):
                     continue
@@ -334,11 +348,6 @@ class DamageLifeMixin:
         # A resolved spell's own turn-long "Damage can't be prevented this
         # turn." held beside another effect it created (Insult) - recorded on
         # `created_replacements` rather than `casting_rule_effects`.
-        from ...machines.damage_modification import (
-            created_damage_unpreventable,
-            spell_damage_unpreventable,
-        )
-
         return created_damage_unpreventable(self, event) or spell_damage_unpreventable(self, event)
 
     # -- damage and life ---------------------------------------------------

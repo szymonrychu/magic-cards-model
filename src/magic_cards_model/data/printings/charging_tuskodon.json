@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "8e49960d-4b45-4d3b-9c6e-e7b717b4feaa",
+  "oracle_id": "1198d47a-4235-4678-bd2e-20f2a97b5924",
+  "multiverse_ids": [
+    439754
+  ],
+  "mtgo_id": 66647,
+  "arena_id": 66811,
+  "tcgplayer_id": 155705,
+  "cardmarket_id": 315420,
+  "name": "Charging Tuskodon",
+  "lang": "en",
+  "released_at": "2018-01-19",
+  "uri": "https://api.scryfall.com/cards/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa",
+  "scryfall_uri": "https://scryfall.com/card/rix/97/charging-tuskodon?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:35:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.jpg?1783935301",
+    "normal": "https://cards.scryfall.io/normal/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.jpg?1783935301",
+    "large": "https://cards.scryfall.io/large/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.jpg?1783935301",
+    "png": "https://cards.scryfall.io/png/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.png?1783935301",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.jpg?1783935301",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.jpg?1783935301",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.webp?1783935301",
+    "grid": "https://cards.scryfall.io/grid/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.webp?1783935301",
+    "display": "https://cards.scryfall.io/display/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.webp?1783935301",
+    "art": "https://cards.scryfall.io/art/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.webp?1783935301",
+    "crop": "https://cards.scryfall.io/crop/front/8/e/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa.webp?1783935301"
+  },
+  "mana_cost": "{3}{R}{R}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Dinosaur",
+  "oracle_text": "Trample\nIf this creature would deal combat damage to a player, it deals double that damage to that player instead.",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Trample",
+    "Double"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2f7e40fc-772d-4a85-bfdd-01653c41d0fa",
+  "set": "rix",
+  "set_name": "Rivals of Ixalan",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/2f7e40fc-772d-4a85-bfdd-01653c41d0fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Arix&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rix?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8e49960d-4b45-4d3b-9c6e-e7b717b4feaa/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1198d47a-4235-4678-bd2e-20f2a97b5924&unique=prints",
+  "collector_number": "97",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "It doesn't hold grudges. It runs them down and impales them.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Izzy",
+  "artist_ids": [
+    "2c3d2473-ff5d-4309-8194-e0b2def2ab65"
+  ],
+  "illustration_id": "e31842bb-c0c3-405f-98f9-54e1ccd8ead2",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16109,
+  "penny_rank": 14635,
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "1.99",
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": "0.68",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=439754&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCharging%2BTuskodon",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCharging%2BTuskodon",
+    "edhrec": "https://edhrec.com/route/?cc=Charging+Tuskodon"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F155705%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=315420&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/66647?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

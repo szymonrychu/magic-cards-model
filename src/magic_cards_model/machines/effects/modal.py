@@ -110,7 +110,10 @@ def reflexive_consequence_effect(text: str) -> AbilityEffect | None:
     sentence = _as_sentence(text)
     if _is_layer_effect_text(sentence) and parsed_layer_effects(sentence) is not None:
         return create_continuous_effect_of_ability
-    return None
+    # A whole-ability sentence whose "it" is the ability's own source ("When you
+    # do, prevent all combat damage that would be dealt to it this turn." -
+    # Oketra's Avenger, CR 701.43d's linked trigger).
+    return ABILITY_TEXT.run("s19", " ".join(text.split()))
 
 
 def _choose_a_color(

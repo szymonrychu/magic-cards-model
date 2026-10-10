@@ -1581,16 +1581,6 @@ REPLACEMENTS: dict[str, list[CardReplacement]] = {
             apply=_exile_and_gain_two_life,
         )
     ],
-    "Ancient Adamantoise": [
-        CardReplacement(
-            label=(
-                "all damage that would be dealt to you and other permanents "
-                "you control is dealt to this creature instead (CR 614.9)"
-            ),
-            applies=_adamantoise_applies,
-            apply=_redirect_damage_to_the_source,
-        )
-    ],
 }
 
 
@@ -3897,11 +3887,14 @@ def parsed_card_replacements(card: Card) -> list[CardReplacement]:
     would ever reach (see `_keyword_replacements`), and CR 614.17d's
     can't-enter effects, which the parser deliberately does not claim.
     """
+    from .prevention_statics import damage_static_replacements  # imports this module
+
     found: list[CardReplacement] = (
         _keyword_replacements(card)
         + _cant_enter_replacements(card)
         + _double_all_damage_replacements(_rules_lines(card.oracle_text or ""))
         + _damage_life_floor_replacements(_rules_lines(card.oracle_text or ""))
+        + damage_static_replacements(card, _rules_lines(card.oracle_text or ""))
     )
     for effect in parse_replacement_effects(card):
         compiled = _compile(effect)

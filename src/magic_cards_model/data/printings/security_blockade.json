@@ -1,0 +1,150 @@
+{
+  "object": "card",
+  "id": "e6250b31-8592-48b2-a877-3637c9ee7d49",
+  "oracle_id": "b4b397a9-85cb-4bdf-8c2e-a151a02a4208",
+  "multiverse_ids": [
+    270790
+  ],
+  "mtgo_id": 46659,
+  "mtgo_foil_id": 46660,
+  "tcgplayer_id": 66610,
+  "cardmarket_id": 258397,
+  "name": "Security Blockade",
+  "lang": "en",
+  "released_at": "2012-10-05",
+  "uri": "https://api.scryfall.com/cards/e6250b31-8592-48b2-a877-3637c9ee7d49",
+  "scryfall_uri": "https://scryfall.com/card/rtr/20/security-blockade?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:59:34Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.jpg?1783940374",
+    "normal": "https://cards.scryfall.io/normal/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.jpg?1783940374",
+    "large": "https://cards.scryfall.io/large/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.jpg?1783940374",
+    "png": "https://cards.scryfall.io/png/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.png?1783940374",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.jpg?1783940374",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.jpg?1783940374",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.webp?1783940374",
+    "grid": "https://cards.scryfall.io/grid/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.webp?1783940374",
+    "display": "https://cards.scryfall.io/display/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.webp?1783940374",
+    "art": "https://cards.scryfall.io/art/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.webp?1783940374",
+    "crop": "https://cards.scryfall.io/crop/front/e/6/e6250b31-8592-48b2-a877-3637c9ee7d49.webp?1783940374"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Enchantment \u2014 Aura",
+  "oracle_text": "Enchant land\nWhen this Aura enters, create a 2/2 white Knight creature token with vigilance.\nEnchanted land has \"{T}: Prevent the next 1 damage that would be dealt to you this turn.\"",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "67d3d039-248a-4eb8-be5c-12959b458fea",
+      "component": "token",
+      "name": "Knight",
+      "type_line": "Token Creature \u2014 Knight",
+      "uri": "https://api.scryfall.com/cards/67d3d039-248a-4eb8-be5c-12959b458fea"
+    },
+    {
+      "object": "related_card",
+      "id": "e6250b31-8592-48b2-a877-3637c9ee7d49",
+      "component": "combo_piece",
+      "name": "Security Blockade",
+      "type_line": "Enchantment \u2014 Aura",
+      "uri": "https://api.scryfall.com/cards/e6250b31-8592-48b2-a877-3637c9ee7d49"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "80b2374d-c5f1-403e-9772-f6c806fd275e",
+  "set": "rtr",
+  "set_name": "Return to Ravnica",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/80b2374d-c5f1-403e-9772-f6c806fd275e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Artr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rtr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e6250b31-8592-48b2-a877-3637c9ee7d49/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab4b397a9-85cb-4bdf-8c2e-a151a02a4208&unique=prints",
+  "collector_number": "20",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "James Ryman",
+  "artist_ids": [
+    "3852bbc9-11c0-4fe3-8722-a06ad7e2bcc5"
+  ],
+  "illustration_id": "d60a78d4-b1bb-4820-9e0d-6efe4657aa13",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 28834,
+  "prices": {
+    "usd": "0.05",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.19",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=270790&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSecurity%2BBlockade",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSecurity%2BBlockade",
+    "edhrec": "https://edhrec.com/route/?cc=Security+Blockade"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F66610%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=258397&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/46659?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

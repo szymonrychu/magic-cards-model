@@ -1,0 +1,151 @@
+{
+  "object": "card",
+  "id": "9883e973-54c3-4bec-91d8-22f2829cdfa2",
+  "oracle_id": "1b92501c-80fe-4ae7-834e-72f57ba41a6a",
+  "multiverse_ids": [
+    74471
+  ],
+  "mtgo_id": 22086,
+  "mtgo_foil_id": 22087,
+  "tcgplayer_id": 12531,
+  "cardmarket_id": 12759,
+  "name": "Sekki, Seasons' Guide",
+  "lang": "en",
+  "released_at": "2005-06-03",
+  "uri": "https://api.scryfall.com/cards/9883e973-54c3-4bec-91d8-22f2829cdfa2",
+  "scryfall_uri": "https://scryfall.com/card/sok/148/sekki-seasons-guide?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:02:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.jpg?1783944133",
+    "normal": "https://cards.scryfall.io/normal/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.jpg?1783944133",
+    "large": "https://cards.scryfall.io/large/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.jpg?1783944133",
+    "png": "https://cards.scryfall.io/png/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.png?1783944133",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.jpg?1783944133",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.jpg?1783944133",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.webp?1783944133",
+    "grid": "https://cards.scryfall.io/grid/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.webp?1783944133",
+    "display": "https://cards.scryfall.io/display/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.webp?1783944133",
+    "art": "https://cards.scryfall.io/art/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.webp?1783944133",
+    "crop": "https://cards.scryfall.io/crop/front/9/8/9883e973-54c3-4bec-91d8-22f2829cdfa2.webp?1783944133"
+  },
+  "mana_cost": "{5}{G}{G}{G}",
+  "cmc": 8.0,
+  "type_line": "Legendary Creature \u2014 Spirit",
+  "oracle_text": "Sekki enters with eight +1/+1 counters on it.\nIf damage would be dealt to Sekki, prevent that damage, remove that many +1/+1 counters from Sekki, and create that many 1/1 colorless Spirit creature tokens.\nSacrifice eight Spirits: Return this card from your graveyard to the battlefield.",
+  "power": "0",
+  "toughness": "0",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "9883e973-54c3-4bec-91d8-22f2829cdfa2",
+      "component": "combo_piece",
+      "name": "Sekki, Seasons' Guide",
+      "type_line": "Legendary Creature \u2014 Spirit",
+      "uri": "https://api.scryfall.com/cards/9883e973-54c3-4bec-91d8-22f2829cdfa2"
+    },
+    {
+      "object": "related_card",
+      "id": "3e55bca3-43a3-44a8-b673-b1d0cf3f203f",
+      "component": "token",
+      "name": "Spirit",
+      "type_line": "Token Creature \u2014 Spirit",
+      "uri": "https://api.scryfall.com/cards/3e55bca3-43a3-44a8-b673-b1d0cf3f203f"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4db16ad3-2b95-442f-bb6b-e9aa7fe7f769",
+  "set": "sok",
+  "set_name": "Saviors of Kamigawa",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4db16ad3-2b95-442f-bb6b-e9aa7fe7f769",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asok&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sok?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9883e973-54c3-4bec-91d8-22f2829cdfa2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1b92501c-80fe-4ae7-834e-72f57ba41a6a&unique=prints",
+  "collector_number": "148",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kev Walker",
+  "artist_ids": [
+    "f366a0ee-a0cd-466d-ba6a-90058c7a31a6"
+  ],
+  "illustration_id": "7c3f15ff-ffea-41d7-89fb-079741e13dd4",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18539,
+  "penny_rank": 9037,
+  "prices": {
+    "usd": "1.59",
+    "usd_foil": "15.09",
+    "usd_etched": null,
+    "eur": "1.14",
+    "eur_foil": "13.73",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=74471&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSekki%252C%2BSeasons%2527%2BGuide",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSekki%252C%2BSeasons%2527%2BGuide",
+    "edhrec": "https://edhrec.com/route/?cc=Sekki%2C+Seasons%27+Guide"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F12531%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12759&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/22086?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

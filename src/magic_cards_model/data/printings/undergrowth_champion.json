@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "d53104d8-5b9a-45b6-a2f9-b2c5d231a03d",
+  "oracle_id": "cb0eb84d-b41b-4147-aa7c-089b7fabd835",
+  "multiverse_ids": [
+    402083
+  ],
+  "mtgo_id": 58667,
+  "mtgo_foil_id": 58668,
+  "tcgplayer_id": 104814,
+  "cardmarket_id": 284446,
+  "name": "Undergrowth Champion",
+  "lang": "en",
+  "released_at": "2015-10-02",
+  "uri": "https://api.scryfall.com/cards/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d",
+  "scryfall_uri": "https://scryfall.com/card/bfz/197/undergrowth-champion?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:23:03Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.jpg?1783938183",
+    "normal": "https://cards.scryfall.io/normal/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.jpg?1783938183",
+    "large": "https://cards.scryfall.io/large/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.jpg?1783938183",
+    "png": "https://cards.scryfall.io/png/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.png?1783938183",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.jpg?1783938183",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.jpg?1783938183",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.webp?1783938183",
+    "grid": "https://cards.scryfall.io/grid/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.webp?1783938183",
+    "display": "https://cards.scryfall.io/display/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.webp?1783938183",
+    "art": "https://cards.scryfall.io/art/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.webp?1783938183",
+    "crop": "https://cards.scryfall.io/crop/front/d/5/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d.webp?1783938183"
+  },
+  "mana_cost": "{1}{G}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove a +1/+1 counter from this creature.\nLandfall \u2014 Whenever a land you control enters, put a +1/+1 counter on this creature.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Landfall"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "91719374-7ac5-4afa-ada8-5da964dcf1d4",
+  "set": "bfz",
+  "set_name": "Battle for Zendikar",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/91719374-7ac5-4afa-ada8-5da964dcf1d4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abfz&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bfz?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d53104d8-5b9a-45b6-a2f9-b2c5d231a03d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Acb0eb84d-b41b-4147-aa7c-089b7fabd835&unique=prints",
+  "collector_number": "197",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tyler Jacobson",
+  "artist_ids": [
+    "522af130-8db4-4b4b-950c-6e2b246339cf"
+  ],
+  "illustration_id": "d8885b8a-0c9c-4835-b6d9-2b801378ac2c",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8438,
+  "penny_rank": 8967,
+  "prices": {
+    "usd": "0.74",
+    "usd_foil": "4.69",
+    "usd_etched": null,
+    "eur": "0.82",
+    "eur_foil": "2.34",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=402083&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUndergrowth%2BChampion",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUndergrowth%2BChampion",
+    "edhrec": "https://edhrec.com/route/?cc=Undergrowth+Champion"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F104814%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=284446&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/58667?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

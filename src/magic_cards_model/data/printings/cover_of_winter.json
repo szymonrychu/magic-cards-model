@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299",
+  "oracle_id": "f85a157f-d7ec-4e61-97df-2ca851b6c666",
+  "multiverse_ids": [
+    121140
+  ],
+  "mtgo_id": 24555,
+  "mtgo_foil_id": 24556,
+  "tcgplayer_id": 14020,
+  "cardmarket_id": 13627,
+  "name": "Cover of Winter",
+  "lang": "en",
+  "released_at": "2006-07-21",
+  "uri": "https://api.scryfall.com/cards/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299",
+  "scryfall_uri": "https://scryfall.com/card/csp/3/cover-of-winter?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:49:33Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.jpg?1783943373",
+    "normal": "https://cards.scryfall.io/normal/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.jpg?1783943373",
+    "large": "https://cards.scryfall.io/large/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.jpg?1783943373",
+    "png": "https://cards.scryfall.io/png/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.png?1783943373",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.jpg?1783943373",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.jpg?1783943373",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.webp?1783943373",
+    "grid": "https://cards.scryfall.io/grid/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.webp?1783943373",
+    "display": "https://cards.scryfall.io/display/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.webp?1783943373",
+    "art": "https://cards.scryfall.io/art/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.webp?1783943373",
+    "crop": "https://cards.scryfall.io/crop/front/9/1/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299.webp?1783943373"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Snow Enchantment",
+  "oracle_text": "Cumulative upkeep {S} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it. {S} can be paid with one mana from a snow source.)\nIf a creature would deal combat damage to you and/or one or more creatures you control, prevent X of that damage, where X is the number of age counters on this enchantment.\n{S}: Put an age counter on this enchantment.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Cumulative upkeep"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1f4f105f-73e4-4f03-849e-82a204807847",
+  "set": "csp",
+  "set_name": "Coldsnap",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1f4f105f-73e4-4f03-849e-82a204807847",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acsp&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/csp?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/91d9bb89-d8f8-4dff-8b94-3f7b8aa8f299/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af85a157f-d7ec-4e61-97df-2ca851b6c666&unique=prints",
+  "collector_number": "3",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wayne Reynolds",
+  "artist_ids": [
+    "afc47cec-3ccc-404e-a8c6-4d83dd504271"
+  ],
+  "illustration_id": "ac03e17f-47f0-4cf2-a77b-9ea0d94f9272",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21335,
+  "penny_rank": 13439,
+  "prices": {
+    "usd": "0.44",
+    "usd_foil": "1.99",
+    "usd_etched": null,
+    "eur": "0.29",
+    "eur_foil": "1.23",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=121140&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCover%2Bof%2BWinter",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCover%2Bof%2BWinter",
+    "edhrec": "https://edhrec.com/route/?cc=Cover+of+Winter"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F14020%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=13627&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/24555?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "object": "card",
+  "id": "9b54945a-d355-40fd-b1fd-9ecb2d696de5",
+  "oracle_id": "be16e9d8-aa73-448b-919c-7d02e2e15911",
+  "multiverse_ids": [
+    446841
+  ],
+  "tcgplayer_id": 166838,
+  "cardmarket_id": 358757,
+  "name": "Hostility",
+  "lang": "en",
+  "released_at": "2018-06-08",
+  "uri": "https://api.scryfall.com/cards/9b54945a-d355-40fd-b1fd-9ecb2d696de5",
+  "scryfall_uri": "https://scryfall.com/card/cm2/105/hostility?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:25:41Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.jpg?1783934741",
+    "normal": "https://cards.scryfall.io/normal/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.jpg?1783934741",
+    "large": "https://cards.scryfall.io/large/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.jpg?1783934741",
+    "png": "https://cards.scryfall.io/png/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.png?1783934741",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.jpg?1783934741",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.jpg?1783934741",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.webp?1783934741",
+    "grid": "https://cards.scryfall.io/grid/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.webp?1783934741",
+    "display": "https://cards.scryfall.io/display/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.webp?1783934741",
+    "art": "https://cards.scryfall.io/art/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.webp?1783934741",
+    "crop": "https://cards.scryfall.io/crop/front/9/b/9b54945a-d355-40fd-b1fd-9ecb2d696de5.webp?1783934741"
+  },
+  "mana_cost": "{3}{R}{R}{R}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Elemental Incarnation",
+  "oracle_text": "Haste\nIf a spell you control would deal damage to an opponent, prevent that damage. Create a 3/1 red Elemental Shaman creature token with haste for each 1 damage prevented this way.\nWhen Hostility is put into a graveyard from anywhere, shuffle it into its owner's library.",
+  "power": "6",
+  "toughness": "6",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Haste"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "a271bdf3-2868-425d-987c-4ce272152a2f",
+      "component": "token",
+      "name": "Elemental Shaman",
+      "type_line": "Token Creature \u2014 Elemental Shaman",
+      "uri": "https://api.scryfall.com/cards/a271bdf3-2868-425d-987c-4ce272152a2f"
+    },
+    {
+      "object": "related_card",
+      "id": "9b54945a-d355-40fd-b1fd-9ecb2d696de5",
+      "component": "combo_piece",
+      "name": "Hostility",
+      "type_line": "Creature \u2014 Elemental Incarnation",
+      "uri": "https://api.scryfall.com/cards/9b54945a-d355-40fd-b1fd-9ecb2d696de5"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "2ba5b1a3-40ed-422e-981d-56753004dfc6",
+  "set": "cm2",
+  "set_name": "Commander Anthology Volume II",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/2ba5b1a3-40ed-422e-981d-56753004dfc6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acm2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cm2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9b54945a-d355-40fd-b1fd-9ecb2d696de5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abe16e9d8-aa73-448b-919c-7d02e2e15911&unique=prints",
+  "collector_number": "105",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Omar Rayyan",
+  "artist_ids": [
+    "256b61a2-b9af-4ff5-b485-47a61818f818"
+  ],
+  "illustration_id": "8096ae04-f429-4ba3-bb5d-3bf9f8dafc46",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 20579,
+  "penny_rank": 8716,
+  "prices": {
+    "usd": "0.24",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=446841&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHostility",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHostility",
+    "edhrec": "https://edhrec.com/route/?cc=Hostility"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F166838%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=358757&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Hostility&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
