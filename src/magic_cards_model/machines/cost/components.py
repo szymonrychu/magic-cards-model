@@ -416,7 +416,7 @@ class CostComponent(EngineModel):
     requirement: CardRequirement | None = None
     """What the chosen cards have to be, when the cost says (CR 118.3)."""
 
-    shared_creature_type: bool = False
+    shared_creature_type: bool = Field(default=False, repr=False)
     """`ComponentKind.TAP` only: "... that share a creature type" (Weight of
     Conscience) - the chosen creatures must all have at least one creature
     type in common (CR 205.3m)."""
