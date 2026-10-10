@@ -556,7 +556,13 @@ class ContinuousMixin:
         )
 
     def add_counters(
-        self: "Game", permanent: CardState, kind: str, amount: int = 1, *, putter: str | None = None
+        self: "Game",
+        permanent: CardState,
+        kind: str,
+        amount: int = 1,
+        *,
+        putter: str | None = None,
+        modular: bool = False,
     ) -> int:
         """Put counters on a permanent, replacement effects included (CR 122.1).
 
@@ -592,6 +598,7 @@ class ContinuousMixin:
                 counter_kind=kind,
                 amount=amount,
                 putter=putter or self._counter_putter(permanent.controller),
+                modular=modular,
             )
             apply_replacements(self, event)
             if event.amount <= 0:
@@ -950,6 +957,12 @@ class ContinuousMixin:
             hand_size_by_player={
                 player.username: len(player.hand) for player in self.players_in_game
             },
+            # CR 401.1: Living Conundrum's "As long as there are no cards in
+            # your library" reads a library size, no more a characteristic
+            # than a hand size is.
+            library_size_by_player={
+                player.username: len(player.library) for player in self.players_in_game
+            },
             # CR 702.195b's enduring story, which "As long as you have an
             # enduring story, ..." statics read off their controller.
             enduring_story_players=frozenset(
@@ -1183,6 +1196,19 @@ class ContinuousMixin:
         match = cls._ABILITY_WORD_PREFIX_RE.match(text.strip())
         without_word = match.group("rest").strip() if match else text.strip()
         return cls._TRAILING_REMINDER_TEXT_RE.sub("", without_word).strip()
+
+    def hand_is_revealed(self: "Game", username: str) -> bool:
+        """Whether `username` controls a permanent that makes them "play with
+        your hand revealed" right now (CR 701.20a: a reveal shows the cards to
+        every player) - read fresh off the computed board every call, like
+        `controls_look_at_top_permission`, so it ends when the permanent does."""
+        board = self.computed_board()
+        return any(
+            self._PLAY_WITH_HAND_REVEALED_RE.fullmatch(self._static_line_without_ability_word(line))
+            is not None
+            for permanent in self.permanents_controlled_by(username)
+            for line in board.of(permanent).abilities
+        )
 
     def controls_look_at_top_permission(self: "Game", username: str) -> bool:
         """Whether `username` controls a permanent granting CR 611.3d's "you
@@ -1732,6 +1758,7 @@ class ContinuousMixin:
         line = cls._static_line_without_ability_word(text)
         return (
             cls._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(line) is not None
+            or cls._PLAY_WITH_HAND_REVEALED_RE.fullmatch(line) is not None
             or cls._REVEALS_EACH_CARD_DRAWN_RE.fullmatch(line) is not None
             or cls._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(line) is not None
             or cls._SPELLS_YOU_CAST_HAVE_IMPROVISE_RE.fullmatch(line) is not None

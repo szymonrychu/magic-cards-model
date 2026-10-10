@@ -676,6 +676,14 @@ _PLACE = r"in (?:your|its owner's|a) (?:graveyard|hand|library)|on the battlefie
 _SELF_IN_PLACES = re.compile(
     rf"{_SELF} is (?:still )?(?P<places>(?:{_PLACE})(?: or (?:{_PLACE}))*)"
 )
+#: Darigaaz Reincarnated's "if this card is exiled with an egg counter on it":
+#: the counter rider narrows the condition, it does not move the zone. Read for
+#: the zones the source functions in only - the counter itself is judged by the
+#: dedicated counter reader, which `_SELF_IN_PLACES` must not shadow.
+_SELF_IN_PLACES_WITH_COUNTER = re.compile(
+    rf"{_SELF} is (?:still )?(?P<places>(?:{_PLACE})(?: or (?:{_PLACE}))*)"
+    r"(?: with (?:an?|\w+) [\w+/-]+ counters? on it)?"
+)
 _SELF_ONLY_IN_GRAVEYARD = re.compile(
     rf"{_SELF} is the only (?:(?P<quality>{_CARD_QUALITY}) )?card in your graveyard"
 )
@@ -706,7 +714,7 @@ def zones_the_source_names(clause: str, source: "CardState") -> "frozenset[Zone]
     from ...models.zone import Zone
 
     text = " ".join(clause.strip().rstrip(".").strip().split()).lower()
-    if (match := _SELF_IN_PLACES.fullmatch(text)) and _names_the_source(
+    if (match := _SELF_IN_PLACES_WITH_COUNTER.fullmatch(text)) and _names_the_source(
         match.group("self"), source
     ):
         return frozenset(_place_zone(place) for place in match.group("places").split(" or "))

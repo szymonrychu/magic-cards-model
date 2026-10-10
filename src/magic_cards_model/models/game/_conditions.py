@@ -882,6 +882,22 @@ class ConditionsMixin:
                 turn=self._turns_taken(),
                 carried=False,
             )
+        # "Play with your hand revealed." (Enduring Renewal) - every card in a
+        # revealed hand is known to every viewer (CR 701.20a), read fresh like
+        # the look-at-the-top permission above.
+        for seat in self.players:
+            if seat.hand and self.hand_is_revealed(seat.username):
+                for held in seat.hand:
+                    found[held.id] = KnownCard(
+                        card_id=held.id,
+                        card_name=held.name,
+                        owner=seat.username,
+                        zone=Zone.HAND,
+                        index_from_top=None,
+                        source='a static "play with your hand revealed" grant',
+                        turn=self._turns_taken(),
+                        carried=False,
+                    )
         return list(found.values())
 
     def _live_reveal(self: "Game", reveal: Reveal, viewer: str) -> KnownCard | None:

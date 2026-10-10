@@ -3399,13 +3399,20 @@ def _merge_disjunctive_sacrifice_cost(parts: list[str]) -> list[str]:
     while index < total:
         part = parts[index]
         lowered = part.strip().lower()
-        if lowered.startswith(("sacrifice ", "discard ", "exile ")) and index + 1 < total:
+        from_among = lowered.startswith("remove ") and " from among " in lowered
+        if (
+            lowered.startswith(("sacrifice ", "discard ", "exile ")) or from_among
+        ) and index + 1 < total:
+            # CR 118.3: "Remove three counters from among other artifacts,
+            # creatures, and planeswalkers you control" (Tekuthal) is one cost
+            # whose list closes on "and".
+            closers = ("or ", "and ") if from_among else ("or ",)
             group = [part]
             cursor = index + 1
             closed = False
             while cursor < total:
                 candidate = parts[cursor]
-                if candidate.strip().lower().startswith("or "):
+                if candidate.strip().lower().startswith(closers):
                     group.append(candidate)
                     cursor += 1
                     closed = True
@@ -4379,9 +4386,8 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # Flagstones of Trokair spells that phrase out instead of saying "dies",
     # and the two are the same event by definition. "die" (no s) is the
     # plural form printed on "one or more other Cats you control die".
-    if (
-        re.search(r"\bdi(?:es|e)\b", lowered)
-        or "put into a graveyard from the battlefield" in lowered
+    if re.search(r"\bdi(?:es|e)\b", lowered) or re.search(
+        r"\bput into (?:a|your) graveyard from the battlefield\b", lowered
     ):
         return TriggerEvent.DIES
     # CR 508.3f/509.3g/702.68a: "attacks [a player] and isn't blocked" -

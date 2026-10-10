@@ -1095,6 +1095,57 @@ class CopyNextSpellYouCast(DelayedEffectSpecBase):
             )
 
 
+class SpellEntersWithAdditionalCounter(DelayedEffectSpecBase):
+    """ "When you next cast a creature spell this turn, that creature enters
+    with an additional +1/+1 counter on it." (Kumano Faces Kakkazan's chapter
+    II) - the delayed half. The cast spell is found by id (it may have been
+    countered in response, CR 608.2b does not apply: no target), and its cast
+    record gains one counter, which `replacement._cast_permission_rider_
+    modifiers` applies as CR 614.1c's "enters with" on the permanent the spell
+    becomes (CR 400.7d carries the record across)."""
+
+    kind: Literal["spell_enters_with_additional_counter"] = "spell_enters_with_additional_counter"
+
+    counter_kind: str
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        record = game.cast_record_of(spell) if isinstance(spell, CardState) else None
+        if record is not None and spell.zone is Zone.STACK:
+            record.enters_with_counters.append(self.counter_kind)
+
+
+class ReturnThatCardToBattlefieldUnderOwner(DelayedEffectSpecBase):
+    """ "When it's put into a graveyard this turn, return that card to the
+    battlefield under its owner's control." (Melira, the Living Cure) - the
+    delayed half. The watched permanent is on the battlefield when the ability
+    is created, so (CR 400.7) the only way "it" reaches a graveyard is straight
+    off the battlefield, which is the `DIES` event; the card is the event's
+    subject, and returns only if it is still in that graveyard as the very
+    object the event named (CR 603.7c)."""
+
+    kind: Literal["return_that_card_to_battlefield_under_owner"] = (
+        "return_that_card_to_battlefield_under_owner"
+    )
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        card_state = game.find_by_id(event.subject_id)
+        if (
+            not isinstance(card_state, CardState)
+            or card_state.zone is not Zone.GRAVEYARD
+            or card_state.owner is None
+            or card_state.zone_change_stamp != event.zone_change_stamp
+        ):
+            return
+        game.put_onto_battlefield(card_state, card_state.owner)
+
+
 class CopyNextSpellWithinManaValue(DelayedEffectSpecBase):
     """ "When you next cast an instant or sorcery spell with mana value `<N>`
     or less this turn, copy that spell." (Dual Strike, Gadwick's First Duel's
@@ -1342,6 +1393,25 @@ class ReflexivePayManaConsequence(DelayedEffectSpecBase):
         consequence_effect = reflexive_pay_consequence_effect(trigger.text)
         if consequence_effect is not None:
             consequence_effect(game, ability)
+
+
+class ReflexiveMayPayManaIfYouDo(DelayedEffectSpecBase):
+    """ "You may pay `{N}`. If you do, `<consequence>`." as the body of a
+    reflexive ability (CR 603.12 + CR 118.12) - the "When you do, you may pay
+    {2}. If you do, create a 1/1 ... Pest" rider on Valentin, Dean of the
+    Vein's dies replacement (`machines/replacement/other_statics.py`). The
+    payment and its consequence resolve together on this one ability, read by
+    `machines/effects/mana.py`'s `_parse_may_pay_mana_if_you_do_clause`.
+    """
+
+    kind: Literal["reflexive_may_pay_mana_if_you_do"] = "reflexive_may_pay_mana_if_you_do"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects.mana import _parse_may_pay_mana_if_you_do_clause
+
+        effect = _parse_may_pay_mana_if_you_do_clause(trigger.text)
+        if effect is not None:
+            effect(game, ability)
 
 
 class ReflexiveMandatoryTokenDamageConsequence(DelayedEffectSpecBase):
@@ -2287,6 +2357,8 @@ DelayedEffectSpec = Annotated[
     | PayOrLoseTheGame
     | CombatDamageToPlayerDraw
     | CopyNextSpellYouCast
+    | SpellEntersWithAdditionalCounter
+    | ReturnThatCardToBattlefieldUnderOwner
     | CopyNextSpellWithinManaValue
     | NextSpellCannotBeCountered
     | DelayedBlinkReturnWithRider
@@ -2294,6 +2366,7 @@ DelayedEffectSpec = Annotated[
     | DungeonRoomAbility
     | ReflexivePayEnergyConsequence
     | ReflexivePayManaConsequence
+    | ReflexiveMayPayManaIfYouDo
     | ReflexiveMandatoryTokenDamageConsequence
     | ReflexiveCounterCountConsequence
     | ReflexiveAttachSubjectToTargetConsequence

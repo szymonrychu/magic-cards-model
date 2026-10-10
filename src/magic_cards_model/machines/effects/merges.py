@@ -4572,7 +4572,7 @@ _MAY_REVEAL_FROM_AMONG_THEM_RE = re.compile(
 #: sentence's tail; "them" is Reality Heist's own plural for a quantity that
 #: can take more than one, "the revealed cards" is Lead the Stampede's.
 _PUT_IT_OR_THEM_INTO_YOUR_HAND_RE = re.compile(
-    r"^put (?:it|them|the revealed cards) into your hand$", re.IGNORECASE
+    r"^put (?:it|them|that card|the revealed cards) into your hand$", re.IGNORECASE
 )
 #: "put the rest on the bottom of your library in any order" - Duskwatch
 #: Recruiter's own third sentence - **or** "... in a random order", which
@@ -5595,7 +5595,10 @@ def _merge_reveal_top_put_all_quality_to_hand_rest_elsewhere_clauses(
                     player, rest, source=source, source_id=source_id
                 )
             # Under every card already there (CR 401.2), each revealed card
-            # once (CR 400.7).
+            # once (CR 400.7): lifted off the top first, or it would be listed
+            # twice.
+            for state in rest:
+                player.library.remove(state)
             player.library.extend(rest)
             player.note_library_changed(placed=rest)
         else:
@@ -5832,6 +5835,52 @@ def _merge_look_top_one_to_hand_exile_rest_clauses(
             game.exile_cards(rest)
 
     return 2, effect
+
+
+_PUT_THE_OTHER_INTO_YOUR_HAND_RE = re.compile(
+    r"^(?:and )?put the other into your hand$", re.IGNORECASE
+)
+
+
+def _merge_look_top_exile_one_other_to_hand_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Ashiok, Wicked Manipulator's +1: "Look at the top two cards of your
+    library. Exile one of them and put the other into your hand." - the same
+    CR 608.2d one-to-hand question as Browse, the rest exiled."""
+    if index + 2 >= len(clauses):
+        return None
+    look_match = _LOOK_AT_TOP_N_CARDS_RE.fullmatch(clauses[index].strip())
+    if look_match is None:
+        return None
+    if _EXILE_ONE_OF_THEM_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+    if _PUT_THE_OTHER_INTO_YOUR_HAND_RE.fullmatch(clauses[index + 2].strip()) is None:
+        return None
+    count = parse_count(look_match.group("count"))
+    if count != 2:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        moved, rest = game.look_at_top_and_split(
+            player,
+            count,
+            source=source,
+            prompt="put one into your hand, exile the other",
+            moved_label="your hand",
+            kept_label="exile",
+            source_id=source_id_of(stack_object),
+            moved_amount=1,
+            moved_exact=True,
+        )
+        for state in moved:
+            player.add(state, Zone.HAND)
+        if rest:
+            game.exile_cards(rest)
+
+    return 3, effect
 
 
 def _merge_look_top_hand_bottom_exile_play_clauses(

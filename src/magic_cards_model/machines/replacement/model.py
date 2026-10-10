@@ -393,6 +393,9 @@ class EventKind(StrEnum):
     #: event is raised *before* the move and carries `replaced` rather than
     #: an amount: there is nothing to reduce, only something to call off.
     DESTROY = "destroy"
+    #: A player is about to begin an extra turn (CR 500.7, 614.10): carries
+    #: `player` and `replaced`, like `LOSE_THE_GAME` - a skip calls it off.
+    BEGIN_EXTRA_TURN = "begin_extra_turn"
     #: A player is about to draw one card (CR 121.1, 121.6, 614.11).
     DRAW = "draw"
     #: A player is about to gain life (CR 119.3).
@@ -433,6 +436,25 @@ class EventKind(StrEnum):
     #: (see `happens` below) - the same shape `DESTROY` already uses for a
     #: yes/no event with nothing to scale.
     LOSE_THE_GAME = "lose_the_game"
+    #: A player is about to search their library (CR 701.23a): `search_limit`
+    #: is how many cards from the top they may look at (Aven Mindcensor).
+    SEARCH = "search"
+    #: A player is about to mill cards (CR 701.17a): `amount` is how many.
+    MILL = "mill"
+    #: A player is about to flip coins (CR 705.1, 614.1a): `amount` coins are
+    #: flipped and `ignore` of them are ignored (Krark's Thumb).
+    FLIP_COIN = "flip_coin"
+    #: A player is about to proliferate (CR 701.34a): `amount` times.
+    PROLIFERATE = "proliferate"
+    #: A permanent is about to explore (CR 701.44a): `card` explores for
+    #: `player`, who controls it.
+    EXPLORE = "explore"
+    #: A player is about to roll dice (CR 706.2): `amount` dice, `ignore` of the
+    #: lowest rolls ignored (Pixie Guide).
+    ROLL_DICE = "roll_dice"
+    #: A permanent is about to assemble `amount` Contraptions (CR 701.45a,
+    #: Steamflogger Boss): `card` is the assembling Rigger.
+    ASSEMBLE = "assemble"
 
 
 @dataclass
@@ -629,6 +651,29 @@ class ReplaceableEvent:
     #: terminate.
     extra: list[TokenDefinition] = field(default_factory=list)
 
+    #: True for a `GAIN_LIFE` that a source's lifelink causes (CR 702.15b) - not
+    #: "a spell or ability" (Rain of Gore's cause).
+    lifelink: bool = False
+
+    #: Where in its owner's library a `ZONE_CHANGE` redirected to `Zone.LIBRARY`
+    #: lands: "top" or "bottom" (CR 401.4 leaves a pile put on the bottom in
+    #: any order), `None` for the shuffle-it-in default (CR 701.24c).
+    library_position: Literal["top", "bottom"] | None = None
+
+    #: `SEARCH`: how many cards from the top of the library may be searched,
+    #: `None` for the whole library (CR 701.23a, Aven Mindcensor).
+    search_limit: int | None = None
+    #: `FLIP_COIN` / `ROLL_DICE`: how many of the flips or rolls are ignored
+    #: (CR 705.1, 706.2; Krark's Thumb ignores a losing flip, Pixie Guide the lowest roll).
+    ignore: int = 0
+    #: True for a `LOSE_LIFE` that is the payment of a cost or of "you may pay N
+    #: life" (CR 118.3b, 119.4) rather than an effect's "you lose N life".
+    payment: bool = False
+    #: True for an `ADD_COUNTERS` that a modular triggered ability puts (CR 702.43a).
+    modular: bool = False
+    #: The card whose cycling ability caused a `DRAW` (CR 702.29a), else `None`.
+    cycled_card: CardState | None = None
+
     #: A `DESTROY` that a replacement effect called off (CR 614.8, CR 701.8c).
     #: The destruction simply does not happen; the permanent stays where it is.
     replaced: bool = False
@@ -655,7 +700,7 @@ class ReplaceableEvent:
         """
         if self.kind in (EventKind.DAMAGE, EventKind.LOSE_LIFE):
             return self.amount > 0
-        if self.kind in (EventKind.DESTROY, EventKind.LOSE_THE_GAME):
+        if self.kind in (EventKind.DESTROY, EventKind.LOSE_THE_GAME, EventKind.BEGIN_EXTRA_TURN):
             return not self.replaced
         return True
 
@@ -694,6 +739,11 @@ class CardReplacement:
     #: A prevention effect (CR 615.1a) rather than a replacement one - what
     #: CR 615.12's "can't be prevented" turns into a no-op.
     prevention: bool = False
+    #: The card's own "would be put into a graveyard from anywhere" line: it
+    #: functions in every zone the card could be moved from (CR 113.6b), not
+    #: only on the battlefield, so `applicable_effects` reads it off the moved
+    #: card itself when that card is not a permanent.
+    anywhere: bool = False
 
 
 @dataclass(frozen=True)
@@ -749,6 +799,23 @@ def leaves_the_battlefield_not_to_exile(event: ReplaceableEvent) -> bool:
         and event.destination is not None
         and event.destination is not Zone.EXILE
     )
+
+
+def _granted_line_replacements(card: Card, granted: Iterable[str]) -> list[CardReplacement]:
+    """The replacement effects of quoted lines another permanent grants this one
+    ("All Slivers have "If this permanent would be put into a graveyard, you may
+    put it on top of its owner's library instead.""), read exactly as if printed
+    on it (CR 613.1f, CR 113.6)."""
+    found: list[CardReplacement] = []
+    for line in granted:
+        lowered = line.lower()
+        if " would " not in lowered or "instead" not in lowered:
+            continue
+        for effect in _parse_oracle_text(line, face=None, names=_names_of(card)):
+            compiled = _compile(effect)
+            if compiled is not None:
+                found.append(compiled)
+    return found
 
 
 def _leave_exile_line_replacements(lines: Iterable[str]) -> list[CardReplacement]:
@@ -862,6 +929,7 @@ def replacements_of_state(
         + _leave_exile_line_replacements(chars.abilities)
         + _damage_life_floor_replacements(_rules_lines("\n".join(chars.abilities)))
         + damage_static_replacements(card, _rules_lines("\n".join(chars.abilities)))
+        + _granted_line_replacements(card, permanent.granted_ability_texts)
     )
     if "Class" not in chars.subtypes:
         # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
@@ -1027,6 +1095,32 @@ class UnreadableCopyExceptionNotice(EngineModel):
     source_id: UUID
     source_name: str
     text: str
+
+
+def _anywhere_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """A card's own "from anywhere" zone-change replacement, read off the card
+    being moved when it is not on the battlefield (CR 113.6b, CR 614.1a): the
+    object generating the effect is the object moving, in hand, library,
+    graveyard or on the stack."""
+    card = event.card
+    if event.kind is not EventKind.ZONE_CHANGE or card is None or card.zone is Zone.BATTLEFIELD:
+        return []
+    front = card.up_face_name or (card.card.card_faces[0].name if card.card.card_faces else None)
+    found: list[ApplicableEffect] = []
+    for index, effect in enumerate(parse_replacement_effects(card.card)):
+        if effect.face not in (None, front):
+            continue
+        compiled = _compile(effect)
+        if compiled is not None and compiled.anywhere and compiled.applies(game, card, event):
+            found.append(
+                ApplicableEffect(
+                    key=f"{card.id}:anywhere:{index}",
+                    source=card,
+                    label=compiled.label,
+                    apply=compiled.apply,
+                )
+            )
+    return found
 
 
 def _leaving_the_stack(event: ReplaceableEvent) -> bool:
@@ -2034,8 +2128,10 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
         found.extend(_bloodthirst_entering_counters(game, event))
         found.extend(_vanishing_entering_counters(game, event))
         found.extend(_group_entering_counters(game, event))
+        found.extend(_modular_entering_counters(game, event))
 
     found.extend(_stack_replacements(game, event))
+    found.extend(_anywhere_effects(game, event))
 
     # One board, hoisted out of the loop below: `computed_board()` recomputes
     # the whole battlefield on every call (CR 613.5), and `replacements_of_
@@ -2192,6 +2288,7 @@ from .enters import (  # noqa: E402
     _cant_enter_replacements,
     _group_entering_counters,
     _impending_entering_counters,
+    _modular_entering_counters,
     _refers_to_self,
     _self_enters_modifiers,
     _vanishing_entering_counters,

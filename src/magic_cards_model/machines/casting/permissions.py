@@ -504,6 +504,10 @@ def granted_cast_options(
                 option = _linked_exile_static_cast_option(
                     text, game, spell, caster, origin_zone, permanent
                 )
+            if option is None:
+                option = _opponents_exile_counter_cast_option(
+                    text, game, spell, caster, origin_zone
+                )
             if option is not None:
                 found.append(GrantedCastOption(source_name=permanent.name, option=option))
     # "You may cast creature spells from your graveyard using their sneak
@@ -601,7 +605,8 @@ def _cast_spells_from_a_zone(
 #: in addition to paying its other costs") is not this shape.
 _ONCE_EACH_TURN_CAST_FROM_GRAVEYARD = re.compile(
     r"^Once during each of your turns, you may cast an? (?P<what>[\w' -]+?) spell "
-    r"from your graveyard\.(?P<tail>.*)$",
+    r"from your graveyard(?: by sacrificing (?P<sacrifice>a creature) in addition to paying "
+    r"its other costs)?\.(?P<tail>.*)$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -665,6 +670,13 @@ def _once_each_turn_cast_from_graveyard(
         timing=timing,
         exile_instead_of_graveyard=bool(match.group("tail").strip()),
         once_per_turn_key=key,
+        # Maestros Ascendancy: "by sacrificing a creature in addition to paying
+        # its other costs" (CR 601.2f), the creature chosen at CR 601.2b.
+        additional_cost=(
+            total_cost_for_phrase(f"Sacrifice {match.group('sacrifice')}")
+            if match.group("sacrifice")
+            else None
+        ),
     )
 
 
@@ -710,6 +722,7 @@ def _graveyard_cast_grant_option(
 _STATIC_ZONE_CAST_PERMISSION_RE = re.compile(
     r"^(?P<during>during your turn, )?you may (?P<lands>play lands and )?cast "
     r"(?:(?P<what>[\w' ,-]+?) )?spells"
+    r"(?: that have an? (?P<ability>[a-z]+) ability)?"
     r"(?: with (?P<stat>power or toughness|power|toughness|mana value) (?P<n>\d+) or "
     r"(?P<direction>less|greater))?"
     r" from (?P<zone>your graveyard|the top of your library)"
@@ -752,6 +765,9 @@ class StaticZoneCastPermission(EngineModel):
     """"power or toughness", "power", "toughness" or "mana value"."""
     bound: int | None = None
     greater: bool = False
+    has_ability: str | None = None
+    """"spells that have a cycling ability": the keyword the spell must carry
+    (CR 702.29f counts every `[type]cycling`)."""
     life: int = 0
     """Life paid in addition to the spell's other costs (CR 601.2f, CR 119.4)."""
     rider_type: str | None = None
@@ -812,6 +828,7 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
         stat=match.group("stat").lower() if match.group("stat") else None,
         bound=int(match.group("n")) if match.group("n") else None,
         greater=(match.group("direction") or "").lower() == "greater",
+        has_ability=(match.group("ability") or "").lower() or None,
         life=int(match.group("life") or 0),
         rider_type=rider_type,
         rider_counter=rider_counter,
@@ -822,6 +839,15 @@ def reads_static_zone_cast_permission_line(text: str) -> bool:
     """What `support.py` asks before crediting the line: whether
     `static_zone_cast_permission` reads all of it."""
     return static_zone_cast_permission(text) is not None
+
+
+def _has_keyword_ability(spell: CardState, ability: str) -> bool:
+    """Whether the spell's card has a `<ability>` ability - CR 702.29f's "every
+    typecycling ability is a cycling ability" included."""
+    return any(
+        keyword.lower() == ability or (ability == "cycling" and keyword.lower().endswith("cycling"))
+        for keyword in spell.card.keywords
+    )
 
 
 def _within_bound(spell: CardState, permission: StaticZoneCastPermission) -> bool:
@@ -883,6 +909,8 @@ def _static_zone_cast_option(
         if turn is None or turn.active_player != caster:
             return None
     if permission.quality and not spell_has_quality(spell, permission.quality):
+        return None
+    if permission.has_ability and not _has_keyword_ability(spell, permission.has_ability):
         return None
     if not _within_bound(spell, permission):
         return None
@@ -1160,6 +1188,73 @@ def _linked_exile_static_cast_option(
         once_per_turn_key=key,
         additional_cost=additional,
         enters_with_counters=(read.rider_counter,) if read.rider_counter else (),
+    )
+
+
+#: "You may cast spells from among cards in exile your opponents own with ice
+#: counters on them, and you may spend mana from snow sources as though it
+#: were mana of any color to cast those spells." - Draugr Necromancer. CR
+#: 601.3's permission over the cards, owned by an opponent (CR 108.3), that
+#: carry the named counter, plus CR 609.4b's spend-as-any-color narrowed to
+#: snow sources.
+_OPPONENTS_EXILE_COUNTER_CAST_RE = re.compile(
+    r"^you may cast spells from among cards in exile your opponents own with "
+    r"(?P<counter>[a-z+/-]+) counters on them"
+    r"(?P<snow>, and you may spend mana from snow sources as though it were mana of any "
+    r"color to cast those spells)?\.?$",
+    re.IGNORECASE,
+)
+
+
+class OpponentsExileCounterCast(EngineModel):
+    """One `_OPPONENTS_EXILE_COUNTER_CAST_RE` line, read."""
+
+    model_config = ConfigDict(frozen=True)
+
+    counter: str
+    snow_any_color: bool = False
+
+
+@lru_cache(maxsize=512)
+def opponents_exile_counter_cast(text: str) -> OpponentsExileCounterCast | None:
+    match = _OPPONENTS_EXILE_COUNTER_CAST_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    return OpponentsExileCounterCast(
+        counter=match.group("counter").lower(), snow_any_color=match.group("snow") is not None
+    )
+
+
+def reads_opponents_exile_counter_cast_line(text: str) -> bool:
+    """What `support.py` asks before crediting the line."""
+    return opponents_exile_counter_cast(text) is not None
+
+
+def _opponents_exile_counter_cast_option(
+    text: str, game: Any, spell: CardState, caster: str, origin_zone: Zone
+) -> KeywordCastOption | None:
+    """`opponents_exile_counter_cast`'s grant for `spell`, or None: `spell` is
+    in exile, owned by an opponent of the caster, and carries the counter
+    (read off the announced copy, since CR 122.2 strips counters when the
+    card moves to the stack)."""
+    read = opponents_exile_counter_cast(text)
+    if (
+        read is None
+        or game is None
+        or origin_zone is not Zone.EXILE
+        or spell.zone is not Zone.EXILE
+    ):
+        return None
+    owner = spell.owner or caster
+    if owner == caster or read.counter not in spell.counters:
+        return None
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION,
+        rule="CR 601.3, CR 609.4b",
+        zone=Zone.EXILE,
+        pays_mana_cost=True,
+        timing=CastTiming.OWN,
+        snow_any_color=read.snow_any_color,
     )
 
 

@@ -1945,6 +1945,22 @@ class TurnSbaMixin:
             return bool(self.pending_triggers) or bool(self.stack)
         return self.turn.grants_priority
 
+    def _skip_replaced_extra_turns(self: "Game") -> None:
+        """CR 614.10: "If a player would begin an extra turn, that player skips
+        that turn instead" (Ugin's Nexus). Each extra turn about to begin is
+        offered to the replacement effects as `EventKind.BEGIN_EXTRA_TURN` and,
+        if one replaced it, spent without being taken (CR 500.7: the most
+        recently created turn comes first)."""
+        assert self.turn is not None
+        while (username := self.turn.pending_extra_turn()) is not None:
+            event = apply_replacements(
+                self,
+                ReplaceableEvent(kind=EventKind.BEGIN_EXTRA_TURN, player=self.player(username)),
+            )
+            if event.happens:
+                return
+            self.turn.skip_pending_extra_turn()
+
     def skip_next_turns(self: "Game", username: str, count: int = 1) -> None:
         """`username` skips their next `count` turns (CR 614.10, CR 614.10a) -
         Ral Zarek, Guest Lecturer's own coin-flip "−7"."""
@@ -2201,6 +2217,8 @@ class TurnSbaMixin:
             # which stays the two-step helper and never sets this flag true
             # across an `advance()` boundary.
             self.turn.add_second_combat_damage_step()
+        if previous_step is Step.CLEANUP and not self.turn.extra_phase_queue:
+            self._skip_replaced_extra_turns()
         step = self.turn.advance()
         if step is Step.DRAW and (self.turn.skips_draw() or self.static_skips_draw_step()):
             # CR 103.8a skips the starting player's whole first draw step, and

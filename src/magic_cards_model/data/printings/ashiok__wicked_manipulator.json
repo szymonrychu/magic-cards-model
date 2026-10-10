@@ -1,0 +1,157 @@
+{
+  "object": "card",
+  "id": "6c4d0db1-74a5-42c0-ac95-e696585d8022",
+  "oracle_id": "67d66678-a8e6-4f80-bade-1f1daf4b0610",
+  "multiverse_ids": [
+    629579
+  ],
+  "mtgo_id": 116466,
+  "arena_id": 86771,
+  "tcgplayer_id": 509489,
+  "cardmarket_id": 725331,
+  "name": "Ashiok, Wicked Manipulator",
+  "lang": "en",
+  "released_at": "2023-09-08",
+  "uri": "https://api.scryfall.com/cards/6c4d0db1-74a5-42c0-ac95-e696585d8022",
+  "scryfall_uri": "https://scryfall.com/card/woe/78/ashiok-wicked-manipulator?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:58:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.jpg?1783915111",
+    "normal": "https://cards.scryfall.io/normal/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.jpg?1783915111",
+    "large": "https://cards.scryfall.io/large/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.jpg?1783915111",
+    "png": "https://cards.scryfall.io/png/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.png?1783915111",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.jpg?1783915111",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.jpg?1783915111",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.webp?1783915111",
+    "grid": "https://cards.scryfall.io/grid/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.webp?1783915111",
+    "display": "https://cards.scryfall.io/display/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.webp?1783915111",
+    "art": "https://cards.scryfall.io/art/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.webp?1783915111",
+    "crop": "https://cards.scryfall.io/crop/front/6/c/6c4d0db1-74a5-42c0-ac95-e696585d8022.webp?1783915111"
+  },
+  "mana_cost": "{3}{B}{B}",
+  "cmc": 5.0,
+  "type_line": "Legendary Planeswalker \u2014 Ashiok",
+  "oracle_text": "If you would pay life while your library has at least that many cards in it, exile that many cards from the top of your library instead.\n+1: Look at the top two cards of your library. Exile one of them and put the other into your hand.\n\u22122: Create two 1/1 black Nightmare creature tokens with \"At the beginning of combat on your turn, if a card was put into exile this turn, put a +1/+1 counter on this token.\"\n\u22127: Target player exiles the top X cards of their library, where X is the total mana value of cards you own in exile.",
+  "loyalty": "5",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "dd6f57de-21af-4c25-8a21-df3a75157939",
+      "component": "combo_piece",
+      "name": "Ashiok, Wicked Manipulator",
+      "type_line": "Legendary Planeswalker \u2014 Ashiok",
+      "uri": "https://api.scryfall.com/cards/dd6f57de-21af-4c25-8a21-df3a75157939"
+    },
+    {
+      "object": "related_card",
+      "id": "858428ee-3a9c-4dfc-84c2-751e59df2ed7",
+      "component": "token",
+      "name": "Nightmare",
+      "type_line": "Token Creature \u2014 Nightmare",
+      "uri": "https://api.scryfall.com/cards/858428ee-3a9c-4dfc-84c2-751e59df2ed7"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set": "woe",
+  "set_name": "Wilds of Eldraine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/woe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6c4d0db1-74a5-42c0-ac95-e696585d8022/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A67d66678-a8e6-4f80-bade-1f1daf4b0610&unique=prints",
+  "collector_number": "78",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Raymond Swanland",
+  "artist_ids": [
+    "e956bacc-077d-4c12-b6bc-ba798b718af9"
+  ],
+  "illustration_id": "a3b6c416-0219-4a5f-88cc-43d649ec2c28",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14321,
+  "penny_rank": 3533,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://twitter.com/wizards_magic/status/1684894310104252419",
+    "previewed_at": "2023-07-28"
+  },
+  "prices": {
+    "usd": "0.64",
+    "usd_foil": "0.82",
+    "usd_etched": null,
+    "eur": "0.86",
+    "eur_foil": "1.37",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629579&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAshiok%252C%2BWicked%2BManipulator",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAshiok%252C%2BWicked%2BManipulator",
+    "edhrec": "https://edhrec.com/route/?cc=Ashiok%2C+Wicked+Manipulator"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F509489%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=725331&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/116466?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

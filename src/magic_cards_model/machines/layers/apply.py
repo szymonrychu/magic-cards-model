@@ -924,6 +924,19 @@ class LayerContext(EngineModel):
     #: resolved.
     hand_size_by_player: Mapping[str, int] = Field(default_factory=dict)
 
+    #: Each player's library size (CR 401.1), keyed by username - Living
+    #: Conundrum's "As long as there are no cards in your library, ..." reads
+    #: its controller's, which is not on the battlefield either. Read when the
+    #: effects are built, like `hand_size_by_player`.
+    library_size_by_player: Mapping[str, int] = Field(default_factory=dict)
+
+    def library_size_of(self, player: str | None) -> int | None:
+        """How many cards `player`'s library holds, or `None` for a player
+        this context knows nothing about."""
+        if player is None:
+            return None
+        return self.library_size_by_player.get(player)
+
     def hand_size_of(self, player: str | None) -> int:
         """How many cards `player` holds, or 0 for a player this context
         knows nothing about - the same empty-is-zero default `unspent_mana_of`

@@ -1939,7 +1939,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 137
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 139
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2224,6 +2224,12 @@ class Game(
     #: gained `battles_protected_by_event_player` (Rampaging Raptor's "battle
     #: that player protects", CR 310.9e); decoded as current, an older shield
     #: or announced target would cover every permanent of its controller.
+    #: 139 (EP01-R1-T6, reserved: 133 + task 6): the layer selector
+    #: `QualifiedCreatures` gained `enchanted` (Necromancer's Magemark), and the
+    #: delayed-effect union gained `SpellEntersWithAdditionalCounter` (Kumano
+    #: Faces Kakkazan II) and `ReturnThatCardToBattlefieldUnderOwner` (Melira);
+    #: a card in exile with an exile-conditioned trigger is now offered events
+    #: (Darigaaz Reincarnated). The integrator renumbers to contiguous order.
     #: 133 (NW06-T5): `CardState` gained `chosen_player` (CR 614.12a's "choose
     #: a player/an opponent"), `devoured` (CR 702.82b) and
     #: `controlled_since_upkeep`, and `Game` gained `upkeeps_begun` (echo, CR
@@ -3492,6 +3498,12 @@ class Game(
     #: permanent's CR 614.12a choice named (`Game._reveal_drawn_card`).
     _REVEALS_EACH_CARD_DRAWN_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^the chosen player reveals each card they draw\.?$", re.IGNORECASE
+    )
+    #: "Play with your hand revealed." (Enduring Renewal) - the controller's
+    #: hand is revealed to every player for as long as the permanent grants it
+    #: (CR 701.20a), read fresh by `known_to` (`Game.hand_is_revealed`).
+    _PLAY_WITH_HAND_REVEALED_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^play with your hand revealed\.?$", re.IGNORECASE
     )
     _LOOK_AT_TOP_CARD_ANY_TIME_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^you may look at the top card of your library any time\.?$", re.IGNORECASE

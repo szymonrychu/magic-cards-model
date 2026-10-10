@@ -1492,16 +1492,20 @@ def _become_a_copy_builder(
 #: reading, minus that one's own "other" exclusion, since haste applies to
 #: the source creature that grants it too, if it is one.
 _ALL_CREATURES_KEYWORD_GRANT_RE = re.compile(
-    r"^all creatures (?:have|has) "
+    r"^all (?:(?P<subtype>[a-z]+) )?creatures (?:have|has) "
     r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
     re.IGNORECASE,
 )
 
 
-def _all_creatures_keyword_grant_builder(keywords: list[str], *, line: str) -> EffectBuilder:
+def _all_creatures_keyword_grant_builder(
+    keywords: list[str], *, line: str, subtype: str | None = None
+) -> EffectBuilder:
     """`_ALL_CREATURES_KEYWORD_GRANT_RE`'s shape - one permanent (CR 611.3,
     indefinite duration) layer 6 grant per keyword, over every creature on
-    the battlefield."""
+    the battlefield (or, for "All Sliver creatures have flying", every creature
+    of that subtype, whoever controls it - CR 205.3)."""
+    selector = every_creature if subtype is None else CreaturesWithSubtype(subtype=subtype)
 
     def builder(
         source: CardState,
@@ -1511,12 +1515,12 @@ def _all_creatures_keyword_grant_builder(keywords: list[str], *, line: str) -> E
     ) -> list[ContinuousEffect]:
         return [
             ContinuousEffect(
-                description=f"{source.name}: all creatures have {keyword}",
+                description=f"{source.name}: all {subtype or ''} creatures have {keyword}",
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
-                selector=every_creature,
+                selector=selector,
                 modification=grant_ability(keyword),
             )
             for keyword in keywords
@@ -1732,6 +1736,17 @@ _PAIRED_BOTH_RE = re.compile(
     r"(?:(?:have (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)"
     r"(?: and get (?P<p1>[+-]\d+)/(?P<t1>[+-]\d+))?)"
     r"|(?:get (?P<p2>[+-]\d+)/(?P<t2>[+-]\d+)))\.?$",
+    re.IGNORECASE,
+)
+
+#: "Creatures you control that are enchanted get +1/+1." (Necromancer's
+#: Magemark) - `_ANTHEM_RE` with CR 303.4b's "enchanted" rider after the
+#: controller clause, kept off the shared subject fragment so only the anthem
+#: reads it (every other predicate leaves the sentence unparsed rather than
+#: dropping the rider).
+_ENCHANTED_ANTHEM_RE = re.compile(
+    rf"^{_QUALIFIED_CREATURE_SUBJECT} that(?:'s| are) enchanted get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
     re.IGNORECASE,
 )
 
@@ -2129,6 +2144,15 @@ _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
     r"|all (?P<all_subtype>[a-z]+))"
     r' have "(?P<ability>.+)"\.?$',
     re.IGNORECASE | re.DOTALL,
+)
+
+
+#: "All Slivers have "If this permanent would be put into a graveyard, ..."" -
+#: the whole-battlefield, both-players twin of `_GROUP_QUOTED_ABILITY_GRANT_RE`
+#: for a creature subtype (Pulmonic Sliver). CR 613.1f: a layer 6 grant, the
+#: source's own subtype included.
+_ALL_SUBTYPE_QUOTED_GRANT_RE = re.compile(
+    r'^all (?P<subtype>[a-z]+?)s have "(?P<ability>.+)"\.?$', re.IGNORECASE | re.DOTALL
 )
 
 
@@ -4496,10 +4520,12 @@ def _creature_group(
             legendary=qualifiers.legendary,
             of_chosen_color=qualifiers.of_chosen_color,
             chosen_color=chosen_color_of(source) if qualifiers.of_chosen_color else None,
+            enchanted=qualifiers.enchanted,
         ),
         f"{'other ' if other else ''}{qualifiers.words}"
         f"{'creature tokens' if qualifiers.tokens else 'creatures'} "
         f"{'your opponents control' if opponents else 'you control'}"
+        f"{' that are enchanted' if qualifiers.enchanted else ''}"
         f"{_chosen_color_words(source) if qualifiers.of_chosen_color else ''}",
     )
 
@@ -6871,6 +6897,20 @@ _PLAYER_LIFE_COMPARISON_RE = re.compile(
 )
 
 
+#: "there are no cards in your library" (Living Conundrum): CR 401.1's zone,
+#: counted for the source's controller (`LayerContext.library_size_of`).
+_NO_CARDS_IN_YOUR_LIBRARY_RE = re.compile(r"^there are no cards in your library$", re.IGNORECASE)
+
+#: "As long as `<condition>`, this creature has base power and toughness N/N
+#: [and has `<keywords>`]." (Living Conundrum) - the gated twin of
+#: `_BASE_PT_SET_RE`: a sublayer 7b set (CR 613.4b) plus layer 6 grants
+#: (CR 613.1f), both on only while the `_self_static_gate` condition holds.
+_GATED_SELF_BASE_PT_RE = re.compile(
+    r"^as long as (?P<condition>[^,]+), this (?:creature|permanent) has base power and "
+    r"toughness (?P<power>\d+)/(?P<toughness>\d+)(?P<rest>(?: and has [^.]+?)?)\.?$",
+    re.IGNORECASE,
+)
+
 #: "two or more creatures died under your control this turn" (Gimli,
 #: Mournful Avenger): CR 700.4's per-turn count for the source's controller,
 #: `LayerContext.creatures_died_under_control`.
@@ -6932,6 +6972,12 @@ def _self_static_gate(
             )
 
         return life_gate, "while the life total condition holds"
+    if _NO_CARDS_IN_YOUR_LIBRARY_RE.fullmatch(text):
+
+        def empty_library_gate(source: CardState, context: LayerContext) -> bool:
+            return context.library_size_of(source.controller) == 0
+
+        return empty_library_gate, "while its controller's library is empty"
     if match := _CREATURES_DIED_UNDER_YOUR_CONTROL_RE.fullmatch(text):
         died_threshold = parse_count(match.group("count"), article=False)
         if not died_threshold:
@@ -8120,6 +8166,16 @@ def quoted_ability_grants(
                 if other and permanent.id == source.id:
                     continue
                 if selector(printed_characteristics(permanent), {}):
+                    wanted.setdefault(permanent.id, set()).add(text)
+            continue
+        if (match := _ALL_SUBTYPE_QUOTED_GRANT_RE.fullmatch(normalized)) and (
+            match.group("subtype").lower() in subtype_vocabulary()
+        ):
+            text = (match.group("ability") or "").strip()
+            subtype = match.group("subtype").lower()
+            grantable.add(text)
+            for permanent in permanents:
+                if subtype in {t.lower() for t in printed_characteristics(permanent).subtypes}:
                     wanted.setdefault(permanent.id, set()).add(text)
             continue
         if match := _INDEFINITE_KEYWORD_AND_QUOTED_GRANT_RE.fullmatch(normalized):
@@ -9846,6 +9902,57 @@ def _context_gated_self_pump_builder(
     return builder
 
 
+def _context_gated_self_base_pt_builder(
+    condition: Callable[[CardState, LayerContext], bool],
+    power: int,
+    toughness: int,
+    granted: list[str],
+    *,
+    line: str,
+    description: str,
+) -> EffectBuilder:
+    """A self base-P/T set (sublayer 7b, CR 613.4b) plus grants (layer 6, CR
+    613.1f) gated by something `LayerContext` carries. Checked at build time,
+    like `_context_gated_self_pump_builder`: the effect is on exactly while
+    the condition holds (CR 604.2, CR 611.3a)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if not condition(source, context):
+            return []
+        effects = [
+            ContinuousEffect(
+                description=f"{source.name}: base P/T {power}/{toughness} {description}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=set_power_toughness(power, toughness),
+            )
+        ]
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: has {ability} {description}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(ability),
+            )
+            for ability in granted
+        )
+        return effects
+
+    return builder
+
+
 def _devotion_gated_not_a_creature_builder(
     colors: frozenset[Color], threshold: int, *, line: str
 ) -> EffectBuilder:
@@ -10255,9 +10362,14 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         )
     if match := _ALL_CREATURES_KEYWORD_GRANT_RE.fullmatch(sentence):
         all_creatures_keywords = _split_and_validate_keywords(match.group("keywords"))
-        if all_creatures_keywords is None:
+        grant_subtype = match.group("subtype")
+        if all_creatures_keywords is None or (
+            grant_subtype is not None and grant_subtype.lower() not in subtype_vocabulary()
+        ):
             return None
-        return _all_creatures_keyword_grant_builder(all_creatures_keywords, line=sentence)
+        return _all_creatures_keyword_grant_builder(
+            all_creatures_keywords, line=sentence, subtype=grant_subtype
+        )
     if (gated := split_as_long_as(sentence)) is not None:
         return _parse_designation_gated_sentence(sentence, *gated)
     if _BOARD_COUNT_GATE_RE.fullmatch(sentence):
@@ -10503,6 +10615,15 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             whose=match.group("whose").lower(),
             line=sentence,
             qualifiers=qualifiers_from_subject(match),
+        )
+    if match := _ENCHANTED_ANTHEM_RE.fullmatch(sentence):
+        return _anthem_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            other=match.group("other") is not None,
+            whose=match.group("whose").lower(),
+            line=sentence,
+            qualifiers=qualifiers_from_subject(match).model_copy(update={"enchanted": True}),
         )
     if match := (_ANTHEM_RE.fullmatch(sentence) or _EACH_ANTHEM_RE.fullmatch(sentence)):
         return _anthem_builder(
@@ -11672,6 +11793,20 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     conditional_type_change = _conditional_self_type_change(sentence)
     if conditional_type_change is not None:
         return conditional_type_change
+    if (match := _GATED_SELF_BASE_PT_RE.fullmatch(sentence)) and (
+        gate := _self_static_gate(match.group("condition"))
+    ):
+        granted = _split_gated_grants(match.group("rest") or "")
+        if granted is None:
+            return None
+        return _context_gated_self_base_pt_builder(
+            gate[0],
+            int(match.group("power")),
+            int(match.group("toughness")),
+            granted,
+            line=sentence,
+            description=gate[1],
+        )
     for gated_re in (_GATED_SELF_LEADING_RE, _GATED_SELF_TRAILING_RE):
         if (match := gated_re.fullmatch(sentence)) and (
             gate := _self_static_gate(match.group("condition"))
@@ -12375,6 +12510,7 @@ from .model import (  # noqa: E402
     CreaturesControlledByQuality,
     CreaturesControlledByWithSubtype,
     CreaturesOfManaValueParity,
+    CreaturesWithSubtype,
     Duration,
     EquippedCreatureIfToughnessExceedsPower,
     FixedCount,

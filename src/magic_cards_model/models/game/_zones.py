@@ -1368,7 +1368,7 @@ class ZonesMixin:
         player.note_library_changed()  # CR 701.20d: a shuffled library is a new order
         self.shuffles_performed += 1
 
-    def flip_coin(self: "Game") -> bool:
+    def flip_coin(self: "Game", player: "Player | str | None" = None) -> bool:
         """CR 705.1: flip a coin, "a two-sided object with ... equal likelihood
         that either side lands face up." Returns `True` for a win (heads, by
         this engine's own arbitrary but fixed convention - CR 705.1 leaves
@@ -1381,9 +1381,66 @@ class ZonesMixin:
         that method's own docstring) - a scenario asserting on the result of
         a flip needs a fixed outcome, not a live coin.
         """
-        rng = Random(f"{self.shuffle_seed}:{self.coin_flips_performed}:coin")  # noqa: S311
-        self.coin_flips_performed += 1
-        return rng.random() < 0.5
+        event = ReplaceableEvent(
+            kind=EventKind.FLIP_COIN,
+            player=self.player(player) if isinstance(player, str) else player,
+            amount=1,
+        )
+        apply_replacements(self, event)
+        results = []
+        for _ in range(max(event.amount, 1)):
+            rng = Random(f"{self.shuffle_seed}:{self.coin_flips_performed}:coin")  # noqa: S311
+            self.coin_flips_performed += 1
+            results.append(rng.random() < 0.5)
+        # CR 614.1a, 705.1: the flipper ignores the losing flips first.
+        kept = sorted(results, reverse=True)[: max(len(results) - event.ignore, 1)]
+        return kept[0]
+
+    def roll_dice(self: "Game", player: "Player | str", sides: int, count: int = 1) -> list[int]:
+        """CR 706.2: a player rolls `count` dice of `sides` sides; the results are
+        returned in rolled order, less the `ignore` lowest ones a replacement
+        effect ignores (Pixie Guide: "roll that many dice plus one and ignore the
+        lowest roll"). Seeded like `flip_coin`, from the same
+        `coin_flips_performed` counter of random outcomes (no new Game field)."""
+        who = self.player(player) if isinstance(player, str) else player
+        event = ReplaceableEvent(kind=EventKind.ROLL_DICE, player=who, amount=count)
+        apply_replacements(self, event)
+        rolls = []
+        for _ in range(event.amount):
+            rng = Random(f"{self.shuffle_seed}:{self.coin_flips_performed}:die")  # noqa: S311
+            self.coin_flips_performed += 1
+            rolls.append(rng.randint(1, sides))
+        for _ in range(event.ignore):
+            rolls.remove(min(rolls))
+        self.emit(
+            GameEvent(event=ExtraTriggerEvent.ROLLS_DICE, player=who.username, amount=len(rolls))
+        )
+        return rolls
+
+    def replaced_mill_count(self: "Game", player: "Player", count: int) -> int:
+        """CR 701.17a, 614.1a: how many cards `player` really mills once the
+        replacement effects on a mill (The Water Crystal) have had their say."""
+        event = ReplaceableEvent(kind=EventKind.MILL, player=player, amount=count)
+        apply_replacements(self, event)
+        return event.amount
+
+    def assembling_count(self: "Game", player: "Player | str", source: CardState) -> int:
+        """CR 701.45a, 614.1a: how many Contraptions `source` assembles for `player`
+        when told to assemble one (Steamflogger Boss: a Rigger "assembles two
+        Contraptions instead"). Assemble is an Unstable action outside the
+        Comprehensive Rules, so this is the hook an assembling effect asks."""
+        who = self.player(player) if isinstance(player, str) else player
+        event = ReplaceableEvent(kind=EventKind.ASSEMBLE, player=who, card=source, amount=1)
+        apply_replacements(self, event)
+        return event.amount
+
+    def proliferation_count(self: "Game", player: "Player | str") -> int:
+        """CR 701.34a, 614.1a: how many times `player` proliferates when told to
+        once (Tekuthal's "proliferate twice instead")."""
+        who = self.player(player) if isinstance(player, str) else player
+        event = ReplaceableEvent(kind=EventKind.PROLIFERATE, player=who, amount=1)
+        apply_replacements(self, event)
+        return event.amount
 
     def search_library(
         self: "Game",
@@ -1513,7 +1570,13 @@ class ZonesMixin:
                     GameEvent(event=ExtraTriggerEvent.SEARCHES_LIBRARY, player=player.username)
                 )
 
-            candidates = [state for state in player.cards_in(zone) if matches(state)]
+            searchable = list(player.cards_in(zone))
+            if zone is Zone.LIBRARY:
+                search = ReplaceableEvent(kind=EventKind.SEARCH, player=player)
+                apply_replacements(self, search)
+                if search.search_limit is not None:
+                    searchable = searchable[: search.search_limit]  # CR 701.23a
+            candidates = [state for state in searchable if matches(state)]
             limit = min(count, len(candidates))
             found: list[CardState] = candidates[:limit]
             if candidates and (optional or len(candidates) > limit):
@@ -1813,7 +1876,13 @@ class ZonesMixin:
 
     # -- drawing, life, and counters, as replaceable events ------------------
 
-    def draw_cards(self: "Game", player: Player | str, count: int = 1) -> list[CardState]:
+    def draw_cards(
+        self: "Game",
+        player: Player | str,
+        count: int = 1,
+        *,
+        cycled: "CardState | None" = None,
+    ) -> list[CardState]:
         """Draw `count` cards one at a time, replacement effects included.
 
         CR 121.2: "Cards may only be drawn one at a time. If a player is
@@ -1878,6 +1947,7 @@ class ZonesMixin:
                     # first card of whichever draw instruction comes first.
                     draw_step_draw=self._is_draw_step_draw(player)
                     and self.cards_drawn_in_own_draw_step.get(player.username, 0) == 0,
+                    cycled_card=cycled,
                 )
                 apply_replacements(self, event)
                 # CR 614.6: a replacement may hand the draw to someone else
@@ -2877,7 +2947,14 @@ class ZonesMixin:
                 # clause for this one the way a search effect prints its own.
                 owner = self._owner_of(card_state)
                 owner.add(card_state, Zone.LIBRARY)
-                self.shuffle_library(owner)
+                if event.library_position == "top":
+                    # CR 401.4-style placement: "put it on top of its owner's library".
+                    owner.library.insert(0, owner.library.pop())
+                elif event.library_position is None:
+                    self.shuffle_library(owner)
+                # "bottom": `Player.add` appended it below every other card (CR 401.2).
+            elif event.destination is Zone.HAND:
+                self._owner_of(card_state).add(card_state, Zone.HAND)
             else:
                 raise ValueError(f"a graveyard replacement sent {card_state.name} nowhere")
 

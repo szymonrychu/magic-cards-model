@@ -220,6 +220,10 @@ def executes(keyword: str) -> bool:
         # CR 702.93a: `_undying_ability` (`_TRIGGER_EXPANSIONS`), resolved by
         # `_undying_effect`.
         "undying",
+        # CR 702.43a: the dying half is `_modular_ability`/`_modular_effect` here,
+        # the "enters with" half `machines/replacement/enters.
+        # _modular_entering_counters`.
+        "modular",
         "dredge",
         "mobilize",
         "indestructible",
@@ -751,6 +755,26 @@ def _persist_ability(ability: KeywordAbility) -> TriggeredAbility:
         intervening_if="it had no -1/-1 counters on it",
         effect=(
             "return it to the battlefield under its owner's control with a -1/-1 counter on it"
+        ),
+        event=TriggerEvent.DIES,
+    )
+
+
+def _modular_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.43a's second half: "Modular N" means "This permanent enters with
+    N +1/+1 counters on it" (`machines/replacement/enters.py`) and "When this
+    permanent is put into a graveyard from the battlefield, you may put a +1/+1
+    counter on target artifact creature for each +1/+1 counter on this
+    permanent.""
+    """
+    return _expansion(
+        ability,
+        keyword="modular",
+        word=TriggerWord.WHEN,
+        condition="this permanent is put into a graveyard from the battlefield",
+        effect=(
+            "you may put a +1/+1 counter on target artifact creature for each "
+            "+1/+1 counter on this permanent"
         ),
         event=TriggerEvent.DIES,
     )
@@ -1673,6 +1697,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "replicate": _single(_replicate_ability),
     "persist": _single(_persist_ability),
     "undying": _single(_undying_ability),
+    "modular": _single(_modular_ability),
     "mobilize": _single(_mobilize_ability),
     "offspring": _single(_offspring_ability),
     "firebending": _single(_firebending_ability),
@@ -2360,7 +2385,7 @@ def _cycling_effect(activation: KeywordActivation) -> list[CardState]:
     game = activation.game
     with game._id_allocator_scope():  # noqa: SLF001
         if typed is None:
-            return game.draw_cards(activation.player, 1)
+            return game.draw_cards(activation.player, 1, cycled=activation.card)
         # CR 702.29e: "Search your library for a [type] card, reveal it, and put
         # it into your hand. Then shuffle your library."
         return _search_reveal_to_hand_and_shuffle(
@@ -5961,6 +5986,28 @@ def _undying_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     return undying_return(game, source)
 
 
+def _modular_effect(game: Any, ability: AbilityOnStack) -> None:
+    """CR 702.43a's dying half: the +1/+1 counters it had as it last existed on the
+    battlefield (CR 603.10a, `last_known_counters`) go onto the target artifact
+    creature, if the controller wants them. The counters are put by "a modular
+    triggered ability" (Zabaz, the Glimmerwasp reads exactly that)."""
+    source = ability.source(game)
+    if source is None or not ability.targets:
+        return
+    count = source.last_known_counters[Counter.PLUS_ONE]
+    target = game.resolve_target(ability.targets[0])
+    if count <= 0 or not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+        return
+    if not game.may(
+        ability.controller,
+        f"put {count} +1/+1 counter(s) on {target.name} (modular)",
+        source=ability.source_name,
+        source_id=source_id_of(ability),
+    ):
+        return
+    game.add_counters(target, Counter.PLUS_ONE, count, putter=ability.controller, modular=True)
+
+
 def _evoke_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     """CR 702.74a's effect: "its controller sacrifices it".
 
@@ -6602,6 +6649,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "prowess": _prowess_effect,
     "persist": _persist_effect,
     "undying": _undying_effect,
+    "modular": _modular_effect,
     "cascade": _cascade_effect,
     "storm": _storm_effect,
     "replicate": _replicate_effect,

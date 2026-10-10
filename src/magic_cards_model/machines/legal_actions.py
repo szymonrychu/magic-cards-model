@@ -308,6 +308,8 @@ def _unfiltered_candidate_pool(
             for card in game.permanents_controlled_by(payer)
             if card.can_remove_counters(component.counter_kind, component.amount)
         ]
+    if kind is ComponentKind.PUT_EXILED_INTO_GRAVEYARD:
+        return list(game.cards_exiled_with(component.link_to_permanent_id, None))
     if kind is ComponentKind.RETURN_TO_HAND and component.requirement is not None:
         # A printed "Return a land you control to its owner's hand" cost -
         # not ninjutsu's unblocked attacker, which carries no requirement.
@@ -556,6 +558,7 @@ def _cast_action(
     candidate_scan: list[_ScannedCandidate],
     spell_face: str | None = None,
     splice_options: tuple[SpliceOption, ...] = (),
+    snow_any_color: bool = False,
 ) -> Action:
     modal = modal_profile(card.card)
     modes = tuple(mode.text for mode in modal.modes) if modal is not None else ()
@@ -575,7 +578,7 @@ def _cast_action(
     # not moved yet here (CR 601.2a happens when the cast is actually
     # announced), so `card.zone` is that zone and is the same answer
     # `from_zone` below reports.
-    spend = ManaSpend.casting(card, zone=card.zone)
+    spend = ManaSpend.casting(card, zone=card.zone, snow_any_color=snow_any_color)
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )
@@ -1058,6 +1061,7 @@ def _cast_actions(
                         candidate_scan=candidate_scan,
                         spell_face=face_name,
                         splice_options=splice_options,
+                        snow_any_color=option.snow_any_color,
                     )
                 )
         else:

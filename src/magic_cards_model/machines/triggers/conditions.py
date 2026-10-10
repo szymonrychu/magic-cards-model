@@ -1934,6 +1934,12 @@ def _condition_matches(
         ):
             return False
         subtype = _required_subtype(condition)
+        if "into your graveyard" in lowered:
+            # Enduring Renewal's "a creature is put into your graveyard from
+            # the battlefield": the graveyard is its owner's (CR 404.1).
+            died = game.find_by_id(event.subject_id) if event.subject_id else None
+            if not isinstance(died, CardState) or died.owner != controller:
+                return False
         if not (
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)
@@ -3575,6 +3581,17 @@ def _unread_condition_matches(
     match = _SEARCHES_LIBRARY_CONDITION.match(condition)
     if match is not None:
         if event.event is not ExtraTriggerEvent.SEARCHES_LIBRARY or event.player is None:
+            return False
+        who = match.group("who")
+        if who == "you":
+            return event.player == controller
+        if who == "an opponent":
+            return event.player != controller
+        return True  # "a player" - anyone.
+
+    match = _ROLLS_DICE_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.ROLLS_DICE or event.player is None:
             return False
         who = match.group("who")
         if who == "you":
@@ -5775,6 +5792,7 @@ from ._common import (  # noqa: E402
     _PUT_INTO_LIBRARY_CONDITION,
     _REVEALED_THIS_WAY_CONDITION,
     _RING_TEMPTS_YOU_CONDITION,
+    _ROLLS_DICE_CONDITION,
     _SEARCHES_LIBRARY_CONDITION,
     _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION,
     _STATE_COUNTER_TRIGGER_RE,

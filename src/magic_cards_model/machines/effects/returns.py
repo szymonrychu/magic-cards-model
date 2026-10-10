@@ -1551,6 +1551,34 @@ def _parse_return_dead_self_to_hand_clause(
     return effect
 
 
+#: "return it to your hand" / "return that card to your hand" (Enduring
+#: Renewal's graveyard trigger) - the triggering event's card, found in the
+#: graveyard it just arrived in (CR 400.7e), into the ability controller's own
+#: hand. The trigger's condition already limits it to cards that player owns.
+_RETURN_DEAD_IT_TO_YOUR_HAND_RE = re.compile(
+    r"^return (?:it|that (?:creature )?card) to your hand$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_return_dead_card_to_your_hand_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_RETURN_DEAD_IT_TO_YOUR_HAND_RE`'s shape. Ability-only: the card is the
+    triggering event's, found by `_dead_self_found`'s CR 400.7e lookup."""
+    if for_spell or not _RETURN_DEAD_IT_TO_YOUR_HAND_RE.fullmatch(clause.strip()):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        card_state = _dead_self_found(game, ability)
+        if card_state is not None and card_state.zone is Zone.GRAVEYARD:
+            game.player(ability.controller).move(card_state, Zone.HAND)
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # Secrets of Strixhaven prepare faces and their triggers (CR 722)
 # --------------------------------------------------------------------------

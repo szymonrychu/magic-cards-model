@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "2d389264-e2d2-4589-9636-faa11fe46710",
+  "oracle_id": "4716ab91-30e6-4c63-8389-a9db8f9414d8",
+  "multiverse_ids": [],
+  "resource_id": "4B6E371104A375E8233DE8B4F8E6D47DE1A11CC499DC3079164687701CCCECC8",
+  "mtgo_id": 142293,
+  "tcgplayer_id": 642807,
+  "cardmarket_id": 834258,
+  "name": "Tekuthal, Inquiry Dominus",
+  "lang": "en",
+  "released_at": "2025-08-01",
+  "uri": "https://api.scryfall.com/cards/2d389264-e2d2-4589-9636-faa11fe46710",
+  "scryfall_uri": "https://scryfall.com/card/eoc/78/tekuthal-inquiry-dominus?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:27:20Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.jpg?1783906040",
+    "normal": "https://cards.scryfall.io/normal/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.jpg?1783906040",
+    "large": "https://cards.scryfall.io/large/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.jpg?1783906040",
+    "png": "https://cards.scryfall.io/png/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.png?1783906040",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.jpg?1783906040",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.jpg?1783906040",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.webp?1783906040",
+    "grid": "https://cards.scryfall.io/grid/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.webp?1783906040",
+    "display": "https://cards.scryfall.io/display/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.webp?1783906040",
+    "art": "https://cards.scryfall.io/art/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.webp?1783906040",
+    "crop": "https://cards.scryfall.io/crop/front/2/d/2d389264-e2d2-4589-9636-faa11fe46710.webp?1783906040"
+  },
+  "mana_cost": "{2}{U}{U}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Phyrexian Horror",
+  "oracle_text": "Flying\nIf you would proliferate, proliferate twice instead.\n{1}{U/P}{U/P}, Remove three counters from among other artifacts, creatures, and planeswalkers you control: Put an indestructible counter on Tekuthal. ({U/P} can be paid with either {U} or 2 life.)",
+  "power": "3",
+  "toughness": "5",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Proliferate"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b6ec8c6b-b4e6-4cb4-84d6-06234ace3b44",
+  "set": "eoc",
+  "set_name": "Edge of Eternities Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/b6ec8c6b-b4e6-4cb4-84d6-06234ace3b44",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aeoc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/eoc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2d389264-e2d2-4589-9636-faa11fe46710/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4716ab91-30e6-4c63-8389-a9db8f9414d8&unique=prints",
+  "collector_number": "78",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Martin de Diego S\u00e1daba",
+  "artist_ids": [
+    "bc760b5e-6f98-4a17-9b12-5f4eccd12bb2"
+  ],
+  "illustration_id": "c833a917-2f44-4500-928e-f6b91a8dcd63",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1201,
+  "penny_rank": 9816,
+  "preview": {
+    "source": "EDHijinks",
+    "source_uri": "https://www.youtube.com/watch?v=Swjj0JGhFco",
+    "previewed_at": "2025-07-10"
+  },
+  "prices": {
+    "usd": "1.59",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.84",
+    "eur_foil": null,
+    "tix": "0.08"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTekuthal%252C%2BInquiry%2BDominus",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTekuthal%252C%2BInquiry%2BDominus",
+    "edhrec": "https://edhrec.com/route/?cc=Tekuthal%2C+Inquiry+Dominus"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F642807%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=834258&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/142293?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

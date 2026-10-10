@@ -59,6 +59,7 @@ from ..layers import (
     Characteristics,
 )
 from ..linked_exile import (
+    parse_return_all_linked_to_hand_lose_life_clause,
     parse_return_linked_creature_clause,
     parse_return_other_linked_cards_to_hand_clause,
 )
@@ -2056,6 +2057,33 @@ def _parse_regenerate_self_clause(clause: str) -> AbilityEffect | None:
         source = ability.source(game)
         if source is not None and source.zone is Zone.BATTLEFIELD:
             game.regenerate(source)
+
+    return effect
+
+
+#: "This creature can't be regenerated this turn." (Knight of the Holy Nimbus's
+#: `{2}` ability, which only the controller's opponents may activate) - the
+#: source's own CR 701.19c grant, ending with the turn (CR 611.2a).
+_SELF_CANT_BE_REGENERATED_RE = re.compile(
+    r"^this (?:creature|permanent|artifact) can'?t be regenerated this turn\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _regenerate_self_cant_be_regenerated_this_turn(text: str) -> AbilityEffect | None:
+    """`_SELF_CANT_BE_REGENERATED_RE`'s shape: the grant line
+    `replacement._regeneration_effects` and the static regeneration read off
+    the computed characteristics."""
+    if _SELF_CANT_BE_REGENERATED_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..replacement.model import CANT_BE_REGENERATED_LINE
+        from .damage import _grant_line_until_end_of_turn
+
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            _grant_line_until_end_of_turn(game, ability, [source], CANT_BE_REGENERATED_LINE)
 
     return effect
 
@@ -7775,6 +7803,13 @@ def _parse_linked_exile_return_pair_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s38")
+def _parse_return_all_linked_to_hand_lose_life_clause(text: str) -> AbilityEffect | None:
+    """Asmodeus the Archfiend's {B} - see
+    `linked_exile.parse_return_all_linked_to_hand_lose_life_clause`."""
+    return parse_return_all_linked_to_hand_lose_life_clause(text)
+
+
 #: "`<antecedent>`. [Then ]you may exile `<self>` and `<n>` cards named
 #: `<name>` from your graveyard. If you do, `<consequence>`." (CR 118.12's
 #: cost-paid-on-resolution "if you do", CR 201.5's self-reference) - the
@@ -9082,6 +9117,38 @@ def _parse_exile_top_of_other_libraries_clause(clause: str) -> TargetedClause | 
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         exile_tops(game, stack_object)
+
+    return effect
+
+
+#: "Target player exiles the top X cards of their library, where X is the
+#: total mana value of cards you own in exile." - Ashiok, Wicked
+#: Manipulator's -7. X is CR 202.3's sum over the controller's own (CR 108.3
+#: ownership, not control) cards in exile, read when the ability resolves.
+_TARGET_PLAYER_EXILES_TOP_X_OWNED_EXILE_RE = re.compile(
+    r"^target (?:opponent|player) exiles the top x cards of their library, "
+    r"where x is the total mana value of cards you own in exile$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s2")
+def _parse_target_player_exiles_top_x_owned_exile_clause(clause: str) -> TargetedClause | None:
+    """`_TARGET_PLAYER_EXILES_TOP_X_OWNED_EXILE_RE`'s shape; a library shorter
+    than X gives what it has."""
+    if _TARGET_PLAYER_EXILES_TOP_X_OWNED_EXILE_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        amount = int(sum(state.mana_value for state in game.exile if state.owner == controller))
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, Player):
+                continue
+            for _ in range(amount):
+                if not target.library:
+                    break
+                game.exile_permanent(target.library[0])
 
     return effect
 

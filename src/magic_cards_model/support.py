@@ -69,6 +69,7 @@ from magic_cards_model.machines.casting import (
     reads_granted_zone_keyword_line,
     reads_linked_exile_static_cast_line,
     reads_mandatory_additional_cost_line,
+    reads_opponents_exile_counter_cast_line,
     reads_optional_exile_reduction_line,
     reads_optional_sacrifice_reduction_line,
     reads_or_pay_additional_cost_line,
@@ -2087,6 +2088,11 @@ def _static_ability_category(
         # Mikey & Don, Party Planners), `Game.land_from_top_of_library_
         # permission` plays the land half, and `replacement._cast_permission_
         # rider_modifiers` places the "enters with" rider's counter.
+        return HANDLED
+    if reads_opponents_exile_counter_cast_line(text):
+        # CR 601.3 / CR 609.4b: `casting._opponents_exile_counter_cast_option`
+        # opens an opponent's counter-marked exiled cards to casting, and its
+        # snow clause widens `ManaSpend.snow_any_color` (Draugr Necromancer).
         return HANDLED
     if reads_using_keyword_permission_line(text) or reads_granted_zone_keyword_line(printing, text):
         # CR 611.3d / CR 601.3: `casting._grant_on_a_card_in_a_zone` grants

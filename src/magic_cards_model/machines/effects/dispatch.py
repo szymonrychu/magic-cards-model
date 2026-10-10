@@ -301,6 +301,7 @@ _PLAYER_GAINS_HEXPROOF_RE = re.compile(
 #: damage nothing here is dealt by a source, so no prevention or protection
 #: applies; CR 102.2's "each opponent" is every player in the game other than
 #: the clause's own controller.
+_EACH_OPPONENT_MILLS_RE = re.compile(r"each opponent mills (?P<rest>.+)", re.IGNORECASE)
 _EACH_OPPONENT_LOSES_LIFE_RE = re.compile(
     rf"each opponent loses (?P<n>{COUNT}) life", re.IGNORECASE
 )
@@ -379,7 +380,8 @@ _DISCARD_HAND_RE = re.compile(r"^discards? (?:your|their|his or her) hand\.?$", 
 # graveyard." The optional "for each `<expr>`" tail is the same reader as
 # `_DRAW_RE`'s own.
 _MILL_RE = re.compile(
-    rf"(?:you )?mills? (?:a card|(?:(?P<that_many>that many)|(?P<n>{COUNT})) cards?)"
+    rf"(?:you )?mills? (?:a card|(?:(?P<that_many>that many)|(?P<n>{COUNT})) cards?"
+    rf"|cards equal to (?P<equal>.+))"
     rf"(?: for each (?P<each>.+))?",
     re.IGNORECASE,
 )
@@ -727,6 +729,21 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
     if each_opponent_punisher is not None:
         return each_opponent_punisher
 
+    if match := _EACH_OPPONENT_MILLS_RE.fullmatch(clause):
+        # CR 701.17a, 102.2: each opponent mills the same instruction (The Water
+        # Crystal's "mills cards equal to the number of cards in your hand").
+        inner = parse_clause_effect(f"mills {match.group('rest')}")
+        if inner is None:
+            return None
+
+        def each_opponent_mills(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            for opponent in _opponents(game, player.username):
+                inner(game, opponent, source, source_id)
+
+        return each_opponent_mills
+
     if match := _EACH_OPPONENT_LOSES_LIFE_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
 
@@ -919,9 +936,18 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         if each is not None and multiplier is None:
             return None
         mills_that_many = match.group("that_many") is not None
+        equal = match.group("equal")
+        equal_reader = count_expression(equal) if equal is not None else None
+        if equal is not None and equal_reader is None:
+            return None
 
         def mill(game: "Game", player: Player, source: str, source_id: str | None) -> None:
             base = amount
+            if equal_reader is not None:
+                # CR 701.17a: "cards equal to the number of cards in your hand" -
+                # "your" is the ability's controller, not the player milled.
+                origin = game.find_by_id(UUID(source_id)) if source_id is not None else None
+                base = equal_reader(game, origin.controller if origin else player.username)
             if mills_that_many:
                 counted = _that_many_or_notice(
                     game, clause, source_id=source_id, source_name=source
@@ -5313,6 +5339,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             parsed.append(effect)
             index += consumed
             continue
+        merged = _merge_look_top_exile_one_other_to_hand_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
         merged = _merge_look_top_hand_bottom_exile_play_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
@@ -6432,6 +6466,7 @@ from .merges import (  # noqa: E402
     _merge_exile_until_quality_then_counter_or_cast_clauses,
     _merge_flip_coin_damage_or_exile_transform_clauses,
     _merge_flip_coin_lose_consequence_clauses,
+    _merge_look_top_exile_one_other_to_hand_clauses,
     _merge_look_top_hand_bottom_exile_play_clauses,
     _merge_look_top_may_reveal_group_to_hand_clauses,
     _merge_look_top_may_reveal_two_types_split_clauses,

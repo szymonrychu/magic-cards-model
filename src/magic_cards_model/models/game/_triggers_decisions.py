@@ -78,6 +78,7 @@ from ...machines.triggers import (
     TargetingNotice,
     TargetingNoticeKind,
     state_triggers_for,
+    triggered_abilities_of,
     triggers_for,
 )
 from ...machines.turn import (
@@ -99,6 +100,30 @@ from ..zone import Zone
 
 if TYPE_CHECKING:
     from . import Game
+
+
+_EXILE_CONDITIONED_TRIGGER: dict[object, bool] = {}
+
+
+def _has_exile_conditioned_trigger(card: CardState) -> bool:
+    """Whether a card in exile has a triggered ability whose intervening "if"
+    says it is exiled (Darigaaz Reincarnated's "if this card is exiled with an
+    egg counter on it", CR 113.6b): such a card is offered every event like a
+    suspended one, and `zones_ability_functions_in` decides whether it really
+    functions there. Memoised per printing."""
+    key = card.card.id
+    found = _EXILE_CONDITIONED_TRIGGER.get(key)
+    if found is None:
+        found = any(
+            ability.intervening_if is not None
+            and (
+                "exiled" in ability.intervening_if.lower()
+                or "in exile" in ability.intervening_if.lower()
+            )
+            for ability in triggered_abilities_of(card.card)
+        )
+        _EXILE_CONDITIONED_TRIGGER[key] = found
+    return found
 
 
 class TriggersDecisionsMixin:
@@ -672,7 +697,11 @@ class TriggersDecisionsMixin:
             # suspend, and has a time counter on it", which is exactly
             # `CardState.is_suspended` - is the filter, so the widening stays
             # the size of the rule that needed it.
-            sources.extend(card for card in self.exile if card.is_suspended)
+            sources.extend(
+                card
+                for card in self.exile
+                if card.is_suspended or _has_exile_conditioned_trigger(card)
+            )
             # CR 114.4: "Abilities of emblems function in the command zone."
             sources.extend(
                 state
@@ -1738,7 +1767,7 @@ class TriggersDecisionsMixin:
         if not answer:
             return False
         if amount > 0:
-            self.lose_life(player, amount)
+            self.lose_life(player, amount, payment=True)  # CR 119.4
         return True
 
     def may_pay_energy(
@@ -1913,7 +1942,7 @@ class TriggersDecisionsMixin:
             return False
         self._pay_mana_while_resolving(player, cost, sources, prompt=full_prompt, spend=spend)
         if life > 0:
-            self.lose_life(player, life)
+            self.lose_life(player, life, payment=True)  # CR 119.4
         return True
 
     def _may_pay_mana_while_resolving(

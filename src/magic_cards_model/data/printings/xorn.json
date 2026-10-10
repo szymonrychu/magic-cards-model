@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e",
+  "oracle_id": "11d8fab8-93af-4291-80bd-cf9436e99f4b",
+  "multiverse_ids": [
+    527454
+  ],
+  "mtgo_id": 91836,
+  "arena_id": 77272,
+  "tcgplayer_id": 243290,
+  "cardmarket_id": 571442,
+  "name": "Xorn",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e",
+  "scryfall_uri": "https://scryfall.com/card/afr/167/xorn?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:07:50Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.jpg?1783926470",
+    "normal": "https://cards.scryfall.io/normal/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.jpg?1783926470",
+    "large": "https://cards.scryfall.io/large/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.jpg?1783926470",
+    "png": "https://cards.scryfall.io/png/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.png?1783926470",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.jpg?1783926470",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.jpg?1783926470",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.webp?1783926470",
+    "grid": "https://cards.scryfall.io/grid/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.webp?1783926470",
+    "display": "https://cards.scryfall.io/display/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.webp?1783926470",
+    "art": "https://cards.scryfall.io/art/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.webp?1783926470",
+    "crop": "https://cards.scryfall.io/crop/front/f/7/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e.webp?1783926470"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "If you would create one or more Treasure tokens, instead create those tokens plus an additional Treasure token.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Treasure"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "713a6502-5239-449a-b04a-c82d525f9916",
+      "component": "combo_piece",
+      "name": "Xorn",
+      "type_line": "Creature \u2014 Elemental",
+      "uri": "https://api.scryfall.com/cards/713a6502-5239-449a-b04a-c82d525f9916"
+    },
+    {
+      "object": "related_card",
+      "id": "a3a684b7-27e0-4d9e-a064-9e03c6e50c89",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/a3a684b7-27e0-4d9e-a064-9e03c6e50c89"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set": "afr",
+  "set_name": "Adventures in the Forgotten Realms",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aafr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/afr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f73fdf76-e3a6-49d0-bfb0-4b7cdbd4271e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A11d8fab8-93af-4291-80bd-cf9436e99f4b&unique=prints",
+  "collector_number": "167",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Xorns are native to the Elemental Plane of Earth, where gems and rare stones are plentiful. When summoned elsewhere they can be quite destructive in search of food.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Yigit Koroglu",
+  "artist_ids": [
+    "a24479f8-6d9e-40f9-bede-f29899922b97"
+  ],
+  "illustration_id": "ea728327-5063-4146-ad7b-a746422b0a13",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 890,
+  "penny_rank": 9154,
+  "preview": {
+    "source": "M.Wakatsuki/aisha",
+    "source_uri": "https://twitter.com/aishawakatsuki/status/1410953123577798666",
+    "previewed_at": "2021-07-02"
+  },
+  "prices": {
+    "usd": "13.37",
+    "usd_foil": "12.66",
+    "usd_etched": null,
+    "eur": "11.25",
+    "eur_foil": "14.50",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=527454&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DXorn",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DXorn",
+    "edhrec": "https://edhrec.com/route/?cc=Xorn"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243290%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=571442&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/91836?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

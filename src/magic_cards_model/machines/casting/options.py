@@ -216,6 +216,11 @@ class KeywordCastOption(EngineModel):
     on the entering permanent; `Casting.cast()` copies it onto
     `CastRecord.enters_with_counters`, which `machines/replacement.py`'s
     `_cast_permission_rider_modifiers` reads as the permanent enters."""
+    snow_any_color: bool = False
+    """CR 609.4b, narrowed to snow sources: the permission also lets the
+    caster "spend mana from snow sources as though it were mana of any color
+    to cast those spells" (Draugr Necromancer). Carried to the payment as
+    `ManaSpend.snow_any_color`."""
 
     def why_not(
         self,

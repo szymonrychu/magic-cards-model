@@ -95,7 +95,9 @@ class DamageLifeMixin:
         username = player.username if isinstance(player, Player) else player
         self.monarch = username
 
-    def gain_life(self: "Game", player: Player | str, amount: int) -> int:
+    def gain_life(
+        self: "Game", player: Player | str, amount: int, *, lifelink: bool = False
+    ) -> int:
         """A player gains life, replacement effects included (CR 119.3).
 
         "If an effect causes a player to gain life or lose life, that player's
@@ -107,7 +109,9 @@ class DamageLifeMixin:
         if amount <= 0:
             return player.life
 
-        event = ReplaceableEvent(kind=EventKind.GAIN_LIFE, player=player, amount=amount)
+        event = ReplaceableEvent(
+            kind=EventKind.GAIN_LIFE, player=player, amount=amount, lifelink=lifelink
+        )
         apply_replacements(self, event)
         # CR 119.9: a trigger written "Whenever [a player] gains life" is
         # treated as written "Whenever a source causes [a player] to gain
@@ -125,7 +129,7 @@ class DamageLifeMixin:
             )
         return player.life
 
-    def lose_life(self: "Game", player: Player | str, amount: int) -> int:
+    def lose_life(self: "Game", player: Player | str, amount: int, *, payment: bool = False) -> int:
         """A player loses life, returning the new total (CR 119.3).
 
         Every life loss comes through here - an effect's "loses N life",
@@ -149,7 +153,9 @@ class DamageLifeMixin:
             player = self.player(player)
         if amount <= 0:
             return player.life
-        event = ReplaceableEvent(kind=EventKind.LOSE_LIFE, player=player, amount=amount)
+        event = ReplaceableEvent(
+            kind=EventKind.LOSE_LIFE, player=player, amount=amount, payment=payment
+        )
         apply_replacements(self, event)
         if event.amount <= 0:
             return player.life
@@ -912,7 +918,7 @@ class DamageLifeMixin:
         if source_had_keyword(source, Keyword.LIFELINK, self):
             controller = source.controller or source.owner
             if controller is not None:
-                self.gain_life(controller, dealt)
+                self.gain_life(controller, dealt, lifelink=True)
 
     def deal_damage_to_player(self: "Game", player: Player | str, amount: int) -> int:
         """Damage dealt to a player causes that much life loss (CR 119.2, 120.3a).

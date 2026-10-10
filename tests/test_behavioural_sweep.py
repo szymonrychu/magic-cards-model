@@ -4757,6 +4757,17 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="cards already exiled with the source (CR 607.1)",
         precondition=r"if there are cards exiled with this",
     ),
+    # EP01-R1-T6: proven by tests/scenarios/test_ep01_r1_other_lines.py and
+    # test_ep01_r1_counter_token_replacement.py.
+    DriverGap(
+        kind="beginning_of_step",
+        event="the source card in exile with egg counters at its owner's upkeep (CR 122.1)",
+        precondition=r"if this card is exiled with an egg counter on it",
+    ),
+    DriverGap(
+        kind="rolls_dice",
+        event="a player rolling one or more dice (CR 706.2)",
+    ),
     # NW06-T1: states the stock boards cannot stage; each is driven by its
     # own scenario file (tests/scenarios/test_nw06_*).
     DriverGap(
@@ -5149,6 +5160,15 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
         if named is not None and not chosen and not source.name.lower().startswith(named.strip()):
             continue  # CR 201.5: a name in its own cost is the source itself
         game.add_counters(source, match.group(1), 5)
+    if "counters from among" in cost:
+        # "Remove three counters from among other creatures you control"
+        # (Tekuthal): counters on a permanent other than the source (CR 118.3).
+        donor = next(
+            p
+            for p in game.permanents_controlled_by(ALICE)
+            if p is not source and Type.CREATURE in p.types
+        )
+        game.add_counters(donor, "+1/+1", 5)
     if ability.loyalty is not None:
         minus = re.match(r"[−-](\d+)", ability.cost.strip())
         if minus is not None:
@@ -5247,6 +5267,16 @@ def _cost_choices(
                 if len(kin) >= component.required:
                     picked = kin[: component.required]
                     break
+        if component.minimum_total_power is not None:
+            # CR 208.1: "any number ... with total power N": the strongest
+            # creatures, one at a time, until their power reaches N.
+            candidates.sort(key=lambda c: -(game.characteristics_of(c).power or 0))
+            picked, total_power = [], 0
+            for candidate in candidates:
+                if total_power >= component.minimum_total_power:
+                    break
+                picked.append(candidate)
+                total_power += game.characteristics_of(candidate).power or 0
         taken.update(c.id for c in picked)
         chosen.setdefault(keyword, []).extend(picked)
     return chosen
@@ -5329,6 +5359,18 @@ def _cost_material_for(card_name: str, text: str) -> tuple[Material, ...]:
                 material += [
                     Material("Grizzly Bears", ALICE, Zone.BATTLEFIELD)
                 ] * component.required
+                continue
+            if component.minimum_total_power is not None:
+                # "Tap any number of untapped creatures ... total power 10":
+                # as many 2-power bears as the stock board lacks power for.
+                have_power = sum(
+                    game.characteristics_of(c).power or 0 for c in choices.get(keyword, [])
+                )
+                short = component.minimum_total_power - have_power
+                if short > 0:
+                    material += [Material("Grizzly Bears", ALICE, Zone.BATTLEFIELD)] * (
+                        -(-short // 2)
+                    )
                 continue
             if have >= component.required:
                 continue
@@ -5504,6 +5546,13 @@ def _needs_a_blocker(ability: ActivatedAbility) -> bool:
     return any(states) and all(CombatState.ATTACKING not in state for state in states if state)
 
 
+def _activator_for(ability: ActivatedAbility) -> str:
+    """Who activates: the opponent for "Only your opponents may activate this
+    ability" (Knight of the Holy Nimbus, CR 602.2), the controller otherwise."""
+    instructions = (ability.instructions or "").lower()
+    return BOB if "only your opponents may activate" in instructions else ALICE
+
+
 def _activate(
     scenario: PlayedScenario, source: CardState, index: int, ability: ActivatedAbility
 ) -> Any:
@@ -5511,11 +5560,14 @@ def _activate(
     the cost's chosen objects, pay mana with everything but the source, and
     put it on the stack."""
     game = scenario.game
-    refusal = game.why_cannot_activate(source, index, ALICE)
+    activator = _activator_for(ability)
+    if scenario.priority_holder != activator:
+        scenario.pass_priority(scenario.priority_holder)
+    refusal = game.why_cannot_activate(source, index, activator)
     if refusal is not None:
         raise _Unavailable(f"refused: {refusal}")
     x_value = _x_for(ability)
-    action = _action_for(scenario, ALICE, ActionKind.ACTIVATE, source.id, ability_index=index)
+    action = _action_for(scenario, activator, ActionKind.ACTIVATE, source.id, ability_index=index)
     targets = (
         _pick(scenario, action.target_slots, text=ability.effect) if action is not None else []
     )
@@ -5527,7 +5579,7 @@ def _activate(
         payment = game.begin_activating(
             source,
             index,
-            ALICE,
+            activator,
             sacrificing=sacrificing,
             discarding=choices.get("discarding"),
             exiling=choices.get("exiling"),
@@ -5536,17 +5588,17 @@ def _activate(
             x_value=x_value,
             targets=targets or None,
         )
-        payment.auto_tap([p for p in game.permanents_controlled_by(ALICE) if p is not source])
+        payment.auto_tap([p for p in game.permanents_controlled_by(activator) if p is not source])
         payment.pay()
         on_stack = game.activate_ability(
             source,
             index,
-            ALICE,
+            activator,
             x_value=x_value,
             exiled_for_cost=(choices.get("exiling") or [None])[0],
             sacrificed_for_cost=sacrificing,
         )
-        game.retain_priority(ALICE)
+        game.retain_priority(activator)
         return on_stack
     except (ValueError, AssertionError) as error:
         raise _Unavailable(f"activation refused: {error}") from error

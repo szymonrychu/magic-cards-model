@@ -77,6 +77,7 @@ if TYPE_CHECKING:
 #: ability's source is the object it is printed on, so "this" is that object and
 #: only the caller building the cost knows which it is.
 _SELF_REFERENCE = re.compile(r"\bthis\b", re.IGNORECASE)
+_OTHER_THAN_THIS = re.compile(r"\bother than this \w+", re.IGNORECASE)
 
 
 def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
@@ -99,6 +100,9 @@ def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
     question the `SACRIFICE`/`DISCARD` and generic `OTHER` self-reference
     fill-ins below ask.
     """
+    # "other than this creature" (Mossbridge Troll) names the source only to
+    # leave it out of the choice, so it is not the cost's own self-reference.
+    text = _OTHER_THAN_THIS.sub("", text)
     if _SELF_REFERENCE.search(text):
         return True
     front = permanent.card.name.split("//")[0].strip()
@@ -916,7 +920,7 @@ class CostsManaMixin:
         paid = self.ask(decision)
         assert isinstance(paid, int)
         if paid > 0:
-            self.lose_life(player, paid)
+            self.lose_life(player, paid, payment=True)  # CR 119.4
         return paid
 
     def unspent_mana_of(self: "Game", player: Player) -> ManaPool:

@@ -276,6 +276,10 @@ class ExtraTriggerEvent(StrEnum):
     #: search (CR 701.23a's own "look at all cards in that zone" is one
     #: action, regardless of how many finds it allows).
     SEARCHES_LIBRARY = "searches_library"
+    #: CR 706.2: a player rolled one or more dice (Barbarian Class's "Whenever
+    #: you roll one or more dice"). `GameEvent.player` is who rolled.
+    #: **Emitted by:** `Game.roll_dice`, once per roll instruction.
+    ROLLS_DICE = "rolls_dice"
     #: CR 709.5h: "Some abilities trigger when a player unlocks a particular
     #: half of a permanent. These abilities trigger when that permanent is
     #: given the appropriate unlocked designation, regardless of whether it
@@ -420,8 +424,8 @@ class GameEvent(EngineModel):
     ..." asks about the *reason* she was tapped, not merely that she was,
     the same way "deals **combat** damage" narrows `combat` above rather
     than matching any damage event. Set by `machines/cost.CostComponent.
-    pay`'s own `ComponentKind.TAP` branch off `minimum_total_power is not
-    None` - the field `pay_teamwork` alone ever sets - so an equip cost, a
+    pay`'s own `ComponentKind.TAP` branch off the `TEAMWORK_TAP` description
+    `pay_teamwork` alone gives its component - so an equip cost, a
     convoke tap, or any other ordinary tap cost leaves this `False`."""
 
     step: Step | None = None
