@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "faa652d7-16d3-400f-9ba4-7ba8078d4a08",
+  "oracle_id": "88f9a7e3-0b35-43e4-b16a-19c54a1e4e2c",
+  "multiverse_ids": [
+    393961
+  ],
+  "tcgplayer_id": 93640,
+  "cardmarket_id": 270001,
+  "name": "Goblin Cohort",
+  "lang": "en",
+  "released_at": "2014-12-05",
+  "uri": "https://api.scryfall.com/cards/faa652d7-16d3-400f-9ba4-7ba8078d4a08",
+  "scryfall_uri": "https://scryfall.com/card/evg/38/goblin-cohort?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:32:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.jpg?1783938767",
+    "normal": "https://cards.scryfall.io/normal/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.jpg?1783938767",
+    "large": "https://cards.scryfall.io/large/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.jpg?1783938767",
+    "png": "https://cards.scryfall.io/png/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.png?1783938767",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.jpg?1783938767",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.jpg?1783938767",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.webp?1783938767",
+    "grid": "https://cards.scryfall.io/grid/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.webp?1783938767",
+    "display": "https://cards.scryfall.io/display/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.webp?1783938767",
+    "art": "https://cards.scryfall.io/art/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.webp?1783938767",
+    "crop": "https://cards.scryfall.io/crop/front/f/a/faa652d7-16d3-400f-9ba4-7ba8078d4a08.webp?1783938767"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Goblin Warrior",
+  "oracle_text": "This creature can't attack unless you've cast a creature spell this turn.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d5dbdea8-45f6-4d22-990b-6b6897f99d18",
+  "set": "evg",
+  "set_name": "Duel Decks Anthology: Elves vs. Goblins",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/d5dbdea8-45f6-4d22-990b-6b6897f99d18",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aevg&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/evg?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/faa652d7-16d3-400f-9ba4-7ba8078d4a08/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A88f9a7e3-0b35-43e4-b16a-19c54a1e4e2c&unique=prints",
+  "collector_number": "38",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Akki shells provided good protection when downhill charging became headlong tumbling.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Darrell Riche",
+  "artist_ids": [
+    "262c8e55-4efc-467b-a042-6f734b9d2e01"
+  ],
+  "illustration_id": "7cde3eac-3616-44fd-a160-80ab57144bf8",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 25051,
+  "penny_rank": 4346,
+  "prices": {
+    "usd": "0.24",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.32",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=393961&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGoblin%2BCohort",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGoblin%2BCohort",
+    "edhrec": "https://edhrec.com/route/?cc=Goblin+Cohort"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F93640%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=270001&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Goblin+Cohort&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

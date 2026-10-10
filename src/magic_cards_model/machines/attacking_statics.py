@@ -215,3 +215,291 @@ def parse_tapped_group_keyword_grant(sentence: str) -> EffectBuilder | None:
     return _tapped_group_keyword_grant_builder(
         keywords, line=sentence, legendary=match.group("legendary") is not None
     )
+
+
+# -- self "can't attack/block unless ...", "alone" and "attacks each combat
+#    unless ..." restrictions (CR 508.1c, 509.1b, 508.1d, 506.5) --------------
+
+_SELF_UNLESS_RE = re.compile(
+    r"^(?P<subject>.+?) can't (?P<what>attack or block|attack|block)"
+    r"(?: (?P<alone>alone)| unless (?P<cond>.+?))?\.?$",
+    re.IGNORECASE,
+)
+_GREATER_POWER_COND_RE = re.compile(
+    r"^an?(?: other)? creatures? with greater power also (?P<verb>attacks|blocks)$", re.IGNORECASE
+)
+_REQUIREMENT_UNLESS_RE = re.compile(
+    r"^(?P<subject>.+?) attacks each combat if able unless (?P<cond>.+?)\.?$", re.IGNORECASE
+)
+_MAX_SPEED_RE = re.compile(r"^you have max speed$", re.IGNORECASE)
+_EVEN_COUNTERS_RE = re.compile(r"^it has an even number of counters on it$", re.IGNORECASE)
+_ONE_ONE_RE = re.compile(r"^you control an? (?P<p>\d+)/(?P<t>\d+) creature$", re.IGNORECASE)
+_PAY_COND_RE = re.compile(r"^you (?:pay|return) ", re.IGNORECASE)
+_DEFENDING_REWRITES = (
+    (re.compile(r"^defending player controls ", re.IGNORECASE), "you control "),
+    (re.compile(r"^defending player is ", re.IGNORECASE), "you are "),
+    (re.compile(r"^defending player has ", re.IGNORECASE), "you have "),
+)
+
+
+def _defender_form(condition: str) -> str | None:
+    """ "defending player controls an Island" as the same condition about "you"
+    (to be asked of the defending player), or None when it is not one."""
+    for pattern, replacement in _DEFENDING_REWRITES:
+        if pattern.match(condition):
+            rewritten = pattern.sub(replacement, condition)
+            return rewritten.replace("their graveyard", "your graveyard").replace(
+                "their hand", "your hand"
+            )
+    return None
+
+
+_PAIRED_SOULBOND_RE = re.compile(r"it's paired with a creature with soulbond", re.IGNORECASE)
+
+
+def _condition_readable(condition: str) -> bool:
+    from ..models.game._conditions import condition_is_readable
+
+    text = condition.strip().rstrip(".")
+    rewritten = _defender_form(text)
+    if rewritten is not None:
+        return condition_is_readable(rewritten)
+    return bool(
+        _PAIRED_SOULBOND_RE.fullmatch(text)
+        or _MAX_SPEED_RE.fullmatch(text)
+        or _EVEN_COUNTERS_RE.fullmatch(text)
+        or _ONE_ONE_RE.fullmatch(text)
+        or condition_is_readable(text)
+    )
+
+
+def _condition_holds(game, creature, defender, condition: str) -> bool | None:
+    """Whether `condition` holds for `creature` now, or None when unread."""
+    from . import speed
+    from .combat import defending_player
+
+    text = condition.strip().rstrip(".")
+    controller = game.controller_of(creature).username or ""
+    rewritten = _defender_form(text)
+    if rewritten is not None:
+        if defender is None:
+            return None
+        defending = defending_player(game, defender)
+        return None if defending is None else game.condition_holds(defending, rewritten, creature)
+    if _MAX_SPEED_RE.fullmatch(text):
+        return speed.has_max_speed(game.player(controller))
+    if _EVEN_COUNTERS_RE.fullmatch(text):
+        return sum(game.characteristics_of(creature).counters.values()) % 2 == 0
+    if one := _ONE_ONE_RE.fullmatch(text):
+        board = game.computed_board()
+        return any(
+            board.of(permanent).is_creature
+            and board.of(permanent).power == int(one["p"])
+            and board.of(permanent).toughness == int(one["t"])
+            for permanent in game.permanents_controlled_by(controller)
+        )
+    if _PAIRED_SOULBOND_RE.fullmatch(text):
+        from .soulbond import paired_with_soulbond
+
+        return paired_with_soulbond(game, creature)
+    return game.condition_holds(controller, text, creature)
+
+
+def _self_sentences(game, creature):
+    """(sentence, match) for each of this creature's own "can't attack/block"
+    sentences, ability word stripped, on the computed board (CR 613.5)."""
+    from .combat import (
+        _computed_ability_sentences,
+        _self_reference_alternatives,
+        strip_ability_word,
+    )
+
+    subjects = {name.lower() for name in _self_reference_alternatives(creature)}
+    for raw in _computed_ability_sentences(creature, game):
+        sentence = strip_ability_word(raw).strip()
+        match = _SELF_UNLESS_RE.fullmatch(sentence)
+        if match is not None and match["subject"].strip().lower() in subjects:
+            yield sentence, match
+
+
+def _condition_refusal(game, creature, defender, action: str) -> str | None:
+    rule = "CR 508.1c" if action == "attack" else "CR 509.1b"
+    for sentence, match in _self_sentences(game, creature):
+        if action not in match["what"].lower().split(" or ") or match["cond"] is None:
+            continue
+        if _PAY_COND_RE.match(match["cond"]) or _GREATER_POWER_COND_RE.fullmatch(match["cond"]):
+            continue
+        if _condition_holds(game, creature, defender, match["cond"]) is False:
+            return f'{creature.name} can\'t {action}: "{sentence}" - that is not so now ({rule})'
+    return None
+
+
+def self_attack_condition_refusal(game, creature, defender) -> str | None:
+    return self_owner_attack_refusal(game, creature, defender) or _condition_refusal(
+        game, creature, defender, "attack"
+    )
+
+
+def self_block_condition_refusal(game, blocker, attacker) -> str | None:
+    return _condition_refusal(game, blocker, None, "block")
+
+
+def _declaration_refusal(game, members, action: str) -> str | None:
+    """`members`: every creature declared as an `action` (attacker/blocker),
+    in the declaration. "Alone" and "a creature with greater power also"
+    are facts about the whole declaration (CR 506.5, CR 508.1c, CR 509.1b)."""
+    rule = "CR 508.1c" if action == "attack" else "CR 509.1b"
+    for creature in members:
+        for sentence, match in _self_sentences(game, creature):
+            if action not in match["what"].lower().split(" or "):
+                continue
+            others = [other for other in members if other.id != creature.id]
+            if match["alone"] is not None and not others:
+                return f'{creature.name} can\'t {action} alone: "{sentence}" ({rule}, CR 506.5)'
+            greater = match["cond"] and _GREATER_POWER_COND_RE.fullmatch(match["cond"])
+            if greater is not None and match["cond"]:
+                mine = game.power_of(creature)
+                if not any(
+                    (power := game.power_of(other)) is not None
+                    and mine is not None
+                    and power > mine
+                    for other in others
+                ):
+                    return (
+                        f'{creature.name} can\'t {action}: "{sentence}" - no creature with '
+                        f"greater power {action}s with it ({rule})"
+                    )
+    return None
+
+
+def self_attack_declaration_refusal(game, attacks) -> str | None:
+    """`attacks` is `[(creature, defender)]`, the whole declaration."""
+    return _declaration_refusal(game, [creature for creature, _defender in attacks], "attack")
+
+
+def self_block_declaration_refusal(game, declared) -> str | None:
+    """`declared` maps attacker id to its blockers, the whole declaration."""
+    blockers = [blocker for group in declared.values() for blocker in group]
+    return _declaration_refusal(game, blockers, "block")
+
+
+# A creature's own compound sentence, "Alexios attacks each combat if able,
+# can't be sacrificed, and can't attack its owner." - each clause is its own
+# rule: CR 508.1d's requirement, CR 701.21a's sacrifice (CR 101.2: "can't"
+# wins), CR 508.1c's restriction.
+_REQUIRES_CLAUSE = "attacks each combat if able"
+_NO_SACRIFICE_CLAUSE = "can't be sacrificed"
+_NOT_OWNER_CLAUSE = "can't attack its owner"
+_COMPOUND_CLAUSES = frozenset({_REQUIRES_CLAUSE, _NO_SACRIFICE_CLAUSE, _NOT_OWNER_CLAUSE})
+_CLAUSE_SPLIT_RE = re.compile(r",\s*(?:and\s+)?|\s+and\s+", re.IGNORECASE)
+
+
+def compound_clauses(sentence: str, subjects) -> frozenset[str] | None:
+    """The clauses of a compound self sentence made only of the three above
+    (at least two of them), or None."""
+    text = sentence.strip().rstrip(".")
+    for subject in sorted(subjects, key=len, reverse=True):
+        lead = subject.lower() + " "
+        if not text.lower().startswith(lead):
+            continue
+        parts = [part.strip().lower() for part in _CLAUSE_SPLIT_RE.split(text[len(lead) :])]
+        if len(parts) >= 2 and all(part in _COMPOUND_CLAUSES for part in parts):
+            return frozenset(parts)
+    return None
+
+
+def _compound_clause_sets(game, creature):
+    from .combat import _computed_ability_sentences, _self_reference_alternatives
+
+    subjects = _self_reference_alternatives(creature)
+    for raw in _computed_ability_sentences(creature, game):
+        clauses = compound_clauses(raw, subjects)
+        if clauses is not None:
+            yield clauses
+
+
+def cant_be_sacrificed(game, permanent) -> str | None:
+    """Why `permanent`'s own "can't be sacrificed" stops it being sacrificed, or
+    None (CR 701.21a, CR 101.2) - read off the computed abilities (CR 613.5)."""
+    if permanent.zone.value != "battlefield":
+        return None
+    for clauses in _compound_clause_sets(game, permanent):
+        if _NO_SACRIFICE_CLAUSE in clauses:
+            return f"{permanent.name} can't be sacrificed (CR 701.21a, CR 101.2)"
+    return None
+
+
+def self_owner_attack_refusal(game, creature, defender) -> str | None:
+    """ "can't attack its owner" (CR 508.1c): an attack on the player who owns
+    the creature."""
+    if defender is None or not defender.is_player:
+        return None
+    for clauses in _compound_clause_sets(game, creature):
+        if _NOT_OWNER_CLAUSE in clauses and defender.username == creature.owner:
+            return f"{creature.name} can't attack its owner {creature.owner} (CR 508.1c)"
+    return None
+
+
+def self_attack_requirements(game, creature) -> list[bool]:
+    """One entry per "attacks each combat if able unless <condition>" this
+    creature has while the condition does not hold (CR 508.1d)."""
+    from .combat import (
+        _computed_ability_sentences,
+        _self_reference_alternatives,
+    )
+
+    subjects = {name.lower() for name in _self_reference_alternatives(creature)}
+    found: list[bool] = [
+        False for clauses in _compound_clause_sets(game, creature) if _REQUIRES_CLAUSE in clauses
+    ]
+    for raw in _computed_ability_sentences(creature, game):
+        match = _REQUIREMENT_UNLESS_RE.fullmatch(raw.strip())
+        if match is None or match["subject"].strip().lower() not in subjects:
+            continue
+        if _condition_holds(game, creature, None, match["cond"]) is False:
+            found.append(False)
+    return found
+
+
+def reads_self_condition_line(printing, text: str, *, card_name: str) -> bool:
+    """Whether every sentence of this static line is one of the shapes above
+    with a condition `Game.condition_holds` (or the local readers) reads."""
+    from .combat import _self_reference_names, strip_ability_word
+    from .layers import layer_readable_sentences
+
+    lowered = text.lower()
+    if (
+        "can't attack" not in lowered
+        and "can't block" not in lowered
+        and "attacks each" not in lowered
+    ):
+        return False
+    subjects = {name.lower() for name in _self_reference_names(card_name)}
+    sentences = [strip_ability_word(s).strip() for s in layer_readable_sentences(text)]
+    if not sentences:
+        return False
+    for sentence in sentences:
+        if compound_clauses(sentence, subjects) is not None:
+            continue
+        if match := _SELF_UNLESS_RE.fullmatch(sentence):
+            if match["subject"].strip().lower() not in subjects:
+                return False
+            cond = match["cond"]
+            if cond is None:
+                # A bare "can't attack or block" is `combat`'s own unconditional
+                # reader's (`_self_attack_restriction_sentence`, block twin).
+                if match["alone"] is None and match["what"].lower() != "attack or block":
+                    return False
+            elif not (
+                _GREATER_POWER_COND_RE.fullmatch(cond)
+                or (not _PAY_COND_RE.match(cond) and _condition_readable(cond))
+            ):
+                return False
+        elif match := _REQUIREMENT_UNLESS_RE.fullmatch(sentence):
+            if match["subject"].strip().lower() not in subjects or not _condition_readable(
+                match["cond"]
+            ):
+                return False
+        else:
+            return False
+    return True

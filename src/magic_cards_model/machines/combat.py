@@ -621,7 +621,7 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
         # text the way the defender check above is.
         return f"{creature.name} can't attack this turn (CR 508.1c)"
 
-    from .combat_statics import power_threshold_restriction_refusal
+    from .combat_statics import extra_attack_refusal, power_threshold_restriction_refusal
 
     return (
         self_card_count_restriction_refusal(game, creature, "attack")
@@ -629,6 +629,7 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
         or power_threshold_restriction_refusal(game, creature, "attack")
         or _defender_refusal(game, defender, active)
         or group_attack_restriction_refusal(game, creature, defender)
+        or extra_attack_refusal(game, creature, defender)
     )
 
 
@@ -775,8 +776,13 @@ def total_attack_cost(
     (CR 508.1d) - `most_obedient_attack` skips a defender that charges."""
     total = ManaCost.parse("")
     reasons: list[str] = []
+    from .combat_statics import extra_attack_costs
+
     for creature, defender in attacks:
-        for charge in attack_costs_against(game, defender):
+        for charge in [
+            *attack_costs_against(game, defender),
+            *extra_attack_costs(game, creature, defender),
+        ]:
             total = total.plus(charge.cost)
             reasons.append(f"{creature.name}: {charge.cost} ({charge.source.name})")
     return total, reasons
@@ -2622,7 +2628,11 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
             )
         )
 
-    return landwalk_refusal(game, attacker, defending)
+    from .combat_statics import extra_block_refusal
+
+    return extra_block_refusal(game, blocker, attacker) or landwalk_refusal(
+        game, attacker, defending
+    )
 
 
 def landwalk_refusal(game: "Game", attacker: CardState, defending: str | None) -> str | None:
@@ -2712,7 +2722,9 @@ def declaration_refusal(game: "Game", declared: dict[UUID, list[CardState]]) -> 
         refusal = self_block_alone_refusal(game, blocker, len(all_blockers))
         if refusal is not None:
             return refusal
-    return None
+    from .combat_statics import extra_declaration_refusal
+
+    return extra_declaration_refusal(game, declared)
 
 
 def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) -> None:
@@ -2754,6 +2766,9 @@ def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) ->
     )
     if unobeyed_lure is not None:
         raise ValueError(unobeyed_lure)
+
+    # CR 509.1d-f: the cost to block, paid in full before the blocks are made.
+    game._pay_block_costs(blocks)
 
     for attack in combat.attacks:
         chosen = declared[attack.attacker_id]
@@ -3473,6 +3488,9 @@ def _own_attack_requirements(game: "Game", creature: CardState) -> list[bool]:
         match = _attack_requirement_match(line, creature.name)
         if match is not None:
             requirements.append(match.group("player") is not None)
+    from .combat_statics import extra_attack_requirements
+
+    requirements.extend(extra_attack_requirements(game, creature))
     return requirements
 
 

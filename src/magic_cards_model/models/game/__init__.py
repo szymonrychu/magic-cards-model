@@ -1939,7 +1939,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 134
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 137
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2238,6 +2238,12 @@ class Game(
     #: would read every convoked spell as convoked by none. `Game` also gained
     #: `lands_entered_this_turn` (Bioengineered Future's "for each land that
     #: entered the battlefield under your control this turn").
+    #: 137 (EP01-R1-T4): `CardState` gained `paired_with` (CR 702.95a's soulbond
+    #: pair); an older dump would decode every creature unpaired, so a
+    #: Flowering Lumberknot that was paired could no longer attack or block.
+    #: The same version: `machines/cost.CostComponent` gained
+    #: `shared_creature_type` (Weight of Conscience's "that share a creature
+    #: type"), reachable through a pending activation's cost.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

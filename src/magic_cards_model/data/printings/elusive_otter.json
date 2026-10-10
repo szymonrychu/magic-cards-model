@@ -1,0 +1,173 @@
+{
+  "object": "card",
+  "id": "bdb79d68-c3af-4091-b7db-005247191da8",
+  "oracle_id": "54175132-2c44-4749-8dfd-d08dcc63e4b3",
+  "multiverse_ids": [],
+  "resource_id": "7D4FABECA5F39B747017FA2177835126C30F75591A213C6DD5F2D87EF424F9D8",
+  "mtgo_id": 149077,
+  "tcgplayer_id": 687625,
+  "cardmarket_id": 881640,
+  "name": "Elusive Otter // Grove's Bounty",
+  "lang": "en",
+  "released_at": "2026-04-24",
+  "uri": "https://api.scryfall.com/cards/bdb79d68-c3af-4091-b7db-005247191da8",
+  "scryfall_uri": "https://scryfall.com/card/soc/306/elusive-otter-groves-bounty?utm_source=api",
+  "layout": "adventure",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:49:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.jpg?1783903753",
+    "normal": "https://cards.scryfall.io/normal/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.jpg?1783903753",
+    "large": "https://cards.scryfall.io/large/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.jpg?1783903753",
+    "png": "https://cards.scryfall.io/png/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.png?1783903753",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.jpg?1783903753",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.jpg?1783903753",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.webp?1783903753",
+    "grid": "https://cards.scryfall.io/grid/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.webp?1783903753",
+    "display": "https://cards.scryfall.io/display/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.webp?1783903753",
+    "art": "https://cards.scryfall.io/art/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.webp?1783903753",
+    "crop": "https://cards.scryfall.io/crop/front/b/d/bdb79d68-c3af-4091-b7db-005247191da8.webp?1783903753"
+  },
+  "mana_cost": "{U} // {X}{G}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Otter // Sorcery \u2014 Adventure",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [
+    "Prowess"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Elusive Otter",
+      "mana_cost": "{U}",
+      "type_line": "Creature \u2014 Otter",
+      "oracle_text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\nCreatures with power less than this creature's power can't block it.",
+      "power": "1",
+      "toughness": "1",
+      "artist": "Christina Kraus",
+      "artist_id": "685354c3-302d-486a-b575-cb19bb2c31c9",
+      "illustration_id": "28bac664-022f-4ed1-83e1-c67dcac98698"
+    },
+    {
+      "object": "card_face",
+      "name": "Grove's Bounty",
+      "mana_cost": "{X}{G}",
+      "type_line": "Sorcery \u2014 Adventure",
+      "oracle_text": "Distribute X +1/+1 counters among any number of target creatures you control. (Then exile this card. You may cast the creature later from exile.)",
+      "artist": "Christina Kraus",
+      "artist_id": "685354c3-302d-486a-b575-cb19bb2c31c9"
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "bdb79d68-c3af-4091-b7db-005247191da8",
+      "component": "combo_piece",
+      "name": "Elusive Otter // Grove's Bounty",
+      "type_line": "Creature \u2014 Otter // Sorcery \u2014 Adventure",
+      "uri": "https://api.scryfall.com/cards/bdb79d68-c3af-4091-b7db-005247191da8"
+    },
+    {
+      "object": "related_card",
+      "id": "5e289bb3-f6de-450d-9f7e-77e2e70cb7cc",
+      "component": "combo_piece",
+      "name": "On an Adventure",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/5e289bb3-f6de-450d-9f7e-77e2e70cb7cc"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "97fab8d1-480a-419d-ab14-663968e29b9c",
+  "set": "soc",
+  "set_name": "Secrets of Strixhaven Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/97fab8d1-480a-419d-ab14-663968e29b9c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asoc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/soc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bdb79d68-c3af-4091-b7db-005247191da8/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A54175132-2c44-4749-8dfd-d08dcc63e4b3&unique=prints",
+  "collector_number": "306",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Christina Kraus",
+  "artist_ids": [
+    "685354c3-302d-486a-b575-cb19bb2c31c9"
+  ],
+  "illustration_id": "28bac664-022f-4ed1-83e1-c67dcac98698",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 7014,
+  "penny_rank": 4839,
+  "prices": {
+    "usd": "0.33",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.27",
+    "eur_foil": null,
+    "tix": "0.10"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DElusive%2BOtter%2B%252F%252F%2BGrove%2527s%2BBounty",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DElusive%2BOtter%2B%252F%252F%2BGrove%2527s%2BBounty",
+    "edhrec": "https://edhrec.com/route/?cc=Elusive+Otter"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F687625%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=881640&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/149077?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

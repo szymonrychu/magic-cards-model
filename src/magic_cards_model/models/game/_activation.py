@@ -1436,6 +1436,11 @@ class ActivationMixin:
         is CR 605.1a's mana ability, spared by an "unless they're mana
         abilities" tail.
         """
+        from ...machines.attached_restrictions import attached_activation_prohibition
+
+        attached = attached_activation_prohibition(self, obj, is_mana=is_mana)
+        if attached is not None:
+            return attached
         for source in list(self.battlefield):
             for line in parse_abilities(source.card):
                 if line.kind is not AbilityKind.STATIC:
@@ -1963,6 +1968,9 @@ class ActivationMixin:
             mana = mana.minus(self._power_up_group_discount(permanent, controller))
         mana = mana.minus(self._activation_target_cost_reduction(permanent, ability, targets))
         mana = self._activated_ability_group_discount(permanent, controller, mana)
+        from ...machines.attached_restrictions import activation_cost_increase
+
+        mana = increase(mana, activation_cost_increase(self, permanent))
 
         return TotalCost(
             mana=mana, components=components, waterbend_generic=waterbend_generic

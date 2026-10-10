@@ -113,6 +113,7 @@ def printed_characteristics(
             is_token=state.token,
             zone_change_stamp=state.zone_change_stamp,
             attached_to=state.attached_to,
+            paired_with=state.paired_with,
             transformed=state.transformed,
         )
     # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
@@ -163,6 +164,7 @@ def printed_characteristics(
         is_token=state.token,
         zone_change_stamp=state.zone_change_stamp,
         attached_to=state.attached_to,
+        paired_with=state.paired_with,
         transformed=state.transformed,
     )
 
@@ -1718,6 +1720,18 @@ _EACH_ANTHEM_PER_OTHER_CREATURE_RE = re.compile(
 #: `_self_protection_from_chosen_color_builder`.
 _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
     r"^this (?:creature|permanent|token) has protection from the chosen colou?r\.?$",
+    re.IGNORECASE,
+)
+
+#: "As long as this creature is paired with another creature, both creatures
+#: have <keyword(s)>[ and get +N/+N]." (Silverblade Paladin, Nightshade
+#: Peddler, Wolfir Silverheart) - CR 702.95a's pair, read live by
+#: `PairedPartners` so the grant ends the moment the pair does (CR 702.95e).
+_PAIRED_BOTH_RE = re.compile(
+    r"^as long as this creature is paired with another creature, both creatures "
+    r"(?:(?:have (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)"
+    r"(?: and get (?P<p1>[+-]\d+)/(?P<t1>[+-]\d+))?)"
+    r"|(?:get (?P<p2>[+-]\d+)/(?P<t2>[+-]\d+)))\.?$",
     re.IGNORECASE,
 )
 
@@ -4206,6 +4220,49 @@ def _self_protection_from_chosen_color_builder(*, line: str) -> EffectBuilder:
     return builder
 
 
+def _paired_both_builder(
+    keywords: list[str], power: int, toughness: int, *, line: str
+) -> EffectBuilder:
+    """`_PAIRED_BOTH_RE`'s shape: a layer 6 grant (CR 613.1f) and/or a 7c pump
+    (CR 613.4c) over the source and its soulbond partner."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = PairedPartners(source_id=source.id)
+        effects = [
+            ContinuousEffect(
+                description=f"{source.name}: both paired creatures have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+        if power or toughness:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: both paired get {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=line,
+                    selector=selector,
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+        return effects
+
+    return builder
+
+
 def _per_other_creature_anthem_builder(
     power: int,
     toughness: int,
@@ -5752,7 +5809,7 @@ _ATTACHED_CREATURE_STATIC_RE = re.compile(
     # Meltstrider's Resolve / Wolfrider's Saddle: "gets +0/+2 and can't be
     # blocked by more than one creature" - the blocker cap (CR 509.1b) with
     # no "has" in front of it, read by the same keyword-list validator.
-    r"| and (?P<restriction>can't be blocked .+?)"
+    r"| and (?P<restriction>can't (?:be blocked .+?|attack alone))"
     # Rope: "gets +1/+2, has reach, and can't be blocked by more than one
     # creature" - the same two grants as a comma list.
     r"|, has (?P<listed>[a-z][a-z ]*?),? and (?P<listed_restriction>can't be blocked .+?))?"
@@ -5814,6 +5871,25 @@ _ATTACHED_CREATURE_IS_SUBTYPE_RE = re.compile(
     r"(?P<power>\d+)/(?P<toughness>\d+)"
     r"(?: and (?P<loses>loses all abilities))?\.?"
     r"(?: It (?P<rider>[^.]+))?\.?$"
+)
+
+#: "Enchanted creature is a Spirit and can't attack or block." (Fog on the
+#: Barrow-Downs) - `_ATTACHED_CREATURE_IS_SUBTYPE_RE`'s subtype *set* (CR 205.1a)
+#: with no base power and toughness, and the restriction (CR 508.1c, 509.1b)
+#: in the same sentence instead of an "It ..." rider.
+_ATTACHED_CREATURE_IS_SUBTYPE_AND_CANT_RE = re.compile(
+    r"^(?P<attachment>[Ee]nchanted|[Ee]quipped) creature is an? "
+    r"(?P<subtypes>[A-Z][a-z]+(?: [A-Z][a-z]+)*) and can'?t "
+    r"(?P<what>attack or block|attack|block)\.?$"
+)
+
+#: "Enchanted creature can't attack or block and has "{7}: ... Activate only as
+#: a sorcery."" (Hold for Ransom) - CR 508.1c/509.1b's restriction and a quoted
+#: ability grant (CR 113.10a) in one sentence, each read as its own layer 6
+#: grant by `_attached_creature_static_builder`.
+_ATTACHED_CREATURE_CANT_AND_HAS_RE = re.compile(
+    r"^(?P<attachment>[Ee]nchanted|[Ee]quipped) creature can'?t "
+    r'(?P<what>attack or block|attack|block) and has "(?P<granted>.+)"\.?$'
 )
 
 #: One part of `_ATTACHED_CREATURE_IS_SUBTYPE_RE`'s rider: CR 508.1c/509.1b's
@@ -8357,8 +8433,8 @@ def _attached_creature_loses_and_becomes_builder(
 
 def _attached_creature_is_subtype_builder(
     subtypes: tuple[str, ...],
-    power: int,
-    toughness: int,
+    power: int | None,
+    toughness: int | None,
     *,
     subject: str,
     line: str,
@@ -8436,18 +8512,21 @@ def _attached_creature_is_subtype_builder(
             )
             for granted in (*keywords, *restrictions)
         )
-        effects.append(
-            ContinuousEffect(
-                description=f"{source.name}: {subject} creature has base P/T {power}/{toughness}",
-                layer=Layer.POWER_TOUGHNESS,
-                sublayer=Sublayer.SET,
-                timestamp=timestamp,
-                source_id=source.id,
-                source_ability=ability,
-                selector=selector,
-                modification=set_power_toughness(power, toughness),
+        if power is not None and toughness is not None:
+            effects.append(
+                ContinuousEffect(
+                    description=(
+                        f"{source.name}: {subject} creature has base P/T {power}/{toughness}"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=ability,
+                    selector=selector,
+                    modification=set_power_toughness(power, toughness),
+                )
             )
-        )
         return effects
 
     return builder
@@ -10922,6 +11001,15 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _all_activated_abilities_builder(all_activated, line=sentence)
     if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
         return _self_protection_from_chosen_color_builder(line=sentence)
+    if match := _PAIRED_BOTH_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match["keywords"]) if match["keywords"] else []
+        if keywords is not None:
+            return _paired_both_builder(
+                keywords,
+                int(match["p1"] or match["p2"] or 0),
+                int(match["t1"] or match["t2"] or 0),
+                line=sentence,
+            )
     if match := _HEXPROOF_FROM_EACH_OF_ITS_COLORS_RE.fullmatch(sentence):
         return _hexproof_from_each_of_its_colors_builder(
             other=match.group("other") is not None,
@@ -11175,6 +11263,26 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             loses_all=match.group("loses") is not None or rider_loses_all or loses_other,
             keywords=rider_keywords,
             restrictions=restrictions,
+        )
+    if match := _ATTACHED_CREATURE_CANT_AND_HAS_RE.fullmatch(sentence):
+        return _attached_creature_static_builder(
+            0,
+            0,
+            [f"This creature can't {match.group('what')}."],
+            subject=match.group("attachment").lower(),
+            granted=match.group("granted").strip(),
+            line=sentence,
+        )
+    if match := _ATTACHED_CREATURE_IS_SUBTYPE_AND_CANT_RE.fullmatch(sentence):
+        return _attached_creature_is_subtype_builder(
+            tuple(match.group("subtypes").split()),
+            None,
+            None,
+            subject=match.group("attachment").lower(),
+            line=sentence,
+            loses_all=False,
+            keywords=[],
+            restrictions=[f"This creature can't {match.group('what')}."],
         )
     if match := _ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE.fullmatch(sentence):
         pump_keywords: list[str] = []
@@ -12240,6 +12348,7 @@ from .model import (  # noqa: E402
     ModifyPowerToughnessPer,
     OnlyThisIncarnation,
     OtherCreatures,
+    PairedPartners,
     PermanentsOfTypes,
     PermanentsOfTypesControlledBy,
     PermanentsWithName,

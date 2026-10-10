@@ -1051,6 +1051,11 @@ class CardState(EngineModel):
     neither an ability nor part of the permanent's copiable values." Set by
     renown's own trigger (CR 702.112a, `machines/effects.py`'s "it becomes
     renowned"), cleared by `move_to` off the battlefield."""
+    paired_with: UUID | None = None
+    """CR 702.95a's pairing: the `id` of the creature this one is paired with,
+    or `None`. Only `machines/soulbond.py` writes it, and it reads it lazily
+    (CR 702.95e: a pair that no longer holds is simply not a pair), so a stale
+    pointer is harmless. Cleared by `move_to` (CR 702.95e, CR 400.7)."""
     venture_room: str | None = None
     """For a dungeon card in the command zone (CR 309.4): the name of the
     room its owner's venture marker is on. `machines/dungeon.py` is the only
@@ -3101,6 +3106,7 @@ class CardState(EngineModel):
             self.saddled_by = ()
             self.suspected = False
             self.renowned = False
+            self.paired_with = None  # CR 702.95e
             self.solved = False  # CR 719.3b
             if zone is Zone.GRAVEYARD:
                 self._note_put_into_graveyard_with_counters()

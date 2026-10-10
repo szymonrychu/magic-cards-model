@@ -2986,6 +2986,13 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     )
     if exactly is not None and not partners:
         partners = ("Grizzly Bears",) * (parse_count(exactly.group(1), article=False) or 1)
+    # "This creature can't attack alone" / "can't attack or block alone"
+    # (Militia Rallier, CR 506.5): a vanilla partner attacks alongside it, or
+    # the declaration is illegal and the trigger never happens.
+    if not partners and re.search(
+        r"can't attack (?:or block )?alone", card.oracle_text or "", re.IGNORECASE
+    ):
+        partners = ("Grizzly Bears",)
     # "if a Pirate and a Vehicle attacked this combat" (Fearless
     # Swashbuckler): each kind the source is not attacks alongside it - a
     # crewed Vehicle (CR 702.122a), or the simplest creature of that subtype.
@@ -5230,6 +5237,16 @@ def _cost_choices(
         ]
         candidates.sort(key=lambda c: c.card.is_land)
         picked = candidates[: component.required]
+        if getattr(component, "shared_creature_type", False):
+            # "... that share a creature type" (Weight of Conscience, CR 205.3m):
+            # the first creature type enough of the candidates carry.
+            for subtype in dict.fromkeys(
+                kind for c in candidates for kind in game.characteristics_of(c).subtypes
+            ):
+                kin = [c for c in candidates if subtype in game.characteristics_of(c).subtypes]
+                if len(kin) >= component.required:
+                    picked = kin[: component.required]
+                    break
         taken.update(c.id for c in picked)
         chosen.setdefault(keyword, []).extend(picked)
     return chosen
@@ -5302,6 +5319,17 @@ def _cost_material_for(card_name: str, text: str) -> tuple[Material, ...]:
             if keyword is None or component.cards or component.required <= 0:
                 continue
             have = len(choices.get(keyword, []))
+            if getattr(component, "shared_creature_type", False):
+                # "... that share a creature type" (Weight of Conscience): the
+                # picked creatures must have a type in common, else a vanilla
+                # pair of one kind is staged.
+                kinds = [set(game.characteristics_of(c).subtypes) for c in choices.get(keyword, [])]
+                if have >= component.required and set.intersection(*kinds):
+                    continue
+                material += [
+                    Material("Grizzly Bears", ALICE, Zone.BATTLEFIELD)
+                ] * component.required
+                continue
             if have >= component.required:
                 continue
             requirement = component.requirement

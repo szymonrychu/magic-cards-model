@@ -910,7 +910,7 @@ _PHRASE_DISCARD = re.compile(
 _PHRASE_TAP = re.compile(
     rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?P<other>other )?(?:untapped )?"
     r"(?P<quality>[\w ,]+?) "
-    r"you control$",
+    r"you control(?P<share> that share a creature type)?$",
     re.IGNORECASE,
 )
 #: `Return a land you control to its owner's hand` (Tameshi, Reality
@@ -1486,6 +1486,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         component.required = read[0]
         component.requirement = requirement
         component.variable_count = read[1]
+        component.shared_creature_type = tap.group("share") is not None
         return component
 
     return None

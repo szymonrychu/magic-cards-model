@@ -416,6 +416,11 @@ class CostComponent(EngineModel):
     requirement: CardRequirement | None = None
     """What the chosen cards have to be, when the cost says (CR 118.3)."""
 
+    shared_creature_type: bool = Field(default=False, repr=False)
+    """`ComponentKind.TAP` only: "... that share a creature type" (Weight of
+    Conscience) - the chosen creatures must all have at least one creature
+    type in common (CR 205.3m)."""
+
     minimum_total_power: int | None = None
     """`ComponentKind.TAP` only: the combined power `cards` must reach or
     beat (CR 208.1) - Teamwork N's own "tap any number of creatures you
@@ -867,6 +872,15 @@ class CostComponent(EngineModel):
         controlled = self._why_not_controlled()
         if controlled is not None:
             return controlled
+        if self.shared_creature_type and len(self.cards) > 1:
+            common = None
+            for card in self.cards:
+                types = set(
+                    game.characteristics_of(card).subtypes if game is not None else card.subtypes
+                )
+                common = types if common is None else common & types
+            if not common:
+                return "the tapped creatures must share a creature type"
         if self.minimum_total_power is not None:
             total = 0
             for card in self.cards:
@@ -896,10 +910,14 @@ class CostComponent(EngineModel):
             or self.requirement.why_not(permanent, game, self.payer) is None
         ]
 
-    def _why_not_sacrifice(self, _game: Any) -> str | None:
+    def _why_not_sacrifice(self, game: Any) -> str | None:
+        from .. import attacking_statics
+
         for card in self.cards:
             if card.zone is not Zone.BATTLEFIELD:
                 return f"{card.name} is not a permanent, so it cannot be sacrificed"
+            if game is not None and (why := attacking_statics.cant_be_sacrificed(game, card)):
+                return why
         return self._why_not_controlled()
 
     def _why_not_controlled(self) -> str | None:

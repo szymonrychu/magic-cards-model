@@ -933,7 +933,7 @@ class CostsManaMixin:
         self: "Game",
         attacks: "Sequence[tuple[CardState, Targetable | str]]",
         sources: "Sequence[CardState] | None" = None,
-    ) -> None:
+    ) -> list[CardState]:
         """CR 508.1h-j: determine the total cost to attack, let the active
         player activate mana abilities for it, and pay it in full - or refuse
         the whole declaration (CR 508.1: "the game returns to the moment
@@ -950,8 +950,9 @@ class CostsManaMixin:
         """
         refs = [(creature, self.attack_target(defender)) for creature, defender in attacks]
         total, reasons = combat_rules.total_attack_cost(self, refs)
+        returned = self._choose_attack_cost_returns(attacks)
         if not total.symbols:
-            return
+            return returned
         active = self.active_player.username
         attacking = {creature.id for creature, _defender in attacks}
         pool = (
@@ -973,6 +974,89 @@ class CostsManaMixin:
             raise ValueError(
                 f"the cost to attack is {total} ({'; '.join(reasons)}) and it cannot be paid: "
                 f"{error} (CR 508.1h, CR 508.1j)"
+            ) from error
+        return returned
+
+    def _choose_attack_cost_returns(
+        self: "Game", attacks: "Sequence[tuple[CardState, Targetable | str]]"
+    ) -> list[CardState]:
+        """CR 508.1g-h: the permanents each "can't attack unless you return a
+        <permanent> you control to its owner's hand" cost (Floodtide Serpent)
+        will return, chosen by the attacking player as the attack is declared
+        (`attack_block_costs.return_costs`). Chosen before any mana is paid
+        so a cost that cannot be paid changes nothing."""
+        from ...machines import attack_block_costs
+
+        taken: set = set()
+        chosen: list[CardState] = []
+        for creature, _defender in attacks:
+            for sentence, candidates in attack_block_costs.return_costs(self, creature):
+                available = [permanent for permanent in candidates if permanent.id not in taken]
+                if not available:
+                    raise ValueError(
+                        f'{creature.name} can\'t attack: "{sentence}" and there is nothing '
+                        "left to return (CR 508.1c, CR 118.3)"
+                    )
+                picked = available[-1]
+                if len(available) > 1:
+                    answer = self.ask(
+                        Decision(
+                            kind=DecisionKind.CHOOSE_CARDS,
+                            player=self.active_player.username,
+                            prompt=f"choose the permanent to return to pay for {creature.name} "
+                            "attacking",
+                            source=creature.name,
+                            source_id=None,
+                            amount=1,
+                            cards=tuple(permanent.id for permanent in available),
+                        )
+                    )
+                    by_id = {permanent.id: permanent for permanent in available}
+                    picked = by_id[answer[0]]
+                taken.add(picked.id)
+                chosen.append(picked)
+        return chosen
+
+    def _return_attack_cost_permanents(self: "Game", chosen: "Sequence[CardState]") -> None:
+        for permanent in chosen:
+            self.return_to_hand(permanent)
+
+    def _pay_block_costs(self: "Game", blocks: "Sequence[tuple[CardState, CardState]]") -> None:
+        """CR 509.1d-f: determine the total cost to block, let the defending
+        player activate mana abilities for it, and pay it in full - or refuse
+        the whole declaration when it cannot be paid (CR 509.1f: "Partial
+        payments are not allowed"). Only a block not already declared costs
+        anything: a harness or caller re-declaring the whole combat does not
+        pay again for the pairs already made."""
+        from ...machines import combat_statics
+
+        combat = self.combat
+        total = ManaCost.parse("")
+        reasons: list[str] = []
+        payer: str | None = None
+        for blocker, attacker in blocks:
+            attack = combat.attack_by(attacker.id)
+            if attack is not None and blocker.id in attack.blockers:
+                continue
+            for charge in combat_statics.extra_block_costs(self, blocker):
+                total = total.plus(charge.cost)
+                reasons.append(f"{blocker.name}: {charge.cost} ({charge.source.name})")
+                payer = self.controller_of(blocker).username
+        if not total.symbols or payer is None:
+            return
+        pool = [
+            permanent for permanent in self.permanents_controlled_by(payer) if not permanent.tapped
+        ]
+        payment = CostPayment.for_total(TotalCost(mana=total), game=self, payer=payer)
+        try:
+            payment.auto_tap(pool)
+            payment.pay()
+        except ValueError as error:
+            if payment.step is not CostStep.PAID:
+                payment.cancel()
+            raise ValueError(
+                f"the cost to block is {total} ({'; '.join(reasons)}) and it cannot be paid: "
+                f"{error} (CR 509.1d, CR 509.1f)"
             ) from error
 
     def spend_play_permission_choice(self: "Game", used: PlayPermission) -> None:

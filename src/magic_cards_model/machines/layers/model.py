@@ -247,6 +247,10 @@ class Characteristics(EngineModel):
     #: can answer "for each Equipment attached to it" (Winter Soldier, Icy
     #: Assassin; Loxodon Punisher) off the board it is handed.
     attached_to: UUID | None = None
+    #: `CardState.paired_with` as of this computation (CR 702.95a) - carried
+    #: for the same reason as `attached_to`, so `PairedPartners` can judge a
+    #: soulbond pair (CR 702.95e) off the board it is handed.
+    paired_with: UUID | None = None
     #: `CardState.transformed` as of this computation (CR 701.27a) - not a
     #: characteristic either, carried for the same reason as `is_token`: a
     #: `Selector` never holds a live `CardState`, and a real printed shape
@@ -766,6 +770,29 @@ class Only(SelectorBase):
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         return chars.card_id == self.card_id
+
+
+class PairedPartners(SelectorBase):
+    """The two creatures of a soulbond pair the source is in (CR 702.95a): the
+    source and its partner, and only while the pair holds - both creatures,
+    pointing at each other, under one controller (CR 702.95c-e)."""
+
+    kind: Literal["paired_partners"] = "paired_partners"
+    source_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        source = board.get(self.source_id)
+        if source is None or source.paired_with is None:
+            return False
+        other = board.get(source.paired_with)
+        if (
+            other is None
+            or other.paired_with != source.card_id
+            or not (source.is_creature and other.is_creature)
+            or source.controller != other.controller
+        ):
+            return False
+        return chars.card_id in (source.card_id, other.card_id)
 
 
 class OnlyThisIncarnation(SelectorBase):
@@ -1715,6 +1742,7 @@ class WithChangeling(SelectorBase):
 #: count things or say "each other" (CR 613.5).
 Selector = Annotated[
     Only
+    | PairedPartners
     | OnlyThisIncarnation
     | CreatureControlledByWithId
     | EveryCreature
@@ -3532,6 +3560,13 @@ _CANT_BE_BLOCKED_ITEM_RE = re.compile(
 )
 
 
+#: "can't attack alone" (CR 508.1c, 506.5) as one item of the same list -
+#: Sightless Brawler's "Enchanted creature gets +3/+2 and can't attack alone."
+#: The granted text is the whole self-referential sentence, which is what
+#: `machines/attacking_statics.py` reads.
+_CANT_ATTACK_ALONE_ITEM_RE = re.compile(r"^can'?t attack alone(?:,\s*|\s+and\s+|$)", re.IGNORECASE)
+
+
 def _split_and_validate_keywords(raw: str) -> list[str] | None:
     """ "double strike and lifelink" / "menace, deathtouch and first strike" /
     "hexproof from monocolored" / "protection from red and from blue" -> each
@@ -3587,6 +3622,11 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
             )
             result.append(sentence)
             remaining = remaining[cant_be_blocked.end() :].strip()
+            continue
+        cant_attack_alone = _CANT_ATTACK_ALONE_ITEM_RE.match(remaining)
+        if cant_attack_alone is not None:
+            result.append("This creature can't attack alone.")
+            remaining = remaining[cant_attack_alone.end() :].strip()
             continue
         bare = _BARE_KEYWORD_ITEM_RE.match(remaining)
         if bare is None:

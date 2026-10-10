@@ -210,8 +210,9 @@ class CombatMixin:
                 enlist_refusal = enlist.enlist_refusal(self, creature, enlisting, set())
                 if enlist_refusal is not None:
                     raise ValueError(enlist_refusal)
-            self._pay_attack_costs([(creature, defender)], attack_cost_sources)
+            returned = self._pay_attack_costs([(creature, defender)], attack_cost_sources)
             attack = combat_rules.declare_attacker(self, creature, self.attack_target(defender))
+            self._return_attack_cost_permanents(returned)
             if enlisting is not None:
                 # CR 508.1g's optional cost, chosen alongside this one
                 # attacker's own declaration.
@@ -292,6 +293,19 @@ class CombatMixin:
                     f"but {others} were also declared as attackers"
                 )
 
+    def _refuse_extra_attack_restrictions(
+        self: "Game", attacks: "Sequence[tuple[CardState, Targetable | str]]"
+    ) -> None:
+        """CR 508.1c: restrictions that judge the whole attack declaration
+        ("can't attack alone", "can't attack unless a creature with greater
+        power also attacks") - `combat_statics.extra_attack_declaration_refusal`."""
+        from ...machines.combat_statics import extra_attack_declaration_refusal
+
+        refs = [(creature, self.attack_target(defender)) for creature, defender in attacks]
+        refusal = extra_attack_declaration_refusal(self, refs)
+        if refusal is not None:
+            raise ValueError(refusal)
+
     def _required_attack_declaration(self: "Game", active: str) -> list[tuple[UUID, UUID | str]]:
         """The fewest attackers that obey every requirement that can be obeyed
         (CR 508.1d), each attacking the defender that obeys the most of its
@@ -338,6 +352,7 @@ class CombatMixin:
             self._refuse_unobeyed_attack_requirements(attacks)
             self._refuse_illegal_attacker_caps(attacks)
             self._refuse_attack_alone_violations(attacks)
+            self._refuse_extra_attack_restrictions(attacks)
             # CR 508.1: an illegal declaration returns the game to the moment
             # before it, so every attacker is judged before any one taps.
             # CR 508.1a-b: each chosen creature attacks one player,
@@ -369,7 +384,7 @@ class CombatMixin:
                         raise ValueError(enlist_refusal)
             # CR 508.1h-j: the whole declaration's cost to attack, paid in
             # full before anyone becomes an attacking creature (CR 508.1k).
-            self._pay_attack_costs(attacks, attack_cost_sources)
+            returned = self._pay_attack_costs(attacks, attack_cost_sources)
             registered = [
                 (
                     creature,
@@ -377,6 +392,10 @@ class CombatMixin:
                 )
                 for creature, defender in attacks
             ]
+            # The permanents returned to pay (Floodtide Serpent) go once every
+            # attacker is registered, so the restriction they pay for is not
+            # re-judged against a cost that has just been paid.
+            self._return_attack_cost_permanents(returned)
             if enlist_choices:
                 for creature, _attack in registered:
                     enlisted = enlist_choices.get(creature.id)
