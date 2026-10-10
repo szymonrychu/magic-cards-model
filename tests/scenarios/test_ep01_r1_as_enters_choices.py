@@ -545,7 +545,12 @@ def test_kicker_mills_as_the_creature_enters(name, kicked, milled):
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     _cast_kicked(scenario, name, kicked=kicked)
-    assert len(scenario.player("alice").graveyard) == milled
+    # Monstrous War-Leech's P/T is the greatest mana value in its controller's
+    # graveyard (a CDA, CR 604.3): over a graveyard of Forests it is 0/0 and
+    # dies to state-based actions (CR 704.5f), so the creature itself is not
+    # one of the milled cards.
+    graveyard = [card for card in scenario.player("alice").graveyard if card.card.name != name]
+    assert len(graveyard) == milled
     assert len(scenario.player("alice").library) == 10 - milled
 
 

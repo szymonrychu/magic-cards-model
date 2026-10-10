@@ -17,7 +17,7 @@ from magic_cards_model.machines.exert_on_attack import reads_exert_as_it_attacks
 from magic_cards_model.machines.replacement.prevention_statics import reads_damage_static_line
 
 
-def reads_static_line(printing, text, *, card_name=None, legendary=False) -> bool:
+def reads_damage_replacement_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
     if "exert" in lowered and reads_exert_as_it_attacks_line(text):
         return True

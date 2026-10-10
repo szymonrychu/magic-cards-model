@@ -16,7 +16,7 @@ from magic_cards_model.models.zone import Zone
 from magic_cards_model.static_audit.enters_counters import _stage
 
 
-def reads_static_line(
+def reads_self_graveyard_cast_line(
     printing, text: str, *, card_name: str | None = None, legendary: bool = False
 ) -> bool:
     if not reads_printed_self_zone_cast_with_counters_line(text):

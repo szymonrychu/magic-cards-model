@@ -16,7 +16,7 @@ from magic_cards_model.machines.abilities import self_normalized_effect_text
 from magic_cards_model.machines.block_statics import reads_block_static_line
 
 
-def reads_static_line(printing, text, *, card_name=None, legendary=False) -> bool:
+def reads_block_count_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
     if "block" not in lowered:
         return False

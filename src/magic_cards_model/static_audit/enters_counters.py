@@ -205,7 +205,7 @@ def _group_line_performed(printing: Card, text: str) -> bool:
     return True
 
 
-def reads_static_line(
+def reads_enters_counters_line(
     printing: Card, text: str, *, card_name: str | None = None, legendary: bool = False
 ) -> bool:
     lowered = text.lower()

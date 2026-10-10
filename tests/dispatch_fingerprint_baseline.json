@@ -3504,6 +3504,7 @@
       "_parse_search_distinct_names_clause",
       "_parse_search_mv_lte_count_clause",
       "_parse_search_mv_equal_to_sacrificed_clause",
+      "_parse_target_player_loses_the_game_clause",
       "_parse_they_gain_or_lose_life_clause",
       "_parse_each_player_life_per_group_they_control_clause",
       "_parse_if_additional_cost_paid_clause",

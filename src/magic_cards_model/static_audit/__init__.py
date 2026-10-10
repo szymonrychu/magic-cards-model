@@ -1,10 +1,10 @@
 """Per-family static-line audits of the EP-01 rounds.
 
 One module per family, each exposing
-`reads_static_line(printing, text, *, card_name, legendary) -> bool`, which
+`reads_<module>_line(printing, text, *, card_name, legendary) -> bool`, which
 asks the PRODUCTION reader whether it performs the static line - never a
 re-derived regex. `support._static_ability_category` calls
-`reads_static_line` just before it gives up on a line as unaudited.
+`reads_<module>_line` just before it gives up on a line as unaudited.
 """
 
 import importlib
@@ -15,7 +15,7 @@ from functools import cache
 @cache
 def _readers():
     return tuple(
-        importlib.import_module(f"{__name__}.{m.name}").reads_static_line
+        getattr(importlib.import_module(f"{__name__}.{m.name}"), f"reads_{m.name}_line")
         for m in sorted(pkgutil.iter_modules(__path__), key=lambda m: m.name)
         if not m.name.startswith("_")
     )

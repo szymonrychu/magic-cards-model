@@ -49,7 +49,7 @@ def _reads(text: str) -> bool:
     )
 
 
-def reads_static_line(printing, text, *, card_name=None, legendary=False) -> bool:
+def reads_cost_modification_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
     if not any(gate in lowered for gate in _GATES):
         return False

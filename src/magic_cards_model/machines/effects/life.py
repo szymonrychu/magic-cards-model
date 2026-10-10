@@ -662,6 +662,35 @@ def _parse_you_lose_the_game_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Target opponent loses the game." - Mirrodin Besieged's Phyrexian mode, once
+#: "Then if there are fifteen or more artifact cards in your graveyard," has
+#: been split off and checked as its own conditional clause. CR 104.3e's
+#: stated loss against the player chosen as the ability went on the stack
+#: (CR 601.2c via 603.3d): `Game.player_loses_the_game` honours a "can't lose
+#: the game" in force (CR 101.2) and offers the loss to "if you would lose
+#: the game, instead" replacements (CR 614).
+_TARGET_PLAYER_LOSES_THE_GAME_RE = re.compile(
+    r"^(?P<phrase>target (?:player|opponent)) loses the game\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_target_player_loses_the_game_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_LOSES_THE_GAME_RE`'s shape."""
+    match = _TARGET_PLAYER_LOSES_THE_GAME_RE.fullmatch(clause.strip())
+    if match is None or not _targets_understood(match.group("phrase"), allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player):
+                game.player_loses_the_game(target.username)
+
+    return effect
+
+
 #: "for each 1 life you lost, exile a permanent you control or a card from
 #: your hand or graveyard." - Lich's Mastery's "Whenever you lose life, ..."
 #: (CR 119.3). The count is the triggering life-loss event's own amount

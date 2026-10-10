@@ -3830,7 +3830,7 @@ def _static_form(
 #: Tried in order against every parsed effect on a `REPLACEMENTS` miss. Order
 #: does not matter between them - each one's event/replacement match is
 #: specific enough that at most one ever claims a given `ReplacementEffect`.
-_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = (
+_BASE_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = (
     _compile_graveyard_exile,
     _compile_dies_exile,
     _compile_enters_uncast_exile,
@@ -3868,7 +3868,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
 #: exact failure the fail-closed rule at the top of this section forbids.
 from .other_statics import CONDITION_AWARE_OTHER_COMPILERS, OTHER_COMPILERS  # noqa: E402
 
-_COMPILERS = _COMPILERS + OTHER_COMPILERS
+_COMPILERS = _BASE_COMPILERS + OTHER_COMPILERS
 
 _CONDITION_AWARE_COMPILERS = frozenset(
     {_compile_draw_plus, _compile_first_time_token_copies, _compile_damage_plus_amount}

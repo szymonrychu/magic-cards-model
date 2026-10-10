@@ -17,7 +17,7 @@ _FAMILIES = (
 )
 
 
-def reads_static_line(printing, text, *, card_name, legendary) -> bool:
+def reads_attack_block_restrictions_line(printing, text, *, card_name, legendary) -> bool:
     lowered = text.lower()
     if "attack" not in lowered and "block" not in lowered and "more to activate" not in lowered:
         return False

@@ -40,7 +40,7 @@ def _effects_of_line(printing, text):
     ]
 
 
-def reads_static_line(printing, text, *, card_name=None, legendary=False) -> bool:
+def reads_enters_choices_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
     if "enter" not in lowered:
         return False

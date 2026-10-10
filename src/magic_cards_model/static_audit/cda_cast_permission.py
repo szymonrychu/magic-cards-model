@@ -17,7 +17,7 @@ from magic_cards_model.machines.effects.continuous import _CAST_EXILED_CARD_STAT
 from magic_cards_model.models.mana import reads_cant_spend_mana_line
 
 
-def reads_static_line(printing, text, *, card_name=None, legendary=False) -> bool:
+def reads_cda_cast_permission_line(printing, text, *, card_name=None, legendary=False) -> bool:
     """Whether one static line of `printing` is a cast/play permission the
     casting machine reads whole."""
     if _CAST_EXILED_CARD_STATIC_RE.search(strip_ability_word(text)[0]):

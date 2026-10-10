@@ -17,7 +17,7 @@ from ..machines.replacement.model import _granted_line_replacements
 from ..machines.replacement.parse import strip_reminder_text
 
 
-def reads_static_line(printing, text, *, card_name=None, legendary=False) -> bool:
+def reads_replacement_other_line(printing, text, *, card_name=None, legendary=False) -> bool:
     line = strip_reminder_text(text)[0].strip()
     if " would " not in line.lower():
         return False
