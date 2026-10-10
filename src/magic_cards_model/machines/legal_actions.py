@@ -137,6 +137,7 @@ from .cost import (
     additional_cost_phrases,
     mana_ability_index,
     mana_candidate_scan,
+    pay_life_cost,
     plan_mana_payment,
     spend_restriction,
 )
@@ -579,6 +580,9 @@ def _cast_action(
     # announced), so `card.zone` is that zone and is the same answer
     # `from_zone` below reports.
     spend = ManaSpend.casting(card, zone=card.zone, snow_any_color=snow_any_color)
+    if game.spends_mana_as_any_color_for_spell(card, player):
+        # CR 609.4b, read here exactly as `Casting.determine_cost` reads it.
+        spend = spend.model_copy(update={"any_color": True})
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )
@@ -1078,6 +1082,20 @@ def _cast_actions(
                 _record_blocked(blocked, card, None, option_refusal)
                 continue
             total = option.cost if option.cost is not None else TotalCost()
+            if option.pays_life_for_mana_value:
+                # Bolas's Citadel: the life is the spell's mana value (X as 0
+                # while it is still unannounced, CR 107.3b).
+                total = TotalCost(
+                    mana=total.mana,
+                    components=[
+                        *total.components,
+                        pay_life_cost(
+                            int(card.mana_value or 0),
+                            payer=player,
+                            description="pay life equal to its mana value",
+                        ),
+                    ],
+                )
             actions.append(
                 _cast_action(
                     game,
@@ -1266,7 +1284,7 @@ def _unlock_door_actions(
     for face in locked_doors(permanent):
         if why_cannot_unlock_door(game, player, permanent, face.name) is not None:
             continue
-        total = unlock_cost(permanent, face.name)
+        total = unlock_cost(permanent, face.name, game, player)
         affordable, reason, pays_with = _cost_affordability(game, player, total, candidate_scan)
         cost_str, mana_cost_str = _cost_strings(total)
         actions.append(

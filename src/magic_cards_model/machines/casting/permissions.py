@@ -2,7 +2,7 @@ import re
 from collections.abc import Callable, Iterable, Sequence
 from enum import StrEnum
 from functools import lru_cache
-from typing import Any
+from typing import Any, NamedTuple
 from uuid import UUID
 
 from pydantic import ConfigDict
@@ -92,17 +92,43 @@ _PRINTED_SELF_ZONE_CAST_WITH_ADDITIONAL_COST_RE = re.compile(
 )
 
 
-def _printed_self_zone_cast_additional_cost(text: str) -> tuple[Zone, TotalCost] | None:
-    match = _PRINTED_SELF_ZONE_CAST_WITH_ADDITIONAL_COST_RE.fullmatch(" ".join(text.split()))
+#: "You may cast this card from your graveyard by paying {2}{W} rather than
+#: paying its mana cost." (Raffine's Guidance) and "... by paying {3}{R} and
+#: exiling four other cards from your graveyard rather than paying its mana
+#: cost." (Squee, Dubious Monarch) - the same CR 604.6 permission with the cost
+#: standing in for the mana cost (CR 118.9) rather than added to it.
+_PRINTED_SELF_ZONE_CAST_ALTERNATIVE_RE = re.compile(
+    r"^you may cast this card from your (?P<zone>graveyard|exile) by (?P<cost>.+?) "
+    r"rather than paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def _as_cost_phrase(extra: str) -> str:
+    """ "paying {2}{W} and exiling four other cards" as the cost phrase
+    `total_cost_for_phrase` reads ("pay {2}{W} and exile four other cards")."""
+    extra = re.sub(r"^removing\b", "Remove", extra.strip(), flags=re.IGNORECASE)
+    extra = re.sub(r"^paying\b", "Pay", extra, flags=re.IGNORECASE)
+    extra = re.sub(r"^exiling\b", "Exile", extra, flags=re.IGNORECASE)
+    return re.sub(r" and exiling\b", " and exile", extra, flags=re.IGNORECASE)
+
+
+def _printed_self_zone_cast_additional_cost(text: str) -> tuple[Zone, TotalCost, bool] | None:
+    """(zone, cost, whether the cost replaces the mana cost) for one line."""
+    line = " ".join(text.split())
+    match = _PRINTED_SELF_ZONE_CAST_WITH_ADDITIONAL_COST_RE.fullmatch(line)
+    replaces = False
+    if match is None:
+        match = _PRINTED_SELF_ZONE_CAST_ALTERNATIVE_RE.fullmatch(line)
+        replaces = match is not None
     if match is None:
         return None
-    extra = re.sub(r"^removing\b", "Remove", match.group("extra").strip(), flags=re.IGNORECASE)
-    extra = re.sub(r"^paying\b", "Pay", extra, flags=re.IGNORECASE)
+    extra = _as_cost_phrase(match.group("cost" if replaces else "extra"))
     cost = total_cost_for_phrase(extra)
     if cost is None:
         return None
     zone = Zone.GRAVEYARD if match.group("zone").lower() == "graveyard" else Zone.EXILE
-    return zone, cost
+    return zone, cost, replaces
 
 
 def reads_printed_self_zone_cast_line(text: str) -> bool:
@@ -116,15 +142,16 @@ def _printed_self_zone_cast_with_additional_cost(card: Card) -> list[KeywordCast
         read = _printed_self_zone_cast_additional_cost(line)
         if read is None:
             continue
-        zone, cost = read
+        zone, cost, replaces = read
         found.append(
             KeywordCastOption(
                 keyword=CAST_PERMISSION,
-                rule="CR 601.3, CR 601.2f",
+                rule="CR 601.3, CR 118.9" if replaces else "CR 601.3, CR 601.2f",
                 zone=zone,
-                pays_mana_cost=True,
+                pays_mana_cost=not replaces,
                 timing=CastTiming.OWN,
-                additional_cost=cost,
+                cost=cost if replaces else None,
+                additional_cost=None if replaces else cost,
             )
         )
     return found
@@ -747,6 +774,15 @@ _ENTERS_WITH_A_COUNTER_RIDER_RE = re.compile(
 #: would die, exile it instead.)" has no game function of its own.
 _REMINDER_TEXT_RE = re.compile(r"\s*\([^()]*\)")
 
+#: Bolas's Citadel's rider: "If you cast a spell this way, pay life equal to its
+#: mana value rather than pay its mana cost." (CR 118.9: life as the
+#: alternative cost; CR 202.3e: X counts toward the mana value.)
+_PAY_LIFE_FOR_MANA_VALUE_RIDER_RE = re.compile(
+    r"^if you cast a spell this way, pay life equal to its mana value rather than pay "
+    r"its mana cost\.?$",
+    re.IGNORECASE,
+)
+
 
 class StaticZoneCastPermission(EngineModel):
     """One `_STATIC_ZONE_CAST_PERMISSION_RE` line, read."""
@@ -775,6 +811,9 @@ class StaticZoneCastPermission(EngineModel):
     spell this way"), or None when it covers every spell cast this way."""
     rider_counter: str | None = None
     """The counter kind the rider puts on the permanent, or None: no rider."""
+    pays_life_for_mana_value: bool = False
+    """Bolas's Citadel: the spells cast this way are paid for with life equal to
+    their mana value rather than their mana cost (CR 118.9)."""
 
 
 def _normalized_spell_quality(what: str | None) -> str:
@@ -806,7 +845,10 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
     rider_type: str | None = None
     rider_counter: str | None = None
     tail = match.group("tail").strip()
-    if tail:
+    pays_life_for_mana_value = False
+    if tail and _PAY_LIFE_FOR_MANA_VALUE_RIDER_RE.fullmatch(tail):
+        pays_life_for_mana_value = True
+    elif tail:
         rider = _ENTERS_WITH_A_COUNTER_RIDER_RE.fullmatch(tail)
         if rider is None:
             return None
@@ -832,6 +874,7 @@ def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
         life=int(match.group("life") or 0),
         rider_type=rider_type,
         rider_counter=rider_counter,
+        pays_life_for_mana_value=pays_life_for_mana_value,
     )
 
 
@@ -924,10 +967,11 @@ def _static_zone_cast_option(
         keyword=CAST_PERMISSION,
         rule="CR 601.3, CR 611.3d",
         zone=origin_zone,
-        pays_mana_cost=True,
+        pays_mana_cost=not permission.pays_life_for_mana_value,
         timing=CastTiming.OWN,
         additional_cost=additional,
         enters_with_counters=counters,
+        pays_life_for_mana_value=permission.pays_life_for_mana_value,
     )
 
 
@@ -937,29 +981,78 @@ def _static_zone_cast_option(
 # --------------------------------------------------------------------------
 
 #: "[During your turn, ]you may play cards exiled with `<this>`." (The
-#: Temporal Anchor) and "You may play lands and cast spells from among cards
-#: exiled with this creature." (Nightveil Specter) - CR 601.1a's "play" (a
-#: land drop or a cast) opened to CR 607.2a's linked pile, read after the
-#: object's own name is normalised to "this `<noun>`" (CR 201.5).
+#: Temporal Anchor), "You may play lands and cast spells from among cards
+#: exiled with this creature." (Nightveil Specter) and Rogue Class's level 3
+#: "You may play cards exiled with this Class, and you may spend mana as
+#: though it were mana of any color to cast those spells." - CR 601.1a's
+#: "play" (a land drop or a cast) opened to CR 607.2a's linked pile, read
+#: after the object's own name is normalised to "this `<noun>`" (CR 201.5).
 _PLAY_CARDS_EXILED_WITH_STATIC_RE = re.compile(
     r"^(?P<during>during your turn, )?you may play (?:cards|lands and cast spells from among "
-    r"cards) exiled with this \w+\.?$",
+    r"cards) exiled with this \w+"
+    r"(?P<any_color>, and you may spend mana as though it were mana of any colou?r "
+    r"to cast those spells)?\.?$",
+    re.IGNORECASE,
+)
+
+#: Evelyn, the Covetous's "Once each turn, you may play a card from exile with
+#: a collection counter on it if it was exiled by an ability you controlled,
+#: and you may spend mana as though it were mana of any color to cast it." -
+#: the pile is named by a counter and by who controlled the exiling ability
+#: (read as: the permanent whose ability exiled it, `ExileAnnotation.
+#: linked_permanent_id`, is one the player controls), not by "this" object.
+_PLAY_COUNTER_CARDS_FROM_EXILE_STATIC_RE = re.compile(
+    r"^once each turn, you may play a card from exile with an? (?P<counter>[\w-]+) counter "
+    r"on it if it was exiled by an ability you controlled"
+    r"(?P<any_color>, and you may spend mana as though it were mana of any colou?r "
+    r"to cast it)?\.?$",
     re.IGNORECASE,
 )
 
 
+class LinkedExilePlayLine(NamedTuple):
+    """One line that opens a pile of exiled cards to being played."""
+
+    during_your_turn: bool
+    any_color: bool
+    once_each_turn: bool = False
+    counter: str | None = None
+    """The kind of counter a card needs to be in the pile (Evelyn), or None
+    for CR 607.2a's "exiled with this object"."""
+
+
+class LinkedExilePlayGrant(NamedTuple):
+    """`linked_exile_play_grant`'s answer: the permanent whose line lets the
+    player play the card, and what that line says."""
+
+    permanent: CardState
+    line: LinkedExilePlayLine
+
+
 def play_cards_exiled_with_line(
     permanent_name: str, text: str, *, legendary: bool = True
-) -> tuple[bool] | None:
-    """`(during_your_turn,)` for a `_PLAY_CARDS_EXILED_WITH_STATIC_RE` line
-    of the permanent named `permanent_name`, or None."""
+) -> LinkedExilePlayLine | None:
+    """The `LinkedExilePlayLine` of a `_PLAY_CARDS_EXILED_WITH_STATIC_RE` or
+    `_PLAY_COUNTER_CARDS_FROM_EXILE_STATIC_RE` line of the permanent named
+    `permanent_name`, or None."""
     from ..abilities import self_normalized_effect_text
 
     normalized = self_normalized_effect_text(permanent_name, text.strip(), legendary=legendary)
     match = _PLAY_CARDS_EXILED_WITH_STATIC_RE.fullmatch(normalized.strip())
-    if match is None:
-        return None
-    return (match.group("during") is not None,)
+    if match is not None:
+        return LinkedExilePlayLine(
+            during_your_turn=match.group("during") is not None,
+            any_color=match.group("any_color") is not None,
+        )
+    counter = _PLAY_COUNTER_CARDS_FROM_EXILE_STATIC_RE.fullmatch(normalized.strip())
+    if counter is not None:
+        return LinkedExilePlayLine(
+            during_your_turn=False,
+            any_color=counter.group("any_color") is not None,
+            once_each_turn=True,
+            counter=counter.group("counter").lower(),
+        )
+    return None
 
 
 def reads_play_cards_exiled_with_line(card: Card, text: str) -> bool:
@@ -974,12 +1067,15 @@ def reads_play_cards_exiled_with_line(card: Card, text: str) -> bool:
     )
 
 
-def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
-    """The permanent `player` controls whose "you may play cards exiled with
-    `<this>`" lets them play `card` right now, or None: `card` is face up in
-    exile (CR 406.3b), exiled with that very object (CR 607.2a, CR 400.7 -
-    `ExileAnnotation.links_to`), and the line's "during your turn" holds."""
-    if game is None or card.zone is not Zone.EXILE or not card.face_up:
+def linked_exile_play_grant(game: Any, card: CardState, player: str) -> LinkedExilePlayGrant | None:
+    """The permanent `player` controls whose line lets them play `card` right
+    now, with that line, or None: `card` is in exile and either exiled with
+    that very object (CR 607.2a, CR 400.7 - `ExileAnnotation.links_to`) or, for
+    a counter-named pile, carries the counter and was exiled by an ability of
+    a permanent `player` controls; the line's "during your turn" and "once
+    each turn" hold. A card exiled face down is playable too (CR 406.3a: the
+    ability that exiled it may allow it to be played)."""
+    if game is None or card.zone is not Zone.EXILE:
         return None
     annotation = card.exile_annotation
     if annotation is None:
@@ -988,20 +1084,43 @@ def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardSta
 
     board = game.computed_board()
     for permanent in game.permanents_controlled_by(player):
-        if not annotation.links_to(permanent.id, permanent.zone_change_stamp):
-            continue
         legendary = Supertype.LEGENDARY in permanent.card.supertypes
         for line in class_gated_lines(permanent, board.of(permanent).abilities):
             read = play_cards_exiled_with_line(permanent.name, line, legendary=legendary)
             if read is None:
                 continue
-            (during_your_turn,) = read
-            if during_your_turn:
+            if read.counter is None:
+                if not annotation.links_to(permanent.id, permanent.zone_change_stamp):
+                    continue
+            else:
+                if card.counters[read.counter] <= 0 or annotation.linked_permanent_id is None:
+                    continue
+                exiler = next(
+                    (
+                        held
+                        for held in game.permanents_controlled_by(player)
+                        if held.id == annotation.linked_permanent_id
+                    ),
+                    None,
+                )
+                if exiler is None:
+                    continue
+            if read.during_your_turn:
                 turn = getattr(game, "turn", None)
                 if turn is None or turn.active_player != player:
                     continue
-            return permanent
+            if read.once_each_turn and once_per_turn_key(permanent) in getattr(
+                game, "once_per_turn_cast_permissions_used", {}
+            ):
+                continue
+            return LinkedExilePlayGrant(permanent, read)
     return None
+
+
+def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
+    """`linked_exile_play_grant`'s permanent, or None."""
+    grant = linked_exile_play_grant(game, card, player)
+    return grant.permanent if grant is not None else None
 
 
 #: A permanent's standing permission to cast from its own linked pile (CR
@@ -1266,7 +1385,8 @@ def _linked_exile_play_option(
     if origin_zone is not Zone.EXILE:
         return None
     probe = spell if spell.zone is Zone.EXILE else None
-    if probe is None or linked_exile_play_source(game, probe, caster) is None:
+    grant = linked_exile_play_grant(game, probe, caster) if probe is not None else None
+    if grant is None:
         return None
     return KeywordCastOption(
         keyword=CAST_PERMISSION,
@@ -1274,6 +1394,10 @@ def _linked_exile_play_option(
         zone=Zone.EXILE,
         pays_mana_cost=True,
         timing=CastTiming.OWN,
+        any_color=grant.line.any_color,
+        once_per_turn_key=(
+            once_per_turn_key(grant.permanent) if grant.line.once_each_turn else None
+        ),
     )
 
 
@@ -2116,10 +2240,19 @@ def granted_optional_additional_costs(
     granted_conspire = conspire_count(game, card, caster, card.zone) - printed_conspire_count(
         card.card
     )
-    return [
-        casualty_cost_option(number)
-        for number in casualty_numbers(game, card, caster, card.zone)[printed:]
-    ] + [conspire_cost_option() for _ in range(max(granted_conspire, 0))]
+    from .granted_life_costs import granted_life_costs
+
+    return (
+        [
+            casualty_cost_option(number)
+            for number in casualty_numbers(game, card, caster, card.zone)[printed:]
+        ]
+        + [conspire_cost_option() for _ in range(max(granted_conspire, 0))]
+        + [
+            OptionalAdditionalCost(keyword=None, cost=f"pay {grant.life} life", rule="CR 118.8b")
+            for grant in granted_life_costs(game, card, caster)
+        ]
+    )
 
 
 def has_flash(card: Card) -> bool:

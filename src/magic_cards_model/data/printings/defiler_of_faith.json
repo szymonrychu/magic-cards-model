@@ -1,0 +1,160 @@
+{
+  "object": "card",
+  "id": "2cfe404d-1a27-4627-9284-56188d92d5d5",
+  "oracle_id": "88ac2d09-7993-4bce-8aae-b2683c5c25a5",
+  "multiverse_ids": [
+    574496
+  ],
+  "mtgo_id": 102508,
+  "arena_id": 82068,
+  "tcgplayer_id": 283128,
+  "cardmarket_id": 671603,
+  "name": "Defiler of Faith",
+  "lang": "en",
+  "released_at": "2022-09-09",
+  "uri": "https://api.scryfall.com/cards/2cfe404d-1a27-4627-9284-56188d92d5d5",
+  "scryfall_uri": "https://scryfall.com/card/dmu/16/defiler-of-faith?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:42:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.jpg?1783921366",
+    "normal": "https://cards.scryfall.io/normal/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.jpg?1783921366",
+    "large": "https://cards.scryfall.io/large/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.jpg?1783921366",
+    "png": "https://cards.scryfall.io/png/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.png?1783921366",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.jpg?1783921366",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.jpg?1783921366",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.webp?1783921366",
+    "grid": "https://cards.scryfall.io/grid/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.webp?1783921366",
+    "display": "https://cards.scryfall.io/display/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.webp?1783921366",
+    "art": "https://cards.scryfall.io/art/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.webp?1783921366",
+    "crop": "https://cards.scryfall.io/crop/front/2/c/2cfe404d-1a27-4627-9284-56188d92d5d5.webp?1783921366"
+  },
+  "mana_cost": "{3}{W}{W}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Phyrexian Human",
+  "oracle_text": "Vigilance\nAs an additional cost to cast white permanent spells, you may pay 2 life. Those spells cost {W} less to cast if you paid life this way. This effect reduces only the amount of white mana you pay.\nWhenever you cast a white permanent spell, create a 1/1 white Soldier creature token.",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Vigilance"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f1fa16ec-b4ab-4da8-a1fa-cf6c303edc7a",
+      "component": "combo_piece",
+      "name": "Defiler of Faith",
+      "type_line": "Creature \u2014 Phyrexian Human",
+      "uri": "https://api.scryfall.com/cards/f1fa16ec-b4ab-4da8-a1fa-cf6c303edc7a"
+    },
+    {
+      "object": "related_card",
+      "id": "8c4b0257-2ca5-4015-9d63-d7cf6e87ab9d",
+      "component": "token",
+      "name": "Soldier",
+      "type_line": "Token Creature \u2014 Soldier",
+      "uri": "https://api.scryfall.com/cards/8c4b0257-2ca5-4015-9d63-d7cf6e87ab9d"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set": "dmu",
+  "set_name": "Dominaria United",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Admu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dmu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2cfe404d-1a27-4627-9284-56188d92d5d5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A88ac2d09-7993-4bce-8aae-b2683c5c25a5&unique=prints",
+  "collector_number": "16",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Magali Villeneuve",
+  "artist_ids": [
+    "9e6a55ae-be4d-4c23-a2a5-135737ffd879"
+  ],
+  "illustration_id": "3a862158-be8d-4fd2-aed4-3ae2196b8717",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4977,
+  "penny_rank": 16773,
+  "preview": {
+    "source": "Kyle Hill",
+    "source_uri": "https://twitter.com/Sci_Phile/status/1561446487015378945",
+    "previewed_at": "2022-08-21"
+  },
+  "prices": {
+    "usd": "0.37",
+    "usd_foil": "0.39",
+    "usd_etched": null,
+    "eur": "0.42",
+    "eur_foil": "0.55",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=574496&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDefiler%2Bof%2BFaith",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDefiler%2Bof%2BFaith",
+    "edhrec": "https://edhrec.com/route/?cc=Defiler+of+Faith"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F283128%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=671603&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/102508?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

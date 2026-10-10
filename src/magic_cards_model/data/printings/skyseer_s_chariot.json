@@ -1,0 +1,144 @@
+{
+  "object": "card",
+  "id": "96ed5b66-8e74-4a90-ad4e-c39d15993994",
+  "oracle_id": "92d28545-4403-4c24-8547-efab4dde6a53",
+  "multiverse_ids": [
+    690465
+  ],
+  "mtgo_id": 136179,
+  "arena_id": 94830,
+  "tcgplayer_id": 615554,
+  "cardmarket_id": 809062,
+  "name": "Skyseer's Chariot",
+  "lang": "en",
+  "released_at": "2025-02-14",
+  "uri": "https://api.scryfall.com/cards/96ed5b66-8e74-4a90-ad4e-c39d15993994",
+  "scryfall_uri": "https://scryfall.com/card/dft/28/skyseers-chariot?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:58:34Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.jpg?1783907914",
+    "normal": "https://cards.scryfall.io/normal/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.jpg?1783907914",
+    "large": "https://cards.scryfall.io/large/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.jpg?1783907914",
+    "png": "https://cards.scryfall.io/png/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.png?1783907914",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.jpg?1783907914",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.jpg?1783907914",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.webp?1783907914",
+    "grid": "https://cards.scryfall.io/grid/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.webp?1783907914",
+    "display": "https://cards.scryfall.io/display/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.webp?1783907914",
+    "art": "https://cards.scryfall.io/art/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.webp?1783907914",
+    "crop": "https://cards.scryfall.io/crop/front/9/6/96ed5b66-8e74-4a90-ad4e-c39d15993994.webp?1783907914"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Artifact \u2014 Vehicle",
+  "oracle_text": "Flying\nAs this Vehicle enters, choose a nonland card name.\nActivated abilities of sources with the chosen name cost {2} more to activate.\nCrew 2",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Crew"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "23464cc2-a69c-427d-b8a7-08e5d80235d7",
+  "set": "dft",
+  "set_name": "Aetherdrift",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/23464cc2-a69c-427d-b8a7-08e5d80235d7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adft&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dft?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/96ed5b66-8e74-4a90-ad4e-c39d15993994/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A92d28545-4403-4c24-8547-efab4dde6a53&unique=prints",
+  "collector_number": "28",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"It's the dawn of a new era, and we shall rise like the suns to greet it.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Carl Critchlow",
+  "artist_ids": [
+    "17948f16-611a-44b8-8d10-9895a0bdfff1"
+  ],
+  "illustration_id": "4a1da322-3d2d-492b-a76a-079fc1105f4d",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17636,
+  "penny_rank": 6424,
+  "preview": {
+    "source": "TCGplayer",
+    "source_uri": "https://infinite.tcgplayer.com/article/Check-Out-TCGplayer-s-EXCLUSIVE-Aetherdrift-Preview-Card/8c7c8352-ffc8-4116-b51f-5c461d35c6a5/",
+    "previewed_at": "2025-01-29"
+  },
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.12",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=690465&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSkyseer%2527s%2BChariot",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSkyseer%2527s%2BChariot",
+    "edhrec": "https://edhrec.com/route/?cc=Skyseer%27s+Chariot"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F615554%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=809062&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/136179?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

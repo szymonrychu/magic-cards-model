@@ -163,6 +163,13 @@ class ExtraTriggerEvent(StrEnum):
     #: player who drew and revealed it. **Emitted by:** `Game.draw_cards`,
     #: through `Game._offer_miracle_reveal`, and nowhere else.
     REVEALED_FOR_MIRACLE = "revealed_for_miracle"
+    #: God-Eternal Kefnet: "You may reveal the first card you draw each turn as
+    #: you draw it" - a card revealed through that static ability, linked to
+    #: its "Whenever you reveal an instant or sorcery card this way" trigger
+    #: (CR 607.2h). `subject_id` is the revealed card, `player` the drawer.
+    #: **Emitted by:** `Game.draw_cards`, through `Game._offer_first_draw_
+    #: reveals`, and nowhere else.
+    REVEALED_FIRST_DRAW = "revealed_first_draw"
     #: CR 510.2: "all combat damage that's been assigned is dealt
     #: simultaneously" - one combat damage step's damage to one player, as a
     #: single event, which is what a batched "Whenever one or more

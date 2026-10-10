@@ -24,6 +24,7 @@ from .components import (
     StaticFreeCastGrant,
     TotalCost,
 )
+from .statics import object_quality
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
     "Noncreature": Type.CREATURE,
@@ -461,6 +462,10 @@ def looks_like_unparsed_cost_modifier(text: str) -> bool:
     a cost increase that fails to apply looks identical to ordinary play)."""
     if cost_modifier_effect(text) is not None:
         return False
+    from .groups import group_spell_modifier
+
+    if group_spell_modifier(text) is not None:
+        return False
     return bool(_COST_MODIFIER_SIGNAL.search(text)) or bool(_COST_DECREASE_SIGNAL.search(text))
 
 
@@ -505,7 +510,9 @@ _ADDITIONAL = re.compile(
     r"^As an additional cost to cast this spell, (?P<what>[^.]+)\.", re.MULTILINE
 )
 _ALTERNATIVE = re.compile(
-    r"^You may (?P<what>[^.]+?) rather than pay this spell's mana cost\.", re.MULTILINE
+    r"^You may (?P<what>[^.]+?) rather than pay this spell's mana cost\."
+    r"(?P<treasure> Spend only mana produced by Treasures to cast it this way\.)?",
+    re.MULTILINE,
 )
 #: Force of Negation's and Force of Vigor's own cousin of `_ALTERNATIVE`: the
 #: same CR 118.9 offer, gated on a plain "if it's not your turn" timing
@@ -559,7 +566,9 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
     than pay this spell's mana cost." alike.
     """
     offers = [
-        AlternativeCostOffer(phrase=match.group("what"))
+        AlternativeCostOffer(
+            phrase=match.group("what"), treasure_only=match.group("treasure") is not None
+        )
         for match in _ALTERNATIVE.finditer(card.oracle_text or "")
     ]
     offers.extend(
@@ -639,10 +648,12 @@ def per_object_exile_reduction_of_sentence(sentence: str) -> ManaCost | None:
 
 
 def alternative_cost_phrase_of_line(text: str) -> str | None:
-    """The cost of a line that is wholly `alternative_cost_offers`'
-    unconditional "You may <cost> rather than pay this spell's mana cost."
-    (CR 118.9), else None."""
-    match = _ALTERNATIVE.fullmatch(text.strip())
+    """The cost of a line that is wholly one of `alternative_cost_offers`'
+    "You may <cost> rather than pay this spell's mana cost." (CR 118.9),
+    unconditional or gated on "If it's not your turn", else None."""
+    match = _ALTERNATIVE.fullmatch(text.strip()) or _ALTERNATIVE_IF_NOT_YOUR_TURN.fullmatch(
+        text.strip()
+    )
     return None if match is None else match.group("what")
 
 
@@ -689,12 +700,108 @@ _ONCE_EACH_TURN_FREE_CAST = re.compile(
 )
 
 
+#: CR 118.9's alternative cost applied from another permanent, with a cost:
+#: "You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you
+#: cast." (Fist of Suns), "... for Zombie creature spells you cast." (Rooftop
+#: Storm), "You may pay {X} rather than pay the mana cost for Samurai spells
+#: you cast, where X is that spell's mana value." (Kentaro), "You may collect
+#: evidence 10 rather than pay the mana cost for spells you cast." and "Once
+#: each turn, you may pay {0} rather than pay the mana cost for a spell you
+#: cast with mana value X or less, where X is the number of time counters on
+#: this enchantment." / "... for a spell you cast from exile." (As Foretold,
+#: Charred Foyer).
+_STATIC_COST_CAST = re.compile(
+    r"^(?P<once>Once each turn, )?you may (?P<cost>(?:pay )?(?:\{[^{}]+\})+|collect evidence \d+) "
+    r"rather than pay the mana cost for (?P<what>.+?)\s*you cast"
+    r"(?: with mana value x or less, where x is the number of (?P<counter>[a-z]+) counters on this "
+    r"[a-z]+| from (?P<zone>exile))?"
+    r"(?:, where x is that spell's mana value)?\.?$",
+    re.IGNORECASE,
+)
+
+
+#: "You may cast creature spells with mana value 3 or less by paying {E} rather
+#: than paying their mana costs. If you cast a spell this way, you may cast it as
+#: though it had flash." (Primal Prayers) - the same CR 118.9 grant in the other
+#: word order, with a mana-value ceiling and a flash rider.
+_STATIC_BY_PAYING = re.compile(
+    r"^you may cast (?P<what>[\w' -]*?spells?)(?: with mana value (?P<mv>\d+) or less)? "
+    r"by paying (?P<cost>(?:\{[^{}]+\})+) rather than paying their mana costs\.?"
+    r"(?P<flash> if you cast a spell this way, you may cast it as though it had flash\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _static_by_paying_grant(text: str) -> StaticFreeCastGrant | None:
+    match = _STATIC_BY_PAYING.match(text.strip())
+    if match is None:
+        return None
+    cost = match.group("cost")
+    if printed_cost_total(cost) is None:
+        return None
+    what = re.sub(r"\bspells?$", "", match.group("what").strip().lower()).strip()
+    if what and object_quality(what) is None:
+        return None
+    return StaticFreeCastGrant(
+        zone=Zone.HAND,
+        cost_phrase=cost,
+        quality_phrase=what or None,
+        max_mana_value=int(match.group("mv")) if match.group("mv") else None,
+        grants_flash=match.group("flash") is not None,
+        any_zone=True,
+    )
+
+
+def _static_cost_cast_grant(text: str) -> StaticFreeCastGrant | None:
+    text = re.sub(r"\s*\([^)]*\)", "", text).strip()
+    match = _STATIC_COST_CAST.match(text)
+    if match is None:
+        return None
+    cost = match.group("cost").strip()
+    mana_value = "where x is that spell's mana value" in text.lower()
+    phrase = re.sub(r"^pay\s+", "", cost, flags=re.IGNORECASE)
+    if mana_value:
+        if phrase.lower() != "{x}":
+            return None
+    elif printed_cost_total(cost) is None:
+        return None
+    what = re.sub(r"^(?:an?|the)\s+", "", match.group("what").strip().lower())
+    what = re.sub(r"\bspells?$", "", what).strip()
+    if what and object_quality(what) is None:
+        return None
+    zone = Zone.EXILE if match.group("zone") else Zone.HAND
+    return StaticFreeCastGrant(
+        zone=zone,
+        cost_phrase=cost,
+        cost_is_mana_value=mana_value,
+        quality_phrase=what or None,
+        any_zone=zone is Zone.HAND,
+        once_each_turn=match.group("once") is not None,
+        max_mana_value_counters=(match.group("counter") or "").lower() or None,
+        only_from_exile=zone is Zone.EXILE,
+    )
+
+
+def printed_cost_total(phrase: str, payer: str | None = None) -> "TotalCost | None":
+    """CR 118.9's cost phrase as the cost a cast pays (the verb "pay" is only
+    the sentence's own)."""
+    stripped = re.sub(r"^pay\s+", "", phrase.strip(), flags=re.IGNORECASE)
+    mana = ManaCost.try_parse(stripped) if stripped.startswith("{") else None
+    if mana is not None:
+        return TotalCost.of(mana)
+    return total_cost_for_phrase(phrase, payer=payer)
+
+
 def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
     """Read one static ability line into a `StaticFreeCastGrant`, or None.
 
     Fails closed: a line this cannot read returns None rather than a guess, so
     a spell is never quietly made free by text nobody parsed.
     """
+    text = re.sub(r"\s*\([^)]*\)", "", text).strip()
+    costed = _static_cost_cast_grant(text) or _static_by_paying_grant(text)
+    if costed is not None:
+        return costed
     once = _ONCE_EACH_TURN_FREE_CAST.match(text.strip())
     if once is not None:
         qualifier = re.sub(r"spells?$", "", once.group("what").strip().lower()).strip()
@@ -797,7 +904,7 @@ _MANA_VALUE_TAIL = r"(?: with mana value (?P<mana_value>\d+))?"
 #: battlefield; "this card" keeps its own zone default.
 _PHRASE_EXILE = re.compile(
     rf"^exile (?:this (?P<self_noun>card|artifact|creature|enchantment|land|planeswalker|permanent)"
-    rf"|(?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ]*?)cards?)"
+    rf"|(?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w /]*?)cards?)"
     + _MANA_VALUE_TAIL
     + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
     re.IGNORECASE,
@@ -909,8 +1016,9 @@ _PHRASE_DISCARD = re.compile(
 #: "other" after a count the same way: never the ability's own source.
 _PHRASE_TAP = re.compile(
     rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?P<other>other )?(?:untapped )?"
-    r"(?P<quality>[\w ,]+?) "
+    r"(?P<quality>[\w ,/]+?) "
     r"you control(?P<share> that share a creature type)?(?P<other_than> other than this (?:creature|permanent|artifact))?"
+    r"(?: with (?P<keyword>[a-z]+))?"
     # CR 208.1: "... with total power 10 or greater" (Mossbridge Troll) - the
     # tapped creatures' combined power is the threshold, whatever their number.
     r"(?: with total power (?P<power>\d+) or (?:greater|more))?$",
@@ -1041,7 +1149,9 @@ def _requirement(quality: str) -> CardRequirement | None:
     was not understood" rather than as "anything will do" - a cost that silently
     accepts the wrong card is worse than one that refuses to be built.
     """
-    words = [word for word in quality.strip().split() if word]
+    # "artifacts, creatures, and/or lands" (Warlord's Elite, Guardian of the
+    # Great Door): "and/or" is the same one-of-these disjunction as "or".
+    words = [word for word in quality.strip().replace("and/or", "or").split() if word]
     if not words:
         return CardRequirement(description=quality.strip())
 
@@ -1184,6 +1294,12 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
     activated for free.
     """
     text = phrase.strip().rstrip(".")
+
+    energy = _PHRASE_PAY_ENERGY.match(text)
+    if energy is not None:
+        return pay_energy_cost(
+            energy.group("symbols").upper().count("{E}"), payer, description=text
+        )
 
     life = _PHRASE_PAY_LIFE.match(text)
     if life is not None:
@@ -1501,6 +1617,8 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         requirement.excludes_source = (
             another or tap.group("other") is not None or tap.group("other_than") is not None
         )
+        if tap.group("keyword"):
+            requirement.keywords = [tap.group("keyword").lower()]
         component = tap_cost(payer=payer, description=text)
         component.required = read[0]
         if tap.group("power") is not None:
@@ -1530,7 +1648,7 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
     mana = ManaCost()
     components: list[CostComponent] = []
     waterbend_generic: int | None = None
-    if "," not in phrase:
+    if "," not in phrase or "and/or" in phrase:
         # `_split_cost_phrase` also splits on a bare " and " - right for a
         # comma-joined or genuinely compound cost ("Tap two untapped
         # creatures you control and discard a card", none printed yet, would
@@ -1545,6 +1663,11 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
         if whole is not None:
             return TotalCost(mana=mana, components=[whole], waterbend_generic=waterbend_generic)
     for part in _split_cost_phrase(phrase):
+        # "pay {1} and return a basic land you control to its owner's hand"
+        # (the Borderposts): the verb is only the sentence's own "pay".
+        pay_mana = _PAY_MANA_PART.match(part)
+        if pay_mana is not None:
+            part = pay_mana.group("mana")
         if _ONLY_MANA.match(part) and not _ACTION_SYMBOL.match(part):
             # A run of braced symbols that is not all mana - CR 107.14's {E}
             # among them - is a cost this phrase reader does not know how to
@@ -1639,6 +1762,7 @@ def cumulative_upkeep_cost(printed: str, count: int, payer: str | None = None) -
 
 
 _ONLY_MANA = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
+_PAY_MANA_PART = re.compile(r"^pay (?P<mana>(?:\{[^{}]+\})+)$", re.IGNORECASE)
 
 #: The two brace-wrapped symbols that are *not* mana: CR 107.5's tap symbol
 #: `{T}` and CR 107.6's untap symbol `{Q}`, each of which "in an activation
@@ -1646,6 +1770,8 @@ _ONLY_MANA = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
 #: `_ONLY_MANA`'s shape and would otherwise be handed to `ManaCost.parse`,
 #: which rightly refuses them - so `total_cost_for_phrase` checks this first
 #: and lets `cost_component_for_phrase` read them as the actions they are.
+#: CR 107.14: "pay {E}" / "{E}{E}" - one energy counter per symbol.
+_PHRASE_PAY_ENERGY = re.compile(r"^(?:pay\s+)?(?P<symbols>(?:\{E\})+)$", re.IGNORECASE)
 _ACTION_SYMBOL = re.compile(r"^\s*\{[TQ]\}\s*$", re.IGNORECASE)
 
 
@@ -1678,6 +1804,7 @@ from .components import (  # noqa: E402
     exile_and_pay_mana_cost_cost,
     exile_cost,
     mill_cost,
+    pay_energy_cost,
     pay_life_cost,
     place_counters_cost,
     put_exiled_into_graveyard_cost,

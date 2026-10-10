@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import ConfigDict, Field
 
-from ...models.card import Card, Layout, Type, types_of
+from ...models.card import Card, Color, Layout, Type, types_of
 from ...models.card_state import (
     CardState,
     Counter,
@@ -61,6 +61,9 @@ from ..cost import (
     tap_cost,
     total_cost_for_phrase,
 )
+from ..cost.abilities import ability_cost_adjustment, foretell_any_turn
+from ..cost.statics import object_quality
+from ..cost.text import printed_cost_total
 from ..decisions import source_id_of
 from ..keywords import (
     enchant_restrictions,
@@ -85,6 +88,7 @@ from ..targeting import (
 from ..teamwork import teamwork_ability, teamwork_instead_target_text, teamwork_payment_refusal
 from ..triggers import ExtraTriggerEvent, GameEvent
 from ..turn import Step
+from .granted_life_costs import GrantedLifeCost, granted_life_costs
 from .options import AlternativeCostOption, KeywordCastOption
 from .permissions import GrantedCastOption, PlayPermission
 
@@ -317,8 +321,32 @@ def types_being_cast(card: Card, face_name: str | None = None) -> tuple[Type, ..
     return tuple(card.types)
 
 
+def flash_grant_sources(game: Any, spell: CardState, caster: str) -> list[str]:
+    """The permanents whose static alternative cost lets `caster` cast `spell`
+    "as though it had flash" when it is paid (Primal Prayers' "If you cast a
+    spell this way, you may cast it as though it had flash"), given it can be
+    paid for this spell now (CR 118.9, CR 601.3)."""
+    if game is None:
+        return []
+    return [
+        name
+        for name, grant in static_free_cast_grants(game, caster)
+        if grant.grants_flash
+        and static_free_cast_refusal(game, caster, spell, spell.zone, name, grant) is None
+    ]
+
+
+def flash_by_alternative_cost(game: Any, spell: CardState, caster: str) -> bool:
+    return bool(flash_grant_sources(game, spell, caster))
+
+
 def why_cannot_cast_now(
-    spell: CardState, caster: str, game: Any = None, *, face: str | None = None
+    spell: CardState,
+    caster: str,
+    game: Any = None,
+    *,
+    face: str | None = None,
+    without_alternative_flash: bool = False,
 ) -> str | None:
     """Why the timing rules refuse this cast right now, or None (CR 117.1a).
 
@@ -410,6 +438,8 @@ def why_cannot_cast_now(
         return None  # Bard's Company's own conditional flash grant
     if game.has_first_spell_flash_grant(caster, spell):
         return None  # Radagast of Rhosgobel's own first-creature-spell flash grant
+    if not without_alternative_flash and flash_by_alternative_cost(game, spell, caster):
+        return None  # Primal Prayers: flash while paying its alternative cost
     if spell.zone is not Zone.HAND and (
         castable_from(spell.card, spell.zone)
         or granted_cast_options(game, spell, caster, spell.zone)
@@ -726,6 +756,10 @@ class Casting(EngineModel):
     "your opponents can't cast noncreature spells this turn", Bonecrusher
     Giant's creature half is legal while Stomp is not.
     """
+    timing_refusals_unless_flash_grant: dict[str, str] = Field(default_factory=dict)
+    """CR 117.1a refusals set aside at the proposal because an alternative cost
+    grants flash (`flash_grant_sources`), keyed like `face_cast_refusals`;
+    `cast()` raises them unless that alternative cost is the one paid."""
     timing_refusals_unless_window: dict[str, str] = Field(default_factory=dict)
     """CR 117.1a refusals `model_post_init` set aside because a keyword whose
     own timing is a window (`CastTiming.OWN_DECLARE_BLOCKERS`, CR 702.190a's
@@ -814,10 +848,19 @@ class Casting(EngineModel):
     """The keyword option `use_keyword` chose carries CR 614.1a's "If a spell
     cast this way would be put into a graveyard, exile it instead." - copied
     onto `CastRecord.exile_instead_of_graveyard` by `cast()`."""
+    keyword_pays_life_for_mana_value: bool = False
+    """The claimed option's `KeywordCastOption.pays_life_for_mana_value`:
+    `total_cost` adds the life equal to the spell's mana value."""
     keyword_once_per_turn_key: str | None = None
     """The once-each-turn grant the chosen option spends
     (`KeywordCastOption.once_per_turn_key`), recorded as used when `cast()`
     completes - not before, since CR 601.6 can still rewind the announcement."""
+    keyword_any_color: bool = False
+    """The claimed option's `KeywordCastOption.any_color` (CR 609.4b)."""
+    treasure_mana_only: bool = False
+    """The chosen alternative cost says "Spend only mana produced by Treasures
+    to cast it this way." (Security Rhox) - `determine_cost` hands it to the
+    payment's `ManaSpend`."""
     alternative_cost: TotalCost | None = None
     free_cast_source: str | None = None
     """The permanent whose static ability applied CR 118.9's alternative cost
@@ -900,6 +943,13 @@ class Casting(EngineModel):
     plain-kicker-style single-payment restriction the way CR 702.33a/c
     distinguishes kicker from multikicker.
     """
+    granted_life_paid: list[GrantedLifeCost] = Field(default_factory=list)
+    """The optional life costs other permanents grant this spell that were
+    announced (CR 118.8b), set by `pay_granted_life_cost`."""
+    colored_only_reductions: list[Color] = Field(default_factory=list)
+    """The colours whose `{C}` reduction a paid granted life cost applies to
+    the spell's mana cost - and only if the cost has such a coloured symbol
+    (CR 118.7a, the Defilers' "reduces only the amount of ... mana you pay")."""
     casualty_paid: int = 0
     """How many of this spell's casualty instances were paid (CR 702.153a,
     CR 702.153b: "each is paid separately"), set by `pay_casualty`."""
@@ -1010,6 +1060,11 @@ class Casting(EngineModel):
     """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
+    announced_counters: dict[str, int] | None = None
+    """The counters the card had before that move (CR 122.1, CR 400.7 clears
+    them): Evelyn, the Covetous opens only exiled cards "with a collection
+    counter on it", which a grant asked about the announced card still has to
+    see."""
     announced_discarded_by: str | None = None
     """Who had discarded the card before that move (CR 701.9a), and"""
     announced_discarded_on_turn: int | None = None
@@ -1073,6 +1128,19 @@ class Casting(EngineModel):
         for option in options:
             evaluated = back_face.name if back_face is not None and option is None else option
             timing = why_cannot_cast_now(self.spell, self.caster, self.game, face=evaluated)
+            if timing is None:
+                strict = why_cannot_cast_now(
+                    self.spell,
+                    self.caster,
+                    self.game,
+                    face=evaluated,
+                    without_alternative_flash=True,
+                )
+                if strict is not None:
+                    # Allowed only because an alternative cost grants flash
+                    # (Primal Prayers): `cast()` raises `strict` unless that
+                    # cost is the one this cast pays.
+                    self.timing_refusals_unless_flash_grant[option or ""] = strict
             if timing is not None:
                 window_refusal = self._timing_window_refusal()
                 if window_refusal is None:
@@ -1162,6 +1230,7 @@ class Casting(EngineModel):
         self.announced_stamp = self.spell.zone_change_stamp
         self.announced_exile_annotation = self.spell.exile_annotation
         self.announced_counters = self.spell.counters.model_copy(deep=True)
+        self.announced_counters = self.spell.counters.model_dump()
         self.announced_discarded_by = self.spell.discarded_by
         self.announced_discarded_on_turn = self.spell.discarded_on_turn
         if self.spell.zone is Zone.LIBRARY:
@@ -1251,6 +1320,7 @@ class Casting(EngineModel):
                     if self.announced_counters is not None
                     else {}
                 ),
+                "counters": Counters(self.announced_counters or {}),
                 "discarded_by": self.announced_discarded_by,
                 "discarded_on_turn": self.announced_discarded_on_turn,
             }
@@ -2016,7 +2086,9 @@ class Casting(EngineModel):
         self.keyword_enters_with_counters = option.enters_with_counters
         self.keyword_snow_any_color = option.snow_any_color
         self.keyword_once_per_turn_key = option.once_per_turn_key
+        self.keyword_any_color = option.any_color
         self.keyword_cost_paid = not option.pays_mana_cost
+        self.keyword_pays_life_for_mana_value = option.pays_life_for_mana_value
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
         if option.keyword.lower() == "bestow":
             # CR 702.103b: "As a spell cast bestowed is put onto the stack, it
@@ -2066,6 +2138,19 @@ class Casting(EngineModel):
             return self.step
 
         cost = option.cost.model_copy(deep=True) if option.cost is not None else TotalCost()
+        if option.keyword.lower() == "dash" and option.cost is not None and self.game is not None:
+            # "Dash costs you pay cost {2} less" (`machines/cost/abilities.py`).
+            cost = TotalCost(
+                mana=ability_cost_adjustment(
+                    self.game,
+                    self.caster,
+                    self.spell,
+                    cost.mana,
+                    kind="dash",
+                    from_zone=self.origin_zone,
+                ),
+                components=cost.components,
+            )
         remaining = list(choosing or [])
         for component in cost.components:
             if component.required and not component.cards:
@@ -2411,6 +2496,7 @@ class Casting(EngineModel):
                     if cost
                     else 0,
                     unavailable=unavailable,
+                    treasure_only=offer.treasure_only,
                 )
             )
 
@@ -2512,22 +2598,15 @@ class Casting(EngineModel):
 
         for source_name, grant in self._static_free_cast_grants():
             options.append(
-                AlternativeCostOption(
-                    index=len(options),
-                    source=AlternativeCostSource.STATIC,
-                    rule="CR 118.9",
-                    source_name=source_name,
-                    description="nothing",
-                    cost=None,
-                    unavailable=static_free_cast_refusal(
-                        self.game,
-                        self.caster,
-                        self._as_announced,
-                        self.origin_zone,
-                        source_name,
-                        grant,
-                    ),
-                    once_per_turn_key=grant.once_per_turn_key,
+                static_grant_option(
+                    len(options),
+                    source_name,
+                    grant,
+                    self.game,
+                    self.caster,
+                    self._as_announced,
+                    self.origin_zone,
+                    self.caster,
                 )
             )
 
@@ -2638,6 +2717,7 @@ class Casting(EngineModel):
             if component.required and not component.cards:
                 component.cards = remaining[: component.required]
                 remaining = remaining[component.required :]
+        self.treasure_mana_only = option.treasure_only
         self.choose_alternative_cost(cost)
         return self.step
 
@@ -2841,6 +2921,44 @@ class Casting(EngineModel):
         component = sacrifice_cost(permanent, payer=self.caster, description=BARGAIN_COST)
         self.add_additional_cost(TotalCost(components=[component]))
         self.bargained = True
+        return self.step
+
+    def granted_life_costs(self) -> list[GrantedLifeCost]:
+        """The optional life costs the caster's permanents grant this spell
+        and that are not yet announced (`machines/casting/granted_life_costs`)."""
+        offered = granted_life_costs(self.game, self.spell, self.caster)
+        for paid in self.granted_life_paid:
+            if paid in offered:
+                offered.remove(paid)
+        return offered
+
+    def pay_granted_life_cost(self, grant: GrantedLifeCost) -> CastingStep:
+        """CR 118.8b / 601.2b: announce a granted optional "you may pay N
+        life" additional cost, and with it the reduction "if you paid life
+        this way" (CR 601.2f). The life is paid with the rest of the total
+        cost at CR 601.2h and must be payable now (CR 119.4)."""
+        if grant not in self.granted_life_costs():
+            raise ValueError(
+                f"{grant.source_name} grants {self.spell.name} no unpaid life cost (CR 118.8b)"
+            )
+        if self.game is not None and self.game.player(self.caster).life < grant.life:
+            raise ValueError(
+                f"{self.caster} cannot pay {grant.life} life with only "
+                f"{self.game.player(self.caster).life} life (CR 119.4)"
+            )
+        self.add_additional_cost(
+            TotalCost(
+                components=[
+                    pay_life_cost(
+                        grant.life,
+                        payer=self.caster,
+                        description=f"pay {grant.life} life ({grant.source_name})",
+                    )
+                ]
+            )
+        )
+        self.granted_life_paid.append(grant)
+        self.colored_only_reductions.append(grant.color)
         return self.step
 
     def casualty_numbers(self) -> list[int]:
@@ -3810,7 +3928,11 @@ class Casting(EngineModel):
         floor: int | None = None
         if self.game is not None:
             board_increases, board_reductions, floor = self.game.static_cost_modifiers_for(
-                self.spell, self.caster, origin_zone=self.origin_zone, targets=self.targets
+                self.spell,
+                self.caster,
+                origin_zone=self.origin_zone,
+                targets=self.targets,
+                casting=self,
             )
             increases = increases + board_increases
             reductions = reductions + board_reductions
@@ -3821,6 +3943,14 @@ class Casting(EngineModel):
             reductions = reductions + granted_affinity_reductions(
                 self.game, self.spell, self.caster, self.origin_zone
             )
+        for color in self.colored_only_reductions:
+            # CR 118.7a: "reduces only the amount of <colour> mana you pay" -
+            # nothing to take off when the cost has no such symbol, so the
+            # reduction never spills into generic (CR 118.7b).
+            symbol = ManaCost.parse(f"{{{color.value}}}")
+            taken = sum(reduction.colored.get(color, 0) for reduction in reductions)
+            if base.with_x(self.x_value).colored.get(color, 0) > taken:
+                reductions.append(symbol)
         own = self.self_reduction if self.self_reduction is not None else self._own_cost_reduction()
         if own.symbols:
             if own in reductions:
@@ -3829,7 +3959,9 @@ class Casting(EngineModel):
         mana = apply_modifications(base.with_x(self.x_value), increases, reductions, floor=floor)
 
         components = list(self.alternative_cost.components) if self.alternative_cost else []
-        if self.permission_used is not None and self.permission_used.pays_life_for_mana_value:
+        if self.keyword_pays_life_for_mana_value or (
+            self.permission_used is not None and self.permission_used.pays_life_for_mana_value
+        ):
             # CR 118.9b's required alternative cost: life equal to the spell's
             # mana value as it will be on the stack (CR 202.3e: X counts).
             components.append(
@@ -4174,6 +4306,14 @@ class Casting(EngineModel):
                 zone=self.origin_zone,
                 x_value=self.x_value,
                 snow_any_color=self.keyword_snow_any_color,
+            ).model_copy(
+                update={
+                    "treasure_only": self.treasure_mana_only,
+                    # CR 609.4b: Chromatic Orrery, Oath of Nissa, Case File
+                    # Auditor - "spend mana as though it were mana of any color".
+                    "any_color": self.keyword_any_color
+                    or self.game.spends_mana_as_any_color_for_spell(self.spell, self.caster),
+                }
             ),
         )
         self.payment.paying_for = "spell"
@@ -4403,6 +4543,18 @@ class Casting(EngineModel):
                 return
             raise ValueError(self._unclaimed_zone_permission_message())
 
+    def _refuse_unless_flash_grant_claimed(self) -> None:
+        """CR 117.1a's refusal, set aside at the proposal because an alternative
+        cost grants flash (`flash_grant_sources`), comes back unless that
+        alternative cost is the one this cast pays."""
+        refusal = self.timing_refusals_unless_flash_grant.get(self.face or "")
+        if refusal is None or self.game is None:
+            return
+        sources = flash_grant_sources(self.game, self._as_announced, self.caster)
+        if self.free_cast_source in sources:
+            return
+        raise ValueError(refusal)
+
     def _refuse_unless_timing_window_claimed(self) -> None:
         """CR 117.1a's refusal, set aside at the proposal because a timing
         window was open (`timing_refusals_unless_window`), comes back unless
@@ -4529,6 +4681,7 @@ class Casting(EngineModel):
         self._refuse_if_x_changed_since_targets()
         self._refuse_unless_allowed_from_its_zone()
         self._refuse_unless_timing_window_claimed()
+        self._refuse_unless_flash_grant_claimed()
 
         self._advance_to(CastingStep.CAST)
         self._turn_face_down_if_cast_that_way()
@@ -4932,12 +5085,50 @@ def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFre
         for line in static_lines:
             grant = static_free_cast_grant(line)
             if grant is not None:
-                if grant.once_each_of_your_turns:
+                grant = grant.model_copy(update={"source_id": permanent.id})
+                if grant.once_each_of_your_turns or grant.once_each_turn:
                     grant = grant.model_copy(
                         update={"once_per_turn_key": once_per_turn_key(permanent)}
                     )
                 found.append((permanent.card.name, grant))
     return found
+
+
+def static_grant_option(
+    index: int,
+    source_name: str,
+    grant: StaticFreeCastGrant,
+    game: Any,
+    caster: str,
+    card: CardState,
+    origin_zone: Zone,
+    payer: str | None = None,
+) -> AlternativeCostOption:
+    """The CR 118.9 option one static grant makes of casting `card`: nothing
+    at all (Omniscience), or the cost the grant prints (Fist of Suns' five
+    colours, Kentaro's mana value, Conspiracy Unraveler's collected evidence)."""
+    cost: TotalCost | None = None
+    description = "nothing"
+    unavailable = static_free_cast_refusal(game, caster, card, origin_zone, source_name, grant)
+    if grant.cost_phrase is not None:
+        if grant.cost_is_mana_value:
+            cost = TotalCost.of(ManaCost.parse(f"{{{int(card.mana_value)}}}"))
+        else:
+            cost = printed_cost_total(grant.cost_phrase, payer)
+        if cost is None and unavailable is None:
+            unavailable = f"{source_name}'s alternative cost {grant.cost_phrase!r} is not read"
+        description = str(cost) if cost is not None else grant.cost_phrase
+    return AlternativeCostOption(
+        index=index,
+        source=AlternativeCostSource.STATIC,
+        rule="CR 118.9",
+        source_name=source_name,
+        description=description,
+        cost=cost,
+        requires=sum(component.required for component in cost.components) if cost else 0,
+        unavailable=unavailable,
+        once_per_turn_key=grant.once_per_turn_key,
+    )
 
 
 def static_free_cast_refusal(
@@ -4959,12 +5150,24 @@ def static_free_cast_refusal(
     any-of-them), a mana value cap, and for "Once during each of your turns"
     whose turn it is and whether that permanent's one use this turn is gone.
     """
-    in_zone = origin_zone is grant.zone
+    in_zone = grant.any_zone or origin_zone is grant.zone
     if not in_zone and grant.also_top_of_library and origin_zone is Zone.LIBRARY:
         library = game.player(caster).library if game is not None else []
         in_zone = bool(library) and library[0] is card
     if not in_zone:
         return f"{source_name} only applies to spells cast from your {grant.zone.value} (CR 118.9)"
+    if grant.quality_phrase:
+        quality = object_quality(grant.quality_phrase)
+        if quality is None or not quality(game, card):
+            return f"{source_name} only applies to {grant.quality_phrase} spells (CR 118.9)"
+    if grant.max_mana_value_counters:
+        source = game.find_by_id(grant.source_id) if grant.source_id is not None else None
+        counters = source.counter_count(grant.max_mana_value_counters) if source is not None else 0
+        if card.mana_value > counters:
+            return (
+                f"{source_name} only applies to spells with mana value {counters} or less, "
+                f"and {card.name} is {card.mana_value}"
+            )
     if grant.type_word and not spell_has_type_word(card.card, grant.type_word):
         return f"{source_name} only applies to {grant.type_word} spells, and {card.name} is not one"
     if grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
@@ -4979,6 +5182,10 @@ def static_free_cast_refusal(
                 f"{source_name} only applies to spells with mana value {cap} or less, and "
                 f"{card.name} is {card.mana_value}"
             )
+    if grant.once_each_turn:
+        used = getattr(game, "once_per_turn_cast_permissions_used", {})
+        if grant.once_per_turn_key in used:
+            return f"{source_name} was already used once this turn"
     if grant.once_each_of_your_turns:
         turn = getattr(game, "turn", None)
         if turn is None or turn.active_player != caster:
@@ -5018,6 +5225,19 @@ def annotate_exile(
         marker=marker, owner=owner or card.controller, turn_exiled=_turn_number(game)
     )
     return card
+
+
+def _marked_exile_cost(
+    game: Any, card: CardState, player: str, cost: TotalCost, kind: str
+) -> TotalCost:
+    """`cost` after "Foretelling cards from your hand costs {1} less" and its
+    plot twin (`machines/cost/abilities.py`, CR 601.2f)."""
+    if game is None:
+        return cost
+    return TotalCost(
+        mana=ability_cost_adjustment(game, player, card, cost.mana, kind=kind, from_zone=Zone.HAND),
+        components=cost.components,
+    )
 
 
 class MarkedExile(EngineModel):
@@ -5066,6 +5286,7 @@ class MarkedExile(EngineModel):
                 f"empty (CR 116.2k, CR 702.170a)"
             )
         cost = total_cost_for_phrase(ability.cost or "") or TotalCost()
+        cost = _marked_exile_cost(game, card, player, cost, "plot")
         return cls(
             card=card,
             player=player,
@@ -5089,13 +5310,20 @@ class MarkedExile(EngineModel):
         """
         if _keyword(card.card, "foretell") is None:
             raise ValueError(f"{card.name} has no foretell ability (CR 702.143a)")
-        if game is not None and game.turn is not None and game.turn.active_player != player:
+        if (
+            game is not None
+            and game.turn is not None
+            and game.turn.active_player != player
+            and not foretell_any_turn(game, player)
+        ):
             raise ValueError(f"{player} can only foretell during their own turn (CR 116.2h)")
         return cls(
             card=card,
             player=player,
             marker=ExileMarker.FORETOLD,
-            cost=TotalCost.of(ManaCost.parse("{2}")).assign_payer(player),
+            cost=_marked_exile_cost(
+                game, card, player, TotalCost.of(ManaCost.parse("{2}")), "foretell"
+            ).assign_payer(player),
             rule="CR 116.2h",
             face_down=True,
             game=game,

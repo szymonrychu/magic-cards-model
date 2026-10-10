@@ -2542,6 +2542,50 @@ def _solve_auto_tap(
     )
 
 
+#: K'rrik, Son of Yawgmoth: "For each {B} in a cost, you may pay 2 life rather
+#: than pay that mana." - the controller's every {B} is payable as a Phyrexian
+#: {B/P} would be (CR 107.4f), a way of paying, not a change to the cost.
+_BLACK_MANA_AS_LIFE_RE = re.compile(
+    r"^for each \{B\} in a cost, you may pay 2 life rather than pay that mana\.?$", re.IGNORECASE
+)
+
+
+def treats_black_mana_as_life(game: Any, payer: str | None) -> bool:
+    """Whether `payer` controls a permanent whose static ability reads
+    `_BLACK_MANA_AS_LIFE_RE`."""
+    if game is None or payer is None:
+        return False
+    board = game.computed_board()
+    return any(
+        _BLACK_MANA_AS_LIFE_RE.match(line.strip())
+        for permanent in game.permanents_controlled_by(payer)
+        for line in board.of(permanent).abilities
+    )
+
+
+def reads_black_mana_as_life_line(text: str) -> bool:
+    """What `support.py` asks before crediting the line."""
+    return _BLACK_MANA_AS_LIFE_RE.match(text.strip()) is not None
+
+
+def payable_with_black_as_life(cost: ManaCost, game: Any, payer: str | None) -> ManaCost:
+    """`cost` with each plain {B} read as {B/P} when `payer`'s permanents say
+    so (K'rrik), else `cost` itself."""
+    black = Color.BLACK
+    if not any(
+        symbol.kind is SymbolKind.COLORED and symbol.colors == (black,) for symbol in cost.symbols
+    ) or not treats_black_mana_as_life(game, payer):
+        return cost
+    return ManaCost(
+        symbols=tuple(
+            ManaSymbol(kind=SymbolKind.PHYREXIAN, colors=(black,))
+            if symbol.kind is SymbolKind.COLORED and symbol.colors == (black,)
+            else symbol
+            for symbol in cost.symbols
+        )
+    )
+
+
 def plan_mana_payment(
     cost: ManaCost,
     sources: Iterable[CardState],
@@ -2595,6 +2639,7 @@ def plan_mana_payment(
     than once per candidate action - see `_solve_auto_tap_flow`.
     """
     context = _SpendContext(game=game, payer=payer, spend=spend)
+    cost = payable_with_black_as_life(cost, game, payer)
     floating: dict[Color, int] = {}
     snow: dict[Color, int] = {}
     restricted: list[Any] = []
@@ -3237,7 +3282,7 @@ class CostPayment(EngineModel):
         if payer is None:
             payer = next((c.payer for c in components if c.payer is not None), None)
         payment = cls(
-            cost=total.mana,
+            cost=payable_with_black_as_life(total.mana, game, payer),
             components=components,
             game=game,
             payer=payer,
@@ -3519,6 +3564,15 @@ class CostPayment(EngineModel):
         # and the CR 602.5 refusals collected on the way - `_activated_mana_
         # ability`, shared with `mana_ability_index` so the ability a
         # `TapPlan` entry reports is the ability the tap actually activates.
+        if (
+            self.spend is not None
+            and self.spend.treasure_only
+            and not is_treasure_source(source, self.game)
+        ):
+            raise ValueError(
+                f"{source.name} is not a Treasure, and only mana produced by Treasures "
+                "may be spent to cast this spell this way (CR 106.6)"
+            )
         activated, refusals, produces, triggered_colors = _activated_mana_ability_with_triggers(
             self, source, produces, restriction
         )

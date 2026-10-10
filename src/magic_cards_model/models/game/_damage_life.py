@@ -603,6 +603,10 @@ class DamageLifeMixin:
                 # Repriser's "an opponent has been dealt noncombat damage
                 # this turn" and Command the Stage's "... last turn".
                 self.record_turn_fact("dealt_noncombat_damage", damaged_player.username)
+                self.noncombat_damage_to_players_this_turn[damaged_player.username] = (
+                    self.noncombat_damage_to_players_this_turn.get(damaged_player.username, 0)
+                    + event.amount
+                )
             if source is not None and not event.combat and event.amount > 0:
                 self._noncombat_deathtouch_and_lifelink(source, target, event.amount)
             return event.amount

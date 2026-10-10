@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c",
+  "oracle_id": "312a5a75-9b68-4e4b-97fe-3ab644e3e493",
+  "multiverse_ids": [
+    188974
+  ],
+  "mtgo_id": 32466,
+  "mtgo_foil_id": 32467,
+  "tcgplayer_id": 31736,
+  "cardmarket_id": 20933,
+  "name": "Firewild Borderpost",
+  "lang": "en",
+  "released_at": "2009-04-30",
+  "uri": "https://api.scryfall.com/cards/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c",
+  "scryfall_uri": "https://scryfall.com/card/arb/54/firewild-borderpost?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:33:50Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.jpg?1783942430",
+    "normal": "https://cards.scryfall.io/normal/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.jpg?1783942430",
+    "large": "https://cards.scryfall.io/large/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.jpg?1783942430",
+    "png": "https://cards.scryfall.io/png/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.png?1783942430",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.jpg?1783942430",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.jpg?1783942430",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.webp?1783942430",
+    "grid": "https://cards.scryfall.io/grid/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.webp?1783942430",
+    "display": "https://cards.scryfall.io/display/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.webp?1783942430",
+    "art": "https://cards.scryfall.io/art/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.webp?1783942430",
+    "crop": "https://cards.scryfall.io/crop/front/e/b/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c.webp?1783942430"
+  },
+  "mana_cost": "{1}{R}{G}",
+  "cmc": 3.0,
+  "type_line": "Artifact",
+  "oracle_text": "You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost.\nThis artifact enters tapped.\n{T}: Add {R} or {G}.",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "G",
+    "R"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "db486ec5-141d-4781-9ee5-5456926934c1",
+  "set": "arb",
+  "set_name": "Alara Reborn",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/db486ec5-141d-4781-9ee5-5456926934c1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aarb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/arb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/eb37a8bd-6b6c-47f3-b7a0-5a20fa2d507c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A312a5a75-9b68-4e4b-97fe-3ab644e3e493&unique=prints",
+  "collector_number": "54",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jean-S\u00e9bastien Rossbach",
+  "artist_ids": [
+    "1b0c07a7-84e8-4384-9b97-28c162586558"
+  ],
+  "illustration_id": "43a9fd53-36dd-46d1-8c41-e7d2eb6ae4fa",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17796,
+  "penny_rank": 2029,
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.78",
+    "usd_etched": null,
+    "eur": "0.26",
+    "eur_foil": "0.78",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=188974&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFirewild%2BBorderpost",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFirewild%2BBorderpost",
+    "edhrec": "https://edhrec.com/route/?cc=Firewild+Borderpost"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F31736%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=20933&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/32466?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

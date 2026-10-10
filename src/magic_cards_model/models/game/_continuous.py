@@ -31,6 +31,8 @@ from ...machines.cost import (
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
 )
+from ...machines.cost.groups import group_spell_modifier
+from ...machines.cost.statics import CostContext
 from ...machines.decisions import (
     Decision,
     DecisionKind,
@@ -1383,6 +1385,7 @@ class ContinuousMixin:
         *,
         origin_zone: Zone | None = None,
         targets: Sequence[TargetRef] | None = None,
+        casting: object | None = None,
     ) -> tuple[list[ManaCost], list[ManaCost], int | None]:
         """Board-wide static cost increases, decreases, and the floor in play
         right now (CR 601.2f, 611.3).
@@ -1525,6 +1528,26 @@ class ContinuousMixin:
                     if not self.condition_holds(owner, effect.condition, permanent):
                         continue
                 if effect is None:
+                    # EP-01 T7: the group-spell grammar of `machines/cost/
+                    # groups.py` (qualities, ordinals, "that target ...",
+                    # counts, "where X is", "if <condition>").
+                    group = group_spell_modifier(text)
+                    if group is not None:
+                        priced = group.modification(
+                            CostContext(
+                                game=self,
+                                owner=caster,
+                                spell=spell,
+                                source=permanent,
+                                targets=tuple(targets or ()),
+                                casting=casting,
+                            ),
+                            caster,
+                            cast_from,
+                        )
+                        if priced is not None:
+                            (decreases if group.sign < 0 else increases).append(priced)
+                        continue
                     if (
                         looks_like_unparsed_cost_modifier(text)
                         and permanent.id not in already_noticed

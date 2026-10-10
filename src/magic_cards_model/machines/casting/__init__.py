@@ -132,6 +132,9 @@ from ..cost import why_not_unblocked as why_not_unblocked
 from ...phrases import with_indefinite_article as with_indefinite_article
 from ..modes import x_restriction_refusal as x_restriction_refusal
 from ..casting_restrictions import zone_cast_prohibition_source as zone_cast_prohibition_source
+from .granted_life_costs import GrantedLifeCost as GrantedLifeCost
+from .granted_life_costs import granted_life_costs as granted_life_costs
+from .granted_life_costs import reads_granted_life_cost_line as reads_granted_life_cost_line
 from .options import (
     AlternativeCostOption,
     AlternativeCostSource,
@@ -272,6 +275,7 @@ from .permissions import (
     hexproof_abilities_in,
     hexproof_qualities_in,
     is_top_of_library,
+    linked_exile_play_grant,
     linked_exile_play_source,
     opponents_exile_counter_cast,
     reads_opponents_exile_counter_cast_line,
@@ -318,6 +322,7 @@ from .casting import (
     remove_suspend_time_counter,
     spell_has_type_word,
     static_free_cast_grants,
+    static_grant_option,
     static_free_cast_refusal,
     types_being_cast,
     why_cannot_cast_a_land,
@@ -474,6 +479,7 @@ __all__ = [
     "keyword_cast_options",
     "kicker_costs",
     "life_or_mana_additional_costs",
+    "linked_exile_play_grant",
     "linked_exile_play_source",
     "opponents_exile_counter_cast",
     "reads_opponents_exile_counter_cast_line",
@@ -497,6 +503,7 @@ __all__ = [
     "reads_optional_sacrifice_reduction_line",
     "reads_or_pay_additional_cost_line",
     "reads_play_cards_exiled_with_line",
+    "reads_granted_life_cost_line",
     "reads_printed_alternative_cost_line",
     "reads_printed_self_zone_cast_line",
     "reads_printed_zone_permission_line",
@@ -507,6 +514,7 @@ __all__ = [
     "splice_candidates",
     "split_second_restriction_source",
     "static_free_cast_grants",
+    "static_grant_option",
     "static_free_cast_refusal",
     "static_zone_cast_permission",
     "types_being_cast",

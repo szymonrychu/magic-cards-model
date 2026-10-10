@@ -24,12 +24,13 @@ from ...machines.casting import (
     granted_cast_options,
     keyword_cast_options,
     life_or_mana_additional_costs,
-    linked_exile_play_source,
+    linked_exile_play_grant,
     marker_cast_options,
+    once_per_turn_key,
     optional_additional_costs,
     play_permissions_on,
     static_free_cast_grants,
-    static_free_cast_refusal,
+    static_grant_option,
     static_zone_cast_permission,
     types_being_cast,
     usable_play_permission,
@@ -625,6 +626,7 @@ class CastingMixin:
         pays_mana_cost: bool = False,
         exile_instead_of_graveyard: bool = False,
         transformed: bool = False,
+        cost_reduction: int = 0,
     ) -> CardState | None:
         """CR 608.2g: cast `card` without paying its mana cost while the
         resolving spell or ability that allows it is still resolving - the one
@@ -665,6 +667,9 @@ class CastingMixin:
         sources the same way a resolution cast's other owed mana is
         (`_pay_resolution_cast_mana`), an X in it chosen by the caster (CR
         107.3a).
+
+        `cost_reduction` is the "That copy costs {N} less to cast" rider (God-Eternal
+        Kefnet): N generic mana off the total cost (CR 601.2f, CR 118.7).
 
         `transformed` casts a nonmodal double-faced card with its back face up
         (CR 712.11a, 712.8c) - a Siege's "cast it transformed" (CR 310.12b).
@@ -758,6 +763,8 @@ class CastingMixin:
                 targets = self._announce_resolution_targets(casting, card, caster, chosen_modes)
                 if targets:
                     casting.choose_targets(targets)
+                if cost_reduction:
+                    casting.reduce_cost(f"{{{cost_reduction}}}")
                 payment = casting.determine_cost(x_value=x_value)
                 self._choose_waterbend_taps(casting, payment, card, caster)
                 if payment.shortfall:
@@ -872,6 +879,7 @@ class CastingMixin:
                 casting.pay_offspring()
         self._announce_casualty(casting, card, caster, taken)
         self._announce_conspire(casting, card, caster, taken)
+        self._announce_granted_life_costs(casting, card, caster)
         if "gift" in printed:
             opponents = [p.username for p in self.players_in_game if p.username != caster]
             promised = self.ask(
@@ -936,6 +944,28 @@ class CastingMixin:
                     )
                 )
                 casting.pay_blight(next(state for state in creatures if state.id == answer[0]))
+
+    def _announce_granted_life_costs(
+        self: "Game", casting: Casting, card: CardState, caster: str
+    ) -> None:
+        """CR 118.8b's optional "you may pay N life" other permanents grant
+        (the Defilers), one `MAY` per granting permanent, legal only while the
+        life can be paid (CR 119.4)."""
+        for grant in casting.granted_life_costs():
+            if self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=(
+                        f"pay {grant.life} life ({grant.source_name}) as you cast {card.name}, "
+                        f"so it costs {{{grant.color.value}}} less (CR 118.8b)"
+                    ),
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=self.player(caster).life >= grant.life,
+                )
+            ):
+                casting.pay_granted_life_cost(grant)
 
     def _announce_casualty(
         self: "Game", casting: Casting, card: CardState, caster: str, taken: set[UUID]
@@ -1899,17 +1929,8 @@ class CastingMixin:
 
         for source_name, grant in static_free_cast_grants(self, caster):
             options.append(
-                AlternativeCostOption(
-                    index=len(options),
-                    source=AlternativeCostSource.STATIC,
-                    rule="CR 118.9",
-                    source_name=source_name,
-                    description="nothing",
-                    cost=None,
-                    unavailable=static_free_cast_refusal(
-                        self, caster, card, origin_zone, source_name, grant
-                    ),
-                    once_per_turn_key=grant.once_per_turn_key,
+                static_grant_option(
+                    len(options), source_name, grant, self, caster, card, origin_zone, caster
                 )
             )
         return options
@@ -1959,6 +1980,7 @@ class CastingMixin:
         reveal_for_cost: CardState | None = None,
         casualty: Sequence[CardState] | None = None,
         conspire: Sequence[Sequence[CardState]] | None = None,
+        granted_life_costs: int = 0,
         exile_for_cost_reduction: Sequence[CardState] | None = None,
         waterbend: bool = False,
         waterbend_tapping: Sequence[CardState] | None = None,
@@ -2099,6 +2121,13 @@ class CastingMixin:
             # with the rest of CR 601.2b's additional costs.
             for pair in conspire or ():
                 casting.pay_conspire(list(pair))
+            # CR 118.8b: how many of the optional life costs other permanents
+            # grant this spell (the Defilers) are paid, taken in order.
+            for _ in range(granted_life_costs):
+                offered = casting.granted_life_costs()
+                if not offered:
+                    raise ValueError(f"{card.name} has no more granted life costs to pay")
+                casting.pay_granted_life_cost(offered[0])
             if exile_for_cost_reduction is not None:
                 casting.exile_for_cost_reduction(exile_for_cost_reduction)
             # CR 601.2b announces every additional cost before CR 601.2c's
@@ -2243,6 +2272,7 @@ class CastingMixin:
         if refusal is not None:
             raise ValueError(refusal)
         permission: PlayPermission | None = None
+        exile_grant = linked_exile_play_grant(self, land, username)
         if land.zone is not Zone.HAND:
             # CR 305.1 plays a land "from their hand"; CR 701.18a's "from the
             # zone it's in (usually the hand)" is the wider action, and only an
@@ -2256,7 +2286,7 @@ class CastingMixin:
                 permission is None
                 and self.graveyard_land_permission(land, username) is None
                 and self.land_from_top_of_library_permission(land, username) is None
-                and linked_exile_play_source(self, land, username) is None
+                and exile_grant is None
             ):
                 granted = play_permissions_on(self, land)
                 if granted:
@@ -2276,6 +2306,10 @@ class CastingMixin:
         # CR 406.3a: a card exiled face down "is turned face up just before
         # the player announces that they are playing the card".
         land.face_up = True
+        if exile_grant is not None and exile_grant.line.once_each_turn:
+            # "Once each turn, you may play a card from exile ..." (Evelyn):
+            # this play is the turn's use of that permanent's permission.
+            self.once_per_turn_cast_permissions_used[once_per_turn_key(exile_grant.permanent)] = 1
 
         # CR 305.2a counts "lands played as special actions and lands played
         # during the resolution of spells and abilities", so any future effect

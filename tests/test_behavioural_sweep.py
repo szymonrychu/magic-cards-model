@@ -4752,6 +4752,13 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="two or more attackers with one of the keywords the condition lists",
         precondition=r"you attack with at least \w+ creatures that have",
     ),
+    # EP01-R1-T7: the stock board has no two other legendary creatures; the
+    # trigger itself is proven in test_ep01_r1_group_cost_modification.py.
+    DriverGap(
+        kind="beginning_of_step",
+        event="two or more other legendary creatures under the controller",
+        precondition=r"if you control two or more other legendary creatures",
+    ),
     DriverGap(
         kind="beginning_of_step",
         event="cards already exiled with the source (CR 607.1)",

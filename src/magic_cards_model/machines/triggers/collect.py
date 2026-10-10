@@ -84,6 +84,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.LAST_COUNTER_REMOVED})
     if _REVEALED_THIS_WAY_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.REVEALED_FOR_MIRACLE})
+    if _REVEALED_FIRST_DRAW_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.REVEALED_FIRST_DRAW})
     if _UNTAPPED_DURING_UNTAP_STEP_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.UNTAPPED_DURING_UNTAP_STEP})
     if _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(lowered):
@@ -1912,6 +1914,7 @@ from ._common import (  # noqa: E402
     _PLAY_A_LAND_OR_CAST_CONDITION,
     _PLAYER_COUNTERS_PUT_CONDITION,
     _PUT_INTO_LIBRARY_CONDITION,
+    _REVEALED_FIRST_DRAW_CONDITION,
     _REVEALED_THIS_WAY_CONDITION,
     _RING_TEMPTS_YOU_CONDITION,
     _ROLLS_DICE_CONDITION,

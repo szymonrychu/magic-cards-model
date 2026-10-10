@@ -1,6 +1,7 @@
 import re
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
+from functools import cache
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -139,7 +140,7 @@ _COSTS_LESS_PER_CARD_TYPE = re.compile(
 #: _quality_matcher`, with the printed "and" meaning "or" for one card (no
 #: card is both an instant and a sorcery).
 _COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE = re.compile(
-    r"costs \{(\d+)\} less to cast for each (?P<quality>(?!card type)[a-z, ]+?) card "
+    r"costs \{(\d+)\} less to cast for each (?P<quality>(?!card type)[a-z,/ ]+?) card "
     r"in your graveyard",
     re.IGNORECASE,
 )
@@ -321,7 +322,92 @@ _SELF_COST_REDUCTION_SHAPES = (
 )
 
 
-def reads_self_cost_reduction_line(text: str) -> bool:
+#: The self-reduction sentences `machines/cost/statics.py`'s readers price
+#: (CR 601.2f), each tried only for a line no earlier row in this module reads:
+#: "for each <count>" (with Valiant Changeling's cap), "where X is <expr>",
+#: "if <condition>" after the amount, and Avatar of Might's leading
+#: "If <condition>, this spell costs ... less". The amount is a run of symbols
+#: - one `{1}`-style unit or one coloured `{U}` per counted object.
+_SELF_EACH_RE = re.compile(
+    r"^this spell costs (?P<amount>(?:\{[^{}]+\})+) less to cast for each (?P<each>[^.]+?)\."
+    r"(?: this effect can't reduce the amount of mana this spell costs by more than "
+    r"(?P<cap>\{\d+\})\.)?$",
+    re.IGNORECASE,
+)
+_SELF_WHERE_RE = re.compile(
+    r"^this spell costs \{x\} less to cast,? where x is (?P<expr>[^.]+)\.$", re.IGNORECASE
+)
+_SELF_IF_AFTER_RE = re.compile(
+    r"^this spell costs (?P<amount>(?:\{[^{}]+\})+) less to cast (?:if|as long as) "
+    r"(?P<cond>[^.]+)\.$",
+    re.IGNORECASE,
+)
+_SELF_IF_BEFORE_RE = re.compile(
+    r"^if (?P<cond>[^,]+), this spell costs (?P<amount>(?:\{[^{}]+\})+) less to cast\.$",
+    re.IGNORECASE,
+)
+
+
+def _claimed_by_earlier_self_reduction(line: str) -> bool:
+    """Whether a row above already prices `line` (so `self_reduction_reader`
+    must not price it a second time)."""
+    if reads_self_cost_reduction_line_earlier(line):
+        return True
+    if _COSTS_LESS_IF_TARGETS_SPELL_RE.search(line) or _COSTS_LESS_IF_TARGETS_DESCRIPTION_RE.search(
+        line
+    ):
+        return True
+    from ...machines.vivid import costs_less_per_color_among_reduction  # noqa: F401
+
+    return "vivid" in line.lower()
+
+
+@cache
+def self_reduction_reader(line: str):  # noqa: ANN201 - a CostContext -> ManaCost reader
+    """One "This spell costs ... less to cast ..." line as a reader over a
+    `CostContext`, or `None` when it is not a shape this reads (or an earlier
+    row already prices it). The one entry both `Game.cost_reduction_for` (to
+    price it at CR 601.2f) and the static audit (to credit it) call."""
+    from ...machines.cost.statics import cost_condition, cost_count, cost_expression
+
+    # Reminder text (CR 207.2 italics) has no game function: "(Your party
+    # consists of ...)" is not part of the sentence read.
+    text = re.sub(r"\s*\([^)]*\)", "", line).strip()
+    if _claimed_by_earlier_self_reduction(text):
+        return None
+    each = _SELF_EACH_RE.match(text)
+    if each is not None:
+        count = cost_count(each.group("each"))
+        unit = ManaCost.try_parse(each.group("amount"))
+        if count is None or unit is None:
+            return None
+        cap = each.group("cap")
+        cap_value = int(cap.strip("{}")) if cap else None
+
+        def per_count(ctx):
+            n = count(ctx)
+            if cap_value is not None:
+                n = min(n, cap_value // max(unit.converted, 1))
+            return ManaCost.parse(each.group("amount") * n) if n > 0 else ManaCost()
+
+        return per_count
+    where = _SELF_WHERE_RE.match(text)
+    if where is not None:
+        expr = cost_expression(where.group("expr"))
+        if expr is None:
+            return None
+        return lambda ctx: ManaCost.parse(f"{{{expr(ctx)}}}") if expr(ctx) > 0 else ManaCost()
+    conditional = _SELF_IF_AFTER_RE.match(text) or _SELF_IF_BEFORE_RE.match(text)
+    if conditional is not None:
+        holds = cost_condition(conditional.group("cond"))
+        unit = ManaCost.try_parse(conditional.group("amount"))
+        if holds is None or unit is None:
+            return None
+        return lambda ctx: unit if holds(ctx) else ManaCost()
+    return None
+
+
+def reads_self_cost_reduction_line_earlier(text: str) -> bool:
     """Whether one printed line is wholly a "This spell costs {N} less to
     cast ..." reduction `Game.cost_reduction_for` computes (CR 601.2f) -
     `support.py`'s credit for it on a permanent card, whose line is read as a
@@ -368,6 +454,22 @@ def reads_self_cost_reduction_line(text: str) -> bool:
         return True
     condition_match = _COSTS_LESS_IF_CONDITION_RE.fullmatch(line)
     return condition_match is not None and condition_is_readable(condition_match.group("condition"))
+
+
+def reads_self_cost_reduction_line(text: str) -> bool:
+    """`reads_self_cost_reduction_line_earlier`'s rows, plus the sentences
+    `self_reduction_reader` prices - what `support.py` credits on a permanent."""
+    line = _ABILITY_WORD_PREFIX_RE.sub("", text.strip(), count=1)
+    return (
+        reads_self_cost_reduction_line_earlier(text)
+        # Swampsnare Trap's "if it targets a creature with flying": priced by
+        # `cost_reduction_for` from `Casting.targets` (CR 601.2c before 601.2f).
+        or (
+            line.lower().startswith("this spell")
+            and _COSTS_LESS_IF_TARGETS_DESCRIPTION_RE.search(line) is not None
+        )
+        or self_reduction_reader(line) is not None
+    )
 
 
 #: What "[text]" in CR 702.41a's "Affinity for [text]" can name, mapped to the
@@ -483,6 +585,10 @@ class CostsManaMixin:
             return False
         if self.controller_of(permanent).username != controller:
             return False
+        if any(scope is None for _source, scope in self._spend_as_any_color_grants(controller)):
+            # An unscoped sentence (Chromatic Orrery, Mycosynth Lattice)
+            # reaches abilities as well as spells.
+            return True
         for source in list(self.battlefield):
             if self.controller_of(source).username != controller:
                 continue
@@ -526,6 +632,45 @@ class CostsManaMixin:
                     ):
                         return True
         return False
+
+    def _spend_as_any_color_grants(
+        self: "Game", player: str
+    ) -> Iterator[tuple[CardState, str | None]]:
+        """Every battlefield permanent's CR 609.4b sentence ("You may spend
+        mana as though it were mana of any color[ to cast <quality> spells].",
+        or its "Players may" form) that applies to `player`, as `(source,
+        scope quality or None)`. Gated on `_still_has_static_line` (CR 613.1f)."""
+        for source in list(self.battlefield):
+            mine = self.controller_of(source).username == player
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                for sentence in (part for part in re.split(r"(?<=\.)\s+", text) if part):
+                    match = _SPEND_AS_ANY_COLOR_STATIC_RE.match(sentence)
+                    if match is None:
+                        continue
+                    if match.group("who").lower() == "you" and not mine:
+                        continue
+                    if not self._still_has_static_line(source, text):
+                        continue
+                    yield source, (match.group("scope") or None)
+
+    def spends_mana_as_any_color_for_spell(self: "Game", spell: CardState, caster: str) -> bool:
+        """Whether `caster` may spend mana as though it were mana of any color
+        to cast `spell` (CR 609.4b): an unscoped permission always, a scoped
+        one when `spell` has the quality it names ("planeswalker", "Case")."""
+        from ...machines.casting import linked_exile_play_grant
+        from ...machines.next_spell import spell_has_quality
+
+        for _source, scope in self._spend_as_any_color_grants(caster):
+            if scope is None or spell_has_quality(spell, scope.lower()):
+                return True
+        # Rogue Class's and Evelyn's "... and you may spend mana as though it
+        # were mana of any color to cast those spells / it": the cards of the
+        # pile the same sentence opens to play.
+        grant = linked_exile_play_grant(self, spell, caster)
+        return grant is not None and grant.line.any_color
 
     @staticmethod
     def _resulting_mana_value(card: CardState, option: str | None) -> int:
@@ -1101,6 +1246,7 @@ class CostsManaMixin:
             crew_offer,
             delve_offer,
             has_convoke,
+            has_crew_loyalty_alternative,
             has_delve,
             has_improvise,
             has_station,
@@ -1143,6 +1289,16 @@ class CostsManaMixin:
                 rule="CR 702.122a",
                 number=crew_number(card.card),
                 candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
+                loyalty_candidates=[
+                    c
+                    for c in battlefield
+                    if has_crew_loyalty_alternative(card.card)
+                    and Type.PLANESWALKER in self.characteristics_of(c).types
+                    and self.controller_of(c).username == player
+                    and c.counters[Counter.LOYALTY] > 0
+                ]
+                if has_crew_loyalty_alternative(card.card)
+                else [],
             )
         # CR 702.184a: a station permanent's own ability, offered while it is
         # on the battlefield - the candidates are the creatures its cost could
@@ -1162,6 +1318,7 @@ class CostsManaMixin:
         spell: CardState,
         caster: str | None = None,
         targets: Sequence[TargetRef] | None = None,
+        casting: object | None = None,
     ) -> ManaCost:
         """What this spell's own text takes off its cost right now (CR 601.2f).
 
@@ -1244,7 +1401,7 @@ class CostsManaMixin:
         if per_quality is not None:
             from ...machines.effects import _card_description_is_readable, _quality_matcher
 
-            quality = re.sub(r"\s+and\s+", " or ", per_quality.group("quality"))
+            quality = re.sub(r"\s+and(?:/or)?\s+", " or ", per_quality.group("quality"))
             if _card_description_is_readable(quality):
                 matches = _quality_matcher(quality)
                 counted = sum(1 for card in self.player(owner).graveyard if matches(card))
@@ -1367,7 +1524,21 @@ class CostsManaMixin:
                 amount += reader(self, owner, spell, 0)
 
         generic = ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
-        return generic.plus(colored_reduction) if colored_reduction.symbols else generic
+        reduction = generic.plus(colored_reduction) if colored_reduction.symbols else generic
+        # The counted, "where X is" and conditional sentences of
+        # `self_reduction_reader`, one per printed line (CR 601.2f).
+        from ...machines.cost.statics import CostContext
+
+        context = CostContext(
+            game=self, owner=owner, spell=spell, targets=tuple(targets or ()), casting=casting
+        )
+        for line in text.split("\n"):
+            reader = self_reduction_reader(_ABILITY_WORD_PREFIX_RE.sub("", line.strip(), count=1))
+            if reader is not None:
+                extra = reader(context)
+                if extra.symbols:
+                    reduction = reduction.plus(extra)
+        return reduction
 
     def could_produce_colorless(self: "Game", permanent: CardState) -> bool:
         """Whether this permanent could produce {C} right now (CR 106.7).
@@ -1643,6 +1814,7 @@ class CostsManaMixin:
             casting.spell,  # type: ignore[attr-defined]
             casting.caster,  # type: ignore[attr-defined]
             targets=casting.targets,  # type: ignore[attr-defined]
+            casting=casting,
         )
         if reduction.symbols:
             # Appended straight onto the casting's reductions rather than through
@@ -1809,6 +1981,7 @@ class CostsManaMixin:
 from ._common import (  # noqa: E402
     _ABILITY_WORD_PREFIX_RE,
     _COLOR_WORDS,
+    _SPEND_AS_ANY_COLOR_STATIC_RE,
     _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE,
     ENERGY_PAID_OR_LOST,
     Targetable,

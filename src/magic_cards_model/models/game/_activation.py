@@ -48,6 +48,7 @@ from ...machines.cost import (
     total_cost_for_phrase,
     untap_cost,
 )
+from ...machines.cost.abilities import ability_cost_adjustment
 from ...machines.decisions import (
     source_id_of,
 )
@@ -405,7 +406,9 @@ def reads_activation_rule_line(
         return True
     sentences = [part for part in re.split(r"(?<=\.)\s+", line) if part]
     return bool(sentences) and all(
-        _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE.match(sentence) for sentence in sentences
+        _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE.match(sentence)
+        or _SPEND_AS_ANY_COLOR_STATIC_RE.match(sentence)
+        for sentence in sentences
     )
 
 
@@ -703,7 +706,9 @@ class ActivationMixin:
         refusal = self.why_cannot_unlock_door(username, permanent, door)
         if refusal is not None:
             raise ValueError(refusal)
-        return CostPayment.for_total(unlock_cost(permanent, door), game=self, payer=username)
+        return CostPayment.for_total(
+            unlock_cost(permanent, door, self, username), game=self, payer=username
+        )
 
     def finish_unlocking_door(
         self: "Game", username: str, permanent: CardState, door: str
@@ -1989,6 +1994,24 @@ class ActivationMixin:
         from ...machines.attached_restrictions import activation_cost_increase
 
         mana = increase(mana, activation_cost_increase(self, permanent))
+        # EP-01 T7: "Equip abilities you activate cost {1} less", "Boast
+        # abilities ...", "Activated abilities cost {2} more" and the rest of
+        # `machines/cost/abilities.py`'s grammar (CR 601.2f via CR 602.2b).
+        mana = ability_cost_adjustment(
+            self,
+            controller,
+            permanent,
+            mana,
+            kind="exhaust"
+            if ability.exhaust
+            else "boast"
+            if (ability.raw or "").lower().startswith("boast")
+            else "",
+            is_mana=ability.mana is not None,
+            is_loyalty=ability.loyalty is not None,
+            targets=tuple(targets or ()),
+            from_zone=permanent.zone,
+        )
 
         return TotalCost(
             mana=mana, components=components, waterbend_generic=waterbend_generic
@@ -3167,7 +3190,7 @@ class ActivationMixin:
             return on_stack
 
 
-from ._common import _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE  # noqa: E402
+from ._common import _SPEND_AS_ANY_COLOR_STATIC_RE, _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE  # noqa: E402
 from ._conditions import (  # noqa: E402
     _card_type_named,
     _is_minus_symbol,

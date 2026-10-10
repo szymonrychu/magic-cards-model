@@ -948,6 +948,9 @@ class ObjectCostOffer(EngineModel):
     """Crew's own printed number (CR 702.122a); `None` for convoke, delve and
     improvise, which name no fixed total."""
     candidates: list[CardState] = Field(default_factory=list)
+    loyalty_candidates: list[CardState] = Field(default_factory=list)
+    """Crew only: the planeswalkers whose loyalty counter could be removed
+    rather than paying the crew cost (Heart of Kiran, CR 118.9)."""
 
 
 class GraveyardArrival(EngineModel):

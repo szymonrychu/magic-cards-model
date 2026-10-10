@@ -10360,6 +10360,11 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         return _chosen_parity_keyword_grant_builder(
             parity_keywords, without=match.group("without").lower() == "without", line=sentence
         )
+    from ..attacking_statics import parse_keyword_filtered_group_keyword_grant
+
+    keyword_filtered_group = parse_keyword_filtered_group_keyword_grant(sentence)
+    if keyword_filtered_group is not None:
+        return keyword_filtered_group
     if match := _ALL_CREATURES_KEYWORD_GRANT_RE.fullmatch(sentence):
         all_creatures_keywords = _split_and_validate_keywords(match.group("keywords"))
         grant_subtype = match.group("subtype")

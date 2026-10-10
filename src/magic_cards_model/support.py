@@ -66,6 +66,7 @@ from magic_cards_model.machines.casting import (
     player_keyword_grant_of_line,
     reads_as_graveyard_cast_permission_line,
     reads_granted_cast_spell_keyword_line,
+    reads_granted_life_cost_line,
     reads_granted_zone_keyword_line,
     reads_linked_exile_static_cast_line,
     reads_mandatory_additional_cost_line,
@@ -110,9 +111,11 @@ from magic_cards_model.machines.cost import (
     cost_announces_x,
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
+    reads_black_mana_as_life_line,
     static_free_cast_grant,
     waterbend_mana_cost,
 )
+from magic_cards_model.machines.cost.abilities import reads_free_cycling_line
 from magic_cards_model.machines.counter_effects import (
     parse_resolution_text as counter_resolution_text,
 )
@@ -170,6 +173,7 @@ from magic_cards_model.machines.modes import Mode, modal_profile, substitute_x
 from magic_cards_model.machines.objects_as_costs import (
     granted_convoke_line_is_readable,
     has_improvise,
+    reads_crew_loyalty_alternative_line,
 )
 from magic_cards_model.machines.opening_hand import OpeningHandAction, read_opening_hand_line
 from magic_cards_model.machines.replacement import (
@@ -2219,6 +2223,23 @@ def _static_ability_category(
         return HANDLED
     if reads_or_pay_additional_cost_line(text):
         # `casting.mandatory_additional_costs` charges either half.
+        return HANDLED
+    if reads_free_cycling_line(text):
+        # CR 118.9: `keywords.cycling_activation` pays {0} for the cycling
+        # cost while the condition holds (New Perspectives).
+        return HANDLED
+    if reads_crew_loyalty_alternative_line(effective_name, text, legendary=legendary):
+        # CR 118.9 / CR 702.122a: `keywords.crew_activation(loyalty_from=...)`
+        # pays the crew cost with a planeswalker's loyalty counter (Heart of Kiran).
+        return HANDLED
+    if reads_black_mana_as_life_line(text):
+        # CR 107.4f: `payable_with_black_as_life` reads each {B} the
+        # controller pays as a Phyrexian {B/P} (K'rrik).
+        return HANDLED
+    if reads_granted_life_cost_line(text):
+        # CR 118.8b / CR 118.7a: `Casting.pay_granted_life_cost` announces the
+        # optional life cost and the coloured-only reduction tied to it
+        # (the Defilers).
         return HANDLED
     if reads_printed_alternative_cost_line(text):
         # CR 118.9: `Casting.alternative_costs` offers the printed "You may
