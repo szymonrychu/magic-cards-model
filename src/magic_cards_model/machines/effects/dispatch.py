@@ -5339,6 +5339,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             parsed.append(effect)
             index += consumed
             continue
+        merged = _merge_look_top_exile_one_other_to_hand_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
         merged = _merge_look_top_hand_bottom_exile_play_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
@@ -6458,6 +6466,7 @@ from .merges import (  # noqa: E402
     _merge_exile_until_quality_then_counter_or_cast_clauses,
     _merge_flip_coin_damage_or_exile_transform_clauses,
     _merge_flip_coin_lose_consequence_clauses,
+    _merge_look_top_exile_one_other_to_hand_clauses,
     _merge_look_top_hand_bottom_exile_play_clauses,
     _merge_look_top_may_reveal_group_to_hand_clauses,
     _merge_look_top_may_reveal_two_types_split_clauses,

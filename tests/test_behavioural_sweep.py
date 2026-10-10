@@ -4733,6 +4733,17 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="cards already exiled with the source (CR 607.1)",
         precondition=r"if there are cards exiled with this",
     ),
+    # EP01-R1-T6: proven by tests/scenarios/test_ep01_r1_other_lines.py and
+    # test_ep01_r1_counter_token_replacement.py.
+    DriverGap(
+        kind="beginning_of_step",
+        event="the source card in exile with egg counters at its owner's upkeep (CR 122.1)",
+        precondition=r"if this card is exiled with an egg counter on it",
+    ),
+    DriverGap(
+        kind="rolls_dice",
+        event="a player rolling one or more dice (CR 706.2)",
+    ),
     # NW06-T1: states the stock boards cannot stage; each is driven by its
     # own scenario file (tests/scenarios/test_nw06_*).
     DriverGap(

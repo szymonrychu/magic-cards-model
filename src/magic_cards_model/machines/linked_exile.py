@@ -171,6 +171,35 @@ def parse_return_other_linked_cards_to_hand_clause(clause: str) -> AbilityEffect
     return effect
 
 
+#: "Return all cards exiled with `<self>` to their owner's hand and you lose
+#: that much life." - Asmodeus the Archfiend's {B}. `<self>` is CR 201.5's
+#: printed short name of the source (never validated against it: the pile is
+#: the resolving ability's own, `_linked_cards`); "that much" is the number
+#: of cards that actually reached a hand.
+_RETURN_ALL_LINKED_TO_HAND_LOSE_LIFE_RE = re.compile(
+    r"^return all cards exiled with (?:this \w+|[a-z][\w'-]*) to their owner'?s hand "
+    r"and you lose that much life\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_return_all_linked_to_hand_lose_life_clause(clause: str) -> AbilityEffect | None:
+    """`_RETURN_ALL_LINKED_TO_HAND_LOSE_LIFE_RE`'s shape, or `None`."""
+    if _RETURN_ALL_LINKED_TO_HAND_LOSE_LIFE_RE.fullmatch(" ".join(clause.strip().split())) is None:
+        return None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        pile = [card for card in _linked_cards(game, ability) if card.zone is Zone.EXILE]
+        with game.returning_together():  # CR 603.2c: one event, several cards
+            for card in pile:
+                game.return_to_hand(card)
+        returned = sum(1 for card in pile if card.zone is Zone.HAND)
+        if returned:
+            game.lose_life(ability.controller, returned)
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # R0a-T5: "exile all <group> until this <type> leaves the battlefield"
 # (CR 610.3) and "Put each card exiled with this <type> into its owner's

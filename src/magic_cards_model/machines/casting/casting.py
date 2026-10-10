@@ -8,7 +8,14 @@ from uuid import UUID
 from pydantic import ConfigDict, Field
 
 from ...models.card import Card, Layout, Type, types_of
-from ...models.card_state import CardState, Counter, ExileAnnotation, ExileMarker, TargetRef
+from ...models.card_state import (
+    CardState,
+    Counter,
+    Counters,
+    ExileAnnotation,
+    ExileMarker,
+    TargetRef,
+)
 from ...models.mana import ManaCost, ManaSpend
 from ...models.zone import Zone
 from ...numbers import VariableX, parse_amount, parse_count
@@ -728,6 +735,9 @@ class Casting(EngineModel):
     by nothing else. The keyword is not announced until `use_keyword`, after
     the proposal, so the refusal is held here and `cast()` raises it unless
     the keyword actually used was the one that opened the window."""
+    keyword_snow_any_color: bool = False
+    """The claimed option's `KeywordCastOption.snow_any_color`: mana from snow
+    sources pays the cost as though it were any color (CR 609.4b)."""
     keyword_enters_with_counters: tuple[str, ...] = ()
     """The claimed option's `KeywordCastOption.enters_with_counters`, copied
     onto `CastRecord.enters_with_counters` as the spell becomes cast."""
@@ -984,6 +994,10 @@ class Casting(EngineModel):
     `PlayPermission` recorded against the object it granted still names
     (CR 400.7h)."""
     announced_exile_annotation: ExileAnnotation | None = None
+    announced_counters: Counters | None = None
+    """The counters the card carried when the cast was proposed - CR 122.2
+    strips them as CR 601.2a moves it to the stack, and Draugr Necromancer's
+    "cards in exile ... with ice counters on them" asks about them."""
     """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
@@ -1138,6 +1152,7 @@ class Casting(EngineModel):
         self.announced_zone = self.spell.zone
         self.announced_stamp = self.spell.zone_change_stamp
         self.announced_exile_annotation = self.spell.exile_annotation
+        self.announced_counters = self.spell.counters.model_copy(deep=True)
         self.announced_discarded_by = self.spell.discarded_by
         self.announced_discarded_on_turn = self.spell.discarded_on_turn
         if self.spell.zone is Zone.LIBRARY:
@@ -1222,6 +1237,11 @@ class Casting(EngineModel):
                 "zone": self.announced_zone,
                 "zone_change_stamp": self.announced_stamp,
                 "exile_annotation": self.announced_exile_annotation,
+                **(
+                    {"counters": self.announced_counters}
+                    if self.announced_counters is not None
+                    else {}
+                ),
                 "discarded_by": self.announced_discarded_by,
                 "discarded_on_turn": self.announced_discarded_on_turn,
             }
@@ -1985,6 +2005,7 @@ class Casting(EngineModel):
         self.keyword_face_only = option.face_only
         self.keyword_exiles_instead = option.exile_instead_of_graveyard
         self.keyword_enters_with_counters = option.enters_with_counters
+        self.keyword_snow_any_color = option.snow_any_color
         self.keyword_once_per_turn_key = option.once_per_turn_key
         self.keyword_cost_paid = not option.pays_mana_cost
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
@@ -4106,7 +4127,12 @@ class Casting(EngineModel):
             # to the stack five steps ago, so the stack is the only answer the
             # object itself still has, and Interdimensional Web Watch's "cast
             # spells from exile" asks about where the cast *started*.
-            spend=ManaSpend.casting(self.spell, zone=self.origin_zone, x_value=self.x_value),
+            spend=ManaSpend.casting(
+                self.spell,
+                zone=self.origin_zone,
+                x_value=self.x_value,
+                snow_any_color=self.keyword_snow_any_color,
+            ),
         )
         self.payment.paying_for = "spell"
         self.payment.paying_for_keyword = (self.keyword_used or "").lower() or None

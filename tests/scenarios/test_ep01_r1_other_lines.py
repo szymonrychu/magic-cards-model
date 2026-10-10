@@ -5,8 +5,12 @@ Each test plays the line through the engine and asserts the outcome, with the
 negative (the condition or controller that must not apply) beside it.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.legal_actions import ActionKind, legal_actions
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from magic_cards_model.support import HANDLED, classify_clauses
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -464,3 +468,174 @@ def test_a_revealed_hand_is_known_to_the_opponent_while_the_permanent_stays():
     assert not scenario.game.hand_is_revealed("alice")
     assert [k for k in scenario.game.known_to("bob") if k.owner == "alice"] == []
     _clause_handled("Enduring Renewal", "Play with your hand revealed")
+
+
+# -- Ashiok, Wicked Manipulator ------------------------------------------------
+
+
+def test_ashiok_plus_one_exiles_one_of_the_top_two_and_takes_the_other():
+    scenario = _board(["Ashiok, Wicked Manipulator"], alice_library=["Island", "Forest", "Swamp"])
+    ashiok = scenario.find("Ashiok, Wicked Manipulator", Zone.BATTLEFIELD, "alice")
+    island, forest = scenario.top_of_library(2, "alice")
+    scenario.scry_bottoming(forest, username="alice")
+
+    scenario.activate(ashiok, index=0)
+    scenario.pass_until_resolved()
+
+    assert island.zone is Zone.EXILE
+    assert forest in scenario.player("alice").hand
+    assert ashiok.loyalty == 6
+    _clause_handled("Ashiok, Wicked Manipulator", "Look at the top two cards")
+
+
+def test_ashiok_minus_seven_exiles_x_cards_from_the_targets_library():
+    scenario = _board(
+        ["Ashiok, Wicked Manipulator"],
+        alice_exile=["Serra Angel", "Grizzly Bears"],
+        bob_library=["Island"] * 10,
+    )
+    ashiok = scenario.find("Ashiok, Wicked Manipulator", Zone.BATTLEFIELD, "alice")
+    ashiok.add_counters(Counter.LOYALTY, 2)
+    before = len(scenario.player("bob").library)
+
+    scenario.activate(ashiok, index=2, targets=[scenario.player("bob")])
+    scenario.pass_until_resolved()
+
+    assert len(scenario.player("bob").library) == before - 7  # 5 + 2
+    _clause_handled("Ashiok, Wicked Manipulator", "Target player exiles")
+
+
+def test_ashiok_minus_seven_ignores_cards_an_opponent_owns_in_exile():
+    scenario = _board(
+        ["Ashiok, Wicked Manipulator"],
+        bob_exile=["Serra Angel"],
+        bob_library=["Island"] * 10,
+    )
+    ashiok = scenario.find("Ashiok, Wicked Manipulator", Zone.BATTLEFIELD, "alice")
+    ashiok.add_counters(Counter.LOYALTY, 2)
+
+    scenario.activate(ashiok, index=2, targets=[scenario.player("bob")])
+    scenario.pass_until_resolved()
+
+    assert len(scenario.player("bob").library) == 10
+
+
+# -- Asmodeus the Archfiend: "{B}: Return all cards exiled with Asmodeus ..." ---
+
+
+def test_asmodeus_returns_the_cards_it_exiled_and_costs_that_much_life():
+    scenario = _board(
+        ["Asmodeus the Archfiend", "Swamp"],
+        alice_library=["Grizzly Bears", "Island", "Forest"],
+        alice_exile=["Serra Angel"],
+    )
+    asmodeus = scenario.find("Asmodeus the Archfiend", Zone.BATTLEFIELD, "alice")
+    scenario.game.draw_cards("alice", 2)  # Binding Contract exiles both, face down
+    assert scenario.player("alice").hand == []
+
+    scenario.activate(asmodeus, *scenario.untapped_sources("Swamp"), index=1)
+    scenario.pass_until_resolved()
+
+    assert sorted(c.card.name for c in scenario.player("alice").hand) == [
+        "Grizzly Bears",
+        "Island",
+    ]
+    assert [c.card.name for c in scenario.game.exile] == ["Serra Angel"]
+    assert scenario.player("alice").life == 18
+    _clause_handled("Asmodeus the Archfiend", "Return all cards exiled with Asmodeus")
+
+
+def test_asmodeus_with_nothing_exiled_costs_no_life():
+    scenario = _board(["Asmodeus the Archfiend", "Swamp"], alice_library=["Island"])
+    asmodeus = scenario.find("Asmodeus the Archfiend", Zone.BATTLEFIELD, "alice")
+
+    scenario.activate(asmodeus, *scenario.untapped_sources("Swamp"), index=1)
+    scenario.pass_until_resolved()
+
+    assert scenario.player("alice").life == 20
+
+
+# -- Draugr Necromancer: cast the ice-counter cards, snow mana as any color ----
+
+
+def _draugr_board(lands):
+    scenario = _board(["Draugr Necromancer", *lands], ["Grizzly Bears"])
+    theirs = scenario.creature("Grizzly Bears", "bob")
+    scenario.game.destroy(theirs)  # exiled with an ice counter instead
+    assert theirs.zone is Zone.EXILE
+    return scenario, theirs
+
+
+def test_draugr_lets_you_cast_an_opponents_ice_counter_card_with_snow_mana_of_any_color():
+    scenario, theirs = _draugr_board(["Snow-Covered Island", "Snow-Covered Island"])
+
+    casting = scenario.cast("Grizzly Bears", "alice", from_zone=Zone.EXILE)
+    casting.use_keyword("Cast permission")
+    sources = scenario.untapped_sources("Snow-Covered Island", "Snow-Covered Island")
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+    bears = scenario.resolve_top()
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert bears.controller == "alice"
+    _clause_handled("Draugr Necromancer", "You may cast spells from among cards in exile")
+
+
+def test_draugr_does_not_let_nonsnow_mana_pay_a_color_it_does_not_make():
+    scenario, _ = _draugr_board(["Island", "Island"])
+
+    casting = scenario.cast("Grizzly Bears", "alice", from_zone=Zone.EXILE)
+    casting.use_keyword("Cast permission")
+    sources = scenario.untapped_sources("Island", "Island")
+    with pytest.raises(ValueError, match="cannot pay"):
+        scenario.pay_with(casting.begin_paying(), *sources)
+
+
+def _try_to_cast_sol_ring_from_exile(scenario):
+    casting = scenario.cast("Sol Ring", "alice", from_zone=Zone.EXILE)
+    casting.use_keyword("Cast permission")
+    sources = scenario.untapped_sources("Snow-Covered Island")
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+
+
+def test_draugr_does_not_open_a_card_without_an_ice_counter():
+    scenario = _board(["Draugr Necromancer", "Snow-Covered Island"], [], bob_exile=["Sol Ring"])
+
+    with pytest.raises(ValueError, match="Cast permission"):
+        _try_to_cast_sol_ring_from_exile(scenario)
+
+
+def test_draugr_does_not_open_your_own_ice_counter_card():
+    scenario = _board(["Draugr Necromancer", "Snow-Covered Island"], [], alice_exile=["Sol Ring"])
+    scenario.find("Sol Ring", Zone.EXILE).add_counters("ice", 1)
+
+    with pytest.raises(ValueError, match="Cast permission"):
+        _try_to_cast_sol_ring_from_exile(scenario)
+
+
+def test_draugr_opens_an_opponents_ice_counter_card_for_ordinary_mana_too():
+    scenario = _board(["Draugr Necromancer", "Island"], [], bob_exile=["Sol Ring"])
+    scenario.find("Sol Ring", Zone.EXILE).add_counters("ice", 1)
+
+    casting = scenario.cast("Sol Ring", "alice", from_zone=Zone.EXILE)
+    casting.use_keyword("Cast permission")
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Island"))
+    scenario.put_on_stack(casting)
+    resolved = scenario.resolve_top()
+
+    assert resolved.zone is Zone.BATTLEFIELD
+
+
+def test_draugr_offers_the_exiled_card_as_an_affordable_cast_with_snow_mana():
+    scenario, _ = _draugr_board(["Snow-Covered Island", "Snow-Covered Island"])
+
+    theirs = scenario.find("Grizzly Bears", Zone.EXILE)
+    rows = [
+        a
+        for a in legal_actions(scenario.game, "alice")
+        if a.kind is ActionKind.CAST and a.card_id == theirs.id
+    ]
+
+    assert rows, "the exiled Grizzly Bears is offered as a cast"
+    assert any(a.affordable for a in rows)

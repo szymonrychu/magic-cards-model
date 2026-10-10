@@ -17,7 +17,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...models.card import Type
-from ...models.card_state import CardState
+from ...models.card_state import CardState, ExileAnnotation, ExileMarker
 from ...models.zone import Zone
 from ..abilities import AbilityKind, TriggeredAbility, TriggerWord
 from ..decisions import Decision, DecisionKind
@@ -134,7 +134,16 @@ def _custom_action(clause: str, source: CardState) -> Apply | None:  # noqa: C90
 
         def exile_own(game, src, event):
             event.amount = 0
-            _exile_top(game, game.player(src.controller), src, face_up=False)
+            exiled = _exile_top(game, game.player(src.controller), src, face_up=False)
+            if exiled is not None and exiled.zone is Zone.EXILE:
+                # CR 607.2a: exiled "with" this permanent, for its other ability.
+                exiled.exile_annotation = ExileAnnotation(
+                    marker=ExileMarker.LINKED,
+                    owner=exiled.owner,
+                    turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+                    linked_permanent_id=src.id,
+                    linked_permanent_stamp=src.zone_change_stamp,
+                )
 
         return exile_own
     if text == "that player exiles the top card of one of their opponents' libraries face down":

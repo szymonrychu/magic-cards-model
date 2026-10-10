@@ -452,6 +452,10 @@ def granted_cast_options(
                 option = _linked_exile_static_cast_option(
                     text, game, spell, caster, origin_zone, permanent
                 )
+            if option is None:
+                option = _opponents_exile_counter_cast_option(
+                    text, game, spell, caster, origin_zone
+                )
             if option is not None:
                 found.append(GrantedCastOption(source_name=permanent.name, option=option))
     # "You may cast creature spells from your graveyard using their sneak
@@ -1124,6 +1128,73 @@ def _linked_exile_static_cast_option(
         timing=CastTiming.OWN,
         once_per_turn_key=key,
         additional_cost=additional,
+    )
+
+
+#: "You may cast spells from among cards in exile your opponents own with ice
+#: counters on them, and you may spend mana from snow sources as though it
+#: were mana of any color to cast those spells." - Draugr Necromancer. CR
+#: 601.3's permission over the cards, owned by an opponent (CR 108.3), that
+#: carry the named counter, plus CR 609.4b's spend-as-any-color narrowed to
+#: snow sources.
+_OPPONENTS_EXILE_COUNTER_CAST_RE = re.compile(
+    r"^you may cast spells from among cards in exile your opponents own with "
+    r"(?P<counter>[a-z+/-]+) counters on them"
+    r"(?P<snow>, and you may spend mana from snow sources as though it were mana of any "
+    r"color to cast those spells)?\.?$",
+    re.IGNORECASE,
+)
+
+
+class OpponentsExileCounterCast(EngineModel):
+    """One `_OPPONENTS_EXILE_COUNTER_CAST_RE` line, read."""
+
+    model_config = ConfigDict(frozen=True)
+
+    counter: str
+    snow_any_color: bool = False
+
+
+@lru_cache(maxsize=512)
+def opponents_exile_counter_cast(text: str) -> OpponentsExileCounterCast | None:
+    match = _OPPONENTS_EXILE_COUNTER_CAST_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    return OpponentsExileCounterCast(
+        counter=match.group("counter").lower(), snow_any_color=match.group("snow") is not None
+    )
+
+
+def reads_opponents_exile_counter_cast_line(text: str) -> bool:
+    """What `support.py` asks before crediting the line."""
+    return opponents_exile_counter_cast(text) is not None
+
+
+def _opponents_exile_counter_cast_option(
+    text: str, game: Any, spell: CardState, caster: str, origin_zone: Zone
+) -> KeywordCastOption | None:
+    """`opponents_exile_counter_cast`'s grant for `spell`, or None: `spell` is
+    in exile, owned by an opponent of the caster, and carries the counter
+    (read off the announced copy, since CR 122.2 strips counters when the
+    card moves to the stack)."""
+    read = opponents_exile_counter_cast(text)
+    if (
+        read is None
+        or game is None
+        or origin_zone is not Zone.EXILE
+        or spell.zone is not Zone.EXILE
+    ):
+        return None
+    owner = spell.owner or caster
+    if owner == caster or read.counter not in spell.counters:
+        return None
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION,
+        rule="CR 601.3, CR 609.4b",
+        zone=Zone.EXILE,
+        pays_mana_cost=True,
+        timing=CastTiming.OWN,
+        snow_any_color=read.snow_any_color,
     )
 
 

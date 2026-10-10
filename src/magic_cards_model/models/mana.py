@@ -588,6 +588,11 @@ class ManaSpend(EngineModel):
     the coloured demands `_demand_list` builds and nothing about the cost or
     the mana itself. A `{C}` symbol still wants colorless mana (colorless is
     not a color, CR 105.1) and `{S}` still wants snow mana."""
+    snow_any_color: bool = False
+    """CR 609.4b narrowed to snow sources: "you may spend mana from snow
+    sources as though it were mana of any color to cast those spells" (Draugr
+    Necromancer). Only mana produced by a snow source is widened; every other
+    mana still pays only the color it is."""
 
     mana_value: float | None = None
     """CR 202.3's mana value of the spell being cast - X counted as the number
@@ -623,7 +628,12 @@ class ManaSpend(EngineModel):
 
     @classmethod
     def casting(
-        cls, card: "HasCharacteristics", *, zone: Zone | None, x_value: int = 0
+        cls,
+        card: "HasCharacteristics",
+        *,
+        zone: Zone | None,
+        x_value: int = 0,
+        snow_any_color: bool = False,
     ) -> "ManaSpend":
         """Mana spent to cast `card` as a spell, out of `zone`.
 
@@ -652,6 +662,7 @@ class ManaSpend(EngineModel):
             update={
                 "mana_value": float(base) + x_count * x_value,
                 "x_in_cost": x_count > 0,
+                "snow_any_color": snow_any_color,
             }
         )
 
@@ -1094,7 +1105,11 @@ def _candidate_options(
 
 
 def _demand_list(
-    options: Sequence[PaymentOption], buckets: Iterable[_Bucket], *, any_color: bool = False
+    options: Sequence[PaymentOption],
+    buckets: Iterable[_Bucket],
+    *,
+    any_color: bool = False,
+    snow_any_color: bool = False,
 ) -> list[tuple[int, list[_Bucket]]]:
     """The demand list `_assign` (and `machines/cost.py`'s source-picking
     `_assign_sources`) solve against, built from one resolution of a cost's
@@ -1114,6 +1129,10 @@ def _demand_list(
     bucket - colorless mana included, since it is spent *as though* it were
     that color - while a `{C}` demand (`Color.COLORLESS`, not a color) and a
     snow demand stay as they are.
+
+    `snow_any_color` is the same permission narrowed to mana from snow sources
+    (`ManaSpend.snow_any_color`, Draugr Necromancer): only a snow bucket is
+    widened.
     """
     buckets = list(buckets)
     generic = sum(option.generic for option in options)
@@ -1126,7 +1145,11 @@ def _demand_list(
             count,
             list(buckets)
             if any_color and color is not Color.COLORLESS
-            else [b for b in buckets if b[0] == color],
+            else [
+                b
+                for b in buckets
+                if b[0] == color or (snow_any_color and b[1] and color is not Color.COLORLESS)
+            ],
         )
         for color, count in colors.items()
     ]
@@ -1531,7 +1554,10 @@ class ManaPool(EngineModel):
         """Can the pool cover these fixed demands? If so, with what mana?"""
         buckets = self._spendable_buckets(spend_on)
         demands = _demand_list(
-            options, buckets, any_color=spend_on is not None and spend_on.any_color
+            options,
+            buckets,
+            any_color=spend_on is not None and spend_on.any_color,
+            snow_any_color=spend_on is not None and spend_on.snow_any_color,
         )
         spent = _assign(buckets, demands)
         if spent is None:
