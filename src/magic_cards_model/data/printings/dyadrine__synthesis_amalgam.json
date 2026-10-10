@@ -1,0 +1,163 @@
+{
+  "object": "card",
+  "id": "994ca692-7138-4dcb-bf46-5da530f86036",
+  "oracle_id": "618a2272-62e0-4d0e-834d-7b81719eba12",
+  "multiverse_ids": [],
+  "resource_id": "CF093DC6902B00C8384EED75C9B53F525F9CFB43B09BABED5352A74208EBAA5F",
+  "mtgo_id": 143045,
+  "arena_id": 96790,
+  "tcgplayer_id": 643506,
+  "cardmarket_id": 835041,
+  "name": "Dyadrine, Synthesis Amalgam",
+  "lang": "en",
+  "released_at": "2025-08-01",
+  "uri": "https://api.scryfall.com/cards/994ca692-7138-4dcb-bf46-5da530f86036",
+  "scryfall_uri": "https://scryfall.com/card/eoe/216/dyadrine-synthesis-amalgam?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:25:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.jpg?1783905927",
+    "normal": "https://cards.scryfall.io/normal/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.jpg?1783905927",
+    "large": "https://cards.scryfall.io/large/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.jpg?1783905927",
+    "png": "https://cards.scryfall.io/png/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.png?1783905927",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.jpg?1783905927",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.jpg?1783905927",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.webp?1783905927",
+    "grid": "https://cards.scryfall.io/grid/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.webp?1783905927",
+    "display": "https://cards.scryfall.io/display/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.webp?1783905927",
+    "art": "https://cards.scryfall.io/art/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.webp?1783905927",
+    "crop": "https://cards.scryfall.io/crop/front/9/9/994ca692-7138-4dcb-bf46-5da530f86036.webp?1783905927"
+  },
+  "mana_cost": "{X}{G}{W}",
+  "cmc": 2.0,
+  "type_line": "Legendary Artifact Creature — Construct",
+  "oracle_text": "Trample\nDyadrine enters with a number of +1/+1 counters on it equal to the amount of mana spent to cast it.\nWhenever you attack, you may remove a +1/+1 counter from each of two creatures you control. If you do, draw a card and create a 2/2 colorless Robot artifact creature token.",
+  "power": "0",
+  "toughness": "1",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "c46f9a07-005c-44b7-8057-b2f00b274dd6",
+      "component": "token",
+      "name": "Robot",
+      "type_line": "Token Artifact Creature — Robot",
+      "uri": "https://api.scryfall.com/cards/c46f9a07-005c-44b7-8057-b2f00b274dd6"
+    },
+    {
+      "object": "related_card",
+      "id": "3cba1ffa-9b43-41f9-a5ea-57cd48013c1c",
+      "component": "combo_piece",
+      "name": "Dyadrine, Synthesis Amalgam",
+      "type_line": "Legendary Artifact Creature — Construct",
+      "uri": "https://api.scryfall.com/cards/3cba1ffa-9b43-41f9-a5ea-57cd48013c1c"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set": "eoe",
+  "set_name": "Edge of Eternities",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aeoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/eoe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/994ca692-7138-4dcb-bf46-5da530f86036/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A618a2272-62e0-4d0e-834d-7b81719eba12&unique=prints",
+  "collector_number": "216",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Igor Grechanyi",
+  "artist_ids": [
+    "b7937915-08e0-41c5-a025-2f08619731fa"
+  ],
+  "illustration_id": "3f8a8dba-50a3-4e4c-81af-933b6b89ac98",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8936,
+  "penny_rank": 6062,
+  "preview": {
+    "source": "MTG Muddstah",
+    "source_uri": "https://youtube.com/shorts/EPg_dDQjSMI",
+    "previewed_at": "2025-07-11"
+  },
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.24",
+    "eur_foil": "0.32",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDyadrine%252C%2BSynthesis%2BAmalgam",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDyadrine%252C%2BSynthesis%2BAmalgam",
+    "edhrec": "https://edhrec.com/route/?cc=Dyadrine%2C+Synthesis+Amalgam"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F643506%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=835041&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/143045?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

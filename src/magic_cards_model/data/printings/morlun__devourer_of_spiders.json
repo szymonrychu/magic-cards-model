@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "1beb2eb9-90b5-43ba-8b04-cfce7dcb744b",
+  "oracle_id": "273ad15c-366a-4691-978b-d6028b57005a",
+  "multiverse_ids": [],
+  "resource_id": "5898FBD1EDE52FDE17F194CCE516D5726CAC9CB0DBAC58595640A3FCCC4360A0",
+  "mtgo_id": 153357,
+  "arena_id": 97876,
+  "tcgplayer_id": 652072,
+  "cardmarket_id": 846991,
+  "name": "Morlun, Devourer of Spiders",
+  "lang": "en",
+  "released_at": "2025-09-26",
+  "uri": "https://api.scryfall.com/cards/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b",
+  "scryfall_uri": "https://scryfall.com/card/spm/59/morlun-devourer-of-spiders?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:15:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.jpg?1783905345",
+    "normal": "https://cards.scryfall.io/normal/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.jpg?1783905345",
+    "large": "https://cards.scryfall.io/large/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.jpg?1783905345",
+    "png": "https://cards.scryfall.io/png/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.png?1783905345",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.jpg?1783905345",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.jpg?1783905345",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.webp?1783905345",
+    "grid": "https://cards.scryfall.io/grid/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.webp?1783905345",
+    "display": "https://cards.scryfall.io/display/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.webp?1783905345",
+    "art": "https://cards.scryfall.io/art/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.webp?1783905345",
+    "crop": "https://cards.scryfall.io/crop/front/1/b/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b.webp?1783905345"
+  },
+  "mana_cost": "{X}{B}{B}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature — Vampire Villain",
+  "oracle_text": "Lifelink\nMorlun enters with X +1/+1 counters on him.\nWhen Morlun enters, he deals X damage to target opponent.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Lifelink"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set": "spm",
+  "set_name": "Marvel's Spider-Man",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aspm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/spm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1beb2eb9-90b5-43ba-8b04-cfce7dcb744b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A273ad15c-366a-4691-978b-d6028b57005a&unique=prints",
+  "collector_number": "59",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "The Inheritors stalk the Spiders across worlds, feeding on their life force for sustenance.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Randy Gallegos",
+  "artist_ids": [
+    "a5048cc7-438a-4378-98e4-da99b78e1db0"
+  ],
+  "illustration_id": "c57d9ab8-798f-4241-b218-8eaa3d2fb56c",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 9389,
+  "penny_rank": 1872,
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": "0.53",
+    "usd_etched": null,
+    "eur": "0.30",
+    "eur_foil": "0.52",
+    "tix": "0.20"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMorlun%252C%2BDevourer%2Bof%2BSpiders",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMorlun%252C%2BDevourer%2Bof%2BSpiders",
+    "edhrec": "https://edhrec.com/route/?cc=Morlun%2C+Devourer+of+Spiders"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F652072%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=846991&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153357?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

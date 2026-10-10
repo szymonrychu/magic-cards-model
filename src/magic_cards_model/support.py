@@ -37,7 +37,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict
 
-from magic_cards_model import __version__
+from magic_cards_model import __version__, static_audit
 from magic_cards_model.data.creature_types import creature_types
 from magic_cards_model.ids import install_id_allocator, reset_id_allocator
 from magic_cards_model.machines import keywords as keyword_machine
@@ -153,6 +153,7 @@ from magic_cards_model.machines.effects.counters import _SUPPORT_RE
 from magic_cards_model.machines.keyword_counters import (
     conditional_group_keyword_grant_of_line,
     enters_with_counters_pronoun_fallback,
+    reads_extra_mana_counters_line,
 )
 from magic_cards_model.machines.layers import (
     LAYER_EFFECTS,
@@ -2248,6 +2249,16 @@ def _static_ability_category(
         # excludes convoke (it is a cost-payment method, not a triggered-
         # ability expansion), so `objects_as_costs.has_convoke_now` reads the
         # identical grant itself, live, at a real cast.
+        return HANDLED
+    if reads_extra_mana_counters_line(text):
+        # CR 118.8 / CR 614.1c: "As an additional cost to cast creature
+        # spells, you may pay any amount of mana" (Chorus of the Conclave) -
+        # `Casting.pay_extra_mana_for_counters` and the enters modifier.
+        return HANDLED
+    if static_audit.reads_static_line(
+        printing, text, card_name=effective_name, legendary=legendary
+    ):
+        # EP-01: per-family static audits, each asking its production reader.
         return HANDLED
     return STATIC_UNAUDITED
 

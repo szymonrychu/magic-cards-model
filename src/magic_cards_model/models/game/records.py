@@ -566,6 +566,22 @@ class CastRecord(EngineModel):
     """How much of `mana_spent` came from creatures (CR 106.3), from
     `ManaPayment.creature_spent` - "three or more mana from creatures was
     spent to cast it"."""
+    returned_mana_value: int = 0
+    """The mana value of the creature returned to its owner's hand to pay a
+    web-slinging cost (CR 702.188a), fixed as it was chosen (CR 601.2b) -
+    "where X is the mana value of the returned creature". 0 when no creature
+    was returned, and for a copy (CR 707.10)."""
+    extra_mana_counters: int = 0
+    """The amount of mana paid as the optional additional cost "pay any amount
+    of mana" (CR 118.8, CR 601.2b; Chorus of the Conclave), which makes the
+    creature enter with that many additional +1/+1 counters (CR 614.1c, read
+    by `machines/replacement._extra_mana_counter_modifiers`). 0 for a copy."""
+
+    convoked: int = 0
+    """How many creatures were tapped to pay for the spell with convoke (CR
+    702.51a), each of which "convoked" it (CR 702.51c) - "for each creature
+    that convoked it". Read off the settled payment at CR 601.2h. 0 for a copy
+    (CR 707.10)."""
     snow_mana_spent: dict[Color, int] = Field(default_factory=dict)
     """How much of `mana_spent` came from snow sources, by colour (CR 107.4h's
     {S}), from `ManaPayment.snow_spent` - "{S} of any of that spell's colors

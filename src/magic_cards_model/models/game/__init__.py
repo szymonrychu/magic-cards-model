@@ -1300,6 +1300,13 @@ class Game(
 
     """
 
+    lands_entered_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many lands have entered the battlefield under each player's control
+    this turn, counting ones that have since left (CR 603.6a's "entered" is a
+    fact of the turn). Bioengineered Future's "for each land that entered the
+    battlefield under your control this turn" reads it
+    (`machines/keyword_counters`); reset with the other per-turn ledgers."""
+
     permanents_left_battlefield_this_turn: dict[str, int] = Field(default_factory=dict)
     """How many permanents each player controlled at the moment those
     permanents left the battlefield this turn, keyed by that controller.
@@ -1932,7 +1939,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 133
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 134
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2225,6 +2232,12 @@ class Game(
     #: version also covers `SpendClause.class_level` on floating mana's CR
     #: 106.6 restriction (NW-06 integration, Sorcerer Class's "to gain a Class
     #: level", CR 716.2a).
+    #: 134 (EP01-R1-T1): `CastRecord` gained `convoked` (CR 702.51c, "for each
+    #: creature that convoked it") and `returned_mana_value` (CR 702.188a,
+    #: web-slinging's "mana value of the returned creature"); an older dump
+    #: would read every convoked spell as convoked by none. `Game` also gained
+    #: `lands_entered_this_turn` (Bioengineered Future's "for each land that
+    #: entered the battlefield under your control this turn").
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

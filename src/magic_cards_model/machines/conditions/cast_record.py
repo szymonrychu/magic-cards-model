@@ -296,6 +296,41 @@ def _no_colored_mana(context: "ConditionContext", match: re.Match[str]) -> bool:
     )
 
 
+def _colors_spent(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "two or more colors of mana were spent to cast it" (Steel Exemplar):
+    how many different colours the payment held (CR 601.2h; colorless is not
+    a color, CR 105.2c). A spell never cast spent none."""
+    from ...models.card import Color
+
+    needed = parse_count(match.group("count") or match.group("count2"))
+    record = _record(context)
+    if needed is None or record is None:
+        return False
+    return (
+        sum(
+            1
+            for color, amount in record.mana_spent.items()
+            if color is not Color.COLORLESS and amount > 0
+        )
+        >= needed
+    )
+
+
+def _not_cast_or_no_mana(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "it wasn't cast or no mana was spent to cast it" (Freestrider
+    Commando): an object that arrived any other way, a copy (CR 707.10), or a
+    spell cast for no mana (CR 601.2h)."""
+    record = _record(context)
+    return record is None or record.is_copy or record.total_mana_spent == 0
+
+
+def _you_cast_it(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "you cast it" (Nine-Lives Familiar): the spell that became this
+    permanent was cast (a copy was not, CR 707.10) by the clause's "you"."""
+    record = _record(context)
+    return record is not None and not record.is_copy and _cast_by_you(context)
+
+
 _SYMBOL_COLORS = {"w": "W", "u": "U", "b": "B", "r": "R", "g": "G", "c": "C"}
 
 
@@ -430,6 +465,13 @@ def _keyword_cost_paid(context: "ConditionContext", match: re.Match[str]) -> boo
     source = context.source
     turn = context.game.turn
     return source is not None and turn is not None and source.turn_entered == turn.turns_taken
+
+
+def _cast_using(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "it was cast using web-slinging" / "Scarlet Spider was cast using
+    web-slinging" (CR 201.5: the source's own name): `_keyword_cost_paid`
+    once the subject is the object the clause is about."""
+    return _names_its_object(match.group("subject"), context) and _keyword_cost_paid(context, match)
 
 
 def _bargained(context: "ConditionContext", match: re.Match[str]) -> bool:
@@ -574,6 +616,15 @@ READERS: tuple[ConditionReader, ...] = (
     ),
     _reader(rf"no colored mana was spent to cast {_IT}", _no_colored_mana),
     _reader(
+        rf"(?:at least (?P<count>{COUNT})|(?P<count2>{COUNT}) or more) colors? of mana "
+        rf"(?:was|were) spent to cast {_IT}",
+        _colors_spent,
+    ),
+    _reader(
+        rf"{_IT} (?:wasn't|was not) cast or no mana was spent to cast {_IT}", _not_cast_or_no_mana
+    ),
+    _reader(rf"you cast {_IT}", _you_cast_it),
+    _reader(
         rf"mana from an? treasure (?:was|were) spent to cast (?P<subject>{_IT})",
         _treasure_mana_spent,
     ),
@@ -623,9 +674,10 @@ READERS: tuple[ConditionReader, ...] = (
         _keyword_cost_paid,
     ),
     _reader(
-        r"(?:it was|he was|she was|they were) cast using (?P<keyword>web-slinging|sneak|surge"
+        rf"{_NAMED_SUBJECT} (?:was|were) cast using "
+        r"(?P<keyword>web-slinging|sneak|surge"
         r"|prowl|spectacle|madness|emerge|dash|blitz|evoke|mayhem|warp)(?P<this_turn> this turn)?",
-        _keyword_cost_paid,
+        _cast_using,
     ),
     _reader(rf"{_SUBJECT} (?:was|were){_NEGATED} bargained", _bargained),
     _reader(r"evidence was(?P<negated>n't| not)? collected", _evidence_collected),

@@ -735,6 +735,7 @@
     "upkeeps_begun",
     "nontoken_creatures_died_under_control_this_turn",
     "open_payment_pools",
+    "lands_entered_this_turn",
     "permanents_left_battlefield_this_turn",
     "spells_cast_last_turn",
     "day_night",

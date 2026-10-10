@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "b4bdcf1d-3387-4e21-9159-9294af1ab0b4",
+  "oracle_id": "2345b243-ed0d-4556-8017-d533db1fbc74",
+  "multiverse_ids": [
+    559832
+  ],
+  "tcgplayer_id": 269302,
+  "cardmarket_id": 652844,
+  "name": "Skyclave Shade",
+  "lang": "en",
+  "released_at": "2022-04-29",
+  "uri": "https://api.scryfall.com/cards/b4bdcf1d-3387-4e21-9159-9294af1ab0b4",
+  "scryfall_uri": "https://scryfall.com/card/ncc/260/skyclave-shade?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:14:23Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.jpg?1783923263",
+    "normal": "https://cards.scryfall.io/normal/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.jpg?1783923263",
+    "large": "https://cards.scryfall.io/large/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.jpg?1783923263",
+    "png": "https://cards.scryfall.io/png/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.png?1783923263",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.jpg?1783923263",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.jpg?1783923263",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.webp?1783923263",
+    "grid": "https://cards.scryfall.io/grid/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.webp?1783923263",
+    "display": "https://cards.scryfall.io/display/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.webp?1783923263",
+    "art": "https://cards.scryfall.io/art/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.webp?1783923263",
+    "crop": "https://cards.scryfall.io/crop/front/b/4/b4bdcf1d-3387-4e21-9159-9294af1ab0b4.webp?1783923263"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Creature — Shade",
+  "oracle_text": "Kicker {2}{B}\nThis creature can't block.\nIf this creature was kicked, it enters with two +1/+1 counters on it.\nLandfall — Whenever a land you control enters, if this card is in your graveyard and it's your turn, you may cast it from your graveyard this turn.",
+  "power": "3",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Kicker",
+    "Landfall"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "c51de34b-d4d6-4179-a432-573744ded119",
+  "set": "ncc",
+  "set_name": "New Capenna Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/c51de34b-d4d6-4179-a432-573744ded119",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ancc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ncc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b4bdcf1d-3387-4e21-9159-9294af1ab0b4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2345b243-ed0d-4556-8017-d533db1fbc74&unique=prints",
+  "collector_number": "260",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "af89b7b2-5d2b-4685-baa9-d321f2d38fc3",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 14426,
+  "penny_rank": 2103,
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=559832&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSkyclave%2BShade",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSkyclave%2BShade",
+    "edhrec": "https://edhrec.com/route/?cc=Skyclave+Shade"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F269302%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=652844&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Skyclave+Shade&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

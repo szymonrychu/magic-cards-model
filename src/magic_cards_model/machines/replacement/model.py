@@ -2019,6 +2019,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
         found.extend(_impending_entering_counters(game, event))
         found.extend(_bloodthirst_entering_counters(game, event))
         found.extend(_vanishing_entering_counters(game, event))
+        found.extend(_group_entering_counters(game, event))
 
     found.extend(_stack_replacements(game, event))
 
@@ -2175,6 +2176,7 @@ def apply_replacements(game: "Game", event: ReplaceableEvent) -> ReplaceableEven
 from .enters import (  # noqa: E402
     _bloodthirst_entering_counters,
     _cant_enter_replacements,
+    _group_entering_counters,
     _impending_entering_counters,
     _refers_to_self,
     _self_enters_modifiers,

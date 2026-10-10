@@ -11,6 +11,7 @@ from ...models.card import Card, Color, Layout, Type, types_of
 from ...models.card_state import CardState
 from ...models.mana import ManaCost
 from ...models.zone import Zone
+from ...numbers import COUNT, parse_count
 from ...snapshot import EngineModel
 from ..abilities import (
     AbilityKind,
@@ -127,6 +128,57 @@ def _printed_self_zone_cast_with_additional_cost(card: Card) -> list[KeywordCast
             )
         )
     return found
+
+
+#: "You may cast this card from your graveyard[ if `<condition>`][ by paying
+#: `<cost>` rather than paying its mana cost]. If you do, it enters with `<n>`
+#: `<kind>` counter[s] on it." (Undead Sprinter, Worldheart Phoenix,
+#: Hundred-Battle Veteran) - the card's own CR 601.3 permission, functioning
+#: from the graveyard (CR 604.6), with CR 614.1c's rider scoped to a spell cast
+#: under it (`KeywordCastOption.enters_with_counters`, the record Leonardo's
+#: grant already uses).
+_PRINTED_SELF_ZONE_CAST_WITH_COUNTERS_RE = re.compile(
+    r"^you may cast this card from your graveyard"
+    r"(?: if (?P<condition>[^.]+?))?"
+    r"(?: by paying (?P<cost>(?:\{[^}]+\})+) rather than paying its mana cost)?\. "
+    rf"if you do, (?:it|this creature) enters with (?P<n>an?|{COUNT}) (?P<kind>\S+) counters? "
+    r"on it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _printed_self_zone_cast_with_counters(card: Card) -> list[KeywordCastOption]:
+    found: list[KeywordCastOption] = []
+    for line in (card.oracle_text or "").splitlines():
+        text = _REMINDER_TEXT_RE.sub("", " ".join(line.split())).strip()
+        match = _PRINTED_SELF_ZONE_CAST_WITH_COUNTERS_RE.fullmatch(text)
+        if match is None:
+            continue
+        count = 1 if match.group("n").lower() in ("a", "an") else parse_count(match.group("n"))
+        cost = None
+        if match.group("cost"):
+            cost = total_cost_for_phrase(match.group("cost"))
+            if cost is None:
+                continue
+        found.append(
+            KeywordCastOption(
+                keyword=CAST_PERMISSION,
+                rule="CR 601.3, CR 604.6, CR 614.1c",
+                zone=Zone.GRAVEYARD,
+                cost=cost,
+                pays_mana_cost=cost is None,
+                timing=CastTiming.OWN,
+                condition=match.group("condition"),
+                enters_with_counters=(match.group("kind").lower(),) * (count or 1),
+            )
+        )
+    return found
+
+
+def reads_printed_self_zone_cast_with_counters_line(text: str) -> bool:
+    """What `support.py` asks before crediting the line."""
+    line = _REMINDER_TEXT_RE.sub("", " ".join(text.split())).strip()
+    return _PRINTED_SELF_ZONE_CAST_WITH_COUNTERS_RE.fullmatch(line) is not None
 
 
 def castable_from(card: Card, zone: Zone) -> list[KeywordCastOption]:
@@ -946,7 +998,10 @@ _LINKED_EXILE_STATIC_CAST_RE = re.compile(
     r" from among cards (?P<own>you own )?exiled with this \w+(?P<this_turn> this turn)?"
     r"(?P<free> without paying (?:its|their) mana costs?)?"
     r"(?: by (?P<extra>.+?) in addition to paying (?:its|their) other costs)?"
-    r"\.(?P<limit>\s*you can'?t cast more than one spell this way each turn\.)?$",
+    r"\.(?P<limit>\s*you can'?t cast more than one spell this way each turn\.)?"
+    r"(?:\s*if you cast an? (?:[a-z]+ )?spell this way, that (?:creature|artifact|enchantment|"
+    r"permanent) enters with (?:an additional|an?|one) "
+    r"(?P<rider>\+1/\+1|[a-z]+) counter on it\.)?$",
     re.IGNORECASE,
 )
 #: "the number of Elves and Faeries you control" - a count of the permanents
@@ -971,6 +1026,9 @@ class LinkedExileStaticCast(EngineModel):
     this_turn: bool = False
     free: bool = False
     additional_cost: str | None = None
+    rider_counter: str | None = None
+    """The counter kind "If you cast a spell this way, that creature enters
+    with a `<kind>` counter on it." puts on the permanent (CR 614.1c)."""
 
 
 def _count_listed_subtypes(expression: str) -> Callable[[Any, str], int] | None:
@@ -1033,6 +1091,7 @@ def linked_exile_static_cast(
         this_turn=match.group("this_turn") is not None,
         free=match.group("free") is not None,
         additional_cost=extra,
+        rider_counter=(match.group("rider") or "").lower() or None,
     )
 
 
@@ -1100,6 +1159,7 @@ def _linked_exile_static_cast_option(
         timing=CastTiming.OWN,
         once_per_turn_key=key,
         additional_cost=additional,
+        enters_with_counters=(read.rider_counter,) if read.rider_counter else (),
     )
 
 

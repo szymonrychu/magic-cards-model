@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "f6cde2c4-f53d-4b44-b83b-37b12e00c835",
+  "oracle_id": "e4e6ffab-3f0c-43f8-b1c3-b59c7fcb095d",
+  "multiverse_ids": [
+    247374
+  ],
+  "mtgo_id": 40723,
+  "mtgo_foil_id": 41043,
+  "tcgplayer_id": 47390,
+  "cardmarket_id": 247185,
+  "name": "Chorus of the Conclave",
+  "lang": "en",
+  "released_at": "2011-06-17",
+  "uri": "https://api.scryfall.com/cards/f6cde2c4-f53d-4b44-b83b-37b12e00c835",
+  "scryfall_uri": "https://scryfall.com/card/cmd/189/chorus-of-the-conclave?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:13:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.jpg?1783941182",
+    "normal": "https://cards.scryfall.io/normal/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.jpg?1783941182",
+    "large": "https://cards.scryfall.io/large/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.jpg?1783941182",
+    "png": "https://cards.scryfall.io/png/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.png?1783941182",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.jpg?1783941182",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.jpg?1783941182",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.webp?1783941182",
+    "grid": "https://cards.scryfall.io/grid/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.webp?1783941182",
+    "display": "https://cards.scryfall.io/display/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.webp?1783941182",
+    "art": "https://cards.scryfall.io/art/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.webp?1783941182",
+    "crop": "https://cards.scryfall.io/crop/front/f/6/f6cde2c4-f53d-4b44-b83b-37b12e00c835.webp?1783941182"
+  },
+  "mana_cost": "{4}{G}{G}{W}{W}",
+  "cmc": 8.0,
+  "type_line": "Legendary Creature — Dryad",
+  "oracle_text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)\nAs an additional cost to cast creature spells, you may pay any amount of mana. If you do, that creature enters with that many additional +1/+1 counters on it.",
+  "power": "3",
+  "toughness": "8",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [
+    "Landwalk",
+    "Forestwalk"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "84ff1a64-4e69-4ed2-8c08-26206e3b97a0",
+  "set": "cmd",
+  "set_name": "Commander 2011",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/84ff1a64-4e69-4ed2-8c08-26206e3b97a0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acmd&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cmd?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f6cde2c4-f53d-4b44-b83b-37b12e00c835/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae4e6ffab-3f0c-43f8-b1c3-b59c7fcb095d&unique=prints",
+  "collector_number": "189",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"We are many, yet one. We are separate in body, yet speak with a single voice. Join us in our chorus.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Brian Despain",
+  "artist_ids": [
+    "b4733d20-d538-4dd6-81fe-408c958ca54b"
+  ],
+  "illustration_id": "eb3c51c5-32bf-42c8-b1d1-779f546e7d59",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 23818,
+  "prices": {
+    "usd": "0.30",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=247374&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChorus%2Bof%2Bthe%2BConclave",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DChorus%2Bof%2Bthe%2BConclave",
+    "edhrec": "https://edhrec.com/route/?cc=Chorus+of+the+Conclave"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F47390%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=247185&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/40723?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

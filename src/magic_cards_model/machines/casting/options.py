@@ -145,6 +145,12 @@ class KeywordCastOption(EngineModel):
     `Game.combat_damage_to_players_this_turn` - the record captured as the
     damage was dealt, so a source that has since died or changed still counts
     as it was."""
+    condition: str | None = None
+    """A condition the permission itself prints - "You may cast this card from
+    your graveyard **if a non-Zombie creature died this turn**" (Undead
+    Sprinter) - asked of the shared condition registry (`Game.condition_holds`)
+    with the caster as "you" and the spell as the source. A clause the registry
+    does not read refuses the option rather than passing it (CR 601.3)."""
     spectacle: bool = False
     """True for CR 702.137a's spectacle: the alternative cost is available
     only "if an opponent lost life this turn", checked by
@@ -312,6 +318,15 @@ class KeywordCastOption(EngineModel):
             return (
                 f"{caster} has not cast another spell this turn, so {spell.name} cannot be "
                 f"cast for its {self.keyword} cost ({self.rule})"
+            )
+        if (
+            self.condition is not None
+            and game is not None
+            and game.condition_holds(caster, self.condition, spell) is not True
+        ):
+            return (
+                f"{spell.name} may be cast from the {self.zone.value} only if "
+                f"{self.condition} ({self.rule})"
             )
         if self.spectacle and game is not None and not game.spectacle_condition_holds(caster):
             return (
@@ -862,6 +877,7 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
             options.append(_warp_from_exile(ability))
     options.extend(_printed_zone_permissions(card, options))
     options.extend(_printed_self_zone_cast_with_additional_cost(card))
+    options.extend(_printed_self_zone_cast_with_counters(card))
 
     aftermath = aftermath_cast_option(card)
     if aftermath is not None:
@@ -1721,6 +1737,7 @@ from ._common import (  # noqa: E402
 from .casting import _why_not_in_own_declare_blockers_step, why_cannot_cast_now  # noqa: E402
 from .permissions import (  # noqa: E402
     _printed_self_zone_cast_with_additional_cost,
+    _printed_self_zone_cast_with_counters,
     _printed_zone_permissions,
     adventure_face,
 )

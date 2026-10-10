@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "36d22296-8eb6-4367-bb21-47b20ad700d9",
+  "oracle_id": "f53da056-97be-41ad-8cfc-0d92e17dcd7b",
+  "multiverse_ids": [
+    640465
+  ],
+  "mtgo_id": 118738,
+  "tcgplayer_id": 525960,
+  "cardmarket_id": 743521,
+  "name": "Sage of Fables",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/36d22296-8eb6-4367-bb21-47b20ad700d9",
+  "scryfall_uri": "https://scryfall.com/card/lcc/169/sage-of-fables?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:38:03Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.jpg?1783913883",
+    "normal": "https://cards.scryfall.io/normal/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.jpg?1783913883",
+    "large": "https://cards.scryfall.io/large/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.jpg?1783913883",
+    "png": "https://cards.scryfall.io/png/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.png?1783913883",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.jpg?1783913883",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.jpg?1783913883",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.webp?1783913883",
+    "grid": "https://cards.scryfall.io/grid/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.webp?1783913883",
+    "display": "https://cards.scryfall.io/display/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.webp?1783913883",
+    "art": "https://cards.scryfall.io/art/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.webp?1783913883",
+    "crop": "https://cards.scryfall.io/crop/front/3/6/36d22296-8eb6-4367-bb21-47b20ad700d9.webp?1783913883"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Creature — Merfolk Wizard",
+  "oracle_text": "Each other Wizard creature you control enters with an additional +1/+1 counter on it.\n{2}, Remove a +1/+1 counter from a creature you control: Draw a card.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d253edc3-5bc7-4cf1-9446-a8540dedffa5",
+  "set": "lcc",
+  "set_name": "The Lost Caverns of Ixalan Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d253edc3-5bc7-4cf1-9446-a8540dedffa5",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alcc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lcc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/36d22296-8eb6-4367-bb21-47b20ad700d9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af53da056-97be-41ad-8cfc-0d92e17dcd7b&unique=prints",
+  "collector_number": "169",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Julia Metzger",
+  "artist_ids": [
+    "6e76edce-99a8-4f87-95d0-e316c378fa8b"
+  ],
+  "illustration_id": "1853d0a8-c853-45b8-95d8-2bd943d95ac6",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 8223,
+  "penny_rank": 7026,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.24",
+    "eur_foil": null,
+    "tix": "0.26"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=640465&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSage%2Bof%2BFables",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSage%2Bof%2BFables",
+    "edhrec": "https://edhrec.com/route/?cc=Sage+of+Fables"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525960%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743521&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/118738?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

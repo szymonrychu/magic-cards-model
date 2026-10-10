@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "70719e7b-6f02-4c1a-9f11-79b2b0d9846a",
+  "oracle_id": "494f8c29-7626-43ed-b0b8-fb9afd4cd5d3",
+  "multiverse_ids": [
+    654950
+  ],
+  "mtgo_id": 123929,
+  "arena_id": 90355,
+  "tcgplayer_id": 544725,
+  "cardmarket_id": 764139,
+  "name": "Dust Animus",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/70719e7b-6f02-4c1a-9f11-79b2b0d9846a",
+  "scryfall_uri": "https://scryfall.com/card/otj/9/dust-animus?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:04:18Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.jpg?1783911858",
+    "normal": "https://cards.scryfall.io/normal/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.jpg?1783911858",
+    "large": "https://cards.scryfall.io/large/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.jpg?1783911858",
+    "png": "https://cards.scryfall.io/png/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.png?1783911858",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.jpg?1783911858",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.jpg?1783911858",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.webp?1783911858",
+    "grid": "https://cards.scryfall.io/grid/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.webp?1783911858",
+    "display": "https://cards.scryfall.io/display/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.webp?1783911858",
+    "art": "https://cards.scryfall.io/art/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.webp?1783911858",
+    "crop": "https://cards.scryfall.io/crop/front/7/0/70719e7b-6f02-4c1a-9f11-79b2b0d9846a.webp?1783911858"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature — Spirit",
+  "oracle_text": "Flying\nIf you control five or more untapped lands, this creature enters with two +1/+1 counters and a lifelink counter on it.\nPlot {1}{W} (You may pay {1}{W} and exile this card from your hand. Cast it as a sorcery on a later turn without paying its mana cost. Plot only as a sorcery.)",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Plot"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "d0d9d4f0-48ec-43e6-bb93-a9589790417b",
+      "component": "combo_piece",
+      "name": "Dust Animus",
+      "type_line": "Creature — Spirit",
+      "uri": "https://api.scryfall.com/cards/d0d9d4f0-48ec-43e6-bb93-a9589790417b"
+    },
+    {
+      "object": "related_card",
+      "id": "f07677af-88a4-4ff5-b591-e1e3ac05235d",
+      "component": "combo_piece",
+      "name": "Plot",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/f07677af-88a4-4ff5-b591-e1e3ac05235d"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/70719e7b-6f02-4c1a-9f11-79b2b0d9846a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A494f8c29-7626-43ed-b0b8-fb9afd4cd5d3&unique=prints",
+  "collector_number": "9",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Uriah Voth",
+  "artist_ids": [
+    "14cf4c0c-1a83-4366-ba61-6d0a26ee5a69"
+  ],
+  "illustration_id": "e37e260a-86c1-4556-a3d6-5aca76931140",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13404,
+  "penny_rank": 4892,
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": "0.13",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=654950&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDust%2BAnimus",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDust%2BAnimus",
+    "edhrec": "https://edhrec.com/route/?cc=Dust+Animus"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544725%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764139&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/123929?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

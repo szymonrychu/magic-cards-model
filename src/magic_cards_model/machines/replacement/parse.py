@@ -522,7 +522,34 @@ def _parse_oracle_text(
                 ):
                     update["linked_trigger"] = linked
                 effects.append(effect.model_copy(update=update))
+        effects = _gate_replaced_enters_with(effects, paragraph)
     return effects
+
+
+def _gate_replaced_enters_with(
+    effects: list[ReplacementEffect], paragraph: str
+) -> list[ReplacementEffect]:
+    """ "[This] enters with six +1/+1 counters on it. It escapes with twelve
+    +1/+1 counters on it instead." (Polukranos, Unchained): the instead-sentence
+    replaces the plain one for a permanent that escaped (CR 702.138c), so the
+    plain sentence's `ENTERS_WITH` applies only to one that did not."""
+    from .enters import ESCAPED_CONDITION, NOT_ESCAPED_CONDITION
+
+    if not re.search(r"\binstead\.?$", paragraph.strip(), re.IGNORECASE):
+        return effects
+    if not any(
+        effect.kind is ReplacementKind.ENTERS_WITH and effect.condition == ESCAPED_CONDITION
+        for effect in effects
+    ):
+        return effects
+    return [
+        effect.model_copy(update={"condition": NOT_ESCAPED_CONDITION})
+        if effect.kind is ReplacementKind.ENTERS_WITH
+        and effect.condition is None
+        and effect.raw == paragraph
+        else effect
+        for effect in effects
+    ]
 
 
 #: CR 702.82a/c's keyword line: "Devour N" or "Devour [quality] N" (Famished
@@ -961,7 +988,8 @@ _COUNTERS = re.compile(r"^(?P<amount>[\w+/-]+) (?P<kind>.+?) counters?$", re.IGN
 #: of counter is still plainly readable, so it is read here rather than the
 #: whole clause being abandoned to `variable_amount`.
 _COUNTERS_EQUAL_TO = re.compile(
-    r"^an? number of (?P<kind>.+?) counters?(?: on it)? equal to (?P<expression>.+?)$",
+    r"^an? number of (?P<kind>.+?) counters?(?: on (?:it|him|her|them))? equal to "
+    r"(?P<expression>.+?)$",
     re.IGNORECASE,
 )
 
@@ -996,6 +1024,16 @@ _THAT_MANY_COUNTERS = re.compile(
 )
 
 
+#: "three additional time counters" (Ravaging Riftwurm), "an additional X
+#: +1/+1 counters" (Apocalypse Hydra): "additional" only says the counters come
+#: on top of the others the permanent enters with (CR 614.1c applies every
+#: such replacement, so they add), and is not part of the counter's kind or
+#: count.
+_ADDITIONAL_COUNTERS = re.compile(
+    r"^(?P<count>an?|\w+) additional (?P<rest>(?:X |[+\-\w/]+ )?.*counters?.*)$", re.IGNORECASE
+)
+
+
 def _read_counters(
     what: str,
 ) -> tuple[int | None, bool, str | None, str | None, int | None] | None:
@@ -1016,6 +1054,10 @@ def _read_counters(
     word that is neither of the above ("your choice of") is None: unreadable.
     """
     text = what.strip()
+    additional = _ADDITIONAL_COUNTERS.match(text)
+    if additional is not None and "for each" not in text.lower():
+        rest = additional.group("rest")
+        text = rest if rest[:2].upper() == "X " else f"{additional.group('count')} {rest}"
     equal_to = _COUNTERS_EQUAL_TO.match(text)
     if equal_to:
         return (

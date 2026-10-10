@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "520ad9d0-5f41-4183-a04e-58a61ad7202b",
+  "oracle_id": "381fa2a9-69fc-4558-a0ac-fb99c6f8d77f",
+  "multiverse_ids": [
+    383249
+  ],
+  "mtgo_id": 53248,
+  "mtgo_foil_id": 53249,
+  "tcgplayer_id": 90905,
+  "cardmarket_id": 267570,
+  "name": "Fugitive Wizard",
+  "lang": "en",
+  "released_at": "2014-07-18",
+  "uri": "https://api.scryfall.com/cards/520ad9d0-5f41-4183-a04e-58a61ad7202b",
+  "scryfall_uri": "https://scryfall.com/card/m15/56/fugitive-wizard?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:39:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.jpg?1783939193",
+    "normal": "https://cards.scryfall.io/normal/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.jpg?1783939193",
+    "large": "https://cards.scryfall.io/large/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.jpg?1783939193",
+    "png": "https://cards.scryfall.io/png/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.png?1783939193",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.jpg?1783939193",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.jpg?1783939193",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.webp?1783939193",
+    "grid": "https://cards.scryfall.io/grid/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.webp?1783939193",
+    "display": "https://cards.scryfall.io/display/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.webp?1783939193",
+    "art": "https://cards.scryfall.io/art/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.webp?1783939193",
+    "crop": "https://cards.scryfall.io/crop/front/5/2/520ad9d0-5f41-4183-a04e-58a61ad7202b.webp?1783939193"
+  },
+  "mana_cost": "{U}",
+  "cmc": 1.0,
+  "type_line": "Creature — Human Wizard",
+  "oracle_text": "",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "6ce49890-3b37-42a5-8932-dbeef1d7b62c",
+  "set": "m15",
+  "set_name": "Magic 2015",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/6ce49890-3b37-42a5-8932-dbeef1d7b62c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am15&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m15?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/520ad9d0-5f41-4183-a04e-58a61ad7202b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A381fa2a9-69fc-4558-a0ac-fb99c6f8d77f&unique=prints",
+  "collector_number": "56",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"The law has its place—as a footnote in my spellbook.\"\n—Siyani, fugitive mage",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mark Zug",
+  "artist_ids": [
+    "48e2b98c-5467-4671-bd42-4c3746115117"
+  ],
+  "illustration_id": "f2683ed4-c876-454f-be52-bc1f534cae19",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 28278,
+  "prices": {
+    "usd": "0.09",
+    "usd_foil": "0.05",
+    "usd_etched": null,
+    "eur": "0.02",
+    "eur_foil": "0.15",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=383249&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFugitive%2BWizard",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFugitive%2BWizard",
+    "edhrec": "https://edhrec.com/route/?cc=Fugitive+Wizard"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F90905%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=267570&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/53248?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -21,6 +21,8 @@ from ...numbers import COUNT, parse_count
 from ..chosen_type import RESTRICTED_TRIBAL_TYPES, matches_restricted_creature_type_choice
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import ReflexiveExileCopiedCard
+from ..keyword_counters import enters_count_reader, fixed_enters_count_reader
+from .as_enters_actions import Action, as_enters_action, counters_for
 
 if TYPE_CHECKING:
     from ...models.game import Game
@@ -38,7 +40,7 @@ from .model import (
 
 #: "this creature", "this land", "this permanent", "this" - a self reference.
 _THIS = re.compile(
-    r"^(this|it)\b|^this (creature|land|permanent|artifact|enchantment|"
+    r"^(this|it|he|she)\b|^this (creature|land|permanent|artifact|enchantment|"
     r"planeswalker|battle|card|spell|vehicle|equipment|token)\b",
     re.IGNORECASE,
 )
@@ -94,9 +96,10 @@ _ENTERS_UNTAPPED = re.compile(rf"^(?P<subject>.+?) {_ENTERS} untapped\.?$", re.I
 #: same `condition` field, and `_read_enters_condition` is what has to
 #: recognise the text itself.
 _ENTERS_WITH = re.compile(
-    rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} with (?P<what>.+?)"
+    rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS}(?P<tapped> tapped)?"
+    r" with (?P<what>.+?)"
     r"(?:\s+on it)?(?:,\s*(?P<tail>where .+?))?"
-    r"(?:\s+if (?P<trailing_condition>.+?))?\.?$",
+    r"(?:\s+(?:if (?P<trailing_condition>.+?)|(?P<trailing_unless>unless .+?)))?\.?$",
     re.IGNORECASE,
 )
 #: CR 702.138c: "An ability that reads "[This permanent] escapes with [one or
@@ -105,10 +108,15 @@ _ENTERS_WITH = re.compile(
 #: three +1/+1 counters on it.", read as the `ENTERS_WITH` it means, gated on
 #: `ESCAPED_CONDITION` (`_escaped`, CR 702.138b).
 _ESCAPES_WITH = re.compile(
-    r"^(?P<subject>[^,]+?) escapes with (?P<what>.+?)(?:\s+on it)?\.?$", re.IGNORECASE
+    r"^(?P<subject>[^,]+?) escapes with (?P<what>.+?)(?:\s+on it)?(?:\s+instead)?\.?$",
+    re.IGNORECASE,
 )
 #: The condition text CR 702.138c's own expansion states.
 ESCAPED_CONDITION = "this permanent escaped"
+#: What the plain "enters with" sentence in front of an "It escapes with ...
+#: instead." sentence (Polukranos, Unchained) is gated on: the instead-sentence
+#: replaces it, so it applies only to a permanent that did not escape.
+NOT_ESCAPED_CONDITION = "this permanent didn't escape"
 #: "for each time it was kicked" - `_read_counters` keeps the count phrase as
 #: the `amount_expression` "time it was kicked"; CR 702.33d's kick count is
 #: read off the spell's cast record as the permanent enters (`_kicked_count`).
@@ -247,34 +255,181 @@ def _try_enters_untapped(sentence: str, names: tuple[str, ...]) -> list[Replacem
     ]
 
 
+#: "two +1/+1 counters on it for each `<count>`" (Hamlet Vanguard, Clay
+#: Champion, Vodalian Mindsinger) and "a +1/+1 counter on it plus an
+#: additional +1/+1 counter on it for each `<count>`" (Sheriff of Safe
+#: Passage): read as an `amount_expression` the count reader
+#: (`keyword_counters.enters_count_reader`) understands - "`<n>` times
+#: `<count>`" and "`<n>` plus `<count>`".
+_MULTIPLE_PER_EACH = re.compile(
+    rf"^(?P<n>{COUNT}) (?P<kind>[^ ]+) counters? on it for each (?P<each>.+)$", re.IGNORECASE
+)
+_PLUS_ADDITIONAL_PER_EACH = re.compile(
+    rf"^(?P<n>{COUNT}) (?P<kind>[^ ]+) counters? on it plus an additional (?P=kind) counter"
+    r" on it for each (?P<each>.+)$",
+    re.IGNORECASE,
+)
+
+
+def _read_multiplied_counters(
+    what: str,
+) -> tuple[int | None, bool, str | None, str | None, int | None] | None:
+    plus = _PLUS_ADDITIONAL_PER_EACH.match(what)
+    if plus is not None:
+        return None, True, plus.group("kind"), f"{plus.group('n')} plus {plus.group('each')}", None
+    times = _MULTIPLE_PER_EACH.match(what)
+    if times is not None and times.group("n").lower() not in ("a", "an"):
+        return (
+            None,
+            True,
+            times.group("kind"),
+            f"{times.group('n')} times {times.group('each')}",
+            None,
+        )
+    return None
+
+
+#: "... and with haste" (Pouncing Wurm, Voidpouncer): CR 614.1c's "enters
+#: with" also covers an ability the permanent enters with. Kept on the
+#: effect's `replacement` text and read back by `_apply_self_enters`.
+_AND_WITH_HASTE = re.compile(r"\s+and with haste$", re.IGNORECASE)
+#: "two +1/+1 counters and a trample counter" - one `ENTERS_WITH` per kind.
+_AND_ANOTHER_KIND = re.compile(
+    rf"^(?P<first>.+? counters?) and (?P<second>(?:an?|{COUNT}) [^ ]+ counters?)$", re.IGNORECASE
+)
+
+
+#: CR 614.1c's "enters with your choice of a `<kind>` counter or a `<kind>`
+#: counter" (Boot Nipper, Wingfold Pteron) and "your choice of two different
+#: counters from among `<list>`" (Grimdancer): one counter per pick, picked
+#: from the printed kinds as the permanent enters (CR 614.12a).
+_CHOICE_OF_TWO_KINDS = re.compile(
+    r"^your choice of an? (?P<a>.+?) counter or an? (?P<b>.+?) counter(?: on it)?$",
+    re.IGNORECASE,
+)
+_CHOICE_OF_DIFFERENT = re.compile(
+    rf"^your choice of (?P<n>{COUNT}) different counters(?: on it)? from among (?P<kinds>.+)$",
+    re.IGNORECASE,
+)
+_WHERE_X_IS = re.compile(r"^where x is (?P<expression>.+)$", re.IGNORECASE)
+_TRAILING_ON_IT = re.compile(r"\s+on (?:it|him|her|them)$", re.IGNORECASE)
+
+
+def choice_counter_options(what: str) -> tuple[int, tuple[str, ...]] | None:
+    """`(picks, kinds)` for a "your choice of ..." counter phrase, else None."""
+    text = what.strip()
+    pair = _CHOICE_OF_TWO_KINDS.match(text)
+    if pair is not None:
+        return 1, (pair.group("a").lower(), pair.group("b").lower())
+    different = _CHOICE_OF_DIFFERENT.match(text)
+    if different is not None:
+        picks = parse_count(different.group("n"))
+        kinds = tuple(
+            part.strip().lower()
+            for part in re.split(r",\s*(?:and |or )?|\s+(?:and|or)\s+", different.group("kinds"))
+            if part.strip()
+        )
+        if picks is not None and 0 < picks <= len(kinds):
+            return picks, kinds
+    return None
+
+
+def _enters_with_effects(
+    sentence: str,
+    names: tuple[str, ...],
+    *,
+    subject: str,
+    what: str,
+    condition: str | None,
+    tapped: bool = False,
+    tail: str | None = None,
+) -> list[ReplacementEffect]:
+    """The effects of one "[This] enters [tapped] with `what`" sentence:
+    CR 614.1d's tapped entry when printed, then one `ENTERS_WITH` per counter
+    kind (CR 614.1c), carrying a trailing "and with haste" rider."""
+    effects: list[ReplacementEffect] = []
+    if tapped:
+        effects.append(
+            _make(
+                ReplacementKind.ENTERS_TAPPED,
+                sentence,
+                subject=subject,
+                tapped=True,
+                self_replacement=_refers_to_self(subject, names),
+            )
+        )
+    shared = {
+        "subject": subject,
+        "condition": condition,
+        "self_replacement": _refers_to_self(subject, names),
+    }
+    if choice_counter_options(what) is not None:
+        effects.append(
+            _make(ReplacementKind.ENTERS_WITH, sentence, replacement=what.strip(), **shared)
+        )
+        return effects
+    parts = [what]
+    haste = _AND_WITH_HASTE.search(what)
+    if haste is not None:
+        parts = [what[: haste.start()]]
+    paired = _AND_ANOTHER_KIND.match(_TRAILING_ON_IT.sub("", parts[0]))
+    if paired is not None:
+        parts = [paired.group("first"), paired.group("second")]
+    for index, part in enumerate(parts):
+        part = _TRAILING_ON_IT.sub("", part)
+        counters = _read_multiplied_counters(part) or _read_counters(part)
+        if counters is None:
+            # A counter count this cannot read fails closed as UNPARSED rather
+            # than as an enters-with effect with a made-up amount or kind.
+            return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
+        amount, variable, counter_kind, expression, that_many_multiplier = counters
+        defined = _WHERE_X_IS.match(tail or "")
+        if (
+            defined is not None
+            and variable
+            and expression is None
+            and amount is None
+            and _TURNS_SINCE_FORETOLD_RE.search(defined.group("expression")) is None
+        ):
+            # "... X +1/+1 counters on him, where X is the mana value of the
+            # returned creature": the count is the defined expression, not
+            # CR 107.3m's announced X.
+            expression = defined.group("expression").strip().rstrip(".")
+        effects.append(
+            _make(
+                ReplacementKind.ENTERS_WITH,
+                sentence,
+                replacement=part + (" and with haste" if haste and index == 0 else ""),
+                amount=amount,
+                variable_amount=variable,
+                counter_kind=counter_kind,
+                amount_expression=expression,
+                that_many_multiplier=that_many_multiplier,
+                **shared,
+            )
+        )
+    return effects
+
+
 def _try_enters_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
     match = _ENTERS_WITH.match(sentence)
     if not match:
         return []
-    subject = match.group("subject").strip()
-    what = match.group("what").strip()
-    counters = _read_counters(what)
-    if counters is None:
-        # A counter count this cannot read fails closed as UNPARSED rather
-        # than as an enters-with effect with a made-up amount or kind.
-        return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
-    amount, variable, counter_kind, expression, that_many_multiplier = counters
-    return [
-        _make(
-            ReplacementKind.ENTERS_WITH,
-            sentence,
-            subject=subject,
-            replacement=what,
-            amount=amount,
-            variable_amount=variable,
-            counter_kind=counter_kind,
-            amount_expression=expression,
-            that_many_multiplier=that_many_multiplier,
-            condition=(match.group("condition") or match.group("trailing_condition") or "").strip()
-            or None,
-            self_replacement=_refers_to_self(subject, names),
-        )
-    ]
+    condition = (
+        match.group("condition")
+        or match.group("trailing_condition")
+        or match.group("trailing_unless")
+        or ""
+    ).strip() or None
+    return _enters_with_effects(
+        sentence,
+        names,
+        subject=match.group("subject").strip(),
+        what=match.group("what").strip(),
+        condition=condition,
+        tapped=match.group("tapped") is not None,
+        tail=match.group("tail"),
+    )
 
 
 def _try_escapes_with(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
@@ -283,27 +438,13 @@ def _try_escapes_with(sentence: str, names: tuple[str, ...]) -> list[Replacement
     match = _ESCAPES_WITH.match(sentence)
     if not match:
         return []
-    subject = match.group("subject").strip()
-    what = match.group("what").strip()
-    counters = _read_counters(what)
-    if counters is None:
-        return [ReplacementEffect(kind=ReplacementKind.UNPARSED, raw=sentence, text=sentence)]
-    amount, variable, counter_kind, expression, that_many_multiplier = counters
-    return [
-        _make(
-            ReplacementKind.ENTERS_WITH,
-            sentence,
-            subject=subject,
-            replacement=what,
-            amount=amount,
-            variable_amount=variable,
-            counter_kind=counter_kind,
-            amount_expression=expression,
-            that_many_multiplier=that_many_multiplier,
-            condition=ESCAPED_CONDITION,
-            self_replacement=_refers_to_self(subject, names),
-        )
-    ]
+    return _enters_with_effects(
+        sentence,
+        names,
+        subject=match.group("subject").strip(),
+        what=match.group("what").strip(),
+        condition=ESCAPED_CONDITION,
+    )
 
 
 def _escaped(game: "Game", entering: CardState) -> bool:
@@ -832,6 +973,36 @@ def _sacrifice_any_number_choice(effect: ReplacementEffect) -> tuple[str, bool] 
     return match.group("restriction").strip(), match.group("optional") is not None
 
 
+def _action_then_enter_with_counters(
+    action: "Action", follower: ReplacementEffect, card_name: str
+) -> Apply:
+    """CR 614.12a: an "As [this] enters" action (reveal, return, exile, put),
+    then the counters the sentence after it sizes from how many objects it
+    acted on (`as_enters_actions.counters_for`)."""
+    kind = follower.counter_kind
+    assert kind is not None
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        entering = event.card
+        who = entering.controller if entering is not None else None
+        if who is None or entering is None:
+            return
+        done = action(game, who, event, source, card_name)
+        amount = counters_for(
+            game,
+            who,
+            entering,
+            done,
+            amount=follower.amount,
+            expression=follower.amount_expression,
+            condition=follower.condition,
+        )
+        if amount > 0:
+            event.counters[kind] = event.counters.get(kind, 0) + amount
+
+    return apply
+
+
 def _sacrifice_any_number_then_enter_with_counters(
     restriction: "_SacrificeRestriction",
     counter_kind: str,
@@ -1244,6 +1415,39 @@ def _enters_tapped_condition(effect: ReplacementEffect) -> EntersCondition | Non
     return tapped_unless
 
 
+def _enters_with_condition(effect: ReplacementEffect) -> EntersCondition | None:
+    """The gate of an "enters with counters" line (CR 614.1c), as a predicate
+    on the permanent as it enters: the board-only readers of
+    `_enters_tapped_condition` first, else the shared condition registry
+    (`Game.condition_holds`) asked with the entering permanent as the source,
+    so a cast-record fact (CR 702.33d "was kicked", CR 601.2h "at least three
+    white mana was spent", raid, "you cast it from your hand") is read off the
+    spell that became this permanent and never live. A shape neither reads is
+    `None`, and a shape the registry declines to read at the moment it is asked
+    never performs (it is not silently treated as true).
+    """
+    holds = _enters_tapped_condition(effect)
+    if holds is not None:
+        return holds
+    condition = (effect.condition or "").strip().rstrip(".")
+    negated = condition.lower().startswith("unless ")
+    if negated:
+        condition = condition[len("unless ") :].strip()
+    if not condition:
+        return None
+
+    def holds_shared(game: "Game", entering: CardState) -> bool:
+        controller = entering.controller or entering.owner
+        if controller is None:
+            return False
+        answer = game.condition_holds(controller, condition, entering)
+        if answer is None:
+            return False
+        return answer != negated
+
+    return holds_shared
+
+
 def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
     """The entering object's own "enters tapped" lines (CR 614.1d) that
     `_self_enters_modifiers` skips because it cannot read them.
@@ -1345,6 +1549,9 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
 
     if condition.strip().lower() == ESCAPED_CONDITION:
         return _escaped
+
+    if condition.strip().lower() == NOT_ESCAPED_CONDITION:
+        return lambda game, entering: not _escaped(game, entering)
 
     return None
 
@@ -1710,6 +1917,35 @@ def _basic_land_name_refusal(value: str) -> str | None:
     if Type.LAND in printing.types and Supertype.BASIC in printing.supertypes:
         return f"{value!r} is a basic land card name (CR 201.4a)"
     return None
+
+
+def _choose_counters(picks: int, kinds: tuple[str, ...], card_name: str) -> Apply:
+    """ "enters with your choice of a flying counter or a first strike counter"
+    - CR 614.12a's choice, asked before the permanent enters, one question per
+    pick over the printed kinds not yet picked; each pick is one counter (CR
+    614.1c, CR 122.6)."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if who is None or source is None:
+            return
+        remaining = list(kinds)
+        for _ in range(picks):
+            value = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_QUALITY,
+                    player=who,
+                    prompt="choose a kind of counter",
+                    source=card_name,
+                    source_id=source_id_of(source),
+                    options=tuple(remaining),
+                )
+            )
+            assert isinstance(value, str)
+            remaining.remove(value)
+            event.counters[value] = event.counters.get(value, 0) + 1
+
+    return apply
 
 
 def _choose_a_player(replacement_text: str, card_name: str) -> Apply | None:
@@ -2422,6 +2658,30 @@ def _self_enters_modifiers(
             continue
 
         if effect.kind is ReplacementKind.AS_ENTERS and effect.condition is None:
+            counted_action = as_enters_action(effect.replacement or "")
+            follower = next(
+                (
+                    other
+                    for other, candidate in enumerate(parsed)
+                    if other > index
+                    and candidate.kind is ReplacementKind.ENTERS_WITH
+                    and candidate.counter_kind is not None
+                ),
+                None,
+            )
+            if counted_action is not None and follower is not None:
+                consumed.add(follower)
+                performable.append(
+                    (
+                        f"{key}:{index}",
+                        _action_then_enter_with_counters(
+                            counted_action, parsed[follower], card_state.card.name
+                        ),
+                        f"{effect.text} {parsed[follower].text}",
+                        False,
+                    )
+                )
+                continue
             sacrifice_choice = _sacrifice_any_number_choice(effect)
             if sacrifice_choice is not None:
                 restriction_text, optional = sacrifice_choice
@@ -2514,8 +2774,24 @@ def _self_enters_modifiers(
             # whose condition does not hold never reaches CR 616.1's list at
             # all rather than being applied to no effect. A condition no reader
             # claims returns `None` and the effect is skipped, unchanged.
-            holds = _enters_tapped_condition(effect)
+            holds = (
+                _enters_with_condition(effect)
+                if effect.kind is ReplacementKind.ENTERS_WITH
+                else _enters_tapped_condition(effect)
+            )
             if holds is None or not holds(game, card_state):
+                continue
+        if effect.kind is ReplacementKind.ENTERS_WITH and effect.counter_kind is None:
+            choice_of_counters = choice_counter_options(effect.replacement or "")
+            if choice_of_counters is not None:
+                performable.append(
+                    (
+                        f"{key}:{index}",
+                        _choose_counters(*choice_of_counters, card_state.card.name),
+                        effect.text,
+                        False,
+                    )
+                )
                 continue
         amount = effect.amount
         if (
@@ -2573,7 +2849,11 @@ def _self_enters_modifiers(
             # leaves `amount` None, skips the counters, and says so.
             from ..effects import UnreadableCounterAmountNotice, amount_expression
 
-            reader = amount_expression(effect.amount_expression)
+            reader = (
+                fixed_enters_count_reader(effect.amount_expression)
+                or amount_expression(effect.amount_expression)
+                or enters_count_reader(effect.amount_expression)
+            )
             if reader is None:
                 game.unreadable_counter_amount_notices.append(
                     UnreadableCounterAmountNotice(
@@ -2619,6 +2899,7 @@ def _self_enters_modifiers(
 
     performable.extend(_riot_modifiers(game, card_state))
     performable.extend(_cast_permission_rider_modifiers(game, card_state))
+    performable.extend(_extra_mana_counter_modifiers(game, card_state))
 
     return performable
 
@@ -2654,6 +2935,30 @@ def _cast_permission_rider_modifiers(
             )
         )
     return found
+
+
+def _extra_mana_counter_modifiers(
+    game: "Game", card_state: CardState
+) -> list[tuple[str, Apply, str, bool]]:
+    """CR 614.1c: the creature a spell becomes enters with as many additional
+    +1/+1 counters as the "any amount of mana" additional cost paid for it
+    (`CastRecord.extra_mana_counters`; Chorus of the Conclave)."""
+    record = game.cast_record_of(card_state)
+    if record is None or not record.extra_mana_counters:
+        return []
+    amount = record.extra_mana_counters
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        event.counters[Counter.PLUS_ONE] = event.counters.get(Counter.PLUS_ONE, 0) + amount
+
+    return [
+        (
+            "extra-mana-counters",
+            apply,
+            f"enters with {amount} additional +1/+1 counters for the mana paid (CR 614.1c)",
+            False,
+        )
+    ]
 
 
 def _riot_modifiers(game: "Game", card_state: CardState) -> list[tuple[str, Apply, str, bool]]:
@@ -2929,7 +3234,10 @@ def self_enters_effects_read(card: Card, effects: Sequence[ReplacementEffect]) -
         if effect.amount_expression is not None:
             if _TIMES_KICKED_RE.match(effect.amount_expression):
                 continue  # CR 702.33d: `_kicked_count`.
-            if amount_expression(effect.amount_expression) is None:
+            if (
+                amount_expression(effect.amount_expression) is None
+                and enters_count_reader(effect.amount_expression) is None
+            ):
                 return False
             continue
         if not effect.variable_amount:
@@ -3090,6 +3398,8 @@ def _apply_self_enters(effect: ReplacementEffect, amount: int | None) -> Apply:
             event.prepared = True
         else:
             assert effect.counter_kind is not None and amount is not None
+            if _AND_WITH_HASTE.search(effect.replacement or ""):
+                event.grants_haste = True
             event.counters[effect.counter_kind] = (
                 event.counters.get(effect.counter_kind, 0) + amount
             )
@@ -3297,3 +3607,229 @@ from .parse import (  # noqa: E402
     parse_replacement_effects,
     strip_reminder_text,
 )
+
+# -- "Each <group> you control enters with an additional <kind> counter" -----
+#
+# CR 614.1c: "[This permanent] enters with ..." is a replacement effect, and
+# CR 614.12 lets a *static ability of another permanent* modify how a permanent
+# enters when it affects the entering object. A battlefield permanent (or,
+# for "as long as this creature is in your graveyard", a graveyard card) that
+# prints such a line adds counters to every matching permanent of its
+# controller's as it enters. The counters ride the entering event
+# (`ReplaceableEvent.counters`) exactly like a self "enters with" does.
+
+_GROUP_ENTERS_RE = re.compile(
+    r"^(?:as long as (?P<lead>.+?), )?"
+    r"(?P<subject>.+? you control(?: that(?:'s| has) [^,]+?| of the chosen type)?)"
+    r" enters? with (?:an|(?P<n>\w+)) additional (?P<kind>[^ ]+) counters? on (?:it|them)"
+    r"(?: for each (?P<each>.+?))?(?: if (?P<trail>its mana value is 4 or less))?\.?$",
+    re.IGNORECASE,
+)
+_GROUP_OTHERWISE_RE = re.compile(
+    r"^otherwise, it enters with (?P<n>\w+) additional (?P<kind>[^ ]+) counters? on it\.?$",
+    re.IGNORECASE,
+)
+_GROUP_SUBJECT_RE = re.compile(
+    r"^(?:(?P<each>each other|each|other) )?(?P<desc>.+?) you control(?P<tail> .+)?$",
+    re.IGNORECASE,
+)
+_IN_YOUR_GRAVEYARD_RE = re.compile(
+    r"^this (?:creature|card|permanent) is in your graveyard$", re.IGNORECASE
+)
+
+
+def adventure_face(card):
+    from ..casting.permissions import adventure_face as read_adventure_face
+
+    return read_adventure_face(card)
+
+
+def _is_subtype(entering: CardState, word: str) -> bool:
+    return any(subtype.lower() == word for subtype in entering.card.subtypes)
+
+
+def _noun_matches(entering: CardState, word: str) -> bool:
+    """One noun of a group subject: a card type ("creature", "vehicle" is a
+    subtype, "planeswalker") or a creature/permanent subtype."""
+    singular = word[:-1] if word.endswith("s") else word
+    card_type = _CARD_TYPE_WORDS.get(singular)
+    if card_type is not None:
+        return card_type in entering.types
+    return _is_subtype(entering, singular)
+
+
+def _group_subject_predicate(subject: str):
+    """`(other, predicate(source, entering) -> bool)` for the subject phrase of
+    a group "enters with" line ("each other Rogue creature you control",
+    "legendary creatures you control", "each other Vehicle and creature you
+    control", "each creature you control that's a Wolf or a Werewolf"), or
+    `None` when it names a group not read."""
+    match = _GROUP_SUBJECT_RE.match(subject.strip())
+    if match is None:
+        return None
+    other = (match.group("each") or "").lower() in ("each other", "other")
+    words = match.group("desc").lower().split()
+    tail = (match.group("tail") or "").strip().lower()
+    any_of = " and " in f" {match.group('desc').lower()} "
+    qualifiers = [w for w in words if w == "legendary" or w.startswith("non-")]
+    nouns = [w for w in words if w not in qualifiers and w != "and"]
+    if not nouns:
+        return None
+    wanted_subtypes: set[str] = set()
+    adventure = False
+    if tail.startswith(("that's a ", "that's an ")):
+        wanted_subtypes = {
+            part.strip().lower()
+            for part in re.split(r",| or ", tail.split(" a", 1)[1])
+            if part.strip()
+        }
+        wanted_subtypes = {
+            w.removeprefix("a ").removeprefix("an ").strip() for w in wanted_subtypes
+        }
+    elif tail == "that has an adventure":
+        adventure = True
+    elif tail and tail != "of the chosen type":
+        return None
+    chosen_type = tail == "of the chosen type"
+
+    def predicate(source: CardState, entering: CardState) -> bool:
+        hits = [_noun_matches(entering, noun) for noun in nouns]
+        if not (any(hits) if any_of else all(hits)):
+            return False
+        for word in qualifiers:
+            if word == "legendary":
+                if Supertype.LEGENDARY not in entering.card.supertypes:
+                    return False
+            elif _is_subtype(entering, word[4:]):
+                return False
+        if wanted_subtypes and not any(_is_subtype(entering, w) for w in wanted_subtypes):
+            return False
+        if adventure and adventure_face(entering.card) is None:
+            return False
+        if chosen_type:
+            chosen = getattr(source.choice, "value", source.choice)
+            return bool(chosen) and chosen in entering.card.subtypes
+        return True
+
+    return other, predicate
+
+
+def _group_mana_value_cap(entering: CardState) -> bool:
+    return entering.mana_value <= 4
+
+
+def group_enters_specs(lines: Iterable[str]):
+    """Each group "enters with additional counters" line among `lines`, as
+    `(in_graveyard, lead_condition, other, predicate, kind, count, each)` -
+    `count` the fixed number, `each` the "for each" description or `None`."""
+    found = []
+    pending = None
+    for raw in lines:
+        sentences = [part.strip() for part in re.split(r"(?<=\.)\s+", raw.strip()) if part.strip()]
+        for sentence in sentences:
+            otherwise = _GROUP_OTHERWISE_RE.match(sentence)
+            if otherwise is not None and pending is not None:
+                pending["otherwise"] = (
+                    parse_count(otherwise.group("n")) or 1,
+                    otherwise.group("kind"),
+                )
+                continue
+            match = _GROUP_ENTERS_RE.match(sentence)
+            if match is None:
+                continue
+            subject = _group_subject_predicate(match.group("subject"))
+            if subject is None:
+                continue
+            lead = match.group("lead")
+            in_graveyard = (
+                lead is not None and _IN_YOUR_GRAVEYARD_RE.match(lead.strip()) is not None
+            )
+            pending = {
+                "in_graveyard": in_graveyard,
+                "lead": None if in_graveyard else lead,
+                "other": subject[0],
+                "predicate": subject[1],
+                "kind": match.group("kind"),
+                "count": parse_count(match.group("n")) if match.group("n") else 1,
+                "each": match.group("each"),
+                "cap": match.group("trail") is not None,
+                "otherwise": None,
+                "text": sentence,
+            }
+            found.append(pending)
+    return found
+
+
+def _group_apply(spec, controller: str):
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        entering = event.card
+        if entering is None:
+            return
+        if spec["cap"] and not _group_mana_value_cap(entering):
+            kind_count = spec["otherwise"]
+            if kind_count is None:
+                return
+            amount, kind = kind_count
+        else:
+            kind = spec["kind"]
+            amount = spec["count"]
+            if spec["each"] is not None:
+                reader = enters_count_reader(spec["each"])
+                if reader is None:
+                    return
+                amount = amount * reader(game, controller, entering, 0)
+        if amount > 0:
+            event.counters[kind] = event.counters.get(kind, 0) + amount
+
+    return apply
+
+
+def _group_entering_counters(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """Every battlefield permanent's (and graveyard card's "as long as this
+    creature is in your graveyard") group "enters with an additional counter"
+    line that applies to the permanent entering in `event` (CR 614.1c)."""
+    entering = event.card
+    if entering is None:
+        return []
+    found: list[ApplicableEffect] = []
+    sources: list[CardState] = list(game.battlefield)
+    for player in game.players:
+        sources.extend(player.graveyard)
+    board = None
+    for source in sources:
+        oracle = source.card.oracle_text or ""
+        lowered = oracle.lower()
+        if "additional" not in lowered or " enter" not in lowered or "counter" not in lowered:
+            continue
+        on_battlefield = source.zone is Zone.BATTLEFIELD
+        if on_battlefield:
+            if "Class" in source.card.subtypes:
+                lines = (source.class_ability_text or "").splitlines()
+            else:
+                board = board or game.computed_board()
+                lines = list(board.of(source).abilities)
+        else:
+            lines = oracle.splitlines()
+        controller = source.controller or source.owner
+        if controller is None or entering.controller != controller:
+            continue
+        for index, spec in enumerate(group_enters_specs(lines)):
+            if spec["in_graveyard"] == on_battlefield:
+                continue
+            if spec["other"] and source.id == entering.id:
+                continue
+            if not spec["predicate"](source, entering):
+                continue
+            if spec["lead"] is not None:
+                answer = game.condition_holds(controller, spec["lead"], source)
+                if answer is not True:
+                    continue
+            found.append(
+                ApplicableEffect(
+                    key=f"{source.id}:group:{index}",
+                    source=source,
+                    label=spec["text"],
+                    apply=_group_apply(spec, controller),
+                )
+            )
+    return found
