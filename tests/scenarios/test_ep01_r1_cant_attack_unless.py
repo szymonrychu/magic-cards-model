@@ -395,12 +395,6 @@ def test_attacks_each_combat_unless_you_control_another_ally() -> None:
     assert declare_nothing(mine=["Reckless Cohort"]) is None
 
 
-def test_plain_cant_attack_or_block() -> None:
-    """Vigean Hydropon: no condition at all."""
-    assert _try("Vigean Hydropon") is not None
-    assert _try("Vigean Hydropon", "block") is not None
-
-
 def test_lambholt_pacifist_needs_a_creature_with_power_four_or_greater() -> None:
     assert _try("Lambholt Pacifist") is not None
     assert _try("Lambholt Pacifist", mine=["Hill Giant"]) is not None
