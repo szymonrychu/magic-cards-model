@@ -55,7 +55,7 @@
         "source": "White Orchid Phantom"
       }
     ],
-    "fields_changed": ["continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "shuffles_performed", "turn_counts", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "lands_entered_this_turn", "permanents_left_battlefield_this_turn", "shuffles_performed", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Abstergo Entertainment@bob#1": {

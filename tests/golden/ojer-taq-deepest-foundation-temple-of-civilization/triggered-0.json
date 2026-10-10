@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["turn_counts", "turn_facts", "turn_history"],
+    "fields_changed": ["lands_entered_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Ojer Taq, Deepest Foundation@alice#1": {

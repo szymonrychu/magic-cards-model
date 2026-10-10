@@ -46,11 +46,14 @@
         "source": "Temur War Shaman"
       }
     ],
-    "fields_changed": ["damage_dealt_this_turn", "spells_cast_this_turn", "turn_history"],
+    "fields_changed": ["creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "spells_cast_this_turn", "turn_history"],
     "notices": {},
     "objects": {
       "Aquamorph Entity@alice#1": {
-        "damage": [0, 3]
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Fleecemane Lion@bob#1": {
+        "zone": ["battlefield", "graveyard"]
       }
     },
     "players": {},

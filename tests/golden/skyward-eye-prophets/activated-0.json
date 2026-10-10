@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects", "reveals", "turn_counts", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "lands_entered_this_turn", "reveals", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

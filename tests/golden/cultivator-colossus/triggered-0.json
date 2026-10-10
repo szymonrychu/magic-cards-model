@@ -73,7 +73,7 @@
         "source": "Cultivator Colossus"
       }
     ],
-    "fields_changed": ["cards_drawn_this_turn", "continuous_effects", "turn_counts", "turn_facts", "turn_history"],
+    "fields_changed": ["cards_drawn_this_turn", "continuous_effects", "lands_entered_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Cultivator Colossus@alice#1": {

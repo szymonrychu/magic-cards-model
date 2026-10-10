@@ -55,7 +55,7 @@
     "index": 2,
     "params": {
       "keyword": "Prowl",
-      "option": "keyword='Prowl' rule='CR 702.76a' zone=<Zone.HAND: 'hand'> cost=TotalCost(mana=ManaCost(symbols=(ManaSymbol(kind=<SymbolKind.GENERIC: 'generic'>, amount=2, colors=()), ManaSymbol(kind=<SymbolKind.COLORED: 'colored'>, amount=0, colors=(<Color.BLUE: 'U'>,))), split_after=None), components=[], waterbend_generic=None) pays_mana_cost=False pays_life_for_mana_value=False timing=<CastTiming.ANY: 'any'> marker=None normal_face_only=False face_only=None later_turn=False discarded_this_turn=False returns_unblocked_creature=False returns_tapped_creature=False prowl=True spectacle=False surge=False understood=True granted_line=None exile_instead_of_graveyard=False emerge_quality=None any_color=False once_per_turn_key=None additional_cost=None enters_with_counters=()"
+      "option": "keyword='Prowl' rule='CR 702.76a' zone=<Zone.HAND: 'hand'> cost=TotalCost(mana=ManaCost(symbols=(ManaSymbol(kind=<SymbolKind.GENERIC: 'generic'>, amount=2, colors=()), ManaSymbol(kind=<SymbolKind.COLORED: 'colored'>, amount=0, colors=(<Color.BLUE: 'U'>,))), split_after=None), components=[], waterbend_generic=None) pays_mana_cost=False pays_life_for_mana_value=False timing=<CastTiming.ANY: 'any'> marker=None normal_face_only=False face_only=None later_turn=False discarded_this_turn=False returns_unblocked_creature=False returns_tapped_creature=False prowl=True spectacle=False surge=False understood=True granted_line=None exile_instead_of_graveyard=False emerge_quality=None any_color=False once_per_turn_key=None additional_cost=None any_type_mana=False condition=None enters_with_counters=() snow_any_color=False"
     },
     "variant": "quiet"
   }

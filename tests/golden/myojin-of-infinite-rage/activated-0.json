@@ -1,0 +1,124 @@
+{
+  "ability": "Remove a divinity counter from Myojin of Infinite Rage: Destroy all lands.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Myojin of Infinite Rage@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Myojin of Infinite Rage"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Myojin of Infinite Rage",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
+    "notices": {},
+    "objects": {
+      "Forest@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Forest@alice#2": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Forest@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Forest@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Island@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Island@alice#2": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Island@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Island@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Mountain@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Mountain@alice#2": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Mountain@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Mountain@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Plains@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Plains@alice#2": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Plains@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Plains@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Swamp@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Swamp@alice#2": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Swamp@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Swamp@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Wastes@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Wastes@alice#2": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Wastes@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 0,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}

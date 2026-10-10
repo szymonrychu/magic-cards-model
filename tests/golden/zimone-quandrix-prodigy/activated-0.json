@@ -55,7 +55,7 @@
         "source": "Zimone, Quandrix Prodigy"
       }
     ],
-    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "lands_entered_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#4": {

@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Murasa Sproutling@alice#1",
-    "targets": ["Aggressive Sabotage@alice#1"],
+    "targets": ["Academy Drake@alice#1"],
     "x": 0
   },
   "board": {
@@ -15,7 +15,7 @@
     "players": {
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
-        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Aggressive Sabotage"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Academy Drake"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Murasa Sproutling"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
@@ -39,7 +39,7 @@
     "fields_changed": ["known_carries"],
     "notices": {},
     "objects": {
-      "Aggressive Sabotage@alice#1": {
+      "Academy Drake@alice#1": {
         "zone": ["graveyard", "hand"]
       }
     },
